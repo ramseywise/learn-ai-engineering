@@ -1,0 +1,640 @@
+{
+ "schema": 1,
+ "key": "2502.04180",
+ "pdf": "ai-engineering/05-graph-engineering/sources/zhang-2025-multi-agent-architecture-search-agentic.pdf",
+ "bib": {
+  "title": "Multi-agent Architecture Search via Agentic Supernet",
+  "authors": [
+   "Guibin Zhang",
+   "Luyang Niu",
+   "Junfeng Fang",
+   "Kun Wang",
+   "Lei Bai",
+   "Xiang Wang"
+  ],
+  "first_author": "Zhang",
+  "year": 2025,
+  "venue": "Proceedings of the 42nd International Conference on Machine Learning (ICML), PMLR 267, 2025",
+  "arxiv": "2502.04180",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 70383,
+  "chars_total": 70383,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can automated multi-agent system design be made query-dependent, by optimising a distribution over architectures instead of one static system, to cut inference cost while keeping or raising accuracy?",
+ "hypothesis": "A one-size-fits-all searched workflow wastes resources on easy queries and fails across domains; a sampled, query-conditioned architecture from a supernet should be cheaper and at least as accurate.",
+ "contributions": [
+  "Paradigm reformulation: agentic supernet, a probabilistic continuous distribution over agentic architectures",
+  "MaAS framework that evolves and adaptively allocates resource-efficient solutions per query",
+  "Evaluation on six benchmarks: 0.54-16.89% higher performance, lower training/inference cost, cross-benchmark and cross-LLM transfer, inductive capacity"
+ ],
+ "method": {
+  "summary": "An L-layer agentic supernet holds a per-layer probability over agentic operators (CoT, Debate, Self-Consistency, Self-Refine, Ensemble, Testing, ReAct, early exit). A MoE-style controller conditioned on the query embedding selects operators layer by layer until a cumulative score threshold; the sampled DAG executes. The layer distribution is updated by a cost-aware Monte Carlo gradient estimate and the operators (prompts, temperature, structure) by LLM-generated textual gradients.",
+  "task": "Automated multi-agent workflow search for math reasoning, code generation and tool use (GAIA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "both",
+    "size": "264 train / 1055 test",
+    "split": "1:4 train:test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH",
+    "role": "both",
+    "size": "617 level-5 problems from 4 types (119 train / 486 test)",
+    "split": "1:4",
+    "source": "Hendrycks et al. 2021; subset following Hong et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiArith",
+    "role": "both",
+    "size": "150 train / 600 test",
+    "split": "1:4",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval",
+    "role": "both",
+    "size": "33 train / 131 test",
+    "split": "1:4",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP",
+    "role": "both",
+    "size": "86 train / 341 test",
+    "split": "1:4",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GAIA",
+    "role": "both",
+    "size": "94 train / 372 test",
+    "split": "1:4",
+    "source": "Mialon et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-4o-mini-0718",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "API, temperature 1"
+    }
+   },
+   {
+    "name": "Qwen-2.5-72b-instruct",
+    "role": "base",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 7 labels it Qwen-2.5-70b in the MATH block"
+    }
+   },
+   {
+    "name": "llama-3.1-70b",
+    "role": "base",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MaAS controller Qϕ",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MoE-style network with FFN scoring over concatenated embeddings of query and previous-layer operators",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "L = 4 sampling layers",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding": "MiniLM (Wang et al. 2020) over LLM-written operator profiles; Sentence-Bert also mentioned"
+    }
+   }
+  ],
+  "training": {
+   "objective": "min E[-p(a|q,π,O) + λ·C(G;q)]; π gradient by Monte Carlo with cost-aware importance weights m_k (Eq 11); operators by textual gradient (Eq 12)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "cost penalty λ in {1e-3, 5e-3, 1e-2}",
+   "hardware": null,
+   "compute": "MATH: 3,052,159 prompt + 2,380,505 completion tokens, 3.38 USD",
+   "wall_clock": "53 min on MATH",
+   "seeds": null,
+   "other": {
+    "L": 4,
+    "K": 4,
+    "thres": 0.3,
+    "lambda": "{1e-3, 5e-3, 1e-2}; value used per benchmark not stated",
+    "population_N": "Fig 7 also varies population size N, not defined in text"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "1",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one sampled architecture per query; number of runs/seeds not stated",
+   "prompting": "Operator prompts evolved by textual gradient; no fixed prompt",
+   "retrieval": null,
+   "parameters": {
+    "L": 4,
+    "thres": 0.3,
+    "K": 4,
+    "operators": "CoT; LLM-Debate (3 debaters, up to 2 rounds); Self-Consistency (5 CoT, majority vote); Self-Refine (max 5 iterations); Ensemble (3 LLM agents, pairwise ranking); Testing; ReAct; Early exit"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "Fraction correct on GSM8K, MATH, MultiArith, GAIA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@1",
+     "definition": "HumanEval, MBPP",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cost",
+     "definition": "Token count, API USD, wall-clock minutes (Table 3); per-query cost in 10^-3 $ (Table 4)",
+     "unit": "$ / tokens / min",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Vanilla",
+    "CoT",
+    "ComplexCoT",
+    "Self-Consistency (CoT x5)",
+    "MultiPersona",
+    "LLM-Debate",
+    "LLM-Blender",
+    "DyLAN",
+    "AgentVerse",
+    "MacNet",
+    "AutoAgents",
+    "GPTSwarm",
+    "ADAS",
+    "AgentSquare",
+    "AFlow",
+    "AutoGPT",
+    "TapeAgent",
+    "Sibyl (GAIA)"
+   ],
+   "protocol": "All baselines on gpt-4o-mini; no seeds, repeats or significance tests stated. AFlow restricted to gpt-4o-mini, MAX_ITERATION=20; AgentSquare early stopping patience 5."
+  },
+  "availability": {
+   "code": "https://github.com/bingreeky/MaAS",
+   "weights": null,
+   "data": "Public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "Operator profile generation for embedding",
+    "text": "You are a highly proficient expert in designing and defining operators for large language models (LLMs). Your primary objective is to meticulously generate the 'description' and 'interface' fields for a specified operator based on its provided Python implementation.",
+    "where": "Appendix B.2 (truncated; full text in paper)"
+   },
+   {
+    "purpose": "Textual gradient: propose new operator",
+    "text": "You are an expert machine learning researcher specializing in designing agentic systems. Your objective is to create building blocks such as prompts and control flows within these systems to solve complex tasks.",
+    "where": "Appendix B.3 (truncated; HumanEval-specific template, adapted from ADAS and AgentSquare)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "We set the number of layers as L = 4, the cost penalty coefficient λ as λ ∈{1e −3, 5e −3, 1e −2}, and the sampling times K = 4. thres = 0.3 for Equation (9).",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MaAS averages 83.59 across GSM8K, MATH, MultiArith, HumanEval, MBPP, above the best baseline AFlow (82.25).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy/pass@1",
+   "value": "83.59",
+   "unit": "% avg",
+   "baseline_value": "82.25 (AFlow)",
+   "n": null,
+   "setup": "gpt-4o-mini-0718, temperature 1, L=4, K=4, thres=0.3, 1:4 train:test split per dataset; Table 1",
+   "note": null,
+   "where": "Sec 4.2, Table 1",
+   "quote": "MaAS achieves an average best score of 83.59%"
+  },
+  {
+   "claim": "MaAS on MATH reaches 51.82 vs AFlow 51.28 and vanilla 46.29.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "51.82",
+   "unit": "% accuracy",
+   "baseline_value": "51.28 (AFlow)",
+   "n": null,
+   "setup": "gpt-4o-mini-0718, temperature 1, L=4, K=4, thres=0.3, 1:4 train:test split per dataset; 486 test problems",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MaAS (Ours), column MATH"
+  },
+  {
+   "claim": "MaAS on HumanEval reaches 92.85 pass@1 vs vanilla 87.08.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "92.85",
+   "unit": "% pass@1",
+   "baseline_value": "87.08",
+   "n": null,
+   "setup": "gpt-4o-mini-0718, temperature 1, L=4, K=4, thres=0.3, 1:4 train:test split per dataset; 131 test problems",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MaAS (Ours), column HumanEval"
+  },
+  {
+   "claim": "MaAS on GAIA averages 20.69 across levels, vs GPTSwarm 16.33 and AgentSquare 16.34.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "20.69",
+   "unit": "% avg",
+   "baseline_value": "16.34 (AgentSquare)",
+   "n": null,
+   "setup": "GAIA 372 test tasks, gpt-4o-mini",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MaAS, column Avg."
+  },
+  {
+   "claim": "On GAIA Level 1 and 2, MaAS improves over the vanilla LLM by 18.38% and 17.61%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "18.38",
+   "unit": "% (Level 1)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GAIA vs gpt-4o-mini baseline",
+   "note": "Level 2 improvement 17.61; both equal differences in Table 2 (25.91-7.53, 22.01-4.40)",
+   "where": "Sec 4.2",
+   "quote": "achieving 18.38% and 17.61% improvements on Level 1 and 2 tasks, respectively"
+  },
+  {
+   "claim": "Training cost on MATH is 3.38 USD for MaAS vs 22.50 USD for AFlow (6.8x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Training API cost",
+   "value": "3.38",
+   "unit": "USD",
+   "baseline_value": "22.50",
+   "n": null,
+   "setup": "MATH, gpt-4o-mini, training/optimisation phase",
+   "note": null,
+   "where": "Sec 4.3, Table 3",
+   "quote": "its training cost reaches 22.50$, which is 6.8× that of MaAS (merely 3.38$)"
+  },
+  {
+   "claim": "Inference cost on MATH is 0.42 USD for MaAS vs 1.66 for AFlow (about 25%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Inference API cost",
+   "value": "0.42",
+   "unit": "USD",
+   "baseline_value": "1.66 (AFlow)",
+   "n": null,
+   "setup": "MATH test set, gpt-4o-mini; prompt 1,311,669 and completion 853,116 tokens",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MaAS, column Total cost ($) (Inference)"
+  },
+  {
+   "claim": "Optimisation wall-clock time for MaAS is 53 minutes vs DyLAN 508 and GPTSwarm 129.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Training wall-clock",
+   "value": "53",
+   "unit": "min",
+   "baseline_value": "508 (DyLAN)",
+   "n": null,
+   "setup": "MATH",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "the optimization wall-clock time of MaAS requires only 53 minutes"
+  },
+  {
+   "claim": "Abstract claims 6-45% of inference cost of existing systems and 0.54-16.89% higher performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6 ~45%",
+   "unit": "% of inference cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six benchmarks vs handcrafted and automated MAS",
+   "note": "Abstract and contributions say six benchmarks, intro says seven; Table 1/2 cover six.",
+   "where": "Abstract",
+   "quote": "requires only 6 ∼45%"
+  },
+  {
+   "claim": "Removing the textual gradient drops HumanEval pass@1 from 92.85 to 90.17 and MATH from 51.82 to 48.23.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "48.23",
+   "unit": "% accuracy (MATH)",
+   "baseline_value": "51.82",
+   "n": null,
+   "setup": "Ablation, Table 4",
+   "note": "Table 4 vanilla MaAS MATH cost 0.86 (10^-3 $) differs from Table 3 inference total 0.42 $ for 486 queries (unit/basis not stated).",
+   "where": "Table 4",
+   "table": "Table 4, row MaAS w/o ∇OL, column MATH Accuracy"
+  },
+  {
+   "claim": "Removing early-exit raises HumanEval cost from 1.01 to 1.67 (10^-3 $) with pass@1 91.44.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.67",
+   "unit": "10^-3 $ per query",
+   "baseline_value": "1.01",
+   "n": null,
+   "setup": "Ablation, HumanEval",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row MaAS w/o Oexit, column HumanEval Cost"
+  },
+  {
+   "claim": "Cross-model: supernet optimised on gpt-4o-mini lifts llama-3.1-70b on MATH from 31.93 to 42.97.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "42.97",
+   "unit": "% accuracy",
+   "baseline_value": "31.93",
+   "n": null,
+   "setup": "MATH, supernet optimised with gpt-4o-mini, run with llama-3.1-70b",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, MATH block, row +MaAS, column llama-3.1-70b"
+  },
+  {
+   "claim": "Cross-dataset: MATH->GSM8K 92.80, GSM8K->MATH 51.02, HumanEval->MATH 50.27, above AFlow and GPTSwarm.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "50.27",
+   "unit": "% accuracy",
+   "baseline_value": "47.15 (AFlow)",
+   "n": null,
+   "setup": "Supernet optimised on one dataset, evaluated on another",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row MaAS, column HumanEval→MATH"
+  },
+  {
+   "claim": "Raising layers L from 2 to 4 improves performance 89.5 to 92.8, then marginal gains.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "92.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sensitivity analysis, Fig 7 (benchmark not named in text)",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "significant performance improvement as L increases from 2 to 4 (89.5% →92.8%)"
+  },
+  {
+   "claim": "Held-out Debate operator, unseen in training, is still activated at inference.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, Debate added only at inference (Fig 8 vs 9)",
+   "note": null,
+   "where": "Sec 4.5; Figs 8-9"
+  }
+ ],
+ "limits": [
+  "Optimizer, learning rate, epochs, batch size, hardware and seeds for training the controller are not given.",
+  "Train sets are tiny (33-264 queries) and no seeds or variance are reported, so differences of about 0.5 points are not testable.",
+  "Which lambda was used per benchmark is not stated; Table 4 costs (10^-3 $) and Table 3 inference cost are not reconciled.",
+  "Sensitivity of 'population size N' in Fig 7 is not described in text.",
+  "Baselines are re-run on gpt-4o-mini only; MaAS tuned per benchmark, GAIA train set only 94 tasks.",
+  "Authors state no ethical concerns; no failure analysis offered."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Agentic operator",
+   "definition": "A composite LLM-agent invocation process that involves multiple LLM calls and tool usage",
+   "where": "Definition 3.1"
+  },
+  {
+   "term": "Agentic supernet",
+   "definition": "A probabilistic, continuous agentic architecture distribution encompassing many possible multi-agent candidates, as an L-layer cascade with per-layer operator probabilities",
+   "where": "Definition 3.2"
+  },
+  {
+   "term": "Textual gradient",
+   "definition": "Agent-generated textual analyses used to update prompt, temperature and operator node structure",
+   "where": "Eq 12"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AFlow",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MCTS workflow search; closest SOTA baseline",
+   "quote": null
+  },
+  {
+   "work": "ADAS (Hu et al.)",
+   "year": 2024,
+   "arxiv": "2408.08435",
+   "relation": "baseline",
+   "note": "also source of textual gradient code",
+   "quote": null
+  },
+  {
+   "work": "AgentSquare (Shang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "modular search; code adapted",
+   "quote": null
+  },
+  {
+   "work": "GPTSwarm (Zhuge et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "graph optimisation",
+   "quote": null
+  },
+  {
+   "work": "DARTS / SNAS",
+   "year": 2018,
+   "arxiv": "1806.09055",
+   "relation": "uses-method",
+   "note": "supernet idea from NAS",
+   "quote": null
+  },
+  {
+   "work": "Multi-agent debate (Du et al.)",
+   "year": 2023,
+   "arxiv": "2305.14325",
+   "relation": "uses-method",
+   "note": "Debate operator",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ReAct operator",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine (Madaan et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "operator",
+   "quote": null
+  },
+  {
+   "work": "LLM-Blender (Jiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Ensemble operator",
+   "quote": null
+  },
+  {
+   "work": "GAIA",
+   "year": 2023,
+   "arxiv": "2311.12983",
+   "relation": "uses-data",
+   "note": "tool-use benchmark",
+   "quote": null
+  },
+  {
+   "work": "MATH, GSM8K, HumanEval, MBPP, MultiArith",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  },
+  {
+   "work": "DyLAN, AgentVerse, MacNet, LLM-Debate, AutoAgents",
+   "year": 2023,
+   "arxiv": "2310.02170",
+   "relation": "baseline",
+   "note": "handcrafted/automated MAS",
+   "quote": null
+  },
+  {
+   "work": "Dynamic routing in MoE models (Huang et al.)",
+   "year": 2024,
+   "arxiv": "2403.07652",
+   "relation": "uses-method",
+   "note": "MoE-style controller",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The overall framework of our proposed MaAS.",
+   "page": 3,
+   "why": "Shows controller, supernet, execution and feedback loop"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "The visualization of MaAS's operator sampling process.",
+   "page": 7,
+   "why": "Per-layer operator probabilities for easy/medium/hard queries, with early exit"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Efficiency comparison between MaAS and state-of-the-art baselines on the MATH Benchmark.",
+   "page": 7,
+   "why": "Token, USD and time costs side by side"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 9",
+   "snippet": "t = argmin_k sum_{j<k} S↓_k > thres ; S_i = FFN(v(q) ∥ Σ_{O∈V1} v(O) ∥ ... ∥ Σ_{O∈V_{ℓ-1}} v(O))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Eq 9 and tables is garbled; values checked against table cells.",
+  "No embedded instructions found."
+ ]
+}

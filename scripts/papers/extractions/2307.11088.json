@@ -1,19 +1,632 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2307.11088",
  "pdf": "generative-ai/08-eval/sources/an-2023-l-eval.pdf",
  "bib": {
   "title": "L-Eval: Instituting Standardized Evaluation for Long Context Language Models",
-  "first_author": "Chenxin An",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Chenxin An",
+   "Shansan Gong",
+   "Ming Zhong",
+   "Xingjian Zhao",
+   "Mukai Li",
+   "Jun Zhang",
+   "Lingpeng Kong",
+   "Xipeng Qiu"
+  ],
+  "first_author": "An",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2307.11088",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 89913,
+  "chars_total": 89913,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; appendix examples B.1-B.20 read."
  },
- "legacy_report": "SOURCE: \"L-Eval: Instituting Standardized Evaluation for Long Context Language Models\", Chenxin An, Shansan Gong, Ming Zhong, Xingjian Zhao, Mukai Li, Jun Zhang, Lingpeng Kong, Xipeng Qiu. Venue as printed: \"preprint\", arXiv:2307.11088v3 [cs.CL], 4 Oct 2023. Affiliations as printed (not mapped per author in the extraction): Fudan University, The University of Hong Kong, University of Illinois Urbana-Champaign, Shanghai AI Lab.\n\nCOVERAGE: 26 of 26 pages, all ~90.9k extracted chars, including appendices A and B; references skimmed. Figures were read by caption only, so bar values in Figure 2 beyond those stated in prose are not reported.\n\nCLAIMS\n- claim: Benchmark size.\n  number: 20 sub-tasks, 508 documents, over 2,000 pairs, 3k-200k tokens\n  setup: Llama2 tokenizer; per-task average length 3,907 to 62,335 tokens; maximum 210,541 (NarrativeQA)\n  quote: \"20 sub-tasks, 508 long documents, and over 2,000 human-labeled query-response pairs ... input length (3k ∼200k tokens)\"\n  where: p1; Table 1, p5\n- claim: Provenance split is from-scratch, re-annotated, and manually cleaned.\n  number: 4 / 4 / 12\n  setup: from scratch = Coursera, SFiction, CodeU, LongFQA\n  quote: \"4 sub-tasks are annotated from scratch (§3.1), 4 sub-tasks are re-annotated from the public datasets (§3.2), and the remaining 12 sub-tasks are manually cleaned\"\n  where: p1\n- claim: Errors in existing datasets were found by having Claude-100k answer each question from the document, with humans re-annotating or removing mismatches.\n  number: none (no counts of removed or fixed items are given)\n  setup: all reused sets\n  quote: \"If Claude produces an answer greatly mismatching the ground truth or states that we cannot deduce the answer from the context, we will either perform re-annotation or simply remove them.\"\n  where: p4\n  Examples of faults found: NarrativeQA questions whose main character \"does not even appear in the input document\" (p24); Qasper \"identical questions yielded contradictory answers\" (p24).\n- claim: Closed-ended vs open-ended split is 7 vs 13 tasks.\n  number: 7 closed (exact-match accuracy), 13 open\n  setup: Table 1 rows; my sums of its columns give 1,047 closed and 1,150 open instructions (2,197 total) and 508 documents\n  quote: none for the sums (they are mine); the rows are in Table 1\n  where: p5\n- claim: The length instruction raises metric-human agreement.\n  number: Kendall tau 0.5 to 0.8 for ROUGE-L; 1 for the GPT-4 judge\n  setup: system-level ranking of 7 models, 85-question subset, 3 annotators (PhD students), 1-5 scale, greedy decoding\n  quote: \"τ has been improved from 0.5 to 0.8 for ROUGE-L and τ of GPT-4 evaluator has even reached to 1\"\n  where: p6\n- claim: Without the length instruction, automatic metrics other than GPT-4 do not track humans.\n  number: none\n  setup: same as above\n  quote: \"all these automatic metrics (except GPT-4) fail to correlate to human judgment\"\n  where: p6\n- claim: N-gram scores swing with output length.\n  number: Claude-100k NQ F-1 9.84 to 57.76 with the length instruction (excess length ΔL 135 to 1)\n  setup: NQ subset, Table 2\n  quote: \"Claude-100k 15.43 45.65 165 14.04 58.77 183 9.84 56.19 135\" / \"+ Length Instruction ... 57.76 51.00 1\"\n  where: p7\n- claim: GPT-4-32k leads closed-ended tasks.\n  number: average 73.11 vs Claude 65.97 vs Turbo-16k 60.73; best open-source (Vicuna1.5-13b-16k) 43.46\n  setup: 6 tasks in Table 3 (TopicRet is reported separately)\n  quote: \"GPT-4-32k ✗ 32k 75.58 96.00 82.17 84.38 25.55 74.99 73.11\"\n  where: p8\n- claim: Claude-100k leads open-ended tasks.\n  number: win-rate vs Turbo-16k 60.94% (GPT-4-32k 54.16%; best open-source Llama2-13b-chat 42.44%)\n  setup: GPT-4 judge, 96-question subset, 96×2 rounds with order swapped\n  quote: \"Claude1.3-100k ✗ 100k 96 42 60.94\"\n  where: p9\n- claim: Fine-tuning for longer context helped closed-ended tasks but not open-ended ones.\n  number: 34% win-rate, 8 points lower than its short version\n  setup: Vicuna1.5-13b-16k vs Llama2-13b-chat, GPT-4 judge\n  quote: \"Vicuna1.5-13b-16k only wins Turbo-16k by 34%, 8 points lower than its short version Llama2-13b\"\n  where: p8\n- claim: Retrieval with a 4k model trails full context.\n  number: 49.73 (AdaEmb) and 49.65 (BM25) vs 60.73 closed-ended average\n  setup: top 4 chunks of 1k; GSM drops to 23.00\n  quote: \"AdaEmb-Turbo-4k-0613 ✓ 4k 61.77 23.00 58.91 76.95 6.66 71.09 49.73\"\n  where: p8\n- claim: Judging everything with GPT-4 was treated as too costly.\n  number: about $100 for 4 datasets; about $5 for the 96-question subset\n  quote: \"Testing the 4 datasets in Table 2 needs about $100!\"\n  where: p6 footnotes\n\nLIMITS\n- No Pearson correlation appears anywhere; only Kendall tau, and only two values are stated in prose.\n- Correlation is over 7 systems, not items. No inter-annotator agreement is reported, and the annotators research the same topic.\n- The length instruction gives the model the reference's word count, which leaks answer granularity (unstated). It also changes outputs, not only scoring: Claude's human average goes 3.08 to 4.04 (Table 5, p15).\n- Claude-100k was both the data filter and an evaluated model (unstated bias risk). Errors Claude agrees with go undetected.\n- The LLM judge never sees the document: \"evaluation results mainly depend on the reference answer\" (p5).\n- Authors concede \"almost all metrics, including ... the GPT-4 evaluator, exhibit bias\" (p15).\n- Small subsets (85 and 96 questions); models are 2023 vintage.\n\nBUILDS ON: Zheng et al., 2023 (LLM-as-judge, MT-Bench); Li et al., 2023c (AlpacaEval); Li et al., 2023a (LongChat topic retrieval); Zhang et al., 2023 (CAB); Shaham et al., 2022/2023 (SCROLLS, ZeroScrolls); Lin, 2004 (ROUGE).\n\nCODE: Judge prompt addition (p5): \"Additional details or information that are not mentioned in the reference answer cannot be considered as advantages and do not let them sway your judgment.\" Length-instruction form (p6): \"We need a 50-word summary\".\n\nFIGURES: Figure 2, p6, \"Kendall-Tau correlation coefficient of different automatic metrics with the average human score.\" It shows each metric with and without the length instruction in one chart.\n\nPROBLEMS\n- No embedded instructions aimed at the reader.\n- Internal inconsistencies in the paper:\n  - \"4 sub-tasks\" re-annotated (p1) vs \"We re-annotate 5 publicly available datasets\" (p3), so 4+5+12 = 21, not 20.\n  - LongFQA has 52 instructions in Table 1 vs \"54 questions\" (p23).\n  - QuALITY has 15 documents in Table 1 vs \"20 long stories\" (p20).\n  - Multi-News has 11 in Table 1 vs \"select 10 articles\" (p26).\n  - Table 4 prints Turbo-16k tokens as \"4k\".\n  - Figure 3 says six models where the text says seven.\n- Table 1's † and * markers are not defined in the caption.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/an-2023-l-eval.pdf"
+ "type": "benchmark",
+ "question": "How can long-context LLMs be evaluated in a standardized way, with high-quality diverse datasets and metrics that agree with human judgment?",
+ "hypothesis": "N-gram metrics do not correlate with human judgment for long-context open-ended generation; length-instruction-enhanced evaluation and LLM judges correlate better.",
+ "contributions": [
+  "A suite of 20 sub-tasks, 508 long documents and 2,000+ human-labeled query-response pairs (3k-200k tokens)",
+  "A study of metric correlation with human judgment, proposing Length-Instruction-Enhanced (LIE) evaluation and LLM judges",
+  "Evaluation of 4 commercial and 12 open-source LCLMs, with findings on retrieval vs full context and NTK scaling"
+ ],
+ "method": {
+  "summary": "Built L-Eval from 4 scratch-annotated, 4-5 re-annotated and ~12 manually cleaned datasets, split into closed-ended (exam accuracy) and open-ended tasks (human, LLM pairwise judge vs Turbo-16k-0613, n-gram). Validated metrics against 3 human annotators on an 85-question subset, then benchmarked 16 LCLMs, with and without retrieval.",
+  "task": "long-context understanding and generation benchmark",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "L-Eval (20 sub-tasks)",
+    "role": "eval",
+    "size": "508 long documents, 2,000+ query-response pairs; avg input 4k-60k tokens, max ~200k (Llama2 tokenizer)",
+    "split": "eval only",
+    "source": "TOEFL, GSM8k, QuALITY, Coursera, TopicRet, SFiction, CodeU, MultiDoc2Dial, Qasper, LongFQA, NQ, CUAD, NarrativeQA, Multi-News, GovReport, BigPatent, SummScreen, Openreview, QMSum, SPACE; licences not stated",
+    "preprocessing": "All samples manually filtered/corrected; Claude-100k used to flag mistaken or unanswerable QAs (answer mismatch -> re-annotate or remove)"
+   },
+   {
+    "name": "85-question human subset",
+    "role": "eval",
+    "size": "12 long documents, 85 open-ended questions",
+    "split": "subset of open-ended tasks",
+    "source": "L-Eval",
+    "preprocessing": null
+   },
+   {
+    "name": "96-question GPT-4 subset",
+    "role": "eval",
+    "size": "17 long documents, 96 open-ended questions",
+    "split": "subset of open-ended tasks",
+    "source": "L-Eval",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Claude1.3-100k",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "100k",
+    "other": {}
+   },
+   {
+    "name": "GPT-4-32k",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k",
+    "other": {}
+   },
+   {
+    "name": "Turbo-4k-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k",
+    "other": {}
+   },
+   {
+    "name": "Turbo-16k-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k",
+    "other": {}
+   },
+   {
+    "name": "Llama1 / Vicuna1.3 / Longchat-16k",
+    "role": "evaluated",
+    "params": "7b/13b",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2k / 16k",
+    "other": {}
+   },
+   {
+    "name": "Llama2 / Llama2-chat / NTK / NTK(Dyn)",
+    "role": "evaluated",
+    "params": "7b/13b",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k, 16k via NTK (t=8)",
+    "other": {}
+   },
+   {
+    "name": "Vicuna1.5-16k / Longchat1.5-32k",
+    "role": "evaluated",
+    "params": "7b/13b",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k / 32k",
+    "other": {}
+   },
+   {
+    "name": "Chatglm2 8k/32k",
+    "role": "evaluated",
+    "params": "6b",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8k / 32k",
+    "other": {}
+   },
+   {
+    "name": "XGen-7b-8k-inst",
+    "role": "evaluated",
+    "params": "7b",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8k",
+    "other": {}
+   },
+   {
+    "name": "MPT-7B-StoryWriter-65k",
+    "role": "evaluated",
+    "params": "7b",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "65k",
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 (judge)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-embedding-ada-002 / BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy search in the human-evaluation study (to minimize variance); not stated elsewhere",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one output per item per model; human study: two runs (with and without length instruction)",
+   "prompting": "zero-shot with task templates in App B; length instruction appends 'Answer this question with xx words' where xx is reference length; GSM 16-shot CoT; document input truncated from the right",
+   "retrieval": "OpenAI AdaEmbedding (dense) and BM25 (sparse); top 4 chunks of 1k tokens given to Turbo-4k-0613",
+   "parameters": {
+    "NTK scale-up t": "8 (t=4 still produced random tokens at 16k)",
+    "dynamic NTK": "t = L / l",
+    "NTK-bias base": "10000 x (L/l + 1)^(d/(d-2))",
+    "NTK-weighted base": "10000 x (L/l * 2)^(d/(d-2))",
+    "judge pairs": "order swapped to reduce positional bias; GPT-4 96x2 rounds, GPT-3.5 181x2 rounds"
+   },
+   "other": {
+    "hardware": "single NVIDIA A800 GPU with FlashAttention",
+    "judge prompt addition": "Additional details or information that are not mentioned in the reference answer cannot be considered as advantages and do not let them sway your judgment."
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exam accuracy",
+     "definition": "exact match; each question scores 100/number of questions; Coursera multi-answer gets a quarter of points if not all correct options chosen; SFiction averages loyalty and factuality",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Win-rate vs Turbo-16k-0613",
+     "definition": "pairwise battle judged by GPT-4 or GPT-3.5, reference answer given; ties reported",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human score",
+     "definition": "1-5 scale by 3 PhD-student annotators, averaged",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L / F-1 / ROUGE-1/2",
+     "definition": "n-gram overlap with reference",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Kendall-Tau",
+     "definition": "rank correlation between metric and average human score over 7 models",
+     "unit": "tau",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Turbo-16k-0613 as pairwise base",
+    "16 LCLMs",
+    "retrieval + Turbo-4k"
+   ],
+   "protocol": "Metric validation: 85-question subset, 7 models, 3 annotators, Kendall-Tau; no seeds or significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/OpenLMLab/LEval",
+   "weights": null,
+   "data": "https://github.com/OpenLMLab/LEval (suite and generation results)"
+  },
+  "prompts": [
+   {
+    "purpose": "length instruction",
+    "text": "[Origin Instruction]: Please summarize the opinions of the professor. [Length Instruction]: We need a 50-word summary, where 50 is the number of words in the reference answer",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "judge prompt addition",
+    "text": "Additional details or information that are not mentioned in the reference answer cannot be considered as advantages and do not let them sway your judgment.",
+    "where": "Sec 4"
+   },
+   {
+    "purpose": "open-ended task suffix",
+    "text": "Answer this question with xx words.",
+    "where": "App B"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Adding the reference word count to the instruction (LIE) raises ROUGE-L Kendall-tau with human scores from 0.5 to 0.8; GPT-4 judge reaches 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall-Tau (ROUGE-L, with LIE)",
+   "value": "0.8",
+   "unit": "tau",
+   "baseline_value": "0.5",
+   "n": null,
+   "setup": "85-question subset, 7 models, 3 human annotators, Kendall-Tau vs average human score (Fig 2)",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "τ has been improved from 0.5 to 0.8 for ROUGE-L"
+  },
+  {
+   "claim": "Without length control, Claude-100k scores very low F-1 on NQ because its outputs are far too long; with LIE it reaches 57.76.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F-1",
+   "value": "9.84",
+   "unit": "F-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, Claude-100k, F-1 against reference, Delta L 135 words vs 1 with LIE",
+   "note": null,
+   "where": "Sec 4.1, Table 2",
+   "quote": "For instance, Claude-100k only achieves a 9.84 F-1",
+   "table": "Table 2, rows Claude-100k and + Length Instruction, NQ F-1 (9.84 -> 57.76)"
+  },
+  {
+   "claim": "GPT-4-32k is best on closed-ended tasks, average 73.11 vs Claude-100k 65.97 and Turbo-16k 60.73.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exam accuracy avg",
+   "value": "73.11",
+   "unit": "%",
+   "baseline_value": "60.73",
+   "n": null,
+   "setup": "L-Eval closed-ended exam accuracy, six tasks averaged",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-4-32k, column Avg."
+  },
+  {
+   "claim": "Claude-100k has the highest win-rate against Turbo-16k-0613 on open-ended tasks under a GPT-4 judge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate vs Turbo-16k-0613",
+   "value": "60.94",
+   "unit": "%",
+   "baseline_value": "50.00",
+   "n": null,
+   "setup": "96-question subset, GPT-4 judge, pairwise with swapped order (96x2 rounds), vs Turbo-16k-0613",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Claude1.3-100k, column GPT-4 win-rate %"
+  },
+  {
+   "claim": "Best open-source 16k model wins only 34% against Turbo-16k under the GPT-4 judge, 8 points below its short-context counterpart.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate vs Turbo-16k-0613",
+   "value": "34",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna1.5-13b-16k, 96-question subset, GPT-4 judge",
+   "note": "Table 4 prints 34.11",
+   "where": "Sec 5.2",
+   "quote": "Vicuna1.5-13b-16k only wins Turbo-16k by 34%, 8"
+  },
+  {
+   "claim": "Retrieval over 4k Turbo lags full 16k context on closed-ended tasks (AdaEmb 49.73 vs 60.73 avg), largely because GSM (16-shot) and CodeU cannot be solved by retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exam accuracy avg",
+   "value": "49.73",
+   "unit": "%",
+   "baseline_value": "60.73",
+   "n": null,
+   "setup": "Turbo-4k-0613 with 4 retrieved 1k chunks vs Turbo-16k-0613, Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row AdaEmb-Turbo-4k-0613, column Avg."
+  },
+  {
+   "claim": "GSM 16-shot long CoT examples lift Turbo-16k-0613 accuracy from 79 to 84.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "84",
+   "unit": "%",
+   "baseline_value": "79",
+   "n": null,
+   "setup": "100 GSM8k problems, 8-shot vs 16-shot",
+   "note": null,
+   "where": "App B.2",
+   "quote": "Concretely, the accuracy rises from 79 (8-shot) to 84 (16-shot)"
+  },
+  {
+   "claim": "CodeU is the hardest task; best model GPT-4-32k gets 25.55%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "25.55",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeU, 90 instructions, function names replaced by Op1..OpN",
+   "note": null,
+   "where": "App B.6",
+   "table": "Table 3, row GPT-4-32k, column CodeU"
+  },
+  {
+   "claim": "GPT-4 judging of the 4 Table-2 datasets would cost about $100, while the 96-question subset costs about $5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$100",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenAI GPT-4 judge pricing at the time",
+   "note": null,
+   "where": "footnotes 6-7",
+   "quote": "Testing the 4 datasets in Table 2 needs about $100!"
+  },
+  {
+   "claim": "Raising the NTK RoPE base from 20,000 to 160,000 steadily improves topic retrieval while math reasoning with long examples degrades.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2 with training-free NTK scaling, GSM100 16-shot and TopicRet (read from Fig 5)",
+   "note": "No numeric accuracies in text; trend only",
+   "where": "Sec 5.2, Fig 5",
+   "quote": "Figure 5, when we increase the base from 20,000 to 160,000,"
+  },
+  {
+   "claim": "Benchmark size: 20 sub-tasks, 508 long documents, 2,000+ human-labeled query-response pairs, input length 3k-200k tokens.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "L-Eval suite",
+   "note": null,
+   "where": "Abstract",
+   "quote": "20 sub-tasks, 508 long documents, and over"
+  },
+  {
+   "claim": "Open-source long-context models produce many Level-1 (unhelpful) outputs on long inputs, e.g. Vicuna-7b-16k 138 Level-1 outputs vs Claude-100k 27 without length instruction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "# Level-1 ratings",
+   "value": "138",
+   "unit": "count",
+   "baseline_value": "27",
+   "n": null,
+   "setup": "85-question subset, 3 annotators summed, 1-5 scale",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Original evaluation results, row Vicuan-7b-16k, column #Level-1"
+  }
+ ],
+ "limits": [
+  "LLM judge cannot see the full long input, so it relies on the reference answer and question; length bias is more pronounced.",
+  "GPT-4 judging all 1000+ open-ended questions is unaffordable; judge results cover only a 96-question subset, human results only 85 questions.",
+  "Human study uses 3 annotators who are PhD students working on LCLMs; 7 models, so Kendall-Tau over few items.",
+  "Judge prompt text is only partly given; decoding settings for non-human-study runs are not stated.",
+  "Models and API snapshots (Claude 1.3, GPT-4-32k, Llama2 era) have dated.",
+  "Dynamic NTK rule found not to hold in practice; analysis limited to Coursera truncation."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Length-Instruction-Enhanced (LIE) evaluation",
+   "definition": "injecting the model with the desired length (number of words of the ground truth) into the original instruction",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ZeroScrolls",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent suite; L-Eval differs by manual filtering, metric study, more closed-ended tasks",
+   "quote": null
+  },
+  {
+   "work": "LongBench",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent long-context suite",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge with MT-Bench and Chatbot Arena (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LLM judge pairwise format; length bias",
+   "quote": null
+  },
+  {
+   "work": "AlpacaFarm (Dubois et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LLM evaluator",
+   "quote": null
+  },
+  {
+   "work": "LongChat (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "TopicRet task and Longchat models",
+   "quote": null
+  },
+  {
+   "work": "GSM8k (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "GSM 16-shot",
+   "quote": null
+  },
+  {
+   "work": "QuALITY (Pang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "re-annotated",
+   "quote": null
+  },
+  {
+   "work": "Lost in the Middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates second/third topic retrieval",
+   "quote": null
+  },
+  {
+   "work": "NTK-aware RoPE (LocalLLaMA)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "training-free scaling studied",
+   "quote": null
+  },
+  {
+   "work": "Position Interpolation (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "PI used by Longchat/Vicuna1.5",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Kendall-Tau correlation coefficient of different automatic metrics with the average human score.",
+   "page": 6,
+   "why": "Shows LIE lifting every metric's correlation."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Ranking of six models under various evaluation metrics with or without length instruction.",
+   "page": 7,
+   "why": "Hexagons regularise with LIE."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Results on 2 summarization and 2 abstractive QA tasks, with and without length instruction.",
+   "page": 7,
+   "why": "Shows n-gram score swings from output length."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Reference list skimmed only; fig 2 bar values are not in text (only 0.5->0.8 and GPT-4 reaching 1).",
+  "Table 4 column header mis-flattened; Table 4 'Longchat-13b-16k' and 'Vicuna1.5-13b-16k' rows share the same GPT-4 numbers in the extracted text."
+ ]
 }

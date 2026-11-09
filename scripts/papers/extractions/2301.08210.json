@@ -1,0 +1,59 @@
+{
+ "schema": 1,
+ "key": "2301.08210",
+ "pdf": "ai-engineering/05-graph-engineering/sources/velickovic-2023-everything-connected.pdf",
+ "bib": {"title": "Everything is Connected: Graph Neural Networks", "authors": ["Petar Veličković"], "first_author": "Veličković", "year": 2023, "venue": "preprint", "arxiv": "2301.08210", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 31001, "chars_total": 31001, "engine": "pymupdf", "skipped": null},
+ "type": "survey",
+ "question": "What are the key concepts of graph representation learning, and how do GNNs relate to Deep Sets, Transformers and geometric equivariant models?",
+ "hypothesis": null,
+ "contributions": ["A short survey that introduces permutation invariance and equivariance, the three spatial GNN flavours (convolutional, attentional, message-passing), GNNs without an input graph (Deep Sets, Transformers, latent graph inference) and geometric (E(3)-equivariant) GNNs."],
+ "method": null,
+ "results": [
+  {"claim": "Transformers are a special case of GNNs: attentional GNNs on a fully connected graph give the Transformer forward pass.", "kind": "claim", "source": "Joshi (2020); Vaswani et al. (2017)", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Conceptual derivation: Eq. 9 with A = 11^T (N_u = V) gives Eq. 11", "quote": "Transformers are themselves a special case of GNNs", "table": null, "note": null, "where": "Section 1; Section 4, Eq. 11"},
+  {"claim": "With no edges assumed (A = I), all three GNN flavours reduce to Deep Sets; on a fully connected graph convolutional GNNs also reduce to Deep Sets.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Node features only, no adjacency", "quote": "yielding the Deep Sets model", "table": null, "note": null, "where": "Section 4"},
+  {"claim": "Expressive power rises from convolutional to attentional to message-passing GNNs, at a cost in interpretability, scalability or stability.", "kind": "claim", "source": "Bronstein et al. (2021)", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Eqs. 8-10 taxonomy", "quote": "power of the GNN progressively increases going from Equation 8 to 10", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Message-passing GNNs are Turing universal given proper initial features, sufficient depth-width product and correct psi and phi.", "kind": "reported", "source": "Loukas (2020)", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Eq. 10 GNNs; depth-width product = #layers x dim h_u", "quote": "GNNs in Equation 10 are Turing universal", "table": null, "note": null, "where": "Section 3"},
+  {"claim": "Transformers are favoured because a fully connected graph allows dense matrix products that fit GPUs and TPUs, with better storage complexity than message passing.", "kind": "claim", "source": "Hooker (2021)", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Argument, no measurement", "quote": "Transformers can be seen as GNNs that are currently winning the", "table": null, "note": "Sentence continues 'hardware lottery (Hooker, 2021)!'", "where": "Section 4"},
+  {"claim": "E(n)-equivariant layer of Satorras et al. keeps features invariant and coordinates equivariant because pairwise distances are isometry-invariant, but only for scalar features.", "kind": "reported", "source": "Satorras et al. (2021)", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Geometric graphs with coordinates in R^3, Eqs. 12-13", "quote": "it only works over", "table": null, "note": "Full sentence: 'a model like this hides a caveat: it only works over scalar features f_u'", "where": "Section 5"}
+ ],
+ "limits": [
+  "Short survey with no experiments; explicitly not a comprehensive overview of GNN layers.",
+  "Edge features are deliberately left out of the formalism for clarity.",
+  "Expressivity claim (Eq. 10 is all we need) is stated as the author's opinion; existence of a powerful GNN does not mean SGD finds it.",
+  "Latent graph inference is only listed by paradigm, not compared."
+ ],
+ "practices": [
+  "Choose the GNN flavour (convolutional, attentional, message-passing) by trading expressivity against interpretability, scalability and stability (Section 3).",
+  "Use an invariant readout (sum/mean/max over nodes) for graph classification and a shared per-node classifier for node classification; for link prediction classify h_u || h_v plus edge features (Section 3).",
+  "When no graph is given, use a fully connected graph (Transformer) for small node counts, or infer the graph (latent graph inference) (Section 4).",
+  "For 3D inputs, use E(3)-equivariant layers; use tensor-field style layers when vector features are needed (Section 5)."
+ ],
+ "terms": [
+  {"term": "Permutation invariance", "definition": "f(PX, PAP^T) = f(X, A)", "where": "Eq. 3"},
+  {"term": "Permutation equivariance", "definition": "F(PX, PAP^T) = P F(X, A)", "where": "Eq. 4"},
+  {"term": "Convolutional / attentional / message-passing GNN", "definition": "h_u = phi(x_u, aggregate over N_u of c_vu psi(x_v)), of a(x_u,x_v) psi(x_v), or of psi(x_u,x_v) respectively", "where": "Eqs. 8-10"},
+  {"term": "Latent graph inference", "definition": "Inferring a graph structure to be used as edges for a GNN; edge selection is non-differentiable", "where": "Section 4"},
+  {"term": "Geometric graph", "definition": "Nodes endowed with both features f_u and coordinates x_u in R^3", "where": "Section 5"}
+ ],
+ "lineage": [
+  {"work": "Geometric deep learning: Grids, groups, graphs, geodesics, and gauges", "year": 2021, "arxiv": "2104.13478", "relation": "extends", "note": "The exposition largely follows Bronstein et al. (2021)", "quote": "The exposition largely follows Bronstein et al. (2021)."},
+  {"work": "Attention is all you need", "year": 2017, "arxiv": null, "relation": "related", "note": "Shown to be an attentional GNN on a complete graph", "quote": null},
+  {"work": "Transformers are graph neural networks (Joshi)", "year": 2020, "arxiv": null, "relation": "related", "note": "In-depth rederivation of Transformers as GNNs", "quote": null},
+  {"work": "Deep Sets (Zaheer et al.)", "year": 2017, "arxiv": null, "relation": "related", "note": "GNN with no edges", "quote": null},
+  {"work": "E(n) equivariant graph neural networks (Satorras et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "Eqs. 12-14", "quote": null},
+  {"work": "What graph neural networks cannot learn: depth vs width (Loukas)", "year": 2020, "arxiv": null, "relation": "related", "note": "Turing universality of MPNNs", "quote": null},
+  {"work": "How powerful are graph neural networks? (Xu et al.); Weisfeiler and Leman go neural (Morris et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "Expressivity limits; author argues fixes remain expressible via message passing", "quote": null},
+  {"work": "Message passing all the way up (Veličković)", "year": 2022, "arxiv": null, "relation": "extends", "note": "Argues one-hop MPNNs suffice if the input graph may be modulated", "quote": null},
+  {"work": "GCN, GAT, GraphSAGE, MPNN, ChebyNet, SGC, MoNet, GATv2, IN, GN", "year": null, "arxiv": null, "relation": "surveys", "note": "Representative layers of each flavour", "quote": null},
+  {"work": "AlphaFold 2 (Jumper et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "Cited as geometric GNN built from Transformers plus equivariance", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1 (unnumbered, abstract page)", "caption": "Inputs (X, A) pass through a GNN to latents (H, A); heads for node classification z_i = f(h_i), graph classification z_G = f(sum_i h_i), link prediction z_ij = f(h_i, h_j, e_ij).", "page": 1, "why": "Shows the three task heads over shared latents at a glance."}
+ ],
+ "code": [
+  {"where": "Eq. 10", "snippet": "h_u = phi(x_u, (+)_{v in N_u} psi(x_u, x_v))  (Message-passing)", "verbatim": false},
+  {"where": "Eq. 11", "snippet": "h_u = phi(x_u, (+)_{v in V} a(x_u, x_v) psi(x_v))", "verbatim": false}
+ ],
+ "problems": ["Text cache contains NUL bytes and garbled math symbols (rendered equations); equations transcribed approximately. Figure on page 1 has no caption text. No embedded instructions seen."]
+}

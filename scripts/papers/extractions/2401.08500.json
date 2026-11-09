@@ -1,19 +1,489 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2401.08500",
  "pdf": "ai-engineering/04-loop-engineering/sources/ridnik-2024-code-generation-alphacodium.pdf",
  "bib": {
   "title": "Code Generation with AlphaCodium: From Prompt Engineering to Flow Engineering",
-  "first_author": "Tal Ridnik",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Tal Ridnik",
+   "Dedy Kredo",
+   "Itamar Friedman"
+  ],
+  "first_author": "Ridnik",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2401.08500",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 35182,
+  "chars_total": 35182,
+  "engine": "pymupdf",
+  "skipped": "Figures (flow diagram, token-count screenshots) not viewed; text around them read."
  },
- "legacy_report": "SOURCE: Code Generation with AlphaCodium: From Prompt Engineering to Flow Engineering. Tal Ridnik, Dedy Kredo, Itamar Friedman (CodiumAI). arXiv:2401.08500v1 [cs.LG], 16 Jan 2024. Preprint (no venue printed).\nCOVERAGE: 35190 of 35190 chars read, all pages including appendices A-D. The figures (flow diagram, token-count screenshots) were not viewed; the text around them was read. Scratch: /tmp/papers-t3/loop-2/alphacodium/t.txt\n\nCLAIMS (ranked)\n- Core: the AlphaCodium flow raises GPT-4 pass@5 on CodeContests validation from 19% (single direct prompt) to 44%.\n  number: 19% -> 44%, x2.3\n  setup: CodeContests validation set (107 problems); GPT-4; pass@5 = percent of problems solved using k=5 generated solutions per problem; baseline is \"a single well-designed direct prompt\".\n  quote: \"For GPT-4 on the validation set, for example, the pass@5 score improves from 19% to 44% - x2.3 improvement.\"\n  where: Sec 5.1, p.7\n- Gains hold across models and splits (Table 1, pass@5, direct prompt -> AlphaCodium):\n  number: DeepSeek-33B val 7->20, test 12->24; GPT-3.5 val 15->25, test 8->17; GPT-4 val 19->44, test 12->29.\n  setup: validation 107 problems, test 165 problems. Extraction flattens the table; the reading above is from the flattened text.\n  quote: \"GPT-4 validation Direct prompt 19%AlphaCodium 44% test Direct prompt 12%AlphaCodium 29%\"\n  where: Table 1, p.7\n- Test-set gain is smaller than validation gain for GPT-4 (12% -> 29%, about x2.4 relative, +17 points vs +25 on validation).\n  quote: same Table 1 line as above.\n- Versus CodeChain (same model GPT-3.5, pass@5): AlphaCodium beats it on both splits.\n  number: val 25% vs 17%; test 17% vs 14%.\n  quote: \"when comparing AlphaCodium to CodeChain with the same model (GPT-3.5) and the same metric (pass@5), AlphaCodium consistently does better.\"\n  where: Sec 5.2, Table 2\n- Versus AlphaCode (GPT-4, AlphaCodium pass@5):\n  number: val 44% vs AlphaCode 17% (pass@10@1K) / 24% (pass@10@100K); test 29% vs 16% / 28%.\n  quote: \"Yet, the top results achieved by AlphaCodium are better\"\n  where: Sec 5.2, Table 2. Note the test-set margin over pass@10@100K is only 29% vs 28%. AlphaCode numbers are taken from its paper, not re-run.\n- LLM call budget: about 15-20 LLM calls per solution, about 100 calls for pass@5.\n  number: ~15-20 per solution; ~100 per pass@5; AlphaCode pass@10@100K = 1M calls (assumes one call per sample, which AlphaCode did not report), \"four orders of magnitude\" more.\n  quote: \"With AlphaCodium flow we perform ∼15-20 LLM calls per solution, so a pass@5 submission involves ∼ 100 LLM calls.\"\n  where: Sec 5.3, p.7\n- AlphaCode2 comparison: also four orders of magnitude more sample-efficient than AlphaCode, but it uses a heavily fine-tuned Gemini-Pro on an unreleased CodeContests variant. AlphaCodium uses general-purpose models as-is.\n  quote: \"AlphaCode2 requires about 100 samples to reach the level of performance of AlphaCode with a million samples, making it over 10000× more sample efficient.\"\n  where: p.8\n- Key design claim: generating extra tests is easier than generating a correct solution.\n  quote: \"A key observation when designing AlphaCodium flow is that generating additional useful tests is easier than generating a correct code solution.\"\n  where: Sec 1, p.2; repeated in Sec 3.3\n- Public tests vs AI tests: public tests are known correct, but \"not comprehensive\". Iterating on public tests alone \"stabilizes and improves the solution but leaves 'blind spots'\". AI tests (6-8 extra, aimed at cases the public tests miss, such as large inputs and edge cases) are then added. There is NO ablation table isolating the gain from public-test iteration vs AI-test iteration; Figure 1(b) is only an illustration.\n  quote: \"Generate an additional 6-8 diverse input-output tests for the problem. Try to cover cases and aspects not covered by the original public tests.\"\n  where: Sec 3.2, Fig 1 caption\n- Test anchors (guards against wrong AI tests). Iterate on the public tests first, and the passing ones become anchors. Then iterate on the AI tests one by one. A passing AI test joins the anchors. A failing AI test is assumed to mean the code is wrong, and the fix must also pass every anchor so far. AI tests are sorted easy to hard so anchors accumulate early.\n  quote: \"demand that the fixed code will also pass all the test anchors already acquired. As a result, the test anchors will protect us against an incorrectly fixed code.\"\n  where: Sec 4, p.6\n- Double validation: the model is asked to re-generate its own AI tests, correcting wrong outputs. The authors say this beats asking a yes/no \"is this test correct?\". There is no number for this.\n  quote: \"We found that this step of double validation, while encouraging the model to be critical and to reason, is more effective than asking a direct yes\\no question\"\n  where: Sec 4, p.5\n- Flow stages: problem reflection, public tests reasoning, 2-3 possible solutions, rank solutions, generate AI tests, initial code (retry until tests pass or a try limit; else keep the code with the closest output), iterate on public tests, iterate on AI tests. Stages can be merged into one call via YAML structured output.\n  where: Sec 3.2-3.3\n- Other practices (qualitative only, no ablation numbers): YAML structured output (preferred over JSON because of quoting and escaping, and fewer tokens), bullet-point reasoning, modular code (small sub-functions, which helps iterative fixing), postponing decisions and ranking several solutions instead of picking one, easy-to-hard accumulation of knowledge.\n- Scorer is the private test suite: about 200 private input-output tests per problem, which the paper says keeps false positives down.\n  quote: \"each problem contains ∼200 private input-output tests the generated code solution must pass.\"\n  where: Sec 2\n- Distance-to-correct score for failed tests (Appendix D): used to pick the \"closest output\" code when none passes. A number gets L2 distance, a numeric array gets the sum of per-cell L2 distances, and a string array gets the count of non-identical cells.\n- What did not work (Appendix C), with no numbers given: injecting the last 50 lines of the execution trace; injecting the last K failed solutions; injecting the last git patch diff; complicated single-stage prompts or non-iterative prompt chains.\n  quote: \"We have not observed improvement from this.\"\n  where: App C, p.10\n\nLIMITS\n- Only CodeContests (validation 107 problems, test 165). Generality to other tasks is claimed as belief (\"we believe\"), not shown.\n- pass@5 only. No variance, seeds, confidence intervals or cost in dollars. With 107 problems each point is about 1%.\n- No component ablation table (reflection vs AI tests vs anchors etc.). The only comparison is direct prompt vs full flow, plus a qualitative Figure 1(b).\n- AlphaCode and CodeChain figures are copied from their papers, because neither released reproducible scripts. The authors concede evaluation subtleties (multiple valid solutions, tolerance, timeouts). The AlphaCode call count is an assumption (1 call per sample). AlphaCode2 was evaluated on a different, unreleased benchmark variant.\n- The \"direct prompt\" baseline is the authors' own design.\n- Dated: models are GPT-3.5, GPT-4 and DeepSeek-33B as of 2024. The paper itself notes newer GPT versions have JSON mode. Possible contamination of CodeContests in the models is not discussed.\n- Authors are from CodiumAI (commercial).\n\nBUILDS ON: AlphaCode (Li et al. 2022, Science 378) as baseline and dataset; CodeContests (Li et al. 2022); CodeChain (Le et al. 2023) as comparison; AlphaCode2 (Gemini Team 2023); DeepSeek Coder (2023); chain-of-verification (Dhuliawala et al. 2023), self-consistency (Wang et al. 2022) and Nori et al. 2023 (Medprompt) cited as NL prompting techniques that did not transfer; HumanEval (Chen et al. 2021), APPS (Hendrycks et al. 2021) and MBPP (Austin et al. 2021) as the easier datasets.\n\nCODE: No executable code. Figure 3 (p.6) is a YAML/Pydantic structured-output prompt for the possible-solutions stage:\n\"The output must be a YAML object equivalent to type $PossibleSolutions, according to the following Pydantic definitions: class Solution (BaseModel): name: str ... why_it_works ... complexity ...\"\nRepo: github.com/Codium-ai/AlphaCodium\n\nFIGURES (from text only, not viewed)\n- Fig 1(a), p.2: the flow. Pre-processing is reflection, public-test reasoning, solution generation and ranking, and AI test generation. The code iterations are initial code, iterate on public tests, then iterate on AI tests. This is the loop and scorekeeper structure.\n- Fig 1(b), p.2: illustration of direct prompt, then public-test iteration (blind spots), then full flow.\n- Fig 2, p.4: a CodeContests problem and an AI self-reflection on it.\n- Fig 3, p.6: structured-output prompt.\n- Fig 4, p.9: JSON vs YAML token counts.\n\nPROBLEMS: No embedded instructions found. Table 1 and Table 2 extracted with columns flattened (for example \"Direct 7%AlphaCodium 20%\"). The reading above is consistent with the abstract and text. Table 1's DeepSeek validation row says \"Direct\" and not \"Direct prompt\", which is a typo in the source."
+ "type": "system",
+ "question": "Can a test-based, multi-stage, iterative code-oriented flow around an off-the-shelf LLM beat single-prompt engineering on hard competitive-programming problems without any fine-tuning?",
+ "hypothesis": "Prompt-engineering tricks that work for natural language are not effective for code; running generated code against tests and iterating (with extra AI-generated tests) is more beneficial.",
+ "contributions": [
+  "AlphaCodium: a test-based, multi-stage, code-oriented iterative flow (pre-processing phase plus code-iterations phase)",
+  "Code-oriented design concepts: YAML structured output, bullet-point analysis, modular code, soft decisions with double validation, postponed decisions, test anchors",
+  "Evaluation on CodeContests validation and test sets showing gains over direct prompts and over CodeChain/AlphaCode with far fewer LLM calls"
+ ],
+ "method": {
+  "summary": "A flow (no training) around GPT-4, GPT-3.5 or DeepSeek-33B: reflect on the problem, reason on public tests, propose and rank 2-3 solutions, generate 6-8 extra AI tests, produce an initial code, then run-fix iterate on public tests and then on AI tests using test anchors. Compared with a single direct prompt on CodeContests with pass@5.",
+  "task": "competitive-programming code generation (CodeContests)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "CodeContests validation",
+    "role": "eval",
+    "size": "107 problems",
+    "split": "validation",
+    "source": "DeepMind CodeContests (Codeforces etc.); ~200 private tests per problem",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeContests test",
+    "role": "eval",
+    "size": "165 problems",
+    "split": "test",
+    "source": "DeepMind CodeContests",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeContests train",
+    "role": "train",
+    "size": "~10K problems",
+    "split": "ignored",
+    "source": "DeepMind CodeContests",
+    "preprocessing": "not used"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": null
+    }
+   },
+   {
+    "name": "GPT-3.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": null
+    }
+   },
+   {
+    "name": "DeepSeek-33B",
+    "role": "evaluated",
+    "params": "33B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "pass@5: 5 generated solutions per problem; ~15-20 LLM calls per solution, ~100 calls per pass@5 submission; number of runs/seeds not stated",
+   "prompting": "Multi-stage prompts with YAML output matching Pydantic classes; bullet-point reflection; ask for modular code with small named sub-functions; direct-prompt baseline described only as 'a single well-designed direct prompt' (text not given)",
+   "retrieval": null,
+   "parameters": {
+    "possible_solutions": "2-3 (max_items=3 in the Pydantic schema)",
+    "ai_tests": "6-8 additional diverse tests",
+    "initial_code_try_limit": "a try-limit exists, value not stated",
+    "public_test_iterations": "not stated",
+    "ai_test_iterations": "not stated",
+    "test_anchors": "passed public tests become anchors; passing AI tests added; fixes must pass all anchors; AI tests sorted easy to hard",
+    "trace_lines_tried_in_failed_ablation": "50",
+    "distance_for_failed_tests": "L2 for numbers, sum of L2 for number arrays, count of differing cells for string arrays (Appendix D)"
+   },
+   "other": {
+    "llm_calls_per_solution": "~15-20"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k",
+     "definition": "percentage of problems solved by using k generated solutions per problem (k=5)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@K@N (AlphaCode)",
+     "definition": "N solutions generated and clustered, K submitted",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "single well-designed direct prompt",
+    "CodeChain (GPT-3.5, pass@5)",
+    "AlphaCode (pass@10@1K, pass@10@100K, numbers from its paper)"
+   ],
+   "protocol": "Private test set of ~200 tests per problem; comparisons to other works use numbers reported in their papers; no seeds, variance or significance reported."
+  },
+  "availability": {
+   "code": "https://github.com/Codium-ai/AlphaCodium",
+   "weights": null,
+   "data": "CodeContests (public)"
+  },
+  "prompts": [
+   {
+    "purpose": "Generate possible solutions (structured YAML output)",
+    "text": "Your goal is to present possible solutions to the problem. Make sure that each solution fully addresses the problem goals, rules, and constraints.",
+    "where": "Figure 3, p.6 (first lines only; the Pydantic part is described in method.inference.parameters)"
+   },
+   {
+    "purpose": "Modular code instruction",
+    "text": "divide the generated code into small sub-functions, with meaningful names and functionality",
+    "where": "Sec 4"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4 pass@5 on validation rises from a direct prompt to the AlphaCodium flow",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": 44,
+   "unit": "%",
+   "baseline_value": 19,
+   "n": null,
+   "setup": "CodeContests validation (107 problems), GPT-4, direct prompt vs AlphaCodium",
+   "quote": "For GPT-4 on the validation set, for example, the pass@5 score improves from 19% to 44% - x2.3 improvement.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, p.7"
+  },
+  {
+   "claim": "GPT-4 on the test set",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": 29,
+   "unit": "%",
+   "baseline_value": 12,
+   "n": null,
+   "setup": "CodeContests test (165 problems), GPT-4",
+   "quote": null,
+   "table": "Table 1, row GPT-4 test AlphaCodium, column score (pass@5)",
+   "note": null,
+   "where": "Table 1, p.7"
+  },
+  {
+   "claim": "GPT-3.5 on validation",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": 25,
+   "unit": "%",
+   "baseline_value": 15,
+   "n": null,
+   "setup": "CodeContests validation, GPT-3.5",
+   "quote": null,
+   "table": "Table 1, row GPT-3.5 validation AlphaCodium, column score (pass@5)",
+   "note": null,
+   "where": "Table 1, p.7"
+  },
+  {
+   "claim": "GPT-3.5 on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": 17,
+   "unit": "%",
+   "baseline_value": 8,
+   "n": null,
+   "setup": "CodeContests test, GPT-3.5",
+   "quote": null,
+   "table": "Table 1, row GPT-3.5 test AlphaCodium, column score (pass@5)",
+   "note": null,
+   "where": "Table 1, p.7"
+  },
+  {
+   "claim": "DeepSeek-33B on validation",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": 20,
+   "unit": "%",
+   "baseline_value": 7,
+   "n": null,
+   "setup": "CodeContests validation, DeepSeek-33B",
+   "quote": null,
+   "table": "Table 1, row DeepSeek-33B validation AlphaCodium, column score (pass@5)",
+   "note": null,
+   "where": "Table 1, p.7"
+  },
+  {
+   "claim": "DeepSeek-33B on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": 24,
+   "unit": "%",
+   "baseline_value": 12,
+   "n": null,
+   "setup": "CodeContests test, DeepSeek-33B",
+   "quote": null,
+   "table": "Table 1, row DeepSeek-33B test AlphaCodium, column score (pass@5)",
+   "note": null,
+   "where": "Table 1, p.7"
+  },
+  {
+   "claim": "AlphaCodium beats CodeChain with the same model (GPT-3.5, validation)",
+   "kind": "reported",
+   "source": "CodeChain, Le et al. 2023 (arXiv:2310.08992)",
+   "metric": "pass@5",
+   "value": 25,
+   "unit": "%",
+   "baseline_value": 17,
+   "n": null,
+   "setup": "GPT-3.5 pass@5 validation; CodeChain number taken from its paper",
+   "quote": null,
+   "table": "Table 2, row GPT-3.5 validation AlphaCodium vs CodeChain",
+   "note": "AlphaCodium figure is the authors' own; CodeChain figure is quoted.",
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "AlphaCode pass@10@100K on validation is lower than AlphaCodium GPT-4",
+   "kind": "reported",
+   "source": "AlphaCode, Li et al. 2022",
+   "metric": "pass@10@100K",
+   "value": 24,
+   "unit": "%",
+   "baseline_value": 44,
+   "n": null,
+   "setup": "GPT-4 AlphaCodium pass@5 validation vs AlphaCode as reported",
+   "quote": null,
+   "table": "Table 2, row GPT-4 validation AlphaCode (pass@10@100K)",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "On the test set AlphaCode pass@10@100K is close to AlphaCodium GPT-4 (29%)",
+   "kind": "reported",
+   "source": "AlphaCode, Li et al. 2022",
+   "metric": "pass@10@100K",
+   "value": 28,
+   "unit": "%",
+   "baseline_value": 29,
+   "n": null,
+   "setup": "GPT-4 AlphaCodium pass@5 test vs AlphaCode as reported",
+   "quote": null,
+   "table": "Table 2, row GPT-4 test AlphaCode (pass@10@100K)",
+   "note": null,
+   "where": "Table 2, p.7"
+  },
+  {
+   "claim": "AlphaCodium uses about 100 LLM calls per pass@5 submission",
+   "kind": "measured",
+   "source": null,
+   "metric": "LLM calls per pass@5 submission",
+   "value": 100,
+   "unit": "calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~15-20 calls per solution, 5 solutions",
+   "quote": "With AlphaCodium flow we perform ∼15-20 LLM calls per solution, so a pass@5 submission involves ∼100 LLM calls.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, p.7"
+  },
+  {
+   "claim": "AlphaCode pass@10@100K involves about 1M LLM calls under an assumed one call per run",
+   "kind": "claim",
+   "source": null,
+   "metric": "LLM calls",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' assumption that AlphaCode used one call per run; unknown",
+   "quote": null,
+   "table": null,
+   "note": "Authors claim four orders of magnitude fewer calls; AlphaCode did not report calls per run.",
+   "where": "Sec 5.3, p.7"
+  },
+  {
+   "claim": "Single-prompt optimisation and chain-of-thought gave no meaningful improvement on CodeContests",
+   "kind": "claim",
+   "source": null,
+   "metric": "",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' observation; no numbers or ablation table given",
+   "quote": "single-prompt optimizations, or even chain-of-thought prompts, have not led to meaningful improvement in the accuracy of LLMs on CodeContests.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, p.3"
+  },
+  {
+   "claim": "Fixed-code must pass accumulated test anchors, protecting against wrong AI tests",
+   "kind": "claim",
+   "source": null,
+   "metric": "",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Design rationale; no ablation of anchors reported",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p.6"
+  }
+ ],
+ "limits": [
+  "No ablation of individual stages or design concepts (YAML, anchors, double validation, bullet points) is reported; only direct prompt vs full flow and a qualitative Fig 1b.",
+  "Model versions, temperature, max tokens, try-limits and iteration counts are not stated; direct-prompt baseline text is not given.",
+  "Single run per cell, no variance or significance reported; small eval sets (107 and 165 problems).",
+  "Comparisons to AlphaCode and CodeChain use their reported numbers, and the authors concede evaluation subtleties (multiple solutions, tolerance, timeouts); AlphaCode LLM call count is an assumption.",
+  "Appendix C lists tricks that did not help (execution trace of last 50 lines, last K failed solutions, last git patch diff, complicated single-stage prompts), with no numbers.",
+  "Only competitive programming evaluated; generalisation to other code tasks is asserted, not shown.",
+  "AlphaCode2 uses a separate unreleased CodeContests variant, so not comparable."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "test anchors",
+   "definition": "Tests (public ones, then AI-generated ones that passed) that any fixed code must also pass, so a wrong AI test cannot drive a bad fix",
+   "where": "Sec 4"
+  },
+  {
+   "term": "double validation",
+   "definition": "Ask the model to re-generate its own output, correcting it if needed, rather than a yes/no check",
+   "where": "Sec 4"
+  },
+  {
+   "term": "pass@k",
+   "definition": "percentage of problems solved by using k generated solutions per problem",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CodeContests / AlphaCode (Li et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Dataset and main comparison; AlphaCode fine-tunes and samples up to 1M solutions",
+   "quote": null
+  },
+  {
+   "work": "CodeChain (Le et al.)",
+   "year": 2023,
+   "arxiv": "2310.08992",
+   "relation": "baseline",
+   "note": "Same-model GPT-3.5 pass@5 comparison",
+   "quote": null
+  },
+  {
+   "work": "AlphaCode2 (Gemini report)",
+   "year": 2023,
+   "arxiv": "2312.11805",
+   "relation": "related",
+   "note": "Compared on efficiency only",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek Coder",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Open-source model evaluated",
+   "quote": null
+  },
+  {
+   "work": "GPT-3.5 / GPT-4 (cited as Floridi & Chiriatti 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Closed models evaluated",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-verification; self-consistency; Medprompt",
+   "year": 2023,
+   "arxiv": "2309.11495",
+   "relation": "related",
+   "note": "NL prompting techniques said to be less effective for code",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "related",
+   "note": "Criticised as simplistic",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of AlphaCodium flow contribution - with direct prompt, the model struggles to solve code problems...",
+   "page": 2,
+   "why": "Flow diagram of pre-processing and code-iteration phases, and how public/AI tests close blind spots"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Example for a prompt with structured output (generate possible solutions stage)",
+   "page": 6,
+   "why": "Shows the YAML/Pydantic prompt format"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of AlphaCodium flow results to direct prompt on various models.",
+   "page": 7,
+   "why": "Main results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 3, p.6",
+   "snippet": "class PossibleSolutions(BaseModel):\n    possible_solutions: List[Solution] = Field(max_items=3, description=...)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures not viewed as images; Table 1 DeepSeek row labels 'Direct' vs 'Direct prompt' inconsistent in print.",
+  "Table 2 AlphaCode rows are numbers from the AlphaCode paper, not rerun."
+ ]
 }

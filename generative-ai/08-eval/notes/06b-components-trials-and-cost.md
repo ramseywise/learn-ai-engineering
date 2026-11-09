@@ -174,7 +174,7 @@ With 8 runs per agent, a gap that looks large can still fail a significance test
 
 ## Efficiency metrics
 
-Log these on every trial. They catch regressions that pass rates miss:
+Log these on every trial. They catch regressions that pass rates miss. Pricing a turn, rolling it up and the percentile dashboards are in [GA 06 note 6](../../06-observability/notes/06-cost-and-latency-dashboards.md); this section covers cost per success as an eval metric:
 
 | Metric | Why |
 |---|---|

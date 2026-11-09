@@ -1,0 +1,95 @@
+{
+ "schema": 1,
+ "key": "2404.08819",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/merrill-2024-illusion-state-state-space-models.pdf",
+ "bib": {"title": "The Illusion of State in State-Space Models", "authors": ["William Merrill", "Jackson Petty", "Ashish Sabharwal"], "first_author": "Merrill", "year": 2024, "venue": "Proceedings of the 41st International Conference on Machine Learning (ICML), Vienna, PMLR 235, 2024", "arxiv": "2404.08819", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 70172, "chars_total": 70172, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Do state-space models such as S4 and Mamba have more expressive power than transformers for state tracking, as their recurrent formulation suggests?",
+ "hypothesis": "SSMs (S4, Mamba) lie in L-uniform TC0 like transformers, so they cannot express NC1-hard state tracking such as S5 permutation composition with fixed depth, while a minimal input-dependent-transition extension can.",
+ "contributions": [
+  "Proof that generalized linear SSMs with non-gated, diagonal or simultaneously diagonalizable transitions (including S4 and S6/Mamba) are in L-uniform TC0 (Theorems 4.2, 4.4, 4.6)",
+  "Reduction showing chess state tracking in UCI (source, target) notation is NC1-complete (Prop 3.3, Cor 3.4)",
+  "Showing that adding a nonlinearity (RNN-SSM) or input-dependent transition matrices (IDS4) lets a one-layer SSM express S5 (Theorems 5.1, 5.2)",
+  "Experiments on A5, A4 x Z5 and Z60 word problems comparing RNN, transformer, S4, Mamba and IDS4 by minimum depth needed"
+ ],
+ "method": {
+  "summary": "Theory: circuit-complexity proofs that linear and diagonal-gated SSMs are in L-uniform TC0 under a log-precision float model, plus constructions for two expressive extensions. Experiments: train RNN, transformer, S4, Mamba and IDS4 on group word problems as token tagging and record the minimum number of layers reaching >90% test accuracy per sequence length.",
+  "task": "Group word problems (A5, A4 x Z5, Z60) as token-tagging; label at step i is the product of the first i elements",
+  "trains": true,
+  "datasets": [
+   {"name": "Group word problems A5, A4 x Z5, Z60", "role": "both", "size": "null: number of training and test sequences not stated; all groups have 60 elements", "split": "train split of length-n sequences plus all 3600 pairwise sequences of length 2; test set of length-n sequences (split ratio not stated)", "source": "synthetic", "preprocessing": "each group element gets a unique token"}
+  ],
+  "models": [
+   {"name": "Transformer", "role": "baseline", "params": null, "architecture": "transformer (TC0 baseline)", "init_from": null, "tokenizer": "one token per group element", "vocab": null, "layers": "varied; minimum depth reaching >90% reported (read from Fig 3 axis 1 to 4)", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RNN", "role": "baseline", "params": null, "architecture": "simple recurrent network", "init_from": null, "tokenizer": null, "vocab": null, "layers": "1 layer suffices", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "S4", "role": "evaluated", "params": null, "architecture": "linear SSM, Gu et al. 2022a", "init_from": null, "tokenizer": null, "vocab": null, "layers": "varied", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Mamba (S6)", "role": "evaluated", "params": null, "architecture": "selective diagonal SSM, Gu & Dao 2023", "init_from": null, "tokenizer": null, "vocab": null, "layers": "varied", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "IDS4 (Input-Dependent S4)", "role": "proposed", "params": null, "architecture": "S4 with A_i = pi_A(x_i), an affine map of the input to a d x d matrix; B, C, D fixed", "init_from": null, "tokenizer": null, "vocab": null, "layers": "1 layer suffices", "hidden": null, "heads": null, "context": null, "other": {"init": "affine projection alpha(x_i) ~ I + N(0, sigma^2); sigma not stated"}}
+  ],
+  "training": {
+   "objective": "inferred: per-position classification of the running group product (token tagging)",
+   "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null,
+   "seq_len": "successively larger n; Fig 3 x-axis ranges 5 to 20 (read from Fig 3)",
+   "precision": null, "weight_decay": null, "dropout": null, "regularisation": null, "hardware": null, "compute": null, "wall_clock": null, "seeds": null,
+   "other": {"note": "Main text gives no optimizer, learning rate, width, dataset size or seed details; code is linked at jpetty.org/ssm-illusion"}
+  },
+  "inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": null, "retrieval": null, "parameters": {}, "other": {}},
+  "eval": {
+   "metrics": [
+    {"name": "Minimum number of layers for >90% test accuracy", "definition": "smallest depth at which full-sequence accuracy on the test set exceeds 90%, per sequence length and group", "unit": "layers", "higher_is_better": false}
+   ],
+   "baselines": ["Transformer (TC0 baseline)", "RNN (expected to track state)"],
+   "protocol": "Train on length-n sequences for increasing n, report full-sequence test accuracy; no seeds or significance tests stated."
+  },
+  "availability": {"code": "http://jpetty.org/ssm-illusion", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.split", "quote": "We always include all 3600 pairwise sequences of length 2 in the training data along with the training split of length-n sequences.", "where": "footnote 10, p8"}
+  ]
+ },
+ "results": [
+  {"claim": "S4 and Mamba (S6) SSMs can be simulated in L-uniform TC0, the same class as transformers, so they cannot solve NC1-hard problems such as S5 unless TC0 = NC1.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Theory: log-precision (c log n bit) floats, bounded number of layers, generalized linear SSM (Theorems 4.2, 4.4, Cor 4.7); assumes TC0 != NC1.", "quote": null, "table": null, "note": "Formal result, no numeric value.", "where": "Section 4, Cor 4.7"},
+  {"claim": "Transformer, S4 and Mamba need depth that grows with sequence length to reach good accuracy on the non-commutative groups, while one-layer RNN and IDS4 handle arbitrarily long sequences.", "kind": "measured", "source": null, "metric": "min layers for >90% test accuracy", "value": 90, "unit": "% accuracy threshold", "baseline_value": null, "n": null, "setup": "A5, A4 x Z5, Z60 word problems as tagging; sequence lengths about 5 to 20; per-length minimum depth from Fig 3 (exact layer counts only in the figure).", "quote": "Figure 3 shows single-layer RNN and IDS4 models learn the word problem for arbitrarily long sequences for all three groups.", "table": null, "note": "Threshold value is the criterion not a result; layer counts are in Fig 3 only.", "where": "Section 6, Results, Fig 3"},
+  {"claim": "Transformers, S4 and Mamba also need growing depth on A4 x Z5, which TC0 circuits can express in principle, so either they cannot express it or learning a constant-depth solution is hard.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "A4 x Z5 word problem, same protocol as Fig 3.", "quote": "Transformers, S4, and Mamba require greater depth even for A4 × Z5, which can be theoretically expressed by TC0 circuits.", "table": null, "note": null, "where": "Section 6, conclusion 2"},
+  {"claim": "S4 and Mamba are empirically somewhat better than the transformer at approximate state tracking on non-commutative groups: the transformer needs at least as many and often more layers.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "A4 x Z5 and A5, sequence lengths as in Fig 3.", "quote": "the transformer requires at least as many (and frequently more) layers as S4 or Mamba.", "table": null, "note": null, "where": "Section 6, conclusion 3"},
+  {"claim": "A one-layer RNN-SSM (nonlinearity at each recurrent update) and a one-layer IDS4 (input-dependent transition matrix) can express any regular language including S5 word problem, with k = |Sigma|.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Theory: one layer, log precision, input dim k = |Sigma|, beginning-of-string symbol for IDS4 (Theorems 5.1, 5.2).", "quote": "there exists a one-layer log-precision IDS4 SSM with k = |Σ| that recognizes $L", "table": null, "note": "IDS4 needs a parallel iterated matrix product (log-depth scan); practicality at LM scale left open.", "where": "Section 5"},
+  {"claim": "Chess state tracking in UCI (source, target) notation is NC1-complete via an NC0 reduction from S5.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Theory: board with a black rook at a8 and queens b8 to e8; a transposition is a 12-move sequence.", "quote": "S5 can be reduced to chess state tracking in UCI notation via NC0 reductions.", "table": null, "note": null, "where": "Section 3.2, Prop 3.3"}
+ ],
+ "limits": [
+  "Results are worst-case and assume TC0 != NC1 and log-precision floats; they do not say how real LLM state tracking behaves at scale.",
+  "Whether transformers, S4 and Mamba can express A4 x Z5 (in TC0) is left open; the depth growth there has two possible explanations.",
+  "Whether IDS4-like architectures are viable for large-scale language modeling is an open question; vanishing/exploding gradients and parallelism untested.",
+  "Experiments only on synthetic group word problems at short lengths (about 5 to 20); the main text omits optimizer, learning rate, model width, dataset sizes and seeds.",
+  "H3 does not meet the generalized linear SSM definition and is not covered.",
+  "Chess and entity-tracking hardness depends on notation/formatting; standard SAN notation may be easier."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Word problem", "definition": "to reduce sequences in M* under multiplication; that is, send m0m1...mk to m0 . m1 . ... . mk in M", "where": "Definition 3.1"},
+  {"term": "IDS4", "definition": "Input-Dependent S4: an SSM whose transition matrix is an affine function of the input, A_i = pi_A(x_i)", "where": "Section 5.2"},
+  {"term": "RNN-SSM", "definition": "SSM layer with a nonlinearity at each recurrent update: h_i = sgn(A h_{i-1} + B x_i)", "where": "Section 5.1"}
+ ],
+ "lineage": [
+  {"work": "The parallelism tradeoff: Limitations of log-precision transformers", "year": 2023, "arxiv": null, "relation": "extends", "note": "Transformers in TC0; proof structure reused for SSMs", "quote": null},
+  {"work": "Mamba: Linear-time sequence modeling with selective state spaces", "year": 2023, "arxiv": "2312.00752", "relation": "evaluates", "note": "S6 shown in TC0 and trained on A5", "quote": null},
+  {"work": "Efficiently modeling long sequences with structured state spaces (S4)", "year": 2022, "arxiv": null, "relation": "evaluates", "note": "S4 shown in TC0 and trained on A5", "quote": null},
+  {"work": "Combining recurrent, convolutional, and continuous-time models with linear state space layers", "year": 2021, "arxiv": null, "relation": "contradicts", "note": "Lemma 3.2 claim that SSMs simulate RNNs relied on infinite depth", "quote": null},
+  {"work": "Liquid structural state-space models", "year": 2023, "arxiv": null, "relation": "extends", "note": "IDS4 is a minimal analogue of Liquid S4", "quote": null},
+  {"work": "Transformers learn shortcuts to automata", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "Word problems as state tracking; shallow shortcuts", "quote": null},
+  {"work": "Barrington 1989; Krohn & Rhodes 1965", "year": 1989, "arxiv": null, "relation": "uses-method", "note": "Non-solvable groups have NC1-complete word problems", "quote": null},
+  {"work": "Hesse 2001; Mereghetti & Palano 2000", "year": 2001, "arxiv": null, "relation": "uses-method", "note": "Iterated product and matrix powering in TC0, extended to log-precision floats", "quote": null},
+  {"work": "Chess as a testbed for language model state tracking (Toshniwal et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "Chess notation for state tracking", "quote": null},
+  {"work": "Entity tracking in language models (Kim & Schuster)", "year": 2023, "arxiv": null, "relation": "related", "note": "Entity tracking; their formatting is not NC1-complete", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "We prove that SSMs, like transformers, cannot solve inherently sequential problems like permutation composition (S5), which lies at the heart of state-tracking problems like tracking chess moves in source-target notation (see Section 3.2), evaluating Python code, or entity tracking.", "page": 1, "why": "Shows chess, code swap and entity examples all reduce to S5"},
+  {"figure": "Fig 2", "caption": "Complexity hierarchy within NC1. Transformers can only recognize languages within TC0, and we show the same for SSMs. Thus, both architectures cannot express the hard state tracking captured by NC1-complete problems like S5.", "page": 2, "why": "Nested-class picture placing SSMs and transformers inside TC0, below S5"},
+  {"figure": "Fig 3", "caption": "Minimum number of layers (lower is better) required to attain > 90% validation accuracy on group multiplication problems by sequence length and group. RNN and IDS4 models of constant depth can solve arbitrarily long sequences, while transformer, S4, and Mamba models require depths monotonically increasing in sequence length.", "page": 8, "why": "The main empirical evidence: required depth vs sequence length per model and group"}
+ ],
+ "code": [
+  {"where": "Definition 2.1, p3", "snippet": "h_i = A_i h_{i-1} + B_i x_i (recurrent form); y_i = C_i h_i + D_i x_i", "verbatim": false},
+  {"where": "Section 5.1, p7", "snippet": "h_i = sgn(A h_{i-1} + B x_i)  (RNN-SSM)", "verbatim": false}
+ ],
+ "problems": ["Figure 3 numeric values are only in the plot; the text gives no numeric accuracy table. No embedded instructions found."]
+}

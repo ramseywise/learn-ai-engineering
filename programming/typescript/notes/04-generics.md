@@ -74,6 +74,7 @@ type Result<T, E = string> = { ok: true; value: T } | { ok: false; error: E };
 When the return type depends on an argument *value*, a single generic signature is not enough. Overloads list the call shapes:
 
 ```ts
+// User, Admin and Person are the types defined in note 03 (Person = User | Admin)
 function filterPersons(people: Person[], kind: 'user', criteria: Partial<User>): User[];
 function filterPersons(people: Person[], kind: 'admin', criteria: Partial<Admin>): Admin[];
 function filterPersons(people: Person[], kind: string, criteria: Partial<Person>): Person[] {
@@ -100,7 +101,7 @@ function filterPersons(people: Person[], kind: string, criteria: Partial<Person>
 ## Try it
 
 - [`practice/typescript-exercises/06`](../practice/typescript-exercises/06/index.ts) (overloads and generics), [`07`](../practice/typescript-exercises/07/index.ts) (a generic `swap`) and [`09`](../practice/typescript-exercises/09/index.ts) (a generic `ApiResponse`)
-- **Easy** type challenges in [`practice/type-challenges/challenges/`](../practice/type-challenges/challenges/): `*-easy-*.ts` (Pick, Readonly, First, Length, Exclude, Awaited, If, Concat, Includes, Push, Parameters). From `practice/`, check with `node check.ts easy`.
+- The type challenges need mapped and conditional types, so they start in [note 05](05-type-transformations.md#try-it).
 
 ## Next
 

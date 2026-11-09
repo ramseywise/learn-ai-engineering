@@ -1,0 +1,219 @@
+{
+ "schema": 1,
+ "key": "2311.17136",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/wei-2023-uniir.pdf",
+ "bib": {
+  "title": "UniIR: Training and Benchmarking Universal Multimodal Information Retrievers",
+  "authors": ["Cong Wei", "Yang Chen", "Haonan Chen", "Hexiang Hu", "Ge Zhang", "Jie Fu", "Alan Ritter", "Wenhu Chen"],
+  "first_author": "Wei",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.17136",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 119832,
+  "chars_total": 119832,
+  "engine": "pymupdf",
+  "skipped": "Appendix Figures 7-16 (per-dataset retrieval visualisations) and the numeric bodies of Tables 11-13 (Recall@1/5/10 per dataset) were skimmed only; the venue is not printed anywhere in the PDF (arXiv stamp 'arXiv:2311.17136v1 [cs.CV] 28 Nov 2023')."
+ },
+ "type": "benchmark",
+ "question": "Can one instruction-following retriever handle queries and candidates of any modality (text, image, image+text) across diverse retrieval tasks, and how should such retrievers be trained and benchmarked?",
+ "hypothesis": "Multi-task training plus natural-language task instructions lets a single retriever pick the intended modality and task from a heterogeneous pool and generalise to unseen datasets and tasks.",
+ "contributions": [
+  "UniIR Framework: A universal multimodal information retrieval framework designed to integrate various multimodal retrieval tasks into a cohesive system.",
+  "M-BEIR: A large-scale multimodal retrieval benchmark that assembles 10 diverse datasets from multiple domains, encompassing 8 distinct multimodal retrieval tasks.",
+  "UniIR models: universal retrievers trained on M-BEIR as a baseline, plus zero-shot evaluation of SOTA vision-language pre-trained models on M-BEIR."
+ ],
+ "method": {
+  "summary": "UniIR fine-tunes CLIP ViT-L/14 and BLIP (large) dual encoders with an in-batch query-candidate contrastive loss on the M-BEIR training split, with a natural-language task instruction prefixed to the query text. Two fusion variants are used (score-level: weighted sum of per-modality similarities; feature-level: a mixed-modality fusion module that outputs one vector). Evaluation is Recall@k with FAISS retrieval from either the 5.6M global pool or per-dataset local pools.",
+  "task": "instruction-following universal multimodal retrieval (8 task types over text, image and image-text queries/candidates)",
+  "trains": true,
+  "datasets": [
+   {"name": "M-BEIR", "role": "both", "size": "10 datasets, 8 tasks, 4 domains, 64 instructions; train 1.1M, dev 182K, test 190K queries; global pool 5.6M candidates (text says 1.5 million queries in total)", "split": "original splits of each dataset; if a dataset releases only a validation set, part of train is held out for validation and results are reported on the original validation set", "source": "Repurposes VisualNews, MSCOCO, Fashion200K, WebQA, EDIS, NIGHTS, OVEN, InfoSeek, FashionIQ, CIRR (licences not stated)", "preprocessing": "Distorted text/images removed, images resized to 256 pixels on the shorter side; larger datasets (VisualNews, OVEN, InfoSeek) trimmed in instances and candidate pools; OVEN candidate text = Wikipedia title + first 100 tokens of summary; InfoSeek articles split into 100-token snippets; 4 human-authored instructions per task-dataset pair; M-BEIR (5.6M) pool = union of the ten M-BEIR_local pools"},
+   {"name": "M-BEIR_local", "role": "eval", "size": "task-specific homogeneous candidate pools from each original dataset (e.g. MSCOCO 25K text + 5K images; NIGHTS 40K images; EDIS 1M; OVEN and InfoSeek trimmed from 6M to 1M each)", "split": "same test queries as M-BEIR", "source": "same ten datasets", "preprocessing": null},
+   {"name": "Held-out generalisation split", "role": "eval", "size": "train on 7 held-in datasets; test on 3 held-out datasets (WebQA, OVEN, CIRR) covering tasks 2, 3, 6, 7, 8", "split": "WebQA, OVEN, CIRR excluded from fine-tuning", "source": "subset of M-BEIR", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "UniIR CLIP_SF", "role": "proposed", "params": null, "architecture": "CLIP ViT-L/14 image and text encoders, score-level fusion (weighted sum of four similarity terms)", "init_from": "CLIP (L-14)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"w1_w2_w3_w4": "1 by default (learnable in the formulation)", "image_resolution": "224x224"}},
+   {"name": "UniIR CLIP_FF", "role": "proposed", "params": null, "architecture": "CLIP encoders plus a 2-layer T5-style multimodal transformer f_MIX (12 attention heads, 64 dims per head), randomly initialised", "init_from": "CLIP (L-14); fusion layers from scratch", "tokenizer": null, "vocab": null, "layers": "2 (fusion)", "hidden": null, "heads": "12", "context": null, "other": {}},
+   {"name": "UniIR BLIP_SF", "role": "proposed", "params": null, "architecture": "BLIP large, score-level fusion", "init_from": "BLIP (large)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "UniIR BLIP_FF", "role": "proposed", "params": null, "architecture": "BLIP ViT-L/14 image encoder feeding the cross-attention layers of BLIP's image-grounded text encoder as f_MIX", "init_from": "BLIP (large)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"image_resolution": "224x224 default; 384x384 variant also reported"}},
+   {"name": "Zero-shot CLIP (L-14), SigLIP (L, timm/ViT-L-16-SigLIP-256), BLIP (L), BLIP2", "role": "baseline", "params": null, "architecture": "pretrained vision-language encoders used as feature extractors, no instruction", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"fusion": "score-level, w1=w2=1 (element-wise addition)", "feature_dim_BLIP": "256", "task8": "only the image used for query and candidate; candidate text is the Wikipedia title with prompt 'a picture of [title]'"}},
+   {"name": "Multi-task baselines (CLIP_SF, CLIP_FF, BLIP_SF, BLIP_FF)", "role": "baseline", "params": null, "architecture": "same architectures as UniIR, trained on all M-BEIR train data without instructions", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Single-task fine-tuned CLIP_SF and BLIP_FF", "role": "baseline", "params": null, "architecture": "fine-tuned on each dataset separately", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "in-batch query-candidate contrastive loss maximising positive pair similarity; instruction prefixed to the query text; padding tokens input for missing modalities",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "105 (CLIP variants), 115 (BLIP variants), at 224x224",
+   "steps": null,
+   "epochs": "20",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single node with 8 H100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"hyperparameters": "'other hyperparameters as reported in the original implementations' (not listed)", "retrieval_index": "FAISS"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration; no seeds or variance reported",
+   "prompting": "one of 4 human-written instructions per task-dataset pair prefixed to the query text; zero-shot baselines get no instruction (instructions degraded zero-shot retrieval)",
+   "retrieval": "two-step pipeline: embed all queries and candidates, then FAISS nearest-neighbour (dot product) over either the 5.6M M-BEIR pool or the task-specific M-BEIR_local pool",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Recall@5 (Recall@10 for Fashion200K and FashionIQ)", "definition": "follows CLIP/BLIP MSCOCO recall: a retrieved instance counts as correct if it overlaps with relevant instances", "unit": "%", "higher_is_better": true},
+    {"name": "Error type rates (wrong modality, wrong domain, other)", "definition": "share of retrieval errors by category on the global pool", "unit": "%", "higher_is_better": false}
+   ],
+   "baselines": ["zero-shot CLIP, SigLIP, BLIP, BLIP2", "single-task fine-tuned CLIP_SF and BLIP_FF", "multi-task fine-tuned without instructions"],
+   "protocol": "Global-pool (M-BEIR, 5.6M) and local-pool (M-BEIR_local) retrieval; held-out experiments train on 7 datasets and test on WebQA, OVEN, CIRR; held-out figures average CLIP_SF and BLIP_FF; no seeds or significance tests."
+  },
+  "availability": {"code": "project page https://tiger-ai-lab.github.io/UniIR/ (code release not otherwise described in text)", "weights": null, "data": "M-BEIR; project page only"},
+  "prompts": [
+   {"purpose": "example M-BEIR instruction (Fashion200K, task 1)", "text": "Based on the following fashion description, retrieve the best matching image.", "where": "Sec 3.2; full list in Tables 9 and 10"},
+   {"purpose": "zero-shot candidate text for OVEN/InfoSeek task 8", "text": "a picture of [title]", "where": "Supplementary 6.2"}
+  ],
+  "evidence": [
+   {"field": "training.epochs", "quote": "We train the model for 20 epochs using other hyperparameters as reported in the original implementations.", "where": "Supplementary 6.2"},
+   {"field": "datasets[M-BEIR].size", "quote": "encompassing 1.5 million queries and a pool of 5.6 million retrieval candidates in total", "where": "Sec 3"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zero-shot pretrained retrievers are near zero on the heterogeneous 5.6M pool because they retrieve the query's own modality.",
+   "kind": "measured", "source": null, "metric": "Recall@5, MSCOCO text-to-image", "value": 0.0, "unit": "%", "baseline_value": null, "n": null,
+   "setup": "M-BEIR 5.6M pool, zero-shot CLIP/SigLIP/BLIP/BLIP2, no instruction",
+   "quote": "all zero-shot models retrieve text instances from the global pool, leading to 0% recall rate",
+   "table": null, "note": null, "where": "Sec 4.2"
+  },
+  {
+   "claim": "Instruction-tuning raises average Recall@5 on M-BEIR (5.6M pool) over the same architecture trained multi-task without instructions: CLIP_SF 36.1 to 48.9.",
+   "kind": "measured", "source": null, "metric": "average Recall@5", "value": 12.8, "unit": "points", "baseline_value": 36.1, "n": null,
+   "setup": "M-BEIR global pool, in-distribution (all 10 datasets seen in training); CLIP_SF multi-task vs UniIR; BLIP_FF 34.6 to 45.5 (+10.9)",
+   "quote": "The average Recall@5 has increased by 12.8 and 10.9, respectively.",
+   "table": "Table 3, row Avg., columns Multi. and UniIR (also Table 2 Average)", "note": null, "where": "Table 2/3, Sec 4.2"
+  },
+  {
+   "claim": "Instruction gains are largest on cross-modality tasks 1 and 3 and negligible on within-modality tasks 2 and 5.",
+   "kind": "measured", "source": null, "metric": "Recall@5 delta, task 1 (CLIP_SF)", "value": 30.8, "unit": "points", "baseline_value": 15.3, "n": null,
+   "setup": "M-BEIR global pool, CLIP_SF, Multi-task 15.3 vs UniIR 46.1 on task 1; task 5 gain only +1.0",
+   "quote": "We also discovered that the largest improvement was observed in cross-modality retrieval tasks 1 and 3.",
+   "table": "Table 3, row 1., column CLIPSF (Delta)", "note": null, "where": "Sec 4.2"
+  },
+  {
+   "claim": "Multi-task models without instructions retrieve the wrong modality about half the time; instruction tuning cuts it to 2.7% (CLIP_SF) and 15.2% (BLIP_FF).",
+   "kind": "measured", "source": null, "metric": "wrong-modality error rate", "value": 58.8, "unit": "%", "baseline_value": 2.7, "n": null,
+   "setup": "M-BEIR global pool errors; Multi-task CLIP_SF 58.8%, BLIP_FF 50.9%; UniIR CLIP_SF 2.7%, BLIP_FF 15.2%",
+   "quote": "The Multi-task models showed a high error rate of 58.8% and 50.9% in retrieving instances with the wrong modality from the global pool.",
+   "table": "Table 4", "note": null, "where": "Sec 4.2, Table 4"
+  },
+  {
+   "claim": "Best UniIR model (CLIP_SF) reaches average Recall@5 of 48.9 on the 5.6M pool versus 5.9 for zero-shot BLIP2 (the zero-shot column shown in Table 2).",
+   "kind": "measured", "source": null, "metric": "average Recall@5", "value": 48.9, "unit": "%", "baseline_value": 5.9, "n": null,
+   "setup": "M-BEIR 5.6M pool, all datasets; zero-shot BLIP2 5.9, CLIP_SF multi-task 36.1",
+   "quote": null, "table": "Table 2, row Average, columns BLIP2 and CLIPSF (Delta)", "note": "Table 2 as extracted shows only BLIP2 for the zero-shot block; Table 3 gives zero-shot CLIP average 7.9 and BLIP 5.7.", "where": "Table 2"
+  },
+  {
+   "claim": "Held-out generalisation on the 5.6M pool (Figure 5): UniIR beats multi-task (no instruction) on all held-out tasks except OVEN task 6 where both are near 9-10; averages from Table 7: multi-task CLIP_SF 20.5 / BLIP_FF 22.8 vs UniIR 27.9 / 28.7.",
+   "kind": "measured", "source": null, "metric": "held-out average Recall@5, CLIP_SF multi-task vs UniIR", "value": 27.9, "unit": "%", "baseline_value": 20.5, "n": null,
+   "setup": "Trained on 7 datasets, tested zero-shot on WebQA, OVEN, CIRR; M-BEIR global pool; zero-shot CLIP 13.5, BLIP 11.1, SigLIP 14.1, BLIP2 11.0",
+   "quote": null, "table": "Table 7, row Average, columns CLIPSF (Multi.) and CLIPSF (UniIR)",
+   "note": "Intro says instruction tuning 'leads to +10 improvement in terms of recall@5 (Figure 5)'; Table 7 averages give about +7 (CLIP_SF +7.4, BLIP_FF +5.9) and the Figure 5 five-task means about 21.7 vs 28.3, so the +10 is not reproduced from the printed numbers (the +10.1 to +12.8 figures in Table 2/3 are in-distribution).", "where": "Fig 5, Table 7"
+  },
+  {
+   "claim": "Held-out generalisation on local pools (Figure 6): UniIR beats multi-task without instruction by about 4 points on average and SoTA zero-shot retrievers by more; multi-task without instruction is worse than zero-shot on some tasks.",
+   "kind": "measured", "source": null, "metric": "held-out average Recall@5, CLIP_SF UniIR", "value": 40.3, "unit": "%", "baseline_value": 35.1, "n": null,
+   "setup": "Trained on 7 datasets, tested on WebQA, OVEN, CIRR; M-BEIR_local; CLIP_SF multi-task 35.1 vs UniIR 40.3; BLIP_FF multi-task 32.4 vs UniIR 35.2; zero-shot SigLIP 35.5",
+   "quote": null, "table": "Table 8, row Average, columns CLIPSF (Multi.) and CLIPSF (UniIR)", "note": null, "where": "Fig 6, Table 8"
+  },
+  {
+   "claim": "On M-BEIR_local, multi-task training with instructions helps BLIP_FF strongly (single-task 37.1 to 46.8) but CLIP_SF only slightly (49.4 to 50.6), and multi-task without instructions leaves CLIP_SF at 49.4.",
+   "kind": "measured", "source": null, "metric": "average Recall@5, UniIR BLIP_FF", "value": 46.8, "unit": "%", "baseline_value": 37.1, "n": null,
+   "setup": "M-BEIR_local, all 10 datasets seen in training; ST=single-task fine-tuning; BLIP_FF multi-task without instruction 45.8; gain +9.7 vs single-task",
+   "quote": "UniIR (BLIPFF) greatly outperforms its single-task counterpart by an average of 9.7% on R@5",
+   "table": null, "note": "Intro credits the +9.7 to 'multi-task training in UniIR(BLIP)'; Table 6 delta is UniIR (with instructions) minus single-task, and multi-task without instructions is 45.8 (+8.7 over ST), so most of this gain is from multi-task training, not instructions, for BLIP_FF.", "where": "Table 6, Sec 4.3"
+  },
+  {
+   "claim": "UniIR surpasses the best zero-shot retriever (SigLIP) on M-BEIR_local.",
+   "kind": "measured", "source": null, "metric": "average Recall@5 on M-BEIR_local, UniIR CLIP_SF", "value": 50.6, "unit": "%", "baseline_value": 37.2, "n": null,
+   "setup": "M-BEIR_local; SigLIP 37.2 is best zero-shot; UniIR BLIP_FF 46.8",
+   "quote": "our UniIR models (CLIPSF) and (BLIPFF) surpass it by a significant margin, with average R@5 values of 50.6% and 46.8% respectively",
+   "table": null, "note": null, "where": "Sec 4.3, Table 6"
+  },
+  {
+   "claim": "Aligning fusion with pretraining architecture helps: CLIP with score fusion beats CLIP with randomly initialised feature-fusion layers by 5.7 average Recall@5 and BLIP feature fusion beats BLIP score fusion by 2.8.",
+   "kind": "measured", "source": null, "metric": "average Recall@5 difference", "value": 5.7, "unit": "points", "baseline_value": 43.3, "n": null,
+   "setup": "M-BEIR global pool; UniIR CLIP_SF 48.9 vs CLIP_FF 43.3; BLIP_FF 45.5 vs BLIP_SF 42.7",
+   "quote": "with an average improvement of 5.7 and 2.8 for CLIP and BLIP, respectively",
+   "table": null, "note": "The text then says task 8 dropped 'from 52.4 to 46.3, for the latter' but 46.3 is the CLIP_FF value in Table 5 and 52.4 is CLIP_SF, so 'the latter' is misworded.", "where": "Sec 4.2, Table 5"
+  },
+  {
+   "claim": "Zero-shot SigLIP is the strongest zero-shot baseline on M-BEIR_local on average, CLIP on news.",
+   "kind": "measured", "source": null, "metric": "average Recall@5, M-BEIR_local, zero-shot", "value": 37.2, "unit": "%", "baseline_value": 24.8, "n": null,
+   "setup": "M-BEIR_local zero-shot: SigLIP 37.2, CLIP 32.5, BLIP 26.8, BLIP2 24.8",
+   "quote": null, "table": "Table 6, row Average, column SigLIP", "note": null, "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Authors concede 'the existing model performance is still relatively far from perfect indicating ample room for future improvement' and defer stronger vision-language backbones and large-scale pretraining to future work.",
+  "Only CLIP and BLIP ViT-L backbones are fine-tuned; optimizer, learning rate, schedule, seeds and variance are not given, and there are no significance tests.",
+  "Generalisation to unseen data is shown on only three held-out datasets (WebQA, OVEN, CIRR), which share task types with held-in data and, for tasks 2, 3, 6, 8, share domains; the held-out figures average CLIP_SF and BLIP_FF; the held-in/held-out numbers per backbone differ sharply.",
+  "The ablation attributing gains to instructions compares against multi-task training without instructions; the instruction-versus-no-instruction effect is measured both in-distribution (Table 2/3) and held-out (Fig 5/6, Tables 7/8); the held-out gain from instructions is smaller (about 4 to 7 points) than the paper's stated +10.",
+  "Internal inconsistencies: intro says 300K training instances while Table 1 totals 1.1M; intro cites Figure 6 for held-out generalisation of the best model but Figure 6 is the local-pool experiment.",
+  "Instructions are written by the authors (4 per task-dataset pair, 64 in total); robustness to unseen instruction phrasing is not tested.",
+  "Candidate pools were trimmed to balance data (e.g. VisualNews, OVEN, InfoSeek), so the 5.6M pool is not the full original corpora.",
+  "Venue: only an arXiv v1 stamp (cs.CV, 28 Nov 2023) is printed; no conference name appears in the PDF."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "M-BEIR", "definition": "Multimodal BEnchmark for Instructed Retrieval", "where": "Sec 3"},
+  {"term": "M-BEIR_local", "definition": "retrieving from a task-specific pool (with homogeneous candidates) provided by the original dataset", "where": "Sec 4"},
+  {"term": "Score-level fusion", "definition": "separate vision and text encoders whose per-modality vectors are combined by a weighted sum, so the similarity is a weighted sum of within- and cross-modality scores", "where": "Sec 2.2"},
+  {"term": "Feature-level fusion", "definition": "integrates features during the encoding phase with mixed-modality attention layers into one vector for multimodal queries or candidates", "where": "Sec 2.2"}
+ ],
+ "lineage": [
+  {"work": "CLIP (Radford et al.)", "year": 2021, "arxiv": "2103.00020", "relation": "uses-method", "note": "backbone and contrastive loss; zero-shot baseline", "quote": null},
+  {"work": "BLIP (Li et al.)", "year": 2022, "arxiv": "2201.12086", "relation": "uses-method", "note": "backbone with cross-attention fusion; zero-shot baseline", "quote": null},
+  {"work": "BLIP-2 (Li et al.)", "year": 2023, "arxiv": "2301.12597", "relation": "baseline", "note": "zero-shot feature extractor", "quote": null},
+  {"work": "SigLIP (Zhai et al.)", "year": 2023, "arxiv": "2303.15343", "relation": "baseline", "note": "strongest zero-shot baseline", "quote": null},
+  {"work": "TART: Task-aware retrieval with instructions (Asai et al.)", "year": 2022, "arxiv": "2211.09260", "relation": "extends", "note": "instruction schema for M-BEIR; text-only precursor", "quote": "The closest to our work is the TART [1], which also aims to build a single retriever to retrieve different content based on the instruction."},
+  {"work": "BEIR (Thakur et al.)", "year": 2021, "arxiv": "2104.08663", "relation": "related", "note": "text-retrieval benchmark that M-BEIR parallels", "quote": null},
+  {"work": "FLAN / Scaling instruction-finetuned language models (Chung et al.)", "year": 2022, "arxiv": "2210.11416", "relation": "related", "note": "instruction tuning motivation", "quote": null},
+  {"work": "OVEN, InfoSeek, EDIS, WebQA, CIRR, FashionIQ, NIGHTS, VisualNews, MSCOCO, Fashion200K", "year": null, "arxiv": null, "relation": "uses-data", "note": "the ten datasets converted into M-BEIR", "quote": null},
+  {"work": "FAISS (Johnson et al.)", "year": 2019, "arxiv": "1702.08734", "relation": "uses-method", "note": "index for retrieval", "quote": null},
+  {"work": "MuRAG, REVEAL, RA-CM3 (retrieval-augmented multimodal models)", "year": null, "arxiv": null, "relation": "related", "note": "downstream users of multimodal retrieval", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "We build a universal multimodal information retriever UniIR through instruction tuning. UniIR is capable of accepting any form of query and instruction to retrieve information in any modality.", "page": 1, "why": "Shows instruction + heterogeneous query/candidate mix at a glance"},
+  {"figure": "Fig 2", "caption": "(a) Score-level fusion encodes each modality into a single feature; (b) CLIP feature-level fusion (CLIP_FF) fuses two modalities into a single feature with a mix-modality transformer layer; (c) BLIP feature-level fusion (BLIP_FF) adopts cross-attention to output a single feature vector.", "page": 3, "why": "Architecture comparison of the fusion variants"},
+  {"figure": "Table 1", "caption": "The overview of M-BEIR training/validation/test set.", "page": 3, "why": "Datasets, tasks, split sizes and pool sizes in one table"},
+  {"figure": "Fig 4", "caption": "Visualization of top 5 retrieved candidates from M-BEIR with 3 models on EDIS. Without instructions, zero-shot and multi-task training models mostly retrieve the wrong modality (text-only).", "page": 6, "why": "Shows the wrong-modality failure the instruction fixes"},
+  {"figure": "Fig 5 / Fig 6", "caption": "Held-out dataset generalization experiments on M-BEIR (and M-BEIR_local): train a Multi-task and a UniIR model on 7 held-in datasets and test on 3 held-out datasets (WebQA, OVEN, CIRR).", "page": 7, "why": "The held-out evidence for the generalisation claim"}
+ ],
+ "code": [
+  {"where": "Sec 2.1", "snippet": "c* = argmax_{c in C} [ f(q, q_inst)^T . f(c) ]", "verbatim": false},
+  {"where": "Sec 2.2", "snippet": "f(q_i, q_t, q_inst) = w1 f_I(q_i) + w2 f_T(q_t, q_inst);  f(c_i, c_t) = w3 f_I(c_i) + w4 f_T(c_t)", "verbatim": false}
+ ],
+ "problems": [
+  "The PDF text contains no venue; the arXiv stamp reads 'arXiv:2311.17136v1 [cs.CV] 28 Nov 2023'.",
+  "Table cells are flattened in the text cache, so column alignment (especially Table 2 zero-shot block, which lists only BLIP2) was reconstructed from order.",
+  "No embedded instructions found in the PDF."
+ ]
+}

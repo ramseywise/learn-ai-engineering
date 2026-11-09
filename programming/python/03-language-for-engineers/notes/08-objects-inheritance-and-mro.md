@@ -15,6 +15,8 @@ cleaned: 2026-11-02
 
 > Sooner or later a `super()` call runs a method in a class you never named, an instance attribute silently replaces a method, or two libraries refuse to combine with `TypeError: metaclass conflict`. All of these come from one small set of rules: how Python looks up an attribute, how it orders a class's ancestors, and how it builds a class in the first place. This chapter teaches those rules, so class behaviour becomes something you can work out instead of something you try until it passes. It also teaches what each tool costs, because most code needs less of this machinery than people expect. Code here ran on CPython 3.14.7.
 
+This chapter builds on [Python 02 · 04 Objects](../../02-informatics/notes/04-objects.md), which covers writing a first class.
+
 ---
 
 ## Classes are objects with a lookup chain
@@ -754,6 +756,8 @@ Can't instantiate abstract class Store without an implementation for abstract me
 4. `cached_property` defines no `__set__`, so it is a non-data descriptor. After computing, it writes the value to the instance `__dict__`, and step 2 of the lookup then finds it before step 3 is reached. `property` is a data descriptor, so step 1 always wins.
 
 </details>
+
+Practice file: [`practice/exercises/08_objects_mro.py`](../practice/exercises/08_objects_mro.py) turns questions 1 to 3 into runnable asserts.
 
 ## Interview checklist
 

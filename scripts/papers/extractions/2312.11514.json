@@ -1,19 +1,632 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2312.11514",
  "pdf": "ai-engineering/07-inference-engineering/sources/alizadeh-2023-llm-flash.pdf",
  "bib": {
   "title": "LLM in a flash: Efficient Large Language Model Inference with Limited Memory",
-  "first_author": "Keivan Alizadeh",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Keivan Alizadeh",
+   "Iman Mirzadeh",
+   "Dmitry Belenko",
+   "S. Karen Khatamifard",
+   "Minsik Cho",
+   "Carlo C Del Mundo",
+   "Mohammad Rastegari",
+   "Mehrdad Farajtabar"
+  ],
+  "first_author": "Alizadeh",
+  "year": 2023,
+  "venue": "preprint (arXiv v3, 30 Jul 2024)",
   "arxiv": "2312.11514",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 87734,
+  "chars_total": 87734,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
  },
- "legacy_report": "SOURCE: \"LLM in a flash: Efficient Large Language Model Inference with Limited Memory\", Keivan Alizadeh, Iman Mirzadeh, Dmitry Belenko, S. Karen Khatamifard, Minsik Cho, Carlo C Del Mundo, Mohammad Rastegari, Mehrdad Farajtabar (Apple). The PDF is arXiv:2312.11514v3 [cs.CL], 30 Jul 2024. The text names no venue, so treat it as a preprint (the cs.CL tag is the only label). First posted Dec 2023, per the arXiv id.\n\nCOVERAGE: 87,706 of 87,706 chars read, including appendices A-G. Only the remaining qualitative-sample tables (Tables 7-9, generated text) were skimmed after Table 7. No extraction faults except a stray \"«cite nucleus»\" in the text. Figures were not viewed. Figure values come from the extracted axis labels only.\n\nCLAIMS (ranked)\n- Headline: models up to 2x the available DRAM run, with up to 4x (CPU) and 20x (GPU) speedup over naive loading.\n  number: 4x CPU, 20x GPU. The intro says 4x, 7x and 20x for CPU, Metal and NVIDIA GPU.\n  setup: about half of the model size available in DRAM, batch 1 (one sequence at a time), 128-token prompt, 256 generated tokens, C4 validation subset. Naive baseline reloads on demand.\n  quote: \"run models 2x larger than the device's DRAM capacity and speed up inference up to 4x, 7x, and 20x compared to naive implementation in CPU, Metal and NVIDIA GPU backends, respectively\"\n  where: Sec 1, p2\n- The Discussion widens the range for OPT.\n  number: 4-5x on CPU, 20-25x on GPU.\n  quote: \"on OPT model, we achieve an acceleration in inference speed of 4-5x compared to traditional loading methods in CPU, and 20-25x in GPU\"\n  where: Sec 7\n- Ablation of I/O latency (Table 2). OPT 6.7B, 16-bit, M1 Max, half of memory available.\n  Rows (Predictor / Windowing / Bundling, DRAM GB, Flash->DRAM GB, throughput, I/O latency):\n  - Naive: 0 GB, 13.4 GB, 6.10 GB/s, 2196 ms.\n  - Predictor (hybrid) only: 6.7 GB, 6.7 GB, 6.10 GB/s, 1090 ms.\n  - + Windowing: 4.8 GB, 0.9 GB, 1.25 GB/s, 738 ms.\n  - + Windowing, DRAM row shows 6.5 GB, 0.2 GB, 1.25 GB/s, 164 ms (a further windowing configuration in the table).\n  - + Bundling: 6.5 GB, 0.2 GB, 2.25 GB/s, 87 ms.\n  quote (final row): \"✓ ✓ ✓ ✓ 6.5 0.2 GB 2.25 GB/s 87 ms\"\n  quote (naive row): \"✗ ✗ ✗ ✗ 0 13.4 GB 6.10 GB/s 2196 ms\"\n  quote (bundling): \"bundling technique can alleviate this by doubling the data transfer chunk size and hence the throughput which leads to reducing the overall latency to half.\"\n  where: Table 2, Sec 4.2\n  note: the extraction merges the checkmark columns. The 4th row is predictor + windowing + one more optimisation, and the 5th adds bundling. Check Table 2 in the PDF for the exact tick pattern of rows 3-4.\n- End-to-end per-token latency in ms (Table 3), I/O + Mem + Compute = Total.\n  - OPT 6.7B CPU: Naive 3182, All 669 (I/O 105, Mem 58, Compute 506), about 4.8x.\n  - OPT 6.7B Metal M1: Naive 2389, All 565.\n  - OPT 6.7B Metal M2: Naive 2270, All 305.\n  - OPT 6.7B GPU (RTX 4090, bfloat16): Naive 2218, All 84 (I/O 30, Mem 34, Compute 20), about 26x. Speculative GPU: 60 (I/O 38.5, Mem 9.5, Compute 12).\n  - Falcon 7B CPU: Naive 3095, Hybrid 1947, All 706.\n  - Persimmon 8B CPU: Naive 3806, Hybrid 2495, All 1041.\n  - Phi-2 2.7B CPU: Naive 1287, Hybrid 711, All 546.\n  - Llama 2 7B CPU: Naive 3095, Hybrid 1903, All 994.\n  quote: \"OPT 6.7B All GPU 30 34 20 84\"\n  quote: \"OPT 6.7B Naive GPU 2196 0 22 2218\"\n  where: Table 3, Sec 4.2. Table 5 gives std devs, e.g. OPT GPU All \"84.64 ( ±6.16)\".\n  setup: about 50% of model size in DRAM for OPT, Falcon, Persimmon and Llama 2. Phi-2 gets 65% because it is small and has less sparsity.\n- The baseline is optimistic for the naive method. Per-method I/O latency is a \"best theoretical\" number, and the naive method is credited with loading only half the model.\n  quote: \"We used best theoretical possible numbers for IO latency for each of the methods to make a fair comparison, the real number might be higher.\"\n  where: Sec 4.1\n- Row-column bundling doubles the read chunk, from d_model*num_bytes to 2*d_model*num_bytes.\n  number: 32 KiB per read for 32-bit OPT 6.7B, 35.5 KiB for Falcon 7B 32-bit (as printed).\n  quote: \"the data chunk size per read is 2dmodel × 4 bytes = 32KiB\"\n  where: Sec 3.2, App C.1\n- Flash hardware facts.\n  number: over 6 GiB/s for a 1 GiB linear read, versus 1.25 GiB/s sparse reads.\n  setup: MacBook M1 Max, 1 TB flash, uncached file. Reads use 32 threads. 32 KiB or larger random reads across multiple threads give enough throughput. Figure 2a sketches DRAM ~100 GB/s vs flash ~1 GB/s, and ~100 GB vs ~10 GB capacity.\n  quote: \"speeds exceeding 6 GiB/s for a 1GiB linear read of an uncached file\"\n  quote: \"throughputs appropriate for sparse LLM inference are achievable on modern hardware using 32KiB or larger random reads across multiple threads\"\n  quote: \"1.25 GiB/s sparse vs 6.1 GiB/s dense\"\n  where: Sec 2.2, 4.2\n- It can pay to read more than needed.\n  quote: \"in some scenarios, it will be worthwhile to read more than needed (but in larger chunks) and then discard\"\n  where: Sec 2.2\n- Activation sparsity the method relies on.\n  number: OPT 6.7B 97%, Falcon 7B (relufied) 95%, Llama 2 (FATReLU, finetuned) 90%.\n  quote: \"The OPT 6.7B model, for instance, exhibits a notable 97% sparsity within its FFN layer.\"\n  where: Sec 3.1\n- Windowing. Keep in DRAM the neurons active for the last k tokens and load only the increment s_agg(k+1) - s_agg(k). Figure 4 uses k=5.\n  number: OPT 6.7B with k=4. The predictor's active neurons alone would take about 10% of DRAM, windowing drops new loads to 2.4% per token, and the window of the past 5 tokens raises FFN DRAM to 24%. Total DRAM is 52.1% of the model: predictor 1.25%, embeddings 3%, attention 32.3%, FFN 15.5%.\n  quote: \"Using active neurons of predictor would require about 10% of the DRAM memory capacity on average; however, with our method, it drops to 2.4%.\"\n  where: App C.1\n- Predictors are low-rank and use the current layer's attention output, unlike Dejavu, which uses the previous layer.\n  setup: OPT 6.7B has rank 128 for the first 28 layers and 1024 for the last four. Average rank is 240, which is under 2.4% of non-embedding weights and FLOPs. Training used 10,000 C4 samples for 2 epochs, 4 hours on an A100 per predictor. Predictors cost 2.75% of inference time on M1 Max CPU and 4.8% on RTX GPU. They give about 5% false negatives and 7% false positives.\n  quote: \"These predictors achieve an average of 5% false negatives and 7% false positives in the OPT 6.7B model.\"\n  where: Sec 3.1, App B, C.1\n- Predictors cost almost no accuracy on zero-shot tasks.\n  number: OPT 6.7B Arc Easy 66.1 -> 66.2, Arc Challenge 30.6 -> 30.6, HellaSwag 50.3 -> 49.8.\n  quote: \"Arc Easy 66.1 66.2\"\n  where: Table 1\n- Predictors over-predict to avoid false negatives. Predicted-active neurons are 3x actual in OPT and Persimmon, and roughly 2x in Phi-2.\n  quote: \"the number of active neurons predicted by the predictor is 3x the amount of actual sparsity observed in the case of dense inference\"\n  where: App B.1\n- Other models.\n  - Falcon 7B: DRAM use is 52.93% of the model, 33% of the FFN with window 4 and 3.1% of FFN neurons per token. I/O is 161 ms, memory management 90 ms, 250 ms total versus a 2196 ms baseline.\n  - Phi-2: gets 2.35x speedup at 65% DRAM.\n  - Llama 2 7B: window 2. About 3x speedup over naive. Table 3 gives 3095 -> 994 ms.\n  - Persimmon 8B: sigmoid threshold 0.7, FFN memory capped at 25%.\n  quote (Falcon): \"making our method approximately 9 to 10 times faster.\"\n  quote (Llama 2): \"LLM in flash gets 3x speed up over naive baseline (Table 3).\"\n  where: App C.2-C.5\n- MMLU after predictors.\n  number: Llama 2 41.8, sparsified 38.96, with predictors 38.63. Phi-2 MMLU drops from 57 to 54.3 after relufication with distillation, then to 52 with predictors.\n  quote: \"we got MMLU of 41.8 for Llama 2, 38.96 for sparsified model by (Song et al., 2024) and 38.63 after training our predictors.\"\n  where: App C.5, C.4, Fig 10\n  note: Table 4 shows Falcon relufied loses accuracy (HellaSwag 57.77 -> 54.17) before predictors, and more with small predictors (50.74).\n- Speculative decoding on OPT 6.7B GPU with lambda=4 gives 1.4x, close to the original 1.58x.\n  quote: \"We used λ = 4and were able to improve the speed of decoding by 1.4x as shown in table 5, this is close to the original 1.58x speedup of speculative decoding.\"\n  where: Sec 5.2\n- Memory-latency tradeoff: latency falls as the share of the model kept in DRAM rises (Figure 7, OPT 6.7B on GPU, 35-80% of model in DRAM).\n  where: Sec 4.3\n- Longer generation does not degrade it. Tested to 1000 tokens, OPT 6.7B on GPU. No SSD thermal throttling, average flash latency does not rise, and nucleus sampling does not hurt.\n  where: Sec 5.1\n- Negative result: co-activation bundling. The closest friend of each neuron co-activates at least 95% of the time, but bundling it caused repeated loading of highly active neurons.\n  quote: \"This result suggests that very active neurons are the closest friends of many others.\"\n  where: Sec 3.2, App D\n- Memory management. Preallocate per layer Req_i x 2*d_model, swap deleted rows with the last rows, and append new rows. A naive realloc would rewrite about 25% of the FFN.\n  where: Sec 3.3, Fig 6\n- Small devices (projection only, not measured): a 7B model at 4-bit would need under 2 GB DRAM versus a 3.5 GB baseline. Quantization does not change sparsity (Table 6 average active 3.30% vs 3.27%).\n  quote: \"rather than the baseline's 3.5GB of required DRAM, our model would necessitate less than 2GB of memory for operation\"\n  where: App F\n\nLIMITS\n- Single-batch inference only. Prompt processing and multi-batch are not studied, and speculative decoding is only preliminary.\n- It needs ReLU-type sparsity. OPT is naturally sparse. Falcon, Phi-2 and Llama 2 had to be relufied or FATReLU-finetuned, with some accuracy cost, and it is \"constructed on the foundation of sparsified networks\". Persimmon already uses squared ReLU.\n- Only about half of the model in DRAM was tested. Other ratios are future work.\n- Energy: lower power but longer duration, so total energy is higher than dense. Quote: \"the sparse model having a higher total energy consumption\". No systematic power or thermal study.\n- Latency numbers use \"best theoretical\" I/O for baselines. NVMe throughput was deliberately pessimised (F_NOCACHE, DirectIO, purge), so real figures could be better.\n- Test hardware: Apple M1 Max, M2 Ultra, RTX 4090. The 4-bit smartphone case is not implemented, and would need 4-bit kernels. A custom MLX Metal kernel was used because PyTorch MPS has performance cliffs with dynamic shapes.\n- Metal M1/M2 speedups are only stated in the intro (7x). The 20x GPU figure is from Naive 2218 ms vs All 84 ms.\n\nBUILDS ON: Dejavu (Liu et al., 2023b) for the low-rank activation predictor. FlexGen (Sheng et al., 2023) for offloading to DRAM and flash. Mirzadeh et al. (2023) for relufication. Song et al. (2024) for FATReLU and sparse Llama 2. Speculative decoding (Leviathan et al., 2022). Also HuggingFace Transformers (Wolf et al., 2019), PyTorch (Paszke et al., 2019), and the MLX Metal kernels (Hannun et al., 2023). Models: OPT (Zhang et al., 2022b), Falcon, Persimmon, Phi-2, Llama 2. Evaluation: InstructEval (Chia et al., 2023) for MMLU.\n\nCODE: none. The Sec 3.3 data structure fields are pointers, matrix, bias, num_used, last_k_active. Inference uses matrix[:num_rows,:d_model] as up-projection and matrix[:num_rows,d_model:].transpose() as down-projection.\n\nFIGURES (captions read from text, images not viewed)\n- Fig 1, p1: stacked bars of per-token latency (compute, load from flash, memory management) for naive vs ours. Half memory. Shows the headline gain at a glance.\n- Fig 2, p2: (a) bandwidth/capacity of DRAM vs flash, (b) random-read throughput vs chunk size (4-64 KB) and threads. The case for bundling and parallel reads.\n- Fig 3, p4: low-rank predictor structure and false positives/negatives near zero.\n- Fig 4, p5: aggregated neuron usage vs window size k, and the sliding-window diagram.\n- Fig 5, p6: up-projection column and down-projection row bundled into one read.\n- Fig 6, p6: delete/insert memory management.\n- Fig 7, p9: latency vs % of model in DRAM (OPT-6.7B, GPU).\n- Fig 8, p9: flash latency up to 1000 tokens.\n- Fig 9-12, appendix: predicted vs actual sparsity per layer, MMLU vs threshold, perplexity, co-activation.\n\nPROBLEMS\n- The Table 2 extraction merges the tick columns. Row 4's configuration is ambiguous, and the \"Hybrid / Predictor\" header labelling is unclear. The 164 ms row is not tied to a clearly named technique in the extraction. Verify against the PDF before citing individual rows.\n- In the Llama 2 appendix, \"Gate projects take 13 of FFN layer and 59 of each transformer block\" is garbled (fractions 1/3 and 5/9 likely).\n- The text has a leftover \"«cite nucleus»\".\n- Figure 1 axis values (100, 450, 700, 1000, 2250, 3100) extracted without clear association. The Llama 2 7B CPU, OPT 6.7B CPU and OPT 6.7B GPU panels show 3100 vs 700 etc., so use Table 3 instead.\n- The Persimmon text says 310 ms / 155 ms \"as seen in Figure 1\" while Table 3 gives total 1041 and Table 5 gives 1090 (310.52 I/O, 155.80 mem). The two tables disagree slightly on Persimmon.\n- No embedded instructions found in the PDF.\n- The venue (ACL 2024) is not stated in the text. Do not cite it as a venue from this source."
+ "type": "system",
+ "question": "How can an LLM whose weights exceed available DRAM be run efficiently by storing parameters in flash and loading them on demand?",
+ "hypothesis": "Exploiting FFN activation sparsity with reuse across recent tokens and larger contiguous reads makes flash-resident inference of models up to 2x DRAM size practical.",
+ "contributions": [
+  "Study of flash and DRAM hardware characteristics and an inference cost model (Sec 2)",
+  "Techniques: sparsity predictor, windowing, row-column bundling, preallocated DRAM management (Sec 3)",
+  "Runs models 2x larger than DRAM with up to 4x, 7x, 20x speedup on CPU, Metal and NVIDIA GPU vs naive (Sec 4)"
+ ],
+ "method": {
+  "summary": "Weights stay in flash. A per-layer low-rank predictor forecasts which FFN neurons fire; only those are read, neurons of the last k tokens are kept in a preallocated DRAM matrix (windowing), and each neuron's up-projection column and down-projection row are stored together (bundling) to double chunk size. Embeddings and attention weights stay in DRAM.",
+  "task": "memory-constrained single-sequence LLM decoding latency",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4 training",
+    "role": "train",
+    "size": "10000 samples",
+    "split": "2 epochs for predictor training",
+    "source": "C4",
+    "preprocessing": null
+   },
+   {
+    "name": "C4 validation subset",
+    "role": "eval",
+    "size": "small subset (size not stated); 100 random samples for sparsity statistics",
+    "split": "first 128 tokens as prompt, 256 tokens generated",
+    "source": "C4",
+    "preprocessing": null
+   },
+   {
+    "name": "refined-web",
+    "role": "train",
+    "size": null,
+    "split": "relufication fine-tuning of Phi-2 (following Mirzadeh et al. 2023)",
+    "source": "RefinedWeb",
+    "preprocessing": null
+   },
+   {
+    "name": "Arc Easy, Arc Challenge, HellaSwag, MMLU, wikitext2",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot; MMLU via InstructEval",
+    "source": "public benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OPT 6.7B",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": "decoder-only, ReLU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 (inferred: predictors for first 28 + last 4 layers)",
+    "hidden": null,
+    "heads": null,
+    "context": "2048 (KV-cache footnote)",
+    "other": {
+     "ffn_sparsity": "97%"
+    }
+   },
+   {
+    "name": "Falcon 7B relufied",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only, ReLU-converted (Mirzadeh et al. 2023)",
+    "init_from": "Falcon 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 (inferred: 28 + 4 last)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ffn_sparsity": "95%"
+    }
+   },
+   {
+    "name": "Persimmon 8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "squared ReLU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "36 (32 + last 4)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phi-2 relufied",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": "relufied with distillation loss",
+    "init_from": "Phi-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 (inferred: 8 groups of 4)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama 2 7B sparsified (FATReLU, Song et al. 2024)",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "SwiGLU with FATReLU",
+    "init_from": "Llama 2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ffn_sparsity": "90%"
+    }
+   },
+   {
+    "name": "Low-rank activation predictor",
+    "role": "proposed",
+    "params": "OPT: rank 128 (first 28 layers), 1024 (last 4); average rank 240; Falcon: 256/1152; Persimmon: 256/1152; Phi-2: 160/480/800 by layer group; Llama 2: 1024 in 4 middle layers, 256 elsewhere",
+    "architecture": "two-layer low-rank (N to R to M) with sigmoid output, active if > threshold",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "input": "output of current layer's attention module",
+     "threshold": "0.5 default, 0.7 Persimmon, 0.4/0.55 Phi-2 rows in Table 4",
+     "loss": "balanced over negative and positive samples"
+    }
+   }
+  ],
+  "training": {
+   "objective": "balanced binary loss on per-neuron ReLU activation (predictor); Phi-2 relufication fine-tune with distillation loss",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "2 (predictor)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "1x A100 GPU per predictor",
+   "compute": "4 hours on an A100 per layer predictor",
+   "wall_clock": "4 hours per predictor",
+   "seeds": null,
+   "other": {
+    "scope": "base LLMs are not trained here except Phi-2 relufication; only predictors are trained"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for most runs; nucleus sampling p=0.9 for Persimmon and in Sec 5.1 comparisons; speculative decoding with lambda=4 on GPU",
+   "temperature": null,
+   "top_p": "0.9 (Persimmon, nucleus runs)",
+   "max_tokens": "256 new tokens (1000 in the long-generation ablation)",
+   "samples": "latency averaged over a small C4 validation subset; standard deviations in Table 5; seeds not stated",
+   "prompting": "first 128 tokens of each C4 example as prompt",
+   "retrieval": null,
+   "parameters": {
+    "window_size_k": "5 tokens in Fig 4; k=4 for OPT/Falcon/Persimmon/Phi-2; k=2 for Llama 2",
+    "memory_budget": "about 50% of model size (65% for Phi-2; stop caching above 55% for Llama 2; 25% of FFN cap for Persimmon)",
+    "read_threads": "32",
+    "chunk_size": "2*d_model*num_bytes (32 KiB for OPT float32)",
+    "dram_matrix": "preallocated Req_i x 2*d_model per layer",
+    "batch_size": "1"
+   },
+   "other": {
+    "hardware": "Apple M1 Max 1TB SSD (CPU float32; Metal float16), Apple M2 Ultra 2TB SSD (Metal), Linux machine with 24GB RTX 4090 (bfloat16)",
+    "software": "HuggingFace Transformers, PyTorch, MLX Metal kernels, macOS 14.3",
+    "io": "F_NOCACHE on macOS, DirectIO on Linux, purge before benchmarks; I/O latency for baselines is best theoretical number"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "per-token inference latency",
+     "definition": "I/O + memory management + compute, averaged per generated token",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "zero-shot accuracy (Arc Easy, Arc Challenge, HellaSwag)",
+     "definition": "accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MMLU",
+     "definition": "InstructEval implementation",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Naive: load whole model on demand each forward pass (at least half the model transferred)",
+    "Hybrid: half of model persisted, other half loaded per token, no sparsity"
+   ],
+   "protocol": "Single sequence at a time; standard deviations reported in Table 5; no significance test; seeds not stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.baselines",
+    "quote": "We used best theoretical possible numbers for IO latency for each of the methods to make a fair comparison, the real number might be higher.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "OPT 6.7B on RTX 4090 GPU: all techniques cut per-token latency from naive loading to 84 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total latency",
+   "value": "84",
+   "unit": "ms/token",
+   "baseline_value": "2218",
+   "n": null,
+   "setup": "OPT 6.7B, bfloat16, RTX 4090 24GB, about half the model in memory, batch 1, 128-token prompt, 256 generated, C4 validation subset; naive I/O is a theoretical best-case number",
+   "note": "2218/84 is about 26x; abstract says up to 20x and discussion says 20-25x",
+   "where": "Table 3, abstract",
+   "quote": "up to 4x and 20x increase in inference speed",
+   "table": "Table 3, rows OPT 6.7B Naive/All, backend GPU, column Total (2218 vs 84)"
+  },
+  {
+   "claim": "OPT 6.7B on M1 Max CPU: 3182 ms naive to 669 ms (about 4.8x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "total latency",
+   "value": "669",
+   "unit": "ms/token",
+   "baseline_value": "3182",
+   "n": null,
+   "setup": "OPT 6.7B float32, M1 Max CPU, half of model in DRAM, batch 1",
+   "note": null,
+   "where": "Table 3, Sec 7",
+   "quote": "an acceleration in inference speed of 4-5x compared to traditional loading methods in CPU",
+   "table": "Table 3, rows OPT 6.7B Naive/All, backend CPU, column Total (3182 vs 669)"
+  },
+  {
+   "claim": "Ablation of I/O latency: predictor, windowing, bundling reduce OPT 6.7B flash I/O latency from 2196 ms to 87 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "I/O latency",
+   "value": "87",
+   "unit": "ms",
+   "baseline_value": "2196",
+   "n": null,
+   "setup": "OPT 6.7B 16 bit on M1 Max, half memory available; 13.4 GB read naive at 6.10 GB/s; final config reads 0.2 GB at 2.25 GB/s",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, last row (Hybrid+Predictor+Windowing+Bundling), column I/O Latency; first row 2196"
+  },
+  {
+   "claim": "Bundling roughly doubles sparse-read throughput (1.25 to 2.25 GB/s) and halves I/O latency (164 to 87 ms).",
+   "kind": "measured",
+   "source": null,
+   "metric": "I/O latency",
+   "value": "87",
+   "unit": "ms",
+   "baseline_value": "164",
+   "n": null,
+   "setup": "OPT 6.7B 16 bit, M1 Max, windowing on",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Windowing without/with Bundling, column I/O Latency (164 vs 87)"
+  },
+  {
+   "claim": "Sparse scattered reads give lower throughput than a dense linear read (1.25 vs 6.1 GiB/s), yet the overall effect stays strongly favourable.",
+   "kind": "measured",
+   "source": null,
+   "metric": "read throughput",
+   "value": "1.25",
+   "unit": "GiB/s",
+   "baseline_value": "6.1",
+   "n": null,
+   "setup": "OPT 6.7B on M1 Max, without bundling",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "e.g. 1.25 GiB/s sparse vs 6.1 GiB/s dense"
+  },
+  {
+   "claim": "Metal M2 Ultra speedup is 7.4x (2270 to 305 ms).",
+   "kind": "measured",
+   "source": null,
+   "metric": "total latency",
+   "value": "305",
+   "unit": "ms/token",
+   "baseline_value": "2270",
+   "n": null,
+   "setup": "OPT 6.7B float16, Apple M2 Ultra, Metal",
+   "note": "Naive Metal M2 I/O is 2145 ms, not 2196",
+   "where": "Table 3",
+   "quote": "7x",
+   "table": "Table 3, rows OPT 6.7B Naive/All, backend Metal M2 (2270 vs 305)"
+  },
+  {
+   "claim": "Other models, CPU totals (naive to All): Falcon 7B 3095 to 706, Persimmon 8B 3806 to 1041, Phi-2 2.7B 1287 to 546, Llama 2 7B 3095 to 994.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total latency",
+   "value": "994",
+   "unit": "ms/token",
+   "baseline_value": "3095",
+   "n": null,
+   "setup": "M1 Max CPU, float32, about 50% of model in memory (65% for Phi-2); Hybrid baseline loads half the model per token without sparsity",
+   "note": "Llama 2 uses window 2 and a FATReLU-sparsified model; text says 3x for Llama 2 and 2.35x for Phi-2",
+   "where": "Table 3, App C",
+   "table": "Table 3, rows Llama 2 7B Naive/All, column Total (3095 vs 994); Falcon 3095 vs 706"
+  },
+  {
+   "claim": "Speculative decoding on the GPU lowers OPT 6.7B latency to 60 ms per token, a 1.4x gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total latency",
+   "value": "60",
+   "unit": "ms/token",
+   "baseline_value": "84",
+   "n": null,
+   "setup": "OPT 6.7B, GPU, draft length lambda = 4",
+   "note": "Text says 'as shown in table 5'; the numbers are in Tables 3 and 5. Original speculative decoding speedup quoted as 1.58x",
+   "where": "Sec 5.2",
+   "quote": "improve the speed of decoding by 1.4x",
+   "table": "Table 3, row OPT 6.7B Speculative GPU, column Total (60)"
+  },
+  {
+   "claim": "Low-rank predictors barely change zero-shot accuracy on OPT 6.7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot accuracy",
+   "value": "49.8",
+   "unit": "HellaSwag accuracy",
+   "baseline_value": "50.3",
+   "n": null,
+   "setup": "OPT 6.7B, ranks 1024 (last 4 layers) and 128 elsewhere, threshold 0.5; Arc Easy 66.1 to 66.2, Arc Challenge 30.6 to 30.6, HellaSwag 50.3 to 49.8",
+   "note": null,
+   "where": "Table 1, Table 4",
+   "quote": "using predictors does not adversely affect the model’s performance in 0-shot tasks",
+   "table": "Table 4, row OPT 6.7B with predictors, column HellaSwag"
+  },
+  {
+   "claim": "Accuracy cost is larger for non-ReLU models: relufied Falcon 7B with predictors loses 1.4 to 4.0 points vs relufied-only on HellaSwag depending on predictor rank; Phi-2 MMLU drops from 57 to 54.3 after relufication and to about 52 with predictors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "54.3",
+   "unit": "MMLU points",
+   "baseline_value": "57",
+   "n": null,
+   "setup": "Falcon 7B relufied HellaSwag 54.17, with predictors 50.74 to 53.16; Phi-2 MMLU via InstructEval",
+   "note": null,
+   "where": "App B.2, C.4",
+   "quote": "MMLU metric drops from 57 to 54.3 after relufication with distillation",
+   "table": "Table 4, Falcon 7B relufied rows, column HellaSwag; App C.4 text"
+  },
+  {
+   "claim": "Llama 2 7B MMLU: 41.8 original, 38.96 FATReLU-sparsified, 38.63 with predictors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "38.63",
+   "unit": "MMLU points",
+   "baseline_value": "41.8",
+   "n": null,
+   "setup": "InstructEval MMLU, M1 Max experiments",
+   "note": null,
+   "where": "App C.5",
+   "quote": "38.63 after training our predictors"
+  },
+  {
+   "claim": "Windowing cuts OPT 6.7B fresh FFN loading from about 10% of DRAM capacity (predictor alone) to 2.4%, at a total DRAM use of 52.1% of model size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "neuron fraction loaded",
+   "value": "2.4",
+   "unit": "% of FFN neurons per token",
+   "baseline_value": "10",
+   "n": null,
+   "setup": "OPT 6.7B, window k=4 (past 5 tokens held), predictors ranks 128/1024",
+   "note": null,
+   "where": "App C.1",
+   "quote": "with our method, it drops to 2.4%"
+  },
+  {
+   "claim": "OPT 6.7B predictors average 5% false negatives and 7% false positives.",
+   "kind": "measured",
+   "source": null,
+   "metric": "predictor error",
+   "value": "5",
+   "unit": "% false negatives",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT 6.7B, 100 C4 validation samples",
+   "note": null,
+   "where": "App C.1",
+   "quote": "an average of 5% false negatives and 7% false positives"
+  },
+  {
+   "claim": "Predictors take about 2.75% of inference time on M1 Max CPU and 4.8% on RTX GPU for OPT 6.7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "predictor overhead",
+   "value": "4.8",
+   "unit": "% of inference time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT 6.7B, average predictor rank 240",
+   "note": null,
+   "where": "App B.3",
+   "quote": "this was comprising 2.75% and in RTX GPU it was 4.8% of inference time"
+  },
+  {
+   "claim": "Sparse model uses lower power but more total energy than a dense model, because generation takes longer.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative; no numbers given",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "the sparse model having a higher total energy consumption"
+  },
+  {
+   "claim": "Bundling neurons by co-activation (closest friend) failed: highly active neurons are the closest friend of many, so they were loaded repeatedly.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT 6.7B, C4 validation co-activation statistics; closest friend coactivates at least 95% of the time",
+   "note": null,
+   "where": "Sec 3.2, App D",
+   "quote": "bundling worked against our original intention"
+  },
+  {
+   "claim": "Latency does not grow with generation length up to 1000 tokens and nucleus sampling does not hurt the method.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT 6.7B on GPU and CPU, greedy and nucleus",
+   "note": null,
+   "where": "Sec 5.1, Fig 8",
+   "quote": "the average flash latency doesn’t increase as we go further in generation"
+  },
+  {
+   "claim": "Flash random-read throughput exceeds 6 GiB/s only for large linear reads; 32 KiB or larger random reads over multiple threads suffice for sparse inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sequential read throughput",
+   "value": "6",
+   "unit": "GiB/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MacBook M1 Max 1TB flash, uncached 1GiB linear read",
+   "note": null,
+   "where": "Sec 2.2",
+   "quote": "speeds exceeding 6 GiB/s for a 1GiB linear read of an uncached file"
+  }
+ ],
+ "limits": [
+  "Single-batch decoding only; prompt processing and multi-batch not studied (Sec 8)",
+  "Requires sparse (ReLU-like) FFN activations; Falcon, Phi-2 and Llama 2 needed relufication or FATReLU fine-tuning, which costs accuracy",
+  "Memory fixed at about half the model size; other sizes left to future work",
+  "Baseline I/O latencies are theoretical best case, not measured",
+  "Total energy is higher than dense despite lower power; no quantitative power or thermal analysis",
+  "Latency sampled from a small C4 subset; no seeds stated; code and weights not released in the text",
+  "Predictors over-predict: about 3x the truly active neurons are loaded in OPT and Persimmon"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "windowing",
+   "definition": "keep in DRAM the neurons predicted active for the last k tokens and load only the incremental difference",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "row-column bundling",
+   "definition": "store the i-th up-projection column and i-th down-projection row together to double the read chunk",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deja Vu (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "low-rank activation predictor; this paper uses current-layer attention output as input",
+   "quote": null
+  },
+  {
+   "work": "Mirzadeh et al., ReLU strikes back",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "relufied Falcon and Phi-2 models",
+   "quote": null
+  },
+  {
+   "work": "Song et al., FATReLU sparsified Llama 2",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sparse Llama 2",
+   "quote": null
+  },
+  {
+   "work": "FlexGen (Sheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "offloads to DRAM and flash but bound by flash throughput",
+   "quote": null
+  },
+  {
+   "work": "OPT (Zhang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "main model",
+   "quote": null
+  },
+  {
+   "work": "MLX (Hannun et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Metal kernels",
+   "quote": null
+  },
+  {
+   "work": "Speculative decoding (Leviathan et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "combined on GPU",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Average inference latency for a single token when only half of the model's memory is available",
+   "page": 1,
+   "why": "I/O, memory management, compute split by backend"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "(a) Flash capacity vs bandwidth; (b) random read throughput vs chunk size and threads",
+   "page": 2,
+   "why": "motivates large chunks and multithreading"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Memory management with deletion by swap and append",
+   "page": 5,
+   "why": "shows the preallocated matrix scheme"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "I/O latency of OPT 6.7B 16 bit on M1 Max when half the memory is available",
+   "page": 6,
+   "why": "per-technique ablation"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Sec 5.2 cites 'table 5' for the speculative speedup; numbers are in Tables 3 and 5",
+  "Appendix C.3 has a broken citation placeholder '«cite nucleus»' and says Figure 1 for Persimmon timings",
+  "Persimmon All CPU I/O+Mem differ between Table 3 (283, 98) and Table 5 (310.52, 155.80), totals 1041 vs 1090",
+  "Intro says 7x Metal; Table 3 gives 4.2x (M1) and 7.4x (M2)"
+ ]
 }

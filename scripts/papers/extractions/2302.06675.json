@@ -1,0 +1,882 @@
+{
+ "schema": 1,
+ "key": "2302.06675",
+ "pdf": "data-science/sources/chen-2023-symbolic-discovery-optimization-algorithms.pdf",
+ "bib": {
+  "title": "Symbolic Discovery of Optimization Algorithms",
+  "authors": [
+   "Xiangning Chen",
+   "Chen Liang",
+   "Da Huang",
+   "Esteban Real",
+   "Kaiyuan Wang",
+   "Yao Liu",
+   "Hieu Pham",
+   "Xuanyi Dong",
+   "Thang Luong",
+   "Cho-Jui Hsieh",
+   "Yifeng Lu",
+   "Quoc V. Le"
+  ],
+  "first_author": "Chen",
+  "year": 2023,
+  "venue": "preprint (arXiv:2302.06675v4, 8 May 2023; no venue printed)",
+  "arxiv": "2302.06675",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 103162,
+  "chars_total": 103162,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an optimizer that generalises from small proxy tasks to state-of-the-art training be discovered automatically by searching a space of programs?",
+ "hypothesis": "Searching programs with evolution plus selection on larger meta-validation tasks and simplification yields an optimizer that generalises beyond the proxy tasks and beats AdamW/Adafactor.",
+ "contributions": [
+  "A method that formulates algorithm discovery as program search with warm-start/restart evolution, abstract execution, funnel selection and simplification",
+  "Lion (EvoLved Sign Momentum), memory-efficient and with uniform per-parameter update magnitude",
+  "Evaluation across image classification, vision-language, diffusion, language modeling and fine-tuning, plus analysis of limits"
+ ],
+ "method": {
+  "summary": "Evolutionary program search (regularized evolution with warm start from AdamW, restarts, abstract-execution pruning and caching, funnel selection on larger meta-validation tasks, manual simplification) over a 43-45 function imperative language produces the optimizer Lion (sign of an interpolated momentum, momentum-only state). Lion is then compared against AdamW/Adafactor (and others) across image classification, contrastive vision-language, diffusion, language modeling and T5 fine-tuning, each optimizer tuned for lr and weight decay.",
+  "task": "optimizer discovery by program search; evaluation on neural-network training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet (ReaL, V2, A, R, Sketch, ObjectNet)",
+    "role": "both",
+    "size": null,
+    "split": "from scratch: ResNet-50 90 epochs batch 1,024, others 300 epochs batch 4,096",
+    "source": "standard benchmarks",
+    "preprocessing": "image size 224 by default; RandAug 2,15 and Mixup 0.5/0.8 in some runs (Table 12)"
+   },
+   {
+    "name": "ImageNet-21K",
+    "role": "pretrain",
+    "size": null,
+    "split": "90 epochs, batch 4,096, then fine-tune on ImageNet",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "JFT-300M and JFT-3B (JFT-5B for BASIC)",
+    "role": "pretrain",
+    "size": "300M / 3B / 5B images",
+    "split": "ViT-B/L/H on JFT-300M, ViT-g/G on JFT-3B; 7 or 14 epochs (517,791 / 1,035,583 steps) per Table 8",
+    "source": "Sun et al. 2017",
+    "preprocessing": "settings follow Dosovitskiy 2021 and Zhai 2021"
+   },
+   {
+    "name": "LM1B / 10% ImageNet proxies",
+    "role": "train",
+    "size": "10% of ImageNet; LM1B",
+    "split": "search proxy tasks",
+    "source": "Chelba 2013",
+    "preprocessing": "ViT proxy: 64x64 images, patch 16; LM proxy: sequence length 32, vocab 3K"
+   },
+   {
+    "name": "Wiki-40B, PG-19, C4",
+    "role": "both",
+    "size": null,
+    "split": "context 512 (Wiki-40B), 1,024 (PG-19)",
+    "source": "Guo 2020; Rae 2020; Raffel 2020",
+    "preprocessing": "vocab 32K small-scale"
+   },
+   {
+    "name": "Internal GLaM-like corpus",
+    "role": "pretrain",
+    "size": "1.6 trillion tokens",
+    "split": "300B tokens trained",
+    "source": "internal, similar to GLaM (Du et al. 2022)",
+    "preprocessing": "vocab 256K"
+   },
+   {
+    "name": "GLUE",
+    "role": "eval",
+    "size": null,
+    "split": "dev set",
+    "source": "Wang 2019a",
+    "preprocessing": null
+   },
+   {
+    "name": "Internal image-text dataset, MSCOCO, Flickr30K",
+    "role": "both",
+    "size": "6.6B pairs (BASIC); 1B pairs (LiT)",
+    "split": "2K MSCOCO val images for real-time Imagen eval",
+    "source": "internal",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Lion",
+    "role": "proposed",
+    "params": null,
+    "architecture": "optimizer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "beta1": 0.9,
+     "beta2": 0.99,
+     "note": "beta1 0.95, beta2 0.98 for language tasks"
+    }
+   },
+   {
+    "name": "AdamW / Adafactor / SGD momentum / RAdam / NAdam / AdaBelief / AMSGrad / PowerSign / AddSign",
+    "role": "baseline",
+    "params": null,
+    "architecture": "optimizers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Search proxy ViT",
+    "role": "base",
+    "params": null,
+    "architecture": "ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3",
+    "hidden": "96",
+    "heads": "3",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Search proxy Transformer",
+    "role": "base",
+    "params": null,
+    "architecture": "Transformer LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "3K",
+    "layers": "2",
+    "hidden": "128",
+    "heads": "2",
+    "context": "32",
+    "other": {}
+   },
+   {
+    "name": "LM small/medium/large",
+    "role": "evaluated",
+    "params": "110M / 336M / 731M",
+    "architecture": "Transformer, FFN 4x d_model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "32K",
+    "layers": "12 / 24 / 24",
+    "hidden": "768 / 1024 / 1536",
+    "heads": "12 / 16 / 16",
+    "context": "512 or 1,024",
+    "other": {
+     "d_head": "64/64/96"
+    }
+   },
+   {
+    "name": "LM 1.1B / 2.1B / 7.5B",
+    "role": "evaluated",
+    "params": "1.07B / 2.14B / 7.49B",
+    "architecture": "Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256K",
+    "layers": "24 / 32 / 32",
+    "hidden": "1536 / 2048 / 4096",
+    "heads": "16 / 16 / 32",
+    "context": "1K",
+    "other": {
+     "d_head": "96/128/128"
+    }
+   },
+   {
+    "name": "Vision models: ResNet-50, Mixer-S/B, ViT-S/B/L/H/g/G, CoAtNet-1/3/7, LiT, BASIC-L, U-Net diffusion, Imagen, T5 Base/Large/11B",
+    "role": "evaluated",
+    "params": "ResNet-50 25.56M; ViT-S/16 22.05M; ViT-B/16 86.57M; ViT-L/16 304.72M; ViT-H/14 632.72M; ViT-g/14 1.04B; ViT-G/14 1.88B; T5 220M/770M/11B",
+    "architecture": "various",
+    "init_from": "LiT: frozen pre-trained ViT image encoder",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "imagen_base_unet_width": "192 vs 512 in original 2B",
+     "superres": "600M identical to Imagen"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised classification / contrastive / diffusion / LM / masked LM / GLUE fine-tuning per task; the search itself maximises proxy validation accuracy or perplexity",
+   "optimizer": "Lion vs AdamW/Adafactor; evolutionary search: regularized evolution, population 1K, tournament size 2",
+   "lr": "per task, Table 12 (e.g. ViT-B/16 Lion 1e-3 vs AdamW 3e-3; with strong aug Lion 1e-4 vs AdamW 1e-3; diffusion Lion 3e-5 vs 3e-4; 7.5B LM Lion 1e-4 vs Adafactor 1e-3; T5 fine-tune Lion 3e-6 vs AdamW 3e-5)",
+   "lr_schedule": "default cosine decay; linear decay for LM; constant for diffusion and T5 fine-tuning",
+   "warmup": "10K steps by default",
+   "batch_size": "ResNet-50 1,024; other from-scratch vision 4,096; ImageNet-21K 4,096; LiT 16,384; BASIC 65,536; diffusion 2,048; LM 2^18 tokens (small-scale), 3M tokens (large); T5 fine-tune 128; proxy 64",
+   "steps": "LM small-scale 125K; T5 fine-tune 500K; proxies 30K (vision) / 20K (LM); JFT per Table 8",
+   "epochs": "ResNet-50 90; others from scratch 300; ImageNet-21K 90; JFT 7 or 14",
+   "tokens": "LM 300B tokens (1.1B-7.5B)",
+   "seq_len": "LM context 512 / 1,024 / 1K",
+   "precision": "momentum stored as bfloat16 by default",
+   "weight_decay": "decoupled, per task Table 12 (Lion values 3-10x AdamW)",
+   "dropout": "per Table 12 (0.1 for several)",
+   "regularisation": "stochastic depth 0.1-0.7, RandAug 2,15, Mixup 0.5/0.8 per Table 12",
+   "hardware": "search: 100 TPU V2 chips per run; target tasks up to 512 TPU V4 chips; ViT-B/16 memory example 8 vs 16 TPU V4 chips",
+   "compute": "~3K TPU V2 days for search; ~72h per search run",
+   "wall_clock": "proxy eval <20 min on one TPU V2 chip; ~72h per search",
+   "seeds": "Table 2 averaged over three runs; five search runs for Fig 2; other tables not stated",
+   "other": {
+    "adamw_defaults": "beta1 0.9, beta2 0.999, eps 1e-8; eps 1e-6 and beta2 0.99 for language tasks",
+    "tuning": "peak lr and lambda tuned on log scale for both Lion and baseline; Sec 4.4 also tunes beta1/beta2",
+    "search_space": "43 functions listed in App H (Sec 2.1 says 45); program mutations insert/delete/modify; constants mutated by factor 2^a, a~N(0,1)"
+   }
+  },
+  "inference": {
+   "decoding": "diffusion: DDPM 1K sampling steps, no classifier-free guidance for ImageNet; Imagen eval uses guidance weight 5.0",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated except three runs for Table 2",
+   "prompting": "LM evaluation one-shot",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "ImageNet, ReaL, V2, A, R, Sketch, ObjectNet; zero-shot for LiT/BASIC",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "ImageNet generation; zero-shot FID-30K on MSCOCO for Imagen",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLIP score",
+     "definition": "image-text alignment",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "token-level (Wiki-40B), word-level (PG-19), masked LM (C4)",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "one-shot EM / accuracy",
+     "definition": "3 NLG tasks and 21 NLU tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GLUE dev score",
+     "definition": "peak validation score per task",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@K",
+     "definition": "ground-truth label of query appears in top-K retrieved",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "AdamW",
+    "Adafactor",
+    "SGD with momentum (ResNet)",
+    "RAdam",
+    "NAdam",
+    "AdaBelief",
+    "AMSGrad",
+    "PowerSign",
+    "AddSign",
+    "Ablation0.9/0.99"
+   ],
+   "protocol": "Every optimizer tuned for lr and weight decay; Table 2 averaged over three runs; no significance tests reported; Lion's lack of significance acknowledged in limitations"
+  },
+  "availability": {
+   "code": "https://github.com/google/automl/tree/master/lion",
+   "weights": null,
+   "data": "ImageNet public; JFT and internal text/image-text corpora not public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "By default, the learning rate schedule is cosine decay with 10K steps warmup,\nand the momentum is saved as bfloat16",
+    "where": "Sec 4"
+   },
+   {
+    "field": "models.search space function count",
+    "quote": "We include 43 available functions",
+    "where": "App H; Sec 2.1 says 45"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Lion on BASIC-L reaches 88.3% zero-shot ImageNet accuracy vs 85.7% for Adafactor",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot ImageNet top-1",
+   "value": "88.3",
+   "unit": "%",
+   "baseline_value": "85.7",
+   "n": null,
+   "setup": "BASIC-L (CoAtNet-7 image tower pre-trained on JFT-5B, contrastive training on 6.6B image-text pairs, batch 65,536); Lion used in both the image-encoder pre-training and contrastive stages; single run",
+   "note": null,
+   "where": "Table 1, Sec 4.2",
+   "table": "Table 1, row Lion, column Zero-shot ImageNet"
+  },
+  {
+   "claim": "Fine-tuned BASIC-L image encoder trained with Lion reaches 91.1% ImageNet top-1, 0.1% above previous SOTA",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1 after fine-tuning",
+   "value": "91.1",
+   "unit": "%",
+   "baseline_value": "90.9",
+   "n": null,
+   "setup": "BASIC-L CoAtNet-7 fine-tuned on ImageNet; Adafactor baseline 90.9",
+   "note": null,
+   "where": "Sec 4.2",
+   "table": "Table 1, row Lion, column Fine-tune ImageNet"
+  },
+  {
+   "claim": "ViT-B/16 trained from scratch on ImageNet gains 1.96% over AdamW with Lion",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": "1.96",
+   "unit": "% (points)",
+   "baseline_value": "75.48",
+   "n": null,
+   "setup": "ViT-B/16, 300 epochs, batch 4,096, RandAug+Mixup not used for this row (77.44 vs 75.48), results averaged over three runs",
+   "note": null,
+   "where": "Sec 4.1, Table 2",
+   "quote": "accuracy increases of 1.96% and 0.58%",
+   "table": "Table 2, ViT-B/16 no-augmentation rows, column ImageNet (Lion 77.44 vs AdamW 75.48)"
+  },
+  {
+   "claim": "With strong augmentation the gain shrinks: Lion beats AdamW by 0.42% on CoAtNet-3",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1 gain",
+   "value": "0.42",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoAtNet-3 from scratch on ImageNet, RandAug+Mixup, drop-path 0.7",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "it still outperforms AdamW by 0.42% on CoAtNet-3"
+  },
+  {
+   "claim": "Lion lets ViT-L/16 match ViT-H/14 trained by AdamW with 3x less pre-training cost (5x on ReaL)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3",
+   "unit": "x pre-training compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-300M pre-training, fine-tuned on ImageNet; ImageNet and ImageNet V2; ReaL gives 5x",
+   "note": null,
+   "where": "Sec 4.1, Fig 1 Left, Fig 4, Table 8",
+   "quote": "but with 3x less pre-training cost"
+  },
+  {
+   "claim": "On ImageNet ReaL the pre-training compute saving of Lion over AdamW is 5x",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "x pre-training compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-L/16 vs ViT-H/14(AdamW) on JFT-300M, ReaL metric",
+   "note": "Abstract states 'saves up to 5x the pre-training compute on JFT'",
+   "where": "Sec 4.1",
+   "quote": "On ImageNet ReaL, the compute saving further becomes\n5x."
+  },
+  {
+   "claim": "ViT-G/14 pre-trained on JFT-3B with Lion reaches 90.71% ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90.71",
+   "unit": "%",
+   "baseline_value": "90.45",
+   "n": null,
+   "setup": "ViT-G/14 518px, fine-tuned with Polyak averaging, vs Adafactor 90.45; marked * rows report last and oracle results because of fine-tuning overfitting",
+   "note": null,
+   "where": "Sec 4.1, Table 3",
+   "quote": "Our ViT-G/14 further achieves a 90.71% accuracy on ImageNet."
+  },
+  {
+   "claim": "Lion improves diffusion FID on 256x256 ImageNet to 4.1 vs 4.7 for AdamW and reaches AdamW final quality in 2.3x fewer steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "4.1",
+   "unit": "FID",
+   "baseline_value": "4.7",
+   "n": null,
+   "setup": "Improved U-Net of Dhariwal and Nichol, batch 2,048, constant LR, DDPM 1K sampling steps no guidance; AdamW FID 4.7; Lion matches AdamW final at 440K steps",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "The ﬁnal FID scores are 4.1\n(Lion) vs. 4.7 (AdamW)"
+  },
+  {
+   "claim": "Lion reduces diffusion training steps by 2.3x to match AdamW's final FID",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.3",
+   "unit": "x iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256x256 ImageNet unconditional generation",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "reducing 2.3x iterations"
+  },
+  {
+   "claim": "LiT zero-shot ImageNet gains of Lion over AdamW are +1.10%, +1.13%, +0.66% across B/32-B, B/16-B and g/14-L",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.13",
+   "unit": "% (LiT-B/16-B)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LiT with frozen pre-trained ViT, 1B image-text pairs, batch 16,384",
+   "note": null,
+   "where": "Sec 4.2, Table 4",
+   "quote": "gains of +1.10%, +1.13%, and +0.66% on zero-shot ImageNet accuracy"
+  },
+  {
+   "claim": "Autoregressive LM: Lion gives 1.6x and 1.5x speedup on medium model for Wiki-40B and PG-19, 2x on large PG-19",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.6",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "110M/336M/731M Transformers, 2^18 tokens per batch, 125K steps, 10K warmup then linear decay; context 512 (Wiki-40B) and 1,024 (PG-19)",
+   "note": null,
+   "where": "Sec 4.4, Fig 7",
+   "quote": "It achieves 1.6x and 1.5x speedup when\ntraining the medium size model on Wiki-40B and PG-19"
+  },
+  {
+   "claim": "On 1.1B-7.5B LMs (300B tokens) Lion improves avg one-shot NLG by +1.0, +0.9, +0.6 exact match over Adafactor; no perplexity difference",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.6",
+   "unit": "EM points (7.5B)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.1B/2.1B/7.5B models, 300B tokens, batch 3M tokens, context 1K, 3 NLG + 21 NLU tasks one-shot; NLU gains 0.7, 0.6, 0.4",
+   "note": null,
+   "where": "Sec 4.4, Table 5, Table 11",
+   "quote": "exact match\nimprovement of +1.0, +0.9, and +0.6 for the 1.1B, 2.1B, and 7.5B models"
+  },
+  {
+   "claim": "T5 GLUE fine-tuning: Lion beats AdamW on average at all three scales (11B: 91.60 vs 91.08)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "91.60",
+   "unit": "avg GLUE dev",
+   "baseline_value": "91.08",
+   "n": null,
+   "setup": "T5 Base/Large/11B, 500K steps, batch 128, constant LR; peak validation scores per task; Base 87.91 vs 87.42, Large 89.86 vs 89.46",
+   "note": "Peak validation scores, not final; single run each",
+   "where": "Sec 4.4, Table 6",
+   "table": "Table 6, row 11B Lion, column Avg"
+  },
+  {
+   "claim": "Masked LM on C4: Lion validation perplexity slightly better (4.18 vs 4.25 small)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.18",
+   "unit": "perplexity",
+   "baseline_value": "4.25",
+   "n": null,
+   "setup": "Small/medium/large, same setup as small-scale AR; medium 3.42 vs 3.54, large 3.18 vs 3.25",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "4.18 vs. 4.25 (small)"
+  },
+  {
+   "claim": "Optimal batch size is 256 for AdamW and 4,096 for Lion; at 32K batch Lion beats AdamW by 2.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.5",
+   "unit": "% accuracy (77.9 vs 75.4)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/16 ImageNet, 300 epochs fixed, RandAug+Mixup; 32K batch gives ~11K steps; Lion robust down to batch 64",
+   "note": null,
+   "where": "Sec 4.6, Fig 8 Left",
+   "quote": "Lion achieves a signiﬁcant 2.5% accuracy gain over AdamW (77.9% vs. 75.4%)"
+  },
+  {
+   "claim": "Lion likely performs no better than AdamW when batch size is small",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "<64",
+   "unit": "batch size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' stated limitation; hedged ('it is likely'), not tested as a sweep below 64 beyond Fig 8",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "it is likely that Lion performs\nno better than AdamW if the batch size is small (<64)"
+  },
+  {
+   "claim": "Suitable Lion learning rate is typically 3-10x smaller than AdamW's and decoupled weight decay 3-10x larger",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "3-10",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' experience across tasks; initial, peak and end LR scaled by same ratio; schedule and clipping unchanged",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "a suitable learning rate for\nLion is typically 3-10x smaller than that for AdamW"
+  },
+  {
+   "claim": "Lion needs half the chips of AdamW for ViT-B/16 at batch 4,096 and runs 2-15% faster",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2-15",
+   "unit": "% speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/16, 224px, batch 4,096, bfloat16 momentum; AdamW needs >=16 TPU V4 chips, Lion 8; speed depends on task, codebase and hardware",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "usually\n2-15% speedup compared to AdamW and Adafactor"
+  },
+  {
+   "claim": "Lion converges to flatter regions: ViT-B/16 has higher training loss (0.75 vs 0.61) but lower noise-perturbed loss (1.37 vs 3.74)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.37",
+   "unit": "L_N_train (Lion)",
+   "baseline_value": "3.74",
+   "n": null,
+   "setup": "ViT-B/16 from scratch on ImageNet; flatness = E over N of L_train(w+eps), averaged over 1K random noises",
+   "note": null,
+   "where": "App G, Table 10",
+   "table": "Table 10, column Lion row LN_train (3.74 AdamW)"
+  },
+  {
+   "claim": "Lion is more robust to lr and weight-decay choices than AdamW (heatmaps)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B/16 on ImageNet from scratch, lr x lambda grid; qualitative, read from Fig 8 Middle/Right",
+   "note": null,
+   "where": "Sec 5, Fig 8"
+  },
+  {
+   "claim": "Ablation with a single beta (0.9 or 0.99) performs worse than all five baselines, so both interpolation factors are needed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "78.23",
+   "unit": "ImageNet top-1 (Ablation0.9, ViT-S/16)",
+   "baseline_value": "79.46",
+   "n": null,
+   "setup": "ViT-S/16 and ViT-B/16 on ImageNet with RandAug+Mixup; Lion 79.46, AdamW 78.89; Ablation0.99 78.19",
+   "note": null,
+   "where": "Sec 4.6, Table 7",
+   "table": "Table 7, row ImageNet ViT-S/16, column Ablation0.9"
+  },
+  {
+   "claim": "Other optimizers (RAdam, NAdam, AdaBelief, AMSGrad, PowerSign, AddSign) show no clear winner and none beat Lion on ViT-S/16 ImageNet",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "79.46",
+   "unit": "ImageNet top-1 (Lion)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-S/16; best baseline AMSGrad 79.01; each tuned for lr and lambda",
+   "note": null,
+   "where": "Sec 4.5, Table 7",
+   "table": "Table 7, row ViT-S/16 ImageNet, column Lion"
+  },
+  {
+   "claim": "Evolutionary search found Lion with ~3K TPU V2 days of search cost; each search run uses 100 TPU V2 chips for ~72h",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~3K",
+   "unit": "TPU V2 days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five repeats plus one restart round from best; 200-300K programs generated per run, 20-30K actually evaluated thanks to cache",
+   "note": null,
+   "where": "Sec 2.2",
+   "quote": "This results in a total cost of ∼3K TPU V2 days."
+  },
+  {
+   "claim": "Redundant statements are 69.8% of programs late in search and the hash cache hit rate is 89.1%, giving ~3x shorter programs and ~10x lower search cost",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "69.8",
+   "unit": "% redundant statements",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five search runs, each 300K programs",
+   "note": null,
+   "where": "Sec 2.2, Fig 2 Right",
+   "quote": "69.8 ± 1.9% redundant statements"
+  },
+  {
+   "claim": "Random search over more than 2M programs on the proxy did not match AdamW",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2M",
+   "unit": "programs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Low-cost proxy task",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "over 2M\nprograms on a low-cost proxy task"
+  },
+  {
+   "claim": "Lion is not clearly better than AdamW on some tasks: Imagen base, large-scale LM perplexity, C4 masked LM; differences are small on ResNets",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' own limitation statement; massive high-quality datasets reduce optimizer differences",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "There are also several tasks where Lion performs similarly to AdamW"
+  }
+ ],
+ "limits": [
+  "Search space is biased toward first-order optimizers; no second-order functions; search cost large and simplification manual (Sec 6)",
+  "Evaluation limited to chosen tasks; ResNet gaps are small; gain falls with strong augmentation (Sec 6)",
+  "Lion ties AdamW on Imagen base model, large-scale LM perplexity and C4 masked LM; difference not statistically significant on some large language and image-text datasets (Sec 1, 6)",
+  "Likely no better than AdamW below batch size 64 (Sec 6)",
+  "Still needs bfloat16 momentum, expensive for giant models",
+  "Seeds and variance are not reported outside Table 2 (three runs); no significance tests",
+  "Baselines are tuned by the authors; Imagen base width reduced to 192 for compute",
+  "Hyperparameters for language tasks tune beta1/beta2 (and AdamW eps) separately from the vision defaults"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Lion",
+   "definition": "EvoLved Sign Momentum: tracks only momentum and takes the sign of an interpolation of gradient and momentum to compute the update",
+   "where": "Abstract, Sec 3"
+  },
+  {
+   "term": "meta-overfitting",
+   "definition": "the search fitness keeps growing, but the meta-validation metric declines, indicating that the discovered algorithms have overfit the proxy tasks",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "funnel selection",
+   "definition": "gradually increases the scale of the meta-validation tasks, only algorithms beating the baseline on task B go on to a 100x larger task C",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AutoML-Zero",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "symbolic program search inspiration",
+   "quote": "is in particular\ninspired by AutoML-Zero"
+  },
+  {
+   "work": "Neural optimizer search with reinforcement learning (Bello et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PowerSign and AddSign compared in Table 7",
+   "quote": null
+  },
+  {
+   "work": "signSGD (Bernstein et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest handcrafted optimizer using sign; different momentum rule",
+   "quote": null
+  },
+  {
+   "work": "AdamW (Loshchilov and Hutter)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main baseline and initial program for the search",
+   "quote": null
+  },
+  {
+   "work": "Adafactor (Shazeer and Stern)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "used when memory is a bottleneck",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "baseline",
+   "note": "AdamW basis",
+   "quote": null
+  },
+  {
+   "work": "BASIC (Pham et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "largest vision-language test, BASIC-L",
+   "quote": null
+  },
+  {
+   "work": "Scaling Vision Transformers (Zhai et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "JFT pre-training/fine-tuning settings, ViT-G/14 reference results",
+   "quote": null
+  },
+  {
+   "work": "LiT (Zhai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Lion vs AdamW on locked-image text tuning",
+   "quote": null
+  },
+  {
+   "work": "Diffusion models beat GANs (Dhariwal and Nichol)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "U-Net for ImageNet generation",
+   "quote": null
+  },
+  {
+   "work": "Imagen (Saharia et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text-to-image setup",
+   "quote": null
+  },
+  {
+   "work": "Transformer quality in linear time (Hua et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "small-scale LM setup",
+   "quote": null
+  },
+  {
+   "work": "When vision transformers outperform ResNets without pre-training (Chen et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "landscape flatness measure",
+   "quote": null
+  },
+  {
+   "work": "JFT-300M, ImageNet, Wiki-40B, PG-19, C4, GLUE",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets used",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Program 1",
+   "caption": "Discovered optimizer Lion",
+   "page": 2,
+   "why": "Entire algorithm in five lines"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "ImageNet fine-tuning accuracy vs pre-training cost on JFT-300M; FID of the diffusion model",
+   "page": 2,
+   "why": "Headline compute savings"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Batch-size ablation and lr x lambda heatmaps for AdamW and Lion",
+   "page": 13,
+   "why": "Shows batch-size dependence and hyperparameter robustness"
+  },
+  {
+   "figure": "Table 12",
+   "caption": "Hyperparameters for all the experiments",
+   "page": 30,
+   "why": "Per-task lr and lambda for Lion vs AdamW"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 2 (App A)",
+   "snippet": "ct ←β1mt−1 + (1 −β1)gt\nθt ←θt−1 −ηt(sign(ct) + λθt−1)\nmt ←β2mt−1 + (1 −β2)gt",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction renders figure and table cells one per line; table values read in order. Sec 2.1 says 45 functions, App H says 43. No embedded instructions found."
+ ]
+}

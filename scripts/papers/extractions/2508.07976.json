@@ -1,0 +1,702 @@
+{
+ "schema": 1,
+ "key": "2508.07976",
+ "pdf": "generative-ai/05-RL/sources/gao-2025-beyond-ten-turns.pdf",
+ "bib": {
+  "title": "Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with Large-Scale Asynchronous RL",
+  "authors": [
+   "Jiaxuan Gao",
+   "Wei Fu",
+   "Minyang Xie",
+   "Shusheng Xu",
+   "Chuyi He",
+   "Zhiyu Mei",
+   "Banghua Zhu",
+   "Yi Wu"
+  ],
+  "first_author": "Gao",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2508.07976",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 66936,
+  "chars_total": 66936,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can online RL unlock expert-level 'Search Intelligence' in open-source search agents given small turn limits and scarce hard QA data?",
+ "hypothesis": "Small turn limits (<=10) and poor data prevent online RL from learning complex search strategies; relaxing the limit with asynchronous RL and synthetic hard QA will unlock them.",
+ "contributions": [
+  "Fully asynchronous agentic RL training enabling long-horizon search (128 turns) with high efficiency",
+  "A prompt-based LLM data-synthesis agent producing challenging, grounded QA pairs",
+  "ASearcher-Local-7B/14B and ASearcher-Web-QwQ open-source agents with state-of-the-art open-source results"
+ ],
+ "method": {
+  "summary": "ASearcher trains search agents (search + browse tools) with GRPO in a fully asynchronous RL system built on AReaL, allowing up to 128 turns per trajectory for QwQ-32B, with a sparse trajectory-end reward (format x F1 for base models, LLM-as-Judge for QwQ). Training data are filtered HotpotQA/2Wiki plus a data-synthesis agent that injects facts and fuzzes details; Qwen2.5-7B/14B are trained on a local Wikipedia RAG and QwQ-32B on the live web.",
+  "task": "agentic search / multi-hop and single-hop QA, deep-research benchmarks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "HotpotQA + 2WikiMultiHopQA (filtered)",
+    "role": "train",
+    "size": "304k QA pairs filtered to 16k",
+    "split": "train sets",
+    "source": "open-source",
+    "preprocessing": "RL-trained model answers 16 times per question; drop if 0 correct of 16, if accuracy >=50%, or if solved with <=1 search turn"
+   },
+   {
+    "name": "WebWalkerQA subset",
+    "role": "train",
+    "size": "a small subset (size not given)",
+    "split": null,
+    "source": "open-source",
+    "preprocessing": null
+   },
+   {
+    "name": "ASearcher synthetic QA",
+    "role": "train",
+    "size": "25,624 entries from 14,107 seed questions (intro: 134k generated, 25.6k need tools)",
+    "split": null,
+    "source": "LLM synthesis agent; Wikipedia facts injected; verified by LLM and QwQ-32B",
+    "preprocessing": "Quality check, difficulty via QwQ-32B no-tool answers, answer-uniqueness check; drop questions QwQ answers without tools"
+   },
+   {
+    "name": "Final training sets",
+    "role": "train",
+    "size": "two sets of 35k each (one for 7B/14B, one for QwQ-32B)",
+    "split": null,
+    "source": "open-sourced",
+    "preprocessing": "stage 2 for QwQ keeps only questions needing >=5 tool calls"
+   },
+   {
+    "name": "NQ, TriviaQA, PopQA, HotpotQA, 2Wiki, MuSiQue, Bamboogle",
+    "role": "eval",
+    "size": "1000 random instances from validation sets of HotpotQA, 2Wiki, MuSiQue; full test sets for Bamboogle",
+    "split": "validation",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "GAIA, xBench-DeepSearch, Frames, HLE-500",
+    "role": "eval",
+    "size": "GAIA: 103 text-only validation examples; others full test sets",
+    "split": "test/val",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ASearcher-Local-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only LLM",
+    "init_from": "Qwen2.5-7B base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ASearcher-Local-14B / Web-14B",
+    "role": "proposed",
+    "params": "14B",
+    "architecture": "decoder-only LLM",
+    "init_from": "Qwen2.5-14B base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ASearcher-Web-QwQ",
+    "role": "proposed",
+    "params": "32B",
+    "architecture": "large reasoning model, prompt-based agent",
+    "init_from": "QwQ-32B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "input kept to at most 10k tokens (last 25k characters of history); thinking discarded from history",
+    "other": {
+     "web-QwQ-v1": "checkpoint after stage 1",
+     "web-QwQ-v2": "checkpoint after stage 2"
+    }
+   },
+   {
+    "name": "Qwen2.5-72B-Instruct",
+    "role": "judge",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "LLM-as-Judge for evaluation"
+    }
+   },
+   {
+    "name": "DeepSeek-V3",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "external webpage summariser and K=16 answer aggregator at test time only"
+    }
+   },
+   {
+    "name": "Search-R1 7B/14B/32B, R1-Searcher-7B, Search-o1(QwQ), DeepResearcher, SimpleDeepSearcher, WebThinker-QwQ, WebDancer-32B",
+    "role": "baseline",
+    "params": "7B-32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "GRPO with token-level normalised clipped objective (Eq. 1); dynamic filtering removes queries whose responses all get identical reward; sparse trajectory-end reward: format x F1 for base LLMs, LLM-as-Judge (no format reward) for QwQ; all generated tokens (thinking, tool calls, summaries) trained end to end",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 for 7B/14B; 64 for ASearcher-Web-QwQ",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "H800 GPUs",
+   "compute": "about 16k H800 GPU hours (ASearcher-Web-QwQ)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "turn_limit": "32 for 7B/14B; 128 for ASearcher-Web-QwQ",
+    "system": "fully asynchronous rollouts and decoupled rollout/training, built on AReaL; training step launches as soon as enough trajectories form a batch",
+    "curriculum": "two-stage for QwQ: stage 1 all difficulties; stage 2 only questions needing >=5 tool calls",
+    "group_size_G": "not stated (16 responses used for data filtering only)",
+    "clip_epsilon": "hyperparameter named, value not given",
+    "off_policy_staleness": "not stated; trajectories can span multiple model versions",
+    "training_steps_hint": "Fig 6 shows around 200 steps where stage 2 starts (read from text 'after step 200')"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Avg@4 and Pass@4 over 4 runs on GAIA/xBench/Frames; baselines run with official code for 4 seeds; test-time search K=16 runs aggregated by DeepSeek-V3",
+   "prompting": "Base LLMs: append-only history from system prompt, tags such as <search>query</search>; QwQ: separate prompts for tool selection, summarisation, answering; history keeps summarised thoughts and tool calls only, last 25k characters",
+   "retrieval": "Local: Wikipedia 2018 corpus (DPR) via RAG; web: search engine returning snippets+URLs, browser returning page content summarised by the agent; retriever/search backend, top-k not stated",
+   "parameters": {
+    "summary_model": "agent itself (training) or DeepSeek-V3 (zero-shot transfer)",
+    "test_time_search_K": "16"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "word-level harmonic mean of precision and recall vs reference answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "LLM-as-Judge (LasJ)",
+     "definition": "Qwen2.5-72B-Instruct judges correctness per task-specific instructions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Avg@4",
+     "definition": "average LLM-judge accuracy over 4 runs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@4",
+     "definition": "ratio of questions where the agent finds the correct answer in 4 trials",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Search-R1 7B/14B/32B",
+    "R1-Searcher-7B",
+    "Search-o1 (QwQ-32B)",
+    "DeepResearcher",
+    "SimpleDeepSearcher",
+    "WebThinker-QwQ",
+    "WebDancer-32B",
+    "direct generation (Qwen2.5-7B, QwQ-32B)",
+    "commercial agents from official reports (Table 5)"
+   ],
+   "protocol": "Fair comparison: baselines use same tools; 4 runs for the hard benchmarks; no significance tests or confidence intervals reported; single training run (no seeds stated)"
+  },
+  "availability": {
+   "code": "https://github.com/inclusionAI/ASearcher",
+   "weights": "open-sourced (footnote 2)",
+   "data": "open-sourced (footnote 2)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "The batch size is set as 128 for 7B and 14B models, and 64 for ASearcher-Web-QwQ.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ASearcher-Web-QwQ-v2 reaches Avg@4 58.7 on GAIA (103 text-only val examples).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg@4 (LLM-as-Judge)",
+   "value": "58.7",
+   "unit": "%",
+   "baseline_value": "48.1 (Search-o1 QwQ, strongest baseline)",
+   "n": null,
+   "setup": "ASearcher-Web-QwQ (QwQ-32B, web search+browse tools, turn limit 128), LLM-as-Judge, Avg@4 over 4 runs, GAIA text-only validation subset",
+   "note": "Table 4 row ASearcher-Web-QwQ-v2, column GAIA Avg@4",
+   "where": "Sec 4.2; Table 4",
+   "quote": "achieves the best Avg@4 scores on GAIA (58.7)"
+  },
+  {
+   "claim": "ASearcher-Web-QwQ-v2 reaches Avg@4 51.1 on xBench-DeepSearch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg@4 (LLM-as-Judge)",
+   "value": "51.1",
+   "unit": "%",
+   "baseline_value": "40.3 (Search-o1 QwQ)",
+   "n": null,
+   "setup": "ASearcher-Web-QwQ (QwQ-32B, web search+browse tools, turn limit 128), LLM-as-Judge, Avg@4 over 4 runs",
+   "note": null,
+   "where": "Sec 4.2; Table 4",
+   "quote": "xBench-DeepSearch (51.1)"
+  },
+  {
+   "claim": "RL training lifts the QwQ-32B agent by +15.0 GAIA, +22.4 xBench, and Frames (text says +14.6, Fig 1 caption says +15.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg@4 gain",
+   "value": "+15.0 GAIA / +22.4 xBench / +14.6 Frames",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QwQ-32B agent before vs after RL, Avg@4, Fig 8",
+   "note": "Fig 1 caption prints +15.6 for Frames; Sec 4.2 prints +14.6. Intro also says '78.0% and 34.3% improvements' on xBench and GAIA (relative, apparently).",
+   "where": "Sec 4.2 Effect of RL Training; Fig 1; Fig 8",
+   "quote": "obtains +15.0, +22.4, and +14.6 improvements on GAIA, xBench-DeepSearch and Frames respectively"
+  },
+  {
+   "claim": "Pass@4 for ASearcher-Web-QwQ-v2 is 74.7 on GAIA and 75.0 on xBench-DeepSearch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@4",
+   "value": "74.7 GAIA / 75.0 xBench",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASearcher-Web-QwQ (QwQ-32B, web search+browse tools, turn limit 128), LLM-as-Judge, Pass@4 (fraction of questions solved in any of 4 trials)",
+   "note": null,
+   "where": "Intro; Table 4",
+   "quote": "ASearcher-Web-QwQ achieves 74.7 on GAIA and 75.0 on xBench-DeepSearch"
+  },
+  {
+   "claim": "Accuracy improves when the agent is forced to use more minimum turns (test-time sweep), supporting that complex tasks need long trajectories; no numbers given in text, read only from Fig 6 Left.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RL-trained QwQ-32B agent, minimum-turn enforcement, accuracy averaged over GAIA, xBench-DeepSearch, Frames",
+   "note": "This is a forced-minimum-turns sweep at test time, not a training-time turn-cap ablation. The paper has no matched short-cap training ablation.",
+   "where": "Sec 3.3.1; Fig 6 Left",
+   "quote": "The results demonstrate that accuracy improves with more turns, confirming that complex tasks demand longer trajectories for effective problem-solving."
+  },
+  {
+   "claim": "Training reached tool calls exceeding 100 turns and output tokens exceeding 400k (abstract/Fig 1), but Sec 4.3 says QwQ agent averaged max about 40 calls at step 200, peaks of 70 calls, and over 150k tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max trajectory length",
+   "value": "100+ turns, 400k+ tokens",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASearcher-Web-QwQ RL training",
+   "note": "Sec 4.3: 'reaching a maximum of around 40 calls at the 200th step, with peak instances even achieving up to 70 calls' and 'a maximum of over 150k tokens'. The two statements are not reconciled in the text; the 100/400k figure probably refers to individual longest trajectories (Fig 1 middle/right), unconfirmed.",
+   "where": "Abstract; Sec 4.3",
+   "quote": "tool calls exceeding 100 turns and output tokens exceeding 400k during training time"
+  },
+  {
+   "claim": "Local-trained ASearcher-Local-7B beats Search-R1-7B and R1-Searcher-7B on the local-KB suite (avg F1 58.0 vs 54.3 and 52.2; LasJ 61.0 vs 55.4 and 54.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg F1",
+   "value": "58.0",
+   "unit": "%",
+   "baseline_value": "54.3 (Search-R1-7B)",
+   "n": null,
+   "setup": "Qwen2.5-7B base, RL on local Wikipedia-2018 RAG, 7 QA benchmarks, 1000 sampled instances for HotpotQA/2Wiki/MuSiQue",
+   "note": null,
+   "where": "Sec 4.2; Table 2",
+   "quote": "an average F1 of 58.0, outperforming strong baselines such as Search-R1-7B"
+  },
+  {
+   "claim": "ASearcher-Local-14B local-KB average: text says F1 60.0 and LasJ 65.6, Table 2 prints 59.7 and 63.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg F1 / LasJ",
+   "value": "60.0 / 65.6 (text) vs 59.7 / 63.6 (Table 2)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-14B, local KB",
+   "note": "Table 2 row ASearcher-Local-14B Avg: 59.7 and 63.6; the text's 60.0 and 65.6 match the Table 3 (web setting) row for the same model. The text appears to quote the wrong table.",
+   "where": "Sec 4.2; Tables 2 and 3",
+   "quote": "ASearcher-Local-14B reaches an F1 of 60.0 and LasJ of 65.6"
+  },
+  {
+   "claim": "Local-trained agents transfer zero-shot to the web setting: ASearcher-Web-14B avg F1 61.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg F1",
+   "value": "61.5",
+   "unit": "%",
+   "baseline_value": "SimpleDeepSearcher-QwQ 58.4",
+   "n": null,
+   "setup": "Qwen2.5-14B, trained on web, evaluated in web search+browse setting",
+   "note": null,
+   "where": "Sec 4.2; Table 3",
+   "quote": "ASearcher-Web-14B achieves the best performance with an average F1",
+   "table": "Table 3, row ASearcher-Web-14B, column Avg. F1"
+  },
+  {
+   "claim": "Using DeepSeek-V3 as webpage summariser (zero-shot swap) raises GAIA 58.7 to 60.3 and xBench 51.1 to 56.4; test-time search K=16 with DeepSeek-V3 aggregation reaches 71.8 GAIA, 75.0 xBench, 83.4 Frames, 24.6 HLE-500.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "71.8 GAIA / 75.0 xBench",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pass@1 table; ASearcher-Web-QwQ-v2, K=16 independent runs aggregated by DeepSeek-V3",
+   "note": "Baselines in Table 5 (o3, Claude-4-Sonnet, Kimi-Researcher...) are from official reports (dagger), not rerun; Table 5 text extraction is column-misaligned so only ASearcher rows were taken.",
+   "where": "Sec 4.2; Table 5",
+   "quote": "we run K = 16 independent runs for each problem in the test set and aggregate the conclusions from these independent runs with DeepSeek-V3",
+   "table": "Table 5, row + Test-time Search (K=16), columns GAIA, xBench-DeepSearch"
+  },
+  {
+   "claim": "Two-stage curriculum: stage 2 keeps only questions needing at least 5 tool calls; v1 to v2 gives GAIA 52.8 to 58.7, xBench 42.1 to 51.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg@4",
+   "value": "52.8 to 58.7 GAIA; 42.1 to 51.1 xBench",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASearcher-Web-QwQ v1 (stage 1) vs v2 (stage 2), Avg@4",
+   "note": "v1 to v2 also adds more training steps, so the gain is not isolated to the data filter.",
+   "where": "Sec 4.1; Table 4",
+   "quote": "we retain only the questions that require at least 5 tool calls to solve",
+   "table": "Table 4, rows ASearcher-Web-QwQ-v1 and -v2"
+  },
+  {
+   "claim": "7B model fails to learn webpage browsing while 14B does; query count scales to about 6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "search queries per trajectory (max)",
+   "value": "6",
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASearcher-Local-7B/14B training, turn limit 32",
+   "note": "Authors' hypothesis for 7B browsing failure (capacity) is untested.",
+   "where": "Sec 4.3; Figs 9-10",
+   "quote": "the number of search queries scale up to 6"
+  },
+  {
+   "claim": "Training ASearcher-Web-QwQ takes about 16k H800 GPU hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute",
+   "value": "16k",
+   "unit": "H800 GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ASearcher-Web-QwQ, total",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "Training of ASearcher-Web-QwQ takes approximated 16k H800 GPU hours in total"
+  },
+  {
+   "claim": "Data synthesis: 14,107 seeds yield 25,624 selected questions (avg 4.27 injections, 2.10 fuzzes).",
+   "kind": "measured",
+   "source": null,
+   "metric": "synthetic questions kept",
+   "value": "25,624",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthesis agent, up to three variations kept per seed",
+   "note": "Intro says 'From 14k seed QAs, we generate 134k high-quality samples, with 25.6k requiring external tools'; 134k is not defined in Sec 3.2.2.",
+   "where": "Sec 3.2.2",
+   "quote": "Starting with 14,107 seed questions, we perform an average of 6.3 injections and 3.2 fuzzes per question"
+  },
+  {
+   "claim": "Open-source data filtered from 304k QA pairs to 16k challenging samples for RL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retained",
+   "value": "16k of 304k",
+   "unit": "QA pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotpotQA + 2WikiMultiHopQA, filtered with an RL-trained model, 16 responses per question",
+   "note": null,
+   "where": "Sec 3.2.1",
+   "quote": "from a total of 304k QA pairs, we retain 16k challenging samples for RL training"
+  }
+ ],
+ "limits": [
+  "No matched ablation of the training-time turn cap (e.g. 10 vs 128) or of asynchronous vs batch training on final accuracy; efficiency claim for async is shown only schematically in Fig 7.",
+  "Value for the 'long horizon matters' claim is a test-time forced-minimum-turn sweep plus a case study (Fig 3/12) on a single GAIA question.",
+  "Optimizer, learning rate, group size G, clip epsilon, steps, decoding settings, seeds are not stated; one training run, no variance across training seeds.",
+  "Text and tables disagree in places (Frames gain +14.6 vs +15.6; ASearcher-Local-14B 60.0/65.6 in text vs 59.7/63.6 in Table 2; 100+ turns/400k tokens vs max ~40 calls/150k tokens in Sec 4.3).",
+  "Table 5 commercial baselines come from official reports and may use different protocols; DeepSeek-V3 summariser and K=16 aggregation use an external LLM.",
+  "Authors' explanation for the 7B model failing to learn browsing (small capacity) is a hypothesis only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Search Intelligence",
+   "definition": "the ability to resolve ambiguous queries, generate precise searches, analyze results, and conduct thorough exploration",
+   "where": "Abstract / Sec 1"
+  },
+  {
+   "term": "Injection",
+   "definition": "inserts facts related to an entity in the question to enrich context and raise complexity",
+   "where": "Sec 3.2.2"
+  },
+  {
+   "term": "Fuzzing",
+   "definition": "blurs certain details in the question to increase uncertainty and difficulty",
+   "where": "Sec 3.2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Search-R1",
+   "year": 2025,
+   "arxiv": "2503.09516",
+   "relation": "extends",
+   "note": "Main online-RL baseline; criticised for turn limit <=10",
+   "quote": "Existing works, such as Search-R1 [11], artificially limit the number of search turns"
+  },
+  {
+   "work": "AReaL",
+   "year": 2025,
+   "arxiv": "2505.24298",
+   "relation": "uses-method",
+   "note": "Async RL system ASearcher builds on",
+   "quote": "Building up on AReaL [7]"
+  },
+  {
+   "work": "GRPO / DeepSeekMath",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "R1-Searcher",
+   "year": 2025,
+   "arxiv": "2503.05592",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Search-o1",
+   "year": 2025,
+   "arxiv": "2501.05366",
+   "relation": "baseline",
+   "note": "Prompt-based agent baseline, also the QwQ agent design inspiration",
+   "quote": null
+  },
+  {
+   "work": "DeepResearcher",
+   "year": 2025,
+   "arxiv": "2504.03160",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "SimpleDeepSearcher",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Strongest 32B baseline on web QA",
+   "quote": null
+  },
+  {
+   "work": "WebThinker",
+   "year": 2025,
+   "arxiv": "2504.21776",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "WebDancer",
+   "year": 2025,
+   "arxiv": "2505.22648",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "One-step-off RL (DeepCoder)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Batch-generation system contrasted in Fig 7",
+   "quote": null
+  },
+  {
+   "work": "GAIA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "xBench-DeepSearch",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Frames (Fact, Fetch, and Reason)",
+   "year": 2024,
+   "arxiv": "2409.12941",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": "1809.09600",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "2WikiMultiHopQA",
+   "year": 2020,
+   "arxiv": "2011.01060",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "WebWalkerQA",
+   "year": 2025,
+   "arxiv": "2501.07572",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "WebSailor",
+   "year": 2025,
+   "arxiv": "2507.02592",
+   "relation": "related",
+   "note": "Fuzzing-based data synthesis",
+   "quote": null
+  },
+  {
+   "work": "WebShaper",
+   "year": 2025,
+   "arxiv": "2507.15061",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "Test scaling of ASearcher-Web-QwQ; tool calls and generated tokens versus training steps",
+   "page": 9,
+   "why": "Shows accuracy rising with forced minimum turns and the heavy-tailed trajectory length that motivates async RL"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "One-Step-off RL v.s. Fully Asynchronous RL",
+   "page": 10,
+   "why": "Shows idle GPU time behind the slowest trajectory"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Comparison of the performance of QwQ-32B agent before and after RL Training",
+   "page": 14,
+   "why": "Per-benchmark RL gain"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "A case study on a complex query from GAIA",
+   "page": 4,
+   "why": "The only qualitative evidence for the long-horizon behaviours"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 2/3/5 text extraction is column-misaligned (cells on separate lines); numbers read by position. Table 5 Frames and HLE columns for some baselines are ambiguous so only ASearcher rows are recorded.",
+  "No embedded instructions found.",
+  "Paper has no appendix beyond the full case study (Appendix A); no hyperparameter appendix."
+ ]
+}

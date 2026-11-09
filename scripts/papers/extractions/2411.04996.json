@@ -1,19 +1,257 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2411.04996",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/liang-2024-mixture-transformers.pdf",
  "bib": {
   "title": "Mixture-of-Transformers: A Sparse and Scalable Architecture for Multi-Modal Foundation Models",
-  "first_author": "Weixin Liang",
-  "year": "2024",
-  "venue": "Trans. Mach. Learn. Res. 2025",
+  "authors": ["Weixin Liang", "Lili Yu", "Liang Luo", "Srinivasan Iyer", "Ning Dong", "Chunting Zhou", "Gargi Ghosh", "Mike Lewis", "Wen-tau Yih", "Luke Zettlemoyer", "Xi Victoria Lin"],
+  "first_author": "Liang",
+  "year": 2024,
+  "venue": "Transactions on Machine Learning Research (04/2025)",
   "arxiv": "2411.04996",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 149724,
+  "chars_total": 149724,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; plot axis text in figure bodies (Figures 6, 9, 12, 15-19, 24-26) is fragmentary and not used except the step-matching ratios; figure images not viewed."
  },
- "legacy_report": "SOURCE: Mixture-of-Transformers: A Sparse and Scalable Architecture for Multi-Modal Foundation Models. Weixin Liang, Lili Yu, Liang Luo, Srinivasan Iyer, Ning Dong, Chunting Zhou, Gargi Ghosh, Mike Lewis, Wen-tau Yih, Luke Zettlemoyer, Xi Victoria Lin (Stanford, AI at Meta). Transactions on Machine Learning Research, 04/2025 (arXiv 2411.04996v2, May 2025).\n\nCOVERAGE: Pages 1-48 of 48 were extracted. About 149k chars read in full, covering the abstract, all sections (1-8), Appendices A-B and the Appendix C figure captions. References were skimmed. Figure bodies (plots, images) were not viewed, only their captions and axis text. Page numbers below are approximate, taken from the contents list. The extraction is noisy: tables and plot labels are fragmented, but the prose is clean.\n\nCLAIMS\n1. MoT matches a 7B dense baseline in the Chameleon setting (text+image, both autoregressive) with 55.8% of the FLOPs.\n number: 55.8% of FLOPs (44.2% reduction); 45.5% of steps on global training loss; 34.8% on image loss.\n setup: 7B, FLOPs-controlled, trained from scratch, 120k steps, 0.377T tokens, roughly equal text and image tokens. Compared on held-out Obelisc, COCO, Flickr and Shutterstock validation losses.\n quote: \"MoT at 55.8% training steps achieves comparable or lower validation losses than dense model's final loss, indicating 44.2% reduction in required training FLOPs.\" Also: \"MoT particularly effective for image modality, requiring 34.8% of dense model's training steps to match final loss.\"\n where: Fig 5, p.11; sec 3.2.2, p.13-14\n\n2. Adding speech as a third modality, MoT reaches dense speech quality with 37.2% of the FLOPs.\n number: 37.2% of FLOPs on speech validation; 22.9% of steps on speech training loss; 15.1%-33.6% of steps across 443M/880M/1.5B.\n setup: 7B Chameleon+Speech. Speech is discrete semantic tokens (DinoSR variant, vocab 500, 25Hz). Speech data is mixed with text+image data at 1:6.\n quote: \"MoT reaches baseline speech performance in 37.2% of the FLOPs (f).\" Also: \"MoT required only 15.1% to 33.6% of the dense model's training steps to match speech training loss across all scales.\"\n where: Fig 8, Fig 9, sec 3.3, p.15-18\n\n3. In the Transfusion setting (text autoregressive, image diffusion), a 760M MoT beats a 1.4B dense model at half the FLOPs.\n number: CLIP 0.214 vs 0.206; FID 21.145 vs 24.688; CIDEr 0.320 vs 0.286.\n setup: Transfusion, 0.5T tokens (text:image 1:1), 250k steps, 256x256 images, 380M licensed Shutterstock images, FLOPs-controlled. No classifier-free guidance unless noted.\n quote: \"The 760M MoT model, using half the training/inference FLOPs of the 1.4B dense baseline (Transfusion), consistently outperforms the dense model across metrics: CLIP score (0.214 vs 0.206, higher is better), FID score (21.145 vs 24.688, lower is better), CIDEr score for image captioning (0.320 vs 0.286, higher is better)\"\n where: Fig 10-11, sec 3.4.2, p.20-22\n\n4. A 7B Transfusion MoT matches the dense image loss in about 30% of the steps and gets better FID and captioning.\n number: 30% of steps; COCO-30k FID 8.14 vs 9.22; CIDEr 40.6 vs 31.5.\n setup: the 9.22 FID is a dense model trained on 1T tokens with richer data, not a matched run. FID is at guidance level 1.6. CIDEr is the final score.\n quote: \"MoT achieves equivalent image pre-training loss to the dense model in only 30% of the training steps.\" Also: \"we compute the COCO-30k FID at a guidance level of 1.6 and obtain a score of 8.14. In contrast, a dense model trained on 1T tokens with richer data achieves a COCO-30k FID of 9.22\". Also: \"achieving a final score of 40.6 versus 31.5.\"\n where: sec 3.4.2, p.21\n\n5. Wall-clock gains are real but measured on one cluster only.\n number: 47.2% of dense time for image loss, 75.6% for text. MoE-4x shows a 1.7x slowdown on image.\n setup: Chameleon 7B, 256 A100 GPUs, AWS p4de.24xlarge, FSDP full shard, PyTorch 2 compile.\n quote: \"MoT matches the dense model's image training loss in 47.2% of the total GPU training time\" and \"MoE-4x exhibits no speed advantage in the text modality (Figure 19d) and even results in a 1.7x slowdown in the image modality compared to the dense model\"\n where: sec 6.2.2, Fig 19, p.32-34\n\n6. MoT's gain grows with GPU count, from a pilot study.\n number: image 42.1% to 21.6% of steps; text 75.7% to 50.9% (16 to 256 GPUs).\n setup: Chameleon 443M. Global batch and tokens scale with GPU count at constant steps.\n quote: \"the percentage of training steps required for MoT to match the dense model decreases from 42.1% (16 GPUs) to 21.6% (256 GPUs). For text, this percentage decreases from 75.7% to 50.9%.\"\n where: sec 6.2.1, Fig 18, p.32\n\n7. MoT beats MoE-4x, which has more total parameters. MoE-4x gains on image shrink with scale and vanish at 7B.\n number: none (qualitative). Example step ratios, 7B image: MoT s=0.348, MoE-4x s=1.012, where s above 1 means no speedup.\n setup: MoE-4x uses Expert Choice routing, FLOPs-matched. Chameleon 37M to 7B.\n quote: \"MoE-4x exhibits diminishing gains in image modality as scale increases, with advantages disappearing at 7B.\" In the speech setting MoE-4x showed \"improvements in training loss but unstable generalization in validation, particularly for speech\".\n where: Fig 6, sec 3.2.3, 3.3.3, p.12-17\n\n8. Ablation: untying the FFN gives the biggest gain. Attention QKV untying adds more, and LayerNorm untying adds nothing.\n number: approx 33.3% extra FLOPs saving on image and 10% on text from adding attention untying on top of FFN untying (Obelisc).\n setup: 880M Chameleon, FLOPs-matched to dense.\n quote: \"this leads to approximately 33.3% FLOPs saving for the image modailty and 10% FLOPs saving for the text modality compared to only performing untying in the feedforward module.\" Also: \"untying the LayerNorm parameters on top of feedforward and attention untying has a negligible impact\"\n where: sec 3.5, Fig 14, p.25-26\n\n9. Leave-one-out: merging modalities into one tower hurts, and the effects are not symmetric.\n number: none.\n setup: 443M Chameleon+Speech, FLOPs-matched.\n quote: \"Combining modalities consistently degraded performance, as evidenced by higher training and validation losses across configurations.\" Also: \"This differential impact suggests non-reciprocal modality competition effects.\"\n where: sec 4, Fig 15, p.26-27\n\n10. Gains across scales in Transfusion (MoT vs dense).\n number: FID 21.58 vs 27.42 (163M), 15.75 vs 25.58 (760M), 15.85 vs 19.32 (1.4B). MoT reaches dense image loss in 17.5%-26.4% of steps.\n quote: \"FID scores showed substantial improvements for MoT over dense models: 21.58 vs 27.42 (163M), 15.75 vs 25.58 (760M), and 15.85 vs 19.32 (1.4B).\"\n where: sec 3.4.3, Fig 12, p.22-23\n\n11. The text gain is small or absent in Transfusion. In Chameleon, MoT needed 54.6%-66.2% of steps for text.\n quote: \"In Transfusion, the text performance improvement was marginal to none (see Appendix 26).\"\n setup: authors' hypotheses are that the separate objectives already decouple text, that text is less compute-intensive, and that the gains favor heavy modalities.\n where: sec 3.4.2, p.21-22\n\n12. Parameter growth is lower than MoE (Parameters-per-FLOP argument).\n number: MoE adds more than 3(E-1)D^2 parameters per layer. MoT adds 7(K-1)D^2 per layer.\n setup: SwiGLU FFN with 3D^2 parameters, attention KQVO with 4D^2; E experts, K modalities.\n quote: \"MoT incurs an added parameter count of (K-1)x(|ATTN|+|FFN|) = 7(K-1)D^2.\"\n where: sec 6.1, p.31\n\n13. MoT hybridizes with MoE: putting MoE-4x in the text FFN improves text further without hurting image. This is a preliminary proof of concept.\n number: none beyond step ratios, for example text s=0.431 at Chameleon 373M.\n where: sec 5, Fig 16-17, p.28-30\n\n14. Motivation: dense models show modality clustering in feature space (PCA, 7B Chameleon+Speech dense). Chameleon used 9.2T tokens to match LLaMA2, which used 2T.\n quote: \"Chameleon (Chameleon Team, 2024) is trained on 9.2 trillion training tokens (including image tokens) to match LLaMA2 (Touvron et al., 2023b), which is trained on 2 trillion training tokens for text performance.\"\n where: sec 1 p.4, Fig 2 and Fig 23\n\nMETHOD (short): Each token is routed by a fixed modality tag, with no learned router. Every non-embedding weight is per modality: FFN, Q/K/V/O projections, and both LayerNorms. Attention is global self-attention over the whole interleaved sequence. FLOPs and active parameters equal the dense model. Equation 2: \"a = GlobalAttn(x,{theta_attn^m}), h_i = x_i + LayerNorm_attn^{m_i}(a_i), output_i = h_i + LayerNorm_ffn^{m_i}(FFN(h_i, theta_ffn^{m_i}))\".\n\nLIMITS\n- The authors say they are \"focus[ing] on evaluating the relative performance ... rather than conducting a scaling law study\".\n- Most \"FLOPs saved\" figures are step-matching on training or validation loss, not downstream accuracy. Downstream metrics (FID, CLIP, CIDEr) appear only in the Transfusion setting.\n- MoE-4x uses Expert Choice routing evaluated with the same routing. The authors concede this may overestimate MoE through future-token leakage, or underestimate it under distribution shift. Caption results for MoE-4x were excluded.\n- Wall-clock and horizontal-scaling results are tied to one AWS A100 setup: \"Further investigation is needed to generalize these findings\".\n- MoT overheads (CPU-GPU sync for grouping tokens, sequential per-modality processing, load imbalance) were not on the critical path in their setup. Group GEMM and Megablocks fixes are left as future work.\n- The Transfusion text gain is small or absent. The 7B image-quality comparison uses a 1T-token dense model with richer data, so it is not matched.\n- Trained on only 0.5T tokens, which is much less than other state-of-the-art image generators. Fine-tuning evidence is qualitative: samples are shown and some hard prompts fail for both models.\n- LayerNorm untying was tested only in combination with FFN and attention untying. Combining with MoE is a preliminary result only.\n- The inference section gives deployment ideas (dynamic batching, padding to one batched GEMM), with no measured inference numbers.\n- Only three modalities were tried: text, image and speech. The text/image vocabularies and the tokenizers are as in Chameleon and Transfusion.\n\nBUILDS ON\n- Chameleon Team 2024: early-fusion, discrete image tokens, data.\n- Zhou et al. 2024 (Transfusion): continuous image tokens with a diffusion loss.\n- Nguyen et al. 2024 (SpiRit-LM): speech data.\n- Liu et al. 2024a (DinoSR variant): speech tokenizer.\n- Gafni et al. 2022: image tokenizer.\n- Lin et al. 2024: modality-specific FFNs (also named as the FFN-only untying baseline).\n- Bao et al. 2022 (VLMo), Wang et al. 2022, Shen et al. 2023: modality-aware MoE.\n- Wang et al. 2023 (CogVLM), He et al. 2024: modality-specific modules on an LLM backbone.\n- Playground v3 (Liu et al. 2024b): concurrent.\n- Zhou et al. 2022: Expert Choice routing, used for the MoE baseline.\n- Jacobs 1991, Shazeer 2017, Fedus 2022: MoE.\n- Alayrac et al. 2022 (Flamingo): cross-attention alternative.\n- Esser et al. 2024 (SD3): diffusion validation loss as predictor.\n\nCODE: Algorithm 1 (sec 2.2, p.9) is pseudocode. The key lines are: group tokens by modality, apply modality-specific Q/K/V projections, restore sequence order, run global self-attention, apply modality-specific output projection with LayerNorm, then modality-specific FFN with LayerNorm. The playbook repo is https://github.com/facebookresearch/Mixture-of-Transformers.\n\nFIGURES (captions only; bodies not viewed)\n- Fig 1 and Fig 3 (p.4, p.8): MoT architecture, with modality-specific weights, then global attention.\n- Fig 2 (p.7): PCA of the dense model's features, clustered by modality. This is the motivation.\n- Fig 5 (p.11): the 7B Chameleon headline, with loss curves and step matching.\n- Fig 6 (p.12): step matching across 37M to 7B, MoT vs MoE-2x/3x/4x. The s values summarize the speedup.\n- Fig 8 and Fig 9 (p.16, p.18): speech results.\n- Fig 11 (p.22): 760M MoT vs 1.4B dense on FID, CLIP and CIDEr.\n- Fig 14 (p.25): untying ablation.\n- Fig 15 (p.26): leave-one-out.\n- Fig 18 (p.33): GPU-count scaling.\n- Fig 19 (p.34): wall-clock, MoT vs MoE-4x.\n- Fig 13, 20-22: sample images, qualitative.\n\nPROBLEMS: No embedded instructions found. Table and figure text is fragmented, and a few typos came from the extraction (\"2.10N\" in Table 4; \"five different sizes\" is followed by four listed). Step-match \"s\" values are ratios read from plot labels. The abstract's \"one third of the FLOPs\" for 7B Transfusion image corresponds to the body's \"30% of steps\" and \"less than one third of the FLOPs\" (sec 1). The Fig 5 caption and section 3.2.2 give 45.5% (steps on global loss) and 55.8% (FLOPs on validation), which are different metrics. Page numbers are inferred."
+ "type": "empirical",
+ "question": "Can giving each modality its own non-embedding transformer parameters, with global self-attention over the whole interleaved sequence, cut the pretraining compute of multi-modal (text, image, speech) generative models at equal FLOPs?",
+ "hypothesis": "Modalities occupy distinct regions of feature space and conflict in a dense model, so rule-based modality-specific parameters (no learned router) should train faster than a dense model and than learned-routing MoE.",
+ "contributions": [
+  "MoT: a sparse multi-modal transformer that unties FFN, attention projections (Q, K, V, O) and LayerNorm per modality while keeping global self-attention, with the same FLOPs as the dense counterpart",
+  "Pretraining from scratch of thirteen instances (three at 7B) in Chameleon (text+image autoregressive), Chameleon+Speech and Transfusion (text autoregressive, image diffusion) settings, against dense and MoE-4x baselines",
+  "Ablation of which components to untie, and a leave-one-modality-out analysis of modality sharing",
+  "Preliminary hybrid of MoT with MoE-4x in the text tower",
+  "System profiling of throughput, GPU scaling and wall-clock time on AWS A100s"
+ ],
+ "method": {
+  "summary": "Each transformer layer routes tokens by their known modality to separate Q/K/V/O projections, FFN and LayerNorm weights, then runs one global self-attention over the full sequence. Dense, MoT and MoE-4x (Expert Choice routing) models are pretrained from scratch with matched FLOPs at several scales in three settings, and compared by training loss, step matching, validation loss and generation metrics.",
+  "task": "multi-modal pretraining (text, image, speech) with autoregressive and diffusion objectives",
+  "trains": true,
+  "datasets": [
+   {"name": "Chameleon mixed-modal training data", "role": "pretrain", "size": "roughly equal amount of text and image tokens; 0.168 to 0.377T tokens seen per run (Table 1)", "split": null, "source": "same data and tokenizers as Chameleon Team (2024); images tokenised into 1,024 discrete tokens with a pre-trained VQ tokenizer (Gafni et al., 2022)", "preprocessing": null},
+   {"name": "Obelisc, MS-COCO (Karpathy test), Flickr30k (Karpathy test), Shutterstock held-out sets", "role": "eval", "size": null, "split": "held-out validation; COCO and Flickr30k used for text-to-image and image-to-text conditional perplexity", "source": "Laurencon et al. 2023; Lin et al. 2014; Plummer et al. 2015; Shutterstock", "preprocessing": null},
+   {"name": "SpiRit-LM speech data (People's Speech, Voxpopuli English, LibriLight, Multilingual LibriSpeech English, Spotify)", "role": "pretrain", "size": "16,404 + 23,166 + 55,308 + 44,585 + 57,290 hours; 1.2B + 1.6B + 4B + 3.2B + 4.2B speech tokens after dedup, plus 0.5B and 0.7B text tokens in the two speech+text sets", "split": null, "source": "Nguyen et al. 2024 (Table 2); speech tokens from an in-house DinoSR variant, vocabulary 500, 40ms per token (25Hz)", "preprocessing": "speech-only plus interleaved speech/text in SpiRit-LM format; speech set combined with Chameleon text-image set at sampling ratio 1:6"},
+   {"name": "LibriLight (LL60K) and People's Speech (PPL30K) held-out sets", "role": "eval", "size": null, "split": "held-out", "source": "as above", "preprocessing": null},
+   {"name": "Transfusion text corpus", "role": "pretrain", "size": "2T-token Llama 2 corpus (sampled); 0.5T tokens/patches sampled in total at 1:1 text:image", "split": null, "source": "Touvron et al. 2023b, Llama 2 tokenizer", "preprocessing": null},
+   {"name": "Shutterstock licensed images and captions", "role": "pretrain", "size": "380 million images", "split": null, "source": "licensed", "preprocessing": "centre-crop and resize to 256x256; VAE with 8x8 spatial downsampling; BOI/EOI tokens around image sequence; caption first 80% of the time"},
+   {"name": "Wikipedia, C4 held-out; CC12M; MS-COCO", "role": "eval", "size": "20 million held-out text tokens (Wikipedia/C4); 30,000 randomly selected COCO validation prompts for FID/CLIP", "split": "CC12M held-out for diffusion validation loss; COCO Karpathy test for CIDEr", "source": "Raffel 2020; Changpinyo 2021; Lin 2014", "preprocessing": null},
+   {"name": "MagicBrush image editing data", "role": "train", "size": "8k examples", "split": null, "source": "Zhang et al. 2023", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Mixture-of-Transformers (MoT)", "role": "proposed", "params": "37M, 94M, 443M, 880M, 1.5B, 7B (Chameleon/Speech); 163M, 760M, 1.4B, 7B (Transfusion); sized to match the dense FLOPs, sizes quoted are activated parameters", "architecture": "decoder-only transformer with per-modality Q,K,V,O, FFN and LayerNorm weights and global self-attention", "init_from": "random (from scratch)", "tokenizer": "Chameleon text and image tokenizers; Llama 2 tokenizer in Transfusion", "vocab": null, "layers": "4 to 32 (Tables 1, 3, 4)", "hidden": "256 to 4096", "heads": "8 to 32", "context": "4096 tokens", "other": {"Table 1 Chameleon": "37M: 256/4/8; 94M: 512/8/8; 443M: 1024/24/16; 1.5B: 2048/24/16; 7B: 4096/32/32 (hidden/layers/heads)", "Table 3 Speech": "443M 1024/24/16; 880M 1536/24/24; 1.5B 2048/24/16; 7B 4096/32/32", "Table 4 Transfusion": "163M 768/16/12; 760M 1536/24/24; 1.4B 2048/24/16; 7B 4096/32/32", "Transfusion extra": "U-Net patch encoder/decoder adds a fixed 0.27B parameters at every size; image = 256 continuous tokens; lambda = 5", "FFN": "analysis assumes SwiGLU FFN with 3D^2 parameters and 4D^2 attention parameters"}},
+   {"name": "Dense transformer", "role": "baseline", "params": "same scales", "architecture": "standard transformer (Llama-style in Transfusion)", "init_from": "random", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4096 tokens", "other": {}},
+   {"name": "MoE-4x (also MoE-2x, MoE-3x at small scales)", "role": "baseline", "params": "same activated parameters as dense; more total parameters", "architecture": "dense model with 4 experts per MLP and Expert Choice routing (Zhou et al. 2022)", "init_from": "random", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4096 tokens", "other": {"eval": "evaluated with the same EC routing as training (not causal), which may leak future tokens; caption metrics excluded for this reason"}},
+   {"name": "MoT + Text MoE-4x", "role": "proposed", "params": null, "architecture": "MoT whose text FFN is replaced by a 4-expert MoE layer", "init_from": "random", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"scale": "not stated in text"}}
+  ],
+  "training": {
+   "objective": "Chameleon: autoregressive next-token loss on text and image tokens (and speech tokens); Transfusion: L_LM + lambda * L_DDPM with lambda = 5, cosine noise schedule",
+   "optimizer": "Transfusion: AdamW (beta1=0.9, beta2=0.95, eps=1e-8); Chameleon and Speech settings: null",
+   "lr": "Transfusion: 3e-4; Chameleon settings: null",
+   "lr_schedule": "Transfusion: cosine decay to 1.5e-5; Chameleon settings: null",
+   "warmup": "Transfusion: 4000 steps; Chameleon settings: null",
+   "batch_size": "Tokens/batch 1.05M to 3.15M in Chameleon runs (Tables 1, 3); 2.10M in Transfusion; per-GPU batch 12 down to 2 sequences",
+   "steps": "Chameleon: 160k (37M to 443M), 120k (880M to 7B); Transfusion: 250k",
+   "epochs": null,
+   "tokens": "Chameleon 0.168T to 0.377T (most 0.252T; 7B 0.377T); Transfusion 0.524T in Table 4, 0.5T in text",
+   "seq_len": "4096 tokens",
+   "precision": null,
+   "weight_decay": "Transfusion: 0.1",
+   "dropout": null,
+   "regularisation": "Transfusion: gradient clipping by norm 1.0",
+   "hardware": "AWS p4de.24xlarge instances (NVIDIA A100); Chameleon 32 to 384 GPUs, Transfusion 128 to 256 GPUs (Tables 1, 4); FSDP full shard, PyTorch 2 compiler",
+   "compute": "FLOPs matched to the dense baseline in every comparison; no GPU-hours stated",
+   "wall_clock": "relative only (MoT reaches dense image loss in 47.2% of GPU time, 256 GPUs, 443M Chameleon)",
+   "seeds": null,
+   "other": {"fine_tuning": "7B MoT and dense fine-tuned on an internal visually appealing dataset (details not given) and 7B MoT on 8k image-editing examples; fine-tune hyperparameters not stated", "table_note": "Table 4 prints 7B Tokens/Batch as '2.10N' (typo for 2.10M); Transfusion section text says 'five different sizes' but lists four"}
+  },
+  "inference": {
+   "decoding": "Transfusion: 250 diffusion steps; no classifier-free guidance unless noted; CFG 5 for 7B example images, CFG 1.6 for the 7B COCO-30k FID of 8.14",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "COCO-30k: 30,000 prompts for FID and CLIP score; seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Training / validation loss and step matching s", "definition": "fraction of the dense model's training steps (or FLOPs, or GPU time) a model needs to reach the dense model's loss; validation loss on held-out Obelisc, COCO, Flickr30k, Shutterstock, LL60K, PPL30K", "unit": "fraction of dense steps / loss in nats", "higher_is_better": false},
+    {"name": "Diffusion validation loss", "definition": "diffusion loss on held-out CC12M, following SD 3", "unit": "loss", "higher_is_better": false},
+    {"name": "FID", "definition": "zero-shot Frechet Inception Distance on 30,000 COCO validation prompts", "unit": "FID", "higher_is_better": false},
+    {"name": "CLIP score", "definition": "alignment of generated COCO images with prompts", "unit": "score (0-1 scale as printed)", "higher_is_better": true},
+    {"name": "CIDEr", "definition": "caption quality on the Karpathy test split of MS-COCO", "unit": "score (printed as 0.320 in figures, 40.6 in text for 7B)", "higher_is_better": true},
+    {"name": "Perplexity on Wikipedia and C4", "definition": "20 million held-out tokens", "unit": "perplexity", "higher_is_better": false}
+   ],
+   "baselines": ["Dense transformer with same FLOPs", "MoE-4x (Expert Choice), plus MoE-2x and MoE-3x at small scales", "Leave-one-out MoT variants", "partial untying variants (FFN only; FFN + QKV)", "1T-token dense model with richer data (FID 9.22 at guidance 1.6)"],
+   "protocol": "single runs per configuration as far as the text shows; no seeds, confidence intervals or significance tests stated. Sparse model sizes are activated parameters. All runs FLOPs-controlled and pretrained from scratch."
+  },
+  "availability": {
+   "code": "Playbook at https://github.com/facebookresearch/Mixture-of-Transformers",
+   "weights": null,
+   "data": "Chameleon, Transfusion and SpiRit-LM data are Meta-internal or cited, not released here; Shutterstock is licensed; the internal fine-tuning set is not described"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.optimizer", "quote": "optimize them using AdamW (β1 =0.9, β2 =0.95, ϵ =1e-8) with a learning rate of 3e-4, warmed up for 4000 steps and decaying to 1.5e-5 using a cosine scheduler", "where": "Sec 3.4.1"},
+   {"field": "training.steps", "quote": "Training steps were set at 160,000 for smaller models (37M to 443M) and 120,000 for larger models (880M to 7B).", "where": "Sec 3.2.1, Table 1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "In the Chameleon 7B setting MoT matches the dense model's validation losses with 55.8% of the training FLOPs.",
+   "kind": "measured", "source": null, "metric": "FLOPs fraction to match dense", "value": 55.8, "unit": "% of dense FLOPs", "baseline_value": 100, "n": null,
+   "setup": "Chameleon 7B, text and image autoregressive, 120k steps dense, Obelisc/COCO/Flickr/SSTK validation losses, FLOPs controlled, one run",
+   "quote": "This indicates that MoT requires only 55.8% of the training FLOPs to match the dense model’s validation metrics, offering substantial computational savings.",
+   "table": null, "note": "The abstract and Figure 5 also say 44.2% reduction in FLOPs; 45.5% of steps for global training loss", "where": "Sec 3.2.2, Fig 5"
+  },
+  {
+   "claim": "At 7B in Chameleon, MoT needs only 34.8% of the dense model's steps to match image training loss.",
+   "kind": "measured", "source": null, "metric": "steps to match dense image loss", "value": 34.8, "unit": "% of dense steps", "baseline_value": 100, "n": null,
+   "setup": "Chameleon 7B, image modality training loss",
+   "quote": "requiring only 34.8% of the dense model’s training steps to match final loss",
+   "table": null, "note": "Fig 6 plot label shows s = 0.348 for MoT image at 7B", "where": "Sec 3.2.2, Fig 5c-d"
+  },
+  {
+   "claim": "Adding speech, MoT reaches the dense model's speech performance with 37.2% of the FLOPs at 7B.",
+   "kind": "measured", "source": null, "metric": "FLOPs fraction to match dense speech loss", "value": 37.2, "unit": "% of dense FLOPs", "baseline_value": 100, "n": null,
+   "setup": "Chameleon+Speech 7B, speech validation loss on LL60K and PPL30K",
+   "quote": "MoT reaches baseline speech performance in 37.2% of the FLOPs (f).",
+   "table": null, "note": "Speech training loss matched in 22.9% of steps; across 443M to 1.5B, 15.1% to 33.6% of steps", "where": "Fig 8 caption"
+  },
+  {
+   "claim": "In Transfusion, a 760M MoT using half the FLOPs of a 1.4B dense baseline beats it on CLIP (0.214 vs 0.206).",
+   "kind": "measured", "source": null, "metric": "CLIP score", "value": 0.214, "unit": "score", "baseline_value": 0.206, "n": 30000,
+   "setup": "Transfusion, 760M MoT vs 1.4B dense, COCO 30k prompts, no classifier-free guidance, 250k steps",
+   "quote": "Image quality improved, as evidenced by CLIP (0.214 vs 0.206) and FID (21.145 vs 24.688) scores (Figure 11c,d).",
+   "table": null, "note": null, "where": "Sec 3.4.2, Fig 11"
+  },
+  {
+   "claim": "Same comparison: FID 21.145 for the 760M MoT against 24.688 for the 1.4B dense model.",
+   "kind": "measured", "source": null, "metric": "FID", "value": 21.145, "unit": "FID (lower better)", "baseline_value": 24.688, "n": 30000,
+   "setup": "Transfusion, 760M MoT vs 1.4B dense, COCO-30k, no CFG",
+   "quote": "FID (21.145 vs 24.688)",
+   "table": null, "note": "Sec 3.4.3 prints different 760M numbers from Fig 12: FID 15.75 vs 25.58 (MoT vs dense at 760M) and CLIP 0.214 vs 0.202; this paper does not explain the 760M dense baseline discrepancy (1.4B dense 0.206 / 24.688 in Fig 11 vs 760M dense 0.202 / 25.58)", "where": "Sec 3.4.2, Fig 11d"
+  },
+  {
+   "claim": "A 7B MoT matches the dense image diffusion loss in about 30% of the steps in Transfusion.",
+   "kind": "measured", "source": null, "metric": "steps to match dense image loss", "value": 30, "unit": "% of dense steps", "baseline_value": 100, "n": null,
+   "setup": "Transfusion 7B, 250k steps, image training loss",
+   "quote": "MoT achieves equivalent image pre-training loss to the dense model in only 30% of the training steps.",
+   "table": null, "note": "Abstract says one third of the FLOPs; Fig 10e plot label s = 0.374", "where": "Sec 3.4.2"
+  },
+  {
+   "claim": "7B MoT improves COCO-30k FID to 8.14 at guidance 1.6, against 9.22 for a dense model trained on 1T tokens of richer data.",
+   "kind": "measured", "source": null, "metric": "COCO-30k FID at guidance 1.6", "value": 8.14, "unit": "FID", "baseline_value": 9.22, "n": 30000,
+   "setup": "Transfusion 7B MoT, 0.5T tokens; baseline trained on 1T tokens with richer data (a different model, not controlled)",
+   "quote": "we compute the COCO-30k FID at a guidance level of 1.6 and obtain a score of 8.14",
+   "table": null, "note": "The baseline is a different training set and token budget", "where": "Sec 3.4.2"
+  },
+  {
+   "claim": "7B MoT more than triples caption learning speed, ending at CIDEr 40.6 vs 31.5 for dense.",
+   "kind": "measured", "source": null, "metric": "CIDEr", "value": 40.6, "unit": "CIDEr", "baseline_value": 31.5, "n": null,
+   "setup": "Transfusion 7B, COCO Karpathy test",
+   "quote": "achieving a final score of 40.6 versus 31.5",
+   "table": null, "note": "Fig 10h prints 0.406 vs 0.315 (same numbers on a 0-1 scale)", "where": "Sec 3.4.2"
+  },
+  {
+   "claim": "MoT reaches the dense model's image training loss in 47.2% of GPU time and text loss in 75.6%, while MoE-4x is 1.7x slower on image.",
+   "kind": "measured", "source": null, "metric": "wall-clock fraction to match dense", "value": 47.2, "unit": "% of dense GPU training time", "baseline_value": 100, "n": null,
+   "setup": "Chameleon, 443M, 256 A100 GPUs on AWS p4de.24xlarge, FSDP, PyTorch 2 compile; authors expect results to vary by cluster",
+   "quote": "MoT matches the dense model’s image training loss in 47.2% of the total GPU training time and continues to improve thereafter (Figure 19b).",
+   "table": null, "note": "Abstract attributes the same numbers to the '7B' model in the introduction; Sec 6.2.2 says 256 GPUs and the horizontal-scaling study uses 443M, so the model size for Fig 19 is not stated clearly", "where": "Sec 6.2.2, Fig 19"
+  },
+  {
+   "claim": "MoT's relative benefit grows with GPU count: steps to match dense image validation loss fall from 42.1% (16 GPUs) to 21.6% (256 GPUs).",
+   "kind": "measured", "source": null, "metric": "steps to match dense (image val loss)", "value": 21.6, "unit": "% of dense steps", "baseline_value": 42.1, "n": null,
+   "setup": "Chameleon 443M, Obelisc, global batch and tokens scaled with GPU count at constant step count",
+   "quote": "the percentage of training steps required for MoT to match the dense model decreases from 42.1% (16 GPUs) to 21.6% (256 GPUs).",
+   "table": null, "note": "Text: 75.7% to 50.9% for text", "where": "Sec 6.2.1, Fig 18"
+  },
+  {
+   "claim": "Untying attention Q,K,V on top of FFN untying saves about 33.3% of FLOPs for image and 10% for text on held-out Obelisc.",
+   "kind": "measured", "source": null, "metric": "FLOPs saving vs FFN-only untying (image)", "value": 33.3, "unit": "% FLOPs", "baseline_value": null, "n": null,
+   "setup": "Chameleon 880M ablation (Table 5), 120k steps; LayerNorm untying then adds negligible gain",
+   "quote": "this leads to approximately 33.3% FLOPs saving for the image modailty and 10% FLOPs saving for the text modality compared to only performing untying in the feedforward module.",
+   "table": null, "note": null, "where": "Sec 3.5, Fig 14"
+  },
+  {
+   "claim": "MoE-4x loses its image-modality advantage as scale grows and is unstable on speech validation, where MoT is consistently better.",
+   "kind": "measured", "source": null, "metric": "qualitative", "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Chameleon and Chameleon+Speech, 37M to 7B; the MoE-4x baseline uses Expert Choice routing evaluated non-causally",
+   "quote": "where it underperforms the dense baseline in speech validation loss, despite outperforming it in speech pre-training loss.",
+   "table": null, "note": "Authors offer routing imbalance and overfitting as unverified explanations", "where": "Sec 3.3.3"
+  },
+  {
+   "claim": "Added parameters per layer: MoE adds more than 3(E-1)D^2, MoT adds 7(K-1)D^2, so MoT has a lower parameter-to-FLOPs ratio when K is small.",
+   "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "SwiGLU FFN with 3D^2 and attention with 4D^2 parameters, hidden = embedding = D",
+   "quote": "In contrast, MoT incurs an added parameter count of (K−1)×(|ATTN|+|FFN|) = 7(K−1)D2.",
+   "table": null, "note": null, "where": "Sec 6.1"
+  },
+  {
+   "claim": "In the Transfusion setting, text gains from MoT are marginal to none, unlike Chameleon where MoT matched dense text loss in 54.6% to 66.2% of steps.",
+   "kind": "measured", "source": null, "metric": "text steps to match dense (Chameleon)", "value": 54.6, "unit": "% of dense steps (lower end)", "baseline_value": null, "n": null,
+   "setup": "Chameleon 37M to 7B text training loss versus Transfusion 163M to 7B",
+   "quote": "In Chameleon, MoT required only 54.6% to 66.2% of training steps to match the dense model’s text modality training loss.",
+   "table": null, "note": null, "where": "Sec 3.4.2"
+  }
+ ],
+ "limits": [
+  "FLOPs-matched comparisons in pretraining loss only; no downstream benchmark accuracy or human evaluation of generations, and Transfusion text results show little gain.",
+  "Single run per configuration; no seeds, variance or significance tests reported.",
+  "Chameleon and Speech optimizer, learning rate, schedule, warmup and precision are not stated; Chameleon data are Meta-internal, so exact reruns are not possible.",
+  "MoE-4x baseline uses Expert Choice routing evaluated non-causally, which can leak future tokens or mis-balance experts, so the MoE comparison is confounded (authors say so); caption metrics for MoE excluded.",
+  "Wall-clock and GPU-scaling results come from one AWS A100 setup; authors expect relative speeds to vary by cluster.",
+  "Models of at most 7B trained on 0.5T tokens (Transfusion), well below state-of-the-art image generators; scaling beyond this is future work.",
+  "Hybrid MoT + MoE-4x results are preliminary; MoE-4x training-loss gains did not carry to validation in Transfusion.",
+  "LayerNorm untying was tested only on top of FFN and attention untying.",
+  "Inference deployment (mixed-modality batching, padding) is discussed but not measured; routing overheads (CPU-GPU sync, sequential modality processing) are noted but not on the critical path in their setup.",
+  "Fine-tuning data (internal) and recipe are undescribed; qualitative image comparisons only."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Mixture-of-Transformers (MoT)", "definition": "a sparse multi-modal transformer that introduces modality-aware sparsity for all non-embedding transformer parameters (FFN, attention projections, LayerNorm) while keeping global self-attention", "where": "Sec 1, 2.2"},
+  {"term": "Step matching", "definition": "plot of the training steps a sparse model needs to reach the dense model's loss at each dense step", "where": "Sec 3.2.2"},
+  {"term": "Chameleon setting", "definition": "text and images (and speech) as discrete tokens, all trained with autoregressive objectives", "where": "Sec 3.1"},
+  {"term": "Transfusion setting", "definition": "text trained autoregressively and images as continuous patches trained with a diffusion objective in one transformer", "where": "Sec 3.4, App A"},
+  {"term": "Parameter to FLOPs ratio (PpF)", "definition": "parameters per FLOP, which governs training throughput through communication overhead", "where": "Sec 6.1"}
+ ],
+ "lineage": [
+  {"work": "Chameleon: Mixed-modal early-fusion foundation models", "year": 2024, "arxiv": "2405.09818", "relation": "extends", "note": "Chameleon setting and data; MoT is a drop-in replacement for its dense transformer", "quote": null},
+  {"work": "Transfusion: Predict the next token and diffuse images with one multi-modal model", "year": 2024, "arxiv": "2408.11039", "relation": "extends", "note": "Transfusion setting, data and dense baseline", "quote": null},
+  {"work": "MoMa: Efficient early-fusion pre-training with mixture of modality-aware experts", "year": 2024, "arxiv": "2407.21770", "relation": "extends", "note": "FFN-only modality untying, reproduced as an ablation arm", "quote": null},
+  {"work": "Mixture-of-experts with expert choice routing", "year": 2022, "arxiv": "2202.09368", "relation": "baseline", "note": "MoE-4x baseline routing", "quote": null},
+  {"work": "CogVLM: Visual expert for pretrained language models", "year": 2023, "arxiv": "2311.03079", "relation": "related", "note": "modality-specific attention on top of a pretrained LLM, text output only", "quote": null},
+  {"work": "Playground v3", "year": 2024, "arxiv": null, "relation": "related", "note": "concurrent, frozen text LLM plus trainable image transformer with global attention", "quote": null},
+  {"work": "SpiRit-LM: Interleaved spoken and written language model", "year": 2024, "arxiv": "2402.05755", "relation": "uses-data", "note": "speech data and format", "quote": null},
+  {"work": "DinoSR", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "variant used as in-house speech tokenizer", "quote": null},
+  {"work": "Stable Diffusion 3 (Esser et al.)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "diffusion validation loss as a predictor of quality", "quote": null},
+  {"work": "Llama 2", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "tokenizer and text corpus", "quote": null},
+  {"work": "PyTorch FSDP", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "distributed training", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Mixture-of-Transformers architecture for multi-modal generative AI.", "page": 8, "why": "Shows per-modality QKV, FFN and LayerNorm with one shared attention across Chameleon and Transfusion inputs."},
+  {"figure": "Fig 5", "caption": "Pre-training acceleration of MoT for 7B Chameleon multi-modal model.", "page": 11, "why": "Step-matching curves and the 55.8% FLOPs checkpoint comparison."},
+  {"figure": "Fig 11", "caption": "In the Transfusion setting, a 760M MoT model outperforms a 1.4B dense baseline across key image generation metrics, while using only half the FLOPs.", "page": 20, "why": "Headline small-model result."},
+  {"figure": "Fig 14", "caption": "Ablation results of modality untying in different transformer components in the Chameleon setting.", "page": 25, "why": "Shows which components matter (FFN, then attention, LayerNorm negligible)."},
+  {"figure": "Fig 19", "caption": "Speed advantage of MoT in wall-clock time (Chameleon Setting).", "page": 34, "why": "Translates FLOPs savings into GPU time and shows MoE-4x slowdown."}
+ ],
+ "code": [
+  {"where": "Eq. 2, Sec 2.2", "snippet": "a = GlobalAttn(x, {θ^m_attn}); h_i = x_i + LayerNorm^{m_i}_attn(a_i); output_i = h_i + LayerNorm^{m_i}_ffn(FFN(h_i, θ^{m_i}_ffn))", "verbatim": false}
+ ],
+ "problems": [
+  "Plot axis labels in the extracted text are fragmentary, so figure-only values were not used beyond printed captions and legends.",
+  "Inconsistent numbers: Sec 3.4.3 gives 760M FID 15.75 vs 25.58 and CLIP 0.214 vs 0.202, while Sec 3.4.2 and Fig 11 give 760M MoT FID 21.145 vs 24.688 (1.4B dense) and CLIP 0.214 vs 0.206. Fig 10g shows 7B FID values 18.862 and 19.502 for MoT vs dense.",
+  "Sec 3.4.1 says 'five different sizes' but lists four; Table 4 prints '2.10N' for 7B tokens/batch.",
+  "Abstract and introduction place the 47.2%/75.6% wall-clock result with the 7B model while Sec 6.2.2 describes 256 GPUs and the horizontal-scaling study uses 443M; the model size for Fig 19 is not stated clearly.",
+  "No embedded instructions found in the PDF text."
+ ]
 }

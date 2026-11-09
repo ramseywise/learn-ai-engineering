@@ -1,0 +1,541 @@
+{
+ "schema": 1,
+ "key": "2308.13418",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/blecher-2023-nougat.pdf",
+ "bib": {
+  "title": "Nougat: Neural Optical Understanding for Academic Documents",
+  "authors": [
+   "Lukas Blecher",
+   "Guillem Cucurull",
+   "Thomas Scialom",
+   "Robert Stojnic"
+  ],
+  "first_author": "Blecher",
+  "year": 2023,
+  "venue": "preprint (arXiv v1; Meta AI)",
+  "arxiv": "2308.13418",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 63243,
+  "chars_total": 63243,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an end-to-end image-to-markup transformer convert scientific document page images (including math and tables) into a lightweight markup language without any OCR engine or embedded text?",
+ "hypothesis": "An OCR-free Donut-style encoder-decoder trained on page images paired with LaTeX-derived markup will beat PDF-embedded text and GROBID, especially on math, because those lose the semantic information of mathematical expressions.",
+ "contributions": [
+  "Release of a pre-trained model capable of converting a PDF to a lightweight markup language (code and model on GitHub)",
+  "A pipeline to create a dataset pairing PDFs to source code",
+  "The method depends only on the image of a page, allowing access to scanned papers and books"
+ ],
+ "method": {
+  "summary": "Nougat is a Donut-style encoder-decoder: a Swin-base encoder reads a rasterised page (896x672) and an mBART-style decoder emits markdown autoregressively. It is trained on a corpus of over eight million page/markup pairs built mostly from arXiv LaTeX (via LaTeXML) with PMC and IDL added for pre-training, with image augmentation and token-perturbation against repetition loops.",
+  "task": "page image to markup (OCR for academic documents)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "arXiv",
+    "role": "both",
+    "size": "7,511,745 pages (from 1,748,201 articles)",
+    "split": "train/test split sizes not stated",
+    "source": "arXiv open-access LaTeX source and compiled PDFs",
+    "preprocessing": "LaTeXML to HTML5, then parsed to lightweight markdown; pages split via TF-IDF bag-of-words SVM plus Gini-impurity boundary search and fuzzy matching; pages kept only if average score >= 0.9 for both page breaks (about 47% acceptance); figures/tables removed with pdffigures2 and reinserted at page end"
+   },
+   {
+    "name": "PMC",
+    "role": "pretrain",
+    "size": "536,319 pages",
+    "split": "pre-training only",
+    "source": "PubMed Central open access non-commercial subset, XML parsed to the same markup",
+    "preprocessing": "display math and tables often images and ignored"
+   },
+   {
+    "name": "IDL",
+    "role": "pretrain",
+    "size": "446,777 pages",
+    "split": "pre-training only",
+    "source": "Industry Documents Library with OCR text from Biten et al. (OCR-IDL)",
+    "preprocessing": "OCR text only, no formatting; teaches basic OCR of scanned documents"
+   }
+  ],
+  "models": [
+   {
+    "name": "Nougat base",
+    "role": "proposed",
+    "params": "350M",
+    "architecture": "Swin base encoder + mBART decoder with cross-attention, 10 decoder layers",
+    "init_from": "pre-trained Swin base weights",
+    "tokenizer": "same tokenizer as Galactica (Taylor et al.)",
+    "vocab": null,
+    "layers": "10 decoder layers",
+    "hidden": null,
+    "heads": null,
+    "context": "S = 4096 tokens max decoder length",
+    "other": {
+     "input_size_HxW": "896x672",
+     "render_dpi": "96"
+    }
+   },
+   {
+    "name": "Nougat small",
+    "role": "proposed",
+    "params": "250M",
+    "architecture": "same with 4 decoder layers",
+    "init_from": "pre-trained base model (as stated: 'we start from the pre-trained base model')",
+    "tokenizer": "same as base",
+    "vocab": null,
+    "layers": "4 decoder layers",
+    "hidden": null,
+    "heads": null,
+    "context": "S = 3584 tokens",
+    "other": {}
+   },
+   {
+    "name": "PDF embedded text",
+    "role": "baseline",
+    "params": null,
+    "architecture": "text layer in the PDF",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GROBID (+ LaTeX-OCR for formulas)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "rule/ML parser to XML converted to markup; formula boxes sent to LaTeX-OCR (pix2tex)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: autoregressive next-token cross-entropy on markup tokens (not stated explicitly)",
+   "optimizer": "AdamW",
+   "lr": "5e-5 initial, 7.5e-6 final",
+   "lr_schedule": "multiplied by 0.9996 every 15 updates until lr_end",
+   "warmup": null,
+   "batch_size": "192 (effective)",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": "4096 (base), 3584 (small)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "image augmentation (erosion, dilation, gaussian noise, gaussian blur, bitmap, image compression, grid distortion, elastic transform; fixed probability each; Albumentations); random token replacement in ground truth, repeated until a sampled number exceeds a 10% threshold",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lr_note": "low lr chosen 'due to training instabilities'"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "4096",
+   "samples": "inferred: one greedy output per page; no repeats or seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "repetition_window_B": "15",
+    "repetition_threshold": "6.75 on VarEnd (post-hoc); online: last 200 tokens and half the threshold"
+   },
+   "other": {
+    "speed": "NVIDIA A10G 24GB, 6 pages in parallel, mean 19.5 s per batch, avg about 1400 tokens/page, base model, no inference optimisation"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Edit distance",
+     "definition": "normalised Levenshtein distance (character insertions, deletions, substitutions divided by total characters)",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU",
+     "definition": "n-gram match between candidate and reference",
+     "unit": "score 0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "METEOR",
+     "definition": "recall-focused MT metric",
+     "unit": "score 0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision/Recall/F1",
+     "definition": "F-measure with precision and recall reported (token level not specified)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PDF embedded text",
+    "GROBID (modified, with LaTeX-OCR for formulas)"
+   ],
+   "protocol": "Single run on the arXiv test set (size not stated), split by modality (plain text, math, tables) and 'All'; no seeds, no significance tests; GROBID XML converted to the same markup with Unicode symbols mapped to LaTeX. Test-set page count not stated."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/nougat",
+   "weights": "released (models)",
+   "data": "dataset-generation pipeline code released; the dataset itself is not stated as released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Due to training instabilities, we choose a learning rate of lrinit = 5 · 10−5 which is reduced by a factor of 0.9996 every 15 updates until",
+    "where": "3.1 Training"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Nougat base gets far lower edit distance than embedded PDF text and GROBID over whole pages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Edit distance (All)",
+   "value": 0.071,
+   "unit": "fraction",
+   "baseline_value": "0.255 (PDF text); 0.312 (GROBID)",
+   "n": null,
+   "setup": "arXiv test set (pages paired with LaTeX-derived markdown), page-level, greedy decoding; Nougat base 350M",
+   "quote": null,
+   "table": "Table 1, row Nougat base (350M), column Edit distance, modality All",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Nougat small (250M) is on par with base overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Edit distance (All)",
+   "value": 0.073,
+   "unit": "fraction",
+   "baseline_value": "0.071 (base)",
+   "n": null,
+   "setup": "arXiv test set (pages paired with LaTeX-derived markdown), page-level, greedy decoding; Nougat small 250M",
+   "quote": "We note that the performance of the smaller model is on par with the larger base model.",
+   "table": "Table 1, row Nougat small (250M), column Edit distance, modality All",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On math, GROBID plus LaTeX-OCR is almost useless; Nougat base reaches 0.128 edit distance and 56.9 BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Edit distance (Math)",
+   "value": 0.128,
+   "unit": "fraction",
+   "baseline_value": "0.727 edit distance, 0.3 BLEU (GROBID + LaTeX OCR)",
+   "n": null,
+   "setup": "arXiv test set (pages paired with LaTeX-derived markdown), page-level, greedy decoding; Nougat base, Math modality",
+   "quote": null,
+   "table": "Table 1, row Nougat base, modality Math, columns Edit distance and BLEU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Nougat base BLEU overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU (All)",
+   "value": 89.1,
+   "unit": "BLEU",
+   "baseline_value": "65.8 (PDF); 55.6 (GROBID)",
+   "n": null,
+   "setup": "arXiv test set (pages paired with LaTeX-derived markdown), page-level, greedy decoding",
+   "quote": null,
+   "table": "Table 1, row Nougat base, modality All, column BLEU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Tables are the hardest-but-one modality: Nougat base edit distance 0.211 vs GROBID 0.626.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Edit distance (Tables)",
+   "value": 0.211,
+   "unit": "fraction",
+   "baseline_value": "0.626 (GROBID)",
+   "n": null,
+   "setup": "arXiv test set (pages paired with LaTeX-derived markdown), page-level, greedy decoding; Tables modality",
+   "quote": null,
+   "table": "Table 1, row Nougat base, modality Tables, column Edit distance",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Plain text edit distance for Nougat base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Edit distance (Plain text)",
+   "value": 0.058,
+   "unit": "fraction",
+   "baseline_value": "0.363 (GROBID + LaTeX OCR plain text)",
+   "n": null,
+   "setup": "arXiv test set (pages paired with LaTeX-derived markdown), page-level, greedy decoding",
+   "quote": null,
+   "table": "Table 1, row Nougat base, modality Plain text, column Edit distance",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Embedded PDF text outperforms GROBID in the paper's comparison (title page and reference formatting differences).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Edit distance (All)",
+   "value": 0.255,
+   "unit": "fraction",
+   "baseline_value": "0.312 (GROBID)",
+   "n": null,
+   "setup": "Embedded PDF text vs ground-truth markup, arXiv test set",
+   "quote": "The performance of the embedded PDF text alone is better than GROBID, which is due to formatting differences for the title page or reference section.",
+   "table": "Table 1, row PDF, column Edit distance",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "The model degenerates into repetition loops on a small share of in-domain pages, more on out-of-domain documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of test pages with repetition",
+   "value": 1.5,
+   "unit": "% of pages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "arXiv test set, greedy decoding",
+   "quote": "We observed this behavior in 1.5% of pages in the test set, but the frequency increases for out-of-domain documents.",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Random token perturbation during training cut failed conversions on out-of-domain documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decline in failed page conversions",
+   "value": 32,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "out-of-domain documents, with anti-repetition augmentation vs without; no in-domain performance drop observed; out-of-domain set not described",
+   "quote": "Particularly for out-of-domain documents, where we saw a 32% decline in failed page conversions.",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Throughput of the base model is low compared with classical parsers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean generation time per batch",
+   "value": 19.5,
+   "unit": "s per batch of 6 pages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NVIDIA A10G 24GB, base model, about 1400 tokens/page average, no inference optimisation",
+   "quote": "With an average number of tokens of ≈1400 we get an mean generation time of 19.5s per batch for the base model without any inference optimization.",
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "GROBID speed figure used for comparison is cited from GROBID's own documentation, not measured by the authors.",
+   "kind": "reported",
+   "source": null,
+   "metric": "GROBID throughput",
+   "value": 10.6,
+   "unit": "PDF/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as cited, hardware not given",
+   "quote": "Compared to classical approaches (GROBID 10.6 PDF/s [4]) this is very slow, but it is not limited to digital-born PDFs and can correctly parse mathematical expressions.",
+   "table": null,
+   "note": "Unit is PDFs per second vs pages per batch for Nougat; not like for like.",
+   "where": "5.5"
+  },
+  {
+   "claim": "Only about 47% of pages pass the page-splitting match filter.",
+   "kind": "measured",
+   "source": null,
+   "metric": "page acceptance rate",
+   "value": 47,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "arXiv dataset construction, avg fuzzy-match score >= 0.9 at both page breaks",
+   "quote": "This results in an acceptance rate of about 47% of all pages.",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "Corpus size; arXiv is the main source.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total pages",
+   "value": 8204754,
+   "unit": "pages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "arXiv 7,511,745 + PMC 536,319 + IDL 446,777",
+   "quote": "The most important data source is arXiv, making up > 91.5% of the corpus.",
+   "table": "Table A.1, row Total, column Number of Pages",
+   "note": null,
+   "where": "Table A.1"
+  }
+ ],
+ "limits": [
+  "Repetition loops are the primary unsolved problem; the model cannot recover once it collapses, and 1.5% is for in-domain test pages only (5.4, 5.5).",
+  "Almost entirely English training data; non-Latin scripts produce instant repetitions; accented characters are replaced by closest Latin letter (5.5).",
+  "Slow: 19.5 s per 6-page batch on an A10G versus GROBID 10.6 PDF/s (5.5).",
+  "Trained page by page, so bibliography styles and section numbering are inconsistent across pages and numbers can be hallucinated (5.5).",
+  "Ground truth is noisy (LaTeXML artifacts, imperfect page splits, PMC math as images); LaTeX has many equivalent spellings, so math and plain-text scores are depressed even for visually identical output (4.2, 5.2).",
+  "Evaluation is only on the arXiv test set whose size is not stated; no scanned-document metrics, only qualitative examples (Appendix B), which are admitted to be noticeably worse than digital-born pages.",
+  "GROBID baseline was modified by the authors (Unicode-to-LaTeX mapping, LaTeX-OCR add-on) and its math scores are affected by bounding-box quality.",
+  "Training hardware, compute, warmup, precision, weight decay, dropout, seeds and test-set size are not stated."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Donut: OCR-free Document Understanding Transformer (Kim et al.)",
+   "year": 2022,
+   "arxiv": "2111.15664",
+   "relation": "extends",
+   "note": "architecture basis",
+   "quote": "We build on the Donut [28] architecture."
+  },
+  {
+   "work": "Swin Transformer (Liu et al.)",
+   "year": 2021,
+   "arxiv": "2103.14030",
+   "relation": "uses-method",
+   "note": "encoder, base size, pretrained init",
+   "quote": null
+  },
+  {
+   "work": "BART (Lewis et al.)",
+   "year": 2019,
+   "arxiv": "1910.13461",
+   "relation": "uses-method",
+   "note": "mBART decoder implementation",
+   "quote": null
+  },
+  {
+   "work": "Galactica (Taylor et al.)",
+   "year": 2022,
+   "arxiv": "2211.09085",
+   "relation": "uses-method",
+   "note": "tokenizer",
+   "quote": null
+  },
+  {
+   "work": "GROBID (Lopez)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "modified with LaTeX-OCR for formulas",
+   "quote": null
+  },
+  {
+   "work": "LaTeX-OCR / pix2tex (Blecher)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "used inside GROBID baseline",
+   "quote": null
+  },
+  {
+   "work": "OCR-IDL (Biten et al.)",
+   "year": 2022,
+   "arxiv": "2202.12985",
+   "relation": "uses-data",
+   "note": "OCR text for IDL pre-training",
+   "quote": null
+  },
+  {
+   "work": "LayoutLM family (Xu et al.; LayoutLMv2; LayoutLMv3)",
+   "year": 2020,
+   "arxiv": "1912.13318",
+   "relation": "related",
+   "note": "OCR-dependent VDU contrast",
+   "quote": null
+  },
+  {
+   "work": "The Curious Case of Neural Text Degeneration (Holtzman et al.)",
+   "year": 2020,
+   "arxiv": "1904.09751",
+   "relation": "related",
+   "note": "repetition under greedy decoding",
+   "quote": null
+  },
+  {
+   "work": "S2ORC (Lo et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "GROBID-based corpus lacking math",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our simple end-to-end architecture following Donut. The Swin Transformer encoder takes a document image and converts it into latent embeddings, which are subsequently converted to a sequence of tokens in an auto-regressive manner",
+   "page": 2,
+   "why": "whole pipeline in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Data processing. The source file is converted into HTML which is then converted to Markdown.",
+   "page": 4,
+   "why": "shows tex to html to markdown ground-truth path"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Examples for repetition detection on logits.",
+   "page": 8,
+   "why": "shows the logit-variance signal separating collapsed from healthy generation"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results on arXiv test set. PDF is the text embedded in the PDF file.",
+   "page": 7,
+   "why": "the headline comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "5.4",
+   "snippet": "VarWinB[l](x) = 1/B sum_{i=x}^{x+B} (l_i - 1/B sum_{j=x}^{x+B} l_j)^2 ; VarEndB[l](x) = variance of VarWinB from x to S; flag repetition if VarEnd drops below 6.75 and stays below (B = 15)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cache contains foreign text (Sorscher data-pruning equations, VQA and WritingPrompts tables, calculus and NASA pages) because the PDF figures (Fig 5, B.1-B.4) embed page images with text layers; none of it is the paper's own content and none was used. No instructions found in it.",
+  "Section map labels (e.g. 'Method', Table 1/2/3/4) beyond Table 1 and A.1 belong to those embedded pages.",
+  "Hyperparameters like hidden size/heads/precision are not stated. Venue 'ICLR 2024' in the repo note is not in this PDF (arXiv v1)."
+ ]
+}

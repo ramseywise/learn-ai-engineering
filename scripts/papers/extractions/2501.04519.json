@@ -1,0 +1,670 @@
+{
+ "schema": 1,
+ "key": "2501.04519",
+ "pdf": "generative-ai/05-RL/sources/guan-2025-rstar-math.pdf",
+ "bib": {
+  "title": "rStar-Math: Small LLMs Can Master Math Reasoning with Self-Evolved Deep Thinking",
+  "authors": [
+   "Xinyu Guan",
+   "Li Lyna Zhang",
+   "Yifei Liu",
+   "Ning Shang",
+   "Youran Sun",
+   "Yi Zhu",
+   "Fan Yang",
+   "Mao Yang"
+  ],
+  "first_author": "Guan",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2501.04519",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 85043,
+  "chars_total": 85043,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can small language models (1.5B-7B) reach o1-level math reasoning through MCTS test-time search and self-evolved training data, without distillation from a stronger model?",
+ "hypothesis": "Step-verified, code-augmented MCTS trajectories plus a preference-pair-trained process reward model, iterated over four rounds, let SLMs self-generate data good enough for frontier math reasoning.",
+ "contributions": [
+  "Code-augmented CoT data synthesis via extensive MCTS rollouts giving step-by-step verified trajectories with Q-values",
+  "Process preference model (PPM) trained on Q-value-derived preference pairs instead of Q-value regression targets",
+  "Four-round self-evolution recipe building policy SLM and PPM from scratch"
+ ],
+ "method": {
+  "summary": "A policy SLM generates one-step code-augmented CoT candidates in MCTS; only steps whose Python executes are kept, and Q-values are back-propagated from terminal correctness. Top-Q trajectories SFT the policy, and Q-value-selected positive/negative steps train a PPM with a Bradley-Terry pairwise loss. Four rounds over 747k problems, then PPM-guided MCTS at test time.",
+  "task": "math word-problem reasoning with test-time search (System 2)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Math problem set (NuminaMath, MetaMath, GPT-4 synthesized)",
+    "role": "train",
+    "size": "747k problems with ground-truth answers",
+    "split": null,
+    "source": "NuminaMath competition-level only, MetaMath, plus GPT-4 synthetic problems seeded from 7.5k MATH train and 3.6k AMC-AIME train",
+    "preprocessing": "GPT-4 synthetic: 10 solutions generated, keep only problems with at least 3 consistent solutions; synthetic problems with trajectory accuracy under 50% removed"
+   },
+   {
+    "name": "MATH-500, AIME 2024 (30 problems), AMC 2023, Olympiad Bench, College Math, GSM8K, GaokaoEn 2023",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "public benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-Math-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "main model, 4 rounds of self-evolution"
+    }
+   },
+   {
+    "name": "Qwen2.5-Math-1.5B",
+    "role": "base",
+    "params": "1.5B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "fine-tuned on round-4 Qwen2.5-Math-7B trajectories"
+    }
+   },
+   {
+    "name": "Qwen2-Math-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "same"
+    }
+   },
+   {
+    "name": "Phi3-mini-Instruct",
+    "role": "base",
+    "params": "3.8B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "paper says 3B in Sec 4.1 and 3.8B elsewhere"
+    }
+   },
+   {
+    "name": "DeepSeek-Coder-V2-Instruct",
+    "role": "teacher",
+    "params": "236B",
+    "architecture": "LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "round-1 bootstrap policy only"
+    }
+   },
+   {
+    "name": "PPM",
+    "role": "reward",
+    "params": "7B",
+    "architecture": "policy model with next-token head replaced by linear layer + tanh scalar head, outputs in [-1,1]",
+    "init_from": "fine-tuned policy model",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "only for synthesizing new problems"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Policy: SFT on top-2 correct trajectories per problem by average Q-value. PPM: Bradley-Terry pairwise ranking loss, L = -1/(2x2) E[log sigma(r(x,ypos)-r(x,yneg))], 2 positive and 2 negative steps per step",
+   "optimizer": "AdamW",
+   "lr": "policy 7e-6 (Qwen), 5e-6 (Phi3-mini); PPM 7e-6",
+   "lr_schedule": "linear for Qwen; cosine for Phi3-mini; PPM schedule not stated",
+   "warmup": null,
+   "batch_size": "policy 128; PPM 512",
+   "steps": null,
+   "epochs": "policy 2; PPM 1",
+   "tokens": null,
+   "seq_len": "4096 tokens (policy)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "bootstrap round: 10 nodes of 8x80GB H100; rounds 2-4: 15 nodes of 4x40GB A100",
+   "compute": null,
+   "wall_clock": "bootstrap about two weeks; rounds 2-4 three days each; final round about one week",
+   "seeds": null,
+   "other": {
+    "policy_refit": "policy fine-tuned from the initial base model each round, not incrementally",
+    "rollouts": "16 MCTS rollouts per problem per round (8 in bootstrap); hard problems get extra 16, then 64, then 128; round 4 uses 2 tree expansions with different seeds",
+    "tree": "max depth 16; 8 candidate nodes per step (5 in bootstrap, 16 in round 4); UCT c=2",
+    "q_annotation": "terminal-guided rounds 1-2 (q(sd)=+1/-1); PPM-augmented from round 3",
+    "orm_pqm": "ORM and PQM share architecture and training parameters with PPM; PQM uses MSE on Q-values"
+   }
+  },
+  "inference": {
+   "decoding": "MCTS: per step 32 candidate nodes scored by PPM, 4 rollouts per step to update Q-values; final answer = trajectory with highest PPM score",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "8 trajectories for most benchmarks, 16 for AIME/AMC; rStar-Math64 uses 64; Pass@1 reported; no seeds or repeat runs stated",
+   "prompting": "MCTS prompt: '<|user|>: {question} <|assistant|>: Let's think step by step and solve the problem with code.' plus previous steps; step ends with <end_of_step>",
+   "retrieval": null,
+   "parameters": {
+    "candidates_per_step": 32,
+    "rollouts_per_step": 4,
+    "uct_c_training": 2
+   },
+   "other": {
+    "tokens_per_trajectory": "Table 9: MATH 5453, AIME 15693, AMC 14544, Olympiad 7889, College 4503, GSM8K 3299, Gaokao 6375"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass@1 accuracy",
+     "definition": "fraction of problems whose single selected answer is correct (for System 2 the PPM-selected trajectory)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@N",
+     "definition": "problem solved if any of N solutions is correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4o",
+    "Claude3.5-Sonnet",
+    "o1-preview",
+    "o1-mini",
+    "QwQ-32B-preview",
+    "DeepSeek-V3",
+    "DeepSeek-Coder-V2-Instruct",
+    "Mathstral-7B",
+    "NuminaMath-72B-CoT",
+    "LLaMA3.1-8B/70B-Instruct",
+    "Qwen2.5-Math Instruct models and Best-of-N with 72B ORM"
+   ],
+   "protocol": "Pass@1; frontier-model numbers for MATH, AIME taken from public reports, others re-measured; Qwen Best-of-N re-evaluated on MATH-500, AIME, AMC; same number of samples as rStar-Math"
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/rStar (stated 'will be available')",
+   "weights": null,
+   "data": "stated 'will be available'"
+  },
+  "prompts": [
+   {
+    "purpose": "bootstrap MCTS prompt for DeepSeek-Coder-V2-Instruct",
+    "text": "You are a powerful agent with broad math knowledge and great python programming skills. You need to use python interpreter to do accurate calculation on math equations.",
+    "where": "App A.3"
+   },
+   {
+    "purpose": "MCTS next-step prompt for policy SLM",
+    "text": "<|user|>: {input question} <|assistant|>: Let's think step by step and solve the problem with code. {trajectory of previous steps}",
+    "where": "App A.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "rStar-Math lifts Qwen2.5-Math-7B on MATH from 58.8% to 90.0% with 64 search trajectories, above o1-preview and level with o1-mini.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1",
+   "value": "90.0",
+   "unit": "% Pass@1",
+   "baseline_value": "58.8",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B policy + 7B PPM, MCTS, 64 trajectories, Pass@1, MATH",
+   "where": "Abstract, Sec 4.2",
+   "note": null,
+   "quote": "On the MATH benchmark, it improves Qwen2.5-Math-7B from 58.8% to 90.0% and Phi3-mini-3.8B from 41.4% to 86.4%, surpassing o1-preview by +4.5% and +0.9%."
+  },
+  {
+   "claim": "On AIME 2024 rStar-Math (7B) solves 53.3% of problems, 8/15 in each of AIME I and II.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME 2024 Pass@1",
+   "value": "53.3",
+   "unit": "%",
+   "baseline_value": "0.0",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B + PPM, 64 trajectories, AIME 2024 (30 problems)",
+   "where": "Abstract, Sec 4.2",
+   "note": null,
+   "quote": "On the USA Math Olympiad (AIME), rStar-Math solves an average of 53.3% (8/15) of problems, ranking among the top 20% the brightest high school math students."
+  },
+  {
+   "claim": "With only 8 trajectories rStar-Math already reaches 89.4% on MATH for the 7B model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1",
+   "value": "89.4",
+   "unit": "% Pass@1",
+   "baseline_value": "58.8",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, 8 trajectories (16 for AIME/AMC)",
+   "where": "Sec 1; Table 5",
+   "note": null,
+   "quote": "On MATH benchmark, with 8 search trajectories, rStar-Math boosts Qwen2.5-Math-7B from 58.8% to 89.4% and Qwen2.5-Math-1.5B from 51.2% to 87.8%."
+  },
+  {
+   "claim": "The 3.8B Phi3-mini policy with the same 7B PPM reaches 86.4% on MATH (64 traj).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1",
+   "value": "86.4",
+   "unit": "% Pass@1",
+   "baseline_value": "41.4",
+   "n": null,
+   "setup": "Phi3-mini-Instruct fine-tuned on round-4 Qwen trajectories, 7B PPM, 64 trajectories",
+   "where": "Table 5",
+   "note": null,
+   "table": "Table 5, row rStar-Math64 (3.8B SLM+7B PPM), column MATH"
+  },
+  {
+   "claim": "Best-of-N with a 72B ORM on the same Qwen2.5-Math-7B-Instruct policy gets 88.4% on MATH and 26.7% on AIME, below rStar-Math with a 7B PPM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1",
+   "value": "88.4",
+   "unit": "% Pass@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B-Instruct + 72B ORM, Best-of-N, same number of samples",
+   "where": "Table 5",
+   "note": null,
+   "table": "Table 5, row Qwen2.5-Math-7B-Instruct+72B ORM, column MATH"
+  },
+  {
+   "claim": "Self-evolution improves the policy SLM across rounds on MATH from 69.6 (r1) to 78.4 (r4) and on AIME 2024 from 3.3 to 26.7 (greedy Pass@1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1 greedy",
+   "value": "78.4",
+   "unit": "% Pass@1",
+   "baseline_value": "58.8",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B fine-tuned each round from base, greedy Pass@1",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row policy SLM-r4, column MATH"
+  },
+  {
+   "claim": "With PPM-guided MCTS the 7B model improves per round: MATH 75.2, 86.6, 87.0, 89.4 for rounds 1 to 4; from round 2 it exceeds GPT-4o (76.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1 per round",
+   "value": "86.6",
+   "unit": "% Pass@1",
+   "baseline_value": "76.6",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, System 2 inference, 8 trajectories (16 for AIME/AMC)",
+   "where": "Table 6",
+   "note": null,
+   "table": "Table 6, row rStar-Math Round 2, column MATH"
+  },
+  {
+   "claim": "PPM quality rises across rounds with the policy fixed to SLM-r1: MATH 75.2, 84.1, 85.2, 87.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1",
+   "value": "87.0",
+   "unit": "% Pass@1",
+   "baseline_value": "75.2",
+   "n": null,
+   "setup": "Policy fixed to policy SLM-r1, PPM-r1..r4",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row PPM-r4, column MATH"
+  },
+  {
+   "claim": "Share of the 747k problems solved in training set rises from 60.17% (round 1) to 90.25% (round 4); Olympiad-level from 20.99% to 80.58%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coverage",
+   "value": "90.25",
+   "unit": "% problems solved",
+   "baseline_value": "60.17",
+   "n": null,
+   "setup": "747k problems, MCTS with latest policy/PPM",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row Round 4, column All"
+  },
+  {
+   "claim": "Step-by-step verified trajectories as SFT data beat GPT-4 distillation (MetaMath, NuminaMath-CoT), random self-generation and ORM rejection sampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1 after SFT",
+   "value": "78.4",
+   "unit": "% Pass@1",
+   "baseline_value": "73.4",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B SFT, same recipe, MATH Pass@1",
+   "where": "Table 7",
+   "note": "baseline is rejection sampling; NuminaMath-CoT 69.6, random sample 72.4, MetaMath 55.2",
+   "table": "Table 7, row Step-by-step verified (ours), column MATH"
+  },
+  {
+   "claim": "PPM beats an outcome reward model (Best-of-N) and a Q-value regression PRM (PQM) when guiding search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH Pass@1",
+   "value": "89.4",
+   "unit": "% Pass@1",
+   "baseline_value": "82.6",
+   "n": null,
+   "setup": "Round-4 policy, MCTS (PQM, PPM) vs Best-of-N (ORM), MATH",
+   "where": "Table 8",
+   "note": "ORM 82.6, PQM 88.2, PPM 89.4. AIME: ORM 26.7, PQM 46.7, PPM 50.0.",
+   "table": "Table 8, row PPM, column MATH"
+  },
+  {
+   "claim": "The reward model dominates final performance: despite differing Pass@1, final accuracy of the three policy sizes converges under the PPM.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5 and Fig 7 comparisons",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "Moreover, despite varying Pass@1 accuracy across our three policy SLM sizes, the final reasoning accuracy converges after applying the PPM."
+  },
+  {
+   "claim": "Self-reflection emerges unprompted: the policy backtracks from low-quality steps to a simpler solution.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative example (Fig 4) and one more in Appendix A.2; no self-reflection data or prompt",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "Notably, no self-reflection training data or prompt was included, suggesting that advanced System 2 reasoning can foster intrinsic self-reflection."
+  },
+  {
+   "claim": "Inference is token-heavy: MCTS generates on average 15693 tokens per trajectory on AIME 2024 and 5453 on MATH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg tokens per trajectory",
+   "value": "15693",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Average generated tokens per trajectory, MCTS inference",
+   "where": "Table 9",
+   "note": null,
+   "table": "Table 9, column AIME 2024"
+  },
+  {
+   "claim": "Self-evolution data generation cost: bootstrap round took about two weeks on 10 nodes of 8x80GB H100; rounds 2-4 took three days each on 15 nodes of 4x40GB A100 (round 4 about one week).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data generation compute",
+   "where": "App A.1",
+   "note": null,
+   "quote": "This required approximately two weeks to finish the data generation."
+  },
+  {
+   "claim": "PPM-fine-tuned policy models do not beat official Instruct versions on Pass@1 (e.g. 78.4 vs 82.6 on MATH for Qwen2.5-Math-7B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Greedy Pass@1",
+   "where": "Table 10 / App A.1",
+   "note": null,
+   "quote": "Qwen2.5-Math-7B-Instruct achieves 4.2% higher accuracy on the MATH benchmark."
+  }
+ ],
+ "limits": [
+  "Four rounds of self-evolution run only on Qwen2.5-Math-7B due to limited GPU; other three policies are fine-tuned on its round-4 data and reuse its PPM.",
+  "Geometry problems needing visual understanding are unsupported; 8 unsolved AIME problems were geometry-based.",
+  "Accuracy saturates or slows at 64 trajectories on MATH, AIME and Olympiad Bench.",
+  "Needs problems with ground-truth final answers; extending to code or general reasoning requires a feedback mechanism (test cases, human labels, mutual verification).",
+  "Remaining unsolved synthetic problems are largely mislabeled (19 of 20 sampled), so self-evolution stopped at 90.25% coverage.",
+  "Inference is expensive: thousands of tokens per trajectory, 8 to 64 trajectories, with 32 candidates per step.",
+  "Benchmark numbers for o1/Claude/QwQ partly from public reports, not re-measured; no seeds, variance or significance tests; no ablation of the code-execution filter alone; frontier-model comparisons are with default settings.",
+  "Fine-tuned policies do not beat official Instruct models on Pass@1."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PPM",
+   "definition": "process preference model: a reward model trained with Q-value-based positive/negative step pairs and a pairwise ranking loss rather than score regression",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "PQM",
+   "definition": "Q-value-based process reward model trained with MSE on Q-values as labels",
+   "where": "App A.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "rStar (Qi et al., Mutual reasoning makes smaller LLMs stronger problem-solvers)",
+   "year": 2024,
+   "arxiv": "2408.06195",
+   "relation": "extends",
+   "note": "MCTS Q-value scoring follows rStar and AlphaGo",
+   "quote": null
+  },
+  {
+   "work": "Let's Verify Step by Step (Lightman et al.)",
+   "year": 2023,
+   "arxiv": "2305.20050",
+   "relation": "related",
+   "note": "PRM800k; MATH-500",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Bradley-Terry pairwise ranking loss",
+   "quote": null
+  },
+  {
+   "work": "AlphaMath Almost Zero (Chen et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Q-value as reward label with MSE (PQM)",
+   "quote": null
+  },
+  {
+   "work": "Math-Shepherd (Wang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "automatic process annotation",
+   "quote": null
+  },
+  {
+   "work": "Improve mathematical reasoning by automated process supervision (Luo et al.)",
+   "year": 2024,
+   "arxiv": "2406.06592",
+   "relation": "related",
+   "note": "MCTS process annotation",
+   "quote": null
+  },
+  {
+   "work": "Scaling LLM test-time compute optimally (Snell et al.)",
+   "year": 2024,
+   "arxiv": "2408.03314",
+   "relation": "related",
+   "note": "test-time compute scaling motivation",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5-Math technical report (Yang et al.)",
+   "year": 2024,
+   "arxiv": "2409.12122",
+   "relation": "baseline",
+   "note": "base policies, Instruct and 72B ORM Best-of-N baselines",
+   "quote": null
+  },
+  {
+   "work": "NuminaMath",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "competition-level problems and CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "MetaMath (Yu et al.)",
+   "year": 2023,
+   "arxiv": "2309.12284",
+   "relation": "uses-data",
+   "note": "problems and SFT baseline",
+   "quote": null
+  },
+  {
+   "work": "Kocsis and Szepesvari, Bandit based Monte-Carlo planning",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "UCT",
+   "quote": null
+  },
+  {
+   "work": "Large Language Monkeys (Brown et al.)",
+   "year": 2024,
+   "arxiv": "2407.21787",
+   "relation": "related",
+   "note": "Best-of-N",
+   "quote": null
+  },
+  {
+   "work": "OpenAI o1",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "o1-preview and o1-mini comparison targets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The overview of rStar-Math.",
+   "page": 2,
+   "why": "shows MCTS, preference pair construction and 4-round loop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Reasoning performance under scaling up the test-time compute.",
+   "page": 10,
+   "why": "accuracy vs number of trajectories"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "An example of intrinsic self-reflection during rStar-Math deep thinking.",
+   "page": 12,
+   "why": "PPM scores showing backtracking"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Pass@1 accuracy of policy models and their accuracy after applying System 2 reasoning with various reward models",
+   "page": 12,
+   "why": "reward model dominates"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, p5",
+   "snippet": "UCT(s) = Q(s) + c * sqrt(ln N_parent(s) / N(s)); Q(s) = q(s)/N(s)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2, p5",
+   "snippet": "q(s_i)_k = q(s_i)_{k-1} + q(s_d)_k",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4, p6",
+   "snippet": "L_ppm = -1/(2x2) E[log sigma(r(x,y_pos) - r(x,y_neg))]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table values were reconstructed from column-flattened text; text printed 88.4 for 1.5B MATH at 64 trajectories in Sec 1 while Table 5 and Table 1 give 88.6.",
+  "Phi3-mini is called 3B in Sec 4.1 and 3.8B elsewhere.",
+  "o1-mini College Math is 57.8 in Table 5 but 55.6 in Table 8.",
+  "No embedded instructions found."
+ ]
+}

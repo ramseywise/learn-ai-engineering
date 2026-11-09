@@ -1,19 +1,630 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2510.18234",
  "pdf": "generative-ai/02-rag-retrieval/sources/wei-2025-deepseek-ocr.pdf",
  "bib": {
   "title": "DeepSeek-OCR: Contexts Optical Compression",
-  "first_author": "Haoran Wei",
-  "year": "2025",
-  "venue": null,
+  "authors": [
+   "Haoran Wei",
+   "Yaofeng Sun",
+   "Yukun Li"
+  ],
+  "first_author": "Wei",
+  "year": 2025,
+  "venue": "preprint",
   "arxiv": "2510.18234",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 53220,
+  "chars_total": 53220,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"DeepSeek-OCR: Contexts Optical Compression\", Haoran Wei, Yaofeng Sun, Yukun Li (DeepSeek-AI). It is arXiv:2510.18234v1 [cs.CV], dated 21 Oct 2025. The text calls itself a \"technical report\" and gives no venue, so treat it as a preprint.\n\nCOVERAGE: I read all 53,164 chars. That is the abstract, the body, Tables 1-4, the discussion and conclusion, and the start of the references. I skimmed the rest of the references, which hold nothing beyond citations. There are no appendices. I did not run the figure-caption script. Figure captions come from the extracted text, and the figure images were not viewed.\n\nCLAIMS (ranked)\n\n- Claim: Decoding precision stays high while text tokens are within about 10x the vision tokens, and falls off beyond that.\n  number: 97% at <10x; about 60% at about 20x\n  setup: Fox benchmark, English documents only, 100 pages with 600-1300 text tokens (tokenized with DeepSeek-OCR's own ~129k vocab). Tested only in Tiny (64 vision tokens) and Small (100) modes. Prompt \"Free OCR.\" (no layout).\n  quote: \"when the number of text tokens is within 10 times that of vision tokens (i.e., a compression ratio < 10×), the model can achieve decoding (OCR) precision of 97%. Even at a compression ratio of 20×, the OCR accuracy still remains at about 60%.\"\n  where: Abstract, p.1\n\n- Claim: Per-bucket compression vs precision table (Table 2). Fox English, with the number of pages in each bucket.\n  number: see rows below\n  setup: as above. Compression = ground-truth text tokens / vision tokens. Small pages counts (4-28 per bucket).\n  quote (verbatim rows, \"text tokens: 64-vis precision/compression, 100-vis precision/compression, pages\"):\n  - \"600-700 96.5% 10.5× 98.5% 6.7×7\"\n  - \"700-800 93.8% 11.8× 97.3% 7.5×28\"\n  - \"800-900 83.8% 13.2× 96.8% 8.5×28\"\n  - \"900-1000 85.9% 15.1× 96.8% 9.7×14\"\n  - \"1000-1100 79.3% 16.5× 91.5% 10.6×11\"\n  - \"1100-1200 76.4% 17.7× 89.8% 11.3×8\"\n  - \"1200-1300 59.1% 19.7× 87.1% 12.6×4\"\n  where: Table 2, p.10. The Figure 1(a) text gives 85.8% and 76.3% for two cells where the table says 85.9% and 76.4%.\n\n- Claim: Headline intro numbers for compression bands.\n  number: 96%+ at 9-10x, ~90% at 10-12x, ~60% at 20x\n  quote: \"Our method achieves 96%+ OCR decoding precision at 9-10× text compression,∼90% at 10-12× compression, and∼60% at 20× compression on Fox [21] benchmarks\"\n  where: Introduction, p.3. The authors add that accuracy is \"being even higher when accounting for formatting differences\".\n\n- Claim: On real document parsing (OmniDocBench), 100 vision tokens beats GOT-OCR2.0 at 256 tokens, and under 800 tokens beats MinerU2.0 at about 7,000.\n  number: Edit distance, English overall: Small (100 tokens) 0.221 vs GOT-OCR2.0 (256 tokens) 0.287. Gundam (795 tokens) 0.127 vs MinerU2.0 (6790 tokens) 0.133.\n  setup: OmniDocBench, edit distance (lower is better). Token counts are the average vision tokens per page. For Base and Large, \"valid\" tokens after padding are in parentheses.\n  quote: \"Requiring only 100 vision tokens (640×640 resolution), DeepSeek-OCR surpasses GOT-OCR2.0 [38] which uses 256 tokens\" and \"Using fewer than 800 tokens (Gundam mode), DeepSeek-OCR outperforms MinerU2.0 [34] which needs nearly 7,000 vision tokens.\"\n  where: Section 4.2, p.12\n\n- Claim: Table 3 DeepSeek-OCR modes (English overall / Chinese overall edit distance).\n  number: Tiny 64: 0.386/0.361. Small 100: 0.221/0.284. Base 256(182): 0.137/0.24. Large 400(285): 0.138/0.208. Gundam 795: 0.127/0.181. Gundam-M 200dpi 1853: 0.123/0.157.\n  quote: \"Base 256(182) 0.137 0.054 0.267 0.163 0.064 0.24 0.205 0.474 0.1 0.181\" and \"Gundam 795 0.127 0.043 0.269 0.134 0.062 0.181 0.097 0.432 0.089 0.103\"\n  where: Table 3, p.11. Competitors for context: dots.ocr 200dpi uses 5545 tokens and scores 0.125 (English). Pipeline tools such as MinerU-2.1.1 score 0.162. Gemini2.5-Pro scores 0.148. GPT4o scores 0.233.\n\n- Claim: The vision tokens needed depend on document type. Slides need about 64 tokens, books and reports need about 100. Newspapers need Gundam modes.\n  number: Newspaper edit distance: Tiny 0.94, Large 0.353, Gundam 0.122, Gundam-M 0.099. Slides: Tiny 0.116.\n  setup: OmniDocBench categories (Table 4). Authors attribute this to text length: \"text tokens in newspapers are 4-5,000\".\n  quote: \"For newspapers, Gundam or even Gundam-master mode is required to achieve acceptable edit distances, because the text tokens in newspapers are 4-5,000, far exceeding the 10× compression of other modes.\"\n  where: Section 4.2 and Table 4, p.12. One oddity in Table 4: FinancialReport scores 0.289 in Gundam but 0.034 in Gundam-M and 0.022 in Large.\n\n- Claim: Production throughput for generating LLM/VLM training data.\n  number: 200k+ pages/day on a single A100-40G; 33M pages/day on 20 nodes (8 A100-40G each)\n  quote: \"DeepSeek-OCR can generate training data for LLMs/VLMs at a scale of 200k+ pages per day (a single A100-40G).\" and \"DeepSeek-OCR can generate 33 million pages of data per day for LLMs or VLMs using 20 nodes (each with 8 A100-40G GPUs).\"\n  where: Abstract and Introduction. The paper gives no hardware or batch setup for these throughput figures.\n\n- Claim: Architecture and mode settings.\n  number: DeepEncoder is about 380M parameters. The decoder is 3B MoE with about 570M active. The compressor is 16x.\n  setup: 80M SAM-base (window attention) feeds a 2-layer conv 16x token compressor, then 300M CLIP-large (global attention). Decoder: DeepSeek-3B-MoE, 6 of 64 routed experts plus 2 shared.\n  quote: \"a 1024×1024 image ... 1024/16×1024/16=4096 patch tokens ... the token count becomes 4096/16=256\"\n  where: Section 3.2.1, p.5\n  Modes (Table 1):\n  - Tiny 512 px, 64 tokens.\n  - Small 640 px, 100 tokens.\n  - Base 1024 px, 256 tokens.\n  - Large 1280 px, 400 tokens.\n  - Gundam: n×100+256 tokens, with n tiles from 2 to 9.\n  - Gundam-M: n×256+400.\n  - Valid-token formula (Eq. 1): N_valid = ⌈N_actual × [1 − (max(w,h) − min(w,h))/max(w,h)]⌉.\n\n- Claim: Training data mix.\n  number: 30M PDF pages in about 100 languages (25M Chinese and English, 5M other). Fine annotations: 2M pages each for Chinese and English. Plus 10M charts, 5M chemical formulas, 1M geometry samples. Overall mix is 70% OCR, 20% general vision, 10% text-only.\n  setup: Sequence length 8192. Trained on 20 nodes × 8 A100-40G, global batch 640. Table 3 lists Tiny to Large and Gundam as trained together. Gundam-M comes from continued training on 6M samples.\n  quote: \"OCR data accounts for 70%, general vision data accounts for 20%, and text-only data accounts for 10%.\"\n  where: Sections 3.4-3.5, pp.7-10\n\n- Claim: The model does \"deep parsing\" with a prompt. Charts become HTML tables, chemical formulas become SMILES, simple geometry is supported, and natural images get dense captions. It also supports layout-aware markdown output.\n  number: none\n  setup: qualitative figures only (Figures 7-10), no metrics.\n  quote: \"<image>\\n<|grounding|>Convert the document to markdown.\" and \"<image>\\nParse the figure.\"\n  where: Section 4.3.1, pp.12-16\n\n- Claim (speculative, not tested): Optical compression could serve as an LLM memory-forgetting mechanism. Older chat history would be rendered as images and progressively downsized.\n  number: \"10× compression efficiency\" for dialogue histories beyond k rounds\n  quote: \"implementing optical processing for dialogue histories beyond 𝑘 rounds in multi-turn conversations to achieve 10×compression efficiency.\"\n  where: Section 5, p.18, Figure 13\n\nLIMITS\n- The compression study is OCR reconstruction only, on 100 English Fox pages. Bucket sizes are as small as 4 pages, and there is no confidence interval.\n- The authors concede it does not validate real context compression: \"OCR alone is insufficient to fully validate true context optical compression\". They list digital-optical interleaved pretraining and needle-in-a-haystack tests as future work.\n- The Fox output format does not match the ground truth, so measured precision is probably understated. The paper gives no figure for the gap.\n- Above 10x, precision falls. The authors give two possible reasons, more complex layout and blurring at 512 or 640 px. They propose no test to tell them apart.\n- The Discussion says: \"we acknowledge this is early-stage work\".\n- The model has no SFT stage, so it is not a chatbot and some abilities need completion prompts.\n- Geometry parsing is described as \"extremely challenging and has a long way to go\".\n- Table 3 compares against other systems at different DPI settings and token counts. The throughput claims come with no setup.\n- The paper has no RAG, retrieval or chunking evaluation. It is parsing and OCR only.\n- It is dated Oct 2025. Newer OCR and parsing models may have passed these results, so I cannot say from this source.\n\nBUILDS ON (as credited)\n- Vary (Wei et al.; ref 36): the SAM + conv compressor design and the DeepEncoder training recipe.\n- SAM (Kirillov 2023) and CLIP (ref 29): the two encoder halves.\n- DeepSeekMoE (refs 19, 20): the decoder.\n- GOT-OCR2.0 (ref 38): the OCR 2.0 task framing and the training-data flywheel.\n- InternVL2.0 (Chen 2024): the tiling method.\n- NaViT / Patch n' Pack (Dehghani 2023): adaptive-resolution encoder comparison.\n- Fox benchmark (ref 21) and OmniDocBench (ref 27): the evaluation sets.\n- Nougat (Blecher 2023), MinerU (ref 34), PP-DocLayout (ref 33) and PaddleOCR (ref 9): used for annotation and as baselines.\n- OneChart (Chen 2024) and Slow Perception (ref 39): chart and geometry data.\n- OPT-IML (Iyer 2022; ref 15): the compact language model used in encoder pretraining.\n\nCODE: none in the paper. The prompts are the useful pieces, quoted verbatim:\n- \"<image>\\nFree OCR.\" (Section 4.1, no layout)\n- \"<image>\\n<|grounding|>Convert the document to markdown.\" (Fig 7)\n- \"<image>\\nParse the figure.\" (Fig 7)\nThe weights and code are at http://github.com/deepseek-ai/DeepSeek-OCR.\n\nFIGURES (not rendered or viewed, captions from the extraction)\n- Fig 1, p.1: (a) compression vs precision on Fox, (b) OmniDocBench edit distance against average vision tokens. It shows the headline trade-off at a glance.\n- Fig 3, p.5: architecture (SAM, 16x conv, CLIP, 3B-MoE).\n- Fig 4 and Table 1: resolution modes.\n- Fig 5: layout-interleaved annotation format.\n- Fig 13: the forgetting-curve analogy, mapping Gundam, Large, Base, Small and Tiny to older memory.\n\nPROBLEMS\n- No embedded instructions found.\n- Table 2 extraction runs columns together, for example \"6.7×7\" is 6.7x compression with 7 pages. Table 3 has similar run-on cells, for example \"Tiny640.386\" is 64 tokens, 0.386, and \"dots.ocr†200dpi\" row values are fused. Re-check these against the PDF layout before quoting.\n- Internal inconsistencies: Table 2 gives 85.9% and 76.4% where Figure 1(a) gives 85.8% and 76.3%. The abstract says \"200k+ pages per day (a single A100-40G)\", while the intro gives 33M pages per day on 20 nodes (160 GPUs), and the two do not obviously reconcile.\n- Table 4 labels the last row \"Guandam-M\", a typo in the paper.\n- The extracted text is saved at /tmp/deepseek_ocr.txt."
+ "type": "empirical",
+ "question": "How many vision tokens are needed to decode a given number of text tokens, i.e. can a page image serve as a compressed representation of text for LLM long context?",
+ "hypothesis": "Rendering text as images and encoding with a compact high-resolution vision encoder can compress text tokens by roughly 10x with little loss, and larger ratios degrade like forgetting.",
+ "contributions": [
+  "Quantitative analysis of vision-text token compression ratios on Fox",
+  "DeepEncoder: window attention (SAM) serially connected to global attention (CLIP) through a 16x convolutional compressor, low activation memory at high resolution",
+  "DeepSeek-OCR (DeepEncoder + DeepSeek-3B-MoE) reaching state-of-the-art among end-to-end models on OmniDocBench with the fewest vision tokens, plus chart/chemical/geometry/natural image parsing"
+ ],
+ "method": {
+  "summary": "A VLM with a ~380M DeepEncoder (SAM-base 80M, 2-layer conv 16x token compressor, CLIP-large 300M) feeding a DeepSeek-3B-MoE decoder (570M active). Trained in two stages (encoder alone with next-token prediction, then the full model) on OCR 1.0, OCR 2.0, general vision and text-only data; evaluated for vision-text compression on Fox and for document parsing on OmniDocBench.",
+  "task": "document OCR / vision-text context compression",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OCR 1.0 document data",
+    "role": "train",
+    "size": "30M PDF pages, ~100 languages (Chinese+English ~25M, others 5M); fine annotations 2M pages each Chinese and English; 600K minority-language samples; 3M Word pages",
+    "split": null,
+    "source": "PDFs collected from the Internet; coarse labels via fitz, fine labels via PP-DocLayout, MinerU, GOT-OCR2.0",
+    "preprocessing": "coarse vs fine labels distinguished by prompt; layout coordinates normalised to 1000 bins"
+   },
+   {
+    "name": "OCR 1.0 natural scene data",
+    "role": "train",
+    "size": "10M samples each Chinese and English",
+    "split": null,
+    "source": "LAION and Wukong, labelled with PaddleOCR",
+    "preprocessing": null
+   },
+   {
+    "name": "OCR 2.0 data",
+    "role": "train",
+    "size": "charts 10M images; chemical formulas 5M pairs; plane geometry 1M",
+    "split": null,
+    "source": "charts rendered with pyecharts/matplotlib; SMILES from PubChem rendered with RDKit; geometry per Slow Perception",
+    "preprocessing": "charts labelled as HTML tables; geometry translation-invariant augmentation, perception-ruler size 4"
+   },
+   {
+    "name": "General vision data",
+    "role": "train",
+    "size": "20% of DeepSeek-OCR training mix; encoder stage also 100M samples from LAION",
+    "split": null,
+    "source": "generated following DeepSeek-VL2 (caption, detection, grounding)",
+    "preprocessing": null
+   },
+   {
+    "name": "In-house text-only pretrain data",
+    "role": "train",
+    "size": "10% of training mix",
+    "split": null,
+    "source": "in-house",
+    "preprocessing": "processed to 8192 tokens"
+   },
+   {
+    "name": "Fox (English document portion)",
+    "role": "eval",
+    "size": "100 pages with 600-1300 ground-truth tokens",
+    "split": "documents selected by token count",
+    "source": "Liu et al. 2024, arXiv:2405.14295",
+    "preprocessing": "ground truth tokenized with DeepSeek-OCR tokenizer (vocab ~129k)"
+   },
+   {
+    "name": "OmniDocBench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Ouyang et al. CVPR 2025",
+    "preprocessing": "dots.ocr and Gundam-M rows use fitz interpolation to 200dpi"
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeek-OCR",
+    "role": "proposed",
+    "params": "~3B total, 570M activated (decoder) + ~380M DeepEncoder",
+    "architecture": "DeepEncoder (SAM-base patch 16 window attn + 2-layer conv 16x compressor + CLIP-large global attn, patch embed removed) + DeepSeek-3B-MoE decoder",
+    "init_from": "SAM-base and CLIP-large pretrained weights (inferred: 'benefit from the pretraining gains')",
+    "tokenizer": "DeepSeek-OCR tokenizer",
+    "vocab": "~129k",
+    "layers": "decoder 12 layers",
+    "hidden": null,
+    "heads": null,
+    "context": "8192 tokens",
+    "other": {
+     "experts": "6 of 64 routed + 2 shared active",
+     "conv_compressor": "2 layers, kernel 3, stride 2, padding 1, channels 256 to 1024",
+     "modes": "Tiny 512 (64 tok), Small 640 (100), Base 1024 (256), Large 1280 (400), Gundam n x 640 tiles + 1024 global (n*100+256), Gundam-M 1024 tiles + 1280 global (n*256+400); n in 2..9; Gundam-M by continued training on 6M sampled data"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction",
+   "optimizer": "AdamW (encoder stage: cosine annealing; full model: step-based scheduler)",
+   "lr": "5e-5 (DeepEncoder stage); 3e-5 initial (DeepSeek-OCR stage)",
+   "lr_schedule": "cosine annealing (encoder); step-based (full model)",
+   "warmup": null,
+   "batch_size": "1280 (encoder); global 640 (full model)",
+   "steps": null,
+   "epochs": "2 (encoder stage); not stated for full model",
+   "tokens": null,
+   "seq_len": "4096 (encoder stage); 8192 (full model)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "20 nodes x 8 A100-40G (full model); pipeline parallel 4 parts, DP 40",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "mix": "OCR 70%, general vision 20%, text-only 10%",
+    "freezing": "SAM and compressor frozen in PP0, CLIP unfrozen in PP1, 6 decoder layers each on PP2 and PP3",
+    "speed": "90B tokens/day text-only, 70B tokens/day multimodal",
+    "framework": "HAI-LLM",
+    "no_sft": "no SFT stage; model is not a chatbot",
+    "encoder_stage_data": "all OCR 1.0 and 2.0 data + 100M LAION samples, with a compact language model (Iyer et al., OPT-IML)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "'<image>\\nFree OCR.' for non-layout OCR; '<image>\\n<|grounding|>Convert the document to markdown.' for layout; '<image>\\nParse the figure.' for deep parsing",
+   "retrieval": null,
+   "parameters": {
+    "N_valid": "ceil(N_actual * [1 - (max(w,h)-min(w,h))/max(w,h)]) for padded Base/Large modes"
+   },
+   "other": {
+    "production_throughput": "200k+ pages/day on one A100-40G; 33M pages/day on 20 nodes x 8 A100-40G"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "OCR precision (Fox)",
+     "definition": "decoding precision of OCR output vs ground truth; formal definition not given",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Compression ratio",
+     "definition": "ground-truth text tokens / vision tokens used",
+     "unit": "x",
+     "higher_is_better": null
+    },
+    {
+     "name": "Edit distance (OmniDocBench)",
+     "definition": "normalised edit distance, overall/text/formula/table/reading order; formal definition not given",
+     "unit": "edit distance",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Pipeline: Dolphin, Marker, Mathpix, MinerU-2.1.1, MonkeyOCR-1.2B, PPstructure-v3",
+    "End-to-end: Nougat, SmolDocling, InternVL2-76B, Qwen2.5-VL-7B/72B, OLMOCR, GOT-OCR2.0, OCRFlux-3B, GPT4o, InternVL3-78B, dots.ocr, Gemini2.5-Pro, MinerU2.0"
+   ],
+   "protocol": "Single evaluation per setting; no seeds, variance or significance test stated. Fox output format does not exactly match ground truth so authors say true performance is somewhat higher."
+  },
+  "availability": {
+   "code": "http://github.com/deepseek-ai/DeepSeek-OCR",
+   "weights": "http://github.com/deepseek-ai/DeepSeek-OCR",
+   "data": "training data not released (in-house/crawled)"
+  },
+  "prompts": [
+   {
+    "purpose": "Fox free OCR without layout",
+    "text": "<image>\\nFree OCR.",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "document to markdown with layout",
+    "text": "<image>\\n<|grounding|>Convert the document to markdown.",
+    "where": "Fig 7"
+   },
+   {
+    "purpose": "deep parsing of figures",
+    "text": "<image>\\nParse the figure.",
+    "where": "Fig 7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "results Table 2",
+    "quote": "85.9%",
+    "where": "Table 2 vs Figure 1(a) prints 85.8% and 76.3% where Table 2 prints 85.9% and 76.4%"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "At under 10x text-to-vision-token compression, OCR precision is about 97%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 97,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fox English documents, 600-1300 text tokens, 100 pages, Tiny (64 vision tokens) / Small (100) modes, prompt '<image>\\nFree OCR.'",
+   "quote": "within a 10× compression ratio, the model’s decoding precision can",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "At ~20x compression (1200-1300 text tokens into 64 vision tokens) precision falls to 59.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 59.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fox English documents, 600-1300 text tokens, 100 pages, Tiny (64 vision tokens) / Small (100) modes, prompt '<image>\\nFree OCR.', 4 pages in bin",
+   "quote": null,
+   "table": "Table 2, row 1200-1300, column Vision Tokens=64 Precision (19.7x)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "With 100 vision tokens, 600-700 token pages decode at 98.5% (6.7x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 98.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fox English documents, 600-1300 text tokens, 100 pages, Tiny (64 vision tokens) / Small (100) modes, prompt '<image>\\nFree OCR.'",
+   "quote": null,
+   "table": "Table 2, row 600-700, column Vision Tokens=100 Precision",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "With 100 vision tokens, 900-1000 token pages decode at 96.8% (9.7x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 96.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fox English documents, 600-1300 text tokens, 100 pages, Tiny (64 vision tokens) / Small (100) modes, prompt '<image>\\nFree OCR.'",
+   "quote": null,
+   "table": "Table 2, row 900-1000, column Vision Tokens=100 Precision",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "With 100 vision tokens, 1000-1100 token pages decode at 91.5% (10.6x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 91.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fox English documents, 600-1300 text tokens, 100 pages, Tiny (64 vision tokens) / Small (100) modes, prompt '<image>\\nFree OCR.'",
+   "quote": null,
+   "table": "Table 2, row 1000-1100, column Vision Tokens=100 Precision",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "With 100 vision tokens, 1200-1300 token pages decode at 87.1% (12.6x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 87.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fox English documents, 600-1300 text tokens, 100 pages, Tiny (64 vision tokens) / Small (100) modes, prompt '<image>\\nFree OCR.'",
+   "quote": null,
+   "table": "Table 2, row 1200-1300, column Vision Tokens=100 Precision",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Authors claim 96%+ precision at 9-10x, ~90% at 10-12x, ~60% at 20x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision",
+   "value": 96,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fox English documents, 600-1300 text tokens, 100 pages, Tiny (64 vision tokens) / Small (100) modes, prompt '<image>\\nFree OCR.'",
+   "quote": "Our method achieves 96%+ OCR decoding precision at 9-10× text compression",
+   "table": null,
+   "note": "The 96%+ figure is a rounding of Table 2 values (96.8 at 9.7x for 100 tokens).",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "On OmniDocBench, Small mode (100 vision tokens) beats GOT-OCR2.0 (256 tokens) on English overall edit distance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit distance",
+   "value": 0.221,
+   "unit": "edit distance",
+   "baseline_value": 0.287,
+   "n": null,
+   "setup": "OmniDocBench English overall, Small mode",
+   "quote": null,
+   "table": "Table 3, row DeepSeek-OCR Small, column English overall",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Gundam mode (795 tokens) beats MinerU2.0 (6790 tokens) on English overall edit distance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit distance",
+   "value": 0.127,
+   "unit": "edit distance",
+   "baseline_value": 0.133,
+   "n": null,
+   "setup": "OmniDocBench English overall, Gundam",
+   "quote": null,
+   "table": "Table 3, row DeepSeek-OCR Gundam, column English overall",
+   "note": "Abstract says 'fewer than 800 vision tokens'; table gives 795.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Gundam-M at 200dpi (1853 tokens) reaches 0.123 English overall edit distance, best among listed end-to-end models, near dots.ocr 200dpi (0.125, 5545 tokens).",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit distance",
+   "value": 0.123,
+   "unit": "edit distance",
+   "baseline_value": 0.125,
+   "n": null,
+   "setup": "OmniDocBench English overall, Gundam-M 200dpi",
+   "quote": null,
+   "table": "Table 3, row Gundam-M†200dpi, column English overall",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Tiny mode (64 tokens) is weak on OmniDocBench English (0.386 overall).",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit distance",
+   "value": 0.386,
+   "unit": "edit distance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OmniDocBench English overall, Tiny",
+   "quote": null,
+   "table": "Table 3, row DeepSeek-OCR Tiny, column English overall",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Newspapers need Gundam-type modes: Tiny edit distance 0.94 vs Gundam-M 0.099 on newspapers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit distance",
+   "value": 0.099,
+   "unit": "edit distance",
+   "baseline_value": 0.94,
+   "n": null,
+   "setup": "OmniDocBench newspaper category, Gundam-M",
+   "quote": null,
+   "table": "Table 4, row Guandam-M, column Newspaper",
+   "note": "Baseline 0.94 is Tiny. Row label is misspelled 'Guandam-M' in the paper.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Newspaper text is 4-5,000 tokens, far beyond 10x compression of the smaller modes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "text tokens per newspaper page",
+   "value": "4-5,000",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OmniDocBench newspapers",
+   "quote": "the text tokens in newspapers are 4-5,000",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Production throughput of 200k+ pages per day on a single A100-40G.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pages/day",
+   "value": "200k+",
+   "unit": "pages/day",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single A100-40G, data generation for LLM/VLM",
+   "quote": "200k+ pages per day (a single A100-40G)",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "33 million pages per day with 20 nodes of 8 A100-40G.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pages/day",
+   "value": "33 million",
+   "unit": "pages/day",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 nodes x 8 A100-40G",
+   "quote": "33 million pages of data per day",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Full-model training speed is 90B tokens/day for text-only and 70B tokens/day multimodal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens/day",
+   "value": "90B / 70B",
+   "unit": "tokens/day",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 nodes x 8 A100-40G",
+   "quote": "the training speed is 90B tokens/day",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5.2"
+  }
+ ],
+ "limits": [
+  "OCR is only a proxy; authors say OCR alone is insufficient to validate true context optical compression and plan digital-optical interleaved pretraining and needle-in-a-haystack tests.",
+  "Compression test uses only 100 English Fox pages; some bins have 4-7 pages; single run, no variance.",
+  "Fox output format mismatch means reported precision is a lower bound by the authors' account; precision metric not formally defined.",
+  "Above 10x, accuracy declines (layout complexity, blur at 512/640 resolution).",
+  "Forgetting mechanism and multi-turn dialogue compression (Fig 13, Sec 5) are conjecture, not tested.",
+  "No SFT stage; not a chatbot; no ablations of DeepEncoder design; training data not released; no warmup, precision, step counts or weight decay reported.",
+  "Reasoning ability of an LLM over compressed vision tokens is not measured; only transcription."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "compression ratio",
+   "definition": "number of text tokens in ground truth/number of vision tokens model used",
+   "where": "Fig 1 caption"
+  },
+  {
+   "term": "OCR 2.0 data",
+   "definition": "chart, chemical formula, and plane geometry parsing data",
+   "where": "Sec 3.4.2"
+  },
+  {
+   "term": "deep parsing",
+   "definition": "parse images within documents through secondary model calls",
+   "where": "Sec 4.3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Vary: Scaling up the vision vocabulary",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "2-layer conv compressor and encoder-training recipe borrowed",
+   "quote": null
+  },
+  {
+   "work": "SAM (Segment anything)",
+   "year": 2023,
+   "arxiv": "2304.02643",
+   "relation": "uses-method",
+   "note": "SAM-base is window-attention half of DeepEncoder",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CLIP-large is global-attention half",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-V2 / DeepSeek-V3 (DeepSeekMoE)",
+   "year": 2024,
+   "arxiv": "2405.04434",
+   "relation": "uses-method",
+   "note": "decoder DeepSeek-3B-MoE",
+   "quote": null
+  },
+  {
+   "work": "GOT-OCR2.0",
+   "year": 2024,
+   "arxiv": "2409.01704",
+   "relation": "extends",
+   "note": "OCR 2.0 data definition; baseline",
+   "quote": null
+  },
+  {
+   "work": "Fox",
+   "year": 2024,
+   "arxiv": "2405.14295",
+   "relation": "uses-data",
+   "note": "compression study benchmark",
+   "quote": null
+  },
+  {
+   "work": "OmniDocBench",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "practical OCR benchmark",
+   "quote": null
+  },
+  {
+   "work": "InternVL2.0",
+   "year": 2024,
+   "arxiv": "2404.16821",
+   "relation": "uses-method",
+   "note": "tiling method; tile-based encoder criticised",
+   "quote": null
+  },
+  {
+   "work": "Qwen2-VL / NaViT",
+   "year": 2024,
+   "arxiv": "2409.12191",
+   "relation": "related",
+   "note": "adaptive-resolution encoder criticised for activation memory",
+   "quote": null
+  },
+  {
+   "work": "MinerU2.0, dots.ocr, Qwen2.5-VL, Nougat, SmolDocling, OLMOCR, Gemini2.5-Pro, GPT4o",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "OmniDocBench comparison, Table 3",
+   "quote": null
+  },
+  {
+   "work": "Slow Perception",
+   "year": 2024,
+   "arxiv": "2412.20631",
+   "relation": "uses-method",
+   "note": "plane geometry data generation",
+   "quote": null
+  },
+  {
+   "work": "OneChart",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "chart data rendering",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-VL2",
+   "year": 2024,
+   "arxiv": "2412.10302",
+   "relation": "uses-method",
+   "note": "general vision data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) compression ratio vs precision on Fox; (b) OmniDocBench edit distance vs average vision tokens",
+   "page": 1,
+   "why": "shows the precision-vs-compression curve and token-efficiency frontier at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The architecture of DeepSeek-OCR",
+   "page": 5,
+   "why": "SAM -> 16x conv -> CLIP -> MoE decoder pipeline"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "multiple resolution modes",
+   "page": 6,
+   "why": "token counts and padding per mode"
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Forgetting mechanisms: progressively downsizing older rendered text images",
+   "page": 19,
+   "why": "proposed memory-decay use for long context"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3.2.2",
+   "snippet": "N_valid = ceil(N_actual * [1 - ((max(w,h) - min(w,h)) / max(w,h))])",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 and 4 flattened by extraction; columns reconstructed from order.",
+  "Figure 1(a) prints 85.8% and 76.3% where Table 2 prints 85.9% and 76.4%.",
+  "Table 4 row misspelled 'Guandam-M'.",
+  "No embedded instructions found."
+ ]
 }

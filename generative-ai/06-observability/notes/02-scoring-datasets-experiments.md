@@ -294,7 +294,7 @@ technical       3.00    4.5    1.50  4
 
 The average went up. Refusals fell from 4.75 to 2, which means the new version now grants requests it was told to decline. On the average dashboard, that looks like a release you should ship.
 
-A number of that size also raises the next question: is it real? With 24 items and a noisy judge, a small change in the average may be nothing. A paired bootstrap resamples the items, keeping each item's two scores together, and shows how much the average change could move by chance alone.
+A number of that size also raises the next question: is it real? With 24 items and a noisy judge, a small change in the average may be nothing. A paired bootstrap resamples the items, keeping each item's two scores together, and shows how much the average change could move by chance alone. [GA 08 note 9](../../08-eval/notes/09-reading-results.md#compare-on-the-same-tasks-paired-differences) covers paired comparisons, how many tasks you need and slicing in full.
 
 ```python
 import numpy as np

@@ -751,6 +751,10 @@ The stretched operand is not copied; NumPy reuses the same memory with a stride 
 | What's a page fault? | The first touch of an unmapped page traps to the kernel, which maps it. That's why allocation looks free until you use it. |
 | What does the TLB do? | It caches address translations, and works because of locality. |
 
+## See also
+
+- [Python 03 · 09 Memory and the runtime](../../python/03-language-for-engineers/notes/09-memory-and-the-runtime.md): refcounting, the GC and `tracemalloc` on the same objects.
+
 ## Next
 
 [5 — Processes, threads and I/O](05-processes-threads-and-io.md): who runs this code, what stops it, and what waits.

@@ -1,0 +1,485 @@
+{
+ "schema": 1,
+ "key": "2308.07633",
+ "pdf": "ai-engineering/07-inference-engineering/sources/zhu-2023-survey-model-compression-large-language.pdf",
+ "bib": {
+  "title": "A Survey on Model Compression for Large Language Models",
+  "authors": [
+   "Xunyu Zhu",
+   "Jian Li",
+   "Yong Liu",
+   "Can Ma",
+   "Weiping Wang"
+  ],
+  "first_author": "Zhu",
+  "year": 2024,
+  "venue": "preprint (arXiv v4, 30 Jul 2024; formatted as TACL)",
+  "arxiv": "2308.07633",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 90107,
+  "chars_total": 90107,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about last 40 percent of chars) skimmed for lineage only. No appendix exists (22 pages: 9 body, rest references)."
+ },
+ "type": "survey",
+ "question": "What model compression techniques exist for LLMs, and how are compressed LLMs measured?",
+ "hypothesis": null,
+ "contributions": [
+  "First survey dedicated solely to model compression for LLMs",
+  "Taxonomy: quantization, pruning, knowledge distillation, low-rank factorization",
+  "Metrics and benchmarks for compressed LLMs",
+  "Challenges and future directions"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "A 175B-parameter GPT model needs at least 350GB in FP16 and at least five 80GB A100 GPUs for inference.",
+   "kind": "reported",
+   "source": "Brown et al., 2020",
+   "metric": "FP16 memory for 175B params",
+   "value": "350",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-175B (Brown et al., 2020), FP16 weights",
+   "where": "Sec 1",
+   "note": null,
+   "quote": "demands a minimum of 350GB of memory in half-precision (FP16) format."
+  },
+  {
+   "claim": "GPTQ at 3-bit weights on OPT-175B raises Wikitext-2 perplexity by 0.34 and gives 3.24x speedup.",
+   "kind": "reported",
+   "source": "Frantar et al., 2023",
+   "metric": "perplexity difference",
+   "value": "0.34",
+   "unit": "perplexity difference (Wikitext-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B, W3 A16 KV16, weight-only PTQ; figures taken from GPTQ paper",
+   "where": "Table 1",
+   "note": "Speedup 3.24x; C4 difference 0.23",
+   "table": "Table 1, row GPTQ, columns Wikitext-2 / Speedup"
+  },
+  {
+   "claim": "AWQ at 3-bit weights on LLaMA2-70B: Wikitext-2 perplexity +0.42, 3.2x speedup.",
+   "kind": "reported",
+   "source": "Lin et al., 2023",
+   "metric": "perplexity difference",
+   "value": "0.42",
+   "unit": "perplexity difference (Wikitext-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA2-70B, W3 A16, weight-only PTQ",
+   "where": "Table 1",
+   "note": "Speedup 3.2x",
+   "table": "Table 1, row AWQ, columns Wikitext-2 / Speedup"
+  },
+  {
+   "claim": "QuIP reaches 2-bit weights on LLaMA2-70B with perplexity +3.007 (Wikitext-2), much larger loss than 3-bit methods.",
+   "kind": "reported",
+   "source": "Chee et al., 2023",
+   "metric": "perplexity difference",
+   "value": "3.007",
+   "unit": "perplexity difference (Wikitext-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA2-70B, W2 A16",
+   "where": "Table 1",
+   "note": "C4 difference 3.228",
+   "table": "Table 1, row QuIP, column Wikitext-2"
+  },
+  {
+   "claim": "LLM.int8() quantizes weights and activations to 8-bit with no perplexity change on OPT-13B (C4) and 1.22x speedup.",
+   "kind": "reported",
+   "source": "Dettmers et al., 2022",
+   "metric": "perplexity difference",
+   "value": "0.00",
+   "unit": "perplexity difference (C4)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-13B, W8A8",
+   "where": "Table 1",
+   "note": "Speedup 1.22x",
+   "table": "Table 1, row LLM.int8(), columns C4 / Speedup"
+  },
+  {
+   "claim": "SmoothQuant W8A8 on OPT-175B: Wikitext-2 perplexity +0.18, 1.56x speedup.",
+   "kind": "reported",
+   "source": "Xiao et al., 2023",
+   "metric": "perplexity difference",
+   "value": "0.18",
+   "unit": "perplexity difference (Wikitext-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B, W8A8",
+   "where": "Table 1",
+   "note": "Speedup 1.56x",
+   "table": "Table 1, row SmoothQuant, columns Wikitext-2 / Speedup"
+  },
+  {
+   "claim": "4-bit weights and 4-bit activations cost more: OS+ on LLaMA-65B +5.77 Wikitext-2 perplexity; RPTQ on OPT-175B +2.26.",
+   "kind": "reported",
+   "source": "Wei et al., 2023",
+   "metric": "perplexity difference",
+   "value": "5.77",
+   "unit": "perplexity difference (Wikitext-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "W4A4",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row OS+, column Wikitext-2"
+  },
+  {
+   "claim": "KVQuant at 2-bit KV cache on LLaMA-65B: Wikitext-2 perplexity +0.19, 1.4x speedup.",
+   "kind": "reported",
+   "source": "Hooper et al., 2024",
+   "metric": "perplexity difference",
+   "value": "0.19",
+   "unit": "perplexity difference (Wikitext-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-65B, W16A16 KV2",
+   "where": "Table 1",
+   "note": "C4 0.11, speedup 1.4x",
+   "table": "Table 1, row KVQuant, column Wikitext-2"
+  },
+  {
+   "claim": "OneBit 1-bit weights on LLaMA-13B: Wikitext-2 perplexity +4.09 (QAT).",
+   "kind": "reported",
+   "source": "Xu et al., 2024",
+   "metric": "perplexity difference",
+   "value": "4.09",
+   "unit": "perplexity difference (Wikitext-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-13B, W1",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row OneBit, column Wikitext-2"
+  },
+  {
+   "claim": "SparseGPT 50% unstructured sparsity on OPT-175B changes Wikitext-2 perplexity by -0.14; 2:4 gives +0.39 and 2x speedup.",
+   "kind": "reported",
+   "source": "Frantar and Alistarh, 2023",
+   "metric": "perplexity difference",
+   "value": "-0.14",
+   "unit": "perplexity difference (WikiText-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT-175B",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row SparseGPT (unstructured), column Perplexity Difference"
+  },
+  {
+   "claim": "DSnoT at 90% sparsity on LLaMA-65B has perplexity difference 2.08e4 (collapse).",
+   "kind": "reported",
+   "source": "Zhang et al., 2024",
+   "metric": "perplexity difference",
+   "value": "2.08e4",
+   "unit": "perplexity difference (WikiText-2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-65B, unstructured 90%",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row DSnoT, column Perplexity Difference"
+  },
+  {
+   "claim": "SliceGPT 30% structured compression on LLaMA2-70B: +1.73 perplexity, 1.87x speedup.",
+   "kind": "reported",
+   "source": "Ashkboos et al., 2024",
+   "metric": "speedup",
+   "value": "1.87",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA2-70B",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row SliceGPT, columns Perplexity Difference / Speed up"
+  },
+  {
+   "claim": "Wanda 2:4 on LLaMA-65B gives only 1.24x speedup, vs 2x for SparseGPT 2:4 on OPT-175B.",
+   "kind": "reported",
+   "source": "Sun et al., 2024",
+   "metric": "speedup",
+   "value": "1.24",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2:4 semi-structured, Ampere GPUs",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row Wanda (semi-structured), column Speed up"
+  },
+  {
+   "claim": "AWQ keeps the top 1% most important weights in high precision.",
+   "kind": "reported",
+   "source": "Lin et al., 2023",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "weight-only PTQ",
+   "where": "Sec 3.2.1",
+   "note": "Quote spans a line break in the text; hyphen is a layout break.",
+   "quote": "AWQ (Lin et al., 2023) stores the top 1% of weights that have the most sig-"
+  },
+  {
+   "claim": "Activation quantization is more sensitive than weight quantization, so weight-only methods reach lower bit widths, but they dequantize before the matmul and cannot use low-bit hardware ops.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PTQ taxonomy",
+   "where": "Sec 3.2",
+   "note": null,
+   "quote": "weight-only quantization inevitably in-"
+  },
+  {
+   "claim": "Ampere GPUs accelerate only 2:4 semi-structured sparsity.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100-class hardware",
+   "where": "Sec 4.3",
+   "note": null,
+   "quote": "supports only the 2:4 ratio, leaving"
+  },
+  {
+   "claim": "Choice of calibration data changes downstream accuracy of compressed models significantly.",
+   "kind": "reported",
+   "source": "Williams and Aletras, 2023",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PTQ and pruning",
+   "where": "Remark 4",
+   "note": null,
+   "quote": "performance of downstream"
+  }
+ ],
+ "limits": [
+  "Tables 1 and 2 copy numbers from the original papers; different models, calibration data and settings, so rows are not comparable head to head.",
+  "No experiments run by the survey; speedups are as reported by each method's authors, hardware not stated.",
+  "Authors concede compressed LLMs still show a significant performance gap to uncompressed ones and the field is early.",
+  "Coverage is up to mid 2024 and shallow per method (one or two sentences each); no recipes or hyperparameters.",
+  "Table 1 lists unlabelled rows for QT and ZeroQuant-FP that the text never discusses."
+ ],
+ "practices": [
+  "Combine PEFT (QLoRA, PEQA, LoftQ, L4Q) with QAT to cut retraining cost (Remark 1, Sec 3.1).",
+  "Treat activation outliers specially (keep in high precision, rescale, or reorder channels) in weight-activation quantization (Sec 3.2.2).",
+  "Quantize KV cache keys per-channel and values per-token (KIVI, Sec 3.2.3).",
+  "Keep sensitive weights in high precision in weight-only quantization (Sec 3.2.1).",
+  "Pick sparsity pattern to match hardware; Ampere accelerates only 2:4 (Sec 4.3).",
+  "Combine structured pruning with knowledge distillation to recover accuracy (Remark 2).",
+  "Prepare high-quality calibration data for PTQ and pruning (Remark 4).",
+  "Use the Roofline model and arithmetic intensity, memory and throughput to assess deployment efficiency (Sec 7.3)."
+ ],
+ "terms": [
+  {
+   "term": "Quantization",
+   "definition": "the process of reducing the number of bits (i.e., precision) in the parameters of the model with minimal loss in inference performance.",
+   "where": "Sec 3"
+  },
+  {
+   "term": "QAT vs PTQ",
+   "definition": "The primary distinction between the two approaches lies in whether retraining is needed during quantization.",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Weight-only quantization",
+   "definition": "focuses solely on quantizing weights, whereas weight-activation quantization extends its objective to both weights and activations.",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "KV cache quantization",
+   "definition": "targets the KV cache, which stores keys and values of attention layers.",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "N:M sparsity",
+   "definition": "every M contiguous elements leave N non-zero elements",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "Structured / unstructured / semi-structured pruning",
+   "definition": "Structured pruning removes entire components like neurons, attention heads, or layers; unstructured prunes individual parameters giving irregular sparsity; semi-structured prunes by specific patterns.",
+   "where": "Sec 4"
+  },
+  {
+   "term": "Black-box KD / White-box KD",
+   "definition": "Black-box KD, where only the teacher's outputs are accessible; White-box KD, where the teacher's parameters or output distribution are available.",
+   "where": "Sec 5"
+  },
+  {
+   "term": "Compression Ratio",
+   "definition": "calculated as the original size divided by the compressed size.",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Speedup Ratio",
+   "definition": "the ratio of the inference time of the uncompressed model over the inference time of the compressed model.",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "MFU",
+   "definition": "the ratio of actual FLOPS utilized by the LLM to the maximum theoretical FLOPS of a device.",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GPTQ (Frantar et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "layer-wise weight-only PTQ, 3/4-bit",
+   "quote": null
+  },
+  {
+   "work": "AWQ (Lin et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "keeps 1% salient weights, per-channel scaling",
+   "quote": null
+  },
+  {
+   "work": "SmoothQuant (Xiao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "W8A8 via per-channel smoothing",
+   "quote": null
+  },
+  {
+   "work": "LLM.int8() (Dettmers et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "outlier dimensions in high precision",
+   "quote": null
+  },
+  {
+   "work": "QuIP (Chee et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "2-bit weight-only",
+   "quote": null
+  },
+  {
+   "work": "KIVI (Liu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "2-bit KV cache",
+   "quote": null
+  },
+  {
+   "work": "KVQuant (Hooper et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "KV cache quantization",
+   "quote": null
+  },
+  {
+   "work": "SparseGPT (Frantar and Alistarh)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "one-shot pruning",
+   "quote": null
+  },
+  {
+   "work": "Wanda (Sun et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "weight x activation norm pruning",
+   "quote": null
+  },
+  {
+   "work": "QLoRA (Dettmers et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "quantization plus PEFT",
+   "quote": null
+  },
+  {
+   "work": "LLM-QAT (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "data-free QAT with distillation",
+   "quote": null
+  },
+  {
+   "work": "SpQR (Dettmers et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "sparse-quantized representation",
+   "quote": null
+  },
+  {
+   "work": "SqueezeLLM (Kim et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "sensitivity-based k-means quantization",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "The performance of various representative LLM quantization methods.",
+   "page": 3,
+   "why": "One view of bit widths (W/A/KV), perplexity cost and speedup across 18 methods."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The performance of various representative LLM pruning methods.",
+   "page": 5,
+   "why": "Shows structured vs unstructured vs 2:4 trade-offs in perplexity and speedup."
+  },
+  {
+   "figure": "Figure 1",
+   "caption": "Taxonomy of Model Compression methods for Large Language Models.",
+   "page": 2,
+   "why": "Maps every method to its category."
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Illustrations of model compression methods for LLMs.",
+   "page": 3,
+   "why": "Flow diagram of QAT, PTQ, KV cache quantization, pruning, KD, low-rank."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and 2 cells flattened by text extraction; values matched by row order. Bit widths for some Table 1 weight-only rows (OWQ 3.01, SpQR 3.89) are fractional average bits.",
+  "No instructions embedded in the text.",
+  "Page numbers in figures are approximate."
+ ]
+}

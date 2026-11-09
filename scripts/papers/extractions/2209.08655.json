@@ -1,19 +1,498 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2209.08655",
  "pdf": "generative-ai/07-agentic-applications/sources/wang-2022-enabling-conversational-interaction-mobile-ui.pdf",
  "bib": {
   "title": "Enabling Conversational Interaction with Mobile UI using Large Language Models",
-  "first_author": "Bryan Wang",
-  "year": "2022",
-  "venue": "CHI 2023",
+  "authors": [
+   "Bryan Wang",
+   "Gang Li",
+   "Yang Li"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "CHI '23 (arXiv v2, 17 Feb 2023)",
   "arxiv": "2209.08655",
-  "doi": null
+  "doi": "10.1145/3544548.3580895"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 93544,
+  "chars_total": 93544,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
  },
- "legacy_report": "SOURCE: \"Enabling Conversational Interaction with Mobile UI using Large Language Models\", Bryan Wang (Univ. of Toronto; work done during internship at Google Research), Gang Li, Yang Li (Google Research). CHI '23, Hamburg, April 23-28 2023 (arXiv 2209.08655v2, 17 Feb 2023). The PDF filename says 2022 (first arXiv version); the printed venue year is 2023.\n\nCOVERAGE: Read all 94,571 chars (all 17 pages, body pp.1-10, references, appendix A.1-A.4 prompt listings). I skimmed the reference list and the appendix prompts. Figures were not rendered. Note row check: no table-row text in the paper conflicts, details below.\n\nNOTE ROW CHECK (03-real-time-multimodal-agents.md ~l.241: \"Prompt one LLM, with a handful of examples, for four mobile UI conversation tasks / Before agents: showed that a screen can be text an LLM reads\")\n- Correct: one LLM (PaLM), at most 2 exemplars, four tasks, screen as HTML text. Fine.\n- Caveat: the paper has NO agent loop and NO multi-step interaction. It is \"unit conversations... at most, a single turn\". Nothing is executed on a device.\n- Caveat: there is no user study. The only human work is crowd rating of outputs (17 raters for question-generation, 37 annotators for summarization). Say \"human ratings\", not \"user study\".\n- Caveat: \"one LLM\" is true but the prompts differ per task (own preamble, exemplars, delimiter tags), and chain-of-thought is used only for question-generation.\n\nCLAIMS (ranked)\n- Method: the screen is turned into text by converting the Android view hierarchy to HTML via depth-first search. Only 4 properties are kept (class, text, resource_id, content_desc). Classes are mapped to tags (TextView to p, Button/ImageButton to button, ImageView to img, EditText to input, everything else to div). resource_name goes into the class attribute, content_desc into alt, and DFS-order numeric ids go into id. The prompt shows only visible leaf nodes.\n  number: PaLM max input 1920 tokens (GPT-3 2048), so at most two exemplars\n  setup: all studies used PaLM; RICO, Screen2Words, PixelHelp data\n  quote: \"Therefore, we limit the number of exemplars in a prompt to be two at most, excluding the test screen, to avoid exceeding the length limit.\"\n  quote: \"using all element properties will result in lengthy HTML text, which may exceed the input length limit of the language model, e.g., 1920 tokens for PaLM and 2048 tokens for GPT-3.\"\n  where: sec 4.1.2, 5 (pp.3-4)\n- Screen Question-Generation (agent asks user): the LLM beats a template baseline \"What is {res_tokens}?\" on all human-rated measures except coverage.\n  number: Grammar 4.98 (sd 0.07) vs 3.60 (sd 0.69), p<0.0001 (Mann-Whitney U); Relevance 92.8% vs 84.1%; Coverage F1 95.9% (P 95.4, R 96.3) vs template 100%\n  setup: 400 RICO screens with at least one EditText; 2 exemplars with chain-of-thought (ground-truth input-field count fed in, screen summary, enumeration); 931 questions, 3 raters each, 17 Google data labelers; no existing dataset, so the authors claim first investigation\n  quote: \"Method Grammar Relevance Coverage F1 Template 3.60 ( 𝜎=0.69) 84.1% 100% LLM 4.98 ( 𝜎=0.07) 92.8% 95.9%\"\n  quote: \"The input field counts were fed with a ground truth count extracted from the screen HTML. We found this step essential to prevent the model from omitting some input elements\"\n  quote: \"LLMs also generate 8.7% more relevant questions compared to the baseline.\"\n  where: sec 5.1, Table 1 (p.5)\n  Also: the model merged related fields on 3 test screens (\"What is the price range?\").\n- Screen Summarization: the LLM loses on automatic metrics to the trained Screen2Words model but wins in human preference.\n  number: 2-shot BLEU-1 45.0, BLEU-4 14.1, CIDEr 39.9, ROUGE-L 33.0, METEOR 17.7 vs Screen2Words 65.5 / 25.1 / 61.3 / 48.6 / 29.5. 0-shot is not meaningful (BLEU-1 7.8). 1-shot BLEU-1 42.3. Human: LLM summary preferred on 63.5% of annotations, Screen2Words 28.6%, equal 7.9%. By majority vote LLM better on 64.1% of screens, unanimous 52.8%; Screen2Words unanimous 20.5%.\n  setup: Screen2Words test set, 4310 screens from 1254 apps; 2 random screens as exemplars (one summary each); 37 annotators, 3 ratings per screen, blind A/B\n  quote: \"2-shot LLM 45.0 25.1 17.6 14.1 39.9 33.0 17.7 Screen2Words [50] 65.5 45.8 32.4 25.1 61.3 48.6 29.5\"\n  quote: \"Among all the human annotations, 63.5% of them rated LLM summaries as more accurate, while 28.6% voted for benchmark model summaries.\"\n  quote: \"LLM summaries are more accurate than those of the benchmark model for 64.1% of screens across the test set. This choice is unanimous between three labelers for more than half of the screens (52.8 %).\"\n  where: sec 5.2, Table 2, Fig 5 (pp.6-7). The authors say automatic metrics reward generic frequent words. LLM summaries average 7.15 words vs 6.64, and use 3062 unique words vs 645.\n- Screen QA (user asks agent): 1 exemplar roughly doubles exact match, and the LLM beats DistilBERT.\n  number: 0-shot exact 30.7%, F1 31.2%; 1-shot exact 65.8%, micro-F1 62.9%; 2-shot exact 66.7%, F1 64.8%; DistilBERT exact 36.0%, F1 37.2%. Relevant (exact+contains+substring) 83.6% at 1-shot, 84.5% at 2-shot.\n  setup: 300 human-labelled QA pairs on 121 RICO screens (preliminary data from another team); 3 screens held out, 1 QA pair each as exemplars (1 shot = one pair); of the remaining 288 pairs, 57 answers are not in the view hierarchy and are excluded; so scored on the answerable ones; baseline distilbert-base-cased-distilled-squad\n  quote: \"2-shot LLM 66.7% 12.6% 5.2% 64.8% DistilBERT [47] 36.0% 8.5% 9.9% 37.2%\"\n  quote: \"1-shot LLM achieved a 62.9% Micro-F1 score, significantly outperforming the baseline's score of 37.2%.\"\n  where: sec 5.3, Table 3 (pp.7-8)\n- Mapping Instruction to UI Action (user instructs agent): LLM underperforms the trained Seq2Act.\n  number: 2-shot in-app 80.36 partial / 45.00 complete; 2-shot cross-app 75.28 / 34.44; 1-shot in-app 78.35 / 40.00; 1-shot cross-app 74.69 / 31.67; 0-shot 1.29 / 0.00; Seq2Act 89.21 / 70.59\n  setup: PixelHelp, 187 multi-step instructions; the model predicts the element id; in-app means the exemplar comes from the same app package as the test screen; the metric is partial/complete match of the target element sequence\n  quote: \"2-shot LLM (in-app) 80.36 45.00 Seq2Act [37] 89.21 70.59\"\n  quote: \"Our approach underperforms the benchmark results from the Seq2Act model [37], which was trained on several dedicated datasets with hundreds of thousands of examples.\"\n  where: sec 5.4, Table 4 (p.8-9)\n- The first exemplar gives most of the gain; the second is marginal. Zero-shot fails on summarization and on action mapping, but works on QA.\n  quote: \"Our findings indicate that the first prompt exemplar usually significantly boosts LLM performance in mobile UI tasks. In contrast, the inclusion of a second example only results in a marginal improvement.\"\n  where: sec 6.4 (p.9)\n- Framing: the four tasks come from a 2x2 taxonomy, initiative (agent/user) by purpose (solicit/provide information). Question-Generation = agent solicits, Summarization = agent provides, QA = user solicits, Instruction-to-Action = user provides. Authors pitch it as prototyping \"as easy as designing a data exemplar\".\n- Chain-of-thought used only for question-generation; found no gain where the output reads directly off the screen HTML.\n  quote: \"we found that this technique does not improve performance for tasks where the output can be directly obtained from the input screen HTML\"\n  where: sec 4.2\n\nLIMITS\n- Text-only: view hierarchy only, no pixels. Authors concede: \"many icons or images on UI screens have missing captions or alt texts ... LLMs may not be able to perform tasks based on these elements\", and apps like photo editors may fail. They also say it \"may not perform well for screens without texts\" (sec 5.2.4, 6.5).\n- Single-turn, single-screen only; multi-screen and multi-turn (clarification, error recovery) are left as future work (6.3). For example it would pick one of two matching emails without asking.\n- Hallucination and steerability are not addressed (6.6).\n- 1920-token window caps exemplars at 2 and limits long screens (6.4). Model distillation/compression is suggested for real-time use.\n- Action mapping is weaker than the trained baseline; authors guess finetuning would help. Their numbers are for a fixed ground-truth hierarchy offline; nothing is executed on a device.\n- QA exact-match metrics are string-based and may under-report aliases (9/15 vs September 15th); 57 of 288 QA answers excluded because they are not in the view hierarchy.\n- Summarization used automatic metrics plus human preference; question-generation has no trained baseline, only a template.\n- Dated: PaLM with a 1920-token limit; no GUI-grounding, vision models or agent loops. The paper itself names Flamingo-style vision-language models as future work.\n\nBUILDS ON: Brown et al. 2020 (GPT-3, few-shot prompting, prompt structure); Chowdhery et al. PaLM (the model); Wei et al. 2022 (chain-of-thought, cited as [53]); Reynolds and McDonell (few-shot locates tasks, [46]); Screen2Words (Wang et al. [50]); Seq2Act (Li et al. [37]); RICO (Deka et al.); PixelHelp [37]; SayCan (Ahn et al. 2022); Screen Recognition and Widget Captioning (alt-text); SUGILITE and KITE (conversational mobile agents); Todi et al. [49] (conversation types). Reference numbers are as printed in the extraction; I did not check the author names for [9], [12], [53], [58].\n\nCODE: Code is open-sourced at https://github.com/google-research/google-research/tree/master/llm4mobile (footnote 1, p.2). Output delimiters: <SOQ>/<EOQ>, <SOS>/<EOS>, <SOA>/<EOA>, <SOI>/<EOI>. Example screen HTML from Appendix A.1 (p.14-ish):\n`<input id =2 class = \" password \" > Crowd3116 </ input >` and `<button id =8 class = \" button1 \" > OK </ button >`\nPreambles: \"Given a screen, summarize its purpose.\" / \"Given a screen, an instruction, predict the id of the UI element to perform the instruction.\" Full prompts are in Appendix A.1-A.4 (Listings 1-4).\n\nFIGURES (not rendered; captions from extracted text)\n- Fig 1 (p.3): 2x2 of initiative vs purpose, with the four tasks. Fastest way to see why these four tasks.\n- Fig 2 (p.4): prompt structure (preamble, exemplars of screen HTML + chain of thought + output, then the test screen).\n- Fig 3 (p.5): the four tasks on one screen.\n- Fig 5 (p.6): annotator vote distribution for summaries.\n- Fig 7 (p.8): QA examples and the exact/contains/substring metric definitions.\n\nPROBLEMS: None for the extraction (text is clean; code listings have spaces inside tags, from PDF rendering). No embedded instructions found. Figures were not inspected. The note row says \"four mobile UI conversation tasks\": correct. The user asked for a \"user study\": the paper has none, only rater studies."
+ "type": "empirical",
+ "question": "Can a single prompted LLM enable several conversational interaction tasks on mobile UIs without task-specific datasets and training?",
+ "hypothesis": "Few-shot prompting with an HTML text representation of the view hierarchy gives competitive performance across mobile UI tasks.",
+ "contributions": [
+  "First investigation of LLMs for conversational interaction on mobile UIs.",
+  "A method to feed GUIs to text LLMs (view hierarchy to HTML via DFS) plus prompting techniques for a range of conversational tasks; code open-sourced.",
+  "Experiments on four tasks: Screen Question-Generation, Screen Summarization, Screen QA, Mapping Instruction to UI Action."
+ ],
+ "method": {
+  "summary": "Android view hierarchies are converted by depth-first traversal into HTML (class mapped to tags, resource_name into class attribute, content_desc into alt, numeric ids). A prompt is a task preamble, up to 2 exemplars (screen HTML, optional chain of thought, tagged output) and the test screen; PaLM is prompted with no training. Four tasks evaluated against a template, Screen2Words, DistilBERT and Seq2Act.",
+  "task": "few-shot prompting of an LLM for mobile UI tasks (question generation, summarization, screen QA, instruction-to-action)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "RICO (screen question-generation)",
+    "role": "eval",
+    "size": "400 test screens each with at least one EditText; 931 questions evaluated",
+    "split": "2 further random screens as exemplars",
+    "source": "RICO (Deka et al. 2017)",
+    "preprocessing": "leaf nodes visible to the user only in prompt"
+   },
+   {
+    "name": "Screen2Words",
+    "role": "eval",
+    "size": "more than 24k screens, five summaries each; test set 4310 screens from 1254 apps",
+    "split": "Screen2Words test set; 2 random screens with one summary each as exemplars",
+    "source": "Wang et al. 2021 [50]",
+    "preprocessing": null
+   },
+   {
+    "name": "Screen QA (preliminary, RICO screens)",
+    "role": "eval",
+    "size": "300 QA pairs from 121 unique screens; 288 after holding out 3 screens (12 QA pairs); 57 of 288 answers absent from view hierarchy",
+    "split": "1 pair sampled from each of the 3 held-out screens as exemplars",
+    "source": "preliminary data from authors of ScreenQA [18]",
+    "preprocessing": "focus on answers present in view hierarchy"
+   },
+   {
+    "name": "PixelHelp",
+    "role": "eval",
+    "size": "187 multi-step instructions",
+    "split": "one screen per unique app package used as prompt modules; in-app vs cross-app",
+    "source": "Li et al. 2020 [37]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LLM (decoder-only, per PaLM paper; not described here)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1920 tokens max input; at most 2 exemplars",
+    "other": {
+     "note": "parameter count of the PaLM variant used not stated"
+    }
+   },
+   {
+    "name": "Screen2Words model",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DistilBERT (distilbert-base-cased-distilled-squad)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "squad": "79.6% EM, 87.0% F1 on SQuAD"
+    }
+   },
+   {
+    "name": "Seq2Act",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one output per item; exemplar choice random, number of prompt draws or seeds not stated (PixelHelp prompts built from randomly sampled prompt modules)",
+   "prompting": "Preamble + N exemplars (N = 0, 1, 2) + test screen HTML; output wrapped in task tags (<SOQ>/<EOQ>, <SOS>/<EOS>, <SOA>/<EOA>, <SOI>/<EOI>); chain of thought only for Screen Question-Generation (input count given as ground truth, screen purpose, enumeration).",
+   "retrieval": null,
+   "parameters": {
+    "html_properties": "class, text, resource_id (resource_name only), content_desc",
+    "class_mapping": "TextView to p; Button/ImageButton to button; ImageView to img; EditText to input; others to div",
+    "ids": "numeric DFS index as id attribute",
+    "max_exemplars": "2 (PaLM input limit 1920 tokens; GPT-3 2048)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Grammar Correctness",
+     "definition": "human rating of generated question, 5-point Likert",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "UI Relevance",
+     "definition": "human binary judgement of question relevance to highlighted element",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Question Coverage F1",
+     "definition": "automatic: indices of ground-truth input elements vs those identified in chain of thought",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU/CIDEr/ROUGE-L/METEOR",
+     "definition": "as in Screen2Words paper",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human preference (summarization)",
+     "definition": "three annotators per screen choose more accurate summary: LLM, Screen2Words, or equal",
+     "unit": "% of annotations / screens",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact Matches / Contains GT / Sub-String of GT / Micro-F1",
+     "definition": "string-match categories (mutually exclusive) and word-overlap micro F1 across dataset",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Partial / Complete match",
+     "definition": "percentage of partial and complete matches of target element sequences (as Seq2Act)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Template 'What is {res_tokens}?'",
+    "Screen2Words",
+    "DistilBERT",
+    "Seq2Act"
+   ],
+   "protocol": "Question generation: 17 raters (professional Google data labelers), three raters per question, 5% audit, Mann-Whitney U test. Summarization human study: 37 annotators, full test set, 3 ratings per screen. Others automatic. Single run reported."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/google-research/tree/master/llm4mobile (HTML conversion algorithm)",
+   "weights": "PaLM not released",
+   "data": "RICO, Screen2Words, PixelHelp are open; screen QA set is preliminary, from authors of [18]"
+  },
+  "prompts": [
+   {
+    "purpose": "Screen question-generation preamble",
+    "text": "Given a screen, the agent needs to identify the elements requiring user input and generates corresponding questions.",
+    "where": "Sec 5.1.2, App A.1"
+   },
+   {
+    "purpose": "Screen summarization preamble",
+    "text": "Given a screen, summarize its purpose.",
+    "where": "Sec 5.2.2, App A.2"
+   },
+   {
+    "purpose": "Screen QA preamble",
+    "text": "Given a screen and a question, provide the answer based on the screen information.",
+    "where": "Sec 5.3.2, App A.3"
+   },
+   {
+    "purpose": "Mapping instruction preamble",
+    "text": "Given a screen, an instruction, predict the id of the UI element to perform the instruction.",
+    "where": "Sec 5.4.2, App A.4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.PaLM.context",
+    "quote": "The PaLM model is trained with a maximum input length of 1920 tokens.",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Screen summarization: LLM summaries judged more accurate than Screen2Words by majority vote on 64.1% of screens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority-vote preference",
+   "value": 64.1,
+   "unit": "% of screens",
+   "baseline_value": null,
+   "n": 4310,
+   "setup": "2-shot PaLM vs Screen2Words, Screen2Words test set, 3 annotators per screen",
+   "quote": "LLM summaries are more accurate than those of the bench-",
+   "table": null,
+   "note": "Fig 5 caption; text says 63.5% of individual annotations favoured LLM, 28.6% benchmark, 7.9% equal",
+   "where": "Sec 5.2.4, Fig 5"
+  },
+  {
+   "claim": "Unanimous preference for LLM summaries on 52.8% of screens vs 20.5% for the benchmark.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unanimous votes",
+   "value": 52.8,
+   "unit": "% of screens",
+   "baseline_value": 20.5,
+   "n": 4310,
+   "setup": "as above",
+   "quote": "Remarkably, LLM summaries were rated as more accurate unanimously by three annotators for 52.8 % of screens.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.4"
+  },
+  {
+   "claim": "Screen summarization automatic metrics: 2-shot LLM trails Screen2Words on all metrics (BLEU-1 45.0 vs 65.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-1",
+   "value": 45.0,
+   "unit": "score",
+   "baseline_value": 65.5,
+   "n": 4310,
+   "setup": "2-shot PaLM vs Screen2Words, Screen2Words test",
+   "quote": null,
+   "table": "Table 2, rows 2-shot LLM and Screen2Words, column BLEU-1",
+   "note": "0-shot gives 7.8 BLEU-1",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Screen QA: 2-shot LLM reaches 66.7% exact match and 64.8% micro-F1 vs DistilBERT 36.0% and 37.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Matches",
+   "value": 66.7,
+   "unit": "%",
+   "baseline_value": 36.0,
+   "n": 231,
+   "setup": "231 = 288 - 57 inferred from answers present in view hierarchy; 2-shot PaLM; DistilBERT off-the-shelf",
+   "quote": null,
+   "table": "Table 3, row 2-shot LLM, column Exact Matches",
+   "note": "Micro-F1 64.8 vs 37.2; 1-shot 65.8 EM, 62.9 F1; 0-shot 30.7 EM. n inferred; paper does not say how many of 288 were scored",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Zero-shot screen QA already works (30.7% exact match) while zero-shot summarization and instruction mapping fail.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Exact Matches 0-shot",
+   "value": 30.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "0-shot PaLM screen QA",
+   "quote": "30.7% of the gener-",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.4"
+  },
+  {
+   "claim": "Mapping instruction to UI action: best setting (2-shot, in-app) gets 80.36 partial and 45.0 complete vs Seq2Act 89.21 and 70.59.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Partial match",
+   "value": 80.36,
+   "unit": "%",
+   "baseline_value": 89.21,
+   "n": 187,
+   "setup": "PixelHelp, 2-shot in-app; cross-app 2-shot 75.28 / 34.44; 0-shot 1.29 / 0.00",
+   "quote": "Our best-performing\nsetting is the 2-shot LLM & in-app, which achieves 80.36 partial\nand 45.0 complete accuracy scores.",
+   "table": "Table 4, row 2-shot LLM (in-app), column Partial",
+   "note": "complete 45.00 vs 70.59 for Seq2Act",
+   "where": "Table 4, Sec 5.4.4"
+  },
+  {
+   "claim": "Screen question-generation: LLM grammar 4.98 vs template 3.60 (p < 0.0001).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Grammar Correctness",
+   "value": 4.98,
+   "unit": "1-5 Likert",
+   "baseline_value": 3.6,
+   "n": 931,
+   "setup": "2-shot PaLM with chain of thought, 400 RICO screens, 931 questions, 3 raters each",
+   "quote": "Our approach achieves an almost perfect\naverage score of 4.98 on grammar correctness, while the rule-based\napproach receives a 3.6 average rating.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1.4, Table 1"
+  },
+  {
+   "claim": "Screen question-generation: UI relevance 92.8% vs 84.1% template; coverage F1 95.9% (precision 95.4%, recall 96.3%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "UI Relevance",
+   "value": 92.8,
+   "unit": "%",
+   "baseline_value": 84.1,
+   "n": 931,
+   "setup": "as above; template coverage 100% by construction",
+   "quote": null,
+   "table": "Table 1, row LLM, column Relevance",
+   "note": "coverage F1 95.9%, template 100%",
+   "where": "Table 1"
+  },
+  {
+   "claim": "The first exemplar gives most of the gain; the second adds little.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization, screen QA, instruction mapping; 0/1/2-shot",
+   "quote": null,
+   "table": null,
+   "note": "e.g. screen QA micro-F1 31.2 to 62.9 to 64.8",
+   "where": "Sec 6.4"
+  }
+ ],
+ "limits": [
+  "Only view hierarchy used; fails where information is in pixels (icons without alt-text, photo-editing apps).",
+  "Single-turn unit conversations only; no multi-screen or multi-turn.",
+  "Prompt limited to at most 2 exemplars by PaLM 1920-token limit; HTML length varies widely.",
+  "Hallucination and steerability not addressed; no control over behaviors such as question combining.",
+  "Screen QA data is preliminary, 57 of 288 answers not in the view hierarchy; string matching under-reports aliased answers (9/15 vs September 15th).",
+  "Underperforms Seq2Act on instruction mapping; automatic summarization metrics favour the trained benchmark.",
+  "No decoding settings, PaLM size, seeds or variance reported; only one prompt draw per condition appears to be reported.",
+  "Chain of thought used only for question generation; authors say it did not help other tasks in early investigations, with no data shown."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Unit conversation",
+   "definition": "conversations which include, at most, a single turn from the user and agent",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Screen Question-Generation",
+   "definition": "synthesize natural language questions relevant to UI elements requiring user input",
+   "where": "Sec 5.1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLM: Scaling language modeling with pathways",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "uses-method",
+   "note": "the LLM prompted in all experiments",
+   "quote": null
+  },
+  {
+   "work": "Language Models are Few-Shot Learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "extends",
+   "note": "prompt structure follows it",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "used for question generation",
+   "quote": null
+  },
+  {
+   "work": "Screen2Words",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "summarization dataset and benchmark model",
+   "quote": null
+  },
+  {
+   "work": "Seq2Act: Mapping Natural Language Instructions to Mobile UI Action Sequences",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PixelHelp dataset and baseline",
+   "quote": null
+  },
+  {
+   "work": "RICO",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "screens for question generation and QA",
+   "quote": null
+  },
+  {
+   "work": "DistilBERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "QA baseline",
+   "quote": null
+  },
+  {
+   "work": "ScreenQA",
+   "year": 2022,
+   "arxiv": "2209.08199",
+   "relation": "uses-data",
+   "note": "preliminary QA data from its authors",
+   "quote": null
+  },
+  {
+   "work": "SayCan",
+   "year": 2022,
+   "arxiv": "2204.01691",
+   "relation": "related",
+   "note": "LLM knowledge for robot commands",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Categorization of conversation scenarios by initiative and purpose",
+   "page": 2,
+   "why": "maps the four tasks to agent/user initiative"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Prompt structure: preamble, exemplars, test screen HTML",
+   "page": 3,
+   "why": "shows the prompt layout at a glance"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Annotator vote distribution across all test screens",
+   "page": 6,
+   "why": "human preference result for summarization"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache is 93544 chars while the script listed 93228; read in full.",
+  "Appendix prompts show line-number artifacts from listings. No embedded instructions found."
+ ]
 }

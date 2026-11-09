@@ -1,19 +1,602 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2303.03846",
  "pdf": "ai-engineering/01-prompt-engineering/sources/wei-2023-larger-language-models-do-context.pdf",
  "bib": {
   "title": "Larger language models do in-context learning differently",
-  "first_author": "Jerry Wei",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Jerry Wei",
+   "Jason Wei",
+   "Yi Tay",
+   "Dustin Tran",
+   "Albert Webson",
+   "Yifeng Lu",
+   "Xinyun Chen",
+   "Hanxiao Liu",
+   "Da Huang",
+   "Denny Zhou",
+   "Tengyu Ma"
+  ],
+  "first_author": "Wei",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2303.03846",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 132168,
+  "chars_total": 132168,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Larger language models do in-context learning differently\", Jerry Wei, Jason Wei, Yi Tay, Dustin Tran, Albert Webson, Yifeng Lu, Xinyun Chen, Hanxiao Liu, Da Huang, Denny Zhou, Tengyu Ma (Google Research, Brain Team; Stanford; Brown). arXiv:2303.03846v2, March 2023. Preprint.\n\nCOVERAGE: Extraction was clean. I read the main text (pp.1-9) and the appendices A, B.1-B.6, C.1, C.2 (start), C.3 (start), C.4 and the start of D. The 132,165-char text came from 51 pages. I skimmed the reference list and the Appendix D prompt dumps (dataset examples, one of which is offensive ETHOS text), and read none of the per-dataset figure data. Figures 16-21 are plots, so their numbers were not extracted.\n\nCLAIMS (ranked)\n1. Overriding semantic priors with flipped in-context labels is an emergent ability of scale.\n - number: text-davinci-002 averages 90.3% accuracy at 0% flipped labels and 22.5% at 100% flipped labels.\n - setup: Fig 2. Average over 6 binary tasks (SST-2, SUBJ, QQP, RTE, FP, ETHOS; TREC excluded because it has 6 classes). 100 eval examples per dataset, k=16 exemplars per class. Eval labels are not flipped, so a model that fully follows the flipped exemplars scores near 0%.\n - quote: \"Large models, on the other hand, experience performance drops to well-below random guessing (e.g,. text-davinci-002 performance drops from 90.3% with 0% ﬂipped labels to just 22.5% with 100% ﬂipped labels).\"\n - where: p.4, Section 3\n2. Small models ignore flipped labels. All GPT-3 models (ada to davinci, 175B) count as \"small\".\n - number: none\n - setup: Fig 2, same as above. GPT-3, InstructGPT, Codex and PaLM (8B/62B/540B) were all tested.\n - quote: \"Note that GPT-3 models can remove semantic priors (i.e., perform at guessing accuracy) but cannot override them (i.e., perform signiﬁcantly worse than guessing), even when presented with 100% ﬂipped labels. For this reason, we consider all GPT-3 models to be “small” models\"\n - where: p.4\n3. Semantically-unrelated label ICL (SUL-ICL, Foo/Bar instead of negative/positive) hurts small models far more than large models. Large models lose little, so they learn the input-label mapping.\n - number: none in the main text; the effect is shown only in Fig 3.\n - setup: Fig 3. k=16 per class, 100 eval examples per dataset, averaged over datasets. Defaults: \"Input/Output\" template and Foo/Bar targets. InstructGPT, Codex, PaLM and GPT-3 were tested. Appendix C.2 says davinci does not follow the trend.\n - quote: \"Large models, on the other hand, experience very small performance drops after this change, indicating that they have the ability to learn input–label mappings in-context when the semantic nature of targets is removed.\"\n - where: p.5, Section 4\n4. Instruction tuning does two things at once. It improves learning of input-label mappings, but it strengthens semantic priors more, so tuned models resist flipped labels.\n - number: Flan-PaLM-8B beats PaLM-8B by 9.6% in SUL-ICL. Standard PaLM reaches as low as 31% at 100% flipped. Flan-PaLM does not get below chance.\n - setup: Figs 6 and 7. PaLM vs Flan-PaLM at 8B/62B/540B. Averaged over six datasets, 100 eval examples each. Fig 7 uses k=16 per class. InstructGPT was not compared with GPT-3 because the only difference between those families cannot be isolated.\n - quote: \"Flan-PaLM-8B outperforms PaLM-8B by 9.6%, almost catching up to PaLM-62B.\" and \"Flan-PaLM models were unable to override their semantics more than what could be achieved by random guessing, even with 100% ﬂipped labels. Standard PaLM models, on the other hand, could achieve as low as 31% accuracy when presented with 100% ﬂipped labels.\"\n - where: p.7, Section 5\n5. More exemplars help large models more than small ones in SUL-ICL.\n - number: none\n - setup: Fig 4. 2, 4, 8 and 16 exemplars per class. PaLM, Codex and GPT-3 (ada/babbage/curie). InstructGPT and davinci were not run because of cost.\n - quote: \"including more in-context exemplars results in a greater performance improvement for large models than it does for small models.\"\n - where: p.6\n6. Some SUL-ICL tasks only work at the largest scale.\n - number: Codex jumps to 80%+ on RTE and ETHOS at code-davinci-002.\n - setup: Fig 5. k=8 per class, 100 eval examples. PaLM is near random on RTE until 540B. PaLM jumps on ETHOS from 8B to 62B. Tasks such as SST-2, TREC, SUBJ and FP are above random even for small models.\n - quote: \"the performance on both the RTE and ETHOS datasets is around random for code-cushman-001 and code-davinci-001, then jumps to 80%+ for code-davinci-002.\"\n - where: p.6\n7. SUL-ICL is easier than flipped-label ICL, especially for medium-sized models.\n - number: the gap is up to 74% (text-curie-001 on SST-2).\n - setup: Fig 10, App B.1. k=16 per class, 100 eval examples, per dataset.\n - quote: \"medium-sized models perform much worse in the ﬂipped-label setting than they do in the SUL-ICL setting, with performance differing by up to 74% (text-curie-001 on SST-2).\"\n - where: p.16\n8. Linear classification in context emerges with Codex scale. It is not a clean size effect across families.\n - number: at N=16 the largest Codex beats random by 19%, while smaller ones beat it by at most 9%. code-davinci-002 works up to N=64. Smaller Codex models hit chance near N=16.\n - setup: Fig 8 and Fig 21. Integer coordinates in 1-1000. 100 eval examples, k=16 per class. PaLM scale does not correlate with dimension (all PaLM models work up to at least N=8). Neither family beats a polynomial SVM.\n - quote: \"the largest model outperforms random guessing by 19% on this task, while smaller models cannot outperform random guessing by more than 9%.\"\n - where: p.8; p.26 (C.4)\n9. SUL-ICL is robust to the target symbols and to the template, but not to scrambled inputs.\n - number: mean accuracy across input formats is 84.2%, ranging from 77.9% to 87.7%. For targets, no consistent difference was found.\n - setup: App B.3-B.4. code-davinci-002, k=16 per class. Targets: Foo/Bar, 0/1, A/B, Apple/Orange, plus reversed versions. Fig 13 uses 250 eval examples. Fig 14 uses 100 eval examples and six templates. Small models reach chance at 25-50% remapped input words, large models at 75-100%.\n - quote: \"the mean accuracy across all NLP tasks for all input formats (which ranges from 77.9% to 87.7%) is within±6.3% of the mean (84.2%).\"\n - where: p.19. Remapping is on p.17: \"At 100% remapped input words, even the largest models (code-davinci-002 and PaLM-540B) are unable to beat random guessing on almost all datasets.\"\n10. Semantically relevant templates (for example \"Review:/Sentiment:\") hurt the smallest model. The largest is unaffected.\n - number: none\n - setup: App B.5, Fig 15. Codex family on SST-2, TREC and RTE, using templates from Zhao et al. (2021), k=16 per class.\n - quote: \"the smallest Codex model (code-cushman-001) sees performance drop across all tested datasets when switching to semantically-relevant prompt templates. The largest Codex model (code-davinci-002), on the other hand, is relatively unaffected\"\n - where: p.20\n11. Out-of-distribution robustness in SUL-ICL emerges with scale.\n - number: SST-2 baseline accuracy is 80/91/94/93 for a-1/b-1/c-1/d-1. With SST-2 as exemplars and RT (Rotten Tomatoes) as eval, it is 54/63/90/93. With RT exemplars and SST-2 eval, it is 44/61/90/92.\n - setup: Table 2, InstructGPT ada to davinci-001, 100 eval examples, k=16 per class.\n - quote: \"Large models (e.g., text-curie-001 and text-davinci-001), on the other hand, do not suffer from these drops, with text-curie-001 only seeing a 4% decrease in accuracy and text-davinci-001 seeing no significant change in accuracy.\"\n - where: p.20-21\n12. Per-dataset instruction-tuning effects are mixed.\n - number: on SST-2, Flan-PaLM-8B beats PaLM-8B by 28%. On SUBJ, PaLM-8B beats Flan-PaLM-8B by 23%.\n - quote: \"PaLM-8B outperforms Flan-PaLM-8B on SUBJ by 23%\"\n - where: p.23, C.3\n\nLIMITS\n- Each dataset has only 100 randomly sampled eval examples, which the authors chose \"to reduce inference costs\". Results are averages over datasets, with no confidence intervals. The authors say their questions \"depend more on general behaviors than on small performance deltas\".\n- The tasks are small-label classification: SST-2, SUBJ, TREC, QQP, RTE, FP, ETHOS. There is no generation or reasoning. QNLI and WSC were dropped because even the largest models were near chance.\n- Models are 2020-2022 era: GPT-3, InstructGPT, Codex, PaLM and Flan-PaLM. No RLHF chat models or current frontier models were tested. The InstructGPT and Codex sizes are not public and were assumed to increase in order.\n- The default is 16 exemplars per class (32 for binary). Fewer exemplars (2-8) appear in Fig 4 and Fig 5 only.\n- The mechanism behind the emergence is left open (\"an open question that we leave for future work\"). In the linear classification task, model size alone did not predict ability (PaLM-540B was no better than PaLM-8B).\n- RTE is excluded for PaLM in the flipped and SUL-ICL runs because 16 exemplars per class exceeded the context length.\n- Flipped-label accuracy is not exactly 100% minus normal accuracy, because small models sometimes output text that is not one of the labels (footnote 5).\n- The authors do not contest Min et al. (2022b). They say their results are \"consistent with Min et al. (2022b) for models scaling up to davinci\", and that learning input-label mappings appears only in larger models such as PaLM-540B, text-davinci-002 and code-davinci-002.\n- Only the abstract and Section 3 say the instruction-tuned flip result holds for \"all datasets and model sizes\". That is the Fig 20 caption.\n\nBUILDS ON: Brown et al., 2020 (few-shot ICL). Min et al., 2022b (random labels barely matter; the main foil). Min et al., 2022a, Wei et al., 2022a and Chung et al., 2022 (instruction tuning, Flan-PaLM). Wei et al., 2022b (emergence). Rong (2021), which replaced labels with non-alphanumeric characters. Xie et al., 2022 (ICL as latent concept inference). Zhao et al., 2021 (templates). Akyürek et al., 2023, von Oswald et al., 2022 and Garg et al., 2022 (transformers learning linear models in context). Webson & Pavlick, 2022. Tran et al., 2022 (OOD robustness). Chowdhery et al., 2022 (PaLM). Ouyang et al., 2022 (InstructGPT). Chen et al., 2021 (Codex).\n\nCODE: Algorithm 1 gives the linear-classification dataset generation procedure in the appendix. It was not reproduced here; the code is not load-bearing for the note.\n\nFIGURES (captions per figures.py)\n- Fig 1, p.2: regular ICL vs flipped-label ICL vs SUL-ICL on a sentiment example. This is the quickest way to explain the three setups.\n- Fig 2, p.4: accuracy vs % flipped labels for four model families. The curve for large models falls below the 50% baseline, which shows the emergence.\n- Fig 3, p.5: accuracy drop from natural-language targets to Foo/Bar, by model size.\n- Fig 6 and Fig 7, p.7: Flan-PaLM vs PaLM on SUL-ICL (better) and on flipped labels (worse).\n- Fig 10, p.16: SUL-ICL vs flipped-label performance.\n- Fig 12, p.17: remapped-input failure.\n- Fig 13, p.18: target types.\n- Fig 21, p.26: linear classification by dimension, with an SVM baseline.\n\nPROBLEMS: No embedded instructions found. Appendix D prompt dumps include offensive hate-speech examples (ETHOS), which are dataset content only. I did not read the per-dataset results in Figures 16-21, which are plots only. Figure axes and legends extract as noise; only caption text and body prose were used for numbers.\n\nNote for the target note: the \"Foo/Bar works\" claim holds for large models and these classification tasks only. The 90.3 -> 22.5 numbers are an average over six binary tasks for text-davinci-002 at k=16 per class (32 exemplars total). They should not be quoted as a general property of few-shot prompting."
+ "type": "empirical",
+ "question": "How much does in-context learning rely on semantic priors from pretraining versus on input-label mappings shown in the exemplars, and how does that change with model scale and instruction tuning?",
+ "hypothesis": "Larger models may be able to override semantic priors and learn input-label mappings in context, even though they presumably hold stronger priors.",
+ "contributions": [
+  "Flipped-label ICL shows overriding semantic priors is an emergent ability of scale.",
+  "SUL-ICL (semantically-unrelated labels) shows learning input-label mappings without semantic priors also emerges with scale, including linear classification.",
+  "Instruction tuning improves input-label mapping learning but strengthens semantic priors more."
+ ],
+ "method": {
+  "summary": "Prompts frozen pretrained and instruction-tuned LMs with few-shot classification exemplars under three label conditions: natural, flipped (a proportion of exemplar labels swapped) and semantically-unrelated (Foo/Bar). Accuracy is measured on unmodified evaluation labels as scale, exemplar count and instruction tuning vary.",
+  "task": "few-shot in-context text classification (seven tasks) plus synthetic N-dimensional linear classification",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SST-2",
+    "role": "eval",
+    "size": "100 randomly sampled evaluation examples per dataset (default)",
+    "split": "exemplars from training set, evaluation from validation set; random 80/20 split where none exists",
+    "source": "HuggingFace datasets",
+    "preprocessing": "natural labels 'Negative Sentiment' / 'Positive Sentiment'"
+   },
+   {
+    "name": "SUBJ",
+    "role": "eval",
+    "size": "100 randomly sampled evaluation examples per dataset (default)",
+    "split": "exemplars from training set, evaluation from validation set; random 80/20 split where none exists",
+    "source": "HuggingFace datasets",
+    "preprocessing": "natural labels 'Subjective Sentence' / 'Objective Sentence'"
+   },
+   {
+    "name": "TREC",
+    "role": "eval",
+    "size": "100 randomly sampled evaluation examples per dataset (default)",
+    "split": "exemplars from training set, evaluation from validation set; random 80/20 split where none exists",
+    "source": "HuggingFace datasets",
+    "preprocessing": "six coarse labels; excluded from flipped-label experiment (six classes); natural labels Human Being, Entity, Description and Abstract Concept, Abbreviation, Location, Numeric Value"
+   },
+   {
+    "name": "QQP",
+    "role": "eval",
+    "size": "100 randomly sampled evaluation examples per dataset (default)",
+    "split": "exemplars from training set, evaluation from validation set; random 80/20 split where none exists",
+    "source": "HuggingFace datasets",
+    "preprocessing": "natural labels 'Duplicate' / 'Not a duplicate'; the two questions of a pair are on consecutive lines in one Input"
+   },
+   {
+    "name": "RTE",
+    "role": "eval",
+    "size": "100 randomly sampled evaluation examples per dataset (default)",
+    "split": "exemplars from training set, evaluation from validation set; random 80/20 split where none exists",
+    "source": "HuggingFace datasets",
+    "preprocessing": "excluded for PaLM in Fig 16/17 because k=16 prompts exceed context length; natural labels 'Entails' / 'Does not entail'; premise and hypothesis on consecutive lines in one Input"
+   },
+   {
+    "name": "FP",
+    "role": "eval",
+    "size": "100 randomly sampled evaluation examples per dataset (default)",
+    "split": "exemplars from training set, evaluation from validation set; random 80/20 split where none exists",
+    "source": "HuggingFace datasets",
+    "preprocessing": "sentences_allagree subset; natural labels 'Positive' / 'Negative' (no neutral class, sentences_allagree subset)"
+   },
+   {
+    "name": "ETHOS",
+    "role": "eval",
+    "size": "100 randomly sampled evaluation examples per dataset (default)",
+    "split": "exemplars from training set, evaluation from validation set; random 80/20 split where none exists",
+    "source": "HuggingFace datasets",
+    "preprocessing": "binary subset; natural labels 'Hate Speech' / 'Not Hate Speech'"
+   },
+   {
+    "name": "Synthetic N-dimensional linear classification",
+    "role": "eval",
+    "size": "100 evaluation examples",
+    "split": null,
+    "source": "generated by Algorithm 1, integer coordinates 1 to 1000",
+    "preprocessing": "16-dimensional example prompt in App D.8: 'Input: <16 comma-separated integers>', labels Foo (negative) / Bar (positive), SUL-ICL only"
+   },
+   {
+    "name": "Rotten Tomatoes (RT)",
+    "role": "eval",
+    "size": "100 evaluation examples",
+    "split": null,
+    "source": "Pang & Lee 2005; OOD test with SST-2 (App B.6)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 ada, babbage, curie, davinci",
+    "role": "evaluated",
+    "params": "350M, 1.3B, 6.7B, 175B (seem to correspond, Gao et al. 2021)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT text-ada-001 to text-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "sizes not public, assumed increasing"
+    }
+   },
+   {
+    "name": "Codex code-cushman-001, code-davinci-001, code-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "sizes not public, assumed increasing"
+    }
+   },
+   {
+    "name": "PaLM",
+    "role": "evaluated",
+    "params": "8B, 62B, 540B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flan-PaLM",
+    "role": "evaluated",
+    "params": "8B, 62B, 540B",
+    "architecture": null,
+    "init_from": "PaLM, instruction-tuned (Chung et al. 2022)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run; a different random set of exemplars per inference example; 100 evaluation examples per dataset; no seeds or variance reported",
+   "prompting": "k = 16 exemplars per class by default (2, 4, 8, 16 in the exemplar sweeps; 8 in Fig 5), 'Input:/Output:' template, Foo/Bar targets in SUL-ICL, natural targets such as 'Negative Sentiment' in regular ICL; exemplars are listed in mixed class order, not grouped (App D); full prompt ends 'Input: <query>\\nOutput:' and the model completes the label; no instruction text; flipped-label and SUL-ICL prompts are made by swapping the label strings",
+   "retrieval": null,
+   "parameters": {
+    "flipped_label_proportions": "0%, 25%, 50%, 75%, 100% (read from Fig 2 axis)",
+    "remapped_word_proportion": "increasing percent of input words remapped (App B.2)",
+    "alternative_targets": "numbers, letters, fruits, with reversals (App B.3)"
+   },
+   "other": {
+    "eval_example_counts": "250 evaluation examples for Fig 13 (code-davinci-002); fewer where dataset smaller",
+    "access": "OpenAI models via API; PaLM models internal",
+    "prompt_length": "k=16 per class gives 32 exemplars per prompt; RTE with k=16 per class exceeds PaLM context length, so it is dropped for PaLM in Fig 16/17"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "share of evaluation examples classified correctly against unmodified ground-truth labels, averaged across datasets",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "regular ICL with natural targets",
+    "random guessing",
+    "polynomial SVM (scikit-learn svm.SVC(kernel='poly')) for linear classification"
+   ],
+   "protocol": "Below 50% accuracy at 100% flipped labels means the model follows the exemplars over its prior. Single runs, no confidence intervals."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "public datasets via HuggingFace"
+  },
+  "prompts": [
+   {
+    "purpose": "regular ICL, SST-2, k=16 per class (32 exemplars in the full prompt)",
+    "text": "Input: a pale imitation\nOutput: Negative Sentiment\nInput: carries you along in a torrent of emotion\nOutput: Positive Sentiment\n...\nInput: one of the more intelligent children ’s movies to hit theaters this year .\nOutput:",
+    "where": "App D.1"
+   },
+   {
+    "purpose": "SUL-ICL conversion rule",
+    "text": "replacing “Negative Sentiment” with “Foo” and “Positive Sentiment” with “Bar” to convert SST-2 in a regular ICL setup to SST-2 in a SUL-ICL setup",
+    "where": "App D intro"
+   },
+   {
+    "purpose": "QQP exemplar (pair on two lines)",
+    "text": "Input: Is Minecraft Turing complete?\nWhy is Minecraft so popular?\nOutput: Not a duplicate",
+    "where": "App D.4"
+   },
+   {
+    "purpose": "RTE exemplar (premise then hypothesis)",
+    "text": "Input: Anna Politkovskaya was found shot dead on Saturday in a lift at her block of ﬂats in the\nRussian capital, Moscow.\nAnna Politkovskaya was murdered.\nOutput: Entails",
+    "where": "App D.7"
+   },
+   {
+    "purpose": "linear classification exemplar (16 integers; Foo negative, Bar positive)",
+    "text": "Input: 648, 626, 543, 103, 865, 910, 239, 665, 132, 40, 348, 479, 640, 913, 885, 456\nOutput: Bar",
+    "where": "App D.8"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.prompting",
+    "quote": "By default, we use k = 16 in-context exemplars per class",
+    "where": "Sec 2.3"
+   },
+   {
+    "field": "datasets.preprocessing",
+    "quote": "Prompts in a SUL-ICL and ﬂipped-label ICL setup can be\nobtained by swapping labels with the desired labels",
+    "where": "App D intro"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "text-davinci-002 falls from 90.3% accuracy with no flipped labels to 22.5% with all exemplar labels flipped, far below chance, so it follows the exemplars over its prior.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy at 100% flipped labels",
+   "value": "22.5",
+   "unit": "% accuracy",
+   "baseline_value": "90.3",
+   "n": "100 eval examples per dataset",
+   "setup": "Fig 2: average over the six binary tasks (SST-2, SUBJ, QQP, RTE, FP, ETHOS; TREC excluded as six-class), 100 evaluation examples per dataset, k=16 exemplars per class, evaluation labels not flipped.",
+   "note": null,
+   "where": "p4 Sec 3",
+   "quote": "text-davinci-002 performance drops from 90.3% with 0% ﬂipped labels to just 22.5% with 100% ﬂipped labels"
+  },
+  {
+   "claim": "Small models (all GPT-3 sizes, treated as small) stay near chance under flipped labels; they cannot override semantic priors.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2, same setup as above; GPT-3 ada to davinci.",
+   "note": null,
+   "where": "p4 Sec 3",
+   "quote": "GPT-3 models can remove semantic\npriors (i.e., perform at guessing accuracy) but cannot override them"
+  },
+  {
+   "claim": "Standard PaLM reaches as low as 31% accuracy at 100% flipped labels, while Flan-PaLM does not get below chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy at 100% flipped labels",
+   "value": "31",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": "100 eval examples per dataset",
+   "setup": "Fig 7: PaLM vs Flan-PaLM 8B/62B/540B, k=16 per class, 100 eval examples per dataset, averaged over six datasets.",
+   "note": "Fig 7 caption says six datasets, but App C.1 says RTE is excluded for PaLM because k=16 prompts exceed context length, so PaLM averages may cover five datasets.",
+   "where": "p7 Sec 5",
+   "quote": "Standard PaLM models, on the other hand, could achieve as low as 31% accuracy when\npresented with 100% ﬂipped labels"
+  },
+  {
+   "claim": "Instruction tuning makes Flan-PaLM unable to override semantic priors beyond chance even at 100% flipped labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7, as above.",
+   "note": null,
+   "where": "p7 Sec 5",
+   "quote": "Flan-PaLM models were unable to override\ntheir semantics more than what could be achieved by random guessing, even with 100% ﬂipped\nlabels"
+  },
+  {
+   "claim": "Flan-PaLM-8B beats PaLM-8B in SUL-ICL by 9.6%, nearly matching PaLM-62B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy difference",
+   "value": "9.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6: SUL-ICL (Foo/Bar), PaLM vs Flan-PaLM, 2 to 16 exemplars per class, 100 eval examples per dataset, averaged over six datasets.",
+   "note": null,
+   "where": "p7 Sec 5",
+   "quote": "Flan-PaLM-8B outperforms PaLM-8B by 9.6%, almost catching up to PaLM-62B"
+  },
+  {
+   "claim": "Large models lose little when natural labels are replaced by semantically-unrelated labels; small models lose a lot.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3: GPT-3, InstructGPT, Codex, PaLM; k=16 per class, 100 eval examples per dataset, average over datasets. The paper gives no number in text, only the figure. davinci behaves like a small model.",
+   "note": null,
+   "where": "p5 Sec 4",
+   "quote": "Large models, on the other hand, experience very small performance drops after this\nchange"
+  },
+  {
+   "claim": "In SUL-ICL more exemplars help large models more than small ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4: 2,4,8,16 exemplars per class; PaLM, Codex, ada/babbage/curie only; InstructGPT and davinci not run for cost.",
+   "note": null,
+   "where": "p6 Sec 4",
+   "quote": "including more in-context exemplars results in a greater performance improvement for large models than it does for small models"
+  },
+  {
+   "claim": "Some SUL-ICL tasks emerge only with scale: RTE near random for PaLM-8B and 62B but well above random for PaLM-540B; code-davinci-002 reaches 80%+ on RTE and ETHOS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5: k=8 exemplars per class, 100 eval examples, Codex and PaLM.",
+   "note": null,
+   "where": "p6 Sec 4",
+   "quote": "then jumps to\n80%+ for code-davinci-002"
+  },
+  {
+   "claim": "The largest Codex model beats random on 16-dimensional linear classification by 19%, smaller ones by at most 9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy minus random",
+   "value": "19",
+   "unit": "% above random",
+   "baseline_value": null,
+   "n": "100 eval examples",
+   "setup": "Fig 8: SUL-ICL Foo/Bar, N=16, k=16 per class, 100 eval examples, integer coordinates 1 to 1000.",
+   "note": null,
+   "where": "p7 Sec 6",
+   "quote": "the largest model outperforms random guessing by 19% on\nthis task, while smaller models cannot outperform random guessing by more than 9%"
+  },
+  {
+   "claim": "code-davinci-002 can do linear classification up to N=64; smaller Codex reach guessing near N=16; all PaLM sizes work up to at least N=8; none beat an SVM baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 21, k=16 per class, 100 eval examples.",
+   "note": null,
+   "where": "p26 App C.4",
+   "quote": "the largest model can successfully perform linear classiﬁcation up to N = 64"
+  },
+  {
+   "claim": "Flipped-label ICL is harder than SUL-ICL; the gap reaches 74% for text-curie-001 on SST-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "74",
+   "unit": "% accuracy gap",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 10, k=16 per class, 100 eval examples; flipped-label accuracy computed by flipping evaluation labels.",
+   "note": null,
+   "where": "p16 App B.1",
+   "quote": "performance differing by up to 74%\n(text-curie-001 on SST-2)"
+  },
+  {
+   "claim": "At 100% remapped input words even the largest models cannot beat random on almost all datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 12, k=16 per class, 100 eval examples.",
+   "note": null,
+   "where": "p17 App B.2",
+   "quote": "At 100% remapped input words, even the largest models (code-davinci-002 and\nPaLM-540B) are unable to beat random guessing on almost all datasets"
+  },
+  {
+   "claim": "Input format barely matters for SUL-ICL: mean accuracy across formats ranges 77.9% to 87.7%, within 6.3% of the 84.2% mean.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "84.2",
+   "unit": "% mean accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 14: code-davinci-002, k=16 per class, 100 eval examples, six alternative templates.",
+   "note": null,
+   "where": "p19 App B.4",
+   "quote": "ranges from 77.9% to 87.7%) is within ±6.3% of the mean\n(84.2%)"
+  },
+  {
+   "claim": "Small InstructGPT models drop by up to 36% on out-of-distribution SST-2/Rotten Tomatoes SUL-ICL; text-curie-001 loses 4%, text-davinci-001 none.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2: InstructGPT a-1,b-1,c-1,d-1, SUL-ICL, k=16 per class, 100 eval examples.",
+   "note": "Table 2 in-context SST-2 / eval RT: a-1 54, b-1 63, c-1 90, d-1 93 against baseline 80, 91, 94, 93.",
+   "where": "p20 App B.6",
+   "quote": "small models (e.g., text-ada-001 and text-babbage-001) suffer from signiﬁcant performance drops of up to 36%"
+  }
+ ],
+ "limits": [
+  "100 evaluation examples per dataset; authors say they chose breadth over per-dataset precision and report no variance.",
+  "OpenAI and Codex model sizes are unknown and assumed to increase; InstructGPT vs GPT-3 cannot isolate instruction tuning.",
+  "davinci behaves like a small model and is unexplained.",
+  "Why scale unlocks these behaviours is left open.",
+  "Models are 2020-2022 vintage and tasks are classification only.",
+  "Linear classification does not improve with PaLM scale, so size alone is not the factor."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SUL-ICL",
+   "definition": "semantically-unrelated label in-context learning: labels such as foo/bar replace natural-language targets",
+   "where": "Sec 4"
+  },
+  {
+   "term": "flipped-label ICL",
+   "definition": "all labels in the exemplars are flipped while evaluation labels stay the same",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Rethinking the role of demonstrations (Min et al. 2022b)",
+   "year": 2022,
+   "arxiv": "2202.12837",
+   "relation": "extends",
+   "note": "random labels barely hurt; this paper finds that holds only up to davinci scale",
+   "quote": null
+  },
+  {
+   "work": "What learning algorithm is in-context learning? (Akyurek et al.)",
+   "year": 2023,
+   "arxiv": "2211.15661",
+   "relation": "related",
+   "note": "transformers implement learning algorithms",
+   "quote": null
+  },
+  {
+   "work": "Transformers learn in-context by gradient descent",
+   "year": 2022,
+   "arxiv": "2212.07677",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Emergent abilities of large language models",
+   "year": 2022,
+   "arxiv": "2206.07682",
+   "relation": "related",
+   "note": "frames results as emergence",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (Flan-PaLM)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Calibrate before use (Zhao et al.)",
+   "year": 2021,
+   "arxiv": "2102.09690",
+   "relation": "uses-method",
+   "note": "semantic prompt templates",
+   "quote": null
+  },
+  {
+   "work": "Rong 2021 blog",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "earlier non-alphanumeric label replacement",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of flipped-label ICL and semantically-unrelated label ICL (SUL-ICL), compared with regular ICL.",
+   "page": 2,
+   "why": "shows the three label conditions side by side"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The ability to override semantic priors when presented with flipped in-context exemplar labels emerges with model scale.",
+   "page": 4,
+   "why": "the headline result: large models drop below 50%"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Instruction-tuned models are worse than pretraining-only models at learning to override semantic priors.",
+   "page": 7,
+   "why": "PaLM vs Flan-PaLM under flipped labels"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, App C.4",
+   "snippet": "t = <a, p>; x+ conditioned on <x+, a> > t; x- conditioned on <x-, a> <= t",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 6/7 captions say six datasets for PaLM while App C.1/C.2 exclude RTE for PaLM; counts conflict.",
+  "No embedded instructions found. Appendix D contains offensive ETHOS text as data.",
+  "Appendix D read in full: prompts are dataset exemplars only. The 'Answer:' line after the final 'Output:' appears to be the target, not part of the prompt text."
+ ]
 }

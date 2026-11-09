@@ -234,7 +234,7 @@ CALL db.index.vector.queryNodes('movie_tagline_embeddings', $top_k, q)
 RETURN movie.title, movie.tagline, score
 ```
 
-`SHOW VECTOR INDEXES` lists what exists. The index is approximate k-nearest-neighbour search over an HNSW graph. As in [note 10](10b-assembling-and-maintaining-kgs.md#stage-5-assembly-with-the-course-as-worked-example), `genai.vector.encode` is the course-era name of the GenAI plugin function; check your Neo4j version before reusing it.
+`SHOW VECTOR INDEXES` lists what exists. The index is approximate k-nearest-neighbour search over an HNSW graph. As in [note 10b](10b-assembling-and-maintaining-kgs.md#stage-5-assembly-with-the-course-as-worked-example), `genai.vector.encode` is the course-era name of the GenAI plugin function; check your Neo4j version before reusing it.
 
 ### Hybrid in practice: a `retrieval_query`
 

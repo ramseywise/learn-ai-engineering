@@ -1,19 +1,360 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2307.09702",
  "pdf": "ai-engineering/01-prompt-engineering/sources/willard-2023-efficient-guided-generation-large-language.pdf",
  "bib": {
   "title": "Efficient Guided Generation for Large Language Models",
-  "first_author": "Brandon T. Willard",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Brandon T. Willard",
+   "Rémi Louf"
+  ],
+  "first_author": "Willard",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2307.09702",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 28502,
+  "chars_total": 28502,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Efficient Guided Generation for Large Language Models\", Brandon T. Willard and Rémi Louf (Normal Computing), arXiv:2307.09702v4 [cs.CL], preprint, dated 2023-07-14 (arXiv stamp 19 Aug 2023). No venue; the PDF shows none.\n\nCOVERAGE: 28558 of 28558 chars read in one pass, including the references and acknowledgments. No appendices or results tables exist. The only results are one timing plot (Section 3.2) and a few anecdotal outputs. Extraction was clean, apart from the Figure 1 and runtime-plot axes, which came out as loose text. I did not run the figure tool.\n\nCLAIMS (ranked)\n1. Masking the logits and sampling at each step makes output follow a regex or CFG, and the paper builds an index over the vocabulary to find the allowed tokens fast.\n - number: none\n - setup: the mask m(s) zeroes the probability of tokens that would violate the constraint (Algorithm 2).\n - quote: \"we can compute an un-normalized conditional distribution by applying a boolean mask m : P (V) → {0, 1}N that restricts the support of the original distribution\"\n - where: Section 2.2, p.4\n\n2. The common approach costs O(N) per generated token, where N is the vocabulary size. Indexing the FSM states against the vocabulary brings the average cost to O(1).\n - number: O(N) per token against O(1) on average. N is \"often on the order of 10^4 or larger\", and N = 50,257 for GPT-2 in the comparison.\n - setup: regex-guided generation. The index σ maps FSM states to the vocabulary tokens that are valid in each state. It is built once, before sampling, and stored as a hash map. This is an asymptotic argument, not a measurement.\n - quote: \"This approach entails a fixed O(N ) cost for each token generated, where N is the size of the LLM's vocabulary.\" and \"The result is an algorithm that costs O(1) on average.\"\n - where: Section 1, p.2\n\n3. In the one runtime test, Guidance's runtime grows steeply with the number of generated tokens, while Outlines stays nearly flat.\n - number: the plot runs to about 120 s on the y-axis for 20–100 generated tokens. The text gives no per-point numbers. I read the plot axes only, and the plot's curve values did not extract.\n - setup: GPT-2, CUDA, temperature 0.1, prompt \"What is a good Python variable name?\", regex [^\\W\\d]\\w*. Guidance was run with caching off and token_healing off. max_tokens was varied, with one timeit loop and one sample per value.\n - quote: \"the observed scaling in the maximum number of sampled tokens is striking and is indicative of the growing computational problem implied by the approach.\"\n - quote: \"(i.e. only one sample is collected for each value of max_tokens)\"\n - where: Section 3.2, pp.10–12\n - Treat the abstract's \"significantly outperforms existing solutions\" as resting on this single run against one library.\n\n4. Guidance's cost grows with sequence length because it re-matches the whole sampled string from the start at every step, and it scans the full vocabulary each time.\n - number: N = 50,257\n - quote: \"the Guidance library uses partial regular expression matching–applied from the start of the sampled sequence each time–and must iterate over the LLM's vocabulary ( N = 50 , 257) on each step.\"\n - where: Section 3.2, p.10\n\n5. The method tracks the FSM state between tokens, so it never re-reads the sequence.\n - number: none\n - setup: the vocabulary is pre-processed from every possible start state, because a multi-character token can match any part of the regex.\n - quote: \"we consider starting in every viable FSM state, because the strings in the vocabulary could match arbitrary parts of a regular expression, and those parts are implicitly the FSM states.\"\n - where: Section 3, p.6\n\n6. Extending to CFGs works with LALR(1) parsers and a pushdown-automaton formulation.\n - number: none\n - setup: the index becomes a trie keyed on parser stack values. This section is a conceptual sketch with no experiment.\n - quote: \"the index will need to be a trie data structure in order to allow queries against the parser's stack values.\"\n - where: Section 4.1, p.15\n\n7. Memory cost: an index for a slightly augmented Python grammar is small even without optimisation.\n - number: about 50 MB\n - setup: \"naively constructed\" indices built from un-reduced DFAs. The paper does not say which vocabulary was used.\n - quote: \"even naively constructed indices (i.e. ones containing unused and redundant parser and FSM state configurations) are still only around 50 MB.\"\n - where: Section 5, p.16\n\n8. Demonstrations with GPT2-medium (355M parameters) show unguided output wandering off-task while regex-guided output is well formed. These are single anecdotes.\n - number: none, apart from the 355M model size.\n - setup: three prompts with max_tokens=30.\n   - Yes/no regex: the guided output was \"Is 1+1=2? Always\". That is valid under the regex but wrong, and the paper does not comment on it.\n   - Year regex: r\"\\s*19[0-9]{2}\" gave \"1952\".\n   - IP regex: gave \"2.2.6.1\" for the Google DNS address.\n - quote: \"In this section we use GPT2-medium (355M parameters) to illustrate how regular expression guided generation works in practice.\"\n - where: Section 3.1, pp.8–10\n - Useful for the note: the constraint guarantees format, not truth.\n\n9. Guaranteed structure is the stated benefit, and the approach is model agnostic.\n - number: none\n - quote: \"enables the construction of reliable interfaces by guaranteeing the structure of the generated text.\"\n - where: Abstract, p.1\n - quote: \"guided LLM generation is used to make LLM model output usable under rigid formatting requirements that are either hard or costly to capture through fine-tuning alone\"\n - where: Section 1, p.1\n\n10. Tokenization subtlety: a lexer reading the partial string \"def f\" would wrongly treat \"f\" as a complete NAME token. The index handles this by allowing every continuation consistent with a partial match.\n - number: none\n - where: Section 4, p.13\n\nLIMITS\n- The authors concede a processing-for-memory trade-off: \"Naturally, it makes a trade-off between processing and memory\".\n- Index memory is theoretically |Q|. They claim it is small \"for non-pathological combinations of regular expressions and vocabularies\" and give no measurements for regexes other than the Python grammar.\n- The evidence is thin. There is one benchmark (a single sample per point, one library, GPT-2, one regex), no accuracy or task-quality results, and no comparison with PICARD, Synchromesh or ReLM. The text says ReLM is most similar, but it does not benchmark against it.\n- The paper does not measure whether masking harms output quality. It lists this as future work: quantifying the gap between masked and raw logits.\n- Masking can force a valid but wrong answer, as the \"Always\" example shows.\n- The CFG and PDA section has no implementation results.\n- Speculative future ideas: use during training or fine-tuning, and \"lifting\" masks into the model architecture.\n- Dated: Outlines API shown (outlines.text.generate, generate.regex) is the mid-2023 version. Guidance has changed since, so the comparison is a 2023 snapshot, and the authors flag possible \"configuration oversights\".\n\nBUILDS ON\n- Kuchnik et al. 2023 (ReLM, transducer formulation; the closest regex-case relative).\n- Beurer-Kellner et al. 2023 (LMQL, \"Prompting is programming\").\n- Scholak et al. 2021 (PICARD).\n- Poesia et al. 2022 (Synchromesh).\n- Geng et al. 2023 (grammar-based constrained decoding).\n- Wang et al. 2023 (Grammar Prompting).\n- Lew et al. 2023 (SMC steering).\n- Microsoft Guidance (2023).\n- Rickard 2023 (parserLLM, rellm).\n- Weng 2021 (controllable text generation).\n- Sipser 1996 (FSM and PDA definitions).\n- Sennrich et al. 2015 (subword vocabularies).\n- Vaswani et al. 2017.\n\nCODE (verbatim)\n- Outlines regex generation, p.8–9:\n  guided = generate.regex(model, r\"\\s*([Yy]es|[Nn]o|[Nn]ever|[Aa]lways)\", max_tokens=30)(prompt)\n- Algorithm 2 (p.5), the core loop: α ← LLM(s, θ); construct mask m(s); α̃ ← m ⊙ α; sample s̃ ~ Categorical(α̃); stop on EOS.\n- Algorithm 4 (p.8): for each v in V, for each state-sequence z accepting v, σ(z0) ← σ(z0) ∪ v.\n- Example regex for floats, p.6: ([0-9]*)?\\.?[0-9]*\n\nFIGURES\n- Figure 1 (p.6): FSM masking for the regex ([0-9]*)?\\.?[0-9]*. It shows the FSM states and which of the vocabulary strings \"A\", \".\", \"42\", \".2\" and \"1\" are masked after each sample. This is the quickest way to see the mechanism.\n- Unnumbered runtime plot (p.12): runtime in seconds against generated tokens (20–100), for Guidance and Outlines. It is the only quantitative result.\n\nPROBLEMS\n- No embedded instructions found.\n- Figure 1 and the runtime plot extracted as loose axis text. I did not read the curve values, so claim 3 has no per-point numbers.\n- The reference list has duplicate Synchromesh entries (2022a and 2022b), which is a fault in the source.\n- The text says \"Section 3.2\" when it points at the plot, a cross-reference error in the source.\n- I did not read the target note, so I made no match against its claims."
+ "type": "system",
+ "question": "How can text generation from an LLM be constrained to a regular expression or context-free grammar without scanning the whole vocabulary at every step?",
+ "hypothesis": "Recasting generation as transitions between finite-state-machine states lets an index over the vocabulary give the allowed-token mask in O(1) on average, so guided generation adds little overhead.",
+ "contributions": [
+  "An FSM formulation of regex-guided generation with Algorithms 3 and 4 building a map from FSM states to allowed vocabulary subsets",
+  "An extension sketch to CFGs via LALR(1) parsers and pushdown automata, with a trie-based index",
+  "The open source Python library Outlines implementing the approach",
+  "A single timing comparison against the Guidance library"
+ ],
+ "method": {
+  "summary": "Boolean-mask the next-token distribution so only tokens that keep the output inside a regex/CFG language have non-zero probability. Precompute a map sigma from each FSM state to the vocabulary strings accepted from that state, so the mask is a hash lookup. Evaluated by three qualitative GPT2-medium examples and one runtime plot against Guidance on GPT-2.",
+  "task": "regex- and CFG-guided (constrained) text generation",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "GPT2-medium",
+    "role": "evaluated",
+    "params": "355M",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Section 3.1 qualitative examples via Outlines (models.transformers('gpt2-medium'))"
+    }
+   },
+   {
+    "name": "GPT-2 (gpt2)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "N = 50,257",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Section 3.2 timing comparison, device cuda, temperature 0.1; parameter count not stated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "multinomial sampling from the masked categorical distribution (Algorithm 2); temperature 0.1 in the timing test; decoding for the Section 3.1 examples not stated",
+   "temperature": "0.1 (Section 3.2 only)",
+   "top_p": null,
+   "max_tokens": "30 in Section 3.1 examples; varied in Section 3.2 (plot x axis 5 to 100 generated tokens, read from the figure)",
+   "samples": "Section 3.2: one sample per max_tokens value (timeit, single loop, single repeat). Section 3.1: one output per prompt. No seeds stated.",
+   "prompting": "Zero-shot raw prompts, e.g. 'Is 1+1=2? ', 'In what year was Noam Chomsky born?\\n', 'What is the IP address of the Google DNS servers? ', 'What is a good Python variable name? '",
+   "retrieval": null,
+   "parameters": {
+    "timing_regex": "[^\\W\\d]\\w*",
+    "guidance_settings": "token_healing=False, device=cuda, temperature=0.1, caching=False, async_mode=False, stream=False",
+    "outlines_settings": "disable_cache(), device=cuda, temperature=0.1",
+    "yes_no_regex": "\\s*([Yy]es|[Nn]o|[Nn]ever|[Aa]lways)",
+    "year_regex": "\\s*19[0-9]{2}"
+   },
+   "other": {
+    "hardware_timing": "device cuda; GPU model not stated",
+    "index_size": "around 50 MB for a slightly augmented Python grammar, naively built with un-reduced DFAs (Section 5)",
+    "cost": "O(N) per token for the naive approach, O(1) on average for the index; index construction cost called 'effectively irrelevant', memory theoretically |Q|"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "runtime",
+     "definition": "wall time of one generation call timed with timeit, as a function of max_tokens",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Guidance library (partial regex matching from the start of the sequence each step, iterating over the vocabulary)"
+   ],
+   "protocol": "One run per max_tokens value, no repeats, no variance, one regex, one prompt. No accuracy, validity or quality measurement."
+  },
+  "availability": {
+   "code": "Outlines, https://github.com/normal-computing/outlines",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Guidance timing program",
+    "text": "What is a good Python variable name?{{{{gen temperature=0.1 max_tokens={max_tokens} pattern=\"[^\\W\\d]\\w*\"}}}}",
+    "where": "Section 3.2, Listing 3.4"
+   },
+   {
+    "purpose": "Outlines timing prompt",
+    "text": "What is a good Python variable name? ",
+    "where": "Section 3.2, Listing 3.5"
+   },
+   {
+    "purpose": "Qualitative example prompt",
+    "text": "Is 1+1=2? ",
+    "where": "Section 3.1"
+   },
+   {
+    "purpose": "Qualitative example prompt",
+    "text": "In what year was Noam Chomsky born?\\n",
+    "where": "Section 3.1"
+   },
+   {
+    "purpose": "Qualitative example prompt",
+    "text": "What is the IP address of the Google DNS servers? ",
+    "where": "Section 3.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "only one sample is collected for each value of max_tokens",
+    "where": "Section 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Masking with a precomputed state-to-vocabulary hash map costs O(1) on average per token, versus a fixed O(N) vocabulary scan for the usual approach.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argued analytically for regex FSMs with a hash-map index sigma; no benchmark of the lookup itself.",
+   "quote": "The result is an algorithm that costs O(1) on average.",
+   "table": null,
+   "note": "The paper hedges: 'Using a hash-map for σ can make the m step in Algorithm 2 cost only O(1) on average'.",
+   "where": "Section 1, Section 3"
+  },
+  {
+   "claim": "In the one timing test, Guidance's runtime grows steeply with the max generated tokens while Outlines stays far lower; the paper gives no numbers, only a plot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": null,
+   "unit": "s",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "GPT-2 (N = 50,257), regex [^\\W\\d]\\w*, prompt 'What is a good Python variable name?', temperature 0.1, cuda, one sample per max_tokens, Guidance has no point past 60 tokens (read from Fig. in Section 3.2).",
+   "quote": "the observed scaling in the maximum number of sampled tokens is striking and is indicative of the growing computational problem implied by the approach.",
+   "table": null,
+   "note": "Read from the plot: Guidance about 118 s at 60 tokens; Outlines about 1 to 2 s at 100 tokens and rising slightly, so 'flat' is approximate. The authors add 'Barring any configuration oversights that might be creating a large run-time discrepancy'.",
+   "where": "Section 3.2, runtime plot (p. 12)"
+  },
+  {
+   "claim": "A naively built index for a slightly augmented Python grammar is about 50 MB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "index size",
+   "value": "50",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Slightly augmented Python grammar, un-reduced DFAs, unused and redundant parser/FSM configurations included; model/vocabulary not stated.",
+   "quote": "are still only around 50 MB",
+   "table": null,
+   "note": null,
+   "where": "Section 5"
+  },
+  {
+   "claim": "With GPT2-medium, regex-guided output obeys the pattern while unguided output rambles; the guided yes/no answer 'Always' to 'Is 1+1=2?' is valid in shape only.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "GPT2-medium (355M), Outlines generate.regex, max_tokens=30, one output per prompt, shown as illustration.",
+   "quote": "# Is 1+1=2? Always",
+   "table": null,
+   "note": "The paper does not comment that the answer is wrong; the Chomsky example returns 1952 (a plausible but unchecked year) and the Google DNS example returns 2.2.6.1.",
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "The paper reports no accuracy or task-quality measurement of guided versus unguided generation.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole paper",
+   "quote": "One could, for instance, attempt to quantify the discrepancy between the masked logits generated by our method and the raw logits generated by the model.",
+   "table": null,
+   "note": "Listed as future work.",
+   "where": "Section 5"
+  }
+ ],
+ "limits": [
+  "Only one timing test: one regex, one prompt, GPT-2, one sample per length, one baseline (Guidance), GPU model unspecified, no variance.",
+  "Authors concede possible 'configuration oversights' in the Guidance comparison.",
+  "No accuracy, validity, or quality results; the effect of masking on output quality is left as future work.",
+  "CFG/LALR(1)/PDA extension is described but not benchmarked or fully specified (sketch only); no results for JSON or Python grammars apart from the 50 MB index remark.",
+  "Memory cost is theoretical |Q| and only measured as about 50 MB for one grammar.",
+  "Index construction cost dismissed as 'effectively irrelevant' with no measurement.",
+  "Guidance behaviour is as of July 2023 and has since changed; Outlines API shown (outlines.text.generate) is the old one."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "guided generation",
+   "definition": "generating sequences of tokens from an LLM that conform to regular expressions or context-free grammars",
+   "where": "Section 1"
+  },
+  {
+   "term": "finite automaton",
+   "definition": "(Q, Σ, δ, q0, F): Q finite set of states, Σ finite alphabet, δ transition function, q0 start state, F accept states",
+   "where": "Definition 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kuchnik et al., Validating large language models with ReLM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Closest regex approach: transducer formulation giving FSMs over the vocabulary",
+   "quote": "our approach shares the most similarity with Kuchnik et al. [2023]"
+  },
+  {
+   "work": "Guidance (Microsoft)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Library used in the timing comparison",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al., 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Model used for timing and examples (gpt2, gpt2-medium)",
+   "quote": null
+  },
+  {
+   "work": "Beurer-Kellner et al., Prompting is programming (LMQL)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prompting library with constrained generation",
+   "quote": null
+  },
+  {
+   "work": "Synchromesh (Poesia et al.)",
+   "year": 2022,
+   "arxiv": "2201.11227",
+   "relation": "related",
+   "note": "Constrained decoding for code",
+   "quote": null
+  },
+  {
+   "work": "PICARD (Scholak et al.)",
+   "year": 2021,
+   "arxiv": "2109.05093",
+   "relation": "related",
+   "note": "Incremental parsing for constrained decoding",
+   "quote": null
+  },
+  {
+   "work": "Lew et al., Sequential Monte Carlo steering",
+   "year": 2023,
+   "arxiv": "2306.03081",
+   "relation": "related",
+   "note": "SMC sampling cited as another way to generate sequences",
+   "quote": null
+  },
+  {
+   "work": "Geng et al., Flexible grammar-based constrained decoding",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Grammar-based constrained decoding",
+   "quote": null
+  },
+  {
+   "work": "Wang et al., Grammar prompting",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Grammar prompting for DSL generation",
+   "quote": null
+  },
+  {
+   "work": "Rickard, parserLLM and rellm",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prompting libraries with structure",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "FSM masking for the regular expression ([0-9]*)?\\.?[0-9]*.",
+   "page": 6,
+   "why": "Shows the FSM states and which of the five vocabulary strings are masked at each state"
+  },
+  {
+   "figure": "Runtime plot (unnumbered, Section 3.2)",
+   "caption": "runtime (s) against generated tokens for guidance and outlines",
+   "page": 12,
+   "why": "The paper's only quantitative result; Guidance rises to about 118 s at 60 tokens, Outlines stays near 0 to 2 s"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3.1",
+   "snippet": "guided = generate.regex(model, r\"\\s*19[0-9]{2}\", max_tokens=30)(prompt)",
+   "verbatim": true
+  },
+  {
+   "where": "Section 2.2, Algorithm 2",
+   "snippet": "alpha <- LLM(s, theta); construct mask m(s); alpha~ <- m ⊙ alpha; sample s~ ~ Categorical(alpha~)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure axes extract as loose text; read the runtime plot from the rendered page 12 image.",
+  "Cached text is 28502 chars; the schema-0 file said 28558 (different engine/cache)."
+ ]
 }

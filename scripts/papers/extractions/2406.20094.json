@@ -1,0 +1,478 @@
+{
+ "schema": 1,
+ "key": "2406.20094",
+ "pdf": "generative-ai/05-RL/sources/ge-2024-scaling-synthetic-data-creation-1.pdf",
+ "bib": {
+  "title": "Scaling Synthetic Data Creation with 1,000,000,000 Personas",
+  "authors": [
+   "Tao Ge",
+   "Xin Chan",
+   "Xiaoyang Wang",
+   "Dian Yu",
+   "Haitao Mi",
+   "Dong Yu"
+  ],
+  "first_author": "Ge",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2406.20094",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 77794,
+  "chars_total": 77794,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can diverse synthetic data be created at billion scale when seed-instance and key-point prompting cannot scale in diversity?",
+ "hypothesis": "Adding a persona to a data synthesis prompt steers an LLM to that perspective, so a collection of 1 billion personas yields diverse synthetic data at scale.",
+ "contributions": [
+  "Persona-driven data synthesis methodology (zero-shot, few-shot, persona-enhanced few-shot prompts)",
+  "Persona Hub: 1,015,863,523 personas built by Text-to-Persona and Persona-to-Persona with deduplication",
+  "Use cases: math and logical reasoning problems, instructions, knowledge-rich texts, game NPCs, tools",
+  "Release of 200,000 personas and sample synthetic data"
+ ],
+ "method": {
+  "summary": "Personas are inferred from RedPajama v2 web text by prompting an LLM, expanded through six rounds of relationship expansion and deduplicated. 1.09M math problems are synthesized with GPT-4 zero-shot persona prompts, solved by gpt-4o, and used to fine-tune Qwen2-7B, evaluated on a synthetic in-distribution test set and MATH.",
+  "task": "persona-driven synthetic data creation; math reasoning SFT",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Persona Hub",
+    "role": "pretrain",
+    "size": "1,015,863,523 personas",
+    "split": null,
+    "source": "Text-to-Persona on RedPajama v2 then Persona-to-Persona (6 iterations)",
+    "preprocessing": "MinHash dedup (1-gram, signature size 128, similarity threshold 0.9), then embedding dedup (text-embedding-3-small, cosine > 0.9), plus simple heuristic quality filters"
+   },
+   {
+    "name": "Synthetic math problems",
+    "role": "train",
+    "size": "1.09M created, 1.07M training",
+    "split": "20k held out as synthetic test set",
+    "source": "0-shot persona prompting with GPT-4 on 1.09 million personas; solutions by gpt-4o (assistant)",
+    "preprocessing": "None stated for training set"
+   },
+   {
+    "name": "Synthetic test set",
+    "role": "eval",
+    "size": "11.6K instances",
+    "split": "filtered from 20K held-out",
+    "source": "same as training",
+    "preprocessing": "solutions from gpt-4o (assistant), gpt-4o (PoT) and gpt-4-turbo (assistant); kept only where at least two solutions consistent"
+   },
+   {
+    "name": "MATH",
+    "role": "eval",
+    "size": "5,000 test problems",
+    "split": "test",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "no MATH instance used in synthesis or training"
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (problem creator; exact version not stated)",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4o (solution generator)",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3-70B-Instruct (equality checker on synthetic test)",
+    "role": "judge",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: supervised fine-tuning on synthesized problem-solution pairs (paper says 'fine-tune')",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "scaling": "Fig 9 trains on different synthetic data scales; values not given in text"
+   }
+  },
+  "inference": {
+   "decoding": "greedy decoding for the fine-tuned model",
+   "temperature": "0 (greedy) for persona-pair problem creation in similarity experiment",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one greedy output per problem; no seeds or repeats stated",
+   "prompting": "0-shot persona prompt 'Create a challenging math problem with the following persona' (simplified; paper says the prompts shown are not exactly those used)",
+   "retrieval": null,
+   "parameters": {
+    "persona_dedup_threshold": "0.9 (MinHash and embedding)",
+    "persona_to_persona_iterations": "6",
+    "persona_similarity_levels": "0.4, 0.6, 0.8 (100 pairs each), 0.9 for gpt-4o vs gpt-35-turbo",
+    "similarity_embedding": "text-embedding-3-small, dim=512"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "answer equality against reference; MATH uses OpenAI simple-evals protocol, synthetic test uses Llama-3-70B-Instruct as equality checker",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Problem validity rate",
+     "definition": "two math experts judge 200 sampled challenging problems",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Semantic similarity",
+     "definition": "cosine similarity of text-embedding-3-small embeddings",
+     "unit": "cosine",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "DeepSeek LLM 67B Chat",
+    "Phi-3-Mini-4K-Instruct",
+    "Yi-1.5-34B-Chat",
+    "Qwen1.5-72B/110B-Chat",
+    "Qwen2-7B/72B-Instruct",
+    "Llama-3-8B/70B-Instruct",
+    "GPT-4 variants",
+    "Claude 3.5 Sonnet",
+    "Claude 3 Opus",
+    "Gemini Pro 1.5",
+    "Gemini Ultra",
+    "DeepSeek-Coder-V2-Instruct"
+   ],
+   "protocol": "Single run; no seeds or significance tests. Some MATH baseline numbers marked * may not use OpenAI evaluation method. Authors say in-distribution test is reference only."
+  },
+  "availability": {
+   "code": "https://github.com/tencent-ailab/persona-hub",
+   "weights": null,
+   "data": "200,000 personas and samples: 50,000 math problems, 50,000 instructions, 10,000 game NPCs, 50,000 logical reasoning problems, 10,000 knowledge-rich texts, 5,000 tools; 370M expert personas added Feb 2025. The 1.07M training set is not stated as released."
+  },
+  "prompts": [
+   {
+    "purpose": "Instruction synthesis, 0-shot",
+    "text": "You are a helpful assistant. Guess a prompt (i.e., instruction) that the following persona may ask you to do: {persona}",
+    "where": "Figure 13, p12 (simplified)"
+   },
+   {
+    "purpose": "Knowledge-rich text",
+    "text": "Assume you are the persona described as follows. Write a Quora article using your knowledge, skills, experience, or insights.",
+    "where": "Figure 14, p13"
+   },
+   {
+    "purpose": "Text-to-Persona",
+    "text": "Who is likely to [read|write|like|dislike|...] the text?",
+    "where": "Figure 3 caption, p4"
+   },
+   {
+    "purpose": "Persona-to-Persona",
+    "text": "Who is in close relationship with the given persona?",
+    "where": "Figure 5 caption, p5"
+   },
+   {
+    "purpose": "Math problem creation, 0-shot",
+    "text": "Create a challenging math problem with the following persona: {persona}",
+    "where": "Figure 6, p6 (simplified)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Qwen2-7B fine-tuned on 1.07M persona-synthesized math problems reaches 64.9% on MATH with greedy decoding, without any MATH data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "64.9",
+   "unit": "%",
+   "baseline_value": "49.6 (Qwen2-7B-Instruct, marked *)",
+   "n": 5000,
+   "setup": "Qwen2-7B SFT on 1.07M GPT-4-created, gpt-4o-solved problems; greedy decoding; OpenAI simple-evals equality check",
+   "quote": "The 7B model fine-tuned with the synthetic training data achieved an impressive 64.9% accuracy on MATH simply using greedy decoding",
+   "table": "Table 2, row Qwen2-7B (fine-tuned w/ the 1.07M synthesized instances), column Accuracy",
+   "note": "Matches gpt-4-turbo-preview (1106 at 64.3, 0125 at 64.5); gpt-4o is 76.6.",
+   "where": "Sec 4.1.2, Table 2, p9"
+  },
+  {
+   "claim": "On the 11.6K in-distribution synthetic test set the fine-tuned model scores 79.4%, above all listed open-source LLMs but below GPT-4 variants.",
+   "kind": "measured",
+   "source": null,
+   "metric": "synthetic test accuracy",
+   "value": "79.4",
+   "unit": "%",
+   "baseline_value": "77.2 (Qwen2-72B-Instruct)",
+   "n": 11600,
+   "setup": "in-distribution; test answers filtered by agreement of two of three solutions; model trained on in-distribution data",
+   "quote": null,
+   "table": "Table 1, row Qwen2-7B (fine-tuned w/ the 1.07M synthesized instances), column Accuracy",
+   "note": "Authors say it is reference only; gpt-4o scores 91.2 and gpt-4-turbo 88.1.",
+   "where": "Table 1, p8"
+  },
+  {
+   "claim": "Two math experts judged 193 of 200 sampled challenging synthesized problems valid.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validity rate",
+   "value": "96.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "200 sampled challenging problems (high school and university-level, China), two experts",
+   "quote": "Only 7 out of 200 problems are marked as invalid (e.g., due to insufficient or conflicting conditions), yielding a reliable validity rate of 96.5%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.2, p9"
+  },
+  {
+   "claim": "Persona Hub contains over one billion personas after deduplication and filtering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "persona count",
+   "value": "1,015,863,523",
+   "unit": "personas",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Text-to-Persona on RedPajama v2, six rounds Persona-to-Persona, MinHash and embedding dedup at 0.9",
+   "quote": "we have harvested a total of 1,015,863,523 personas, finally forming our Persona Hub.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, p5"
+  },
+  {
+   "claim": "MATH accuracy rises with the amount of synthetic training data, roughly following a scaling law.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2-7B trained on varying synthetic scale; values only in Fig 9",
+   "quote": null,
+   "table": null,
+   "note": "Claim: 'generally aligns with the scaling law (Kaplan et al., 2020)'; no fit given.",
+   "where": "Fig 9, p9"
+  },
+  {
+   "claim": "Math problems created from persona pairs are less similar than the personas; gpt-4o and gpt-35-turbo problems from personas at 0.9 similarity mostly fall in 0.6 to 0.75.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problem similarity range",
+   "value": "0.6 to 0.75",
+   "unit": "cosine",
+   "baseline_value": "0.9 (persona similarity)",
+   "n": 100,
+   "setup": "100 persona pairs per similarity level, greedy decoding, text-embedding-3-small dim 512",
+   "quote": "most synthesized math problems’ similarity falls within the range of 0.6 to 0.75, which is much lower than the similarity of the personas (0.9)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.2, Fig 10, p10"
+  },
+  {
+   "claim": "Persona Hub is about 10^10 tokens, a 10,000x compression of public web text (10^14 tokens).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "order-of-magnitude estimate",
+   "quote": null,
+   "table": null,
+   "note": "Footnote 14 gives 10,000x compression.",
+   "where": "Fig 2, footnote 14"
+  }
+ ],
+ "limits": [
+  "Training hyperparameters (learning rate, epochs, batch size, hardware, optimizer) are not stated, so the 64.9% cannot be rerun from the paper.",
+  "Solutions come from gpt-4o, so the gain mixes persona-diverse problems with strong-teacher distillation; no ablation without personas or against a non-persona baseline is shown.",
+  "Diversity is argued from similarity of problem pairs only; no coverage or downstream ablation at billion scale.",
+  "In-distribution test answers are not fully reliable and only the authors' model trains in-distribution; authors say treat as reference.",
+  "Some baseline MATH numbers (*) may use a different evaluation method.",
+  "Only math is evaluated quantitatively; other use cases are qualitative examples, and prompts shown are simplified.",
+  "Authors concede persona descriptions lack fine-grained detail, text-only, and LLM hallucination limits fidelity.",
+  "Claims about eliminating the data bottleneck and mitigating model collapse are assertions without data."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Text-to-Persona",
+   "definition": "Infer a persona likely to read, write, like or dislike a given text by prompting an LLM.",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Persona-to-Persona",
+   "definition": "Derive personas with interpersonal relationships from existing personas, to reach low-visibility personas.",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Persona-enhanced few-shot prompting",
+   "definition": "Few-shot prompt where each demonstration is paired with its derived persona.",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-Instruct",
+   "year": 2022,
+   "arxiv": "2212.10560",
+   "relation": "related",
+   "note": "instance-driven synthesis it contrasts with",
+   "quote": null
+  },
+  {
+   "work": "MetaMath",
+   "year": 2023,
+   "arxiv": "2309.12284",
+   "relation": "related",
+   "note": "instance-driven, relies on MATH train data",
+   "quote": null
+  },
+  {
+   "work": "Key-point-driven data synthesis (Huang et al.)",
+   "year": 2024,
+   "arxiv": "2403.02333",
+   "relation": "related",
+   "note": "key-point-driven paradigm contrasted",
+   "quote": null
+  },
+  {
+   "work": "Synthetic data (almost) from scratch (Li et al.)",
+   "year": 2024,
+   "arxiv": "2402.13064",
+   "relation": "related",
+   "note": "key-point-driven paradigm contrasted",
+   "quote": null
+  },
+  {
+   "work": "RedPajama v2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "web text for Text-to-Persona",
+   "quote": null
+  },
+  {
+   "work": "MATH",
+   "year": 2021,
+   "arxiv": "2103.03874",
+   "relation": "uses-data",
+   "note": "OOD evaluation",
+   "quote": null
+  },
+  {
+   "work": "WildChat",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "instruction demonstrations for persona-enhanced few-shot",
+   "quote": null
+  },
+  {
+   "work": "Qwen2",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model fine-tuned",
+   "quote": null
+  },
+  {
+   "work": "MinHash (Broder)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "persona dedup",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Personas can work with a wide range of data synthesis prompts to guide an LLM to synthesize data with corresponding perspectives.",
+   "page": 1,
+   "why": "Shows one prompt template times many personas giving diverse outputs."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Accuracy on MATH with scaling the synthetic instances used for training Qwen2-7B",
+   "page": 9,
+   "why": "Scaling curve; values not in text."
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Similarities of math problems created by personas with different similarities",
+   "page": 10,
+   "why": "Diversity evidence."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 9 and 10 values exist only in figures; text extraction of equations is garbled.",
+  "No embedded instructions found."
+ ]
+}

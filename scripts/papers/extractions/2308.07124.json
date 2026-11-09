@@ -1,0 +1,332 @@
+{
+ "schema": 1,
+ "key": "2308.07124",
+ "pdf": "generative-ai/05-RL/sources/muennighoff-2023-octopack.pdf",
+ "bib": {
+  "title": "OctoPack: Instruction Tuning Code Large Language Models",
+  "authors": ["Niklas Muennighoff","Qian Liu","Armel Zebaze","Qinkai Zheng","Binyuan Hui","Terry Yue Zhuo","Swayam Singh","Xiangru Tang","Leandro von Werra","Shayne Longpre"],
+  "first_author": "Muennighoff",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2308.07124",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 163192,
+  "chars_total": 163192,
+  "engine": "pymupdf",
+  "skipped": "Reference list and the Table 4 per-language numeric rows skimmed only; Appendix R model-output example listings (Figures 26-39) not read line by line."
+ },
+ "type": "empirical",
+ "question": "Can Git commits (code change plus commit message) serve as permissively licensed instruction data that improves instruction-tuned Code LLMs, without using OpenAI-generated outputs?",
+ "hypothesis": "Including many programming languages in instruction tuning boosts performance further, and code data (commits) should behave the same way as natural-language instruction data.",
+ "contributions": [
+  "COMMITPACK and COMMITPACKFT: 4TB of permissively licensed code commits across 350 programming languages for pretraining and a filtered 2GB variant containing high-quality code instructions used for finetuning",
+  "HUMANEVALPACK: A benchmark for Code LLM generalization, spanning three scenarios (Code Repair, Code Explanation, Code Synthesis) and 6 programming languages (Python, JavaScript, Java, Go, C++, Rust)",
+  "OCTOCODER and OCTOGEEX: The best permissive Code LLMs"
+ ],
+ "method": {
+  "summary": "Builds COMMITPACK (4TB of single-file GitHub commits, 350 languages) and a heavily filtered 2GB subset COMMITPACKFT (277 languages, commit message as instruction). Instruction-tunes StarCoder 16B (LoRA) on 5,000 random COMMITPACKFT samples plus filtered OASST to get OctoCoder, ablates against xP3x, Self-Instruct and OASST, and evaluates on HumanEvalPack (new human-written 6-language, 3-task extension of HumanEval).",
+  "task": "instruction tuning of code LLMs; evaluation on code repair, code explanation, code synthesis",
+  "trains": true,
+  "datasets": [
+   {"name":"COMMITPACK","role":"pretrain","size":"~4TB; 57,700,105 samples; 350 languages (Table 4)","split":null,"source":"GitHub Archive (GH Archive) metadata on Google BigQuery, commits up to 2016, plus scraped before/after files; licences MIT, Artistic-2.0, ISC, CC0-1.0, EPL-1.0, MPL-2.0, Apache-2.0, BSD-3-Clause, AGPL-3.0, LGPL-2.1, BSD-2-Clause or none","preprocessing":"Table 5: commit message 5-10,000 chars, noise messages removed, single-file commits only, opt-out users removed"},
+   {"name":"COMMITPACKFT","role":"train","size":"~2GB; 742,273 samples; 277 languages (Table 1); 702,062 per Table 4; 5,000 sampled for finetuning across 6 eval languages","split":"5,000 random samples across the 6 evaluated languages","source":"filtered COMMITPACK","preprocessing":"Table 6: before code <=50,000 chars, after code non-empty and different, no '#', extension check, filename not in message, message 10-1000 chars and 5-1000 words, uppercase start, 50-768 StarCoder tokens for before+special+after, message must start with an allowed imperative verb (Table 7), noise strings and regexes removed, 90% of Bump/Set version/Update version dropped; reduces dataset ~1000x. No HumanEval contamination found."},
+   {"name":"xP3x code subset","role":"train","size":"532,107,156 samples total; 5,000 used","split":null,"source":"Muennighoff et al. 2022b; APPS, CodeContests, Jupyter Code Pairs, MBPP, XLCoST, Code Complex, Docstring Corpus, Great Code, State Changes; NeuralCodeSearch excluded","preprocessing":null},
+   {"name":"StarCoder Self-Instruct","role":"train","size":"5,003 samples, 12 languages","split":null,"source":"Self-Instruct method with StarCoder as generator","preprocessing":null},
+   {"name":"OASST (filtered)","role":"train","size":"8,587 samples (of 161,443), 28 languages, 2.5% code","split":null,"source":"filtered variant from Dettmers et al. 2023 (QLoRA), plus filter removing refusals/moralizing answers","preprocessing":"code fraction counted by fenced-language markers, so likely underestimated"},
+   {"name":"HUMANEVALPACK","role":"eval","size":"164 problems x 6 languages x 3 tasks; 984 bugs for HumanEvalFix","split":null,"source":"human-written extension of HumanEval; bugs added manually by one author","preprocessing":null}
+  ],
+  "models": [
+   {"name":"OctoCoder","role":"proposed","params":"16B","architecture":"decoder-only (StarCoder)","init_from":"StarCoder 16B","tokenizer":"StarCoder tokenizer","vocab":null,"layers":null,"hidden":null,"heads":null,"context":"2048 sequence length in finetuning","other":{}},
+   {"name":"OctoGeeX","role":"proposed","params":"6B","architecture":null,"init_from":"CodeGeeX2","tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{}},
+   {"name":"StarCoder","role":"base","params":"16B","architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{}},
+   {"name":"SantaCoderPack","role":"proposed","params":"1.1B","architecture":"SantaCoder architecture with MQA, no FIM","init_from":null,"tokenizer":"StarCoder tokenizer","vocab":null,"layers":null,"hidden":null,"heads":null,"context":"8192","other":{}},
+   {"name":"WizardCoder, InstructCodeT5+, StarChat-beta, BLOOMZ, GPT-4, Diff Codegen 2B","role":"evaluated","params":"16B / 16B / 16B / 176B / unknown / 2B","architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{}}
+  ],
+  "training": {
+   "objective": "instruction tuning, loss over full sequence (masking input loss was an ablation)",
+   "optimizer": "inferred: not stated for finetuning; SantaCoderPack pretraining uses Adam b1=0.9, b2=0.95, eps=1e-8",
+   "lr": "5e-4 (StarCoder/OctoCoder, LoRA); 5e-5 (OctoGeeX); 5e-5 (SantaCoder finetune); 2e-4 (SantaCoderPack pretrain)",
+   "lr_schedule": "cosine",
+   "warmup": "linear warmup (length not stated) for finetuning; 2% of steps for SantaCoderPack",
+   "batch_size": "32 (OctoCoder); 48 (OctoGeeX); 64 (SantaCoder finetune); 64 global (SantaCoderPack)",
+   "steps": "35 (OctoCoder, OctoGeeX); up to 200,000 (SantaCoder finetune); 250k (SantaCoderPack)",
+   "epochs": "up to one epoch",
+   "tokens": "2.2 million finetuning tokens (OctoCoder); 131B tokens for SantaCoderPack (35B data repeated ~4 times)",
+   "seq_len": "2048 with packing (OctoCoder); 8192 (SantaCoderPack)",
+   "precision": null,
+   "weight_decay": "0.1 (SantaCoderPack only)",
+   "dropout": null,
+   "regularisation": "LoRA used for StarCoder finetuning (no significant difference from full finetuning observed); rank/alpha not stated",
+   "hardware": "32 A100 GPUs (SantaCoderPack); finetuning hardware not stated",
+   "compute": "SantaCoderPack 14 days",
+   "wall_clock": "14 days (SantaCoderPack)",
+   "seeds": null,
+   "other": {"prompt_format_training":"Question: {instruction}\n{context}\nAnswer:\n{function_start} (Figure 18)","hyperparameter_selection":"final OctoGeeX uses the manual 1,178-sample selection; OctoCoder uses random selection","manual_selection":"1178 samples: 725 OASST + 89/61/86/72/70/75 CommitPackFT for Python/JS/Java/Go/C++/Rust"}
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.2",
+   "top_p": "0.95",
+   "max_tokens": null,
+   "samples": "n = 20 samples per problem for pass@1; n = 1 for GPT-4",
+   "prompting": "Zero-shot. Each model uses its authors' prompt format or a simple intuitive one (Appendix Q, Figures 18-25); prompts not optimised. HumanEvalExplain caps explanation length at the docstring character count.",
+   "retrieval": null,
+   "parameters": {},
+   "other": {"gpt4_n1_check":"n=1 vs n=20 changed GPT-4 HumanEvalSynthesize Python from 75.0% to 75.2%"}
+  },
+  "eval": {
+   "metrics": [
+    {"name":"pass@1","definition":"likelihood that the model solves a problem in a single attempt; estimated from n=20 samples at T=0.2, top_p=0.95; a problem is solved if generated code passes every test","unit":"%","higher_is_better":true},
+    {"name":"HumanEvalExplain pass@1","definition":"model explains the function under a character limit, then the same model regenerates code from its own explanation; solution overlap >=20 chars removed from the explanation; scored by execution","unit":"%","higher_is_better":true}
+   ],
+   "baselines": ["StarCoder","BLOOMZ","StarChat-beta","CodeGeeX2","WizardCoder","InstructCodeT5+","GPT-4","Self-Instruct","OASST","xP3x-Code"],
+   "protocol": "Zero-shot pass@1 on HumanEvalPack, 3 tasks x 6 languages; execution-based; single run, no seeds or confidence intervals stated."
+  },
+  "availability": {
+   "code": "https://github.com/bigcode-project/octopack",
+   "weights": "https://hf.co/bigcode/octocoder, https://hf.co/bigcode/octogeex",
+   "data": "https://hf.co/datasets/bigcode/commitpack, commitpackft, humanevalpack"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field":"results.StarCoder 33.6 to OctoCoder 46.2","quote":null,"where":"Table 2 HumanEvalSynthesize Python rows StarCoder 33.6 and OctoCoder 46.2; Table 12 row Without instruction tuning Synthesize 33.6"},
+   {"field":"training.steps","quote":"OCTOCODER was trained for 35 steps with a sequence length of 2048 and packing corresponding to 2.2 million total finetuning tokens.","where":"Appendix P"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "OctoCoder reaches 46.2% pass@1 on Python HumanEvalSynthesize (the original HumanEval task), up from 33.6% for its base StarCoder, a relative 38% gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": "33.6",
+   "n": "n=20 samples, T=0.2",
+   "setup": "StarCoder 16B instruction-tuned with LoRA on 5,000 COMMITPACKFT samples mixed with 8,587-sample filtered OASST (no OpenAI outputs); zero-shot, HumanEvalPack Python split, Synthesize task.",
+   "quote": "With a pass@1 of 46.2% on the original Python split, OCTOCODER improves by a relative 38% over its base model, StarCoder.",
+   "table": null,
+   "note": "The 46.2 comes from a COMMITPACKFT+OASST mix, not commit data alone. The 33.6 baseline is the pretrained StarCoder (Table 2 and Table 12 'Without instruction tuning'). Abstract says state-of-the-art among models not trained on OpenAI outputs.",
+   "where": "Section 4.2, p.8; Abstract"
+  },
+  {
+   "claim": "On Python HumanEvalSynthesize the commit data gives no edge over other instruction sets: OASST alone scores 46.4, Self-Instruct+OASST 46.2 and COMMITPACKFT+OASST 46.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 HumanEvalSynthesize Python",
+   "value": "46.2",
+   "unit": "%",
+   "baseline_value": "46.4",
+   "n": null,
+   "setup": "StarCoder 16B finetuned on each dataset combination (about 5,000 samples per source), Python split of HumanEvalPack.",
+   "quote": null,
+   "table": "Table 12, rows OASST (46.4), SI + OASST (46.2), COMMITPACKFT + OASST (46.2), column Synthesize",
+   "note": "Text: 'All instruction datasets provide similar boosts for code synthesis (HUMANEVALSYNTHESIZE)'. Commits help on Fix (30.4 vs 23.1 for OASST) and the average (37.2 vs 34.7), not on Synthesize.",
+   "where": "Table 12, Appendix I; Section 4.1"
+  },
+  {
+   "claim": "COMMITPACKFT+OASST gives the best average over fix, explain and synthesize on the Python split, an absolute 23% above the no-tuning StarCoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1 (Fix, Explain, Synthesize), Python",
+   "value": "37.2",
+   "unit": "%",
+   "baseline_value": "14.1",
+   "n": null,
+   "setup": "StarCoder 16B, Python split of HumanEvalPack, six data mixtures plus ablations.",
+   "quote": null,
+   "table": "Table 12, row COMMITPACKFT + OASST, column Average; row Without instruction tuning",
+   "note": "Text says 'absolute 23% improvement'; 37.2 - 14.1 = 23.1. COMMITPACKFT + SI + xP3x + OASST is close at 37.1.",
+   "where": "Section 4.1, Table 12"
+  },
+  {
+   "claim": "On HumanEvalFix Python, COMMITPACKFT+OASST scores 30.4 versus 23.1 for OASST alone and 8.7 for untuned StarCoder, which the authors attribute to about 20% bug-fix commits.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 HumanEvalFix Python",
+   "value": "30.4",
+   "unit": "%",
+   "baseline_value": "8.7",
+   "n": null,
+   "setup": "StarCoder 16B finetuned, Python split.",
+   "quote": "This is likely due to COMMITPACKFT including around 20% of bug fixes among other code-related tasks (Figure 2).",
+   "table": "Table 12, rows COMMITPACKFT + OASST and OASST, column Fix",
+   "note": "Causal explanation is a hypothesis ('likely'), not tested. Figure 2 reports Bug Fixes 19.02% of GPT-4-classified Python commits.",
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "OctoCoder has the highest HumanEvalPack average among permissive models; HumanEvalSynthesize average 35.5 (StarCoder 27.6), HumanEvalFix average 27.0 (StarCoder 13.4), HumanEvalExplain average 24.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 average over 6 languages",
+   "value": "35.5",
+   "unit": "%",
+   "baseline_value": "27.6",
+   "n": null,
+   "setup": "Zero-shot, six languages, Synthesize task; permissive models; GPT-4 scores 78.3 on the same task.",
+   "quote": null,
+   "table": "Table 2, rows OCTOCODER and StarCoder, HUMANEVALSYNTHESIZE column Avg.",
+   "note": "StarCoder averages: Fix 13.4, Explain 0.0.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "GPT-4 scores 86.6% on Python HumanEvalSynthesize but only 47.0% on HumanEvalFix and 64.6% on HumanEvalExplain Python, showing the new tasks are harder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 Python",
+   "value": "86.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "n=1",
+   "setup": "GPT-4 via API, zero-shot, n=1 sample, T=0.2.",
+   "quote": "With a pass rate of 86.6% for a single solution, GPT-4 is close to fully saturating the Python subset.",
+   "table": null,
+   "note": "GPT-4 was earlier reported 67% (OpenAI 2023) and 81% (Bubeck et al. 2023); authors suspect API changes, contamination, or prompting.",
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Instruction tuning generalises to languages unseen at tuning time (BLOOMZ on Go and Rust is above the random baseline of 0.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 HumanEvalFix",
+   "value": "16.4",
+   "unit": "%",
+   "baseline_value": "0.0",
+   "n": null,
+   "setup": "BLOOMZ 176B, HumanEvalFix Go (16.4) and Rust (5.7).",
+   "quote": null,
+   "table": "Table 2, row BLOOMZ under HUMANEVALFIX, column Go",
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Python, Java and JavaScript make up about 30% of StarCoder pretraining data, Rust 1.2%; OctoCoder is best on the former and weakest on Rust.",
+   "kind": "reported",
+   "source": "Li et al., 2023b (StarCoder)",
+   "metric": "share of pretraining data",
+   "value": "1.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "StarCoder pretraining mix.",
+   "quote": "OCTOCODER performs weakest on Rust, which is the lowest resource language of StarCoder among the languages we benchmark (1.2% of pretraining data).",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Prompting StarCoder in the pretraining commit format scores higher on HumanEvalFix than OctoCoder: Python 32.7 vs 30.4, average 30.5 vs 27.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 HumanEvalFix",
+   "value": "30.5",
+   "unit": "%",
+   "baseline_value": "27.0",
+   "n": null,
+   "setup": "StarCoder (which saw COMMITPACK in the format <commit_before>...<commit_msg>...<commit_after> in pretraining), zero-shot, six languages average; OctoCoder from Table 2.",
+   "quote": null,
+   "table": "Table 10, row StarCoder Commit Format, column Avg.",
+   "note": "The format does not work for HumanEvalExplain.",
+   "where": "Appendix G, Table 10"
+  },
+  {
+   "claim": "Finetuning SantaCoder on line-diff format raises HumanEvalFix Python from 7.1 to 9.9 versus commit-format finetuning at 3.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 HumanEvalFix Python",
+   "value": "9.9",
+   "unit": "%",
+   "baseline_value": "7.1",
+   "n": null,
+   "setup": "SantaCoder 1.1B finetuned on Python/Java/JavaScript COMMITPACKFT with line-diff format, up to 200,000 steps, batch 64.",
+   "quote": null,
+   "table": "Table 13, row SantaCoder + Line diff format finetuning, column Python",
+   "note": "Line diff cuts diff characters by 70% vs unified diff; does not handle insertions well.",
+   "where": "Appendix J"
+  },
+  {
+   "claim": "Models struggle most with HumanEvalFix bugs needing excess logic removed (WizardCoder solves 11.0%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 HumanEvalFix Python by bug type",
+   "value": "11.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "164 Python bugs, 31 of them excess logic; WizardCoder.",
+   "quote": null,
+   "table": "Table 16, row Excess logic, column WizardCoder",
+   "note": null,
+   "where": "Appendix M"
+  },
+  {
+   "claim": "Filtering COMMITPACK to COMMITPACKFT shrinks it about 1000x and raises the relative change between pre- and post-commit code from 0.7% to 31%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "post/pre commit code length ratio",
+   "value": "1.31",
+   "unit": "ratio",
+   "baseline_value": "1.007",
+   "n": null,
+   "setup": "Word statistics before and after the COMMITPACKFT filters.",
+   "quote": "The percentage of code changed between pre- and post-commit is 77.6/59.1 = 1.31 (a 31% increase) as opposed to 3269.8/3269.9 = 1.007 (a 0.7% increase).",
+   "table": null,
+   "note": null,
+   "where": "Appendix E, Table 8"
+  }
+ ],
+ "limits": [
+  "The headline 46.2 vs 33.6 is HumanEvalSynthesize Python for a COMMITPACKFT+OASST mix; OASST alone scored 46.4 (Table 12), so commits are not shown to help plain synthesis. Their measured advantage is on HumanEvalFix and the average.",
+  "Single run per configuration, no seeds or confidence intervals; ablations use only the Python split and about 5,000 samples per source.",
+  "HumanEvalPack derives from HumanEval, so GPT-4 and other models may be contaminated; authors say results should be interpreted carefully.",
+  "Prompts not optimised; models without a canonical prompt (BLOOMZ, GPT-4) may be at a slight disadvantage.",
+  "Execution-based pass@k reflects functional correctness only, not code quality; LLM-based judges may be biased.",
+  "Multi-file commits filtered out; commit data only up to 2016; line-diff format does not handle insertions and is useless for explain/synthesize.",
+  "Models fail at output-length adherence in HumanEvalExplain.",
+  "GPT-4 score is far above prior reports (67%, 81%), possibly from API changes or contamination.",
+  "Classification of commit types uses GPT-4 (only for analysis in Figure 2, not for training data); LoRA rank and optimizer for finetuning not stated.",
+  "Authors suggest commit data could train reward models (code after a commit is preferred) but do not test it."
+ ],
+ "practices": [],
+ "terms": [
+  {"term":"permissive model","definition":"weights are freely accessible and usable for commercial purposes; models trained on OpenAI outputs are classified non-permissive","where":"Table 2 caption, Section 1"},
+  {"term":"COMMITPACKFT","definition":"filtered ~2GB variant of COMMITPACK whose commit messages resemble instructions","where":"Section 2"}
+ ],
+ "lineage": [
+  {"work":"StarCoder","year":2023,"arxiv":"2305.06161","relation":"extends","note":"base model instruction tuned into OctoCoder","quote":null},
+  {"work":"CodeGeeX2","year":2023,"arxiv":"2303.17568","relation":"extends","note":"base of OctoGeeX","quote":null},
+  {"work":"SantaCoder","year":2023,"arxiv":"2301.03988","relation":"extends","note":"architecture for SantaCoderPack and finetuning ablations","quote":null},
+  {"work":"xP3x / BLOOMZ (Muennighoff et al.)","year":2022,"arxiv":"2211.01786","relation":"uses-data","note":"code subset used as an instruction-data baseline","quote":null},
+  {"work":"Self-Instruct","year":2022,"arxiv":"2212.10560","relation":"uses-method","note":"used with StarCoder to generate 5,003 synthetic instructions","quote":null},
+  {"work":"OpenAssistant Conversations (OASST)","year":2023,"arxiv":"2304.07327","relation":"uses-data","note":"natural-language targets mixed in","quote":null},
+  {"work":"QLoRA (Dettmers et al.)","year":2023,"arxiv":"2305.14314","relation":"uses-data","note":"filtered OASST variant reused","quote":null},
+  {"work":"HumanEval (Chen et al.)","year":2021,"arxiv":"2107.03374","relation":"extends","note":"extended into HumanEvalPack","quote":null},
+  {"work":"WizardCoder","year":2023,"arxiv":"2306.08568","relation":"baseline","note":"trained on OpenAI-derived data, labelled non-permissive","quote":null},
+  {"work":"InstructCodeT5+","year":2023,"arxiv":"2305.07922","relation":"baseline","note":"non-permissive baseline","quote":null},
+  {"work":"PanGu-Coder2","year":2023,"arxiv":"2307.14936","relation":"related","note":"concurrent OpenAI-data code instruction model","quote":null},
+  {"work":"LIMA","year":2023,"arxiv":"2305.11206","relation":"related","note":"cited to justify small instruction sets","quote":null},
+  {"work":"Code Alpaca (Chaudhary)","year":2023,"arxiv":null,"relation":"related","note":"synthetic OpenAI-generated data used by competing models","quote":null},
+  {"work":"The Stack (Kocetkov et al.)","year":2022,"arxiv":"2211.15533","relation":"uses-data","note":"opt-out list and overlap comparison","quote":null},
+  {"work":"GPT-4","year":2023,"arxiv":"2303.08774","relation":"evaluates","note":"strongest evaluated model","quote":null},
+  {"work":"CoEditor (Wei et al.)","year":2023,"arxiv":"2305.18584","relation":"related","note":"prior commit-history editing work, 1650 Python repos","quote":null}
+ ],
+ "figures": [
+  {"figure":"Figure 4","caption":"Comparing permissively licensed instruction datasets by instruction tuning StarCoder. Models are evaluated on the Python subset of HUMANEVALPACK.","page":6,"why":"Shows the data-source ablation at a glance (values in Table 12)."},
+  {"figure":"Figure 3","caption":"HUMANEVALPACK overview. The first HumanEval problem is depicted across the three scenarios for Python.","page":4,"why":"Shows the fix, explain and synthesize task formats."},
+  {"figure":"Figure 2","caption":"Overview of COMMITPACK and COMMITPACKFT: language distribution and task distribution of Python subset (59K samples) according to GPT-4.","page":3,"why":"Shows commit task mix (bug fixes ~19%, new features ~26%)."}
+ ],
+ "code": [
+  {"where":"Appendix G","snippet":"<commit_before>code_before<commit_msg>message<commit_after>code_after","verbatim":true},
+  {"where":"Figure 18","snippet":"Question: {instruction}\n{context}\nAnswer:\n{function_start}","verbatim":true}
+ ],
+ "problems": [
+  "Table 4 and reference list were skimmed; Appendix R example outputs not read line by line.",
+  "COMMITPACKFT sample count printed as 742,273 (Table 1) and 702,062 (Table 4); 5,000 for finetuning.",
+  "Python COMMITPACKFT subset printed as 59K (Fig 2 caption), 56K (Appendix D) and 56,025 (Table 4).",
+  "No embedded instructions found in the PDF text."
+ ]
+}

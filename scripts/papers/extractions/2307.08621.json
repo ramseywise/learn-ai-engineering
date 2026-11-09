@@ -1,0 +1,510 @@
+{
+ "schema": 1,
+ "key": "2307.08621",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sun-2023-retentive-network.pdf",
+ "bib": {
+  "title": "Retentive Network: A Successor to Transformer for Large Language Models",
+  "authors": [
+   "Yutao Sun",
+   "Li Dong",
+   "Shaohan Huang",
+   "Shuming Ma",
+   "Yuqing Xia",
+   "Jilong Xue",
+   "Jianyong Wang",
+   "Furu Wei"
+  ],
+  "first_author": "Sun",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2307.08621",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 40704,
+  "chars_total": 40704,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can one architecture combine training parallelism, O(1) inference cost and Transformer-level language-modeling quality?",
+ "hypothesis": "A retention mechanism with parallel, recurrent and chunkwise forms breaks the 'impossible triangle' and succeeds the Transformer.",
+ "contributions": [
+  "Retention: dual recurrent/parallel form derived from recurrence, with a chunkwise recurrent form",
+  "Multi-scale retention with per-head fixed decay, swish gate and GroupNorm",
+  "Experiments at 1.3B-6.7B on scaling, zero/4-shot, training cost, inference cost, 200M variants comparison, ablations"
+ ],
+ "method": {
+  "summary": "Replaces multi-head attention with gated multi-scale retention (decayed linear attention with xPos-style rotation, no softmax). Trained from scratch at 1.3B, 2.7B, 6.7B against same-size Transformers with matched parameters, on 100B tokens; also 200M comparison with Linear Transformer, RWKV, H3, Hyena.",
+  "task": "next-token language-model pretraining",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Curated mix of The Pile, C4 and The Stack",
+    "role": "pretrain",
+    "size": "100B tokens",
+    "split": "in-domain validation set (size not stated)",
+    "source": "The Pile, C4, The Stack",
+    "preprocessing": "<bos> token appended at start of each sequence"
+   },
+   {
+    "name": "HellaSwag, BoolQ, COPA, PIQA, Winograd, Winogrande, StoryCloze",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "PG22, QMSum, GovReport, SummScreen",
+    "role": "eval",
+    "size": null,
+    "split": "out-of-domain perplexity",
+    "source": "Project Gutenberg 2019-2022; SCROLLS-style sets",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RetNet 1.3B/2.7B/6.7B",
+    "role": "proposed",
+    "params": "1.3B, 2.7B, 6.7B (13B only in Table 4 cost)",
+    "architecture": "RetNet blocks: MSR + FFN, pre-LayerNorm",
+    "init_from": "from scratch, DeepNet initialisation",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24, 32, 32",
+    "hidden": "2048, 2560, 4096",
+    "heads": "8, 10, 16 (head dim 256 for Q,K; 512 for V)",
+    "context": "2048 training max length",
+    "other": {
+     "ffn_size": "4096, 5120, 8192",
+     "retnet_ffn_intermediate": "2d",
+     "gamma": "1 - exp(linspace(log 1/32, log 1/512, h)), same across sizes"
+    }
+   },
+   {
+    "name": "Transformer (same sizes)",
+    "role": "baseline",
+    "params": "1.3B, 2.7B, 6.7B",
+    "architecture": "standard Transformer, parameter-matched",
+    "init_from": "from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "200M comparison models (Linear Transformer, RWKV, H3, Hyena, RetNet)",
+    "role": "baseline",
+    "params": "200M",
+    "architecture": "16 layers, hidden 1024",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16",
+    "hidden": "1024",
+    "heads": null,
+    "context": null,
+    "other": {
+     "H3 head dim": "8"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token prediction (language modeling)",
+   "optimizer": "AdamW, betas (0.9, 0.98)",
+   "lr": "6e-4 (1.3B), 3e-4 (2.7B, 6.7B)",
+   "lr_schedule": "linear decay in text; Table 7 says polynomial decay",
+   "warmup": "375 steps",
+   "batch_size": "4M tokens",
+   "steps": "25k (Table 7: 25,000); 200M models 10k steps",
+   "epochs": null,
+   "tokens": "100B",
+   "seq_len": "2048 max",
+   "precision": null,
+   "weight_decay": "0.05 in text; 0.01 in Table 7",
+   "dropout": "0.1",
+   "regularisation": "gradient clipping 2.0",
+   "hardware": "512 AMD MI200 GPUs (pretraining); 8x Nvidia A100-80GB for cost tests",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "200M batch": "0.5M tokens",
+    "implementation": "TorchScale",
+    "chunk_size_cost_test": "512"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration; no seeds stated",
+   "prompting": "zero-shot and 4-shot; prompt format not given",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "cost test": "6.7B on one A100-80GB, lengths 2048-8192, batch 1-8 for latency; Transformer uses KV cache"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Validation perplexity",
+     "definition": "perplexity on in-domain val set and OOD corpora",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Accuracy",
+     "definition": "zero-shot/4-shot on 7 tasks, simple average",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Throughput",
+     "definition": "words per second",
+     "unit": "wps",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPU memory",
+     "definition": "memory during training or decoding",
+     "unit": "GB",
+     "higher_is_better": false
+    },
+    {
+     "name": "Latency",
+     "definition": "decoding latency",
+     "unit": "ms",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Transformer",
+    "Transformer+FlashAttention",
+    "Linear Transformer",
+    "RWKV",
+    "H3",
+    "Hyena"
+   ],
+   "protocol": "Appendix B: 2048 text chunks, perplexity on last 128 tokens; no seeds or significance tests"
+  },
+  "availability": {
+   "code": "Code will be available at https://aka.ms/retnet (as of v4)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.weight_decay",
+    "quote": "weight decay is set to 0.05",
+    "where": "Sec 3.1 vs Table 7 (0.01)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RetNet at 6.7B averages higher zero-shot accuracy than the authors' Transformer over seven tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot accuracy",
+   "value": 69.51,
+   "unit": "%",
+   "baseline_value": 66.07,
+   "n": null,
+   "setup": "6.7B RetNet vs Transformer, both trained from scratch on 100B tokens (25k steps, 4M-token batches, 2048 max length) from Pile+C4+The Stack; HS, BoolQ, COPA, PIQA, Winograd, Winogrande, StoryCloze; single run",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-Shot RetNet, column Avg"
+  },
+  {
+   "claim": "RetNet 4-shot average over the same seven tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg 4-shot accuracy",
+   "value": 69.76,
+   "unit": "%",
+   "baseline_value": 66.44,
+   "n": null,
+   "setup": "6.7B RetNet vs Transformer, both trained from scratch on 100B tokens (25k steps, 4M-token batches, 2048 max length) from Pile+C4+The Stack; 4-shot; single run",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 4-Shot RetNet, column Avg"
+  },
+  {
+   "claim": "RetNet starts to beat Transformer on validation perplexity only above about 2B parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "model size crossover",
+   "value": "2B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation PPL at 1.3B, 2.7B, 6.7B; each 100B tokens; values read only from Fig 5 (no numbers printed)",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "Empirically, we find that RetNet starts to outperform Transformer when the model size is larger than 2B."
+  },
+  {
+   "claim": "Decoding at 8k input is 8.4x faster than Transformer with KV cache",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoding speedup",
+   "value": 8.4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B model per intro (Sec 3.4 says 6.7B model on one A100-80GB), 8k sequence length, Transformer with KV cache",
+   "note": "Intro says 7B; Sec 3.4 and Fig 6 say 6.7B. Fig 1 labels 3.4X memory, 15.6X throughput, 8.4X latency.",
+   "where": "Sec 1; Fig 1",
+   "quote": "For a 7B model and 8k sequence length, RetNet decodes 8.4× faster and saves 70% of memory"
+  },
+  {
+   "claim": "RetNet saves 70% of GPU memory vs Transformer at 8k decode",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory saving",
+   "value": 70,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as decoding speedup row",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "saves 70% of memory"
+  },
+  {
+   "claim": "RetNet decoding memory beyond weights is about 3% and constant with length",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra memory share",
+   "value": 3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6.7B, A100-80GB, sequence lengths 2048-8192",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "The additional memory consumption of RetNet is almost negligible (i.e., about 3%) while the model weights occupy 97%."
+  },
+  {
+   "claim": "Training throughput at 6.7B, 8192-token sequences: RetNet vs Transformer",
+   "kind": "measured",
+   "source": null,
+   "metric": "training throughput",
+   "value": 17458.6,
+   "unit": "wps",
+   "baseline_value": 2754.4,
+   "n": null,
+   "setup": "8x A100-80GB, seq len 8192, chunkwise retention chunk 512, tensor parallelism for 6.7B and 13B; RetNet in vanilla PyTorch",
+   "note": "Trm+FlashAttn is 16230.1 wps",
+   "where": "Table 4",
+   "table": "Table 4, row 6.7B, column Throughput RetNet"
+  },
+  {
+   "claim": "Training memory at 6.7B: RetNet vs Transformer",
+   "kind": "measured",
+   "source": null,
+   "metric": "training memory",
+   "value": 48.0,
+   "unit": "GB",
+   "baseline_value": 69.0,
+   "n": null,
+   "setup": "same as training throughput row",
+   "note": "Trm+FlashAttn is 51.4 GB",
+   "where": "Table 4",
+   "table": "Table 4, row 6.7B, column Memory RetNet"
+  },
+  {
+   "claim": "Among 200M models RetNet has lowest in-domain perplexity vs RWKV, H3, Hyena, Linear Transformer",
+   "kind": "measured",
+   "source": null,
+   "metric": "in-domain PPL",
+   "value": 26.05,
+   "unit": "perplexity",
+   "baseline_value": 29.97,
+   "n": null,
+   "setup": "200M params, 16 layers, hidden 1024, 10k steps, 0.5M-token batches",
+   "note": "baseline is best competitor H3; RWKV 30.92, Hyena 32.08, Linear Transformer 40.24",
+   "where": "Table 5",
+   "table": "Table 5, row RetNet, column In-Domain"
+  },
+  {
+   "claim": "Perplexity with 2048 context, last 128 tokens scored",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 11.98,
+   "unit": "perplexity",
+   "baseline_value": 12.35,
+   "n": null,
+   "setup": "eval on 2048-token chunks, perplexity on last 128 tokens; context 2048; model size not stated in appendix",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row RetNet, column 2048"
+  },
+  {
+   "claim": "Removing the gamma decay worsens in-domain perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "in-domain PPL",
+   "value": 27.86,
+   "unit": "perplexity",
+   "baseline_value": 26.05,
+   "n": null,
+   "setup": "200M ablation setup as Sec 3.5",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row -gamma decay, column In-Domain"
+  },
+  {
+   "claim": "Reducing head dimension 256 to 64 worsens in-domain perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "in-domain PPL",
+   "value": 27.68,
+   "unit": "perplexity",
+   "baseline_value": 26.05,
+   "n": null,
+   "setup": "200M ablation",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Reduce head dimension, column In-Domain"
+  }
+ ],
+ "limits": [
+  "Largest language-modeling model is 6.7B on 100B tokens; no long-context recall or retrieval test",
+  "Crossover at 2B read from Fig 5 with no tabulated values; single run, no seeds",
+  "Weight decay (0.05 vs 0.01) and LR schedule (linear vs polynomial) inconsistent between text and Table 7",
+  "Transformer baseline is the authors' own, trained with their setup; RetNet cost measured in vanilla PyTorch",
+  "Intro says 7B for the 8.4x claim, Sec 3.4 says 6.7B",
+  "Future work: scale model size and training steps"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "impossible triangle",
+   "definition": "achieving training parallelism, good performance and low-cost inference simultaneously",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Linear Transformer (Katharopoulos et al.)",
+   "year": 2020,
+   "arxiv": "2006.16236",
+   "relation": "baseline",
+   "note": "linearized attention recurrence",
+   "quote": null
+  },
+  {
+   "work": "RWKV",
+   "year": 2023,
+   "arxiv": "2305.13048",
+   "relation": "baseline",
+   "note": "compared at 200M",
+   "quote": null
+  },
+  {
+   "work": "H3 / Hungry Hungry Hippos",
+   "year": 2022,
+   "arxiv": "2212.14052",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Hyena Hierarchy",
+   "year": 2023,
+   "arxiv": "2302.10866",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "S4",
+   "year": 2021,
+   "arxiv": "2111.00396",
+   "relation": "related",
+   "note": "content-unaware special case",
+   "quote": null
+  },
+  {
+   "work": "A length-extrapolatable transformer (xPos)",
+   "year": 2022,
+   "arxiv": "2212.10554",
+   "relation": "extends",
+   "note": "retention derivation aligns with xPos",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "training cost comparison",
+   "quote": null
+  },
+  {
+   "work": "DeepNet",
+   "year": 2022,
+   "arxiv": "2203.00555",
+   "relation": "uses-method",
+   "note": "initialisation",
+   "quote": null
+  },
+  {
+   "work": "The Pile; C4; The Stack",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Retentive network (RetNet) achieves low-cost inference (i.e., GPU memory, throughput, and latency), training parallelism, and favorable scaling curves compared with Transformer.",
+   "page": 1,
+   "why": "summarises 3.4x memory, 15.6x throughput, 8.4x latency at 8k"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Perplexity decreases along with scaling up the model size.",
+   "page": 7,
+   "why": "only source of the 2B crossover"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Inference cost of Transformer and RetNet with a model size of 6.7B.",
+   "page": 9,
+   "why": "memory/throughput/latency vs length and batch"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 6",
+   "snippet": "Sn = γSn−1 + K⊺nVn;  Retention(Xn) = QnSn",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 8",
+   "snippet": "γ = 1 −2−5−arange(0,h) ∈Rh",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 5 values not in text.",
+  "No embedded instructions found."
+ ]
+}

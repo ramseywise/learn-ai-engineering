@@ -1,0 +1,120 @@
+{
+ "schema": 1,
+ "key": "2311.10702",
+ "pdf": "generative-ai/05-RL/sources/ivison-2023-camels-changing-climate.pdf",
+ "bib": {"title": "Camels in a Changing Climate: Enhancing LM Adaptation with TÜLU 2", "authors": ["Hamish Ivison","Yizhong Wang","Valentina Pyatkin","Nathan Lambert","Matthew Peters","Pradeep Dasigi","Joel Jang","David Wadden","Noah A. Smith","Iz Beltagy","Hannaneh Hajishirzi"], "first_author": "Ivison", "year": 2023, "venue": "preprint", "arxiv": "2311.10702", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 48518, "chars_total": 48518, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How much do better base models, a new instruction mix, DPO, and QLoRA improve open LLaMA-2 instruction-tuned models over TÜLU 1?",
+ "hypothesis": null,
+ "contributions": ["TÜLU-V2-mix, an improved collection of high-quality instruction datasets","TÜLU 2, LLAMA-2 models finetuned on the V2 mixture","TÜLU 2+DPO, trained with DPO, including the largest DPO-trained model to date (70B)","CODE TÜLU 2, CODE LLAMA models finetuned on the V2 mix"],
+ "method": {
+  "summary": "LLaMA-2 (7B/13B/70B) and Code Llama (7B/13B/34B) are fully finetuned on a 326,154-sample V2 mix, then DPO-trained on binarized UltraFeedback with Zephyr-Beta hyperparameters. QLoRA is compared with full finetuning. Evaluation uses an 8-task suite plus MT-Bench with GPT-4-0613 as judge.",
+  "task": "instruction tuning and preference optimisation (DPO) of LLMs",
+  "trains": true,
+  "datasets": [
+   {"name": "TÜLU-V2-mix", "role": "train", "size": "326,154 samples (V1 mix: 490,445)", "split": null, "source": "FLAN 50,000; CoT 50,000; Open Assistant 1 7,708; ShareGPT 114,046; GPT4-Alpaca 20,000; Code-Alpaca 20,022; LIMA 1,030; WizardLM Evol-Instruct V2 30,000; Open-Orca 30,000; Science literature 7,544; Hardcoded 140", "preprocessing": "filtered samples referencing other LLM systems (GPT-4, Open Assistant, Claude); Dolly removed; FLAN downsampled; max length 8,192 tokens (20 samples truncated vs 63,900 at 2,048); mean length 1097 tokens"},
+   {"name": "UltraFeedback (filtered, binarized, as Zephyr-Beta)", "role": "train", "size": null, "split": null, "source": "Cui et al. 2023", "preprocessing": "filtered and binarized; contains TruthfulQA prompts so TruthfulQA is omitted for DPO models"},
+   {"name": "MMLU, GSM8k, BBH, TydiQA GoldP, Codex-Eval (HumanEval 164 problems), ToxiGen, TruthfulQA (818 q), AlpacaEval (805 prompts), MT-Bench (80 questions with followups)", "role": "eval", "size": null, "split": null, "source": "Appendix A", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaMA-2", "role": "base", "params": "7B, 13B, 70B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "training max 8,192 tokens", "other": {"pretraining": "2 trillion tokens"}},
+   {"name": "Code Llama", "role": "base", "params": "7B, 13B, 34B", "architecture": "LLaMA-2 further pretrained on code", "init_from": "LLaMA-2", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "TÜLU 2 / TÜLU 2+DPO / CODE TÜLU 2", "role": "proposed", "params": "7B, 13B, 70B (Code: 7B, 13B, 34B)", "architecture": "as base", "init_from": "LLaMA-2 / Code Llama", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-4-0613 (judge for AlpacaEval and MT-Bench)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "SFT (2 epochs); DPO on UltraFeedback; QLoRA SFT variant",
+   "optimizer": null,
+   "lr": "SFT 2e-5 (1e-5 for 70B); QLoRA 1e-4; DPO 5e-7",
+   "lr_schedule": null,
+   "warmup": "ratio 0.03 (SFT, QLoRA); 0.1 (DPO)",
+   "batch_size": "effective 128 (SFT, QLoRA); 32 (DPO)",
+   "steps": null,
+   "epochs": "SFT 2; QLoRA 5; DPO 3",
+   "tokens": null,
+   "seq_len": "8,192 (SFT, DPO); 4,096 (QLoRA)",
+   "precision": "BFloat16",
+   "weight_decay": "0",
+   "dropout": "LoRA dropout 0.1 (QLoRA only)",
+   "regularisation": null,
+   "hardware": "256-chip TPU v3 pod (512-chip for 70B DPO); QLoRA on internal A100 80GB cluster",
+   "compute": "70B DPO: 512-core TPUv3, three epochs in approximately 7 days",
+   "wall_clock": "70B DPO approximately 7 days",
+   "seeds": null,
+   "other": {"dpo_beta": "0.1", "qlora_rank": "64", "qlora_alpha": "16", "qlora_layers": "all attention and feedforward linear layers", "code": "EasyLM-based (hamishivi/EasyLM); QLoRA via open-instruct"}
+  },
+  "inference": {
+   "decoding": "Codex-Eval sampled; ToxiGen and TruthfulQA greedy; AlpacaEval up to 8192 tokens, no stop sequences",
+   "temperature": "0.8 (Codex-Eval)",
+   "top_p": null,
+   "max_tokens": "8192 (AlpacaEval); 512 (ToxiGen)",
+   "samples": null,
+   "prompting": "MMLU 0-shot; GSM8k 8-shot CoT; BBH 3-shot CoT; TydiQA 1-shot GoldP; TruthfulQA 6 in-context examples",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "AlpacaEval win rate", "definition": "% of generations GPT-4 (alpaca_eval_gpt4 annotator, GPT-4-0613) prefers over Davinci-003", "unit": "%", "higher_is_better": true},
+    {"name": "MT-Bench", "definition": "single-answer grading by GPT-4-0613 over 160 responses", "unit": "score /10", "higher_is_better": true},
+    {"name": "Average", "definition": "naive average over tasks; ToxiGen as 100-x", "unit": "points", "higher_is_better": true},
+    {"name": "ToxiGen", "definition": "% generations a roberta-large classifier deems toxic", "unit": "% toxic", "higher_is_better": false}
+   ],
+   "baselines": ["TÜLU V1 mix", "ShareGPT-only", "LLaMA-2-Chat", "Zephyr-Beta", "Xwin-LM", "Code Llama / Instruct", "GPT-3.5/4"],
+   "protocol": "single runs reported, no seeds or significance tests stated; GPT-4 judge"
+  },
+  "availability": {"code": "https://github.com/allenai/open-instruct ; https://github.com/hamishivi/EasyLM", "weights": "https://huggingface.co/collections/allenai/tulu-v2-suite-6551b56e743e6349aab45101", "data": "https://huggingface.co/datasets/allenai/tulu-v2-sft-mixture"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.compute", "quote": "was trained on a 512-core TPUv3, completing three epochs in approximately 7 days", "where": "Sec 3 Training"}
+  ]
+ },
+ "results": [
+  {"claim": "DPO raises AlpacaEval win rate at 70B", "kind": "measured", "source": null, "metric": "AlpacaEval win rate", "value": "95.1", "unit": "%", "baseline_value": "86.6", "n": null, "setup": "LLaMA-2 70B, V2 SFT then DPO on UltraFeedback", "table": "Table 3, row 70B TÜLU 2+DPO, column AlpacaEval", "note": null, "where": "Table 3"},
+  {"claim": "DPO gains on AlpacaEval at all sizes (+11.2 at 7B, +10.6 at 13B, +8.5 at 70B)", "kind": "measured", "source": null, "metric": "AlpacaEval delta", "value": "+8.5", "unit": "points", "baseline_value": null, "n": null, "setup": "70B delta; 7B +11.2, 13B +10.6", "table": "Table 3, row 70B Δ, column AlpacaEval", "note": null, "where": "Table 3"},
+  {"claim": "DPO improves MT-Bench at 70B", "kind": "measured", "source": null, "metric": "MT-Bench", "value": "7.89", "unit": "score", "baseline_value": "7.49", "n": null, "setup": "70B TÜLU 2+DPO vs TÜLU 2; 7B unchanged (6.30 to 6.27), 13B 6.70 to 7.00", "table": "Table 4, row 70B TÜLU 2+DPO, column MT-Bench", "note": null, "where": "Table 4"},
+  {"claim": "DPO with Zephyr-Beta hyperparameters is stable at 70B; largest publicly released DPO model", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "70B, lr 5e-7, beta 0.1, 3 epochs", "quote": "DPO training is stable at large scales.", "note": null, "where": "Sec 3.3"},
+  {"claim": "DPO sharply cuts multilingual TydiQA at 70B (-17.8) and 13B (-13.5)", "kind": "measured", "source": null, "metric": "TydiQA F1 delta", "value": "-17.8", "unit": "points", "baseline_value": null, "n": null, "setup": "70B, 1-shot GoldP", "table": "Table 3, row 70B Δ, column TydiQA", "note": null, "where": "Table 3"},
+  {"claim": "DPO increases output verbosity (AlpacaEval avg output length 1011 to 1414 at 70B)", "kind": "measured", "source": null, "metric": "avg output length", "value": "1414", "unit": "length as printed", "baseline_value": "1011", "n": null, "setup": "70B", "table": "Table 4, row 70B TÜLU 2+DPO, column Avg. Output Length", "note": "unit not stated", "where": "Table 4"},
+  {"claim": "DPO leaves most capability metrics roughly unchanged", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "MMLU, BBH, GSM8k", "quote": "This suggests that DPO training does not significantly change model capabilities.", "note": "70B average drops 73.8 to 72.1 mostly from TydiQA", "where": "Sec 3.3"},
+  {"claim": "V2 mix beats V1 mix by an average of 8%", "kind": "measured", "source": null, "metric": "average", "value": "8%", "unit": "%", "baseline_value": null, "n": null, "setup": "LLaMA-2 SFT, Table 2", "quote": "with our new mixture outperforming our old mixture by an average of 8%", "note": null, "where": "Sec 1"},
+  {"claim": "V2 mix gain shrinks with scale: 13% at 7B, 1% at 70B", "kind": "measured", "source": null, "metric": "average improvement", "value": "1%", "unit": "%", "baseline_value": "13%", "n": null, "setup": "70B vs 7B", "quote": "it only provides a 1% improvement at the 70B scale", "note": null, "where": "Sec 3.2"},
+  {"claim": "QLoRA lags full finetuning, mostly on AlpacaEval; gap shrinks with size", "kind": "measured", "source": null, "metric": "average gap", "value": "10% to 3%", "unit": "%", "baseline_value": null, "n": null, "setup": "7B to 70B, V2 mix", "quote": "(from 10% worse on average to 3% worse on average across", "note": "AlpacaEval gap about 20%", "where": "Sec 1"},
+  {"claim": "70B AlpacaEval QLoRA vs full finetune", "kind": "measured", "source": null, "metric": "AlpacaEval", "value": "78.6", "unit": "%", "baseline_value": "86.6", "n": null, "setup": "70B", "table": "Table 5, row 70B TÜLU 2 (QLoRA), column AlpacaEval", "note": null, "where": "Table 5"},
+  {"claim": "CODE TÜLU 2 improves Codex-Eval by about 70% average over TÜLU 2 but drops AlpacaEval about 20%", "kind": "measured", "source": null, "metric": "Codex-Eval", "value": "70%", "unit": "% average improvement", "baseline_value": null, "n": null, "setup": "Code Llama vs LLaMA-2 on V2 mix", "quote": "(70% average im-", "note": "quote from the line-broken abstract bullet", "where": "Sec 1"},
+  {"claim": "TÜLU 2+DPO 70B AlpacaEval vs GPT-3.5-turbo", "kind": "measured", "source": null, "metric": "AlpacaEval", "value": "95.1", "unit": "%", "baseline_value": "83.6", "n": null, "setup": "70B vs GPT-3.5-turbo-0301", "table": "Table 4, rows GPT-3.5-turbo-0301 and 70B TÜLU 2+DPO", "note": "text says 89.4 for GPT-3.5-turbo-0314, but Table 4 gives 83.6 for 0301", "where": "Sec 3.3 vs Table 4"},
+  {"claim": "TÜLU 2 70B is highest on average among open models in Table 1", "kind": "measured", "source": null, "metric": "Average", "value": "73.8", "unit": "points", "baseline_value": "69.1", "n": null, "setup": "Xwin-LM 70B as comparison", "table": "Table 1, row TÜLU 2 70B, column Average", "note": null, "where": "Table 1"}
+ ],
+ "limits": [
+  "TruthfulQA omitted for DPO models because UltraFeedback uses TruthfulQA prompts (contamination).",
+  "Cannot rule out GPT models trained on benchmark data.",
+  "AlpacaEval and MT-Bench rely on a GPT-4 judge; GPT-4 version not pinned by AlpacaEval, authors fix GPT-4-0613.",
+  "No PPO or other RLHF comparison at scale; no data ablations of DPO; mechanisms not understood.",
+  "No seeds, variance or significance tests reported; QLoRA not tried at the DPO stage.",
+  "Training data mix lacks explicit multilingual data, which they suggest explains the TydiQA drop.",
+  "Code Llama-Instruct comparison confounded by its private training data.",
+  "Gains from the V2 mix cannot be attributed per dataset; no per-dataset ablation."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {"work": "How far can camels go? (TÜLU 1)", "year": 2023, "arxiv": "2306.04751", "relation": "extends", "note": "predecessor models and evaluation suite", "quote": null},
+  {"work": "Direct preference optimization", "year": 2023, "arxiv": "2305.18290", "relation": "uses-method", "note": "DPO algorithm", "quote": null},
+  {"work": "Zephyr: Direct distillation of LM alignment", "year": 2023, "arxiv": "2310.16944", "relation": "uses-method", "note": "DPO hyperparameters and UltraFeedback recipe", "quote": null},
+  {"work": "UltraFeedback", "year": 2023, "arxiv": "2310.01377", "relation": "uses-data", "note": "preference data", "quote": null},
+  {"work": "QLoRA", "year": 2023, "arxiv": "2305.14314", "relation": "uses-method", "note": "result differs from Dettmers et al. on a wider task suite", "quote": null},
+  {"work": "Llama 2", "year": 2023, "arxiv": "2307.09288", "relation": "uses-method", "note": "base model", "quote": null},
+  {"work": "Code Llama", "year": 2023, "arxiv": "2308.12950", "relation": "uses-method", "note": "base for CODE TÜLU 2", "quote": null},
+  {"work": "AlpacaEval", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "GPT-4 judge benchmark", "quote": null},
+  {"work": "Judging LLM-as-a-judge with MT-Bench", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "MT-Bench", "quote": null},
+  {"work": "A long way to go: length correlations in RLHF", "year": 2023, "arxiv": "2310.03716", "relation": "related", "note": "verbosity bias from RLHF", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 3", "caption": "Evaluation results for TÜLU V2 models with and without DPO finetuning, and the difference between the two results (Δ).", "page": 6, "why": "Shows DPO gains on AlpacaEval and losses on TydiQA in one view"},
+  {"figure": "Table 4", "caption": "MT-Bench and AlpacaEval results, along with average output length of AlpacaEval responses.", "page": 7, "why": "Shows the verbosity increase beside quality gains"}
+ ],
+ "code": [],
+ "problems": ["Text says 512-core TPUv3 for the 70B DPO run while Appendix B says 512-chip TPU v3 pod.", "Text says GPT-3.5-turbo-0314 scores 89.4 on AlpacaEval, but Table 4 lists GPT-3.5-turbo-0301 at 83.6.", "Optimizer is not stated.", "Table values were read from line-broken pymupdf text; no instructions embedded in the PDF."]
+}

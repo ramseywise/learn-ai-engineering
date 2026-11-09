@@ -48,6 +48,11 @@ parameter rejected              control with effort instead of temperature
 | Weaker tool calling in some open reasoning models | Test parallel and multi-step tool use explicitly before relying on it |
 | Sampling parameters ignored or rejected | Expect fixed temperature on many reasoning endpoints; control with effort instead ([04](04-controlling-output.md#sampling-parameters)) |
 
+The measurements behind the table are collapsed below. In short: easy tasks cost many more tokens for little accuracy, wrong answers run longer than right ones, and a visible chain can be a poor guide to what produced the answer.
+
+<details>
+<summary>Measured evidence: overthinking, underthinking, filler tokens and unfaithful chains</summary>
+
 Overthinking is easy to see. In a survey's example, DeepSeek-R1 spent 602 words and 42 seconds and QwQ-32B 616 words and 19 seconds comparing two decimals, re-checking after they had reached the right answer (one prompt, tested March 2025, so an illustration and not a measurement). The survey sorts the fixes by where they act: training (a length reward in RL, fine-tuning on variable-length CoT), output (latent compression, early stopping and sample selection) and input (prompt-guided budgets, routing easy queries to a fast model). Input is the part a prompt can reach. Two of its templates are a budget, `Let's think step by step and use less than <Token-Budget> tokens.`, and a per-step limit, `only keep a minimum draft for each thinking step, with 5 words at most`. The survey relays their authors' claims of token savings at held accuracy. It also relays Lee et al.'s finding, on their own compression prompts such as "use 10 words or less", that "existing prompt-based compression methods fall far short of these limits", the limits being what they compute a task needs. Both templates are also step-by-step scaffolding, which the advice above tells you to drop on a reasoning model, so score them against the effort setting on your own eval. The survey runs no experiments and gives no measured comparison across methods, so use it as a map of the methods and go to the original papers for sizes ([arXiv:2503.16419](https://arxiv.org/abs/2503.16419) (Sui et al., TMLR 2025)).
 
 ![DeepSeek-R1 and QwQ-32B overthinking a decimal comparison](../sources/images/sui-stop-overthinking-fig4.png)
@@ -83,16 +88,21 @@ Content matters, not only compute: inline Self-Notes beat dummy "_" tokens in th
 ![Vanilla, chain-of-thought and Self-Notes generation: notes interleave the context](../sources/images/lanchantin-self-notes-fig1.png)
 *Image Source: Lanchantin et al., [Learning to Reason and Memorize with Self-Notes](https://arxiv.org/abs/2305.00833) (2023), Fig. 1*
 
+</details>
+
 ---
 
 ## Pitfalls
 
+- **Leaving a reasoning model on easy tasks.** Symptom: high cost and latency for a small gain. On ASDIV, QwQ-32B-Preview scored 96.9% against 95.6% for Llama-3.3-70B-Instruct but used 741.8 tokens against 166.4. Fix: route easy subtasks to a non-reasoning model or lower the effort, and keep the reasoning model for the hard ones.
 - **Auditing through the visible chain of thought.** Symptom: the chain looks fine and the behaviour isn't, because the chain doesn't always reflect what drove the answer. Fix: evaluate outputs, and don't make the chain your only safety monitor.
 - **Sending `temperature` to a reasoning endpoint.** Symptom: a rejected or ignored parameter. Fix: control it with effort, and check what each model accepts.
 
 ## Try it
 
-1. A reasoning model's chains look clean on 1,000 audited transcripts. Can you conclude it is not deceiving you?
+1. A reasoning model scores 96.9% on a grade-school arithmetic set, a chat model 95.6%, and the reasoning model uses about four times the tokens. What do you change?
+   <details><summary>Answer</summary>Route the easy tasks to the cheaper model, or lower the effort. The extra tokens bought about one point (ASDIV: 741.8 against 166.4 tokens). Keep the reasoning model for the hard subtasks.</details>
+2. A reasoning model's chains look clean on 1,000 audited transcripts. Can you conclude it is not deceiving you?
    <details><summary>Answer</summary>No. A chain monitor catches only what the chain states, and chains do not always reflect what drove the answer. OpenAI's GPT-4o monitor flagged 0.17% of 102,443 o1-preview chains, mostly invented policies used to withhold information. Evaluate the outputs too.</details>
 
 ## Interview checklist
@@ -103,4 +113,4 @@ Content matters, not only compute: inline Self-Notes beat dummy "_" tokens in th
 
 ## Next
 
-[Prompt optimization](08-prompt-optimization.md): reasoning models are good at writing prompts, so let them tune yours against a metric.
+[Evaluating prompts](08-evaluating-prompts.md): build the metric first. Reasoning models are good at writing prompts, so [prompt optimization](09-prompt-optimization.md) then lets them tune yours against it.

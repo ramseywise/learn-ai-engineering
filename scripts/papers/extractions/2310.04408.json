@@ -1,19 +1,680 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.04408",
  "pdf": "generative-ai/02-rag-retrieval/sources/xu-2023-recomp.pdf",
  "bib": {
   "title": "RECOMP: Improving Retrieval-Augmented LMs with Compression and Selective Augmentation",
-  "first_author": "Fangyuan Xu",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Fangyuan Xu",
+   "Weijia Shi",
+   "Eunsol Choi"
+  ],
+  "first_author": "Xu",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2310.04408",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 80224,
+  "chars_total": 80224,
+  "engine": "pymupdf",
+  "skipped": "Reference list and the long qualitative example rows of Tables 9, 11, 12 skimmed only."
  },
- "legacy_report": "SOURCE: RECOMP: Improving Retrieval-Augmented LMs with Compression and Selective Augmentation. Fangyuan Xu, Weijia Shi, Eunsol Choi. arXiv:2310.04408v1, preprint (6 Oct 2023). Later published at ICLR 2024, but that is not printed in this PDF.\nCOVERAGE: 80290 of 80290 chars read. Main text, appendices A.1/A.2, Tables 5-12 and the pseudocode figures were read. The reference list and the long qualitative example tables (6, 7, 9, 11, 12) were skimmed only. Figure images were not viewed. The note (05-chunking-query-parsing-and-reranking.md) does not cite RECOMP. It covers rerankers (bi-encoder, cross-encoder, ColBERT) and the claim that fewer, better chunks cut cost.\n\nCLAIMS (ranked)\n1. Compressing 5 retrieved docs to about 5% of the tokens costs only a few EM points on NQ and TQA.\n number: NQ -2 EM at 5% tokens, TQA -3.7 EM at 5% tokens. Table 2 lists NQ at 36 vs 660 tokens (EM 37.04 vs 39.39) and TQA at 32 vs 677 tokens (EM 58.68 vs 62.37).\n setup: Flan-UL2 20B as the LM, contriever-msmarco retriever, Wikipedia Dec 2018 in 100-word passages, top 5 docs, 5-shot prompt, trained abstractive compressor (T5-large 775M).\n quote: \"On NQ, it achieves a compression ratio of 5% tokens while losing 2 EM points compared to prepending full documents. On TQA, we observe similar trends, compression ratio of 5% tokens while losing 3.7 EM points\"\n where: p.7, Table 2\n\n2. On HotpotQA (multi-hop) the extractive compressor works better than the abstractive one, and the gain is smaller.\n number: 11% of tokens, -2.4 EM. Table 2: extractive 75 tok, EM 30.40 vs top-5 684 tok, EM 32.80. Abstractive EM is 28.20.\n setup: Flan-UL2, 500 sampled HotpotQA dev examples, extractive selects 2 sentences.\n quote: \"we find extractive approach to be more helpful, achieving 11% compression rate while losing 2.4 EM points compared to prepending full documents.\"\n where: p.7-8\n\n3. Selective augmentation: the abstractive compressor outputs an empty string when retrieval would not help, and is trained to do so by a critic.\n number: 33% of language-modeling examples get a non-empty summary. 4-24% of abstractive training examples have an empty target; Table 5 gives 25% NQ, 16% TQA, 4% HotpotQA, 24% Wikitext.\n setup: A teacher (gpt-3.5-turbo) writes summaries. An example is kept only if the end-task score with the summary beats the score with no retrieval; otherwise the target is empty.\n quote: \"Our abstractive compressor achieves high compression rate through selective augmentation, prepending summaries to only 33% of examples\"\n where: p.7 and p.8; Fig 3 and Fig 7 pseudocode; Table 5 (A.1)\n\n4. More retrieved text is not always better, and irrelevant documents hurt.\n number: Language modeling, GPT2 PPL: top 1 doc 32.90 (141 tok), top 5 docs 35.53 (512 tok), no retrieval 37.84. QA does gain from 5 docs over 1: NQ EM 39.39 vs 33.07.\n setup: WikiText-103, GPT2 117M, BM25 retrieval every 32 tokens, 100-word docs.\n quote: \"More tokens are not always better: prepending top 1 document outperforms prepending top 5 documents.\"\n where: p.6, Table 1\n\n5. A trained 110M sentence-level extractive compressor beats off-the-shelf rankers.\n number: NQ EM 36.57 (37 tok) vs Contriever 30.06, DPR 34.32, BM25 25.82, Random 23.27. Top-1 doc is 33.07 at 132 tok. TQA EM 58.99 vs DPR 56.58. HotpotQA EM 30.40 vs Contriever 28.60. The extractive oracle reaches NQ EM 60.22.\n setup: Dual encoder initialised from contriever (110M), contrastive loss. Positives are the sentence with the best LM log-likelihood or EM. Negatives are the top 5 Contriever-ranked sentences scoring lower. Top 20 sentences from the top 5 docs.\n quote: \"Ours 37 36.57 44.22 38 58.99 65.26 75 30.40 40.14\"\n where: p.7, Table 2; p.3-4\n\n6. Off-the-shelf DPR on one sentence beats the top-1 document in-domain, but it degrades out of domain.\n number: 39 vs 132 tokens on NQ.\n quote: \"On NQ, selecting the top 1 DPR ranked sentences from top 5 documents outperforms prepending top 1 document, with much fewer tokens (39 vs. 132).\"\n where: p.7\n\n7. The language-modeling compressors reach about 25% compression with a small drop vs the top-1 document, and they transfer to larger LMs.\n number: Ours extractive PPL 33.67 / 18.19 / 10.73 at 31 tok. Ours abstractive PPL 33.64 / 18.09 / 10.66 at 15 tok. Top-1 doc is 32.90 / 17.86 / 10.57 (the GPT2-XL token count printed in the extraction, \"14\", looks like an extraction fault). Oracles use 6-13% of tokens and reach PPL 30.36.\n setup: Compressors trained with GPT2; tested on GPT2, GPT2-XL (1.5B) and GPT-J (6B).\n quote: \"Ours (init. w/ T5) 15 33.64 15 18.09 15 10.66\"\n where: p.6, Table 1\n\n8. Transfer to another QA LM is weaker.\n number: On LLaMA-13B, NQ EM is 34.38 (extractive) and 36.32 (abstractive), vs 37.04 for full top-5 and 30.89 with no retrieval. The authors say the compressors get 5% compression with under 5 EM drop on NQ/TQA, but not always better than baselines (Contriever vs ours on TQA/HotpotQA).\n quote: \"Ours (init. w/ Contriever) 37 34.38 44.15 38 65.28 71.85 75 33.20 42.88\"\n where: Table 10, p.21; discussion p.8\n\n9. Naive heuristic compression (bag of words, named entities) is poor.\n number: NQ EM 23.60 (NE) and 28.48 (BoW), vs 21.99 with no retrieval.\n quote: \"Top 5 documents (NE) 338 23.60 31.02 128 54.96 61.19 157 22.20 31.89\"\n where: Table 2\n\n10. Off-the-shelf T5 gives extreme compression and a small gain, but trained compression is much better.\n number: T5 adds 7-10 tokens for a 4-6 EM gain.\n quote: \"Off-the-shelf summarization model (T5) boasts the highest level of compression, achieving 4-6 points gains in EM while adding mere 7-10 tokens.\"\n where: p.7\n\n11. Models copy from distractors. Compression reduces the wrong-copy rate.\n number: Wrong-copy rate when the gold answer is absent from the evidence: 51% for top-1 doc, 81% for top-5, 85% for GPT-3.5 summaries, 39% for the trained compressor.\n setup: NQ dev; Table 3.\n quote: \"Prepending top 5 documents has a higher frequency (81%) of copying incorrectly compared to top 1 document (51%), and GPT-3 compression leads to an even higher incorrect copying frequency (85%)\"\n where: p.8-9\n\n12. Abstractive summaries are less faithful than the teacher's, and multi-hop is worst.\n number: Manual check of 30 non-empty summaries per dataset, % useful (faithful and comprehensive): NQ GPT-3.5 83 vs ours 80; TQA 83 vs 77; HotpotQA 50 vs 40. Faithful (Yes): HQA 74 vs 67; NQ 90 vs 80.\n setup: Authors labelled the summaries themselves.\n quote: \"NQ GPT-3.5 90 0 10 97 0 3 83Ours 80 13 7 100 0 0 80\"\n where: p.9, Table 4\n\n13. Evidence ordering: documents are concatenated in ascending retrieval score, so the best one sits next to the question. Other setup details: the prompt uses 5 random in-context examples with no docs. The compressor is far smaller than the LM (110M extractive, 775M abstractive vs 20B).\n quote: \"we concatenate them in ascending order of retrieval score, with the highest scored document closest to the question\"\n where: p.5\n\nLIMITS\n- Authors concede abstractive compression for multi-hop tasks \"demands further study\". The extractive compressor is not adaptive: it fixes the number of sentences (1 for Wikitext and NQ/TQA, 2 for HotpotQA) and has no selective augmentation, which they leave to future work.\n- The compressor is trained per dataset and per base LM. Transfer to LLaMA-13B is only partial.\n- Faithfulness is not trained for. It is checked manually by the authors on 30 samples per dataset.\n- Retriever quality was assumed fixed (\"Improving retriever is not the focus\"). Only one retriever setup, Wikipedia 100-word passages and Flan-UL2 or GPT2-family LMs were tested.\n- Oracle numbers are upper bounds that use the gold answer.\n- Dated: 2023 models. Teacher is gpt-3.5-turbo. LMs are Flan-UL2, GPT2, GPT-J and LLaMA-13B, all short-context, so conclusions may not hold for modern long-context LLMs.\n- Training the compressors requires scoring with the target LM. The paper does not report this training cost.\n\nBUILDS ON: Ram et al. 2023 (in-context RALM; a cross-encoder document reranker, called \"similar set-up but less compute efficient\"); Shi et al. 2023b (REPLUG); Izacard et al. 2021 (Contriever); Karpukhin et al. 2020 (DPR, contrastive loss); West et al. 2022 (symbolic knowledge distillation with a critic); Jung et al. 2023; Liu et al. 2023 (lost in the middle); Shi et al. 2023a (distraction by irrelevant context); Si et al. 2022; Mallen et al. 2022; Xu & Lapata 2020 (query-focused summarization); Chen et al. 2023 (faithfulness and comprehensiveness labels); Wingate et al. 2022, Chevalier et al. 2023 and Mu et al. 2023 (soft-prompt compression, contrasted); Raffel et al. 2020 (T5).\n\nCODE: Pseudocode only.\n- Fig 6 (p.16, QA extractive): positive p_i = argmax Score(M, y_i, [s_j; x_i]). Negatives are the top 5 sentences by encoder score among those that score lower than p_i. The encoder is fine-tuned contrastively.\n- Fig 7 (p.16, QA abstractive): s_i = Decode(Mt, [p; x_i; D_i]). If Score(M, y_i, [s_i; x_i]) < Score(M, y_i, [x_i]), the target is the empty string.\n- Table 8 (p.19), NQ/TQA teacher prompt: \"Compress the information in the retrieved documents into a 2-sentence summary that could be used to answer the question: Question: query Retrieved documents: docs Compressed documents:\"\n- Training hyperparameters (A.2, p.15): extractive batch 64, lr 2e-5, 1000 warmup steps, 3 epochs. Abstractive batch 16, lr 1e-5, 3 epochs. Teacher temperature 0.7.\n\nFIGURES\n- Fig 1 (p.2): the retrieve, compress, prepend pipeline. One example shows 749 tokens for full docs vs 58 tokens with RECOMP, and both give 2015. Quick overview of the idea.\n- Fig 2 and 3 (p.3-4): training algorithms for the extractive compressor and for the abstractive compressor with its critic.\n- Fig 4 and 8: histogram of abstractive summary lengths. The wide spread, including empty summaries, is the evidence for selective augmentation.\n- Fig 5: data distribution on NQ, TriviaQA and HotpotQA dev sets, in the appendix. Its caption was not read in full.\n\nPROBLEMS: No embedded instructions found. The Table 1 token count for GPT2-XL top-1 doc (\"14\") looks like a typo or extraction fault (it should be about 141). The extraction also garbled Table 5 headers and some Table 10 cells: abstractive oracle NQ F1 \"84.87\" looks wrong, since EM is 45.60, and the extractive TQA oracle F1 80.46 is below its EM 84.61. Treat those cells as unreliable. Figures were not rendered. The run did not use scripts/papers/figures.py."
+ "type": "empirical",
+ "question": "Can retrieved documents be compressed into a short textual summary, possibly empty, that keeps a frozen LM's end-task performance at a fraction of the prompt tokens?",
+ "hypothesis": "Compressing retrieved documents with end-task-trained compressors cuts inference cost and removes irrelevant content that distracts the LM, with minimal loss in task performance.",
+ "contributions": [
+  "RECOMP (Retrieve, Compress, Prepend) with an extractive and an abstractive compressor trained on end-task signal from a black-box LM",
+  "Selective augmentation: compressor can return an empty string",
+  "Oracle compressions as upper bounds",
+  "Evidence that compressors transfer across LMs on language modelling and partly on QA, with a manual faithfulness check"
+ ],
+ "method": {
+  "summary": "A 110M contriever dual encoder (extractive, contrastive loss on sentences scored by the reader LM's likelihood or EM) and a T5-large 775M encoder-decoder (abstractive, distilled from gpt-3.5-turbo summaries filtered by the reader's end-task score, with empty-string targets when retrieval hurts) compress the top 5 retrieved 100-word documents before they are prepended to a frozen LM.",
+  "task": "retrieval-augmented language modelling (WikiText-103) and open-domain QA (NQ, TriviaQA, HotpotQA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiText-103",
+    "role": "both",
+    "size": "extractive train 1,398,318 / val 1,5483 (as printed); abstractive train 38,410 / val 9,603 (from 2% of training set)",
+    "split": "train for compressors; dev/test for perplexity",
+    "source": "Merity et al. 2016",
+    "preprocessing": "BM25 top 5 docs, top 20 sentences; sentence split with NLTK; articles containing the input removed from the corpus; retrieval every 32 tokens"
+   },
+   {
+    "name": "Natural Questions",
+    "role": "both",
+    "size": "extractive train 42,149 / val 9,769; abstractive train 39,466 / val 4,931",
+    "split": "dev set for evaluation",
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": "contriever-msmarco top 5 docs, top 20 sentences, Wikipedia page title prepended to each sentence"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "both",
+    "size": "extractive train 70,032 / val 8,753; abstractive train 48,322 / val 5,887",
+    "split": "test set for evaluation",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "as NQ"
+   },
+   {
+    "name": "HotpotQA",
+    "role": "both",
+    "size": "extractive train 24,526 / val 3,068; abstractive train 26,556 / val 2,937",
+    "split": "500 randomly sampled dev examples for evaluation",
+    "source": "Yang et al. 2018",
+    "preprocessing": "summaries generated only for training data whose gold answer is in retrieved docs (56% of training data) to cut API cost"
+   },
+   {
+    "name": "Wikipedia Dec 20, 2018 dump",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Karpukhin et al. 2020a",
+    "preprocessing": "non-overlapping 100-word documents"
+   }
+  ],
+  "models": [
+   {
+    "name": "Extractive compressor",
+    "role": "proposed",
+    "params": "110M",
+    "architecture": "dual encoder, [CLS] embeddings, inner product",
+    "init_from": "contriever checkpoint (unsupervised for LM; contriever-msmarco for QA)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "selects": "1 sentence (WikiText, NQ, TQA), 2 sentences (HotpotQA)",
+     "negatives": "up to 5 per example"
+    }
+   },
+   {
+    "name": "Abstractive compressor",
+    "role": "proposed",
+    "params": "775M",
+    "architecture": "encoder-decoder",
+    "init_from": "T5-large checkpoint (already trained on summarization data)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "only 'gpt-3.5-turbo' printed"
+    }
+   },
+   {
+    "name": "GPT-2",
+    "role": "base",
+    "params": "117M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "scoring LM for LM compressor training and eval"
+    }
+   },
+   {
+    "name": "GPT2-XL",
+    "role": "evaluated",
+    "params": "1.5B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-J",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flan-UL2",
+    "role": "base",
+    "params": "20B",
+    "architecture": "instruction-tuned LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "reader for QA and scoring LM for QA compressors"
+    }
+   },
+   {
+    "name": "LLaMA-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "transfer test"
+    }
+   },
+   {
+    "name": "contriever-msmarco",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "QA retrieval"
+    }
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "LM retrieval"
+    }
+   }
+  ],
+  "training": {
+   "objective": "extractive: contrastive loss, -log e^sim(x,p) / (e^sim(x,p)+sum e^sim(x,n)); abstractive: seq2seq fine-tuning on filtered teacher summaries (empty string when prepending the summary scores worse than no retrieval)",
+   "optimizer": "Adam (both compressors)",
+   "lr": "2e-5 extractive; 1e-5 abstractive",
+   "lr_schedule": null,
+   "warmup": "1000 steps (both)",
+   "batch_size": "64 extractive; 16 abstractive",
+   "steps": null,
+   "epochs": "3 (both)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoint_selection": "best reranked perplexity (LM) or best reranked accuracy (QA) on validation set",
+    "separate_compressors": "one extractive and one abstractive trained per dataset",
+    "teacher_decoding": "OpenAI API temperature 0.7, top p = 1; four summaries per example for LM (prompts of Table 8), single prompt per QA dataset; 2% of WikiText train = 48,013 examples",
+    "filtering": "extractive: positives = best-scoring sentence, negatives = up to 5 top-contriever sentences scoring lower by threshold epsilon (epsilon value not given); % filtered per Table 5; abstractive QA drops examples where summary does not improve"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: single run per setting; no seeds or repeated runs reported",
+   "prompting": "5 randomly sampled training examples as in-context examples (110, 147, 149 tokens avg for NQ, TQA, HotpotQA), no retrieved docs in the examples; retrieved docs concatenated in ascending score order, best closest to the question",
+   "retrieval": "QA: contriever-msmarco, top 5 100-word docs from Wikipedia Dec 2018; LM: BM25, top 5, retrieval every 32 tokens",
+   "parameters": {
+    "extractive_sentences": "1 (NQ, TQA, WikiText) / 2 (HotpotQA)",
+    "top_sentences_candidates": "20 sentences from top 5 docs"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "WikiText-103 perplexity of the LM with the compressed evidence prepended",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "EM",
+     "definition": "exact match of answer string",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "token-level F1 of answer strings",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "# tokens",
+     "definition": "tokens of in-context evidence, excluding in-context examples",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "No retrieval",
+    "Top 1 document",
+    "Top 5 documents",
+    "BoW",
+    "NE (named entities)",
+    "Random sentence",
+    "BM25 sentence",
+    "Contriever sentence",
+    "DPR sentence (fine-tuned on NQ)",
+    "off-the-shelf T5-large 770M",
+    "GPT-3.5 summaries",
+    "extractive and abstractive oracles"
+   ],
+   "protocol": "Single reported number per cell, no variance or significance test; faithfulness and comprehensiveness judged manually by the authors on 30 random non-empty summaries per dataset."
+  },
+  "availability": {
+   "code": "https://github.com/carriex/recomp",
+   "weights": null,
+   "data": "states code, prompts and API-generated data are released"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-3.5 summaries for NQ and TQA",
+    "text": "Compress the information in the retrieved documents into a 2-sentence summary that could be used to answer the question: Question: query Retrieved documents: docs Compressed documents:",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "GPT-3.5 summaries for HotpotQA",
+    "text": "Source documents: docs Question: query Generate a reasoning chain to answer the question:",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "WikiText prompt 1",
+    "text": "Generate the next two sentences of the given query using the information from the provided documents.",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "WikiText prompt 2",
+    "text": "Select sentences from the retrieved docs that are most likely be in the next sentence.",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "WikiText prompt 3",
+    "text": "Generate the next one sentence of the given query using the information from the provided documents",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "WikiText prompt 4",
+    "text": "Summarize the information from the provided documents",
+    "where": "Table 8"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "using a batch size of 64, learning rate of 2e-5 and 1000 warmup steps for 3 epochs",
+    "where": "A.2 extractive"
+   },
+   {
+    "field": "training.lr",
+    "quote": "using a batch size of 16, learning rate of 1e-5 and 1000 warmup steps for 3 epochs",
+    "where": "A.2 abstractive"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On NQ the trained abstractive compressor gives 5% of the tokens for a 2 EM loss versus full top-5 documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "37.04",
+   "unit": "EM",
+   "baseline_value": "39.39",
+   "n": null,
+   "setup": "Flan-UL2 20B reader, 5-shot, contriever-msmarco top 5 100-word Wikipedia (Dec 2018) passages, compressors trained per dataset; NQ dev; 36 vs 660 tokens",
+   "where": "Sec 5; Table 2",
+   "note": "Table 2: Ours abstractive 37.04 EM at 36 tokens; top 5 documents 39.39 at 660 tokens",
+   "quote": "On NQ, it achieves a compression ratio of 5% tokens while losing 2 EM points compared to prepending full documents."
+  },
+  {
+   "claim": "On TriviaQA the abstractive compressor gives 5% of the tokens for a 3.7 EM loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "58.68",
+   "unit": "EM",
+   "baseline_value": "62.37",
+   "n": null,
+   "setup": "Flan-UL2 20B reader, 5-shot, contriever-msmarco top 5 100-word Wikipedia (Dec 2018) passages, compressors trained per dataset; TQA test; 32 vs 677 tokens",
+   "where": "Sec 5; Table 2",
+   "note": null,
+   "quote": "On TQA, we observe similar trends, compression ratio of 5% tokens while losing 3.7 EM points compared to prepending full sets of documents."
+  },
+  {
+   "claim": "On HotpotQA the extractive compressor (two sentences) gives 11% of the tokens for a 2.4 EM loss; abstractive is weaker there.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "30.40",
+   "unit": "EM",
+   "baseline_value": "32.80",
+   "n": null,
+   "setup": "Flan-UL2 20B reader, 5-shot, contriever-msmarco top 5 100-word Wikipedia (Dec 2018) passages, compressors trained per dataset; 500 random HotpotQA dev examples; 75 vs 684 tokens",
+   "where": "Sec 5; Table 2",
+   "note": "Table 2: extractive Ours 30.40 EM, 75 tokens; abstractive Ours 28.20 EM, 64 tokens",
+   "quote": "find extractive approach to be more helpful, achieving 11% compression rate while losing 2.4 EM points compared to prepending full documents."
+  },
+  {
+   "claim": "Trained extractive compressor (one sentence) beats BM25, Contriever and NE/BoW on NQ and beats DPR (fine-tuned on NQ) in-domain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "36.57",
+   "unit": "EM",
+   "baseline_value": "34.32",
+   "n": null,
+   "setup": "Flan-UL2 20B reader, 5-shot, contriever-msmarco top 5 100-word Wikipedia (Dec 2018) passages, compressors trained per dataset; NQ dev, 37 tokens",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row Extractive Ours, column NQ EM (36.57); DPR 34.32; Contriever 30.06"
+  },
+  {
+   "claim": "Off-the-shelf T5 summariser compresses most (7-10 tokens) and gains 4-6 EM over no retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-UL2 20B reader, 5-shot, contriever-msmarco top 5 100-word Wikipedia (Dec 2018) passages, compressors trained per dataset",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "Off-the-shelf summarization model (T5) boasts the highest level of compression, achieving 4-6 points gains in EM while adding mere 7-10 tokens."
+  },
+  {
+   "claim": "Oracle compressors beat full documents at 6-13% of tokens; extractive oracle on NQ reaches 60.22 EM with 34 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "60.22",
+   "unit": "EM",
+   "baseline_value": "39.39",
+   "n": null,
+   "setup": "Flan-UL2 20B reader, 5-shot, contriever-msmarco top 5 100-word Wikipedia (Dec 2018) passages, compressors trained per dataset; NQ; oracle picks best sentence per example using gold answer, so it is an upper bound not a method",
+   "where": "Table 2; Sec 5",
+   "note": null,
+   "table": "Table 2, row Extractive Oracle, column NQ EM"
+  },
+  {
+   "claim": "Language modelling: more documents is not better; top-1 document beats top-5 in perplexity on WikiText-103 with GPT-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "32.90",
+   "unit": "PPL",
+   "baseline_value": "35.53",
+   "n": null,
+   "setup": "GPT-2 117M, BM25 retrieval every 32 tokens, 100-word docs; top 5 truncated to 512 tokens",
+   "where": "Sec 5; Table 1",
+   "note": "Table 1: top 1 = 32.90 (141 tokens); top 5 = 35.53 (512 tokens); no retrieval 37.84",
+   "quote": "prepending top 1 document outperforms prepending top 5 documents."
+  },
+  {
+   "claim": "Language modelling: both trained compressors give 25% of top-1 document tokens at minimal perplexity cost, and transfer to GPT2-XL and GPT-J.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Compressors trained with GPT-2 as base; evaluated on GPT2-XL 1.5B and GPT-J 6B; WikiText-103",
+   "where": "Sec 5; Table 1",
+   "note": null,
+   "quote": "Comparing to prepending one document, we achieve a compression ratio of 25% at minimum performance drop.",
+   "table": "Table 1, row Abstractive Ours (init. w/ T5), column GPT2 PPL 33.64 at 15 tokens; extractive Ours 33.67 at 31 tokens"
+  },
+  {
+   "claim": "On language modelling the abstractive compressor prepends a summary to only 33% of examples (selective augmentation).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103, GPT-2 base",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "prepending summaries to only 33% of examples"
+  },
+  {
+   "claim": "Training-set summaries are empty for 4-24% of examples (Table 5 lists 25% NQ, 16% TQA, 4% HotpotQA, 24% Wikitext).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "teacher gpt-3.5-turbo summaries filtered by end-task score",
+   "where": "Sec 6; Table 5",
+   "note": "Text says 4-24%; Table 5 % empty column shows NQ 25",
+   "quote": "4-24% of training examples for abstractive compressors"
+  },
+  {
+   "claim": "Transfer to LLaMA-13B is partial: on NQ/TQA about 5% tokens with under 5 EM drop, but no clear gain over Contriever on TQA/HotpotQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Compressors trained for Flan-UL2, applied to LLaMA-13B",
+   "where": "Sec 6; Table 10",
+   "note": null,
+   "quote": "on NQ/TQA, our compressor obtains 5% compression ratio with less than 5 EM drop compared to full document setting",
+   "table": "Table 10, row Abstractive Ours, column NQ EM 36.32; extractive Ours 34.38; Top 5 37.04"
+  },
+  {
+   "claim": "Models copy answers from irrelevant evidence: GPT-3.5 summaries lead to 85% wrong copying, ours 39%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev, Flan-UL2; % of predictions in evidence when gold answer is not in evidence",
+   "where": "Sec 6; Table 3",
+   "note": null,
+   "quote": "Our compressor successfully reduce such erroneous behavior to 39%."
+  },
+  {
+   "claim": "Manual check: GPT-3.5 summaries are more useful than the trained compressor's on all three datasets; HotpotQA is worst (40% useful ours vs 50%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 non-empty summaries per dataset, judged by the authors; faithful and comprehensive both needed",
+   "where": "Sec 6; Table 4",
+   "note": null,
+   "table": "Table 4, row HQA Ours, column % Use. 40; GPT-3.5 50"
+  }
+ ],
+ "limits": [
+  "Compressors are trained per dataset and per reader LM; transfer to LLaMA-13B is worse than in-model and sometimes no better than baselines.",
+  "Abstractive compressor is less faithful than its GPT-3.5 teacher and less useful on multi-hop HotpotQA (40% useful vs 50%); the authors say learning an abstractive compressor for complex tasks needs further study.",
+  "Extractive compressor uses a fixed number of sentences; adaptive/selective extractive compression is left to future work.",
+  "Retriever quality is not studied (retrieved docs assumed given); readers are short-context 2023 LMs; manual evaluation is 30 summaries per dataset by the authors; single runs, no variance reported.",
+  "Oracle results use gold answers and are upper bounds, not achievable methods.",
+  "Training data depends on gpt-3.5-turbo output, which may include factual errors (ethics statement)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RECOMP",
+   "definition": "Retrieve, Compress, Prepend: an intermediate step that compresses retrieved documents into a textual summary before in-context augmentation",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Selective augmentation",
+   "definition": "the compressor returns an empty summary when the retrieved documents are irrelevant or unhelpful",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Contriever (Izacard et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "initialisation of the extractive compressor and a baseline",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al. 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "T5-large initialises the abstractive compressor",
+   "quote": null
+  },
+  {
+   "work": "Symbolic knowledge distillation (West et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "teacher generation plus critic filtering; here the critic is the reader's end-task score",
+   "quote": null
+  },
+  {
+   "work": "In-context RALM (Ram et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LM eval protocol (retrieve every 32 tokens) and a cross-encoder reranker comparison",
+   "quote": null
+  },
+  {
+   "work": "REPLUG (Shi et al. 2023b)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "evaluation setup and scoring by LM likelihood",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle (Liu et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivation: LMs miss information in long contexts",
+   "quote": null
+  },
+  {
+   "work": "Flan-UL2 / Flan (Chung et al. 2022)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "evaluates",
+   "note": "QA reader",
+   "quote": null
+  },
+  {
+   "work": "DPR (Karpukhin et al. 2020b)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sentence ranker baseline",
+   "quote": null
+  },
+  {
+   "work": "Soft-prompt compression (Wingate 2022; Chevalier 2023 arXiv:2305.14788; Mu 2023)",
+   "year": 2023,
+   "arxiv": "2305.14788",
+   "relation": "related",
+   "note": "vector compression; RECOMP yields text transferable across LMs",
+   "quote": null
+  },
+  {
+   "work": "NQ, TriviaQA, HotpotQA, WikiText-103",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation and training data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "An illustration of RECOMP, which compresses retrieved documents into a textual summary before prepending it as input to a language model",
+   "page": 2,
+   "why": "58 tokens vs 749 for full RALM on one example"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Open-domain QA results with Flan-UL2 (20B) as the LM M",
+   "page": 7,
+   "why": "all QA numbers: tokens, EM, F1 per method"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 5 prints validation size as '1,5483' for Wikitext (likely 15,483).",
+  "Text says 4-24% empty summaries; Table 5 shows 25% for NQ.",
+  "Table 10 abstractive oracle NQ F1 84.87 looks anomalous against EM 45.60; extractive oracle TQA F1 80.46 is below EM 84.61 (apparent typos in paper)."
+ ]
 }

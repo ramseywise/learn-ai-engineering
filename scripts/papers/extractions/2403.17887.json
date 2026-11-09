@@ -1,0 +1,774 @@
+{
+ "schema": 1,
+ "key": "2403.17887",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/gromov-2024-unreasonable-ineffectiveness-deeper-layers.pdf",
+ "bib": {
+  "title": "The Unreasonable Ineffectiveness of the Deeper Layers",
+  "authors": [
+   "Andrey Gromov",
+   "Kushal Tirumala",
+   "Hassan Shapourian",
+   "Paolo Glorioso",
+   "Daniel A. Roberts"
+  ],
+  "first_author": "Gromov",
+  "year": 2025,
+  "venue": "ICLR 2025",
+  "arxiv": "2403.17887",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 81216,
+  "chars_total": 81216,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "How much of the depth of open-weight pretrained LLMs can be removed (and healed with light QLoRA finetuning) before question-answering performance and next-token loss degrade, and what does that say about where knowledge is stored?",
+ "hypothesis": "Because of the residual structure, deeper layers whose output is similar to their input can be removed with little harm; shallow layers matter more (hypotheses 0-2 in Sec 3.1).",
+ "contributions": [
+  "A layer-pruning method that picks the block of n consecutive layers with minimal angular distance between its input and output, then heals with QLoRA",
+  "A simpler heuristic: drop the deepest n layers before the final layer, then heal",
+  "Evidence that QA accuracy (MMLU, BoolQ) is flat until a model-dependent pruning fraction then collapses to random, while healed C4 loss rises smoothly",
+  "Evidence that GSM8K and HellaSwag degrade at any pruning, suggesting deeper layers matter for reasoning"
+ ],
+ "method": {
+  "summary": "Compute angular distance between the final-token representation entering layer l and layer l+n on C4 validation samples, drop the n-layer block with the minimum distance, then heal with 4-bit QLoRA (FFN modules only) on C4 for 5000 steps at batch 16. Evaluate MMLU, BoolQ and C4 validation loss across pruning fractions for seven open-weight models.",
+  "task": "post-training layer pruning of pretrained decoder-only LLMs, with PEFT healing",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4 (en, train split)",
+    "role": "train",
+    "size": "164M tokens (7B and smaller) or 328M tokens (13B and larger) per healing run",
+    "split": "train for healing",
+    "source": "Hugging Face load_dataset('c4','en')",
+    "preprocessing": "long examples truncated to max seq length; special tokens added when available; Qwen needed a default padding token"
+   },
+   {
+    "name": "C4 validation",
+    "role": "eval",
+    "size": "60k randomly sampled sequences, fixed across models",
+    "split": "validation",
+    "source": "Hugging Face c4",
+    "preprocessing": "loss divided by log V"
+   },
+   {
+    "name": "C4 validation (angular distance)",
+    "role": "dev",
+    "size": "10k samples",
+    "split": "validation",
+    "source": "Hugging Face c4",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": null,
+    "split": "cais/mmlu, dev set used for few-shot examples",
+    "source": "Hendrycks et al. 2020",
+    "preprocessing": "original formatting, no prompt engineering; average accuracy over all subjects"
+   },
+   {
+    "name": "BoolQ",
+    "role": "eval",
+    "size": null,
+    "split": "hassansh/boolq_n_shot",
+    "source": "Clark et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "CoT-MMLU, GSM8K, HellaSwag",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "EleutherAI lm-eval-harness (flan_cot_fewshot, gsm8k_cot, hellaswag)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-2-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "32,000",
+    "layers": "32",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max_seq_len": "2048",
+     "peak_lr": "3e-4",
+     "lora_rank": "2"
+    }
+   },
+   {
+    "name": "Llama-2-13B",
+    "role": "base",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "32,000",
+    "layers": "40",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max_seq_len": "4096",
+     "peak_lr": "3e-4",
+     "lora_rank": "64"
+    }
+   },
+   {
+    "name": "Llama-2-70B",
+    "role": "base",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "32,000",
+    "layers": "80",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max_seq_len": "4096",
+     "peak_lr": "3e-5 (from sweep)",
+     "lora_rank": "8"
+    }
+   },
+   {
+    "name": "Qwen-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "151,936",
+    "layers": "32",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max_seq_len": "2048",
+     "peak_lr": "3e-4",
+     "lora_rank": "64"
+    }
+   },
+   {
+    "name": "Qwen-14B",
+    "role": "base",
+    "params": "14B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "151,936",
+    "layers": "40",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max_seq_len": "4096",
+     "peak_lr": "3e-4",
+     "lora_rank": "64"
+    }
+   },
+   {
+    "name": "Mistral-7B-v0.1",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "32,000",
+    "layers": "32",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max_seq_len": "2048",
+     "peak_lr": "3e-6 (from sweep)",
+     "lora_rank": "4"
+    }
+   },
+   {
+    "name": "Phi-2",
+    "role": "base",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "51,200",
+    "layers": "32",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max_seq_len": "2048",
+     "peak_lr": "2e-4",
+     "lora_rank": "64"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy on C4 (healing)",
+   "optimizer": null,
+   "lr": "peak 3e-4 for most models; Phi-2 2e-4; Llama-2-70B 3e-5; Mistral-7B 3e-6",
+   "lr_schedule": "cosine annealed",
+   "warmup": "100 steps",
+   "batch_size": "16 (global)",
+   "steps": "5000",
+   "epochs": null,
+   "tokens": "164M (<=7B) or 328M (>=13B)",
+   "seq_len": "2048 (<=7B) or 4096 (>=13B)",
+   "precision": "4-bit quantised base weights (bitsandbytes QLoRA)",
+   "weight_decay": null,
+   "dropout": "LoRA dropout 0.05",
+   "regularisation": null,
+   "hardware": "single 40GB A100 GPU per experiment",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "SEED_VAL = 0 via transformers.enable_full_determinism; finetuning seeds 0 to 2 ablated on Llama-2-13B (Fig 9)",
+   "other": {
+    "lora_alpha": "equal to LoRA rank",
+    "lora_targets": "FFN only: gate_proj/down_proj/up_proj (Llama, Mistral); fc1/fc2 (Phi-2); w1/w2/c_proj (Qwen)",
+    "lora_rank_protocol": "start at 64; if healing clearly harms vs no healing, sweep ranks and pick best by MMLU; chosen on the simple heuristic (except Llama-2-70B)",
+    "framework": "Hugging Face Trainer API, peft"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "GSM8K pass@1 from a single generation per problem; other evals single run",
+   "prompting": "MMLU 5-shot in main text (Sec 4.1, Fig 2); Appendix B.2 says 0 few-shot examples; BoolQ 0-shot; CoT-MMLU via flan_cot_fewshot",
+   "retrieval": null,
+   "parameters": {
+    "pruning_n": "number of layers removed, varied up to ~80% of layers",
+    "angular_distance": "d = (1/pi) arccos(x_l . x_{l+n} / (|x_l||x_{l+n}|)) on the final token T, averaged over samples",
+    "simple_heuristic": "drop layers L-n to L-1, excluding the final layer"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MMLU accuracy",
+     "definition": "average over all subjects; random = 25%",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "BoolQ accuracy",
+     "definition": "yes/no reading comprehension, 0-shot",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Normalized C4 validation loss",
+     "definition": "cross-entropy divided by log V of the model vocab",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "GSM8K pass@1",
+     "definition": "gsm8k_cot, one CoT generation per problem",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "HellaSwag accuracy",
+     "definition": "EleutherAI hellaswag, random 25%",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "CoT-MMLU accuracy",
+     "definition": "flan_cot_fewshot",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "no healing",
+    "simple deepest-layers heuristic",
+    "random-layer pruning",
+    "shallow-layer pruning (Llama-2-7B MMLU, Fig 11)",
+    "unpruned model"
+   ],
+   "protocol": "Single run per point, no significance tests; ablations on prompt order, few-shot count, finetuning seed, LoRA rank on Llama-2-13B/Mistral-7B/Llama-2-7B/70B."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "public Hugging Face datasets and checkpoints (Appendix B.1 table)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.prompting",
+    "quote": "For our experiments, we use 0 few-shot examples; our results and analysis are robust to this choice, cf. Figure 8.",
+    "where": "Appendix B.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Layers to prune are chosen as the n-block with minimum angular distance between its input and output representations, then healed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all seven models; distance on final token, averaged over 10k C4 validation samples",
+   "quote": "Find the layer, ℓ∗, that minimizes that distance:",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Healing uses 4-bit QLoRA on C4 for 5000 steps at global batch size 16.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5000,
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all models; LoRA dropout 0.05, FFN-only targets, cosine LR with 100 warmup steps",
+   "quote": "Models were finetuned for 5000 steps with a global batch size of 16",
+   "table": null,
+   "note": null,
+   "where": "App B.1"
+  },
+  {
+   "claim": "Healing token budget is 164M or 328M C4 tokens, on a single 40GB A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "164M or 328M",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B-and-smaller use 164M, 13B-and-larger use 328M",
+   "quote": "on either 164M or 328M tokens from the Colossal Clean Crawled Corpus (C4)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Llama-2 family MMLU accuracy transitions sharply to random at a pruning fraction around 45%-55%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU transition point",
+   "value": "45%-55%",
+   "unit": "pruning fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU, healed and unhealed, Llama-2 7B/13B/70B",
+   "quote": "a pruning fraction around 45%-55% for models in the Llama-2 family",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Mistral-7B MMLU transitions to random at about 35% pruning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU transition point",
+   "value": "35%",
+   "unit": "pruning fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU, Mistral-7B",
+   "quote": "35% for Mistral 7B",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Phi-2 MMLU transitions to random at about 25% pruning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU transition point",
+   "value": "25%",
+   "unit": "pruning fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU, Phi-2 2.7B",
+   "quote": "25% for Phi-2",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Qwen family MMLU transitions to random at about 20% pruning (Qwen-7B, Qwen-14B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU transition point",
+   "value": "20%",
+   "unit": "pruning fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU, Qwen-7B and Qwen-14B",
+   "quote": "and 20% for models from the Qwen family",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "The paper's stated overall range for the collapse to random guessing across models is 20%-55%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20%-55%",
+   "unit": "pruning fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU (Fig 2) and BoolQ (Fig 7) captions, all seven models",
+   "quote": "performances are quite robust until 20%-55% pruning fractions, depending on model family and size",
+   "table": null,
+   "note": "Abstract says only 'up to half'; Fig 1 caption gives 40%-50% for Llama-2-70B and Sec 1 says 'up to roughly half'.",
+   "where": "Fig 2 caption, Fig 7 caption"
+  },
+  {
+   "claim": "Llama-2-70B QA accuracy collapses between 40% and 50% pruning (Fig 1 caption).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "40%-50%",
+   "unit": "pruning fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-70B, MMLU and BoolQ, healed",
+   "quote": "sharp transitions in performance for the accuracy of question-answering tasks (here between 40%-50% pruning fraction)",
+   "table": null,
+   "note": null,
+   "where": "Fig 1 caption"
+  },
+  {
+   "claim": "Healed C4 loss increases smoothly with no transition through the pruning fractions where QA accuracy collapses.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80%",
+   "unit": "pruning fraction (continuity shown up to)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "normalized C4 validation loss, healed, seven models",
+   "quote": "continuity and very slow growth in the healed loss (light blue) up to at least to 80% pruning fraction",
+   "table": null,
+   "note": null,
+   "where": "Fig 1 caption, Sec 4.2"
+  },
+  {
+   "claim": "Healing gives only modest MMLU gains and pushes the transition slightly later; the simple deepest-layers heuristic is much worse than similarity pruning without healing but nearly equal after healing.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-70B, MMLU/BoolQ/C4 loss, Fig 5",
+   "quote": "with healing, the scores of both methods are quite similar",
+   "table": null,
+   "note": null,
+   "where": "Fig 5 caption"
+  },
+  {
+   "claim": "Authors conclude the purpose of healing is repairing the pruning interface, not acquiring knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "similarity vs simple heuristic, Llama-2-70B",
+   "quote": "These experiments are strong evidence that the purpose of post-pruning finetuning is the healing of damage at the pruning interface and not the acquisition of additional knowledge.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "GSM8K and HellaSwag degrade immediately under any pruning, while CoT-MMLU stays flat like MMLU.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-70B, similarity-informed pruning (Fig 6); values only in figure",
+   "quote": "both GSM8K and HellaSwag, our two reasoning tasks, exhibit immediate degradation in performance with any amount of pruning",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Unpruned Llama-2-70B CoT-MMLU is about 43% versus about 69% for MMLU without CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~43% vs ~69%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-70B at 0% pruning",
+   "quote": "(∼69% vs. ∼43%, respectively; cf. Figures 2 and 6)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5 footnote 7"
+  },
+  {
+   "claim": "Authors' interpretation: shallow layers likely store and retrieve knowledge, deeper layers support higher-level computation such as math reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "inference from MMLU/BoolQ vs GSM8K/HellaSwag results",
+   "quote": "the shallow layers likely play a critical role in the storing of knowledge and retrieving of information, while the deeper layers are important for higher-level computations such as mathematical reasoning",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Layer pruning is more robust in larger, deeper models (Llama-2-13B, 70B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU across families",
+   "quote": "layer pruning is more robust for the larger and deeper models",
+   "table": null,
+   "note": "Authors offer two untested explanations: smaller models more overtrained, or deeper models can lose more layers in absolute terms.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Lower LoRA rank generally improves MMLU after healing but worsens C4 loss, suggesting overfitting to C4 at higher ranks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B, Llama-2-7B, Llama-2-70B rank sweeps (Fig 10)",
+   "quote": "decreasing the LoRA rank generally improves performance",
+   "table": null,
+   "note": null,
+   "where": "App C.3"
+  },
+  {
+   "claim": "Similarity-informed pruning outperforms random-layer and shallow-layer pruning on MMLU.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-7B, LoRA rank 64 (Fig 11)",
+   "quote": "The similarity-informed pruning strategy clearly outperforms these baselines.",
+   "table": null,
+   "note": "Fig 11 title says Llama-7B; caption says Llama-2 7B.",
+   "where": "App C.4"
+  }
+ ],
+ "limits": [
+  "Only QA-style benchmarks (MMLU, BoolQ) show the flat region; GSM8K, HellaSwag and C4 loss degrade immediately, so 'half the layers' applies to knowledge QA only",
+  "Single run per point, no confidence intervals; seed ablation only on Llama-2-13B",
+  "LoRA rank and some learning rates chosen per model by sweeps on MMLU, which tunes to the eval; compute did not allow an exhaustive sweep",
+  "Only 7 models, 2.7B-70B, all base pretrained models and one healing set (C4); no instruct models",
+  "Healing data C4 is probably lower quality than the models' pretraining data; authors suspect overfitting with higher ranks",
+  "Qwen family behaves anomalously (transition at ~20%); unexplained",
+  "MMLU shot count inconsistent: 5-shot in Sec 4.1/Fig 2, 0 few-shot in Appendix B.2",
+  "No latency or memory measurement reported; no code release stated",
+  "Authors concede they do not know why healing removes the transition in loss but not in QA accuracy"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "healing",
+   "definition": "a small amount of finetuning to repair the mismatch at the pruning interface",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "QLoRA",
+   "year": 2023,
+   "arxiv": "2305.14314",
+   "relation": "uses-method",
+   "note": "4-bit quantised LoRA finetuning for healing",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "low-rank adapters on FFN modules",
+   "quote": null
+  },
+  {
+   "work": "ShortGPT: Layers in LLMs are more redundant than you expect",
+   "year": 2024,
+   "arxiv": "2403.03853",
+   "relation": "related",
+   "note": "concurrent independent layer-pruning work with a similar Block Influence metric; ~28% of Llama-2 7B prunable",
+   "quote": null
+  },
+  {
+   "work": "Reducing transformer depth on demand with structured dropout",
+   "year": 2019,
+   "arxiv": "1909.11556",
+   "relation": "related",
+   "note": "LayerDrop, suggested for pretraining",
+   "quote": null
+  },
+  {
+   "work": "Logit lens / Tuned lens",
+   "year": 2023,
+   "arxiv": "2303.08112",
+   "relation": "related",
+   "note": "layer-to-layer convergence of token distributions motivates pruning deep layers",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "7B, 13B, 70B",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": "2310.06825",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Qwen technical report",
+   "year": 2023,
+   "arxiv": "2309.16609",
+   "relation": "evaluates",
+   "note": "7B, 14B",
+   "quote": null
+  },
+  {
+   "work": "Phi-2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "2.7B",
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BoolQ",
+   "year": 2019,
+   "arxiv": "1905.10044",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GSM8K",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "HellaSwag",
+   "year": 2019,
+   "arxiv": "1905.07830",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "C4 / T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Raffel et al. 2020",
+   "quote": null
+  },
+  {
+   "work": "Are emergent abilities a mirage?",
+   "year": 2023,
+   "arxiv": "2304.15004",
+   "relation": "related",
+   "note": "consistent with decoupled metrics",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of the layer-pruning strategy and Llama-2-70B results",
+   "page": 2,
+   "why": "Shows algorithm and the QA cliff vs smooth healed loss in one view"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "MMLU accuracy vs fraction of layers dropped, per model family",
+   "page": 6,
+   "why": "Per-family transition points"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Normalized C4 validation loss vs fraction dropped, before and after healing",
+   "page": 7,
+   "why": "Loss is continuous after healing"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Llama-2 70B on CoT-MMLU, GSM8K, HellaSwag under pruning",
+   "page": 10,
+   "why": "Reasoning tasks degrade immediately"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 6-7",
+   "snippet": "ℓ⋆(n) ≡ arg min_ℓ d(x(ℓ), x(ℓ+n)); d = (1/π) arccos(x_T(ℓ)·x_T(ℓ+n) / (||x_T(ℓ)|| ||x_T(ℓ+n)||))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Figure data (per-point accuracies) exist only in plots, so no numeric transition values beyond the stated text.",
+  "MMLU few-shot count is 5-shot in main text but 0 in Appendix B.2.",
+  "Main-text LoRA rank table cell for Llama-2-7B is 2 and the Config table leaves LoRA alpha/rank blank in text extraction."
+ ]
+}

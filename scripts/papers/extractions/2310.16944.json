@@ -1,0 +1,494 @@
+{
+ "schema": 1,
+ "key": "2310.16944",
+ "pdf": "generative-ai/05-RL/sources/tunstall-2023-zephyr.pdf",
+ "bib": {
+  "title": "Zephyr: Direct Distillation of LM Alignment",
+  "authors": [
+   "Lewis Tunstall",
+   "Edward Beeching",
+   "Nathan Lambert",
+   "Nazneen Rajani",
+   "Kashif Rasul",
+   "Younes Belkada",
+   "Shengyi Huang",
+   "Leandro von Werra",
+   "Clémentine Fourrier",
+   "Nathan Habib",
+   "Nathan Sarrazin",
+   "Omar Sanseviero",
+   "Alexander M. Rush",
+   "Thomas Wolf"
+  ],
+  "first_author": "Tunstall",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2310.16944",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 44785,
+  "chars_total": 44785,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a small open LLM be aligned to user intent entirely by distillation (teacher dialogues plus teacher AI-feedback preferences) with DPO, without human annotation or sampling during training?",
+ "hypothesis": "Distilled DPO on AI-feedback preferences, after dSFT, gives a 7B model chat alignment comparable to much larger RLHF-trained models.",
+ "contributions": [
+  "Zephyr-7B, Mistral-7B aligned with dSFT then dDPO, SOTA 7B chat model on MT-Bench/AlpacaEval, no human annotation",
+  "Ablation showing SFT before DPO is required and preference optimisation is needed",
+  "Observation that DPO overfitting (perfect train accuracy) does not hurt downstream chat scores"
+ ],
+ "method": {
+  "summary": "Three steps: dSFT of Mistral-7B on filtered UltraChat; binarised GPT-4 preferences from UltraFeedback (best-mean response vs random other of 4); DPO on those static pairs initialised from the dSFT model. Evaluated on MT-Bench, AlpacaEval and Open LLM Leaderboard.",
+  "task": "preference optimisation / alignment distillation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "UltraChat (filtered)",
+    "role": "train",
+    "size": "1.47M dialogues raw; approximately 200k after filtering",
+    "split": null,
+    "source": "GPT-3.5-turbo generated, 30 topics, 20 text material types (Ding et al. 2023)",
+    "preprocessing": "truecasing heuristics (about 5% of dataset) plus filters for helpfulness and removing responses like 'I don't have personal experiences'"
+   },
+   {
+    "name": "UltraFeedback",
+    "role": "train",
+    "size": "64k prompts, 4 responses each, rated by GPT-4",
+    "split": null,
+    "source": "Cui et al. 2023",
+    "preprocessing": "highest mean score = chosen, one of remaining three at random = rejected (random chosen to add diversity and make DPO harder); computed offline"
+   },
+   {
+    "name": "MT-Bench",
+    "role": "eval",
+    "size": "160 questions, 8 areas, 2 turns",
+    "split": null,
+    "source": "Zheng et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaEval",
+    "role": "eval",
+    "size": "805 questions",
+    "split": null,
+    "source": "Li et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Open LLM Leaderboard (ARC, HellaSwag, MMLU, TruthfulQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Beeching et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Mistral 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Zephyr-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "Mistral-7B",
+    "init_from": "SFT model trained one epoch, then three DPO epochs",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "teacher scoring UltraFeedback"
+    }
+   }
+  ],
+  "training": {
+   "objective": "SFT: max E log pi(y|x); DPO (Eq 1) with reference = dSFT model",
+   "optimizer": "AdamW",
+   "lr": "SFT peak 2e-5; DPO peak 5e-7",
+   "lr_schedule": "SFT cosine; DPO linear",
+   "warmup": "10% warmup steps (both)",
+   "batch_size": "SFT global 512 (packing); DPO global 32",
+   "steps": null,
+   "epochs": "SFT one to three epochs; DPO one to three epochs; final: 1 SFT + 3 DPO",
+   "tokens": null,
+   "seq_len": "2048 tokens (SFT, with packing); DPO not stated",
+   "precision": "bfloat16",
+   "weight_decay": "none (no weight decay)",
+   "dropout": null,
+   "regularisation": "DPO beta = 0.1",
+   "hardware": "16 A100 (80GB), TRL + DeepSpeed ZeRO-3 + FlashAttention-2",
+   "compute": "typically 2-4 hours per experiment",
+   "wall_clock": "2-4 hours",
+   "seeds": null,
+   "other": {
+    "peft": "no LoRA tried",
+    "hyperparams_full": "deferred to alignment-handbook repo"
+   }
+  },
+  "inference": {
+   "decoding": "main benchmarks: not stated; adversarial appendix prompts: nucleus sampling",
+   "temperature": "0.7 (appendix adversarial prompts only)",
+   "top_p": "0.95 (appendix adversarial prompts only)",
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MT-Bench",
+     "definition": "GPT-4 rates each response 1-10; mean over two turns",
+     "unit": "score 1-10",
+     "higher_is_better": true
+    },
+    {
+     "name": "AlpacaEval",
+     "definition": "GPT-4 pairwise win rate vs text-davinci-003",
+     "unit": "win %",
+     "higher_is_better": true
+    },
+    {
+     "name": "Open LLM Leaderboard",
+     "definition": "ARC, HellaSwag, MMLU, TruthfulQA classification accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Xwin-LM v0.1 7B/70B",
+    "Mistral-Instruct v0.1",
+    "MPT-Chat",
+    "StableLM-Tuned-alpha",
+    "Llama2-Chat 70B",
+    "Vicuna 33B",
+    "WizardLM 70B",
+    "Guanaco 65B",
+    "Falcon-Instruct 40B",
+    "Claude 2",
+    "GPT-3.5-turbo",
+    "GPT-4"
+   ],
+   "protocol": "Single reported scores; AlpacaEval shows standard errors; no seeds or significance test stated; some baseline scores taken from public leaderboards, Xwin-LM 7B MT-Bench self-run (asterisk)"
+  },
+  "availability": {
+   "code": "https://github.com/huggingface/alignment-handbook",
+   "weights": "Hugging Face Hub (HuggingFaceH4 collection)",
+   "data": "pre-processed datasets on the Hugging Face Hub"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other",
+    "quote": "For the full set of hyperparameters and instructions on how to train the models, see: https://github.com/huggingface/alignment-handbook.",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Zephyr-7B scores 7.34 on MT-Bench, above Llama2-Chat-70B at 6.86.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": 7.34,
+   "unit": "score 1-10",
+   "baseline_value": 6.86,
+   "n": null,
+   "setup": "Mistral-7B base, dSFT on filtered UltraChat (~200k) 1 epoch, then DPO on UltraFeedback (64k prompts) 3 epochs, beta 0.1; GPT-4 judge",
+   "quote": "ZEPHYR-7B achieves competitive performance with LLAMA2-CHAT 70B, scoring better on MT-Bench",
+   "table": "Table 1, row Zephyr 7B dDPO, column MT-Bench (Llama2-Chat 70B: 6.86)",
+   "note": null,
+   "where": "Table 1, Sec 5"
+  },
+  {
+   "claim": "Zephyr-7B AlpacaEval win rate 90.60 vs Llama2-Chat-70B 92.66, within two standard deviations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval",
+   "value": 90.6,
+   "unit": "win %",
+   "baseline_value": 92.66,
+   "n": null,
+   "setup": "Mistral-7B base, dSFT on filtered UltraChat (~200k) 1 epoch, then DPO on UltraFeedback (64k prompts) 3 epochs, beta 0.1; GPT-4 judge",
+   "quote": "within two\nstandard deviations on AlpacaEval",
+   "table": "Table 1, row Zephyr, column AlpacaEval (90.60 +-1.03; Llama2-Chat 92.66 +-0.91)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ablation: DPO directly on the base model without SFT scores 4.76 MT-Bench.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": 4.76,
+   "unit": "score 1-10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B, one epoch DPO on UltraFeedback, no dSFT",
+   "table": "Table 3, row dDPO - dSFT, column MT-Bench",
+   "note": "AlpacaEval 30.76",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Ablation: dSFT-1 then DPO (1 epoch each) scores 7.00 MT-Bench, 86.07 AlpacaEval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": 7.0,
+   "unit": "score 1-10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B, 1 epoch SFT on UltraChat then 1 epoch DPO on UltraFeedback",
+   "table": "Table 3, row dDPO + dSFT, column MT-Bench",
+   "note": "Differs from final 7.34, which used 3 DPO epochs; Table 3 does not state the epochs for 7.00 beyond one epoch each",
+   "where": "Table 3"
+  },
+  {
+   "claim": "SFT on top-ranked UltraFeedback completions after dSFT-1 (dSFT-2) scores 6.19 MT-Bench, lower than dSFT-1 alone at 6.64.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": 6.19,
+   "unit": "score 1-10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B, 1 epoch UltraChat SFT then 1 more epoch SFT on chosen UltraFeedback completions",
+   "table": "Table 3, row dSFT-2, column MT-Bench",
+   "note": "dSFT-1 6.64/85.65; dSFT-2 6.19/78.54. Text says only that it 'does not make an impact in performance'.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Open LLM Leaderboard: Zephyr-7B reaches 62.03 ARC, 84.52 HellaSwag, 61.44 MMLU, 57.44 TruthfulQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": 61.44,
+   "unit": "%",
+   "baseline_value": 69.83,
+   "n": null,
+   "setup": "Zephyr-7B dDPO vs 7B and larger open models (Llama2-Chat 70B MMLU 69.83)",
+   "table": "Table 2, row Zephyr, column MMLU",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Zephyr is much worse than proprietary models in math and coding on MT-Bench.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MT-Bench per-category breakdown",
+   "quote": "is much worse in math and coding",
+   "note": null,
+   "where": "Sec 5, Fig 1"
+  },
+  {
+   "claim": "After one epoch DPO overfits to perfect training accuracy without hurting MT-Bench/AlpacaEval; best is 1 SFT epoch + 3 DPO epochs; SFT longer than one epoch makes DPO regress.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 epoch ablation on MT-Bench, Mistral-7B",
+   "quote": "the strongest model was obtained with one\nepoch of SFT followed by three epochs of DPO",
+   "note": "Per-epoch MT-Bench values are only in Fig 3, not text",
+   "where": "Sec 5, Fig 3"
+  },
+  {
+   "claim": "Training takes 2-4 hours on 16 A100s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all experiments",
+   "quote": "typically took 2-4 hours to complete",
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Zephyr-7B does worse than WizardLM-70B and Xwin-LM-70B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 and 2 comparisons",
+   "quote": "ZEPHYR-7B performs worse than WIZARDLM-70B",
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "GPT-4 is the evaluator for MT-Bench and AlpacaEval, biased towards models distilled from it and verbose answers (authors concede)",
+  "Does not test scaling to larger models such as Llama-2-70B",
+  "Only helpfulness/intent alignment; safety not considered; appendix shows dDPO model complies with a scam SMS request",
+  "No seeds, variance or significance tests; MT-Bench has no error bars",
+  "Full hyperparameters are in an external repo (DPO seq len, steps unstated)",
+  "Qualitative examples are cherry-picked (stated in captions)",
+  "Table 3 ablation epochs: 7.00 uses 1 epoch DPO, final 7.34 uses 3",
+  "Xwin-LM 7B MT-Bench 6.19 self-evaluated; no compared PPO baseline trained by the authors",
+  "No ablation of the random-vs-lowest rejected-response choice"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dSFT",
+   "definition": "distilled SFT: train the student on instructions and responses generated by a teacher",
+   "where": "Sec 3"
+  },
+  {
+   "term": "dDPO",
+   "definition": "distilled DPO: DPO on teacher AI-feedback preference pairs from static data",
+   "where": "Sec 3"
+  },
+  {
+   "term": "AIF",
+   "definition": "AI Feedback: teacher (GPT-4) scores of four model responses per prompt, binarised into preferences",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Direct Preference Optimization (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dDPO objective",
+   "quote": null
+  },
+  {
+   "work": "UltraChat (Ding et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dSFT data",
+   "quote": null
+  },
+  {
+   "work": "UltraFeedback (Cui et al.)",
+   "year": 2023,
+   "arxiv": "2310.01377",
+   "relation": "uses-data",
+   "note": "preference data",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B (Jiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "pipeline stages followed; ablation replicates that RLHF needs SFT first",
+   "quote": "we replicate past results (Ouyang et al., 2022)"
+  },
+  {
+   "work": "Xwin-LM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dPPO, contemporaneous",
+   "quote": null
+  },
+  {
+   "work": "MT-Bench / Chatbot Arena (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "judge benchmark",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The three steps of our method: dSFT on UltraChat, AIF collection via four-model ensemble scored by GPT-4, dDPO",
+   "page": 4,
+   "why": "pipeline at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Train and test set accuracy during DPO (left) and MT-Bench scores for Mistral-7B models fine-tuned with dSFT then dDPO for varying epochs (right)",
+   "page": 8,
+   "why": "only source for epoch ablation and overfitting claim"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Ablation of different alignment methods on the base Mistral 7B model",
+   "page": 8,
+   "why": "SFT necessity ablation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3",
+   "snippet": "pi_theta = max_pi E_(x,yw,yl)~D log sigma( beta log pi(yw|x)/pi_dSFT(yw|x) - beta log pi(yl|x)/pi_dSFT(yl|x) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text layout of tables is column-flattened; table cells read by position",
+  "Fig 3 values not extractable as text",
+  "No embedded instructions found"
+ ]
+}

@@ -1,0 +1,680 @@
+{
+ "schema": 1,
+ "key": "2410.10762",
+ "pdf": "ai-engineering/04-loop-engineering/sources/zhang-2024-aflow.pdf",
+ "bib": {
+  "title": "AFLOW: AUTOMATING AGENTIC WORKFLOW GENERATION",
+  "authors": [
+   "Jiayi Zhang",
+   "Jinyu Xiang",
+   "Zhaoyang Yu",
+   "Fengwei Teng",
+   "Xiong-Hui Chen",
+   "Jiaqi Chen",
+   "Mingchen Zhuge",
+   "Xin Cheng",
+   "Sirui Hong",
+   "Jinlin Wang",
+   "Bingnan Zheng",
+   "Bang Liu",
+   "Yuyu Luo",
+   "Chenglin Wu"
+  ],
+  "first_author": "Zhang",
+  "year": 2025,
+  "venue": "ICLR 2025",
+  "arxiv": "2410.10762",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 116682,
+  "chars_total": 116682,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can workflow design for LLM tasks be automated end to end by searching over code-represented workflows with MCTS, beating hand-designed and prior automated workflows?",
+ "hypothesis": "Tree-structured experience, execution feedback and soft-mixed selection let an LLM optimizer search the workflow space more efficiently than ADAS's linear history.",
+ "contributions": [
+  "Formalise workflow optimisation as search over nodes and edges, generalising prior approaches",
+  "AFLOW: MCTS-based method with operators, discovering workflows with minimal human intervention",
+  "Evaluation on six benchmarks: +5.7% over manual methods, +19.5% over automated approaches, smaller models beating larger ones on cost-performance"
+ ],
+ "method": {
+  "summary": "AFLOW treats an agentic workflow as code (LLM-invoking nodes with prompt parameters, edges as Python control flow, plus predefined operators) and searches over whole workflows with an MCTS variant. An optimizer LLM (Claude-3.5-sonnet) makes one modification per round from the selected workflow's tree-structured experience (success and failure children, plus execution logs), each candidate is executed five times on a validation set, and results are backpropagated. Evaluated on six benchmarks against hand-designed methods and ADAS.",
+  "task": "automated agentic workflow search and optimisation for reasoning tasks with numeric evaluation (QA, code, math)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "both",
+    "size": "full dataset",
+    "split": "1:4 validation:test (20%/80%), random seed 42",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "validation set reduced to problems with high score variance over five runs of blank template"
+   },
+   {
+    "name": "HumanEval",
+    "role": "both",
+    "size": "full dataset",
+    "split": "1:4 validation:test",
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP",
+    "role": "both",
+    "size": "full dataset",
+    "split": "1:4 validation:test",
+    "source": "Austin et al. 2021",
+    "preprocessing": "first test case of each problem used as public test for the Test operator"
+   },
+   {
+    "name": "HotpotQA",
+    "role": "both",
+    "size": "1,000 random samples",
+    "split": "1:4 validation:test",
+    "source": "Yang et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "DROP",
+    "role": "both",
+    "size": "1,000 random samples",
+    "split": "1:4 validation:test",
+    "source": "Dua et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH level 5 subset (MATHlv5*)",
+    "role": "both",
+    "size": "617 problems",
+    "split": "1:4 validation:test",
+    "source": "Hendrycks et al. 2021; subset as in Hong et al. 2024a",
+    "preprocessing": "four types: Combinatorics & Probability, Number Theory, Pre-algebra, Pre-calculus, level 5"
+   }
+  ],
+  "models": [
+   {
+    "name": "Claude-3.5-sonnet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "API model used as optimizer in MCTS expansion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "optimizer; version string not given for optimizer, executor version Claude-3.5-sonnet-0620"
+    }
+   },
+   {
+    "name": "GPT-4o-mini-0718",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "API model, main executor",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": 0
+    }
+   },
+   {
+    "name": "DeepSeek-V2.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "API model, executor",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": 1
+    }
+   },
+   {
+    "name": "GPT-4o-0513",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "API model, executor",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": 0
+    }
+   },
+   {
+    "name": "Claude-3.5-sonnet-0620",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "API model, executor",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": 0
+    }
+   },
+   {
+    "name": "GPT-4o",
+    "role": "judge",
+    "params": null,
+    "architecture": "LLM judge for open-ended tasks only (Appendix F)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "1 for DeepSeek-V2.5, 0 for the other models",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "each generated workflow run 5 times on validation set per round (mean and std); final test results are the average of three runs",
+   "prompting": "workflow code with Custom node prompts written by the optimizer; operators Generate (Contextual, Code), Format, Review&Revise, Ensemble (ScEnsemble), Test, Programmer, Custom",
+   "retrieval": null,
+   "parameters": {
+    "max_rounds_N": 20,
+    "top_k": 3,
+    "early_stop_n": "5 rounds with top-k average unchanged",
+    "lambda": "0.2 in Sec 4 text, 0.4 in Appendix A.6 pseudocode",
+    "alpha": "0.4 in Sec 4 text, 0.2 in Appendix A.6 pseudocode",
+    "validation_split": "20%",
+    "test_split": "80%",
+    "split_seed": 42,
+    "validation_filter": "blank template run 5 times, keep high-variance problems (threshold not given)",
+    "Test_operator_test_loop": 3,
+    "Programmer_retries": 3,
+    "Programmer_exec_timeout_s": 180,
+    "workflow_graph_complexity_limit": "should not exceed 10 (optimizer prompt)",
+    "ADAS_rounds": 30,
+    "single_modification_per_round": true
+   },
+   "other": {
+    "optimizer_prompt": "Appendix A.1",
+    "initial_workflow": "blank template with a single Node and no prompt",
+    "selection": "soft mixed probability over top-k workflows plus the initial workflow",
+    "experience": "each tree node stores score, success children and failure children with modification text; execution logs of predictions vs expected output"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Solve rate",
+     "definition": "fraction of problems solved",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@1",
+     "definition": "code accuracy per Chen et al. 2021",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "F1 score on HotpotQA and DROP",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cost",
+     "definition": "dollars from tracked token usage over the test set",
+     "unit": "$",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "IO",
+    "CoT (Wei et al. 2022)",
+    "CoT SC 5 answers (Wang et al. 2022)",
+    "MedPrompt 3 answers 5 votes (Nori et al. 2023)",
+    "MultiPersona Debate (Wang et al. 2024a)",
+    "Self-Refine max 3 rounds (Madaan et al. 2023)",
+    "ADAS (Hu et al. 2024)"
+   ],
+   "protocol": "all methods executed with GPT-4o-mini on the divided test set, three runs averaged; no variance reported in tables; no significance tests; single search run per setting not stated"
+  },
+  "availability": {
+   "code": "https://github.com/FoundationAgents/AFlow",
+   "weights": null,
+   "data": "public benchmarks; optimization trajectories said to be in the repo; supplementary materials hold open-ended outputs"
+  },
+  "prompts": [
+   {
+    "purpose": "Workflow optimizer (LLM expansion) prompt",
+    "text": "You are building a Graph and corresponding Prompt to jointly solve {type} problems. [abridged; full text in Appendix A.1]",
+    "where": "Appendix A.1"
+   },
+   {
+    "purpose": "Execution feedback prompt",
+    "text": "Below are the logs of some results with the aforementioned Graph that performed well but encountered errors, which can be used as references for optimization: {log}",
+    "where": "Appendix C.2"
+   },
+   {
+    "purpose": "LLM-as-judge scoring for open-ended tasks (four dimensions 1-5, total max 20, GPT-4o)",
+    "text": "You are an expert evaluator tasked with scoring responses to open-ended questions. [abridged; full text in Appendix F.1]",
+    "where": "Appendix F.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.alpha",
+    "quote": "α (0.4) controls score influence, and λ (0.2) balances exploration and exploitation.",
+    "where": "Sec 4 Eq 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "AFLOW averages 80.3% across six benchmarks with GPT-4o-mini as executor.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average score",
+   "value": "80.3",
+   "unit": "%",
+   "baseline_value": "76.0",
+   "n": null,
+   "setup": "Table 1; HotpotQA/DROP F1, HumanEval/MBPP pass@1, GSM8K/MATH solve rate; GPT-4o-mini executor, Claude-3.5-sonnet optimizer, 20 rounds; test split, mean of three runs; best manual baseline CoT SC avg 76.0",
+   "note": null,
+   "where": "Sec 5.2, Table 1",
+   "table": "Table 1, row Ours, column Avg."
+  },
+  {
+   "claim": "AFLOW beats manual methods by 5.7% on average and automated optimisation (ADAS) by 19.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average improvement",
+   "value": "5.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six benchmarks, GPT-4o-mini executor",
+   "note": "Paper does not say whether 5.7 and 19.5 are relative or absolute; averages in Table 1 are 80.3 vs 76.0 (CoT SC) and 67.2 (ADAS).",
+   "where": "Sec 5.2",
+   "quote": "Workflows optimized by AFLOW outperform all manually designed methods by an average of 5.7% and surpass contemporary automatic workflow optimization work by 19.5%."
+  },
+  {
+   "claim": "ADAS scores below plain IO on average, so a naive linear-history search can lose to no workflow at all.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average score",
+   "value": "67.2",
+   "unit": "%",
+   "baseline_value": "72.8",
+   "n": null,
+   "setup": "Table 1, ADAS run with Claude-3.5-sonnet optimizer, GPT-4o-mini executor, 30 rounds; IO baseline 72.8",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ADAS, column Avg."
+  },
+  {
+   "claim": "AFLOW improves over ADAS on MATH level 5 and MBPP by about 57%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative improvement over ADAS",
+   "value": "57",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATHlv5* and MBPP, GPT-4o-mini",
+   "note": "MBPP 83.4 vs 53.4 and MATH 56.2 vs 35.4 in Table 1.",
+   "where": "Sec 5.2",
+   "quote": "improving over ADAS on MATHlv5∗and MBPP tasks by 57%"
+  },
+  {
+   "claim": "With GPT-4o-mini plus DeepSeek-V2.5 workflows, a weaker model matches GPT-4o IO on HumanEval at 4.55% of the cost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost ratio vs GPT-4o IO",
+   "value": "4.55",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval test split; AFLOW workflow found with GPT-4o-mini executed by DeepSeek-V2.5 reaches 0.9390 for $0.0291 vs GPT-4o IO 0.9389 for $0.6371",
+   "note": null,
+   "where": "Appendix D; abstract",
+   "quote": "Executing AFLOW (GPT-4o-mini) with deepseek achieves parity with GPT-4o IO at 4.55% of the cost."
+  },
+  {
+   "claim": "AFLOW workflows beat GPT-4o IO at 5.92% and 8.05% of the cost for the DeepSeek and GPT-4o-mini searches.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost ratio vs GPT-4o IO",
+   "value": "8.05",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, AFLOW(deepseek) with deepseek and AFLOW(GPT-4o-mini) with GPT-4o-mini",
+   "note": null,
+   "where": "Appendix D",
+   "quote": "Executing AFLOW (deepseek) with deepseek and AFlow(GPT-4o-mini) with GPT-4o-mini outperform GPT-4o IO at 5.92% and 8.05% of the cost, respectively."
+  },
+  {
+   "claim": "Per-benchmark gains: MBPP 83.4 vs best baseline 73.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "83.4",
+   "unit": "%",
+   "baseline_value": "73.6",
+   "n": null,
+   "setup": "MBPP, GPT-4o-mini",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours, column MBPP"
+  },
+  {
+   "claim": "HumanEval pass@1 of the discovered workflow.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "94.7",
+   "unit": "%",
+   "baseline_value": "91.6",
+   "n": null,
+   "setup": "HumanEval, GPT-4o-mini; best baseline CoT SC / MedPrompt 91.6",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours, column HumanEval"
+  },
+  {
+   "claim": "Workflows transfer across executor models, but a workflow searched with one model is weaker on another than one searched with that model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval pass@1, GPT-4o-mini executor",
+   "value": "90.8",
+   "unit": "%",
+   "baseline_value": "94.7",
+   "n": null,
+   "setup": "Table 2, HumanEval, workflow searched with DeepSeek-V2.5 (Ours*) run on GPT-4o-mini vs workflow searched with GPT-4o-mini (Ours)",
+   "note": null,
+   "where": "Sec 5.2, Table 2",
+   "quote": "This suggests that different language models require different workflows to achieve their optimal performance.",
+   "table": "Table 2, row GPT-4o-mini, column Ours*"
+  },
+  {
+   "claim": "Without operators AFLOW still reaches 93.1% on GSM8K, above manual designs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "solve rate",
+   "value": "93.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K ablation, operators removed, only Custom operator, 20 rounds",
+   "note": "Best with operators is 93.5 in Table 1.",
+   "where": "Sec 5.2, Fig 5",
+   "quote": "Notably, even without operators, AFLOW maintains strong performance (93.1%), surpassing manual designs."
+  },
+  {
+   "claim": "On the GSM8K case study the optimal path reached validation score 0.9352 in the tree from a blank template.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation score",
+   "value": "0.9352",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, Fig 6, best path from round 1 (0.8591) via ScEnsemble (0.8872), Programmer review (0.9160), prompt edits (0.9333, 0.9352)",
+   "note": null,
+   "where": "Fig 6",
+   "quote": "Score: 0.9352"
+  },
+  {
+   "claim": "Search settings: alpha 0.4 and lambda 0.2 in the main text for the soft mixed probability.",
+   "kind": "measured",
+   "source": null,
+   "metric": "selection hyperparameters",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Soft mixed probability selection, Eq 3",
+   "note": "Appendix A.6 pseudocode sets λ ←0.4, α ←0.2, i.e. swapped; the paper is inconsistent.",
+   "where": "Sec 4 Eq 3; Appendix A.6",
+   "quote": "α (0.4) controls score influence, and λ (0.2) balances exploration and exploitation."
+  },
+  {
+   "claim": "Open-ended novel task: LLM-judge and human scores both rank round 8 first; the judge gave 20 and humans 19.3 on a 20-point scale.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg LLM score",
+   "value": "20",
+   "unit": "points of 20",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single long-form novel prompt, Claude-3.5-sonnet execute/optimise, GPT-4o judge, three annotators paid $10/hour, 8 rounds",
+   "note": "Single task, so no statistical weight; round 1 judged 12, humans 2.",
+   "where": "Appendix F.2.1",
+   "table": "Table A1, round 8, column Avg LLM Score"
+  },
+  {
+   "claim": "Idea-generation task: round 6 is ranked first by both the LLM judge (19.7) and humans (19.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg LLM score",
+   "value": "19.7",
+   "unit": "points of 20",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One representative of 10 questions, GPT-4o-mini executor, Claude-3.5-sonnet optimiser, GPT-4o judge",
+   "note": null,
+   "where": "Appendix F.2.2",
+   "table": "Table A2, round 6, column Avg LLM Score"
+  },
+  {
+   "claim": "AFLOW reaches convergence under stated conditions (bounded G, valid workflows, non-zero improvement probability).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix G sketch, no proof",
+   "note": null,
+   "where": "Appendix G.2",
+   "quote": "AFLOW achieves optimal performance within finite iterations under three conditions:"
+  }
+ ],
+ "limits": [
+  "Authors focus on reasoning tasks with numerical evaluation functions; open-ended tasks only shown as two single-prompt case studies with an LLM judge (Appendix F)",
+  "Operators are human-designed effort; without them the GSM8K result is 93.1% vs 93.5%",
+  "Workflows found with one executor transfer imperfectly to others (Table 2)",
+  "Convergence and completeness claims in Appendix G are stated, not proven",
+  "No variance, seeds beyond split seed, or significance tests in the tables; search cost of the optimizer is not reported in dollars in the main text",
+  "Each round evaluates five runs on validation, which raises per-iteration cost (authors concede)",
+  "Inconsistency: lambda and alpha swapped between Sec 4 and Appendix A.6; Appendix A.6 calls the 80% split 'training'"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Agentic workflow",
+   "definition": "a series of LLM-invoking nodes connected by edges to define the execution orders",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Operator",
+   "definition": "predefined, reusable combinations of nodes representing common agentic operations (e.g., Ensemble, Review & Revise)",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Soft mixed probability selection",
+   "definition": "mix of uniform and score-weighted probability over top-k workflows and the initial workflow",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Automated design of agentic systems (ADAS)",
+   "year": 2024,
+   "arxiv": "2408.08435",
+   "relation": "baseline",
+   "note": "code-represented workflows with linear history; main automated baseline",
+   "quote": null
+  },
+  {
+   "work": "GPTSwarm",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "graph representation of workflows with RL",
+   "quote": null
+  },
+  {
+   "work": "DSPy",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs manual workflow setup before prompt optimisation",
+   "quote": null
+  },
+  {
+   "work": "TextGrad",
+   "year": 2024,
+   "arxiv": "2406.07496",
+   "relation": "related",
+   "note": "prompt optimisation within fixed workflows",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "manual baseline and basis of Review&Revise operator",
+   "quote": null
+  },
+  {
+   "work": "Self-Consistency",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "basis of Ensemble operator and CoT SC baseline",
+   "quote": null
+  },
+  {
+   "work": "MedPrompt",
+   "year": 2023,
+   "arxiv": "2311.16452",
+   "relation": "baseline",
+   "note": "manual baseline",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "manual baseline",
+   "quote": null
+  },
+  {
+   "work": "MultiPersona (Wang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "manual baseline",
+   "quote": null
+  },
+  {
+   "work": "AlphaCodium",
+   "year": 2024,
+   "arxiv": "2401.08500",
+   "relation": "related",
+   "note": "AFLOW rediscovered a similar test-generation-and-execution flow on MBPP",
+   "quote": null
+  },
+  {
+   "work": "Large language models as optimizers",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LLM as optimizer idea",
+   "quote": null
+  },
+  {
+   "work": "Archon",
+   "year": 2024,
+   "arxiv": "2409.15254",
+   "relation": "related",
+   "note": "hyperparameter / inference-time architecture search; also source of 1:4 split practice",
+   "quote": null
+  },
+  {
+   "work": "HumanEval, MBPP, GSM8K, MATH, HotpotQA, DROP",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "six evaluation benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Overall AFLOW framework: ... iteratively executes a cycle of Soft Mixed Probability Selection, LLM-Based Expansion, Execution Evaluation, and Experience Backpropagation",
+   "page": 5,
+   "why": "shows the MCTS loop and fixed vs searched parameters"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Tree-structured iteration process of AFLOW on GSM8K",
+   "page": 10,
+   "why": "shows single-step modifications along the best path and failed branches"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Cost vs HumanEval pass@1 scatter with Pareto front",
+   "page": 9,
+   "why": "weaker models on the Pareto front beating stronger ones"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4 Eq 3",
+   "snippet": "Pmixed(i) = λ · 1/n + (1 −λ) · exp(α · (si −smax)) / Σj exp(α · (sj −smax))",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix A.5",
+   "snippet": "async def __call__(self, problem: str, entry_point: str): ... best_solution = await self.sc_ensemble(solutions=solutions, problem=problem); test_result = await self.test(...)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction clean; figure data (Fig 1 values) interleaved but matches Table 1.",
+  "No embedded instructions found.",
+  "Optimizer Claude-3.5-sonnet version is not given; seeds for MCTS runs and optimizer temperature are not stated; hardware not stated.",
+  "lambda/alpha values swapped between Sec 4 and Appendix A.6."
+ ]
+}

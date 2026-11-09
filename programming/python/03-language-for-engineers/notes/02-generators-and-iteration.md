@@ -115,3 +115,7 @@ def take(n, it):
 ## Exercises
 
 [`practice/exercises/02_iteration.py`](../practice/exercises/02_iteration.py)
+
+## Next
+
+[3 — Functions, closures and decorators](03-functions-deeper.md): functions as values, closures and the decorator.

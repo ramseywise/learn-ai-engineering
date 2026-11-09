@@ -1,0 +1,615 @@
+{
+ "schema": 1,
+ "key": "2401.15024",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ashkboos-2024-slicegpt.pdf",
+ "bib": {
+  "title": "SliceGPT: Compress Large Language Models by Deleting Rows and Columns",
+  "authors": [
+   "Saleh Ashkboos",
+   "Maximilian L. Croci",
+   "Marcelo Gennari do Nascimento",
+   "Torsten Hoefler",
+   "James Hensman"
+  ],
+  "first_author": "Ashkboos",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2401.15024",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 64819,
+  "chars_total": 64819,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can a trained LLM be compressed post hoc by replacing each weight matrix with a smaller dense one (reducing embedding dimension) while keeping accuracy and getting real speedups?",
+ "hypothesis": "An orthogonal change of basis per block lets the signal be projected onto its principal components so minor ones can be sliced away with little loss.",
+ "contributions": [
+  "Computational invariance: orthogonal transforms can be applied to each weight matrix in a transformer without changing the model.",
+  "Per-block PCA projection of the signal between blocks, then deleting rows/columns (SliceGPT).",
+  "Experiments on OPT and LLAMA-2 (and Phi-2 zero-shot) up to 30% slicing, with superior perplexity to SparseGPT 2:4."
+ ],
+ "method": {
+  "summary": "Convert LayerNorm to RMSNorm, compute a per-block orthogonal matrix Q from PCA of calibration activations (eigenvectors of sum X^T X, double precision), insert Q^T_l Q_{l+1} in residual connections, and delete the minor columns/rows. Optional LoRA recovery fine-tuning.",
+  "task": "post-training structured compression of decoder-only LLMs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiText-2 train",
+    "role": "both",
+    "size": "calibration set size 1024 sequences (main), 128 (ablation)",
+    "split": "calibration from training set; perplexity on WikiText-2 test (inferred)",
+    "source": "Merity et al., 2016",
+    "preprocessing": "sequence length 2048 in main experiments"
+   },
+   {
+    "name": "Alpaca train",
+    "role": "both",
+    "size": "calibration 1024 (LLAMA-2) or 2048 (Phi-2) sequences, seq len 2048 (Table 3)",
+    "split": "train",
+    "source": "Taori et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "PIQA, WinoGrande, HellaSwag, ARC-e, ARC-c",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "LM Evaluation Harness, default parameters",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OPT 125M-66B",
+    "role": "evaluated",
+    "params": "125M, 1.3B, 2.7B, 6.7B, 13B, 30B, 66B",
+    "architecture": "decoder-only, LayerNorm",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLAMA-2 7B/13B/70B",
+    "role": "evaluated",
+    "params": "7B, 13B, 70B",
+    "architecture": "decoder-only, RMSNorm, gated FFN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phi-2",
+    "role": "evaluated",
+    "params": "2.8B",
+    "architecture": "decoder-only (zero-shot only)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SparseGPT 2:4",
+    "role": "baseline",
+    "params": null,
+    "architecture": "2:4 semi-structured sparsity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: LoRA recovery fine-tuning (objective not stated)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "1xH100 80GB (LLAMA-2 7B/13B), 4xH100 80GB (LLAMA-2 70B), 1xV100 32GB (Phi-2)",
+   "compute": "RFT 0h23m (7B), 0h44m (13B), 1h35m (70B), 1h59m (Phi-2); slicing 0h44m, 1h08m, 3h31m, 0h49m (Table 3)",
+   "wall_clock": "1-5 hours total",
+   "seeds": null,
+   "other": {
+    "lora_r": 32,
+    "lora_alpha": 10,
+    "rft_data": "approximately 1k sequences for WikiText-2-sliced models, 5k for Alpaca-sliced",
+    "other_hparams": "defaults of Hugging Face PEFT",
+    "rft_not_applied": "no RFT params found that improved OPT models",
+    "pca_precision": "double (FP32 degrades larger models, Appendix A.2)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config; no seeds or variance reported",
+   "prompting": "zero-shot via LM Evaluation Harness defaults",
+   "retrieval": null,
+   "parameters": {
+    "slicing_levels": "10%, 20%, 25%, 30% (50% for throughput)",
+    "calibration_size": "1024 main, 128 ablation",
+    "calibration_seq_len": "2048 main",
+    "throughput_protocol": "seq len 128, batch doubled until OOM or drop-off, 80GB H100",
+    "latency_protocol": "batch size 1, 128-token generation, A100 40GB and Quadro RTX6000 24GB",
+    "matmul_timing": "seq len 2048, A100 80GB, cuSparseLt 0.5, median over 103 runs"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "WikiText-2 perplexity",
+     "definition": "perplexity on WikiText-2",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "Mean zero-shot accuracy",
+     "definition": "average over PIQA, WinoGrande, HellaSwag, ARC-e, ARC-c",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Throughput",
+     "definition": "max tokens/s over batch sizes",
+     "unit": "tokens/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "Per-token latency / GPUms",
+     "definition": "ms per token times number of GPUs",
+     "unit": "ms, GPUms",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Dense",
+    "SparseGPT 2:4"
+   ],
+   "protocol": "Single runs; no seeds or error bars stated."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/TransformerCompression",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.lora_r",
+    "quote": "For all RFT we use lora_r = 32, lora_alpha = 10 and sequence length 1024",
+    "where": "Section 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Without recovery fine-tuning, slicing 25% of parameters keeps 99% (OPT 66B), 96% (LLAMA-2 70B) and 87% (Phi-2) of dense zero-shot accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retained mean accuracy",
+   "value": "99% / 96% / 87%",
+   "unit": "% of dense mean zero-shot accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mean of PIQA, WinoGrande, HellaSwag, ARC-e, ARC-c via LM Evaluation Harness; no RFT; Section 5 conclusion. Abstract states 99%, 99%, 90% for the same models without saying the latter two need RFT.",
+   "note": "Abstract prints 99%, 99% and 90% for LLAMA-2 70B, OPT 66B, Phi-2; conclusion gives 99%, 96%, 87% without RFT and 99% (LLAMA-2 70B), 90% (Phi-2) with RFT. Per Table 8 (Alpaca calibration) LLAMA-2 70B 25%: 73.59 vs dense 76.57; with WikiText-2 calibration (Table 7) 69.75.",
+   "where": "Section 5",
+   "quote": "slicing OPT 66B, LLAMA-2 70B and Phi-2 at 25% maintains 99%, 96% and 87% of the dense performance"
+  },
+  {
+   "claim": "With LoRA recovery fine-tuning on Alpaca, 25%-sliced LLAMA-2 70B and Phi-2 recover to 99% and 90% of dense performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retained mean accuracy",
+   "value": "99% / 90%",
+   "unit": "% of dense",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Alpaca calibration and Alpaca RFT, LoRA r=32, 5k sequences, 25% slicing.",
+   "note": null,
+   "where": "Section 5",
+   "quote": "With recovery fine-tuning 25%-sliced LLAMA-2 70B and Phi-2 increase to 99% and 90% respectively."
+  },
+  {
+   "claim": "LLAMA-2 70B sliced 30% with Alpaca RFT averages 74.3% against 76.6% dense.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean zero-shot accuracy",
+   "value": 74.3,
+   "unit": "% mean accuracy",
+   "baseline_value": 76.6,
+   "n": null,
+   "setup": "30% slice (~51.6B params), Alpaca calibration plus RFT, five zero-shot tasks.",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "we are able to achieve an average accuracy of 74.3%, compared to 76.6% on the dense model"
+  },
+  {
+   "claim": "Phi-2 at 25% slicing with RFT averages 65.2% vs 72.2% dense (90.3% retained).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean zero-shot accuracy",
+   "value": 65.2,
+   "unit": "% mean accuracy",
+   "baseline_value": 72.2,
+   "n": null,
+   "setup": "Alpaca calibration and RFT; sliced model ~2.2B params vs 2.8B.",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "The average accuracy of Phi-2 with 25% slicing and RFT is 65.2%, compared to 72.2% with the dense model."
+  },
+  {
+   "claim": "25%-sliced models reach up to 1.55x token throughput over dense on 80GB H100s (LLAMA-2 70B); other 25% cases are 1.06x-1.13x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens/s",
+   "value": "1.55x",
+   "unit": "x throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sequence length 128; batch size doubled until OOM or throughput drops; Table 11: LLAMA-2 70B dense 541 tok/s at batch 128 on 2 GPUs, 25% sliced 839 tok/s at batch 256 on 2 GPUs (sliced model fits a larger batch).",
+   "note": "Throughput at max batch, not latency; OPT 13B 1.13x, OPT 66B 1.08x, LLAMA-2 13B 1.06x at 25%.",
+   "where": "Section 4.1, Table 11",
+   "quote": "The 25% sliced models achieve up to 1.55× throughput improvement over the dense model."
+  },
+  {
+   "claim": "At 50% slicing the two largest models fit on one GPU instead of two, giving 3.13x and 1.87x throughput (6.26x and 3.75x for a fixed GPU count).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3.13x / 1.87x",
+   "unit": "x throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "H100 80GB, sequence length 128, OPT 66B and LLAMA-2 70B.",
+   "note": "Table 11 prints 6.26x and 3.75x for 1 GPU vs dense on 2 GPUs.",
+   "where": "Section 4.1",
+   "quote": "At 50% slicing the largest models require only one GPU instead of two, with large increases in throughput: 3.13× and 1.87×."
+  },
+  {
+   "claim": "LLAMA-2 70B per-token generation compute on Quadro RTX6000 falls from 1764 GPUms to 1075 GPUms (64%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "64%",
+   "unit": "% of dense GPUms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Batch size 1, generating length-128 sequences, 25% slicing, 7 GPUs to 5 GPUs, Hugging Face code without continuous batching or sharding.",
+   "note": null,
+   "where": "Section 4.1, Table 2",
+   "quote": "the compute required using RTX6000 GPUs is reduced to 64%, from 1764 GPUms to 1075 GPUms"
+  },
+  {
+   "claim": "Latency speedup at 25% slicing is 16-17% on RTX6000 and 11-13% on A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "16-17% / 11-13%",
+   "unit": "% speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OPT 66B and LLAMA-2 70B, batch size 1, 128 tokens.",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "We observe a speedup of 16-17% on RTX6000 GPUs when employing 25% slicing, and 11-13% on A100s."
+  },
+  {
+   "claim": "On 40GB A100s, inference cost of LLAMA-2 70B is reduced to 66% of dense (4 to 3 GPUs).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "66%",
+   "unit": "% of dense GPUms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2: 500 GPUms dense vs 330 GPUms at 25% slicing.",
+   "note": null,
+   "where": "Section 5",
+   "quote": "reduce the cost of inference of LLAMA-2 70B on 40GB A100 GPUs to 66% of that of the dense model"
+  },
+  {
+   "claim": "SparseGPT 2:4 is worse than SliceGPT 25% on all LLAMA-2 sizes; for OPT, 30% sliced beats 2:4 except at 2.7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "4.60 vs 4.98",
+   "unit": "WikiText-2 perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLAMA-2 70B, WikiText-2 calibration, set size 1024, seq len 2048.",
+   "note": "LLAMA-2 7B: 7.24 vs 8.69; 13B: 6.30 vs 7.07.",
+   "where": "Table 1",
+   "quote": "SparseGPT 2:4 performs worse than SliceGPT with 25% slicing in all LLAMA-2 models.",
+   "table": "Table 1, LLAMA-2 70B: Dense 3.32; SparseGPT 2:4 4.98; SliceGPT (25%) 4.60"
+  },
+  {
+   "claim": "At 50% slicing WikiText-2 perplexity is worse than SparseGPT 2:4 though throughput is much higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "8.86 (70B)",
+   "unit": "WikiText-2 perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLAMA-2 70B: 50% slice 8.86 vs 2:4 4.98 (Table 12); LLAMA-2 7B 17.17 vs 8.69.",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "We note that the WikiText2 perplexity of SliceGPT at 50% is worse than SparseGPT 2:4",
+   "table": "Table 12, rows SliceGPT (50%), column PPL"
+  },
+  {
+   "claim": "Matmul timing (A100, seq 2048): SliceGPT 25% matches SparseGPT 2:4 speedup on LLAMA-2 70B (1.32x) with better perplexity; on 7B/13B 2:4 is faster (1.48x/1.50x vs 1.33x/1.30x).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.32x",
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cuSparseLt 0.5 vs PyTorch dense, median over 103 runs, per-layer matmuls only.",
+   "note": null,
+   "where": "Appendix A.7, Table 12",
+   "table": "Table 12, rows LLAMA-2 70B SparseGPT 2:4 and SliceGPT (25%), column Total in ms (speedup)"
+  },
+  {
+   "claim": "Single-precision PCA hurts larger models: LLAMA-2 70B at 25% is 7.01 with FP32 PCA vs 4.89 with double precision (calibration 128).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7.01 vs 4.89",
+   "unit": "WikiText-2 perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Calibration set size 128, seq len 2048.",
+   "note": null,
+   "where": "Appendix A.2",
+   "table": "Table 4 row SliceGPT 25% col LLAMA-2 70B 7.01; Table 5 row SliceGPT (25%) 4.89"
+  },
+  {
+   "claim": "Slicing a model costs 1-3 hours on one GPU; 3h31m for LLAMA-2 70B on 1xH100 at 30%, 5h06m total with RFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3h31m",
+   "unit": "time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3: 30% slicing, Alpaca calibration 1024 sequences of 2048; RFT on 4xH100.",
+   "note": "Text says 1 to 3 hours but Table 3 shows 3h31m for 70B; Section 4 says approximately 3.5 hours for Q on LLAMA-2 70B.",
+   "where": "Section 4.1, Table 3",
+   "quote": "All LLAMA-2 , OPT and Phi-2 models can be sliced on a single GPU in 1 to 3 hours."
+  },
+  {
+   "claim": "Varying slicing by layer helps OPT but hurts LLAMA-2 perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "About 25% total slicing, calibration 128.",
+   "note": null,
+   "where": "Appendix A.4",
+   "quote": "Varying the slicing level by layer improves the WikiText-2 perplexity in OPT models, but has the opposite effect in LLAMA-2 models.",
+   "table": "Table 6, LLAMA-2 7B: 6.84 constant vs 7.63 varying"
+  },
+  {
+   "claim": "Alpaca calibration/RFT gives much better zero-shot accuracy than WikiText-2, attributed to similarity to benchmark tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLAMA-2 and Phi-2 with RFT.",
+   "note": null,
+   "where": "Section 4.1",
+   "quote": "We attribute this difference to the similarity between Alpaca and the benchmark tasks."
+  },
+  {
+   "claim": "Computational invariance: RMSNorm(XQ)Q^T = RMSNorm(X), so orthogonal transforms can be folded into weights without changing outputs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RMSNorm-connected transformers; LayerNorm models are converted first.",
+   "note": null,
+   "where": "Section 3.1",
+   "quote": "RMSNorm(XℓQ)Q⊤= RMSNorm(Xℓ) ."
+  },
+  {
+   "claim": "Column-norm pruning baseline failed: perplexity soared into the 1000s after pruning a few columns.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Initial baseline pruning smallest-norm columns; no numbers given.",
+   "note": null,
+   "where": "Section 4",
+   "quote": "WikiText-2 perplexity of the model soaring into the 1000s after pruning just a few columns"
+  },
+  {
+   "claim": "Smaller dense LMs outperform 13B-or-smaller models pruned to similar size.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' concession.",
+   "note": null,
+   "where": "Section 5",
+   "quote": "Smaller but dense LMs perform better than LMs with 13B parameters or less pruned to similar sizes"
+  }
+ ],
+ "limits": [
+  "Dense smaller LMs beat 13B-or-smaller models pruned to similar size (Section 5).",
+  "Sliced models have more parameters than SparseGPT 2:4 models; at 50% slicing perplexity is worse than 2:4.",
+  "RFT could not improve OPT models.",
+  "End-to-end SparseGPT 2:4 speedups were not feasible; comparison is per-layer matmul timing only.",
+  "Latency tests used Hugging Face code without continuous batching or sharding; OPT 175B excluded.",
+  "Not combined with quantization; authors suggest it as future work.",
+  "No seeds or variance reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "computational invariance",
+   "definition": "it is possible to apply an orthogonal transformation to the output of one component, so long as it is undone in the next",
+   "where": "Section 3"
+  },
+  {
+   "term": "RFT",
+   "definition": "recovery fine-tuning after pruning",
+   "where": "Section 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SparseGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "2:4 sparsity baseline",
+   "quote": null
+  },
+  {
+   "work": "LLM-Pruner",
+   "year": 2023,
+   "arxiv": "2305.11627",
+   "relation": "related",
+   "note": "structured pruning; RFT with LoRA follows it",
+   "quote": null
+  },
+  {
+   "work": "LLM Surgeon",
+   "year": 2023,
+   "arxiv": "2312.17244",
+   "relation": "related",
+   "note": "contemporary structured pruning",
+   "quote": null
+  },
+  {
+   "work": "OPT",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "recovery fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "ThiNet",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "most analogous channel pruning",
+   "quote": null
+  },
+  {
+   "work": "Stanford Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "WikiText-2 (Pointer sentinel mixture models)",
+   "year": 2016,
+   "arxiv": "1609.07843",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Matrix multiplication of the signal X and a weight matrix W under unstructured, 2:4 and slicing sparsity",
+   "page": 2,
+   "why": "Shows that slicing shrinks X too."
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Computational-invariance applied per block with Q^T_l Q_{l+1} in the skip connection",
+   "page": 7,
+   "why": "Shows the method."
+  },
+  {
+   "figure": "Table 11",
+   "caption": "Throughput on 80GB H100",
+   "page": 21,
+   "why": "Setup for the 1.55x claim."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 2",
+   "snippet": "RMSNorm(XℓQ)Q⊤= RMSNorm(Xℓ)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 1 and text report calibration size 1024; Table 12 LLAMA-2 70B SliceGPT 25% 12.20 total equals SparseGPT 2:4 total."
+ ]
+}

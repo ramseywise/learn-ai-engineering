@@ -1,0 +1,467 @@
+{
+ "schema": 1,
+ "key": "1610.07524",
+ "pdf": "data-science/sources/chouldechova-2016-fair-prediction-disparate-impact.pdf",
+ "bib": {
+  "title": "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments",
+  "authors": [
+   "Alexandra Chouldechova"
+  ],
+  "first_author": "Chouldechova",
+  "year": 2016,
+  "venue": "preprint (arXiv v1, stat.AP, 24 Oct 2016); published as Big Data 2017 (doi from caller, not in PDF)",
+  "arxiv": "1610.07524",
+  "doi": "10.1089/big.2016.0047"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 18617,
+  "chars_total": 18617,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a recidivism score that is free of predictive bias (calibrated across race) still produce unequal false positive and false negative rates and disparate impact when prevalence differs across groups?",
+ "hypothesis": "Differences in FPR and FNR cited by ProPublica are a direct consequence of applying a predictively unbiased instrument to groups with different recidivism prevalence.",
+ "contributions": [
+  "Make precise the connection between the psychometric notion of test fairness and error rates in classification.",
+  "Demonstrate how an RPI with different FPR and FNR between groups can lead to disparate impact when high-risk individuals receive stricter penalties."
+ ],
+ "method": {
+  "summary": "Algebraic derivation (eq 2.4, Props 3.1-3.2) plus descriptive plots on the ProPublica Broward County COMPAS data; no model is trained.",
+  "task": "fairness analysis of recidivism risk scores",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ProPublica Broward County COMPAS data",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "made publicly available by ProPublica [9]",
+    "preprocessing": "restricted to defendants whose race is recorded as African-American (b) or Caucasian (w); sample size not stated"
+   }
+  ],
+  "models": [
+   {
+    "name": "COMPAS recidivism risk decile score",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "cutoff": "coarsened by thresholding at sHR; Fig 2 uses decile > 4; cutoff for footnote-4 rates not stated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one dataset, no resampling; 95% confidence intervals on Figs 1 and 2 (method not stated)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "high_risk_cutoff": "decile score > 4 (Fig 2 caption)",
+    "outcome": "2-year recidivism",
+    "penalty_policy": "MinMax (tL if low-risk, tH if high-risk)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FPR",
+     "definition": "P(Sc=HR | Y=0)",
+     "unit": "proportion",
+     "higher_is_better": false
+    },
+    {
+     "name": "FNR",
+     "definition": "P(Sc=LR | Y=1)",
+     "unit": "proportion",
+     "higher_is_better": false
+    },
+    {
+     "name": "PPV",
+     "definition": "P(Y=1 | Sc=HR, R=r)",
+     "unit": "proportion",
+     "higher_is_better": true
+    },
+    {
+     "name": "Delta",
+     "definition": "E(T_b,y1 - T_w,y2), expected penalty difference",
+     "unit": "penalty units",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [],
+   "protocol": "Descriptive; no significance test; Flores et al. verification by logistic regression is cited, not redone"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "ProPublica public data (URL in refs [9])"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets[0].size",
+    "quote": "This data set contains COM-\nPAS recidivism risk decile scores, 2-year recidi-\nvism outcomes",
+    "where": "p. 2 Sec 1.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Identity linking FPR, FNR, PPV and prevalence for a thresholded score",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Any binary coarsened score Sc with PPV in (0,1) and prevalence p in (0,1); derived from the confusion matrix",
+   "quote": "Given values of the PPV ∈(0, 1) and prevalence",
+   "table": null,
+   "note": "Equation 2.4: FPR = p/(1-p) * (1-PPV)/PPV * (1-FNR). Numbered 2.4 in arXiv v1; the target note cites it as eq. 2.6 (later version).",
+   "where": "p. 2-3, Sec 2.1 eq 2.4"
+  },
+  {
+   "claim": "When prevalence differs, a test-fair score cannot have equal FPR and FNR across groups",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test fairness (calibration) of S implies equal PPV of coarsened Sc (eq 2.3); prevalence differs between groups; no proof given beyond 'straightforward to show'",
+   "quote": "a test-fair score Sc cannot have equal false",
+   "table": null,
+   "note": null,
+   "where": "p. 3, Sec 2.1"
+  },
+  {
+   "claim": "Recidivism prevalence in the data, Black defendants",
+   "kind": "measured",
+   "source": null,
+   "metric": "prevalence",
+   "value": "51",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ProPublica Broward County COMPAS data, defendants recorded as African-American or Caucasian; COMPAS decile score, 2-year recidivism outcome",
+   "quote": "is 51%, compared to 39% for White",
+   "table": null,
+   "note": null,
+   "where": "p. 3, Sec 2.1"
+  },
+  {
+   "claim": "Recidivism prevalence, White defendants",
+   "kind": "measured",
+   "source": null,
+   "metric": "prevalence",
+   "value": "39",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ProPublica Broward County COMPAS data, defendants recorded as African-American or Caucasian; COMPAS decile score, 2-year recidivism outcome",
+   "quote": "is 51%, compared to 39% for White",
+   "table": null,
+   "note": null,
+   "where": "p. 3, Sec 2.1"
+  },
+  {
+   "claim": "Black defendants: FPR 45%, FNR 28%",
+   "kind": "measured",
+   "source": null,
+   "metric": "FPR, FNR",
+   "value": "45% FPR / 28% FNR",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ProPublica Broward County COMPAS data, defendants recorded as African-American or Caucasian; COMPAS decile score, 2-year recidivism outcome; cutoff for these two rates not stated in the text (Fig 2 uses decile > 4)",
+   "quote": "Black: FPR = 45%, FNR = 28%.",
+   "table": null,
+   "note": null,
+   "where": "p. 3, footnote 4"
+  },
+  {
+   "claim": "White defendants: FPR 23%, FNR 48%",
+   "kind": "measured",
+   "source": null,
+   "metric": "FPR, FNR",
+   "value": "23% FPR / 48% FNR",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ProPublica Broward County COMPAS data, defendants recorded as African-American or Caucasian; COMPAS decile score, 2-year recidivism outcome; cutoff not stated for these rates",
+   "quote": "White: FPR = 23%, FNR = 48%",
+   "table": null,
+   "note": null,
+   "where": "p. 3, footnote 4"
+  },
+  {
+   "claim": "COMPAS appears to adhere well to test fairness: observed recidivism rates by decile score are similar for Black and White defendants",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Observed P(Y=1|S=s,R) per decile 1-10, 95% CI error bars; read from Figure, no numbers given",
+   "quote": "We can see that the COMPAS RPI appears to adhere",
+   "table": null,
+   "note": null,
+   "where": "p. 2, Fig 1"
+  },
+  {
+   "claim": "Under the MinMax policy the expected penalty difference is (tH - tL) times the difference in high-risk probabilities",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binary penalty: tL if low-risk, tH if high-risk; Delta = E(T_b,y1 - T_w,y2)",
+   "quote": "Proposition 3.1. The expected diﬀerence in penalty",
+   "table": null,
+   "note": null,
+   "where": "p. 3, Prop 3.1"
+  },
+  {
+   "claim": "Among non-recidivators the penalty gap is (tH-tL)(FPR_b - FPR_w); among recidivators (tH-tL)(FNR_w - FNR_b)",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MinMax policy; eqs 3.2 and 3.3. Higher-prevalence group gets higher FPR and lower FNR so is penalised more in both classes",
+   "quote": "Corollary 3.1 (Non-recidivators)",
+   "table": null,
+   "note": null,
+   "where": "p. 3, Cor 3.1 and 3.2"
+  },
+  {
+   "claim": "With tL=0, tH=1 a non-recidivating defendant in group b is FPR_b/FPR_w times as likely to be incarcerated as one in group w",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MinMax with tL=0, tH=1; E T = P(T != 0); footnote 5 notes FPR_r is conditional on tL = 0 subgroup. No numeric ratio computed in the paper (45/23 would be about 1.96 from the footnote-4 rates; derived by the reader, not stated)",
+   "quote": "FPRb/FPRw",
+   "table": null,
+   "note": null,
+   "where": "p. 4, Sec 3 (footnote 5)"
+  },
+  {
+   "claim": "FPR gaps between Black and White defendants persist across prior-count bins among misdemeanor defendants",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Misdemeanor charge only; high-risk = COMPAS decile score > 4; prior count bins 0, 1-3, 4-6, 7-10, >10; 95% CI; bar heights not given in text",
+   "quote": "between-group diﬀerences in these error rates persist",
+   "table": null,
+   "note": null,
+   "where": "p. 4, Fig 2"
+  },
+  {
+   "claim": "COMPAS decile score distributions differ by race: Cohen's d = 0.60, non-overlap (total variation distance) 24.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "Cohen's d; total variation distance",
+   "value": "d = 0.60; dTV = 24.5%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Decile score histograms, Black vs White",
+   "quote": "Cohen’s d = 0.60, non-overlap",
+   "table": null,
+   "note": null,
+   "where": "p. 4, Fig 3 caption"
+  },
+  {
+   "claim": "Delta is bounded by (tH-tL) times total variation distance between score distributions of same-outcome groups",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MinMax policy; stated as sharp bound, no proof in paper",
+   "quote": "Proposition 3.2 (Percent overlap bound)",
+   "table": null,
+   "note": null,
+   "where": "p. 4, Prop 3.2"
+  },
+  {
+   "claim": "Balancing error rates overall does not guarantee balance at finer granularity, and generally gives a score that is not free from predictive bias",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion, binary-binary setting",
+   "quote": "this does\nnot guarantee balance at ﬁner levels of granularity",
+   "table": null,
+   "note": null,
+   "where": "p. 5, Sec 4"
+  },
+  {
+   "claim": "Test-fair (calibrated) scores can still cause disparate impact; fairness is social and ethical, not statistical",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' framing",
+   "quote": "is a social and ethical concept, not a statistical one",
+   "table": null,
+   "note": null,
+   "where": "p. 1"
+  }
+ ],
+ "limits": [
+  "Sample size, PPV by race and the cutoff behind the footnote-4 FPR/FNR are not stated in the text.",
+  "Only a simple binary-score, binary-penalty (MinMax) setting; says all salient features are present but non-binary analogs are not shown.",
+  "Analysis covers only use cases where high risk means a stricter penalty, not risk-reduction uses (e.g. PCRA).",
+  "Fairness is called a social and ethical concept; no recommendation on which criterion to pick, and the level of granularity for error balance is left to the decision maker.",
+  "Does not discuss rearrest as a proxy for reoffence or label bias; the outcome is called 2-year recidivism with no discussion of measurement. These are absences, not conceded limits.",
+  "Calibration claim for COMPAS rests on Fig 1 and a cited Flores et al. regression, no test reported.",
+  "This is arXiv v1; later versions differ (the target note quotes text and eq 2.6 not found here)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Test fairness (well-calibrated)",
+   "definition": "A score S is test-fair if it reflects the same likelihood of recidivism irrespective of group membership: P(Y=1|S=s,R=b)=P(Y=1|S=s,R=w) for all s.",
+   "where": "p. 2, Def 2.1"
+  },
+  {
+   "term": "Disparate impact",
+   "definition": "settings where a penalty policy has unintended disproportionate adverse impact on a particular group",
+   "where": "p. 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Inherent trade-offs in the fair determination of risk scores (Kleinberg, Mullainathan, Raghavan)",
+   "year": 2016,
+   "arxiv": "1609.05807",
+   "relation": "related",
+   "note": "Independent concurrent work making the same observation; cited as arXiv preprint 2016",
+   "quote": "independent concurrent\nwork by Kleinberg et al."
+  },
+  {
+   "work": "Machine bias (Angwin, Larson, Mattu, Kirchner, ProPublica)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Its FPR/FNR disparity finding is the target explained",
+   "quote": null
+  },
+  {
+   "work": "How we analyzed the COMPAS recidivism algorithm (ProPublica)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of Broward County data",
+   "quote": null
+  },
+  {
+   "work": "False positives, false negatives, and false analyses (Flores, Bechtel, Lowenkamp)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Unpublished rejoinder; verifies COMPAS test fairness with logistic regression",
+   "quote": null
+  },
+  {
+   "work": "Northpointe COMPAS selected questions",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Reference [3] is Northpointe; no Dieterich et al. response is cited in this version",
+   "quote": null
+  },
+  {
+   "work": "Skeem and Lowenkamp, Risk, race & recidivism (SSRN)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Predictive bias findings by race and gender [5,6,7]",
+   "quote": null
+  },
+  {
+   "work": "Meehl 1954; Grove et al. 2000",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Data-driven prediction beats clinical judgement",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Plot shows P(Y = 1 | S = s, R) for the COMPAS decile score, with R ∈{Black, White}. Error bars represent 95% confidence intervals.",
+   "page": 2,
+   "why": "Shows near-calibration across race at every decile"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "False positive rates across prior record count for defendants charged with a Misdemeanor offense. High-risk if COMPAS decile score > 4. 95% CIs.",
+   "page": 4,
+   "why": "FPR gap persists in low-prior subgroups"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "COMPAS decile score histograms for Black and White defendants. Cohen's d = 0.60, non-overlap dTV(fb, fw) = 24.5%.",
+   "page": 4,
+   "why": "Different score distributions that drive the error-rate gap"
+  }
+ ],
+ "code": [
+  {
+   "where": "p. 3, eq 2.4",
+   "snippet": "FPR = p/(1-p) * (1-PPV)/PPV * (1-FNR)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 3, eq 3.2/3.3",
+   "snippet": "Delta = (tH - tL)(FPR_b - FPR_w) [non-recidivators]; Delta = (tH - tL)(FNR_w - FNR_b) [recidivators]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction has ligatures and line breaks; equations are split across lines.",
+  "No prompt injection found.",
+  "Abstract of this v1 differs from the later published version that the target note quotes."
+ ]
+}

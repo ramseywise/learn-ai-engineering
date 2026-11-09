@@ -1,19 +1,517 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2401.15884",
  "pdf": "generative-ai/02-rag-retrieval/sources/yan-2024-corrective-retrieval-augmented-generation.pdf",
  "bib": {
   "title": "Corrective Retrieval Augmented Generation",
-  "first_author": "Shi-Qi Yan",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Shi-Qi Yan",
+   "Jia-Chen Gu",
+   "Yun Zhu",
+   "Zhen-Hua Ling"
+  ],
+  "first_author": "Yan",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2401.15884",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 61291,
+  "chars_total": 61291,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
  },
- "legacy_report": "SOURCE: \"Corrective Retrieval Augmented Generation\" (CRAG), Shi-Qi Yan, Jia-Chen Gu, Yun Zhu, Zhen-Hua Ling (USTC, UCLA, Google DeepMind). arXiv:2401.15884v3, 7 Oct 2024. The PDF header names no venue, so treat it as an arXiv preprint. Code: github.com/HuskyInSalt/CRAG.\n\nCOVERAGE: 61,371 of 61,371 chars read (all pages: body, Tables 1-6, Appendix A prompts, B.1-B.5, Table 11). References were skimmed only. Extraction was clean. I did not run the figure-captions script. Figure 1-3 captions came from the text.\n\nCLAIMS (ranked)\n1. A small fine-tuned evaluator classifies retrieval quality better than prompted ChatGPT.\n- number: 84.3 vs 58.0 / 62.4 / 64.7\n- setup: PopQA retrieval results. Evaluator is T5-large, 0.77B, fine-tuned. The ChatGPT baselines are GPT-3.5 Turbo (direct, CoT, few-shot). Metric is evaluator accuracy.\n- quote: \"Our Retrieval Evaluator (T5-based) 84.3 / ChatGPT 58.0 / ChatGPT-CoT 62.4 / ChatGPT-few-shot 64.7\"\n- where: Table 4, section 5.5 (about 28k chars in)\n2. CRAG improves standard RAG on all four datasets.\n- number: with SelfRAG-LLaMA2-7b, PopQA 52.8 -> 59.8, Bio FactScore 59.2 -> 74.1, PubHealth 39.0 -> 75.6, ARC 53.2 -> 68.6. With LLaMA2-hf-7b, PopQA 50.5 -> 54.9, Bio 44.9 -> 47.7, Pub 48.9 -> 59.5, ARC 43.4 -> 53.7.\n- setup: Same Contriever retrievals as Self-RAG, so results are comparable. Accuracy, except Biography, which uses FactScore. PopQA is the 1,399-query long-tail subset.\n- quote: \"CRAG outperformed RAG by margins of 7.0% accuracy on PopQA, 14.9% FactScore on Biography, 36.6% accuracy on PubHealth, and 15.4% accuracy on Arc-Challenge when based on SelfRAG-LLaMA2-7b, as well as by margins of 4.4% accuracy on PopQA, 2.8% FactScore on Biography, and 10.3% on Arc-Challenge when based on LLaMA2-hf-7b.\"\n- where: Table 1, section 5.3\n- Note: the paper says \"margins of 7.0%\" etc. but these are absolute points (52.8 to 59.8). The PubHealth gain for hf-7b (48.9 to 59.5) is not in the quoted text.\n3. Self-CRAG beats Self-RAG, and Self-RAG breaks when you swap in a generator that was not instruction-tuned for it.\n- number: SelfRAG-7b: PopQA 54.9 -> 61.8, Bio 81.2 -> 86.2, Pub 72.4 -> 74.8, ARC 67.3 vs 67.2 (no gain). With LLaMA2-hf-7b: Self-RAG* 29.0 / 32.2 / 0.7 / 23.9, Self-CRAG 49.0 / 69.1 / 0.6 / 27.9.\n- quote: \"Compared with the current state-of-the-art Self-RAG, Self-CRAG outperformed it by margins of 20.0% accuracy on PopQA, 36.9% FactScore on Biography, and 4.0% accuracy on Arc-Challenge when based on LLaMA2-hf-7b\"\n- where: Table 1, section 5.3. The Self-RAG* numbers were reproduced by the authors.\n4. Ablation of the three actions on PopQA: removing any one action lowers accuracy.\n- number: CRAG on hf-7b: 54.9 full, 53.2 without Correct, 54.4 without Incorrect, 54.0 without Ambiguous. On SelfRAG-7b: 59.8 full, 58.3 / 59.5 / 59.0. Self-CRAG on hf-7b: 49.0 full, 43.6 / 47.7 / 48.1.\n- quote: \"w/o. Correct 53.2 58.3 / w/o. Incorrect 54.4 59.5 / w/o. Ambiguous 54.0 59.0\"\n- where: Table 2\n- Single-action-only runs (Table 11, appendix): CRAG hf-7b 54.9 full, only Correct 52.4, only Incorrect 47.0, only Ambiguous 52.7. SelfRAG-7b 59.8 full, 56.7 / 48.5 / 58.0. Forcing web-only (Incorrect) is the worst.\n- The Ambiguous action reduces dependence on evaluator accuracy: \"Preliminary experiments of employing only the Correct and Incorrect actions show that the efficacy of CRAG was easily affected by the accuracy of the retrieval evaluator.\"\n5. Ablation of knowledge-utilisation steps (PopQA accuracy): refinement, query rewriting and selection each help. Selection matters most for Self-CRAG on hf-7b.\n- number: CRAG hf-7b 54.9 full, 49.8 without refinement, 51.7 without rewriting, 50.9 without selection. SelfRAG-7b 59.8 full, 54.2 / 56.2 / 58.6. Self-CRAG hf-7b 49.0 full, 35.9 / 37.2 / 24.9. Self-CRAG SelfRAG-7b 61.8 full, 52.2 / 58.4 / 57.9.\n- quote: \"w/o. refinement 49.8 54.2 / w/o. rewriting 51.7 56.2 / w/o. selection 50.9 58.6\"\n- where: Table 3\n6. The gain comes from the correction mechanism, not just from adding web search.\n- number: PopQA, hf-7b: CRAG 54.9, RAG 50.5, RAG w. web 52.2. SelfRAG-7b: CRAG 59.8, RAG 52.8, RAG w. web 53.8. Self-RAG 54.9, Self-RAG w. web 57.9, Self-CRAG 61.8. On hf-7b, Self-RAG 29.0, Self-RAG w. web 24.9, Self-CRAG 49.0.\n- quote: \"RAG w. web 52.2 53.8\" and \"augmenting RAG or Self-RAG with the proposed self-correction mechanism significantly outperformed the models consistently supplemented with web search knowledge in all cases.\"\n- where: Table 5, section 5.7\n7. Overhead is modest. This is a rough estimate of the generation phase only.\n- number: TFLOPs per token 26.5 (RAG) vs 27.2 (CRAG). Execution time per instance 0.363s (RAG) vs 0.512s (CRAG). Self-RAG 0.741s, Self-CRAG 0.908s.\n- setup: PopQA, A800 GPU. Retrieval and data-processing stages (including web search latency) are excluded.\n- quote: \"TFLOPs per token executing time(s) / RAG 26.5 0.363 / CRAG 27.2 0.512 / Self-RAG 26.5 ∼132.4 0.741 / Self-CRAG 27.2 ∼80.2 0.908\"\n- where: Table 6, section 5.8\n8. Robustness to a degraded retriever (Figure 3): accurate retrievals were removed at random on PopQA with SelfRAG-LLaMA-7b. Self-CRAG degraded more slowly than Self-RAG. The actual retrieval accuracy was 69.8.\n- number: 69.8 (actual retrieval accuracy). The paper gives no other exact figures, only a plot.\n- quote: \"as the retrieval performance dropped, the generation performance of Self-CRAG dropped more slightly than that of Self-RAG.\"\n- where: section 5.6, Figure 3\n\nMethod and settings (for the note's CRAG description)\n- Evaluator: T5-large, scores each (question, document) pair separately, about 10 docs per question, in the range -1 to 1. Labels are +1 and -1, from PopQA gold wiki titles, with negatives sampled from retrieved results.\n- Correct: at least one document is above the upper threshold. The documents go to decompose-filter-recompose.\n- Incorrect: all documents are below the lower threshold. Retrieved documents are discarded and the system uses web search.\n- Ambiguous: everything else. It uses both internal and web knowledge.\n- Thresholds were \"set empirically\", per dataset, as (upper, lower): PopQA (0.59, -0.99), PubHealth/ARC (0.5, -0.91), Biography (0.95, -0.91).\n- Strip filter: top-5 strips, filter threshold -0.5. Web: Google Search API, top-5, Wikipedia preferred. Queries are rewritten into at most three keywords by GPT-3.5 Turbo (few-shot prompt, Table 7).\n- quote: \"The two confidence thresholds for triggering one of the three actions were set empirically.\" (App. B.3)\n- The evaluator was fine-tuned on PopQA training data (the roughly 14k samples minus the 1,399 test queries) and transferred unchanged to Bio, Pub and ARC.\n\nLIMITS\n- The authors concede: \"fine-tuning an external retrieval evaluator is inevitable.\" Removing it is left to future work.\n- All generators are LLaMA2-7B variants. No stronger LLM generators were tested.\n- The evaluator is trained on PopQA signals, and the thresholds are tuned per dataset. Whether a threshold generalises is not shown.\n- The paper gives no latency figure that includes retrieval or web search. Table 6 covers generation only.\n- No confidence intervals and no seeds are reported. Many deltas are small (CRAG without Incorrect is 0.5 below on PopQA, 54.9 vs 54.4).\n- Web search is a live commercial API (Google), so results may not be reproducible. Biases from web content are only mitigated by preferring Wikipedia.\n- PubHealth with hf-7b gives near-zero scores for Self-RAG and Self-CRAG (0.7 and 0.6). The authors blame instruction-following failure (\"fail to generate True or False\").\n- Relevance to the target note: the paper does not test a confidence-gate threshold of 0.7 or a Bedrock KB. It shows nothing about how often the gate short-circuits, and nothing about CRAG on enterprise or support corpora.\n- Dated: LLaMA2-era models and Contriever retrieval.\n\nBUILDS ON: Lewis et al., 2020 (RAG); Asai et al., 2024 (Self-RAG, also the source of the retrieval results and PopQA split); Raffel et al., 2020 (T5); Izacard et al., 2022 (Contriever); Mallen et al., 2023 (PopQA); Min et al., 2023 (FactScore/Biography); Zhang et al., 2023a (PubHealth); Bhakthavatsalam et al., 2021 (ARC); Luo et al., 2023 (SAIL); Dhuliawala et al., 2024 (CoVe); Narayanan et al., 2021 (FLOPs formulas); Piktus et al., 2021 and Komeili et al., 2022 (web search augmentation).\n\nCODE: no code in the paper. Algorithm 1 (CRAG Inference) is pseudocode in section 4.2: score each (x, d_i) with the evaluator E, then produce a Confidence value. CORRECT gives k = Knowledge_Refine(x, D). INCORRECT gives k = Web_Search(W rewrites x). AMBIGUOUS gives k = both. Then G predicts y given x and k. The prompts in Appendix A are worth reusing (Table 8, direct yes/no relevance grader: \"Given a question, does the following document have exact information to answer the question? Answer yes or no only.\").\n\nFIGURES\n- Fig 1 (p1): low-quality retriever examples (Henry Feilden, Death of a Batman) where a wrong document leads to a wrong answer.\n- Fig 2 (p4): inference flow. Evaluator -> Correct / Ambiguous / Incorrect -> refine / rewrite + web search -> generator. This is the best single picture of the method.\n- Fig 3 (p7): generation accuracy vs retrieval accuracy for Self-RAG and Self-CRAG on PopQA.\n\nPROBLEMS: No embedded instructions found. Table text layout in the extraction is flattened but the values read unambiguously. The Table 1 column order is PopQA, Bio, Pub, ARC. Table 1's \"Self-RAG*\" row under LLaMA2-hf-7b was reproduced by the authors. Check the note's claims about the \"CRAG +0.005 MRR, 0.7 gate\" and the \"LangGraph graph agent with CRAG\" against the source. The paper's CRAG is a trained T5 evaluator with web fallback and strip refinement. A LangGraph CRAG with a 0.7 gate on Bedrock scores is a re-implementation, not the paper's method, and the paper does not report MRR or P@1.\n\nFiles: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/yan-2024-corrective-retrieval-augmented-generation.pdf. Full text at /tmp/crag.txt."
+ "type": "empirical",
+ "question": "How can a RAG system detect and correct retrieval that returns irrelevant documents, rather than feeding them to the generator?",
+ "hypothesis": "A lightweight trained retrieval evaluator that triggers refinement, web search or both will make RAG and Self-RAG more robust to bad retrieval.",
+ "contributions": [
+  "First attempt to design corrective strategies for RAG when the retriever returns inaccurate results",
+  "A plug-and-play method named CRAG for self-correction and efficient use of retrieved documents",
+  "Experiments showing adaptability to RAG-based approaches and generalizability across short- and long-form generation"
+ ],
+ "method": {
+  "summary": "A fine-tuned T5-large scores each (question, document) pair; the scores trigger Correct (refine documents into filtered strips), Incorrect (discard and use rewritten-query web search) or Ambiguous (both). The result feeds a frozen generator; coupled to RAG (CRAG) and to Self-RAG (Self-CRAG).",
+  "task": "retrieval-augmented generation: short-form QA, long-form biography, true/false, multiple choice",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PopQA",
+    "role": "both",
+    "size": "14k samples total; 1,399 long-tail test queries",
+    "split": "1,399 test (Self-RAG split); remainder used to fine-tune the evaluator",
+    "source": "Mallen et al. 2023; golden subject wiki title used as positive relevance signal",
+    "preprocessing": "positives label 1, negatives -1 randomly sampled from retrieval results"
+   },
+   {
+    "name": "Biography",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Min et al. 2023, FactScore",
+    "preprocessing": null
+   },
+   {
+    "name": "PubHealth",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhang et al. 2023a",
+    "preprocessing": null
+   },
+   {
+    "name": "Arc-Challenge",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bhakthavatsalam et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Retrieval evaluator (T5-large)",
+    "role": "proposed",
+    "params": "0.77B",
+    "architecture": "T5 encoder-decoder, relevance score in [-1,1]",
+    "init_from": "T5-large (Raffel et al. 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-hf-7b",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "generator, not trained here"
+    }
+   },
+   {
+    "name": "SelfRAG-LLaMA2-7b",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": "LLaMA2-7B instruction-tuned by Self-RAG",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "generator, released Self-RAG model"
+    }
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense retriever; Self-RAG's retrieval results reused",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "docs_per_question": "generally 10"
+    }
+   },
+   {
+    "name": "GPT-3.5 Turbo (ChatGPT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "query rewriting and as a prompted retrieval evaluator baseline"
+    }
+   }
+  ],
+  "training": {
+   "objective": "fine-tune evaluator as relevance scorer, labels +1 / -1",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "NVIDIA A800 80GB GPU",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "evaluator fine-tuned on PopQA only (the PopQA samples left after the 1,399 test queries), transferred to Bio, Pub, ARC"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: single run per cell, no seeds or variance reported",
+   "prompting": "ChatGPT rewrites question to at most three keywords with a 4-shot prompt (Table 7)",
+   "retrieval": "top documents from Contriever as given by Self-RAG; Google Search API top-k 5, Wikipedia pages preferred",
+   "parameters": {
+    "thresholds (upper, lower)": "PopQA (0.59, -0.99); PubHealth and Arc-Challenge (0.5, -0.91); Biography (0.95, -0.91)",
+    "strip filter": "top-k 5, filter threshold -0.5",
+    "Correct rule": "at least one document above upper threshold",
+    "Incorrect rule": "all documents below lower threshold",
+    "Ambiguous": "otherwise; internal plus external knowledge"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "PopQA, PubHealth, Arc-Challenge",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FactScore",
+     "definition": "Biography (Min et al. 2023)",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LLaMA2 7B/13B",
+    "Alpaca 7B/13B",
+    "CoVE65B",
+    "LLaMA2-c13B",
+    "ChatGPT",
+    "Ret-LLaMA2-c13B",
+    "Ret-ChatGPT",
+    "Perplexity.ai",
+    "SAIL",
+    "RAG",
+    "Self-RAG"
+   ],
+   "protocol": "Numbers for non-CRAG baselines cited from original papers except starred (*) reproductions; no seeds, variance or significance test."
+  },
+  "availability": {
+   "code": "github.com/HuskyInSalt/CRAG",
+   "weights": null,
+   "data": "public datasets; PopQA from huggingface akariasai/PopQA"
+  },
+  "prompts": [
+   {
+    "purpose": "search query rewriting",
+    "text": "Extract at most three keywords separated by comma from the following dialogues and questions as queries for the web search, including topic background within dialogues and main intent within questions.",
+    "where": "Appendix A, Table 7 (4 few-shot examples follow)"
+   },
+   {
+    "purpose": "ChatGPT as evaluator, direct",
+    "text": "Given a question, does the following document have exact information to answer the question? Answer yes or no only.",
+    "where": "Appendix A, Table 8"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CRAG over RAG on PopQA with SelfRAG-LLaMA2-7b generator",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.8,
+   "unit": "% accuracy",
+   "baseline_value": 52.8,
+   "n": null,
+   "setup": "PopQA long-tail subset, 1,399 queries; accuracy; Contriever retrievals from Self-RAG; SelfRAG-LLaMA2-7b generator, T5-large evaluator, Google Search; single run, no variance reported",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, SelfRAG-LLaMA2-7b block, rows CRAG and RAG, column PopQA"
+  },
+  {
+   "claim": "Self-CRAG over Self-RAG on PopQA with SelfRAG-LLaMA2-7b",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.8,
+   "unit": "% accuracy",
+   "baseline_value": 54.9,
+   "n": null,
+   "setup": "PopQA long-tail subset, 1,399 queries; accuracy; Contriever retrievals from Self-RAG; SelfRAG-LLaMA2-7b",
+   "note": "Text says margin 6.9; 61.8-54.9=6.9.",
+   "where": "Table 1",
+   "table": "Table 1, SelfRAG-LLaMA2-7b block, row Self-CRAG, column PopQA"
+  },
+  {
+   "claim": "Self-CRAG over Self-RAG on Biography FactScore (SelfRAG-LLaMA2-7b)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FactScore",
+   "value": 86.2,
+   "unit": "FactScore",
+   "baseline_value": 81.2,
+   "n": null,
+   "setup": "Biography long-form; SelfRAG-LLaMA2-7b",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, SelfRAG-LLaMA2-7b block, row Self-CRAG, column Bio"
+  },
+  {
+   "claim": "With the plain LLaMA2-hf-7b generator, Self-RAG collapses and Self-CRAG recovers on PopQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 49.0,
+   "unit": "% accuracy",
+   "baseline_value": 29.0,
+   "n": null,
+   "setup": "PopQA; LLaMA2-hf-7b (not Self-RAG tuned); Self-RAG* is the authors' reproduction",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, LLaMA2-hf-7b block, row Self-CRAG, column PopQA"
+  },
+  {
+   "claim": "PubHealth accuracy of CRAG with LLaMA2-hf-7b rises over RAG, but Self-RAG and Self-CRAG on that generator score under 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.5,
+   "unit": "% accuracy",
+   "baseline_value": 48.9,
+   "n": null,
+   "setup": "PubHealth; LLaMA2-hf-7b",
+   "note": "Self-RAG* 0.7 and Self-CRAG 0.6 on Pub; authors attribute to the model failing to emit True/False.",
+   "where": "Table 1; App B.5",
+   "table": "Table 1, LLaMA2-hf-7b block, row CRAG, column Pub"
+  },
+  {
+   "claim": "Fine-tuned T5-large retrieval evaluator beats prompted ChatGPT at judging retrieval quality",
+   "kind": "measured",
+   "source": null,
+   "metric": "evaluator accuracy",
+   "value": 84.3,
+   "unit": "% accuracy",
+   "baseline_value": 64.7,
+   "n": null,
+   "setup": "PopQA retrieval results; ChatGPT prompts in Appendix A (direct, CoT, few-shot)",
+   "note": "ChatGPT 58.0, CoT 62.4, few-shot 64.7. How ground truth for 'correct retrieval' is defined is not stated.",
+   "where": "Table 4",
+   "table": "Table 4, row Our Retrieval Evaluator (T5-based), column Accuracy"
+  },
+  {
+   "claim": "Removing knowledge refinement drops Self-CRAG PopQA accuracy by the most of any utilization operation",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 35.9,
+   "unit": "% accuracy",
+   "baseline_value": 49.0,
+   "n": null,
+   "setup": "PopQA; LLaMA2-hf-7b generator",
+   "note": "Other drops with LLaMA2-hf-7b: w/o rewriting 37.2, w/o selection 24.9. SelfRAG-LLaMA2-7b: 52.2, 58.4, 57.9 vs 61.8.",
+   "where": "Table 3",
+   "table": "Table 3, LLaMA2-hf-7b column, row Self-CRAG w/o. refinement"
+  },
+  {
+   "claim": "Removing any single action lowers PopQA accuracy, but by small margins for CRAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 53.2,
+   "unit": "% accuracy",
+   "baseline_value": 54.9,
+   "n": null,
+   "setup": "PopQA; CRAG w/o Correct, LLaMA2-hf-7b",
+   "note": "Other CRAG ablations: w/o Incorrect 54.4, w/o Ambiguous 54.0; SelfRAG-LLaMA2-7b 58.3, 59.5, 59.0 vs 59.8.",
+   "where": "Table 2",
+   "table": "Table 2, row w/o. Correct (under CRAG), column LLaMA2-hf-7b"
+  },
+  {
+   "claim": "Forcing only the Incorrect (web search) action everywhere is the worst single-action setting",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.5,
+   "unit": "% accuracy",
+   "baseline_value": 59.8,
+   "n": null,
+   "setup": "PopQA; CRAG with SelfRAG-LLaMA2-7b",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row only Incorrect, column SelfRAG-LLaMA2-7b (CRAG block)"
+  },
+  {
+   "claim": "Giving RAG or Self-RAG the same web-search knowledge helps little relative to the correction mechanism",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 53.8,
+   "unit": "% accuracy",
+   "baseline_value": 59.8,
+   "n": null,
+   "setup": "PopQA; RAG w. web, SelfRAG-LLaMA2-7b",
+   "note": "CRAG 59.8 vs RAG w. web 53.8; Self-RAG w. web 57.9 vs Self-CRAG 61.8. Self-RAG w. web with LLaMA2-hf-7b fell to 24.9 from 29.0.",
+   "where": "Table 5",
+   "table": "Table 5, row RAG w. web, column SelfRAG-LLaMA2-7b"
+  },
+  {
+   "claim": "CRAG adds modest per-instance latency over RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "execution time",
+   "value": 0.512,
+   "unit": "s per instance",
+   "baseline_value": 0.363,
+   "n": null,
+   "setup": "PopQA; generation phase only; retrieval and data-processing stages excluded",
+   "note": "TFLOPs per token 27.2 vs 26.5 for RAG; Self-CRAG 0.908 s vs Self-RAG 0.741 s.",
+   "where": "Table 6",
+   "table": "Table 6, row CRAG, column executing time(s)"
+  },
+  {
+   "claim": "Self-CRAG degrades more slowly than Self-RAG as retrieval accuracy is artificially degraded",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PopQA, SelfRAG-LLaMA-7b; accurate retrieval results randomly removed; read from Fig 3 only (actual retrieval accuracy 69.8)",
+   "note": null,
+   "where": "Sec 5.6, Fig 3",
+   "quote": "the generation performance of Self-CRAG dropped more slightly than that of Self-RAG"
+  }
+ ],
+ "limits": [
+  "Fine-tuning an external retrieval evaluator is required (authors concede).",
+  "Evaluator is trained on PopQA only and transferred; thresholds were set empirically per dataset, with no stated tuning procedure.",
+  "All generators are LLaMA2-7B variants; no larger or proprietary generator.",
+  "Single run per cell, no variance or significance.",
+  "Table 6 overhead excludes retrieval and web search stages.",
+  "Self-RAG and Self-CRAG on LLaMA2-hf-7b PubHealth score under 1 owing to output-format failure, so those gains are not meaningful.",
+  "Evaluator accuracy (Table 4) does not define how ground-truth retrieval correctness is labeled.",
+  "Google Search dependence limits reproducibility over time."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Correct / Incorrect / Ambiguous",
+   "definition": "Three actions triggered by evaluator confidence against upper and lower thresholds",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "decompose-then-recompose",
+   "definition": "Split documents into strips, score each with the evaluator, filter, concatenate the kept strips in order",
+   "where": "Sec 4.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-RAG",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Self-CRAG plugs CRAG into it; uses its retrievals and data splits",
+   "quote": null
+  },
+  {
+   "work": "RAG (Lewis et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "CRAG coupled to standard RAG",
+   "quote": null
+  },
+  {
+   "work": "Contriever",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "evaluator initialisation",
+   "quote": null
+  },
+  {
+   "work": "PopQA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "FactScore",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Biography metric",
+   "quote": null
+  },
+  {
+   "work": "SAIL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "CoVE",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of the proposed CRAG at inference.",
+   "page": 3,
+   "why": "Shows the three-action flow in one picture."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Generation performance of Self-RAG and Self-CRAG given different retrieval performance on PopQA",
+   "page": 7,
+   "why": "Robustness curve."
+  }
+ ],
+ "code": [],
+ "problems": []
 }

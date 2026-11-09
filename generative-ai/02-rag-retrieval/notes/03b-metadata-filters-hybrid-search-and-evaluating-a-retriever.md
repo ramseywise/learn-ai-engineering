@@ -119,7 +119,7 @@ M3-Embedding puts the three scorers in one model. An XLM-RoBERTa-large extended 
 
 ## Evaluating a retriever
 
-You need a labelled set: for each query, which documents are relevant.
+You need a labelled set: for each query, which documents are relevant. The metric definitions and a framework comparison live in [GA 08 note 7](../../08-eval/notes/07-evaluating-rag-and-grounding.md#retrieval-metrics); this section keeps the worked numbers and code.
 
 | Metric | Formula | Question it answers |
 |---|---|---|

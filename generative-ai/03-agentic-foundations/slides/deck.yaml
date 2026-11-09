@@ -1,4 +1,4 @@
-# Agentic Foundations lecture deck. Covers notes 01-07.
+# Agentic Foundations lecture deck. Covers notes 01-07 including the b and c notes (01b, 01c, 02b, 02c, 03b, 03c, 04b, 04c).
 # Build: make slides PILLAR=generative-ai/03-agentic-foundations STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: a restock agent, from the inventory manager in Generative AI Design Patterns ch. 1.
@@ -122,6 +122,80 @@ parts:
           Albada adds a rung below the LLM: plain code, chosen when inputs are predictable or certification demands deterministic logic.
           Our restock calculation is plain code. The judgment around suppliers is what might justify a model.
 
+      - layout: code
+        title: Every step re-reads everything before it
+        recall: Why does an agent run cost more than its step count suggests?
+        lang: text
+        code: |
+          steps  input tokens    cost
+              4        18,800  $0.047
+              8        66,400  $0.152
+             12       142,800  $0.314
+             24       544,800  $1.147
+
+          24 steps, full history:  $1.147
+          24 steps, last 4 only:   $0.463
+        bullets:
+          - "**Input grows with the square of the steps.** Doubling 12 to 24 nearly quadruples it."
+          - "**Caching does not change the shape.** The context still grows."
+          - "**A window cuts 60%,** if the agent never needs what fell out."
+        takeaway: Each step pays for the whole history again, so total input grows roughly with the square of the steps, and step caps and bounded history are the first levers.
+        source: notes/01b-what-an-agent-costs.md
+        notes: >-
+          This is our own token model from note 01b, with illustrative prices of 2 and 8 dollars per million tokens, so only the shape carries over.
+          The model assumes every run uses all its steps. A real cap stops early finishers sooner, so measure your own step distribution.
+
+      - layout: table
+        title: Price the run, then divide by how often it succeeds
+        recall: What is cost-of-pass?
+        header: [Backbone on GAIA, Accuracy, Cost per solved task]
+        widths: [4, 2, 3]
+        rows:
+          - [Claude 3.7 Sonnet, 61.8%, "$3.54"]
+          - [GPT-4.1, 53.3%, "$0.98"]
+          - [Qwen3-30B-A3B, 17.6%, "$0.13"]
+        highlight: [0]
+        bold_first: true
+        takeaway: Cost-of-pass is the cost of one attempt divided by the success rate, and it shows that the most accurate backbone cost 3.6 times more per solved task than the runner-up.
+        source: notes/01b-what-an-agent-costs.md
+        notes: >-
+          From Efficient Agents (Wang et al., 2025) on about 165 GAIA validation tasks, one run per setting. In the same study best-of-4 per step moved accuracy from 53.3% to 53.9%
+          and cost-of-pass from 0.98 to 1.28 dollars, and plain history beat model-summarised history, 56.4% at 0.74 dollars against 51.5% at 1.52 dollars.
+          One to three points on this sample is noise.
+
+      - layout: image
+        title: An agent can change itself at three timescales
+        recall: In what three ways does an agent learn?
+        image: ../sources/images/li-ai-agents-in-depth-fig1-2.svg
+        caption: Three levels of agent capability updates (Bojie Li, AI Agents in Depth, 2026, Fig. 1-2)
+        bullets:
+          - "**Context:** this task only. Fast and cheap."
+          - "**External artifacts:** prompts, skills and code. Across tasks and auditable."
+          - "**Parameters:** weights via post-training. Permanent."
+          - "**Procedural writes are the riskiest** (CoALA)."
+        takeaway: An agent learns in context for one task, in auditable external artifacts across tasks, or in its weights permanently, and editing its own prompts or skills is the riskiest write.
+        source: notes/01c-model-as-agent-and-how-agents-learn.md
+        notes: >-
+          RL taught frontier models the tool-calling decision, but the tool itself still runs outside the weights, so a stronger model makes the harness matter more.
+          CoALA ranks the risk: a bad prompt or skill update can break the agent, which is far riskier than appending a fact.
+
+      - layout: table
+        title: Reward-filtered self-training beat more expert data
+        recall: Why train an agent on its own successful rollouts?
+        header: [AgentGym task, Cloned on experts, After AgentEvol]
+        widths: [3, 3, 3]
+        rows:
+          - [WebShop, "66.5", "76.5"]
+          - [ALFWorld, "77.5", "88.0"]
+          - [BabyAI, "69.3", "82.7"]
+        highlight: [1]
+        bold_first: true
+        takeaway: Keeping only an agent's successful rollouts beat cloning on 2.4 times as many expert trajectories on three tasks, but the gain came from task breadth and lost on SciWorld.
+        source: notes/01c-model-as-agent-and-how-agents-learn.md
+        notes: >-
+          AgentGym with Llama-2-Chat-7B: behavioral cloning on 6,130 trajectories, then four rounds of sample, keep successes, fine-tune. On SciWorld the extra expert data won, 74.5 against 38.0.
+          DPO on success and failure pairs did worse than successes alone on all four tasks tested. Our toy in note 01c shows the same mechanism in a few lines.
+
   - title: A model cannot touch anything
     summary: The tool-call mechanism · The raw loop · Limits of reasoning · Reliable tools · Injection
     notes: >-
@@ -194,6 +268,53 @@ parts:
           These are from pattern P13 in Generative AI Design Patterns, chapter 5. Shown reasoning can also be a story told afterwards.
           The book's own success case applies a laminar-flow formula to give 84 cubic metres per second through a 25 cm pipe, about 1,700 metres per second,
           which is meaningless. So well-formed steps are not evidence of a correct answer.
+
+      - layout: compare
+        title: Write the plan down, and name the tool in each step
+        recall: Why put tool names in a plan?
+        emphasis: right
+        left:
+          title: No routine in the prompt
+          tag: HR agent, 25 tools, 1,148 step-level calls
+          accent: 94A3B8
+          bullets:
+            - "GPT-4o **41.1%**; Qwen3-14B 32.6%"
+            - "Over 85% of errors were the wrong tool"
+        right:
+          title: A numbered routine, tools named
+          tag: Routine, Zeng et al., 2025
+          accent: D4621A
+          bullets:
+            - "GPT-4o **96.3%**; Qwen3-14B 83.3%"
+            - "Removing the tool names cost most models 5-15 points"
+            - "A Qwen3-14B tuned on 537 traces reached 90.2% with no routine"
+        takeaway: Where the process is known, write the steps and the tool for each in the prompt, because wrong tool choice is the main failure and distractor routines cost GPT-4o about 20 points.
+        source: notes/02b-planning-and-tool-use.md
+        notes: >-
+          One internal scenario, GPT-4o-generated test data, a single run, and a baseline that is one prompt rather than a ReAct loop. Keep one routine per process in context.
+          The zero-shot version is Plan-and-Solve. Test any planning prompt on the model you will deploy.
+
+      - layout: code
+        title: A plan with dependencies runs in two waits, not nine
+        recall: When does a plan DAG pay?
+        lang: text
+        code: |
+          levels: [6, 3]
+            level 1: 6 calls, 6 values known
+            level 2: 3 calls, 9 values known
+          sequential  waits: 9
+          parallel    waits: 2
+          # same orders either way:
+          # A 60, B 84, C 1
+        bullets:
+          - "**Stock and lead time** for three items are six independent lookups."
+          - "**The order quantity** needs both, so it waits one level."
+          - "**Restate what is known** after every level."
+        takeaway: A dependency graph lets the harness run independent calls together, which buys latency and smaller contexts, but showed no reliable accuracy gain over the strongest sequential baseline.
+        source: notes/02b-planning-and-tool-use.md
+        notes: >-
+          Output of our planned executor in note 02b with stub tools. GAP cut mean turns from 2.69 to 1.78 on HotpotQA, and accuracy against the strongest baseline rose by under a point.
+          What the plan gives up is adaptation: if get_stock fails, nothing downstream runs.
 
       - layout: cards
         title: What makes tool calls reliable
@@ -282,6 +403,51 @@ parts:
           Agents do not save or search by default, so the system prompt has to say when.
 
       - layout: compare
+        title: Skills did not beat plain history in context
+        recall: Do skill libraries beat keeping the history in context?
+        emphasis: none
+        left:
+          title: Agent writes SKILL.md files
+          tag: ContinualSkillBench, normalized reward
+          accent: D4621A
+          bullets:
+            - "**0.582** with skills"
+            - "Won 5 of 6 exact-match comparisons"
+            - "Lost 5 of 6 open-ended rubric ones"
+        right:
+          title: Same history and feedback, no skills
+          tag: Guan et al., 2026
+          accent: 0F7490
+          bullets:
+            - "**0.585** in context"
+            - "**0.469** with neither"
+            - "Keeping experience helped in 14 of 15 pairs"
+        takeaway: Keeping experience across tasks helped, but skills added nothing over plain history on average, so write a skill for fixed-output procedures and rely on context for judgement calls.
+        source: notes/03b-learning-from-experience.md
+        notes: >-
+          Two frontier models on Law, Finance and Healthcare, LLM-judged rubrics, no variance reported. A bigger library was a worse one, and the weaker writer produced worse skills.
+          Recuris found a verified task-state tracker worth +23.9 points where ten distilled skills added +2.0, with an interval that included zero.
+
+      - layout: table
+        title: What transfers is the insight, not the trajectory
+        recall: What transfers across tasks, trajectories or insights?
+        header: [Memory format, Average Pass@3]
+        widths: [5, 3]
+        rows:
+          - [No memory, "0.523"]
+          - [Full trajectory, "0.534"]
+          - [Workflow of commands, "0.538"]
+          - [Reflexion-style summary, "0.546"]
+          - [One-to-three-sentence insight, "0.560"]
+        highlight: [4]
+        bold_first: true
+        takeaway: Pass@3 rose as memories got more abstract, and raw trajectories hurt where a command that worked in one environment broke in another, so keep the raw record and distil an insight layer on top.
+        source: notes/03b-learning-from-experience.md
+        notes: >-
+          Memory Transfer Learning, Kim et al., 2026: a gpt-5-mini coding agent retrieved three memories from other benchmarks. Trajectories hurt on Terminal-Bench 2 (0.270 against 0.315).
+          The differences are a few points on 100-task subsets with no intervals. Promote a lesson to a skill only after it has worked twice, as MSCE does.
+
+      - layout: compare
         title: Does curating memory pay? Often not
         recall: Does agent-curated memory beat a verbatim store?
         emphasis: left
@@ -365,6 +531,51 @@ parts:
         notes: >-
           This is the output of our stubbed block in note 04, reflowed to fit. Two models can agree on a wrong answer, which is why the verifier is code.
           The transition check is the group-chat lesson: a graph forbids what a prompt can only discourage.
+
+      - layout: compare
+        title: A critic picks worse than counting votes
+        recall: Does self-critique beat sampling at equal compute?
+        emphasis: right
+        left:
+          title: Ask the model to pick the best of 8
+          tag: Same 8 candidates, GSM8K and MATH-500
+          accent: 94A3B8
+          bullets:
+            - "At 1.5B: lost to the vote by **8.0 and 11.3** points"
+            - "At 3B: lost by 5.3 and 17.3"
+            - "At 7B: 2.0 and 1.3, intervals include zero"
+        right:
+          title: Count the votes
+          tag: Self-consistency at equal tokens
+          accent: D4621A
+          bullets:
+            - "**0 of 36** self-critique comparisons beat it"
+            - "10 were significantly worse"
+            - "The critic cannot tell a right chain from a wrong one"
+        takeaway: At equal tokens a majority vote over independent samples beat self-critique in every comparison, so any design that adds roles should be compared with it first.
+        source: notes/04b-when-more-agents-pay.md
+        notes: >-
+          Mirzaei, 2026, on small Qwen2.5 models and 150 questions per cell, math with exact-match answers only. Self-Refine was designed for open-ended text, where a vote cannot be taken.
+          Du et al.'s own vote baseline got 81.0 on GSM8K against debate's 85.0, so half of debate's gain over one agent is what voting already gives.
+
+      - layout: table
+        title: A mixed team with a protocol can beat the vote
+        recall: When has a team beaten the vote?
+        header: [Setup on competition math, Average]
+        widths: [6, 2]
+        rows:
+          - [Best single member, "48.8%"]
+          - [Best model sampled 10 times plus a vote, "55.4%"]
+          - ["Three copies of o3-mini, same strategies", "56.0%"]
+          - [Best model playing every role in sequence, "58.7%"]
+          - ["Three mixed mid-tier models, learned protocol", "66.7%"]
+        highlight: [4]
+        bold_first: false
+        takeaway: A team beat the vote only with different models and a learned interaction protocol, and the gap was near zero on a knowledge suite, so say what differs between the agents before adding them.
+        source: notes/04b-when-more-agents-pay.md
+        notes: >-
+          Pappu et al., 2026: o3-mini, Claude Sonnet 4 and DeepSeek-V3, held-out AIME, HMMT 2026 and TheoremQA physics, means of 3 seeds on 30 to 100 problems.
+          Matching was by candidate count, not tokens, and the offline strategy search is not counted. Marjanovic et al. found that voting across 23 unequal models mostly added wrong answers.
 
       - layout: table
         title: Count the calls before you search over plans

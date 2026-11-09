@@ -1,19 +1,667 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.04253",
  "pdf": "generative-ai/03-agentic-foundations/sources/du-2024-anytool.pdf",
  "bib": {
   "title": "AnyTool: Self-Reflective, Hierarchical Agents for Large-Scale API Calls",
-  "first_author": "Yu Du",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Yu Du",
+   "Fangyun Wei",
+   "Hongyang Zhang"
+  ],
+  "first_author": "Du",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2402.04253",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 68572,
+  "chars_total": 68572,
+  "engine": "pymupdf",
+  "skipped": "Figures 1-7 are charts or diagrams; values not extracted from text."
  },
- "legacy_report": "SOURCE: \"AnyTool: Self-Reflective, Hierarchical Agents for Large-Scale API Calls\", Yu Du, Fangyun Wei, Hongyang Zhang (Tsinghua, Microsoft Research Asia, Waterloo). The PDF is arXiv:2402.04253v1, 6 Feb 2024, and prints no venue, so treat it as a preprint. Year: 2024.\n\nCOVERAGE: All 17 pages and all 68,591 chars were read, including the appendices (Tables 8-21, case study). Figures 1-7 are charts or diagrams whose values did not extract. Only the text and table values are reported.\n\nCLAIMS (ranked)\n- Claim: A hierarchical GPT-4 retriever (meta-agent, category agents, tool agents) plus a solver and self-reflection loop reaches 58.2% average pass rate on filtered ToolBench, against 22.9% for ToolLLM's original pipeline.\n  number: 58.2 vs 22.9 (Table 1 Avg.)\n  setup: Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I), 16K+ RapidAPI APIs, GPT-4 function calling, DFSDT solver, pass rate by Eq 2, GPT-4-32K judge. Results are reproduced by the authors.\n  quote: \"AnyTool (Ours) SR Agent SR GPT-4 w/ DFSDT 52.2 61.4 67.6 58.9 45.9 63.2 58.2\" and \"ToolLLM ToolLLM’s ToolLLaMA w/ DFSDT 28.4 26.3 38.4 21.5 15.1 7.7 22.9\"\n  where: p.6, Table 1\n- Claim: AnyTool beats GPT-4 given the reference (gold) APIs. The text reports +32.6 over ToolLLM and +19.3 over GPT-4 with reference APIs, while the abstract says +35.4%.\n  number: 58.2 vs 38.9 (+19.3)\n  setup: The baselines get the benchmark's reference APIs, so no retrieval is needed. AnyTool searches all 16K+.\n  quote: \"significantly outperforms both the original ToolLLM and GPT-4 using reference APIs, by +32.6 and +19.3 points, respectively, in terms of the average pass rate.\" Abstract: \"AnyTool outperforms ToolLLM by +35.4% in terms of average pass rate on ToolBench.\"\n  where: p.1 abstract; p.7. The +32.6 matches the 25.6 row (ToolLLaMA with reference APIs, 58.2-25.6). The abstract's +35.4 does not match the 22.9 row, which gives 35.3. The paper is inconsistent here.\n- Claim: A plain GPT-4 agent (14.0%) and AutoGen-RAG with embeddings (13.1%) retrieve far worse than the hierarchy over the same pool.\n  number: 15.2 (plain agent) and 13.1 (AutoGen-RAG) vs 58.2 avg\n  setup: Table 1. The plain agent sees 500 APIs per group (33 groups). AutoGen-RAG uses 1,000-token chunks.\n  quote: \"GPT-4 Plain Agent GPT-4 w/ DFSDT 13.9 23.5 17.6 13.9 9.2 13.2 15.2\"\n  where: p.6; Appendix A.4-A.5\n- Claim: On the new AnyToolBench (400 queries, no reference APIs), AnyTool scores 73.8%, ToolLLM with a GPT-4 solver 36.6%, and the GPT-4 plain agent 14.0%.\n  number: 73.8 / 36.6 / 18.9 / 14.0\n  quote: \"AnyTool (Ours) SR Agent SR GPT-4 73.8\"\n  where: p.7, Table 2\n- Claim: Ablating the hierarchy or the self-reflection each cuts the pass rate sharply.\n  number: G2-I 58.9 to 22.4 (flat) or 19.6 (no reflection). G3-I 63.2 to 15.8 for both.\n  setup: Filtered ToolBench G2-I and G3-I. The flat variant merges category and tool functions into the meta-agent's function list.\n  quote: \"-Hierarchical Structure 22.4 15.8 / -Self-Reflection 19.6 15.8 / -DFSDT/+CoT 50.5 60.3\"\n  where: p.7, Table 3. Swapping DFSDT for CoT costs 8.4 and 2.9 points.\n- Claim: Self-reflection re-activates agents bottom-up (tool, then category, then meta). Re-activating more levels gives higher pass rates.\n  number: G2-I/G3-I 43.9/44.7 (tool agents only), 55.2/55.3 (+category), 58.9/63.2 (all)\n  quote: \"Tool Agents 43.9 44.7 / Tool Agents + Category Agents 55.2 55.3 / All Agents 58.9 63.2\"\n  where: p.7, Table 4\n- Claim: Pass rate rises with extra reflection rounds, by up to 20% in 4-6 iterations.\n  number: up to 20% (stated in prose; Fig 3 values not extractable)\n  quote: \"With only 4-6 self-reflection iterations, the pass rate improves by up to 20% across all datasets.\"\n  where: p.2-3\n- Claim: The ToolLLM pass-rate metric is inflated, because unsolvable queries count as passed.\n  number: 99.0% pass rate with random API candidates\n  setup: Random candidates per query, judged under the Eq 1 protocol. Eq 1 counts #(Non-solvable) in the numerator.\n  quote: \"when API candidates are randomly selected for each query, GPT-4 predominantly labels them as “non-solvable”, resulting in an inflated pass rate of 99.0% through the metric defined in Eq 1.\"\n  where: p.4. The authors' fix is Eq 2, Solved/(Solved+Unsolved), plus a manual filter of ToolBench to solvable queries.\n- Claim: The GPT-4 judge agrees with humans far better than GPT-3.5 does.\n  number: 96.5% vs 73.9%\n  setup: G1-I subset, AnyTool solutions.\n  quote: \"GPT-4’s alignment with human evaluation stands at 96.5%, while that of GPT-3.5 is only 73.9%.\"\n  where: p.6\n- Claim: A bigger searchable API pool gives a higher pass rate.\n  number: G2-I/G3-I 18.6/7.9 (1K), 26.3/23.7 (5K), 38.1/36.8 (10K), 58.9/63.2 (all)\n  setup: Random subsets of the pool.\n  where: p.8, Table 5\n- Claim: Candidate-pool cap and tools per tool agent show saturation or trade-offs.\n  number: Pool cap 16/32/64 gives G2-I 49.5/58.9/58.9 and G3-I 42.1/55.3/63.2. Tools per tool agent K=3/5/10 gives G2-I 48.6/58.9/52.3 and G3-I 42.1/57.9/39.5.\n  quote: \"managing too many tools (e.g., K = 10) leads to a larger search space and may cause overlooking of relevant APIs, while managing too few tools (e.g., K = 3) might result in lower recall.\"\n  where: p.8, Tables 6-7\n- Claim: Cost is high, at about 135K tokens and 43 OpenAI calls per query.\n  number: 13.5 × 10^4 tokens, 14.1 API candidates, 43.3 calls, 4.6 self-reflections per query on average\n  setup: Averaged across all datasets. A 200,000-token cap per query and at most 10 API calls in the DFSDT solver.\n  quote: \"each query consumes 13.5 × 104 tokens, identifies 14.1 API candidates, and involves 43.3 OpenAI API calls and 4.6 self-reflections.\"\n  where: p.12, A.6; p.11, A.1\n- Claim: Giving the plain agent more information (names, descriptions, details) barely helps, and the embedding model barely matters for RAG.\n  number: Plain agent G2-I 13.1 / 15.9 / 13.1, G3-I 13.2 throughout. RAG G2-I 8.4 (ada-002) vs 7.4 (mpnet).\n  where: p.12, Tables 10-11\n- Claim: On the original, unfiltered ToolBench, AnyTool averages 44.8 against ToolLLM's 20.4 (ToolLLaMA) and 32.2 (GPT-4 solver).\n  quote: \"AnyTool (Ours) SR Agent SR GPT-4 w/ DFSDT 46.0 54.0 53.0 37.0 46.5 32.0 44.8\"\n  where: p.11, Table 9. All queries are counted, solvable or not, under Eq 2.\n- Claim: Design mechanics worth noting.\n  - The solver's \"finish\" returns Give Solution, Try Backtrack, or Give Up. On Give Up it must name the irrelevant or failed APIs, which are pruned from the pool and history before the retry.\n  - Reflection triggers when GPT-4 judges a proposed solution as not solving the query, or when the solver gives up.\n  - Agents that called finish_search are not re-activated.\n  - Retriever agents run multi-threaded, each with its own history. All stop when a tool agent's check_if_request_solvable returns True.\n  where: pp.4-6\n\nLIMITS\n- Authors concede (Impact Statements): \"its performance in extremely complex scenarios has not been verified, owing to the absence of appropriate datasets.\" They also note the dependence on GPT-4's function calling.\n- Authors concede wall-clock time was not measured: \"calculating the processing time ... is infeasible\" because the GPT-4 server response is unstable.\n- The judge is GPT-4 only, validated on G1-I only (96.5% agreement).\n- Filtered ToolBench subsets are small, at 115, 132, 142, 107, 98 and 38 queries. G3-I has 38, so differences there are noisy.\n- The authors filtered the benchmark and built AnyToolBench themselves. GPT-4 generated its queries and reference solutions, so the benchmark could favor GPT-4-based agents.\n- The baselines are weak by construction. The ToolLLM retriever is a trained model. The plain and RAG GPT-4 baselines were implemented by the authors, and the plain agent scans in groups.\n- The paper's \"self-reflection\" is closer to feedback-driven re-search than a verified-correction loop. It cites Huang et al. 2023 (LLMs cannot self-correct reasoning) as a negative result, but does not test it directly.\n- It is dated: it uses GPT-4 and GPT-3.5 function calling from 2023, RapidAPI tools, and the DFSDT/ToolBench setup. There is no MCP, no long-context retrieval comparison, and no sampling variance or seeds reported.\n- The Table 3 ablation uses one run each, with no intervals.\n\nBUILDS ON: ToolLLM / ToolBench (Qin et al. 2023b: dual-phase retrieve-then-solve, DFSDT, evaluation protocol, 16K RapidAPI APIs); GPT-4 function calling (Achiam et al. 2023); Chain of Thought (Wei et al. 2022); AutoGen RAG baseline, cited as Augenstein et al. 2023 (the paper's own citation looks wrong); self-reflection literature: RAIN (Li et al. 2024), self-play (Chen et al. 2024), self-rewarding LMs (Yuan et al. 2024), Self-Instruct (Wang et al. 2022), Huang et al. 2023. Related tool work cited: Toolformer (Schick et al. 2023), Gorilla (Patil et al. 2023), API-Bank (Li et al. 2023), HuggingGPT (Shen et al. 2023), RestGPT, ToolAlpaca, TALM. ReAct is not cited.\n\nCODE: No code is included. The paper says only \"Code will be available at https://github.com/dyabel/AnyTool.\" Verbatim prompts are available (Tables 14-20). The re-activation prompt for tool agents, Table 18 (p.15):\n\"The current APIs have failed to solve the query, resulting in: {fail reason}. You need to analyze this result and seek additional APIs. It’s possible that the tools lack the relevant APIs. In such cases, you should call the Finish function. Remember not to invent tool or API names.\"\nThe Table 8 function lists, per agent type, are on p.11.\n\nFIGURES (not extracted by the figures script; captions are from the text)\n- Fig 2, p.2: overview of the meta-agent / category agent / tool agent hierarchy, the function list per agent, and the solver and self-reflection loop. It is the fastest way to see the architecture.\n- Fig 3, p.2: pass rate versus number of self-reflection rounds per dataset.\n- Fig 4, p.4: the ToolLLM evaluation protocol (a) versus the revised one (b). It shows the metric flaw.\n- Figs 5-6, p.8: average self-reflection frequency and agent count per dataset.\n- Fig 7, p.17: a case study with step-by-step retrieval, a first failure (\"due to the query limit, I couldn't generate a random word\"), reflection, and a corrected answer.\n\nPROBLEMS: No extraction faults beyond garbled equations (Eq 1 and Eq 2 are flattened) and chart-only data. There were no embedded instructions. The abstract's +35.4% does not match the body's +32.6 and +19.3. The paper does not name the venue, and I did not infer one. Page-level offsets were not tracked, so locations are page numbers from the PDF pages."
+ "type": "system",
+ "question": "Can a GPT-4 function-calling agent with a hierarchical API retriever and self-reflection solve queries over 16K+ RapidAPI APIs without training any module?",
+ "hypothesis": "A hierarchical divide-and-conquer retriever plus a closed-loop self-reflection mechanism outperforms trained retrievers and flat GPT-4 retrieval; a larger API pool gives more chance of a relevant API.",
+ "contributions": [
+  "AnyTool: plug-and-play hierarchical API retriever (meta/category/tool agents), solver (DFSDT or CoT) and self-reflection loop on GPT-4 function calling",
+  "Revised evaluation protocol (Eq 2) that removes the 'non-solvable counts as solved' inflation of ToolLLM's Eq 1",
+  "AnyToolBench, 400 solvable queries over the whole API pool",
+  "Filtered ToolBench with non-solvable queries removed by manual review"
+ ],
+ "method": {
+  "summary": "A meta-agent creates category agents, which create tool agents; tool agents add APIs to a global candidate pool via function calls until check_if_request_solvable returns True. A single GPT-4 solver (DFSDT or CoT) answers from the pool; if GPT-4 judges the answer unsolved or the solver gives up, agents are re-activated bottom-up with the failure reason, and the solver reruns on the expanded pool.",
+  "task": "tool/API use over a 16K+ API pool (retrieve then solve)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Filtered ToolBench",
+    "role": "eval",
+    "size": "115, 132, 142, 107, 98, 38 queries (G1-I, G1-T, G1-C, G2-I, G2-C, G3-I)",
+    "split": "six ToolBench subsets",
+    "source": "ToolBench (Qin et al., 2023b), manually filtered by authors",
+    "preprocessing": "Removed non-solvable queries: missing essential info, fake parameters, queries naming a specific API, unreasonable broad queries (App A.7)"
+   },
+   {
+    "name": "Original ToolBench",
+    "role": "eval",
+    "size": "200 queries per subset, 100 for G3-I",
+    "split": "six subsets",
+    "source": "Qin et al., 2023b",
+    "preprocessing": null
+   },
+   {
+    "name": "AnyToolBench",
+    "role": "eval",
+    "size": "400 instances",
+    "split": null,
+    "source": "Built by authors with GPT-4 exploring the API pool, queries span 2 to 5 categories, reference solutions verified",
+    "preprocessing": "Query at least thirty words; at most 20 initial meta-function calls (Table 21)"
+   },
+   {
+    "name": "RapidAPI API pool",
+    "role": "eval",
+    "size": "16K+ APIs",
+    "split": null,
+    "source": "Collected in ToolLLM",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (function calling)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "not stated",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated for agents; judge is GPT-4-32K"
+    }
+   },
+   {
+    "name": "ToolLLaMA w/ DFSDT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": "LLaMA fine-tuned by ToolLLM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 w/ CoT and DFSDT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AutoGen-RAG retriever (all-mpnet-base-v2, text-embedding-ada-002)",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "chunk": "1,000-token text segments"
+    }
+   },
+   {
+    "name": "GPT-4-32K",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32K",
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "200,000 tokens per query across all components",
+   "samples": null,
+   "prompting": "Zero-shot bootstrap prompts per agent type (Tables 14-20); solver prompt adapted from ToolLLM with a give-up option and reason",
+   "retrieval": "Hierarchical agent search over category > tool > API; candidate pool max 32 or 64 (default not stated; Table 6), up to K=5 tools per tool agent (Table 7), solver max 10 API calls",
+   "parameters": {
+    "max_API_calls_solver": "10",
+    "token_limit": "200,000",
+    "tools_per_tool_agent_K": "5 (best in Table 7)",
+    "candidate_pool_max": "Table 6 tests 16/32/64",
+    "self_reflection_rounds": "avg 4.6; Fig 3 shows 4-6 rounds; max not stated",
+    "plain_agent_groups": "33 groups of 500 APIs"
+   },
+   "other": {
+    "threading": "agents run independently multi-threaded",
+    "processing_time": "not reported (GPT-4 server unstable)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass rate (Eq 2)",
+     "definition": "#Solved / (#Solved + #Unsolved), judged by GPT-4-32K on query and solution",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass rate (Eq 1, ToolLLM)",
+     "definition": "(#Non-solvable + #Solved)/(#Non-solvable + #Solved + #Unsolved)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ToolLLM (OpenAI TE / ToolLLM retriever + ToolLLaMA or GPT-4 DFSDT)",
+    "ToolLLM with reference APIs",
+    "GPT-4 and GPT-3.5 with reference APIs, CoT and DFSDT",
+    "GPT-4 plain agent retriever",
+    "GPT-4 AutoGen-RAG retriever"
+   ],
+   "protocol": "Single reported number per cell, no seeds, no significance tests stated; GPT-4-32K judge with ToolBench prompt; human agreement 96.5% on G1-I; all baselines reproduced by authors."
+  },
+  "availability": {
+   "code": "https://github.com/dyabel/AnyTool (stated as 'will be available')",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "meta-agent bootstrap",
+    "text": "You are APIGPT, with access to a database of APIs. This database is organized into the following categories: {categories}. Your task is to help users identify the relevant categories for their needs. ... Remember, your goal is not to answer the query directly but to identify all potentially relevant categories and assign them to agents. Once you have completed the assignment, call the 'Finish' function.",
+    "where": "Table 14 (abridged)"
+   },
+   {
+    "purpose": "re-activate tool agents",
+    "text": "The current APIs have failed to solve the query, resulting in: {fail reason}. You need to analyze this result and seek additional APIs. It's possible that the tools lack the relevant APIs. In such cases, you should call the Finish function. Remember not to invent tool or API names.",
+    "where": "Table 18"
+   },
+   {
+    "purpose": "re-activate category agents",
+    "text": "The current APIs have failed to solve the query, and the reason is: {fail reason}. Please consider assigning more unexplored tools to the agents.",
+    "where": "Table 19"
+   },
+   {
+    "purpose": "re-activate meta-agent",
+    "text": "The current APIs have failed to solve the query, and the reason is: {fail reason}. Please consider assigning more unexplored categories to the agents.",
+    "where": "Table 20"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "AnyTool (self-reflective GPT-4 agent retriever + SR GPT-4 w/ DFSDT solver) averages 58.2% pass rate on filtered ToolBench",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "58.2",
+   "unit": "%",
+   "baseline_value": "22.9",
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge",
+   "where": "Table 1",
+   "table": "Table 1, row AnyTool (Ours), column Avg.",
+   "note": null
+  },
+  {
+   "claim": "Original ToolLLM (ToolLLM's trained retriever + ToolLLaMA w/ DFSDT solver) averages 22.9%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "22.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge; no reference APIs",
+   "where": "Table 1",
+   "table": "Table 1, row 2 (ToolLLM's retriever, ToolLLaMA w/ DFSDT), column Avg.",
+   "note": null
+  },
+  {
+   "claim": "ToolLLM retriever with GPT-4 w/ DFSDT solver averages 31.8%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "31.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge",
+   "where": "Table 1",
+   "table": "Table 1, row 3 (ToolLLM's retriever, GPT-4 w/ DFSDT), column Avg.",
+   "note": null
+  },
+  {
+   "claim": "ToolLLM with reference APIs and ToolLLaMA w/ DFSDT averages 25.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "25.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge; reference APIs given, no retriever",
+   "where": "Table 1",
+   "table": "Table 1, row ToolLLM None ToolLLaMA w/ DFSDT, column Avg.",
+   "note": null
+  },
+  {
+   "claim": "OpenAI text-embedding-ada-002 retriever with ToolLLaMA w/ DFSDT averages 8.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "8.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge",
+   "where": "Table 1",
+   "table": "Table 1, row OpenAI TE, column Avg.",
+   "note": null
+  },
+  {
+   "claim": "GPT-4 with reference APIs: CoT solver averages 29.6%, DFSDT solver 38.9%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "38.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge; reference APIs; DFSDT (CoT is 29.6)",
+   "where": "Table 1",
+   "table": "Table 1, row GPT-4 None GPT-4 w/ DFSDT, column Avg.",
+   "note": "CoT row Avg. 29.6"
+  },
+  {
+   "claim": "GPT-3.5 with reference APIs: CoT 28.3%, DFSDT 33.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "33.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge; reference APIs; DFSDT (CoT is 28.3)",
+   "where": "Table 1",
+   "table": "Table 1, row GPT-3.5 w/ DFSDT, column Avg.",
+   "note": null
+  },
+  {
+   "claim": "GPT-4 plain-agent retriever + GPT-4 w/ DFSDT averages 15.2%; AutoGen-RAG retriever averages 13.1%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "15.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge; 33 groups of 500 APIs for plain agent (AutoGen-RAG 13.1)",
+   "where": "Table 1",
+   "table": "Table 1, row GPT-4 Plain Agent, column Avg.",
+   "note": null
+  },
+  {
+   "claim": "AnyTool beats original ToolLLM and GPT-4 with reference APIs by +32.6 and +19.3 points average pass rate",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "+32.6 / +19.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge",
+   "where": "Sec 5.2",
+   "quote": "by +32.6 and +19.3 points, respectively, in terms of the average pass rate",
+   "note": "58.2-25.6=32.6 and 58.2-38.9=19.3, so +32.6 is vs the reference-API ToolLLaMA row, not the 22.9 original; abstract says +35.4% vs ToolLLM (58.2-22.9=35.3)"
+  },
+  {
+   "claim": "Abstract: AnyTool outperforms ToolLLM by +35.4% average pass rate on ToolBench",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "35.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Filtered ToolBench (G1-I/T/C, G2-I/C, G3-I; 115,132,142,107,98,38 queries), 16K+ RapidAPI APIs, pass rate Eq 2, GPT-4-32K judge",
+   "where": "Abstract",
+   "quote": "AnyTool outperforms ToolLLM by +35.4% in terms of average pass rate on ToolBench",
+   "note": "58.2-22.9=35.3; rounding"
+  },
+  {
+   "claim": "Ablation, removing the hierarchical structure (flat retriever) drops G2-I from 58.9 to 22.4 and G3-I from 63.2 to 15.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "22.4 (G2-I) / 15.8 (G3-I)",
+   "unit": "%",
+   "baseline_value": "58.9 / 63.2",
+   "n": null,
+   "setup": "Filtered ToolBench G2-I and G3-I only; full AnyTool 58.9 / 63.2; flat version merges category- and tool-level functions into the meta-agent's function list",
+   "where": "Table 3",
+   "table": "Table 3, row -Hierarchical Structure, columns G2-I and G3-I",
+   "note": null
+  },
+  {
+   "claim": "Ablation, removing self-reflection: G2-I 19.6, G3-I 15.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "19.6 (G2-I) / 15.8 (G3-I)",
+   "unit": "%",
+   "baseline_value": "58.9 / 63.2",
+   "n": null,
+   "setup": "Filtered ToolBench G2-I, G3-I",
+   "where": "Table 3",
+   "table": "Table 3, row -Self-Reflection, columns G2-I and G3-I",
+   "note": null
+  },
+  {
+   "claim": "Ablation, DFSDT replaced by CoT: G2-I 50.5, G3-I 60.3 (declines of 8.4 and 2.9)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "50.5 (G2-I) / 60.3 (G3-I)",
+   "unit": "%",
+   "baseline_value": "58.9 / 63.2",
+   "n": null,
+   "setup": "Filtered ToolBench G2-I, G3-I",
+   "where": "Table 3",
+   "table": "Table 3, row -DFSDT/+CoT, columns G2-I and G3-I",
+   "note": null
+  },
+  {
+   "claim": "Re-activating only tool agents gives 43.9/44.7; tool+category 55.2/55.3; all agents 58.9/63.2 (G2-I/G3-I)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "43.9 / 44.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Self-reflection re-activation scope ablation, G2-I and G3-I",
+   "where": "Table 4",
+   "table": "Table 4, row Tool Agents, columns G2-I and G3-I",
+   "note": null
+  },
+  {
+   "claim": "Consumption: average 13.5 x 10^4 tokens per query, 14.1 API candidates, 43.3 OpenAI API calls, 4.6 self-reflections",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost per query",
+   "value": "13.5 x 10^4 tokens; 43.3 calls",
+   "unit": "tokens, calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaged over all queries in all datasets; token cap 200,000 per query; wall-clock time not reported",
+   "where": "App A.6",
+   "quote": "each query consumes 13.5 \u00d7 104 tokens, identifies 14.1 API candidates, and involves 43.3 OpenAI API calls and 4.6 self-reflections",
+   "note": "Table 12 Avg. column prints 13.6 (x10^4) tokens and 43.3 calls; text says 13.5"
+  },
+  {
+   "claim": "Per-subset average tokens (x10^4) G1-I 13.6, G1-T 12.1, G1-C 8.5, G2-I 17.7, G2-C 14.8, G3-I 16.2, ATB 12.2; calls 39.3, 38.8, 33.8, 54.0, 57.6, 35.7, 44.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost per query",
+   "value": "54.0 (max calls, G2-I)",
+   "unit": "calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 12 per dataset; ATB=AnyToolBench",
+   "where": "Table 12",
+   "table": "Table 12, row Average Call Number, column G2-I",
+   "note": "Row/column order of the extracted table is ambiguous: the 7 values per row map to G1-I,G1-T,G1-C,G2-I,G2-C,G3-I,ATB and the Avg. column is the last value of 8; the text lists 8 values with Avg last."
+  },
+  {
+   "claim": "On AnyToolBench (400 queries, whole API pool) AnyTool gets 73.8% vs ToolLLM(ToolLLaMA) 18.9%, ToolLLM(GPT-4 solver) 36.6%, GPT-4 plain agent 14.0%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "73.8",
+   "unit": "%",
+   "baseline_value": "36.6",
+   "n": null,
+   "setup": "AnyToolBench, DFSDT solver in all rows",
+   "where": "Table 2",
+   "table": "Table 2, row AnyTool (Ours), column PR (%)",
+   "note": null
+  },
+  {
+   "claim": "Random API candidates make GPT-4 label queries non-solvable, inflating ToolLLM's Eq 1 pass rate to 99.0%",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "99.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random candidates per query, ToolLLM protocol (Eq 1)",
+   "where": "Sec 3.2",
+   "quote": "resulting in an inflated pass rate of 99.0% through the metric defined in Eq 1",
+   "note": null
+  },
+  {
+   "claim": "GPT-4 judge agrees with human evaluators 96.5% (GPT-3.5 73.9%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "96.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "G1-I subset of ToolBench, AnyTool solutions",
+   "where": "Sec 5.1",
+   "quote": "GPT-4\u2019s alignment with human evaluation stands at 96.5%, while that of GPT-3.5 is only 73.9%",
+   "note": null
+  },
+  {
+   "claim": "Self-reflection: 4-6 iterations improve pass rate by up to 20% across datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "up to 20",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3",
+   "where": "Sec 1",
+   "quote": "only 4-6 self-reflection iterations, the pass rate improves by up to 20% across all datasets",
+   "note": null
+  },
+  {
+   "claim": "Pass rate rises with API pool size: 1,000 -> 18.6/7.9; 5,000 -> 26.3/23.7; 10,000 -> 38.1/36.8; all -> 58.9/63.2 (G2-I/G3-I)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "58.9 / 63.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random API subsets, G2-I and G3-I",
+   "where": "Table 5",
+   "table": "Table 5, row All, columns G2-I and G3-I",
+   "note": null
+  },
+  {
+   "claim": "Max API-candidate pool size 16: 49.5/42.1; 32: 58.9/55.3; 64: 58.9/63.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "58.9 / 63.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "G2-I/G3-I",
+   "where": "Table 6",
+   "table": "Table 6, row 64, columns G2-I and G3-I",
+   "note": null
+  },
+  {
+   "claim": "Max tools per tool agent K=3: 48.6/42.1; K=5: 58.9/57.9; K=10: 52.3/39.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "58.9 / 57.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "G2-I/G3-I",
+   "where": "Table 7",
+   "table": "Table 7, row 5, columns G2-I and G3-I",
+   "note": "K=5 G3-I is 57.9 here vs 63.2 in the main result, so the default config in Table 7 differs from Table 3"
+  },
+  {
+   "claim": "On unfiltered original ToolBench AnyTool averages 44.8% vs ToolLLM 20.4% (ToolLLaMA) and 32.2% (GPT-4 solver)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": "44.8",
+   "unit": "%",
+   "baseline_value": "32.2",
+   "n": null,
+   "setup": "Original ToolBench (200 queries per subset, 100 for G3-I), Eq 2",
+   "where": "Table 9",
+   "table": "Table 9, row AnyTool (Ours), column Avg.",
+   "note": null
+  }
+ ],
+ "limits": [
+  "Complex scenarios unverified for lack of datasets; depends on GPT-4 function calling (Impact Statements)",
+  "Processing time not reported",
+  "No seeds, variance or significance testing; single numbers on small subsets (G3-I has 38 queries)",
+  "Ablations only on G2-I and G3-I",
+  "Authors' own filtered ToolBench and AnyToolBench, judged by GPT-4, so baselines are reproduced under the authors' protocol",
+  "Cost is ~135K tokens and ~43 GPT-4 calls per query"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pass rate (Eq 2)",
+   "definition": "#(Solved) / (#(Solved) + #(Unsolved)), skipping ToolLLM's solvable/non-solvable phase",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ToolLLM: Facilitating LLMs to master 16000+ real-world APIs",
+   "year": 2023,
+   "arxiv": "2307.16789",
+   "relation": "extends",
+   "note": "Data, DFSDT solver, evaluation prompt, main baseline",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoT solver variant",
+   "quote": null
+  },
+  {
+   "work": "AutoGen RAG",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retriever baseline",
+   "quote": null
+  },
+  {
+   "work": "Huang et al. Large language models cannot self-correct reasoning yet",
+   "year": 2023,
+   "arxiv": "2310.01798",
+   "relation": "related",
+   "note": "negative result on self-correction",
+   "quote": null
+  },
+  {
+   "work": "Gorilla",
+   "year": 2023,
+   "arxiv": "2305.15334",
+   "relation": "related",
+   "note": "embedding API retrieval",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "function calling",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of AnyTool",
+   "page": 3,
+   "why": "Shows meta/category/tool agents, function lists and the self-reflection loop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Pass rate improves as the number of self-reflection rounds increases",
+   "page": 2,
+   "why": "Shows effect of reflection per dataset"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Evaluation protocols: ToolLLM vs ours",
+   "page": 4,
+   "why": "Why Eq 1 is inflated"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Case study",
+   "page": 17,
+   "why": "Worked reactivation trace"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2 Eq 2",
+   "snippet": "R = #(Solved) / (#(Solved) + #(Unsolved))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cache loses table layout; Table 1 and 12 columns were assigned by order and the Table 12 row mapping should be checked against the PDF",
+  "Abstract (+35.4) and Sec 5.2 (+32.6) differ because they compare against different ToolLLM rows",
+  "Table 7 K=5 G3-I 57.9 differs from default 63.2",
+  "No embedded instructions found"
+ ]
 }

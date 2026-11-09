@@ -1,0 +1,671 @@
+{
+ "schema": 1,
+ "key": "2309.00267",
+ "pdf": "generative-ai/05-RL/sources/lee-2023-rlaif-vs-rlhf.pdf",
+ "bib": {
+  "title": "RLAIF vs. RLHF: Scaling Reinforcement Learning from Human Feedback with AI Feedback",
+  "authors": [
+   "Harrison Lee",
+   "Samrat Phatale",
+   "Hassan Mansoor",
+   "Thomas Mesnard",
+   "Johan Ferret",
+   "Kellie Lu",
+   "Colton Bishop",
+   "Ethan Hall",
+   "Victor Carbune",
+   "Abhinav Rastogi",
+   "Sushant Prakash"
+  ],
+  "first_author": "Lee",
+  "year": 2024,
+  "venue": "Proceedings of the 41st International Conference on Machine Learning, Vienna, Austria. PMLR 235, 2024",
+  "arxiv": "2309.00267",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 96078,
+  "chars_total": 96078,
+  "engine": "pymupdf",
+  "skipped": "references skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can an off-the-shelf LLM replace human annotators as the preference source for RL alignment with comparable policy quality?",
+ "hypothesis": "LLM-generated preference labels are a viable substitute for human labels; higher AI labeler alignment should lead to better RLAIF policies.",
+ "contributions": [
+  "RLAIF achieves comparable performance to RLHF on summarization, helpful dialogue and harmless dialogue.",
+  "RLAIF improves over an SFT policy when the labeler is the same size as the policy or the exact same checkpoint.",
+  "d-RLAIF derives reward directly from an off-the-shelf LLM during RL and matches or outperforms canonical RLAIF.",
+  "Study of techniques to maximize alignment of AI preferences to human preferences."
+ ],
+ "method": {
+  "summary": "AI preference labels come from PaLM 2 prompts (log-prob softmax over '1' vs '2', averaged over both candidate orders). A reward model on PaLM 2 XS is trained on soft labels and a REINFORCE-with-baseline policy is trained, compared with the same pipeline on human labels. d-RLAIF skips the RM and uses a 1-10 LLM score as reward.",
+  "task": "preference-based RL alignment (summarization, helpful and harmless dialogue)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Reddit TL;DR (filtered)",
+    "role": "train",
+    "size": "123k posts, ~5% validation",
+    "split": "train rollout prompts, test for human eval",
+    "source": "Stiennon et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "OpenAI human preferences (TL;DR)",
+    "role": "train",
+    "size": "92k pairwise comparisons",
+    "split": "AI labeling on 15% downsample of train, high-confidence only (confidence 1,2,8,9), 3-4k examples",
+    "source": "Stiennon et al. 2020",
+    "preprocessing": "downsampled and filtered"
+   },
+   {
+    "name": "Anthropic helpful-base and harmless-base",
+    "role": "both",
+    "size": ">40k train and 2k test examples each",
+    "split": "test split into 2/3 validation and 1/3 test; AI labeling on 10% downsample of train (3-4k)",
+    "source": "Bai et al. 2022a, hh-rlhf",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM 2 XS (SFT)",
+    "role": "base",
+    "params": null,
+    "architecture": "PaLM 2 Extra-Small",
+    "init_from": "summarization: fine-tuned on Reddit TL;DR; other tasks: instruction-tuned PaLM 2 XS",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "params_note": "parameter count not given in the paper"
+    }
+   },
+   {
+    "name": "PaLM 2 L / S / XS labelers",
+    "role": "judge",
+    "params": null,
+    "architecture": "PaLM 2, instruction-tuned, no prior RL",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens max input for labeling",
+    "other": {
+     "default": "PaLM 2 L; XS for same-size RLAIF and d-RLAIF"
+    }
+   },
+   {
+    "name": "Reward models (human and AI feedback)",
+    "role": "reward",
+    "params": null,
+    "architecture": "PaLM 2 XS",
+    "init_from": "summarization: AI RM from SFT model, human RM from PaLM 2 XS; dialogue: both from instruction-tuned PaLM 2 XS",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1152 tokens max input (1024 context + 128 response)",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "RM: cross-entropy on softmax of RM scores with soft AI labels (Bradley-Terry style loss for human labels); policy: REINFORCE with value baseline, KL penalty to SFT, objective (1-beta)r - beta*KL",
+   "optimizer": "Adafactor",
+   "lr": "1e-5 (SFT, RM, RL)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "SFT 128; RM 128 summarization and 32 other tasks; RL 128",
+   "steps": null,
+   "epochs": "SFT 1 epoch; RM 2-3 epochs until plateau; RL 8 epochs",
+   "tokens": null,
+   "seq_len": "SFT max input 1024 and output 128 tokens; RM 1152 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL beta = 0.05",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "gamma": "1, terminal reward only",
+    "rl_sampling_temperature": "0.9",
+    "checkpoint_selection": "4 high-reward candidate checkpoints, judged by an off-the-shelf LLM win rate vs SFT plus manual inspection of a dozen examples",
+    "post_processing": "trailing symbols removed from summaries (App H)",
+    "no_ppo": "REINFORCE used rather than PPO"
+   }
+  },
+  "inference": {
+   "decoding": "CoT rationale for labeling: greedy, T=0.0, max 512 decoding tokens",
+   "temperature": "0.0 for labeling CoT; 0.3-1.0 for self-consistency; 0.9 for RL policy sampling",
+   "top_p": null,
+   "max_tokens": "labeling input max 4096 tokens; CoT 512",
+   "samples": "two inferences per pair (candidate order swapped) averaged; self-consistency 4 or 16 samples (2 or 32 inferences)",
+   "prompting": "Preamble (Base or Detailed), optional few-shot exemplars, sample, ending; optional two-step CoT",
+   "retrieval": null,
+   "parameters": {
+    "self_consistency_top_k": "40",
+    "d_rlaif_score": "s(y|x)=sum_i i*P(i|y,x) over tokens 1-10, normalized to [-1,1]",
+    "best_prompts": "summarization Detailed + CoT 0-shot; helpfulness Base + CoT 0-shot; harmlessness Base 2-shot"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AI labeler alignment",
+     "definition": "fraction of examples where argmax of soft AI preference equals the human preference",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Win rate",
+     "definition": "percentage of instances where humans prefer policy A over B; rankings without ties",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Harmless rate",
+     "definition": "percentage of responses rated harmless independently by humans",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "RM pairwise accuracy",
+     "definition": "RM scores preferred candidate higher on a holdout set of human preferences",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SFT",
+    "RLHF (same pipeline with human labels)",
+    "same-size RLAIF",
+    "RLHF + RLAIF"
+   ],
+   "protocol": "Human raters (~2k rating instances, ~6k context-response pairs, 3 raters each, ~18k tuples; Kendall W 0.6-0.7); significance via binomial test, paired and two-sample t-tests; single run per condition, seeds not stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": "PaLM 2 available through Vertex AI but exact reproducibility not guaranteed",
+   "data": "public datasets: Reddit TL;DR, OpenAI preferences, Anthropic hh-rlhf"
+  },
+  "prompts": [
+   {
+    "purpose": "Base summarization preamble",
+    "text": "You are an expert summary rater. Given a piece of text and two of its possible summaries, output 1 or 2 to indicate which summary is better.",
+    "where": "Table 16"
+   },
+   {
+    "purpose": "d-RLAIF summarization scoring",
+    "text": "You are an expert summary rater. Given a TEXT (completed with a SUBREDDIT and a TITLE) and a SUMMARY, your role is to provide a SCORE from 1 to 10 that rates the quality of the SUMMARY given the TEXT, with 1 being awful and 10 being a perfect SUMMARY.",
+    "where": "App D"
+   },
+   {
+    "purpose": "Helpful dialogue Base + CoT 0-shot ending",
+    "text": "First, discuss the helpfulness and honesty of each response. Then, explain which one is better overall and why. Finally, select which response is the most helpful and honest. Rationale:",
+    "where": "Table 21"
+   },
+   {
+    "purpose": "CoT ending for summarization",
+    "text": "Consider the coherence, accuracy, coverage, and overall quality of each summary and explain which one is better. Rationale:",
+    "where": "Table 17"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use the Adafactor optimizer with a learning rate of 10−5.",
+    "where": "App F"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RLAIF is preferred over SFT on summarization (71%) and RLHF is preferred over SFT (73%); difference not significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "71% vs 73%",
+   "unit": "win rate vs SFT",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization, Reddit TL;DR test split. Human evaluation, test splits, SFT/RL policies from PaLM 2 XS, AI labels from PaLM 2 L (best prompt per task), canonical RLAIF (RM + REINFORCE)",
+   "note": null,
+   "where": "Sec 4.1, Table 1",
+   "quote": "RLAIF and RLHF are preferred by human evaluators over the baseline SFT policy 71% and 73% of the time for summarization6 and 63% and 64% for helpful dialogue generation, respectively."
+  },
+  {
+   "claim": "RLAIF vs SFT 63% and RLHF vs SFT 64% on helpful dialogue; head-to-head RLAIF vs RLHF 52% (not significantly different from 50%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "63% vs 64%; head-to-head 52%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Helpful dialogue (Anthropic helpful-base test). Human evaluation, test splits, SFT/RL policies from PaLM 2 XS, AI labels from PaLM 2 L (best prompt per task), canonical RLAIF (RM + REINFORCE)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row RLAIF vs RLHF, column Helpful dialogue (52%); rows RLAIF vs SFT 63%, RLHF vs SFT 64%"
+  },
+  {
+   "claim": "RLAIF vs RLHF head-to-head on summarization is 50%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "50%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization; Human evaluation, test splits, SFT/RL policies from PaLM 2 XS, AI labels from PaLM 2 L (best prompt per task), canonical RLAIF (RM + REINFORCE)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row RLAIF vs RLHF, column Summarization"
+  },
+  {
+   "claim": "On harmless dialogue RLAIF scores a higher harmless rate than RLHF and SFT, statistically significant by two-sided paired t-tests.",
+   "kind": "measured",
+   "source": null,
+   "metric": "harmless rate",
+   "value": "88% vs 76% vs 64%",
+   "unit": "harmless rate (RLAIF vs RLHF vs SFT)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Harmless dialogue (Anthropic harmless-base test); humans rate each response harmless/harmful independently; AI labels from PaLM 2 L with Base 2-shot prompt.",
+   "note": null,
+   "where": "Sec 4.1; footnote 7",
+   "quote": "For harmless dialogue generation, RLAIF achieves a harmless rate of 88%, outperforming both RLHF and SFT, which score 76% and 64%, respectively7."
+  },
+  {
+   "claim": "After post-hoc length control, summarization win rates drop (RLAIF vs SFT 59%, RLHF vs SFT 61%) but RL policies still beat SFT by similar margin. Policies were longer than SFT (164, 161, 132 chars).",
+   "kind": "measured",
+   "source": null,
+   "metric": "length-controlled win rate",
+   "value": "59% vs 61%",
+   "unit": "length-adjusted win rate vs SFT",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization; logistic regression on length ratio, predicted at ratio 1.0; method conceded to be imperfect.",
+   "note": null,
+   "where": "App J, Table 8",
+   "quote": "our length-adjusted win rates for RLAIF and RLHF vs. SFT are 59% and 61%, respectively (see Table 8)."
+  },
+  {
+   "claim": "Length-controlled harmless rate: RLAIF 91%, RLHF 78%, SFT 64%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "length-controlled harmless rate",
+   "value": "91% vs 78% vs 64%",
+   "unit": "harmless rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Harmless dialogue, SFT average length as reference.",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, rows SFT/RLHF/RLAIF, column Length corrected"
+  },
+  {
+   "claim": "Same-size RLAIF (PaLM 2 XS labeler, XS policy) is preferred over SFT 68% of the time vs 71% for PaLM 2 L labeler; difference not significant (two-sample t-test p=0.07).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "68%",
+   "unit": "win rate vs SFT",
+   "baseline_value": "71% (PaLM 2 L labeler)",
+   "n": null,
+   "setup": "Summarization only. The XS labeler is instruction-tuned XS while the policy is XS fine-tuned on TL;DR, so the authors say it is not strict self-improvement.",
+   "note": null,
+   "where": "Sec 4.2, footnote 8",
+   "quote": "Same-size RLAIF still improves greatly over the SFT baseline, with human annotators preferring same-size RLAIF 68% of the time over SFT (see Table 1)."
+  },
+  {
+   "claim": "d-RLAIF beats SFT 74% on summarization and 66% on helpful dialogue; the helpfulness case uses the same checkpoint as labeler and initial policy (strict self-improvement).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "66% (helpful); 74% (summarization)",
+   "unit": "win rate vs SFT",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization and helpfulness; d-RLAIF labeler is instruction-tuned PaLM 2 XS, scoring 1-10 directly during RL.",
+   "note": "Typo 'a a' in the source.",
+   "where": "Sec 4.3, Table 1",
+   "quote": "For helpful dialogue generation, we find that d-RLAIF achieves a a win rate of 66% over the SFT baseline."
+  },
+  {
+   "claim": "d-RLAIF is preferred over same-size RLAIF head-to-head 60% (significantly different from 50% by binomial test) on summarization; same-size RLAIF vs SFT is 68% against d-RLAIF 74%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "60%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization, PaLM 2 XS labeler in both arms; differ only in reward function (direct score vs distilled RM).",
+   "note": null,
+   "where": "Sec 4.3",
+   "table": "Table 1, row d-RLAIF vs Same-size RLAIF, column Summarization"
+  },
+  {
+   "claim": "Length-controlled d-RLAIF vs same-size RLAIF falls to 56%; d-RLAIF vs SFT 65%, same-size RLAIF vs SFT 59%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "56%",
+   "unit": "length-corrected win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, rows d-RLAIF vs Same-size RLAIF, column Length corrected"
+  },
+  {
+   "claim": "AI labeler alignment rises with labeler size on summarization: PaLM 2 L 78.0%, S 73.8%, XS 62.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AI labeler alignment",
+   "value": "78.0% / 73.8% / 62.7%",
+   "unit": "% alignment",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization, Detailed + CoT 0-shot prompt (best prompt), 3-4k downsampled filtered preference examples; alignment vs human preferences.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows PaLM 2 L / S / XS, column AI Labeler Alignment"
+  },
+  {
+   "claim": "Position bias grows as labeler shrinks: % same position preferred after swapping is 18% (L), 21% (S), 56% (XS).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% same position preferred",
+   "value": "18% / 21% / 56%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization, Detailed + CoT 0-shot.",
+   "note": null,
+   "where": "App B, Table 4",
+   "table": "Table 4, column % Same Position Preferred"
+  },
+  {
+   "claim": "Best prompts beat Base 0-shot by +1.9%, +1.3%, +1.7% alignment for summarization, helpfulness, harmlessness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AI labeler alignment gain",
+   "value": "+1.9 / +1.3 / +1.7",
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 2 L labeler; Table 2 prompt variants.",
+   "note": null,
+   "where": "Sec 4.4, Table 2",
+   "quote": "The best prompts outperform the base prompts (“Base 0-shot”) by +1.9%, +1.3%, and +1.7% for summarization, helpfulness, and harmlessness, respectively."
+  },
+  {
+   "claim": "Summarization alignment is 78.0% for Detailed + CoT 0-shot vs 76.1% for Base 0-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AI labeler alignment",
+   "value": "78.0%",
+   "unit": "% alignment",
+   "baseline_value": "76.1%",
+   "n": null,
+   "setup": "Summarization, PaLM 2 L.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Detailed + CoT 0-shot and Base 0-shot, column Summary"
+  },
+  {
+   "claim": "CoT helps summarization consistently but for helpfulness/harmlessness only with Base preamble; in-context exemplars lower alignment for summarization and helpfulness (Detailed 8-shot summarization 69.8%) and help only harmlessness (Base 0-shot 69.4% to Base 2-shot 72.1%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AI labeler alignment",
+   "value": "69.8%",
+   "unit": "% alignment",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 2 L, Table 2.",
+   "note": "Authors verified with 10 random 1-shot exemplar trials on summarization: max alignment 76.1%, below Base 0-shot.",
+   "where": "Table 2",
+   "table": "Table 2, row Detailed 8-shot, column Summary (69.8%); row Base 2-shot, column Harm. (72.1%)"
+  },
+  {
+   "claim": "Self-consistency (16 sampled CoT rationales, preference distributions averaged) lowers alignment, 72.8% at T=1.0 vs 78.0% with greedy single sample.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AI labeler alignment",
+   "value": "72.8%",
+   "unit": "% alignment",
+   "baseline_value": "78.0%",
+   "n": null,
+   "setup": "Summarization, Detailed + CoT 0-shot, top-K sampling K=40; 4 vs 16 samples differ by up to 0.4%.",
+   "note": "Text says 'see Figure 14' but the data are in Table 14.",
+   "where": "App M, Table 14",
+   "table": "Table 14, rows 1 sample T=0.0 and 16 samples T=1.0, column AI Labeler Alignment"
+  },
+  {
+   "claim": "LLM labeler agreement of 78% compares with human inter-annotator agreement of 73-77% on the OpenAI summarization preference data.",
+   "kind": "reported",
+   "source": "Stiennon et al. (2020)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization; human figure is from Stiennon et al. (2020), not measured here.",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "Stiennon et al. (2020) estimated that agreement rate for the OpenAI human preference dataset was 73-77%, suggesting that the off-the-shelf LLM achieving 78% alignment performs well in absolute terms."
+  },
+  {
+   "claim": "Policy trained on Detailed CoT 0-shot labels (78.0% alignment) is preferred 59% over policy trained on Base 0-shot labels (76.1%); only two policies compared.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "59%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization, RLAIF; authors say rigorous experimentation is required.",
+   "note": null,
+   "where": "App N",
+   "quote": "human evaluators prefer summaries from “Detailed CoT 0-shot” 59% of the time over “Base 0-shot”17."
+  },
+  {
+   "claim": "Reward models trained on human feedback are more accurate than those trained on AI feedback on held-out human preferences, yet RLAIF matches or beats RLHF.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM pairwise accuracy",
+   "value": "79.3% vs 74.2% (summarization)",
+   "unit": "% pairwise accuracy (human RM vs AI RM)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise accuracy on human holdout.",
+   "note": "RMs trained on Base 0-shot vs Detailed CoT 0-shot labels score 77.9% vs 74.2%, the inverse order of RL outcome; RM accuracy may not reflect RL usefulness.",
+   "where": "App G, Table 5",
+   "table": "Table 5, rows Summarization 79.3% vs 74.2%, Helpful 76.0% vs 67.8%, Harmless 72.1% vs 69.7%"
+  },
+  {
+   "claim": "Combining human and AI feedback (RLHF + RLAIF) did not improve over RLHF alone: 71% vs 74% win rate over SFT, not significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "71% vs 74%",
+   "unit": "win rate vs SFT",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization; RM trained on human labels plus PaLM 2 L AI labels.",
+   "note": null,
+   "where": "App K",
+   "quote": "RLHF + RLAIF and RLHF achieve win rates of 71% and 74% over SFT, respectively."
+  },
+  {
+   "claim": "AI preference labeling is estimated over 10x cheaper than human labeling: $0.06 vs $0.67 per example.",
+   "kind": "measured",
+   "source": null,
+   "metric": "labeling cost",
+   "value": "over 10x",
+   "unit": "cost ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization labeling with GPT-4 list prices (not PaLM 2) vs Google Cloud human annotation prices at time of writing; excludes annotator training and setup costs.",
+   "note": "Per-example cost $0.06 AI vs $0.67 human (304 words * $0.11/50 words).",
+   "where": "App L",
+   "quote": "We estimate AI preference labeling to be over 10x less costly than human preference labeling following the calculations below."
+  },
+  {
+   "claim": "Human evaluators prefer RLAIF and RLHF over human reference summaries 79% and 80% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "79% / 80%",
+   "unit": "win rate vs reference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reddit TL;DR.",
+   "note": null,
+   "where": "Sec 4.1 footnote 6",
+   "quote": "RLAIF and RLHF are also preferred over the human reference summaries in Reddit TL;DR 79% and 80% of the time, respectively."
+  },
+  {
+   "claim": "Qualitative: RLHF summaries sometimes hallucinate where RLAIF does not; RLAIF summaries sometimes less fluent. A 70-example blind ranking showed no significant difference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "n of blind-ranking eval",
+   "value": "70",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization, small-scale human inspection.",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "We conducted a small-scale evaluation on 70 examples, where human annotators were asked to blindly rank RLHF and RLAIF summaries in terms of accuracy, coverage, and coherence."
+  }
+ ],
+ "limits": [
+  "PaLM 2 only, policies all PaLM 2 XS; parameter counts and compute not reported; no seeds or variance across runs.",
+  "Human win rates are sensitive to length; post-hoc length correction is conceded to be imperfect (App J).",
+  "End-to-end sensitivity to labeler alignment compares only two policies; authors say rigorous experimentation is required.",
+  "Qualitative differences (RLHF hallucination, RLAIF fluency) not shown significant at scale.",
+  "Combining human and AI feedback showed no gain in the one setup tried.",
+  "Same-size RLAIF is not strict self-improvement; strict case is d-RLAIF on helpfulness only.",
+  "Cost estimate uses GPT-4 and Google Cloud list prices, not PaLM 2 cost.",
+  "Impact statement: AI labels may transfer biases; human experts should be gold standard in high-stakes domains such as medicine, law, employment.",
+  "SHP dataset gave no meaningful improvement over SFT for either RLHF or RLAIF after length correction (App J mention), so results are not universal.",
+  "RL uses REINFORCE rather than PPO; results may differ with other RL algorithms."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "d-RLAIF",
+   "definition": "a technique that circumvents RM training by obtaining rewards directly from an off-the-shelf LLM during RL",
+   "where": "Abstract"
+  },
+  {
+   "term": "same-size RLAIF",
+   "definition": "RLAIF where the AI labeler (PaLM 2 XS) is the same size as the policy",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Constitutional AI: Harmlessness from AI Feedback",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "extends",
+   "note": "introduced RLAIF but did not directly compare human vs AI feedback",
+   "quote": null
+  },
+  {
+   "work": "Learning to summarize from human feedback (Stiennon et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "RLHF pipeline, TL;DR data, length-control method",
+   "quote": null
+  },
+  {
+   "work": "Training a helpful and harmless assistant with RLHF (Bai et al.)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-data",
+   "note": "hh-rlhf datasets",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "found to degrade labeler alignment",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT labeling",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "labeler and policy models",
+   "quote": null
+  },
+  {
+   "work": "REINFORCE (Williams)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RL algorithm used instead of PPO",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Human evaluators strongly prefer RLAIF and RLHF over the SFT baseline for summarization and helpful dialogue generation.",
+   "page": 1,
+   "why": "headline win and harmless rates"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Process to obtain AI-generated preference labels for summarization (CoT rationale then softmax over 1 vs 2).",
+   "page": 3,
+   "why": "two-step labeling"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "In d-RLAIF the off-the-shelf LLM provides rewards directly during RL.",
+   "page": 4,
+   "why": "shows RM removal"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.2.2",
+   "snippet": "s(y|x) = sum_{i=1}^{10} i P(i|y,x), then normalized to [-1, 1]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text mentions 'Figure 14' for self-consistency but data is in Table 14.",
+  "Page-1 figure numbers and table cells are scattered in extraction; Table 1 columns reconstructed from order."
+ ]
+}

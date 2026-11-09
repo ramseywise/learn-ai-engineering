@@ -1,19 +1,684 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2302.03668",
  "pdf": "ai-engineering/01-prompt-engineering/sources/wen-2023-hard-prompts-made-easy.pdf",
  "bib": {
   "title": "Hard Prompts Made Easy: Gradient-Based Discrete Optimization for Prompt Tuning and Discovery",
-  "first_author": "Yuxin Wen",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Yuxin Wen",
+   "Neel Jain",
+   "John Kirchenbauer",
+   "Micah Goldblum",
+   "Jonas Geiping",
+   "Tom Goldstein"
+  ],
+  "first_author": "Wen",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2302.03668",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 50471,
+  "chars_total": 50471,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
  },
- "legacy_report": "SOURCE: Hard Prompts Made Easy: Gradient-Based Discrete Optimization for Prompt Tuning and Discovery. Yuxin Wen, Neel Jain, John Kirchenbauer, Micah Goldblum, Jonas Geiping, Tom Goldstein. arXiv:2302.03668v2 (1 Jun 2023). The PDF extract shows no venue, so treat it as a preprint. Cited in the text as a method called PEZ.\n\nCOVERAGE: 50,564 of 50,564 chars and all 15 pages, including the appendix, Tables 5-7 and the reference list (skimmed). Figure captions were read from the extraction and the images were not viewed. I also read notes/08-prompt-optimization.md. It does not currently cite this paper; its gradient-based bullet covers only \"AutoPrompt, prefix tuning, prompt tuning\".\n\nCLAIMS (ranked)\n- PEZ learns discrete prompts by keeping a continuous (soft) iterate. Each step projects it to the nearest vocabulary embedding, takes the gradient at the projected tokens, and applies that gradient to the continuous iterate. The authors present it as a simpler alternative to AutoPrompt and FluentPrompt, which re-project after every step. It is white-box: it needs the model's embedding matrix and gradients.\n  number: none\n  setup: Algorithm 1 (PEZ); the vocabulary embedding matrix E, projection Proj and a frozen model θ are inputs.\n  quote: \"During each forward pass, we first project the current embeddings P onto the nearest neighbor P′ before calculating the gradient. Then, using the gradient of the discrete vectors, P′, we update the continuous/soft iterate, P.\"\n  where: p.3 (about char 9,000)\n- The projection-every-step baselines can stall. The paper says this needs extensive learning-rate tuning, and Fig 8 shows model-dependent learning-rate sensitivity.\n  number: none\n  quote: \"if the nearest neighbors are far away from the embeddings and the learning rate is not tuned properly, the embeddings may become stagnant, which can require extensive hyperparameter tuning\"\n  where: p.2\n- Text-to-text transfer. Prompts were optimized on GPT-2 Large (774M) with a 10-token prepended prompt and transferred to larger models without retraining. PEZ with the fluency penalty beat the baselines on three of the four target models.\n  number: SST-2 validation accuracy (%), mean ± s.e. over 5 prompts. Columns are GPT-2 Large (source), GPT-2 XL, T5-LM-XL, OPT-2.7B, OPT-6.7B.\n  - EmptyTemplate: 80.84, 73.85, 52.75, 72.48, 58.72\n  - AutoPromptSGD: 87.56, 78.19, 56.01, 73.69, 65.28\n  - FluentPrompt: 88.33, 78.53, 55.64, 70.39, 61.74\n  - PEZ no fluency: 88.12, 77.8, 61.12, 76.93, 71.72\n  - PEZ with fluency: 88.05, 79.72, 63.30, 77.18, 72.39\n  - Soft prompt on the source model: 93.35, and it cannot be transferred.\n  setup: prompts generated on GPT-2 Large for 5000 steps. The five prompts with the best validation accuracy per method were then tested on the other models. The text also says the largest boost is about 14% over the template-only baseline on OPT-6.7B.\n  quote: \"PEZFluency (Ours) 88.05±0.55 79.72±3.26 63.30±2.30 77.18±3.82 72.39±1.82\" and \"we can see the largest boost from OPT-6.7B with our fluent method with about a 14% increase over just the template baseline.\"\n  where: p.8, Table 2\n  Caveats: on the source model PEZ does not beat the baselines (FluentPrompt 88.33 is highest). The standard errors are large (about 2-4 points), so the margins over the baselines on GPT-2 XL and OPT-2.7B are within noise. \"OPT-6.7B\" in the table and \"OPT-6B\" in the text are the same model.\n- On the source model, prompts of 10 prepended tokens come nowhere near the soft prompt. PEZ is only comparable to the other hard-prompt methods on sentiment and about 2 points better on AGNEWS.\n  number: validation accuracy (%) for SST-2, AGNEWS, Amazon:\n  - PEZ no fluency: 88.12, 77.06, 87.70\n  - PEZ with fluency: 88.05, 76.94, 87.78\n  - AutoPromptSGD: 87.56, 74.36, 87.75\n  - FluentPrompt: 88.33, 74.62, 87.42\n  - Soft prompt: 93.35, 92.76, 94.65\n  setup: GPT-2 Large, 10 discrete tokens prepended, best of 3 learning rates, standard error over 5 seeds, early stopping on a 5000-example holdout.\n  quote: \"Soft Prompt 93.35±0.01 92.76±0.01 94.65±0.01\"\n  where: p.12, Table 5\n- Few-shot discovery on AGNEWS (GPT-2 Large). Hard prompts are far above the empty template but below soft prompts.\n  number: k=2 and k=4 shots per class: EmptyTemplate 58.34 / 58.34; PEZ no fluency 70.07 / 73.99; PEZ with fluency 70.93 / 74.15; Soft Prompt 74.92 / 79.93.\n  setup: 3 tokens appended (\"It was about\"), 100 epochs, 100 seeds, early stopping, λ=0.03, about 5 minutes per run.\n  quote: \"PEZFluency (Ours) 70.93±0.60 74.15±0.48\" and \"each few-shot run takes about 5 minutes.\"\n  where: p.8, Table 3\n- Transfer is uneven. In the appendix GPT-2 Large to GPT-2 XL transfer on AGNEWS, only the fluent PEZ clearly helps. The non-fluent PEZ prompt has high variance.\n  number: GPT-2 XL: EmptyTemplate 52.42; AutoPromptSGD 63.79±3.61; FluentPrompt 61.57±5.1; PEZ no fluency 59.45±8.63; PEZ with fluency 67.59±2.67.\n  quote: \"PEZFluency(Ours) 76.94±0.48 67.59±2.67\"\n  where: p.12, Table 6\n  Note: its header \"GPT-2 Large (755M)\" and the \"774M\" in the text differ, and Table 6 reports \"standard deviation\" while the other tables report standard error.\n- Larger models do not automatically score higher with the same prompt.\n  quote: \"simply scaling a model–with no additional training–does not guarantee that performance will scale accordingly.\"\n  where: p.8\n- Image prompts (CLIP / Stable Diffusion). 8 PEZ tokens roughly match CLIP Interrogator's roughly 77 tokens, and soft prompts transfer badly.\n  number: CLIP score on LAION, MS COCO, Celeb-A, Lexica.art:\n  - PEZ (8 tokens): 0.697, 0.674, 0.602, 0.711\n  - CLIP Interrogator (~77 tokens, with a keyword bank and BLIP): 0.707, 0.690, 0.558, 0.762\n  - Interrogator at 8 tokens: 0.539, 0.575, 0.360, 0.532\n  - Interrogator at 16 tokens: 0.650, 0.650, 0.491, 0.671\n  - Interrogator at 32 tokens: 0.694, 0.663, 0.540, 0.730\n  - PEZ with the keyword bank: 0.702, 0.689, 0.629, 0.740\n  - Soft prompt (8 tokens): 0.408, 0.420, 0.451, 0.554\n  - AutoPromptSGD: 0.689, 0.669, 0.595, 0.702\n  - FluentPrompt: 0.688, 0.671, 0.583, 0.702\n  setup: Stable Diffusion v2 as the generator. OpenCLIP-ViT/H used for optimization, with learning rate 0.1, 3000 AdamW steps, guidance scale 9 and 25 inference steps. The scorer is OpenCLIP-ViT/G (not used in optimization). 100 sampled images per dataset, averaged over 5 seeds.\n  quote: \"PEZ (Ours) 8 CLIP 0.697 0 .674 0 .602 0 .711\" and \"soft prompts do not transfer well compared to all hard prompt methods in our evaluation.\"\n  where: p.5 Table 1; p.15 Table 7\n- Longer prompts are not better. Training loss on CLIP falls with length, but the CLIP score on the generated images does not keep rising.\n  number: the paper finds a length of 16 best (see the quote). Fig 5 sweeps 2-6 tokens; its axis labels were garbled in extraction.\n  quote: \"Long prompts thus overfit and are less transferable, and we empirically find a length of 16 to result in the most generalizable performance.\"\n  where: p.6\n  Caveat: the 16 conflicts with the 2-6 token range on the Fig 5 axis, so verify against the figure.\n- Other uses, shown only as qualitative figures: style transfer, prompt concatenation (Fig 4), and prompt distillation to 0.7/0.5/0.3/0.1 of the original length (Fig 6, Fig 11). Prompt distillation also shortens the 77-token CLIP limit problem.\n  quote: \"even with only 3 or 4 tokens, the hard prompts can still generate images very similar in concept to the original\"\n  where: p.7\n- Safety: PEZ can build prompts that avoid a banned word while reproducing the banned concept. The authors demonstrated it on Midjourney with \"Afghan\" blocked (Fig 7, Fig 10).\n  quote: \"prompt optimization can be used as a mechanism to bypass simple rule-based content filters.\"\n  where: p.9\n\nLIMITS\n- White-box only. PEZ needs gradients and the embedding matrix. The \"API-only\" benefit the paper claims applies to deploying the found prompt, not to finding it. For images it avoids backpropagating through the diffusion model by using the CLIP encoder as the loss.\n- Readability. The learned prompts are often gibberish, and the authors concede this. Examples are \"negative vibeThis immatureollywood Mandarinollywood This energetic screenplay\" for SST-2, and image prompts mixing real words, junk and emojis.\n- Quotes: \"prompts are not coherent English for any of the methods\" (Appendix A.2) and \"even though they are human-readable, they may still contain several un-interpretable tokens\" (Conclusion).\n- Only small, old models were tested: GPT-2 Large as the source, and GPT-2 XL, T5-LM-XL, OPT 2.7B and 6.7B as targets. There are no instruction-tuned chat models, and the paper reports no GPT-3/4 results.\n- Tasks are narrow classification: SST-2, Amazon Polarity and AGNEWS. Hard prompts remain far below soft prompts, for example AGNEWS 77 vs 92.8.\n- The gains over the baselines are small relative to the standard errors on several cells. Some hyperparameters were chosen as best across learning rates.\n- There is no human evaluation of image quality, only CLIP similarity.\n- The authors warn hard prompts could extract harmful or sensitive training data. They observed no instance.\n- Dated: the paper predates LLM-as-optimizer methods (APE, OPRO) and chat-model prompting. It optimizes tokens through gradients, not natural-language instructions.\n\nBUILDS ON (as printed)\n- AutoPrompt (Shin et al., 2020), which uses HotFlip (Ebrahimi et al., 2018).\n- FluentPrompt (Shi et al., 2022), which uses Langevin dynamics (Kumar et al., 2022).\n- Prefix tuning (Li & Liang, 2021) and soft prompt tuning (Lester et al., 2021).\n- Khashabi et al. (2022), \"Prompt waywardness\".\n- Quantized/binary-network optimizers that keep continuous weights (Courbariaux et al., 2015, 2016; Li et al., 2017).\n- Gal et al. (2022), textual inversion.\n- CLIP Interrogator, using BLIP (Li et al., 2022) and OpenCLIP (Cherti et al., 2022).\n- Others cited: GrIPS (Prasad et al., 2022), RLPrompt (Deng et al., 2022), OpenPrompt (Ding et al., 2022).\n\nCODE\nAlgorithm 1 (PEZ), p.3, as pseudocode:\n  P = [e_i..e_M] sampled from E_|V|\n  for 1..T: P' = Proj_E(P); g = grad_{P'} L_task(B(P', X_i), Y_i, θ); P = P - γ g\n  return Proj_E[P]\nObjective used for text: L = (1 − λ_fluency) L_task + λ_fluency L_fluency, with λ = 0.003 (Table 2 setup) and 0.03 for the few-shot runs.\nImage objective: L(P, x) = 1 − S(f(P), g(x)), with S the cosine similarity.\nDistillation: L = 1 − Sim(f(P_target), f(P)).\nThe released code is at https://github.com/YuxinWenRick/hard-prompts-made-easy.\n\nFIGURES\n- Fig 1 (p.1) and Fig 2 (p.4): a target image becomes an 8-token discovered prompt, which regenerates a similar image in Stable Diffusion. Fastest way to show what \"hard prompt discovery\" produces, including the gibberish tokens.\n- Fig 5 (p.6): prompt length against training loss and validation CLIP score. Shows that longer prompts overfit.\n- Fig 6 (p.7): prompt distillation. Shows the same concept kept at lengths down to 3-4 tokens.\n- Fig 8 (p.12): learning-rate sensitivity of FluentPrompt on GPT-2 Medium and T5-LM Base. Shows the stagnation problem with projection every step.\n- Fig 12 (p.15): on SST-2, AutoPrompt with SGD and fluency beats AutoPrompt with k=1.\n- Fig 7 and Fig 10 (pp.9, 14): filter evasion on Midjourney.\nCaptions came from the extracted text. I did not run the figures script.\n\nPROBLEMS\n- No embedded instructions were found.\n- Extraction is clean prose, but emojis and some table headers are garbled. The Table 2 header reads \"OPT(755M, Source)\", and the numbers are still aligned.\n- Tables 2 and 6 give GPT-2 Large as 774M in the text and 755M in the tables.\n- Fig 5 axis labels were garbled, so the exact token range is unverified.\n- Table 5 says \"5 speeds\" for seeds, which is a typo in the source.\n- Footnote 2 is split by the page break. It says a template boosts performance differently across GPT-2 Large and XL.\n- A suggested use for the note: the paper supports a short \"gradient-based / white-box\" bullet. The honest framing is that PEZ finds token strings that are weak on readability and that transfer across small models only partially. It is not a method for tuning chat or API prompts."
+ "type": "empirical",
+ "question": "Can hard (interpretable, portable) text prompts be learned efficiently by gradient-based optimisation, for both text-to-image and text-to-text tasks?",
+ "hypothesis": "Keeping a continuous soft prompt as the iterate while evaluating gradients at its nearest-neighbour projection (PEZ) finds better and more transferable hard prompts than projecting after every update (AutoPrompt, FluentPrompt).",
+ "contributions": [
+  "A simple scheme for learning hard prompts using continuous optimisation (PEZ), adapting lessons from quantized-network optimisation.",
+  "Hard prompts for image generation that perform competitively with specialised prompt tools using far fewer tokens.",
+  "Learned hard prompts that perform well on language classification, out-perform other text optimisation schemes, and transfer across networks, more so with fluency regularisation."
+ ],
+ "method": {
+  "summary": "PEZ keeps a continuous prompt embedding P, projects it to nearest vocabulary embeddings P', computes the task gradient at P' and applies it to P, with a final projection. Applied to CLIP prompt inversion (prompts for Stable Diffusion) and to few-shot and full-data prompt tuning of GPT-2 Large for classification, with transfer to larger LMs.",
+  "task": "hard prompt optimisation: CLIP prompt inversion for text-to-image; prompt tuning for text classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAION",
+    "role": "eval",
+    "size": "100 randomly sampled images per dataset",
+    "split": null,
+    "source": "Schuhmann et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MS COCO",
+    "role": "eval",
+    "size": "100 randomly sampled images",
+    "split": null,
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "Celeb-A",
+    "role": "eval",
+    "size": "100 randomly sampled images",
+    "split": null,
+    "source": "Liu et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Lexica.art",
+    "role": "eval",
+    "size": "100 randomly sampled images",
+    "split": null,
+    "source": "Santana 2022 (Gustavosta/Stable-Diffusion-Prompts)",
+    "preprocessing": null
+   },
+   {
+    "name": "SST-2",
+    "role": "both",
+    "size": null,
+    "split": "hold-out set of 5000 examples for early stopping; reports validation accuracy",
+    "source": "Socher et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "Amazon Polarity",
+    "role": "both",
+    "size": null,
+    "split": "hold-out set of 5000 examples for early stopping; validation accuracy",
+    "source": "McAuley & Leskovec 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "AGNEWS",
+    "role": "both",
+    "size": "4 classes",
+    "split": "few-shot: k=2 or k=4 examples per class as train set, equal-size holdout, validated on full validation set",
+    "source": "Zhang et al. 2015",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OpenCLIP-ViT/H",
+    "role": "base",
+    "params": null,
+    "architecture": "CLIP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "77 tokens",
+    "other": {
+     "use": "frozen, drives prompt optimisation; shares text encoder with Stable Diffusion v2"
+    }
+   },
+   {
+    "name": "OpenCLIP-ViT/G",
+    "role": "judge",
+    "params": null,
+    "architecture": "CLIP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "reference model for CLIP score, not used in optimisation"
+    }
+   },
+   {
+    "name": "Stable Diffusion-v2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "latent diffusion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 Large",
+    "role": "base",
+    "params": "774M (Table 2 and 6 print 755M)",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "frozen; source model for prompt optimisation"
+    }
+   },
+   {
+    "name": "GPT-2 XL",
+    "role": "evaluated",
+    "params": "1.3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "transfer target"
+    }
+   },
+   {
+    "name": "T5-LM-XL",
+    "role": "evaluated",
+    "params": "3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "transfer target"
+    }
+   },
+   {
+    "name": "OPT-2.7B",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "transfer target"
+    }
+   },
+   {
+    "name": "OPT-6.7B",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "transfer target; text says OPT-6B"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Image: L(P,x)=1-S(f(P),g(x)) cosine similarity of CLIP text and image embeddings. Text: L=(1-lambda_fluency)L_task+lambda_fluency L_fluency, lambda=0.003 (0.03 for few-shot AGNEWS). Distillation: L=1-Sim(f(P_target),f(P)).",
+   "optimizer": "image: AdamW; text: Adafactor",
+   "lr": "image: 0.1; text (Table 5): best of 0.1, 0.3, 0.5 for PEZ and 1, 3, 10 for AutoPrompt_SGD/FluentPrompt",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 (text)",
+   "steps": "image: 3000; text transfer: 5000 steps on GPT-2 Large",
+   "epochs": "few-shot: 100 epochs",
+   "tokens": null,
+   "seq_len": "image: 8 prompt tokens for main PEZ result (16 to 22 judged best generalising); text: 10 prompt tokens prepended for Table 5, 3 appended for few-shot",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "fluency loss (lambda 0.003); no-fluency ablation lambda=0",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "each few-shot run takes about 5 minutes",
+   "seeds": "image: 5 seeds; Table 5: 5 seeds; few-shot: 100 seeds",
+   "other": {
+    "init": "prompt embeddings sampled from real vocabulary embeddings; text-task prompt tokens initialised with label tokens (footnote 4)",
+    "early_stopping": "hold-out set of 5000 examples, evaluated every 100 steps"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Image: 100 images per dataset, CLIP score averaged over 5 seeds. Transfer: top five prompts by average validation accuracy per method.",
+   "prompting": "Templates: SST-2/Amazon '<s>It was <mask>' verbalizer positive/negative; AGNEWS '<s>It was about <mask>' verbalizer politics, sports, business, technology. Style transfer uses 'a tiger in the style of {}' etc.",
+   "retrieval": null,
+   "parameters": {
+    "stable_diffusion_guidance_scale": "9",
+    "stable_diffusion_inference_steps": "25",
+    "prompt_length_image": "8 tokens",
+    "distillation_ratios": "0.7, 0.5, 0.3, 0.1"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CLIP score",
+     "definition": "cosine similarity under OpenCLIP-ViT/G between target image and image generated by Stable Diffusion from the learned prompt",
+     "unit": "cosine similarity",
+     "higher_is_better": true
+    },
+    {
+     "name": "Validation accuracy",
+     "definition": "classification accuracy of the LM with learned prompt and template/verbalizer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CLIP Interrogator (with and without BLIP, 8/16/32/~77 tokens)",
+    "AutoPrompt_SGD",
+    "FluentPrompt",
+    "Soft prompt",
+    "EmptyTemplate",
+    "PEZ + keyword Bank"
+   ],
+   "protocol": "Image: mean over 100 images and 5 seeds per dataset. Text: standard error over 5 prompts or seeds; few-shot over 100 seeds with early stopping. No significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/YuxinWenRick/hard-prompts-made-easy",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "For Stable Diffusion-",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On LAION, PEZ with 8 tokens nearly matches CLIP Interrogator using about 77 tokens plus BLIP and a keyword bank.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP score (LAION)",
+   "value": "0.697",
+   "unit": "cosine similarity",
+   "baseline_value": "0.707",
+   "n": "100 images x 5 seeds",
+   "setup": "Stable Diffusion-v2, OpenCLIP-ViT/H for optimisation, OpenCLIP-ViT/G for scoring; PEZ 8 tokens vs CLIP Interrogator ~77 tokens",
+   "table": "Table 1, row PEZ (Ours) vs CLIP Interrogator, column LAION",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On Celeb-A PEZ beats CLIP Interrogator.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP score (Celeb-A)",
+   "value": "0.602",
+   "unit": "cosine similarity",
+   "baseline_value": "0.558",
+   "n": "100 images x 5 seeds",
+   "setup": "as Table 1; interrogator keyword bank lacks face words",
+   "table": "Table 1, row PEZ (Ours), column Celeb-A",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "At equal 8 tokens PEZ greatly exceeds CLIP Interrogator on LAION.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP score (LAION)",
+   "value": "0.539",
+   "unit": "cosine similarity",
+   "baseline_value": "0.697",
+   "n": "100 images x 5 seeds",
+   "setup": "CLIP Interrogator truncated to 8 tokens (0.539) vs PEZ 8 tokens (0.697)",
+   "table": "Table 1, row CLIP Interrogator 8 tokens, column LAION",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Soft prompts transfer poorly to Stable Diffusion compared with hard prompt methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP score (LAION)",
+   "value": "0.408",
+   "unit": "cosine similarity",
+   "baseline_value": "0.697",
+   "n": "100 images x 5 seeds",
+   "setup": "8-token soft prompt vs PEZ",
+   "table": "Table 1, row Soft Prompt, column LAION",
+   "quote": "We note that even though Stable Diffusion and CLIP share the same text encoder, soft prompts do not transfer well",
+   "note": null,
+   "where": "Sec 4.2, Table 1"
+  },
+  {
+   "claim": "Restricting PEZ to the keyword bank closes most of the gap to CLIP Interrogator without BLIP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP score (LAION)",
+   "value": "0.702",
+   "unit": "cosine similarity",
+   "baseline_value": "0.677",
+   "n": "100 images x 5 seeds",
+   "setup": "PEZ + Bank 8 tokens vs CLIP Interrogator without BLIP ~77 tokens",
+   "table": "Table 1, row PEZ (Ours) + Bank, column LAION",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Longer prompts reduce CLIP loss but do not improve Stable Diffusion generations; length of 16 to 22 generalises best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best prompt length",
+   "value": "16 to 22",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5 ablation, validation CLIP score of generated images vs prompt length",
+   "quote": "we empirically find a length of 16 to",
+   "note": "Quote continues '22' on a later line after the figure axis; Fig 5 axis ticks read 2^2..2^6.",
+   "where": "Sec 4.2, Fig 5"
+  },
+  {
+   "claim": "PEZ prompts learned on GPT-2 Large transfer to OPT-6.7B with the largest boost over template-only baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SST-2 accuracy, OPT-6.7B",
+   "value": "72.39",
+   "unit": "%",
+   "baseline_value": "58.72",
+   "n": "5 prompts",
+   "setup": "Prompts trained on GPT-2 Large 5000 steps, top 5 by validation accuracy, SST-2 validation",
+   "table": "Table 2, row PEZ Fluency, column OPT (6.7B)",
+   "quote": "with about a 14% increase over just",
+   "note": "Text says OPT-6B in setup, table says 6.7B.",
+   "where": "Table 2, Sec 5.2"
+  },
+  {
+   "claim": "PEZ transfers better than AutoPrompt_SGD and FluentPrompt on T5-LM-XL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SST-2 accuracy, T5-LM-XL",
+   "value": "63.30",
+   "unit": "%",
+   "baseline_value": "56.01",
+   "n": "5 prompts",
+   "setup": "as Table 2; AutoPrompt_SGD 56.01, FluentPrompt 55.64, empty template 52.75",
+   "table": "Table 2, row PEZ Fluency, column T5-LM-XL",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On the source model GPT-2 Large, PEZ is comparable to baselines on SST-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SST-2 accuracy, GPT-2 Large",
+   "value": "88.05",
+   "unit": "%",
+   "baseline_value": "88.33",
+   "n": "5 prompts",
+   "setup": "FluentPrompt 88.33, PEZ no fluency 88.12; soft prompt 93.35",
+   "table": "Table 2, row PEZ Fluency, column GPT-2 Large",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "PEZ beats other discrete methods on AGNEWS by about 2 points; sentiment tasks are comparable.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AGNEWS accuracy",
+   "value": "77.06",
+   "unit": "%",
+   "baseline_value": "74.62",
+   "n": "5 seeds",
+   "setup": "10 prompt tokens prepended, GPT-2 Large, best of three learning rates; soft prompt 92.76",
+   "table": "Table 5, row PEZ No Fluency, column AGNEWS",
+   "quote": "outperform the other methods on AGNEWS by about 2%",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Few-shot AGNEWS (k=4): PEZ with fluency reaches 74.15 vs empty template 58.34 but trails soft prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AGNEWS accuracy, k=4",
+   "value": "74.15",
+   "unit": "%",
+   "baseline_value": "79.93",
+   "n": "100 seeds",
+   "setup": "GPT-2 Large, 3 appended tokens, 100 epochs, early stopping, lambda=0.03; baseline_value is soft prompt",
+   "table": "Table 3, row PEZ Fluency, column k=4",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Few-shot AGNEWS (k=2): PEZ with fluency reaches 70.93 vs soft prompt 74.92.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AGNEWS accuracy, k=2",
+   "value": "70.93",
+   "unit": "%",
+   "baseline_value": "74.92",
+   "n": "100 seeds",
+   "setup": "as Table 3",
+   "table": "Table 3, row PEZ Fluency, column k=2",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Each few-shot prompt discovery run is cheap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock per run",
+   "value": "5",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "few-shot AGNEWS, GPT-2 Large",
+   "quote": "It is worth noting that each",
+   "note": "Quote spans a line break: 'each few-shot run takes about 5 minutes'.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "AGNEWS prompts transfer from GPT-2 Large to GPT-2 XL, best with PEZ fluency.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AGNEWS accuracy, GPT-2 XL",
+   "value": "67.59",
+   "unit": "%",
+   "baseline_value": "52.42",
+   "n": null,
+   "setup": "prompts from GPT-2 Large; baseline is empty template",
+   "table": "Table 6, row PEZ Fluency, column GPT-2 XL",
+   "note": "Table 6 labels GPT-2 Large 755M and calls the spread standard deviation.",
+   "where": "Table 6"
+  },
+  {
+   "claim": "PEZ can produce a prompt that avoids a banned token yet reproduces the banned image on Midjourney, bypassing word-level filters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Midjourney, target 'Afghan girl', qualitative (Fig 7, 10)",
+   "quote": "prompt optimization can be used as a mechanism",
+   "note": null,
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "Learned prompts still contain several un-interpretable tokens (Conclusion).",
+  "Hard prompts may extract harmful phrases or sensitive content from training data; not observed.",
+  "Embedding-space geometry is poorly understood.",
+  "Soft prompts remain clearly stronger in accuracy (93.35 vs 88.05 SST-2; 79.93 vs 74.15 few-shot).",
+  "Image evaluation uses CLIP similarity only, no human study; no significance tests; 100 images per dataset.",
+  "Transfer tested only from GPT-2 Large to a few older LMs (up to 6.7B); no hardware or compute stated.",
+  "Safety: method can evade token-level content filters."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "hard prompt",
+   "definition": "made from interpretable words and tokens, and must be hand-crafted by humans",
+   "where": "Abstract"
+  },
+  {
+   "term": "soft prompt",
+   "definition": "consist of continuous feature vectors",
+   "where": "Abstract"
+  },
+  {
+   "term": "distillation ratio",
+   "definition": "|P|/|P_target|",
+   "where": "Sec 4.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AutoPrompt",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Shin et al.; SGD variant used as baseline",
+   "quote": null
+  },
+  {
+   "work": "Toward human readable prompt tuning (FluentPrompt)",
+   "year": 2022,
+   "arxiv": "2212.10539",
+   "relation": "baseline",
+   "note": "Shi et al.; Langevin dynamics plus fluency loss",
+   "quote": null
+  },
+  {
+   "work": "CLIP Interrogator",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BLIP caption + keyword bank",
+   "quote": null
+  },
+  {
+   "work": "The Power of Scale for Parameter-Efficient Prompt Tuning",
+   "year": 2021,
+   "arxiv": "2104.08691",
+   "relation": "uses-method",
+   "note": "soft prompt baseline and Adafactor setting",
+   "quote": null
+  },
+  {
+   "work": "Textual inversion (Gal et al.)",
+   "year": 2022,
+   "arxiv": "2208.01618",
+   "relation": "extends",
+   "note": "hard-prompt version of style-transfer setting",
+   "quote": null
+  },
+  {
+   "work": "Prompt waywardness (Khashabi et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "clamping soft prompts to tokens degrades performance",
+   "quote": null
+  },
+  {
+   "work": "Training quantized nets (Li et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "continuous iterate vs stochastic rounding",
+   "quote": null
+  },
+  {
+   "work": "OpenPrompt",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text setting built on Ding et al.",
+   "quote": null
+  },
+  {
+   "work": "RLPrompt",
+   "year": 2022,
+   "arxiv": "2205.12548",
+   "relation": "related",
+   "note": "RL discrete prompt optimisation",
+   "quote": null
+  },
+  {
+   "work": "GrIPS",
+   "year": 2022,
+   "arxiv": "2203.07281",
+   "relation": "related",
+   "note": "gradient-free edit search",
+   "quote": null
+  },
+  {
+   "work": "Stable Diffusion / OpenCLIP",
+   "year": 2022,
+   "arxiv": "2212.07143",
+   "relation": "evaluates",
+   "note": "generator and CLIP models",
+   "quote": null
+  },
+  {
+   "work": "LAION-5B, MS COCO, Celeb-A, Lexica.art, SST-2, Amazon Polarity, AGNEWS",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1/2",
+   "caption": "Hard prompt discovery from a target image using CLIP, used to prompt Stable Diffusion.",
+   "page": 1,
+   "why": "Shows the pipeline and the gibberish-plus-real-words prompts."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Quantitative evaluation of learned hard prompts (CLIP score).",
+   "page": 5,
+   "why": "Main image comparison with token counts."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "SST-2 accuracy transferred from GPT-2 Large to larger models.",
+   "page": 8,
+   "why": "Transfer evidence."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Prompt distillation at ratios 0.7 to 0.1.",
+   "page": 7,
+   "why": "Shows shortened prompts keep concept."
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "P' = Proj_E(P); g = grad_{P'} L(B(P'), Y, theta); P = P - gamma g; final P = Proj_E[P]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 caption says 'It was about' template, k shots 'across 100 seeds'; Table 5 caption says '5 speeds' (seeds).",
+  "GPT-2 Large printed as 774M in text and 755M in tables.",
+  "No embedded instructions found."
+ ]
 }

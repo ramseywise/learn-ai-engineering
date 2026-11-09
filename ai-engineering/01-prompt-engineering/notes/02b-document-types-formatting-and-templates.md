@@ -24,10 +24,7 @@ Two attention effects pull against each other:
 
 Together they create the **Valley of Meh**: content in the early middle of the prompt is used less effectively than the beginning or the second half. Its depth and exact position vary by model, but the book says every model has one, and it matters most in large prompts. There's no full fix — put your best material at the start or end, and filter context to keep the prompt short (book, Ch 6).
 
-The evidence is Liu et al. (2023), *Lost in the Middle*. In multi-document QA, they moved the one document that contains the answer through 10, 20 or 30 retrieved documents (about 2K, 4K and 6K tokens). Accuracy was U-shaped in every model they tested. With 20 documents, GPT-3.5-Turbo scored about 76% when the answer came first, about 63% when it came last, and dropped to about 54% in the middle. That is **below its 56.1% closed-book score with no documents at all**: an answer buried in the middle was worse than no retrieval. Extended-context versions of the same models often scored the same as the base versions, so a bigger window doesn't fix the position problem ([arXiv:2307.03172](https://arxiv.org/abs/2307.03172)):
-
-![Accuracy vs. position of the answer document, Liu et al. 2023](../sources/images/huyen-ai-engineering-fig5-4.png)
-*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-4, reproducing Liu et al. (2023)*
+Liu et al. (2023) measured it: accuracy was U-shaped in the position of the answer document, in every model they tested, and a bigger window did not fix it. The numbers and the figure are in [context engineering 01](../../02-context-engineering/notes/01-why-context-is-finite.md#context-rot).
 
 **Test your own model.** A needle-in-a-haystack (NIAH) test inserts one fact at different depths of a long prompt and asks for it back. RULER (Hsieh et al., 2024) is a harder synthetic suite. You can also build a realistic version from your own data, such as the patient's blood type in a long visit transcript. Use **private** facts, so the model can't answer from its training data instead of the context (*AI Engineering*, ch. 5). Where the task description works best is model-specific too: GPT-4 did better with it at the start, Llama 3 at the end. The sandwich below covers both cases.
 
@@ -52,10 +49,6 @@ flowchart LR
 The book calls writing the first words of the answer **inception** (`The three main risks are 1.` or ` ```python `): the model treats the opening as its own and continues in that shape, which also makes the output easier to parse. Chat APIs that allow prefilling the assistant turn support the same move.
 
 When the instruction changes *how* the content must be read (counting, extracting a specific field), state it in the introduction too — the model can't go back and re-read ([01-how-models-read-prompts](01-how-models-read-prompts.md#property-3--left-to-right-attention-order-matters)).
-
----
-
-The rest of the anatomy, on document types, formatting injected content, agent system prompts and templates, is in [2b — document types, formatting and templates](02b-document-types-formatting-and-templates.md).
 
 ---
 
@@ -110,36 +103,13 @@ Content that doesn't fit the main flow can go in an **aside** — a clearly mark
 
 Snippet checklist: **modular** (insert or drop like list items), **natural** (reads as part of the document), **brief**, and **inert** (its token count doesn't change with its neighbors). Inertness matters because tokenization isn't additive. With OpenAI's GPT-3.5-and-later tokenizer, `"be"` + `"am"` is one token plus one token but `"beam"` is a single token, while `"cat"` + `"tail"` becomes three tokens (`c`, `att`, `ail`) as `"cattail"` (book, Ch 6, Table 6-4). Separate elements with whitespace so they can't merge. GPT tokenizers have many tokens that *start* with a space and few that end with one, so put the space at the start of a snippet, not the end. They also merge runs of newlines, so a snippet should either never start or never end with a newline. Never starting with one is usually easier, and ending every element with a newline also simplifies string handling and token counting.
 
-**Assembly** is a packing problem: choose the elements that maximize the prompt's value within a budget of the context window minus the tokens reserved for the response. With a very large window, set a softer budget anyway, for compute and to keep out loosely relevant context. The book compares it to a 0-1 knapsack with dependencies and notes there is no standard solver, so you write your own (Ch 6).
-
-Each element carries a **position**, an **importance** and its **dependencies**. Beginners conflate position and importance because recent content is often important, but the introduction outranks most of the middle. The book distinguishes **priorities**, a few integer tiers where every higher tier is used before dipping into the next, from **scores**, floats that rank elements within a tier (Ch 4). A typical tiering puts the central instructions and the output format at the top (they go in at all costs), explanations next, and context third. Pick one convention for whether importance accounts for length, and apply it everywhere. Dependencies come in three kinds:
+**Assembly** is a packing problem: choose the elements that maximize the prompt's value within the context window minus the tokens reserved for the response. Budgeting is in [context engineering 03](../../02-context-engineering/notes/03-budgeting-the-window.md#formally-assembly-under-a-constraint) and finding the candidates is in [context engineering 04](../../02-context-engineering/notes/04-retrieval.md). What is specific to a prompt is the bookkeeping. Each element carries a **position**, an **importance** and its **dependencies**. Beginners conflate position and importance because recent content is often important, but the introduction outranks most of the middle. Dependencies come in three kinds:
 
 - **Requirement** — one element needs another ("Richard is the protagonist of *The Beach*" before "He grew up in England").
 - **Elastic** — a snippet has several versions (full → trimmed → minimal, e.g. a chapter with more and more paragraphs replaced by "..."); ask "what's the biggest version that fits?", not "does it fit?".
 - **Mutually exclusive** — two snippets cover the same thing (a document and its summary, or overlapping passages); include at most one, with the shorter as the fallback.
 
-Start with the **minimal prompt crafter**: order the elements and keep as many from the end as fit. It needs no scoring, and it works because models are trained to handle document suffixes, so it suits chat and apps that build on a main text. As the app grows, move to a greedy engine. **Additive** greedy starts empty and adds the highest-value element whose requirements are met and that fits. It copes when far more elements exist than fit, but breaks down with cyclical requirements or high-value elements that need low-value ones. **Subtractive** greedy starts with everything and removes the least valuable, pruning anything whose requirements are gone. It suits a manageable number of elements with few incompatibilities, and handles elastic snippets more easily (book, Ch 6).
-
-An additive sketch:
-
-```python
-def assemble(snippets, budget):
-    chosen, used, covered = [], 0, set()
-    for s in sorted(snippets, key=lambda s: -s.priority):
-        if s.group in covered:            # mutually exclusive with one already chosen
-            continue
-        if not s.requires <= covered:     # a requirement isn't in yet
-            continue
-        for version in s.versions:        # elastic: largest first
-            if used + version.tokens <= budget:
-                chosen.append((s.position, version.text))
-                used += version.tokens
-                covered.add(s.group)
-                break
-    return "".join(text for _, text in sorted(chosen))   # restore document order
-```
-
-Score by priority, but emit in document order. Retrieval, scoring and packing are covered in depth in [02-context](../../02-context-engineering/notes/02-context-anatomy.md).
+Start with the **minimal prompt crafter**: order the elements and keep as many from the end as fit. It needs no scoring, and it works because models are trained to handle document suffixes. As the app grows, move to a greedy engine, additive or subtractive (book, Ch 6). Score by priority, but emit in document order.
 
 ---
 
@@ -154,6 +124,8 @@ A long agent system prompt is an operating manual for a capable new hire. Li's T
 | Tool descriptions removed (signatures kept) | Tool-call errors up 45% |
 
 **Write an SOP, not a rule pile.** Numbered stages (validate → classify → preprocess → execute → verify), each with its exception branches. The model can then tell which stage it is in and what applies there, instead of searching hundreds of rules for one that fits. When an agent underperforms, **ablate before rewriting**: switch off one component at a time and see what moves.
+
+**When a procedure, and when a high altitude.** This advice and the warning that decision-tree prompts are brittle ([context engineering 02](../../02-context-engineering/notes/02-context-anatomy.md#system-prompt-altitude)) cover different failures. Use a procedure for the part of the job that has a fixed order and a cost for skipping a step, such as verifying identity before a refund. Flattening that order into a pile of rules cost the agent over 30% of its success. A tree of if-then rules in prose is the wrong tool for open-ended judgment: each production bug adds a branch, and the prompt still misses the next case. So write the stages as the procedure, and inside a stage give a heuristic and its signal rather than an enumeration. When you catch yourself adding a fourth conditional, move the rule into a tool or a code-level control.
 
 **Make business rules executable.** "Choose the billing type that fits the task" behaves differently on every run. Is a clothing return "savings"? Is a cancellation? Product owners have to settle each edge as a decision rule: commission only when an existing bill is negotiated down; *never* on refunds or cancellations; success-probability bands map to billing models; "savings" are computed only from the current bill, never from an avoided future increase. In mature teams, **product managers own these rules**. Engineers encode them faithfully and don't invent business logic. Give the model a clear framework and let it spend its reasoning on the parts that need judgment.
 
@@ -173,7 +145,7 @@ You are a data analyst. Answer the question using only the dataset excerpt.
 <dataset>{{DATASET_EXCERPT}}</dataset>
 ```
 
-A template is the unit you version, test and optimize — see [08-prompt-optimization](08-prompt-optimization.md).
+A template is the unit you version, test and optimize — see [09-prompt-optimization](09-prompt-optimization.md).
 
 ---
 

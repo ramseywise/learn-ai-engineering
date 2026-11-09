@@ -1,0 +1,115 @@
+{
+ "schema": 1,
+ "key": "2302.03169",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xie-2023-data-selection-language-models-importance.pdf",
+ "bib": {"title": "Data Selection for Language Models via Importance Resampling", "authors": ["Sang Michael Xie", "Shibani Santurkar", "Tengyu Ma", "Percy Liang"], "first_author": "Xie", "year": 2023, "venue": "preprint (arXiv v3, 18 Nov 2023)", "arxiv": "2302.03169", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 104123, "chars_total": 104123, "engine": "pymupdf", "skipped": "Reference list skimmed only for lineage; quality-filter example text in Appendix J not examined in detail."},
+ "type": "empirical",
+ "question": "How can a pretraining subset be selected cheaply from a huge raw text corpus so that it matches a desired target distribution, and does that improve downstream performance?",
+ "hypothesis": "Importance resampling in a reduced hashed n-gram feature space selects data closer to the target than heuristic classification or random selection, and the closeness (KL reduction) predicts downstream accuracy.",
+ "contributions": ["DSIR: importance resampling on a hashed n-gram feature space, selecting 100M Pile documents in 4.5 hours", "KL reduction data metric that correlates with downstream accuracy (r=0.82) across 8 selection methods", "DSIR matches expert curation for domain-specific continued pretraining and beats random and heuristic filtering by 2-2.5% on GLUE for general-domain pretraining"],
+ "method": {
+  "summary": "DSIR hashes unigrams and bigrams into 10k buckets, fits bag-of-n-grams generative models to raw (Pile) and target data by counting, computes importance weights p_hat/q_hat per raw example, and samples k examples without replacement with the Gumbel top-k trick. It is compared with random selection, GPT-3-style heuristic classification, top-k variants and DAPT manual curation in continued pretraining (RoBERTa-base, 8 tasks) and from-scratch BERT-base pretraining (GLUE).",
+  "task": "pretraining data selection (masked language modelling), evaluated by fine-tuning",
+  "trains": true,
+  "datasets": [
+   {"name": "The Pile", "role": "pretrain", "size": "1.6B examples (intro); 1.7B examples of 128 whitespace words (Appendix F)", "split": "chunk 0 reserved for validation, last 29 of 30 chunks used", "source": "Gao et al. 2020", "preprocessing": "split into 128-word examples; quality filter for heuristic classification and DSIR: word length 40-500, repeat ratio 0.02-0.2, informativeness ratio 0.3-0.7, numeric ratio <0.2 (52% of examples kept); random selection uses unfiltered Pile"},
+   {"name": "8 downstream tasks (ACL-ARC, Sci-ERC, ChemProt, RCT, HyperPartisan, AGNews, Helpfulness, IMDB)", "role": "both", "size": null, "split": "unlabeled training inputs used as DSIR target; fine-tuned on the task", "source": "Gururangan et al. 2020 setting", "preprocessing": null},
+   {"name": "Wikipedia + books (Books3, BookCorpus2, Gutenberg) from Pile validation set", "role": "train", "size": null, "split": "target distribution for general-domain selection", "source": "The Pile", "preprocessing": null},
+   {"name": "GLUE (MNLI, QNLI, QQP, RTE, SST-2, MRPC, CoLA, STS-B)", "role": "eval", "size": null, "split": "dev set", "source": "Wang et al. 2019", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "BERT-base (trained from scratch on selected data)", "role": "proposed", "params": null, "architecture": "BERT-base masked LM", "init_from": "scratch", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "128 tokens", "other": {}},
+   {"name": "RoBERTa-base (continued pretraining)", "role": "base", "params": null, "architecture": "RoBERTa-base", "init_from": "public RoBERTa checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "256 tokens in continued pretraining", "other": {}},
+   {"name": "BERT-base checkpoint (continued pretraining, Appendix E)", "role": "base", "params": null, "architecture": "BERT-base", "init_from": "public BERT-base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "512 tokens", "other": {}}
+  ],
+  "training": {
+   "objective": "masked language modelling",
+   "optimizer": "AdamW (beta1 0.9, beta2 0.999, eps 1e-8)",
+   "lr": "from scratch: 1e-3 (8e-4 for DSIR, since 1e-3 diverged); continued pretraining RoBERTa: 5e-4 or 1e-4 (1e-4 if 5e-4 diverged); BERT continued: 1e-4",
+   "lr_schedule": "linear",
+   "warmup": "from scratch 3000 steps; RoBERTa continued 720 steps; BERT continued 1440 steps",
+   "batch_size": "from scratch 4096 (16 accumulation steps on 4 GPUs); RoBERTa continued 4096; BERT continued 2048",
+   "steps": "from scratch 50000; RoBERTa continued 12500; BERT continued 25000",
+   "epochs": "inferred: 4 epochs over 51.2M selected examples for from-scratch runs (stated in Section 7)",
+   "tokens": "26B tokens processed from scratch (128 x 4096 x 50000); BERT continued adds 26B to BERT's 43B for 69B total",
+   "seq_len": "128 from scratch; 256 RoBERTa continued; 512 BERT continued",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4 Titan RTX (pretraining), 1 Titan RTX (fine-tuning)",
+   "compute": "about 50 hours per from-scratch run; about 60 hours per BERT continued pretraining run",
+   "wall_clock": "50 hours per from-scratch run",
+   "seeds": "fine-tuning averaged over 5 seeds",
+   "other": {"domain_specific_compute": "equal token budget to DAPT models of Gururangan et al. 2020; 25M selected examples of fixed token length 256", "general_domain_selection": "51.2M examples selected (102.4M then concatenated in pairs); 96% from non-Wikipedia/books domains, 4% uniform from Wikipedia and books", "glue_finetune": "10 epochs, batch 32 or 16, lr 1e-5 or 2e-5, AdamW weight decay 0.1, betas 0.9/0.98, eps 1e-6, warmup ratio 0.06, polynomial schedule, FP16; RTE, MRPC, STS-B start from MNLI model", "domain_finetune": "batch size 4096 listed in Table 11, 3 or 10 epochs chosen on validation over 5 seeds, patience 3, max length 256 (512 for reviews and for DAPT)"}
+  },
+  "inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": "5 fine-tuning seeds per result", "prompting": null, "retrieval": null, "parameters": {"hash_buckets": "m = 10000", "ngrams": "unigrams and bigrams hashed into the same space", "resampling": "k samples without replacement via Gumbel top-k", "heuristic_classification": "fasttext bigram classifier, 2M hash tokens, 300-d pretrained subword vectors, autotune 30 min, Pareto shape 9", "unigram_smoothing": "mix with uniform, weight 1e-5", "neural_variant": "all-MiniLM-L6-v2 384-d embeddings, GMMs with 1000 (raw) and 50 (target) components, diagonal covariance"}, "other": {}},
+  "eval": {
+   "metrics": [
+    {"name": "macro-F1 (micro-F1 for ChemProt and RCT)", "definition": "downstream fine-tuning F1 on 8 tasks, averaged over 5 seeds", "unit": "F1 %", "higher_is_better": true},
+    {"name": "GLUE dev accuracy", "definition": "average over 8 tasks, 5 fine-tuning seeds", "unit": "% accuracy", "higher_is_better": true},
+    {"name": "KL reduction", "definition": "mean over targets of KL(target||raw) minus KL(target||selected) on hashed n-gram distributions, estimated from first 100k examples of each dataset", "unit": "nats", "higher_is_better": true}
+   ],
+   "baselines": ["random selection", "heuristic classification (GPT-3/Pile/PaLM)", "top-k heuristic classification", "manual curation / DAPT checkpoints (Gururangan et al. 2020)", "no continued pretraining", "top-k DSIR", "DSIR variants (discriminative, unigram, neural features)"],
+   "protocol": "5 seeds, standard deviations reported in tables; no significance tests; one selection run per method."
+  },
+  "availability": {"code": "https://github.com/p-lambda/dsir", "weights": "pretrained models stated available", "data": "selected data stated available"},
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.parameters.hash_buckets", "quote": "hash each n-grams into one of m buckets (m = 10000 in this paper)", "where": "Section 4"}
+  ]
+ },
+ "results": [
+  {"claim": "DSIR selects 100M documents from the full Pile in 4.5 hours on one 96-core CPU node.", "kind": "measured", "source": null, "metric": "selection wall-clock", "value": "4.5", "unit": "hours", "baseline_value": null, "n": "100M documents selected from the Pile", "setup": "hashed n-gram DSIR, 10k buckets, raw distribution fit with 1B hashed indices, target ChemProt, 1 CPU node with 96 cores, no preprocessing other than decompression", "quote": "DSIR selects 100M documents from the full Pile dataset in 4.5 hours on 1 CPU node with 96 cores.", "table": null, "note": "4.36 hours of the total is computing importance weights; fitting 1 minute, resampling 6 minutes", "where": "Section 4, page 4"},
+  {"claim": "General-domain BERT-base trained from scratch on DSIR-selected data reaches 82.30 average GLUE dev accuracy, versus 80.25 for random selection.", "kind": "measured", "source": null, "metric": "GLUE dev average", "value": "82.30", "unit": "% accuracy", "baseline_value": "80.25", "n": "5 seeds", "setup": "target is Wikipedia + books (Pile validation set); 51.2M examples selected from the Pile; BERT-base, 50k steps, batch 4096, length 128; heuristic classification 79.85, top-k heuristic 81.47, top-k DSIR 81.38", "quote": "DSIR achieves 82.3% average GLUE accuracy, improving over random selection by 2% and heuristic classification by 2.5%.", "table": "Table 3, row DSIR / Random selection, column Avg (82.30 / 80.25)", "note": null, "where": "Section 7, Table 3"},
+  {"claim": "In domain-specific continued pretraining from RoBERTa-base, DSIR averages 83.76 F1 over 8 tasks versus 83.46 for DAPT manual curation and 82.58 for random selection.", "kind": "measured", "source": null, "metric": "average F1 over 8 tasks", "value": "83.76", "unit": "F1 %", "baseline_value": "82.58", "n": "5 seeds, 8 tasks", "setup": "RoBERTa-base start; 25M selected Pile examples per task, length 256, same token compute for all methods; target is each task's unlabeled inputs; RoBERTa no continued pretraining 82.20; heuristic classification 82.88; top-k heuristic 83.65", "quote": "On average, DSIR improves over random selection by 1.2% and manually curated data (DAPT) by 0.3%, showing the potential to replace manual curation.", "table": "Table 1, row DSIR / Manual curation/DAPT / Random selection, column Avg (83.76 / 83.46 / 82.58)", "note": null, "where": "Section 5, Table 1"},
+  {"claim": "KL reduction on hashed n-gram features correlates with average downstream F1 across 8 selection methods.", "kind": "measured", "source": null, "metric": "Pearson r", "value": "0.82", "unit": "r", "baseline_value": null, "n": "8 selection methods, 8 targets", "setup": "distribution parameters estimated from 100k samples per dataset; continued pretraining setting", "quote": "The average downstream F1 score is highly correlated with the KL reduction (Pearson r = 0.82).", "table": null, "note": null, "where": "Section 6, Fig 3"},
+  {"claim": "Heuristic classification scores 0.5% below random selection on GLUE, which the authors attribute to the Pile already being heuristically filtered.", "kind": "measured", "source": null, "metric": "GLUE dev average", "value": "79.85", "unit": "% accuracy", "baseline_value": "80.25", "n": "5 seeds", "setup": "same from-scratch BERT-base setup, target Wikipedia + books", "quote": "Heuristic classification leads to 0.5% lower accuracy than random selection from The Pile.", "table": "Table 3, row Heuristic classification, column Avg", "note": null, "where": "Section 7"},
+  {"claim": "Importance resampling beats top-k selection by 0.8-0.9% GLUE average.", "kind": "measured", "source": null, "metric": "GLUE dev average difference", "value": "0.8-0.9", "unit": "% accuracy", "baseline_value": null, "n": "5 seeds", "setup": "from-scratch BERT-base; top-k heuristic 81.47, top-k DSIR 81.38", "quote": "DSIR without top-k is competitive with these variants on all datasets and achieves a 0.8–0.9% higher average over top-k variants.", "table": null, "note": null, "where": "Section 7"},
+  {"claim": "Generative (n-gram) importance weights beat discriminative estimators in DSIR; unigram features score 0.26% below n-grams.", "kind": "measured", "source": null, "metric": "average F1", "value": "83.76", "unit": "F1 %", "baseline_value": "83.15", "n": "5 seeds", "setup": "continued pretraining Table 2: fasttext discriminative 83.15, n-gram discriminative 83.19, unigram generative 83.50", "quote": "This approach (DSIR (fasttext discriminative)) improves F1 by 0.3% over heuristic classification.", "table": "Table 2, row DSIR (n-gram generative) vs DSIR (fasttext discriminative), column Avg", "note": null, "where": "Section 5, Table 2"},
+  {"claim": "Using the worst-matched pretraining set for a downstream task costs 6% F1 on average, 30% on HyperPartisan in the worst case.", "kind": "measured", "source": null, "metric": "F1 drop", "value": "6", "unit": "% F1", "baseline_value": null, "n": "5 seeds", "setup": "all 8x8 pairs of DSIR-selected pretraining data and downstream tasks", "quote": "We find a 6% average drop in F1 when we choose the worst pairing for each downstream task instead of matching the pretraining and downstream data.", "table": null, "note": null, "where": "Section 5, Fig 2"},
+  {"claim": "Within-domain transfer F1 is 82.9 versus 81.2 cross-domain.", "kind": "measured", "source": null, "metric": "F1", "value": "82.9", "unit": "F1 %", "baseline_value": "81.2", "n": "5 seeds", "setup": "off-diagonal pairs of DSIR-selected data, same domain vs different domain", "quote": "We find that the within-domain F1 (82.9%) is 1.7% higher on average than the cross-domain F1 (81.2%)", "table": null, "note": null, "where": "Section 5"},
+  {"claim": "DSIR with neural (sentence-embedding GMM) features scores 81.40 GLUE, 1-1.5% over random but below n-gram DSIR.", "kind": "measured", "source": null, "metric": "GLUE dev average", "value": "81.40", "unit": "% accuracy", "baseline_value": "82.30", "n": "5 seeds", "setup": "preliminary, all-MiniLM-L6-v2 embeddings, GMMs", "quote": "On average, DSIR with neural features improves by 1-1.5%+ over random selection and heuristic classification", "table": "Table 4, row DSIR + Neural features, column Avg", "note": null, "where": "Appendix B"},
+  {"claim": "Continued pretraining from BERT-base on DSIR data averages 83.99 GLUE versus 83.59 random and 83.43 for BERT-base alone.", "kind": "measured", "source": null, "metric": "GLUE dev average", "value": "83.99", "unit": "% accuracy", "baseline_value": "83.59", "n": "5 seeds", "setup": "target formal text; continued from public BERT-base for 26B tokens", "quote": "DSIR improves over random selection by 0.4% and over BERT-base by 0.6%, achieving almost 84% on the GLUE dev set.", "table": "Table 5, row DSIR, column Avg", "note": null, "where": "Appendix E"},
+  {"claim": "In a coin-flip simulation DSIR converges to the fair target with raw data size while top-k picks all tails.", "kind": "worked-example", "source": null, "metric": "heads fraction", "value": "44%, 47%, 50%", "unit": "% heads", "baseline_value": null, "n": "1000 trials", "setup": "k=10 from biased coin (0.9 heads), raw n in {100, 200, 500}", "quote": "For raw data sizes n∈{100,200,500}, DSIR selects a dataset with (44%, 47%, 50%) heads respectively, averaged over 1000 trials.", "table": null, "note": null, "where": "Appendix A"}
+ ],
+ "limits": [
+  "n-grams capture only superficial word-level overlap; neural features could capture semantics but a preliminary version did not beat n-grams (Section 9).",
+  "The target distribution is a heuristic: Wikipedia and books as a proxy for high quality text; other targets for general-domain LMs left to future work.",
+  "Domain-specific experiments use unlabeled downstream task inputs as the target, a controlled setting; target choice matters (6% average F1 drop for the worst pairing).",
+  "Models are small (BERT-base, RoBERTa-base) masked LMs evaluated by fine-tuning; no decoder-only or large-scale LM results.",
+  "Heuristic classification losing to random is attributed to the Pile already being filtered that way (a hypothesis, not tested).",
+  "Original DAPT corpora were partly unavailable (internal S2ORC), so KL reduction for manual curation uses public approximations; DAPT checkpoints themselves are the originals.",
+  "DSIR needed a lower learning rate (8e-4) than other methods in from-scratch training since 1e-3 diverged; DSIR could amplify biases in the target data."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "heuristic classification", "definition": "train a binary classifier to discriminate formal text from web data and select web examples with predicted probability above a noisy (Pareto) threshold", "where": "Section 1"},
+  {"term": "KL reduction", "definition": "a data metric that measures how much a selected dataset reduces the KL divergence to the target (in some feature space) over random selection", "where": "Section 1, Eq. 2"}
+ ],
+ "lineage": [
+  {"work": "Don't Stop Pretraining (DAPT), Gururangan et al.", "year": 2020, "arxiv": "2004.10964", "relation": "baseline", "note": "domain-adaptive pretraining setting, 8 tasks and DAPT checkpoints used as manual curation baseline", "quote": null},
+  {"work": "Language Models are Few-Shot Learners (GPT-3), Brown et al.", "year": 2020, "arxiv": "2005.14165", "relation": "baseline", "note": "heuristic classification filtering of web data", "quote": null},
+  {"work": "The Pile, Gao et al.", "year": 2020, "arxiv": "2101.00027", "relation": "uses-data", "note": "raw dataset for selection", "quote": null},
+  {"work": "PaLM, Chowdhery et al.", "year": 2022, "arxiv": "2204.02311", "relation": "baseline", "note": "heuristic classification", "quote": null},
+  {"work": "RoBERTa, Liu et al.", "year": 2019, "arxiv": "1907.11692", "relation": "evaluates", "note": "base model for continued pretraining; GLUE fine-tuning hyperparameters", "quote": null},
+  {"work": "BERT, Devlin et al.", "year": 2019, "arxiv": "1810.04805", "relation": "evaluates", "note": "architecture for from-scratch training", "quote": null},
+  {"work": "Izsak et al., How to train BERT with an academic budget", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "large batch, short sequence training recipe", "quote": null},
+  {"work": "Bag of Tricks for Efficient Text Classification (fasttext), Joulin et al.", "year": 2017, "arxiv": "1607.01759", "relation": "uses-method", "note": "hashed n-gram features and classifier", "quote": null},
+  {"work": "Rubin, importance resampling", "year": 1988, "arxiv": null, "relation": "extends", "note": "classic low-dimensional importance resampling extended to LM data", "quote": null},
+  {"work": "Moore and Lewis, intelligent selection of LM training data", "year": 2010, "arxiv": null, "relation": "related", "note": "top-k cross-entropy difference selection; top-k DSIR is a form of it", "quote": null},
+  {"work": "GLUE, Wang et al.", "year": 2019, "arxiv": "1804.07461", "relation": "uses-data", "note": "general-domain evaluation", "quote": null},
+  {"work": "Razeghi et al.", "year": 2022, "arxiv": null, "relation": "related", "note": "similar finding for in-context learning that data statistics predict performance", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Given a large raw dataset such as The Pile and a smaller target dataset, select a subset distributed like the target in some feature space; DSIR estimates importance weights in n-gram space and resamples.", "page": 2, "why": "shows the whole pipeline in one diagram"},
+  {"figure": "Fig 3", "caption": "Average KL reduction on the n-gram feature space against average downstream F1 over the 8 continued pretraining datasets (Pearson r=0.82).", "page": 8, "why": "shows the data metric predicts downstream results"},
+  {"figure": "Fig 4", "caption": "Beginning characters of 20 random examples selected by random selection, heuristic classification, and DSIR, target formal text.", "page": 9, "why": "qualitative view of how formal DSIR output is"}
+ ],
+ "code": [
+  {"where": "Section 4, Eq. 1", "snippet": "P(z;γ)=∏_{j=1..m} γ[j]^{z[j]}", "verbatim": false},
+  {"where": "Appendix F", "snippet": "s_i = log(p_hat_feat(z_i)/q_hat_feat(z_i)) + g_i, g_i ~ Gumbel(0,1); select top k scores (numpy.argpartition)", "verbatim": false}
+ ],
+ "problems": ["Pile size printed as 1.6B examples in the introduction and 1.7B in Appendix F.", "Table 11 lists fine-tuning batch size 4096 for domain-specific tasks, likely a typo but recorded as printed.", "Number of documents or examples per target in Section 7 is 51.2M; Table 1 per-task selection is 25M examples (not documents of fixed size beyond 256 tokens)."]
+}

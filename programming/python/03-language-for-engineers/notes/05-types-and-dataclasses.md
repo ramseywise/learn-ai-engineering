@@ -74,7 +74,7 @@ class Chunk:
 - Mutable defaults need `field(default_factory=list)`, the same trap as in [note 01](01-data-model-and-idioms.md).
 - `dataclasses.replace(c, score=0.9)` makes a modified copy of a frozen instance. `asdict(c)` converts it to a dict.
 
-Returning a plain tuple, or a tuple of tuples, from a function makes every caller depend on position. Wilson's example returns nested tuples and breaks each caller when the signature gains a value (*Machine Learning Engineering in Action*, ch. 10, Listings 10.5 to 10.8). He suggests `collections.namedtuple`, comparing it to a Scala case class. `typing.NamedTuple` is the same thing with type hints; a frozen dataclass as above is the choice once the result needs methods or validation.
+Returning a plain tuple makes every caller depend on position, as Wilson's nested-tuple example shows (*Machine Learning Engineering in Action*, ch. 10); `typing.NamedTuple` fixes it, and a frozen dataclass as above is the choice once the result needs methods or validation (see [readable code and smells](../../../software-design/notes/01-readable-code-and-smells.md)).
 
 ## Pydantic: when data comes from outside
 

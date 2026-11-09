@@ -63,11 +63,16 @@ For models where thinking is a switch:
 
 1. **Thinking off** first. Evaluate. A manual CoT prompt is a cheap middle step.
 2. If the answers are shallow or wrong in ways that look like a reasoning failure, **enable thinking at low effort**.
-3. Escalate to **medium**, then **high**, only while it keeps improving your eval scores ([09](09-evaluating-prompts.md)).
+3. Escalate to **medium**, then **high**, only while it keeps improving your eval scores ([08](08-evaluating-prompts.md)).
 4. Use few-shot examples to fix *style and format*, not reasoning.
 
 ![Escalating reasoning effort](../sources/images/dair-hybrid-reasoning-effort-escalation.jpg)
 *Evaluate after each step and stop at the first satisfactory one. DAIR, Reasoning LLMs Guide.*
+
+**Optimize for accuracy first, then latency and cost.** Sampling several answers from thinking-off often rivals thinking-on. The measured version, with the arithmetic, is collapsed below.
+
+<details>
+<summary>Measured evidence: sampling, voting and paying for thinking once</summary>
 
 Thinking off can be stronger than it looks, especially if you sample several answers. Ma et al. switched off thinking in DeepSeek-R1-Distill-Qwen-32B by prefilling the thinking block with "Okay, I think I have finished thinking." and closing it. On math, coding and theorem-proving benchmarks, this NoThinking mode used 2.0–5.1× fewer tokens. It trailed full thinking at pass@1 on most benchmarks, but matched it once enough samples were drawn (pass@k at large k). On theorem proving it matched thinking at every k while using 3.3–3.7× fewer tokens. At an equal, small token budget it often won outright: "51.3 vs. 28.9 on AMC23 with 700 tokens." Drawing several NoThinking answers in parallel and keeping the best one beat sequential thinking on tasks with a verifier, at "7× lower latency and even 4× less total token usage." The authors tested only open-weight models, because prefilling the thinking block needs access closed APIs don't give: "we lack access for making interventions to closed-source models" ([arXiv:2504.09858](https://arxiv.org/abs/2504.09858) (Ma et al., 2025-04)). Where you can check answers automatically, try several thinking-off samples before you pay for long thinking.
 
@@ -102,9 +107,9 @@ The same arithmetic explains why "think longer" stalls. Wen et al. capped a sing
 
 A plain vote also discards information: in over 80% of majority-vote failures the right answer was among the samples, and having the model score the chains instead averaged 90.57 against 87.48 for 40-chain voting (GPT-3.5-Turbo-0301, six math sets, one run, same-family scorer, pre-reasoning-model) ([arXiv:2405.12939](https://arxiv.org/abs/2405.12939) (Yin et al., 2024-05, preprint)).
 
-**Optimize for accuracy first, then latency and cost.**
-
 **Some of the thinking budget buys procedure the domain repeats, and that part can be paid once.** Singh et al. had a coding agent read 35 to 50 existing no-think trajectories per domain and write a 40 to 130 line skill file, then put it in the non-reasoning model's system prompt. On GPT-5.4-mini (reasoning effort none against medium, 3 evaluation seeds, 40 to 50 held-out tasks), thinking cost 3.0× to 5.1× the output tokens per episode; the skill recovered 55% to over 100% of the think gap and beat thinking outright on ALFWorld (0.787 against 0.713) and τ²-bench retail (0.408 against 0.350) at 2.9× to 4.5× fewer output tokens. On ALFWorld the skill cut stall loops from 28.7% to 5.3% of episodes. Thinking still won on telecom (0.450 against 0.333) and SpreadsheetBench-Verified (0.613 against 0.560), which the authors read as instance-specific work no fixed prompt can carry. Each skill was distilled once, so distillation variance is unmeasured, no intervals are given, and on Qwen3.6-27B the skill regressed retail by 4.2 points ([arXiv:2608.07885](https://arxiv.org/abs/2608.07885) (Singh et al., COLM 2026 Efficient Reasoning Workshop)). The hybrid rule follows: distil the invariants into the prompt, and escalate to thinking for the instances that remain.
+
+</details>
 
 ---
 
@@ -114,9 +119,9 @@ Use them for the reasoning-heavy *module* of an application, not the whole thing
 
 - **Planning** in agentic systems — e.g., the planner in an orchestrator-worker deep-research agent.
 - **Agentic RAG** — routing complex queries and reasoning across many sources.
-- **LLM-as-judge** — evaluator-optimizer loops where the judge needs to reason ([09](09-evaluating-prompts.md#llm-as-judge)).
+- **LLM-as-judge** — evaluator-optimizer loops where the judge needs to reason ([08](08-evaluating-prompts.md#llm-as-judge)).
 - Large codebases, algorithmic and scientific work, literature synthesis, ambiguous knowledge-intensive tasks.
-- **Writing prompts for other models** — meta-prompting ([08](08-prompt-optimization.md)).
+- **Writing prompts for other models** — meta-prompting ([09](09-prompt-optimization.md)).
 
 ![Orchestrator-worker agent](../sources/images/dair-orchestrator-worker-agent.jpg)
 *The reasoning model sits in the orchestrator, breaking the query into subtasks. Cheaper models run the parallel search workers and summaries. DAIR.*
@@ -156,7 +161,7 @@ Use deep research only for multi-source, time-sensitive questions that need care
 
 The book went to press in 2024, before the first reasoning models (o1 shipped in September 2024). Its only nod to them is that better RLHF was making chat models "express their chain-of-thought reasoning" more. Read its forecasts as a 2024 baseline.
 
-- **Benchmarks saturate.** Leading models ace MMLU, HellaSwag, GSM8K and similar benchmarks. Partly the models are better, and partly benchmark text leaks into training data (contamination). The book's fixes are refreshed leaderboards (it names the Open LLM Leaderboard 2, since retired) and tests built to resist memorization, such as ARC-AGI. The book calls ARC-AGI "algorithmically generated" and impossible to memorize. In fact its puzzles are hand-designed and protected by a private test set, and even it gave way: in December 2024 o3 scored 76% on ARC-AGI-1's semi-private set (88% at high compute), and ARC-AGI-2 replaced it in 2025. For your own app this means **public scores don't predict your task.** Build your own eval ([09](09-evaluating-prompts.md)).
+- **Benchmarks saturate.** Leading models ace MMLU, HellaSwag, GSM8K and similar benchmarks. Partly the models are better, and partly benchmark text leaks into training data (contamination). The book's fixes are refreshed leaderboards (it names the Open LLM Leaderboard 2, since retired) and tests built to resist memorization, such as ARC-AGI. The book calls ARC-AGI "algorithmically generated" and impossible to memorize. In fact its puzzles are hand-designed and protected by a private test set, and even it gave way: in December 2024 o3 scored 76% on ARC-AGI-1's semi-private set (88% at high compute), and ARC-AGI-2 replaced it in 2025. For your own app this means **public scores don't predict your task.** Build your own eval ([08](08-evaluating-prompts.md)).
 
   ![Benchmark saturation](../sources/images/berryman-prompt-engineering-for-llms-fig11-2.png)
   *Top scores on the Hugging Face Open LLM Leaderboard (v1, open models), Sep 2023 to May 2024. Thin lines are human baselines. GSM8K went from under 10 to the human line in under a year. Image Source: Berryman & Ziegler (2024), Fig. 11-2*
@@ -216,4 +221,4 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 
 ## Next
 
-[7b — reasoning-model failure modes](07b-reasoning-model-failure-modes.md): where reasoning models go wrong, then [prompt optimization](08-prompt-optimization.md).
+[7b — reasoning-model failure modes](07b-reasoning-model-failure-modes.md): where reasoning models go wrong, then [evaluating prompts](08-evaluating-prompts.md).

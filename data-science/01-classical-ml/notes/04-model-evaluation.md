@@ -18,7 +18,7 @@ cleaned: 2026-11-02
 ---
 # Model Evaluation
 
-> A model scored 90%. Is that good? This note gives the machinery to answer: cross-validation instead of one split, grid search with a held-out test set (or nested CV), a metric chosen from the business consequence of each error type, thresholds read off precision–recall and ROC curves, and learning curves to decide whether you need more data or a different model.
+> A model scored 90%. Is that good? This note gives the machinery to answer: cross-validation instead of one split, grid search with a held-out test set (or nested CV), a metric chosen from the business consequence of each error type, and learning curves to decide whether you need more data or a different model. Thresholds and the precision–recall and ROC curves are in the next note, [04b](04b-thresholds-pr-roc-and-calibration.md).
 
 **In plain words.** A score means little until you know what it's compared with and what each mistake costs. If hardly any emails are spam, a filter that lets everything through scores highly and catches nothing. A missed cancer and a needless follow-up scan are both "errors", yet nobody would price them the same. Evaluation is the job of testing a model fairly on data it hasn't seen, with a measure that reflects those costs, so you can tell your manager whether to trust it.
 
@@ -295,7 +295,7 @@ On the ten-class digits task with logistic regression (450 test images) the book
 
 ## Using a metric in model selection
 
-Pass `scoring` to CV and grid search; the default is accuracy (classifiers) or $R^2$ (regressors).
+Pass `scoring` to CV and grid search; the default is accuracy (classifiers) or $R^2$ (regressors). The block below uses ROC-AUC, and the rules and pitfalls later also name average precision. Both score a model's ranking of the rows, higher is better, and [04b](04b-thresholds-pr-roc-and-calibration.md#roc-curve-and-auc) defines them. Here they only matter as scorers to search on.
 
 ```python
 gamma_grid = {"gamma": [0.0001, 0.01, 0.1, 1, 10]}
@@ -405,7 +405,7 @@ With $p \ge n$ a perfect fit is guaranteed whatever the features contain, so rep
 | Split the way production meets data (groups, time) | Otherwise CV measures memorisation |
 | Compare against `DummyClassifier` first | 90% accuracy can be zero skill |
 | Choose the metric from the cost of each error type | Accuracy assumes FP and FN cost the same |
-| Use AUC or average precision for model selection on imbalanced data; tune the threshold separately | Ranking quality and operating point are separate decisions |
+| Use AUC or average precision for model selection on imbalanced data; tune the threshold separately ([04b](04b-thresholds-pr-roc-and-calibration.md)) | Ranking quality and operating point are separate decisions |
 | Plot a learning curve before collecting more data | It tells you whether more data can help |
 | Search hyperparameters on a log scale, check the best isn't on an edge | |
 

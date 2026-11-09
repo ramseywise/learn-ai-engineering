@@ -1,0 +1,763 @@
+{
+ "schema": 1,
+ "key": "2309.00071",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/peng-2023-yarn.pdf",
+ "bib": {
+  "title": "YaRN: Efficient Context Window Extension of Large Language Models",
+  "authors": [
+   "Bowen Peng",
+   "Jeffrey Quesnelle",
+   "Honglu Fan",
+   "Enrico Shippole"
+  ],
+  "first_author": "Peng",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2309.00071",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 53052,
+  "chars_total": 53052,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "How can the context window of RoPE-based LLMs be extended efficiently, with and without fine-tuning?",
+ "hypothesis": "Per-dimension (wavelength-aware) interpolation plus an attention temperature beats uniform position interpolation and NTK-aware scaling at lower training cost.",
+ "contributions": [
+  "A complete account of the previously unpublished NTK-aware, Dynamic NTK and NTK-by-parts interpolations",
+  "YaRN: NTK-by-parts interpolation plus attention scaling by temperature t",
+  "Llama 2 7B and 13B extended to 64k and 128k with 400 (+200) steps",
+  "Dynamic Scaling for extension without fine-tuning"
+ ],
+ "method": {
+  "summary": "Fine-tunes Llama 2 7B/13B with modified RoPE frequencies (NTK-by-parts, alpha=1, beta=32) and attention logit scaling sqrt(1/t)=0.1 ln(s)+1, at s=16 for 400 steps on 64k PG19 chunks then s=32 for 200 more. Evaluates sliding-window perplexity, passkey retrieval and the Open LLM suite against PI, NTK-aware, NTK-by-parts, Together and Code Llama.",
+  "task": "context window extension of RoPE language models",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PG19",
+    "role": "train",
+    "size": "chunked into 64k-token segments (128k models) or 32k segments (ablation); total size not stated",
+    "split": "train (inferred)",
+    "source": "Rae et al. 2020, public",
+    "preprocessing": "chunked, each segment bookended with BOS and EOS"
+   },
+   {
+    "name": "Proof-pile",
+    "role": "eval",
+    "size": "10 random test documents with at least 128k tokens",
+    "split": "test",
+    "source": "Azerbayev et al. 2022",
+    "preprocessing": "truncated to context sizes 2k to 128k in 2k steps"
+   },
+   {
+    "name": "GovReport",
+    "role": "eval",
+    "size": "50 documents with at least 16k tokens",
+    "split": "test",
+    "source": "Huang et al. 2021",
+    "preprocessing": "untruncated, fixed 32k window"
+   },
+   {
+    "name": "RedPajama sample",
+    "role": "dev",
+    "size": "896 documents of 16k tokens",
+    "split": null,
+    "source": "Computer 2023",
+    "preprocessing": "used to study attention temperature (App A.3); also used by LLongMA-2 baseline"
+   },
+   {
+    "name": "Hugging Face Open LLM suite",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "ARC-c 25-shot, HellaSwag 10-shot, MMLU 5-shot, TruthfulQA 0-shot",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama 2 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k",
+    "other": {}
+   },
+   {
+    "name": "Llama 2 13B",
+    "role": "base",
+    "params": "13B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k",
+    "other": {}
+   },
+   {
+    "name": "LLaMA 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2k",
+    "other": {
+     "use": "ablation studies, 32k target, s=16"
+    }
+   },
+   {
+    "name": "YaRN Llama 2 7B/13B s=16",
+    "role": "proposed",
+    "params": "7B, 13B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": "Llama 2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "64k",
+    "other": {}
+   },
+   {
+    "name": "YaRN Llama 2 7B/13B s=32",
+    "role": "proposed",
+    "params": "7B, 13B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": "own s=16 checkpoint, 200 more steps",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k",
+    "other": {}
+   },
+   {
+    "name": "Together LLaMA-2-7B-32K (PI)",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k",
+    "other": {}
+   },
+   {
+    "name": "Code Llama 7B/13B (NTK-aware, base 1M)",
+    "role": "baseline",
+    "params": "7B, 13B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "100k",
+    "other": {}
+   },
+   {
+    "name": "LLongMA-2 7B (PI)",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "decoder-only transformer with RoPE",
+    "init_from": "Llama 2 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8k",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token prediction (not stated)",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.95",
+   "lr": "2 x 10^-5",
+   "lr_schedule": null,
+   "warmup": "linear, 20 steps",
+   "batch_size": "64 (global)",
+   "steps": "400 at s=16; s=32 starts from the s=16 checkpoint and adds 200; ablation 400 steps at s=16",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "64k (128k models), 32k (ablation)",
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "A100 (PyTorch FSDP, Flash Attention 2); GPU count not stated",
+   "compute": "A100-hours: 128 (LLaMA 7B 32k, s=16), 256 (Llama 2 7B 64k), 256+128 (128k)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "tokens_inferred": "inferred: 400 steps x 64 x 64k = about 1.6B tokens for s=16; the paper states no token count",
+    "alpha_beta": "alpha=1, beta=32",
+    "attention_scale": "sqrt(1/t)=0.1 ln(s)+1"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "passkey: 50 iterations (32k LLaMA 7B), 10 iterations (64k/128k models); perplexity on 10 documents; no seeds",
+   "prompting": "Open LLM suite: ARC-c 25-shot, HellaSwag 10-shot, MMLU 5-shot, TruthfulQA 0-shot; passkey prompt format not given",
+   "retrieval": null,
+   "parameters": {
+    "S": "256 sliding window stride",
+    "dynamic_scaling": "s = max(1, l'/L)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "sliding-window perplexity",
+     "definition": "Press et al. 2022 sliding window, S=256",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "passkey accuracy",
+     "definition": "retrieve a five-digit passkey from filler text; averaged over context sizes up to the largest with accuracy >= 80%",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Open LLM suite scores",
+     "definition": "ARC-c, HellaSwag, MMLU, TruthfulQA",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PI",
+    "NTK-aware",
+    "NTK-by-parts",
+    "Dynamic variants",
+    "Together LLaMA-2-7B-32K",
+    "Code Llama 7B/13B",
+    "LLongMA-2 7B",
+    "original Llama 2 / LLaMA"
+   ],
+   "protocol": "Single runs, no seeds or significance tests; perplexity on 10 Proof-pile docs and 50 GovReport docs."
+  },
+  "availability": {
+   "code": "https://github.com/jquesnelle/yarn",
+   "weights": null,
+   "data": "PG19, Proof-pile, GovReport public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We used a learning rate of 2 × 10−5 with no weight decay and a linear warmup of 20 steps",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Llama 2 7B extended with YaRN at s=32 (400 steps at s=16 then 200 more, 64k training data) reaches 2.37 perplexity at 128k context.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "2.37",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sliding-window perplexity S=256, ten Proof-pile test documents of at least 128k tokens, truncated to 131072 tokens; Llama 2 7B, YaRN 400+200 steps, 4k x 32.",
+   "note": null,
+   "where": "Table 1, p8",
+   "table": "Table 1, row 7B YaRN 400+200 4k x 32, column 131072"
+  },
+  {
+   "claim": "Llama 2 13B at s=32 reaches 2.24 perplexity at 128k on the same protocol.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "2.24",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as Table 1, 13B YaRN 400+200.",
+   "note": null,
+   "where": "Table 1, p8",
+   "table": "Table 1, row 13B YaRN 400+200 4k x 32, column 131072"
+  },
+  {
+   "claim": "The s=16 models (trained on 64k) are not usable at 128k (perplexity above 10).",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "> 101",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, 400 steps, s=16, 7B and 13B at 131072 tokens.",
+   "note": "Printed as '> 101' (i.e. > 10^1).",
+   "where": "Table 1, p8",
+   "table": "Table 1, rows 7B/13B YaRN 400 4k x 16, column 131072 (> 101)"
+  },
+  {
+   "claim": "YaRN needs about 0.1% of the original pre-training data and 10x fewer tokens, 2.5x fewer steps than previous methods.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract and intro claim; relative to PI-style recipes (Chen et al. 2023).",
+   "note": null,
+   "where": "Abstract",
+   "quote": "requiring 10x less tokens and 2.5x less training steps than previous methods"
+  },
+  {
+   "claim": "YaRN reaches state-of-the-art after fine-tuning on less than about 0.1% of the original pre-training data.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intro claim; no pre-training token count is given in the paper to check the fraction.",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "YaRN reaches state-of-the-art performances in context window extensions after fine-tuning on less than ∼0.1% of the original pre-training data."
+  },
+  {
+   "claim": "Training cost in A100-hours: YaRN 7B at s=16 (64k) 256 hours, s=32 (128k) 256+128, versus 640 for PI 16k, 64000 for the NTK-aware 50k model and 6400 for Code Llama.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU-hours (A100)",
+   "value": "256",
+   "unit": "A100-hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4, 7B models; the Together.ai PI entry is '?'.",
+   "note": null,
+   "where": "Table 4, p9",
+   "table": "Table 4, rows Llama 2 YaRN 4k x 16 (256), 4k x 32 (256 + 128), Xiong et al. (64000), Rozière et al. (6400), Chen et al. (640)"
+  },
+  {
+   "claim": "Fine-tuning LLaMA 7B (2k) at s=16 for 400 steps and then evaluating at 32k: YaRN 2.77, NTK-by-parts 2.81, PI 3.57, NTK-aware 8.49.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "2.77",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5 fine-tuned rows, ten Proof-pile docs, S=256, 32768 window.",
+   "note": null,
+   "where": "Table 5, p16",
+   "table": "Table 5, row YaRN fine-tuned 400 steps 2k x 16, column 32768"
+  },
+  {
+   "claim": "Without any fine-tuning, YaRN on LLaMA 7B (2k pretrain) at s=16 has perplexity 3.45 at 32k while PI is above 10^2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "3.45",
+   "unit": "ppl",
+   "baseline_value": "> 102 (PI)",
+   "n": null,
+   "setup": "Table 5, non-fine-tuned, 2k x 16, column 32768; ten Proof-pile docs, S=256.",
+   "note": "Dynamic YaRN row also reads 3.45 at 32768; PI s=16 row printed '> 102'.",
+   "where": "Table 5, p16",
+   "table": "Table 5, row YaRN not fine-tuned 2k x 16, column 32768"
+  },
+  {
+   "claim": "YaRN fine-tuned for 400 steps matches PI fine-tuned for 1000 steps when extending Llama 2 7B from 4k to 8k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "3.35",
+   "unit": "ppl",
+   "baseline_value": "3.34",
+   "n": null,
+   "setup": "Table 6, perplexity at 8192: PI 1000 steps 3.34, YaRN 400 steps 3.35; PI model is LLongMA-2 7B trained on RedPajama.",
+   "note": null,
+   "where": "Table 6, p17",
+   "table": "Table 6, rows 7B PI 1000 and 7B YaRN 400, column 8192"
+  },
+  {
+   "claim": "Passkey retrieval: YaRN 7B s=32 gets 99.4% averaged up to 128k; 13B s=32 99.4%; s=16 models 96.3% (7B) and 97.5% (13B) up to 64k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey accuracy",
+   "value": "99.4%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 iterations per context size, random passkey position, sizes 8k to 128k; accuracy is the average over tested sizes up to the passkey context (maximum size with accuracy >= 80%).",
+   "note": null,
+   "where": "Table 9, p19",
+   "table": "Table 9, row 7B YaRN s=32, column Passkey Accuracy"
+  },
+  {
+   "claim": "Code Llama 13B (NTK) has rising perplexity above 100k yet retrieves the passkey at 128k with 99.4% accuracy, so perplexity alone does not give effective context size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 7 (13B Code Llama 2.37 at 98304, 2.54 at 131072) and Table 9.",
+   "note": null,
+   "where": "App B.5",
+   "quote": "While the Code Llama 13b model exhibits increasing perplexity above 100k context lengths, it was still able to accurately retrieve the passkey at a context length of 128k."
+  },
+  {
+   "claim": "Standard-benchmark degradation is small for Llama 2 7B at s=32: MMLU 43.8 to 41.7, ARC-c 53.1 to 52.1, HellaSwag 77.8 to 78.4, TruthfulQA 39.0 to 37.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "41.7",
+   "unit": "%",
+   "baseline_value": "43.8",
+   "n": null,
+   "setup": "Hugging Face Open LLM suite: 25-shot ARC-c, 10-shot HellaSwag, 5-shot MMLU, 0-shot TruthfulQA.",
+   "note": null,
+   "where": "Table 3, p9",
+   "table": "Table 3, rows 7B None and 7B YaRN 4k x 32, column MMLU"
+  },
+  {
+   "claim": "For 13B the MMLU drop is larger: 55.8 to 52.8 (s=16) and 51.9 (s=32), a 3.9-point drop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "51.9",
+   "unit": "%",
+   "baseline_value": "55.8",
+   "n": null,
+   "setup": "Table 3, 13B rows.",
+   "note": "3.9-point drop is the extractor's subtraction.",
+   "where": "Table 3, p9",
+   "table": "Table 3, rows 13B None and 13B YaRN 4k x 32, column MMLU"
+  },
+  {
+   "claim": "Average drop between s=16 and s=32 YaRN models is 0.49% in scores.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open LLM suite.",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "We also observe that there was on average a 0.49% drop in scores between the"
+  },
+  {
+   "claim": "Other methods degrade more on LLaMA 7B (s=16, 400 steps): MMLU PI 25.9, NTK-aware 27.7, NTK-by-parts 32.7, YaRN 30.0 vs base 35.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "30.0",
+   "unit": "%",
+   "baseline_value": "35.7",
+   "n": null,
+   "setup": "Table 2, LLaMA 7B 2k x 16.",
+   "note": null,
+   "where": "Table 2, p9",
+   "table": "Table 2, row YaRN, column MMLU"
+  },
+  {
+   "claim": "Code Llama 7B/13B (NTK) lose a lot on standard benchmarks (MMLU 31.1 and 32.8) vs Llama 2 (43.8, 55.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": "31.1",
+   "unit": "%",
+   "baseline_value": "43.8",
+   "n": null,
+   "setup": "Table 10.",
+   "note": "Code Llama is code-specialised, so the drop is confounded with additional training.",
+   "where": "Table 10, p19",
+   "table": "Table 10, rows Code Llama 7B and 13B, column MMLU"
+  },
+  {
+   "claim": "GovReport perplexity at fixed 32k window over 50 documents: YaRN s=16 7B 3.59, s=32 3.64, Code Llama 7B 4.44, Together PI 3.67.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "3.59",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 GovReport documents of at least 16k tokens, S=256.",
+   "note": null,
+   "where": "Table 8, p18",
+   "table": "Table 8, row 7B YaRN (s = 16), column Perplexity"
+  },
+  {
+   "claim": "Recommended attention scale for LLaMA and Llama 2 is sqrt(1/t) = 0.1 ln(s) + 1, giving about 1.208 at s=8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sqrt(1/t) at s=8",
+   "value": "1.208",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fitted by lowest perplexity versus s with NTK-by-parts on LLaMA 7b, 13b, 33b, 65b without fine-tuning; checked on 896 16k-token RedPajama documents.",
+   "note": null,
+   "where": "App A.3 Eq 23",
+   "quote": "= 0.1 ln(s) + 1 ≈1.208."
+  },
+  {
+   "claim": "Good NTK-by-parts boundaries for Llama family: alpha = 1, beta = 32.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Found experimentally, Sec 3.2.",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "good values for α and β are α = 1 and β = 32"
+  },
+  {
+   "claim": "PI fine-tunes were only able to reach a scale factor of roughly s = 8 before outputs degrade.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cited prior fine-tunes (kaiokendev, Chen et al., Together.ai, Quesnelle et al.).",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "achieve a scaling factor of roughly s = 8 before the LLM’s outputs starts to degrade"
+  },
+  {
+   "claim": "Dynamic Scaling prevents the perplexity blow-up beyond 4096 on non-fine-tuned Llama 2, and Dynamic-YaRN beats Dynamic-PI.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "One GovReport sample, S=256, read from Fig 8 (qualitative, single sample).",
+   "note": null,
+   "where": "App B.7",
+   "quote": "Dynamic-YaRN outperforms Dynamic-PI in terms of long-range perplexity on pretrained"
+  }
+ ],
+ "limits": [
+  "Single runs, no seeds, confidence intervals or tests; perplexity from ten Proof-pile documents.",
+  "Perplexity is not a reliable indicator of effective context: authors hypothesise it 'may not be a great indicator'; passkey is a simple retrieval task, not reasoning.",
+  "Passkey accuracy averages over sizes up to the passkey context only, so the reported 99.4% excludes sizes where accuracy was below 80%.",
+  "No pre-training token count or total fine-tuning token count given; the 0.1% figure is unverifiable from the text.",
+  "Temperature formula fit on LLaMA/Llama 2 only; authors say alpha, beta must be tuned per model family.",
+  "Benchmark drops are larger for 13B (MMLU 55.8 to 51.9); the PG19 domain shift is blamed.",
+  "Dynamic scaling evidence is a single GovReport sample (Fig 8).",
+  "Code Llama comparisons are confounded by its code-specialised extra training.",
+  "ReRoPE and LM-Infinite not compared because they modify attention."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "scale factor s",
+   "definition": "s = L'/L",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "NTK-by-parts",
+   "definition": "interpolate by s dims with r(d) < alpha, leave dims with r(d) > beta, ramp between",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Dynamic Scaling",
+   "definition": "update s = max(1, l'/L) at each forward pass",
+   "where": "Sec 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Extending context window of LLMs via Position Interpolation (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PI; training procedure followed",
+   "quote": null
+  },
+  {
+   "work": "NTK-aware interpolation (bloc97)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "unpublished reddit post, formalised",
+   "quote": null
+  },
+  {
+   "work": "Dynamic NTK (emozilla)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "reddit post",
+   "quote": null
+  },
+  {
+   "work": "RoFormer / RoPE (Su et al.)",
+   "year": 2022,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "base positional encoding",
+   "quote": null
+  },
+  {
+   "work": "Code Llama (Rozière et al.)",
+   "year": 2023,
+   "arxiv": "2308.12950",
+   "relation": "baseline",
+   "note": "ABF / NTK-aware with base 1M",
+   "quote": null
+  },
+  {
+   "work": "Effective long-context scaling of foundation models (Xiong et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "NTK-aware 4k x 44.2",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base models extended",
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "evaluates",
+   "note": "ablation model",
+   "quote": null
+  },
+  {
+   "work": "PG19 (Rae et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "fine-tuning data",
+   "quote": null
+  },
+  {
+   "work": "Proof-pile; GovReport",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "perplexity eval",
+   "quote": null
+  },
+  {
+   "work": "Passkey retrieval (Mohtashami and Jaggi)",
+   "year": 2023,
+   "arxiv": "2305.16300",
+   "relation": "uses-data",
+   "note": "task",
+   "quote": null
+  },
+  {
+   "work": "Train Short, Test Long / ALiBi (Press et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sliding window perplexity",
+   "quote": null
+  },
+  {
+   "work": "Fourier Features (Tancik et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "NTK motivation",
+   "quote": null
+  },
+  {
+   "work": "LongLLaMA / LLongMA-2 (Quesnelle et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PI Llama 2 7B 8k",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Sliding window perplexity (S = 256) of ten 128k Proof-pile documents and passkey retrieval accuracy at different prompt lengths for finetuned LLaMA 7B models fine-tuned to 32k context for 400 steps",
+   "page": 8,
+   "why": "Compares four interpolation methods at equal budget"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Fix s = 8, compare the LLaMA 7b perplexity on 896 16k-token documents over different scaling 1/sqrt(t)",
+   "page": 14,
+   "why": "Justifies the temperature formula"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Sliding window perplexity (S = 256) of a 1.28M-token Proof-pile documents truncated to the context window size",
+   "page": 18,
+   "why": "Perplexity vs context for all 128k models"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2 Eq 13",
+   "snippet": "h(θd) = (1 − γ(r(d))) θd/s + γ(r(d)) θd",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.3 Eq 15",
+   "snippet": "sqrt(1/t) = 0.1 ln(s) + 1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Venue printed as arXiv v3 (6 Feb 2026); ICLR 2024 is not in the PDF text, so venue recorded as preprint.",
+  "Fig 7 caption says '1.28M-token' where text says ten 128k documents (likely typo).",
+  "Table 5 caption says ten 128k Proof-pile docs but columns stop at 32768.",
+  "Table 1 labels 'Extension Scale 4k x 16' etc.; Table 4 labels YaRN 7B LLaMA as 2k x 16.",
+  "Cached text has NUL bytes; read via sanitised copy.",
+  "No embedded instructions found."
+ ]
+}

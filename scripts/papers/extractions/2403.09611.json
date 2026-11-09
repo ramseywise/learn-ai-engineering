@@ -1,0 +1,156 @@
+{
+ "schema": 1,
+ "key": "2403.09611",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/mckinzie-2024-mm1.pdf",
+ "bib": {
+  "title": "MM1: Methods, Analysis & Insights from Multimodal LLM Pre-training",
+  "authors": ["Brandon McKinzie","Zhe Gan","Jean-Philippe Fauconnier","Sam Dodge","Bowen Zhang","Philipp Dufter","Dhruti Shah","Xianzhi Du","Futang Peng","Floris Weers","Anton Belyi","Haotian Zhang","Karanjeet Singh","Doug Kang","Ankur Jain","Hongyu Hè","Max Schwarzer","Tom Gunter","Xiang Kong","Aonan Zhang","Jianyu Wang","Chong Wang","Nan Du","Tao Lei","Sam Wiseman","Guoli Yin","Mark Lee","Zirui Wang","Ruoming Pang","Peter Grasch","Alexander Toshev","Yinfei Yang"],
+  "first_author": "McKinzie",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2403.09611",
+  "doi": null
+ },
+ "read": {"by":"source-reader","at":"2026-11-09","chars_read":108123,"chars_total":108123,"engine":"pymupdf","skipped":"Reference list skimmed; qualitative example figures (App. D, Figs 11-17) read only as text fragments."},
+ "type": "empirical",
+ "question": "Which choices of image encoder, vision-language connector and pre-training data mixture matter most when building a performant multimodal LLM?",
+ "hypothesis": null,
+ "contributions": [
+  "Small-scale ablations over model architecture (image encoder, resolution, VL connector) and pre-training data (caption, interleaved, text-only, synthetic).",
+  "Design lessons from those ablations, shown to transfer to SFT.",
+  "MM1 family: dense 3B, 7B, 30B and MoE 3B (64 experts, 64B total) and 7B (32 experts, 47B total), SOTA on few-shot pre-training metrics and competitive after SFT on 12 benchmarks."
+ ],
+ "method": {
+  "summary": "Ablate one component at a time on a 1.2B-LLM base (ViT-L/14 CLIP encoder, C-Abstractor with 144 tokens, 45/45/10 caption/interleaved/text mix), then scale the chosen recipe (ViT-H 378px CLIP, C-Abstractor 144 tokens) to 3B/7B/30B dense and MoE LLMs, pre-train 200k steps unfrozen, and SFT on 1.45M examples with high-resolution support.",
+  "task": "multimodal LLM pre-training (image-text to text) and supervised fine-tuning for VQA, captioning and MLLM benchmarks",
+  "trains": true,
+  "datasets": [
+   {"name":"Captioned images (CC3M, CC12M, HQIPT-204M, COYO, Web Image-Text-1B internal)","role":"pretrain","size":"2B image-text pairs","split":"mixture 45% of sequences","source":"public plus internal","preprocessing":"image-text pairs packed along sequence; attention masks block cross-example attention"},
+   {"name":"Synthetic captions VeCap-300M","role":"pretrain","size":"300M image-text pairs","split":"part of caption data (about 7% of caption data)","source":"VeCap [57]","preprocessing":null},
+   {"name":"Interleaved image-text (OBELICS, Web Interleaved internal)","role":"pretrain","size":"600M documents (Table 2); App. A.1 says internal set is 500M documents, 1B images, 500B text tokens","split":"45% of sequences","source":"built from 3B HTML files","preprocessing":"drop documents with no images or more than 30; filter images (corrupt, aspect ratio <1/2 or >2, <100px or >10,000px, URL containing logo/button/icon/plugin/widget); dedupe images whose URL or MD5 appeared more than 10 times; keep first occurrence per page"},
+   {"name":"Text-only (webpages, code, social media, books, encyclopedic, math)","role":"pretrain","size":"2T tokens","split":"10% of sequences","source":"150B English HTML files filtered to 3B; boilerplate removal, GPT-3/CCNet-style quality filters, exact-hash and LSH dedup","preprocessing":null},
+   {"name":"SFT mixture (LLaVA-Conv 57k, LLaVA-Complex 77k, ShareGPT-4V 102k, VQAv2 83k, GQA 72k, OKVQA 9k, OCRVQA 80k, DVQA 200k, ChartQA 18k, AI2D 3k, DocVQA 39k, InfoVQA 24k, A-OKVQA 66k, COCO Captions 83k, TextCaps 22k, SynthDog-EN 500k, text-only 13k)","role":"train","size":"1.45M examples","split":"all mixed, randomly sampled","source":"public plus internal text-only set","preprocessing":"academic sets formatted as instructions per LLaVA-1.5, e.g. 'Answer the question using a single word or phrase.'"},
+   {"name":"Pre-training eval: COCO, NoCaps, TextCaps, VQAv2, TextVQA, VizWiz, OKVQA","role":"eval","size":null,"split":"COCO Karpathy test; NoCaps val; TextCaps val; VQAv2 testdev; TextVQA val; VizWiz testdev; OKVQA val (ablations use val splits for VQAv2 and VizWiz)","source":"public","preprocessing":null},
+   {"name":"SFT eval: VQAv2, TextVQA, ScienceQA-IMG, MMMU, MathVista, MME, MMBench, SEED-Bench, POPE, LLaVA-Bench-in-the-Wild, MM-Vet","role":"eval","size":"12 benchmarks","split":null,"source":"public","preprocessing":null}
+  ],
+  "models": [
+   {"name":"MM1 ablation base","role":"base","params":"1.2B LLM","architecture":"decoder-only transformer LLM + ViT-L/14 CLIP (DFN-5B + VeCap-300M, 336x336) + C-Abstractor, 144 image tokens","init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{"encoder ablation uses 2.9B LLM":"Table 1"}},
+   {"name":"MM1-3B / MM1-7B / MM1-30B","role":"proposed","params":"3B, 7B, 30B (LLM)","architecture":"ViT-H 378x378 CLIP (DFN-5B) + C-Abstractor 144 tokens + decoder-only LLM","init_from":"image encoder and LLM decoder both initialised from in-house pre-trained models; LLM pre-trained on the text-only mixture","tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":"4096 tokens, up to 16 images per sequence","other":{"connector":"randomly initialised, peak LR 8e-5"}},
+   {"name":"MM1-3B-MoE / MM1-7B-MoE","role":"proposed","params":"64B total (3B-MoE, 64 experts, sparse layer every 2 layers); 47B total (7B-MoE, 32 experts, sparse layer every 4 layers)","architecture":"GShard/ST-MoE style, top-2 gating, load-balance loss 0.01, router z-loss 0.001; only decoder replaced","init_from":"dense backbone hyperparameters reused","tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{}},
+   {"name":"Flamingo, IDEFICS, Emu2, LLaVA-NeXT, CogVLM, Gemini, GPT-4V etc.","role":"baseline","params":"various","architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{}}
+  ],
+  "training": {
+   "objective": "inferred: next-token (autoregressive) text prediction on image-text sequences; paper does not name the loss",
+   "optimizer": "AdamW (decoupled weight decay), gradient clip max norm 1; SFT uses AdaFactor",
+   "lr": "pre-training peak: 6e-5 (3B), 4e-5 (7B), 2e-5 (30B); connector 8e-5; SFT peak 1e-5",
+   "lr_schedule": "cosine decay to 10% of peak over 2e5 steps (pre-training); cosine decay to 0 (SFT)",
+   "warmup": "2000 linear steps",
+   "batch_size": "512 sequences (pre-training); 256 (SFT)",
+   "steps": "200k pre-training (grid searches 5e4); 10k SFT",
+   "epochs": null,
+   "tokens": "approx. 400B tokens (200k steps)",
+   "seq_len": "4096 (pre-training, up to 16 images at 378x378, 144 tokens each); 2048 (SFT)",
+   "precision": null,
+   "weight_decay": "lambda = 0.1 * peak LR",
+   "dropout": null,
+   "regularisation": "z-loss scale 1e-4 added for MM1-30B",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "mixing done once offline into a fixed deterministic snapshot; all models see same examples in same order; different input-pipeline seeds had non-negligible impact",
+   "other": {
+    "framework":"AXLearn",
+    "unfrozen":"all models pre-trained entirely unfrozen; SFT keeps encoder and LLM unfrozen",
+    "lr_fit":"eta = exp(-0.4214 ln(N) - 0.5535), N non-embedding params; grid on 9M, 85M, 302M, 1.2B; fit on 8-shot average; predicted 2.2e-5 for N=3e10",
+    "predicted optimal (Table 7)":"1.2B 8.6e-5 / 5.0e-6 wd; 2.9B 5.9e-5 / 3.5e-6; 6.4B 4.2e-5 / 2.5e-6; 30B 2.2e-5 / 1.3e-6",
+    "batch composition":"roughly 1M text tokens and 1M image tokens per batch",
+    "high resolution SFT":"positional embedding interpolation to 448, 560, 672 px (672 px = 2,304 tokens); sub-image decomposition: 672x672 downsampled global image plus 4 sub-images of 1344 resized image, up to 1792x1792; default for Table 4 is 1344x1344 with 720 tokens per image"
+   }
+  },
+  "inference": {
+   "decoding": "greedy decoding until EOS or stop tokens (newline for captioning; '.', ',', 'Question' also for VQA)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "few-shot prompts randomly sampled per dataset from train (else val) set, query excluded; GPT-4-judged benchmarks (MM-Vet, LLaVA-Bench) run 3 times and averaged",
+   "prompting": "pre-training eval: '{IMAGE} A photo of' for captioning, '{IMAGE} Question: {QUESTION} Short answer:' for VQA; 0/4/8/16-shot; MM1-30B-Chat MathVista with few-shot chain-of-thought",
+   "retrieval": null,
+   "parameters": {"mixed-resolution in-context examples":"only last N=3 images use sub-image decomposition, earlier in-context examples low resolution; enables 8-shot"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name":"CIDEr","definition":"captioning score via nlg-eval package","unit":"CIDEr","higher_is_better":true},
+    {"name":"VQA accuracy","definition":"OpenFlamingo VQAMetric post-processing (commit 60a5fd6)","unit":"%","higher_is_better":true},
+    {"name":"SFT meta-average","definition":"each benchmark divided by the baseline config (224px, attention pooling, 64 queries), then averaged; baseline = 100","unit":"normalised points","higher_is_better":true}
+   ],
+   "baselines": ["Flamingo-3B/9B/80B","IDEFICS-9B/80B","Emu2-14B/37B","MobileVLM","LLaVA-Phi","Imp-v1","TinyLLaVA","Bunny","Gemini Nano-2","InstructBLIP","Qwen-VL-Chat","LLaVA-1.5","ShareGPT4V","LVIS-Ins4V","VILA","SPHINX-Intern2","LLaVA-NeXT 7B/34B","CogVLM-30B","Gemini Pro/Ultra","GPT4V"],
+   "protocol": "ablations: zero-shot and 4/8-shot averages over captioning and VQA tasks; single runs, no significance tests stated; only larger baselines compared in pre-training table"
+  },
+  "availability": {"code":"AXLearn framework (github.com/apple/axlearn); no MM1 training code stated","weights":null,"data":"includes internal datasets (Web Image-Text-1B, Web Interleaved, text-only, SFT text-only) not released"},
+  "prompts": [],
+  "evidence": [
+   {"field":"training.tokens","quote":"for 200k steps (approx. 400B tokens)","where":"Sec. 4"},
+   {"field":"training.lr","quote":"we used η equal to 6e-5, 4e-5, and 2e-5, respectively","where":"App. B.1"}
+  ]
+ },
+ "results": [
+  {"claim":"Raising image resolution from 224 to 336 gives roughly a 3% boost on all ablation metrics across encoders, the largest single encoder effect.","kind":"measured","source":null,"metric":"ablation 0/4/8-shot average","value":3,"unit":"% approx.","baseline_value":null,"n":null,"setup":"Table 1, 2.9B LLM, C-Abstractor, encoder variants","quote":"increasing image resolution from 224 to 336 results in approx. 3% boost in all metrics across all architectures","table":null,"note":null,"where":"Sec. 3.2"},
+  {"claim":"Doubling encoder size ViT-L to ViT-H gives a modest gain, usually under 1%.","kind":"measured","source":null,"metric":"ablation metrics","value":1,"unit":"% upper bound","baseline_value":null,"n":null,"setup":"Table 1, 2.9B LLM","quote":"a doubling in parameters, results in a modest performance increase of usually less than 1%","table":null,"note":null,"where":"Sec. 3.2"},
+  {"claim":"Adding VeCap-300M synthetic captions to encoder pre-training gives more than 1% few-shot boost.","kind":"measured","source":null,"metric":"few-shot ablation","value":1,"unit":"% lower bound","baseline_value":null,"n":null,"setup":"Table 1, encoder pre-training data","quote":"yields more than 1% boost in few-shot scenarios","table":null,"note":null,"where":"Sec. 3.2"},
+  {"claim":"Contrastive ViT-L encoders beat the reconstructive AIM600M of comparable size by 0.3 to 1.5%; AIM was trained on under half the data so the result is inconclusive.","kind":"measured","source":null,"metric":"ablation metrics","value":null,"unit":null,"baseline_value":null,"n":null,"setup":"Table 1, 2.9B LLM","quote":"result in 0.3% to 1.5% performance gain compared to AIM600M of comparable size","table":null,"note":null,"where":"Sec. 3.2"},
+  {"claim":"Number of visual tokens and image resolution matter most; the VL connector type has little effect.","kind":"measured","source":null,"metric":null,"value":null,"unit":null,"baseline_value":null,"n":null,"setup":"Fig. 4, 1.2B LLM, avg pooling vs attention pooling vs C-Abstractor, 224/336px, 64/144 tokens","quote":"Number of visual tokens and image resolution matters most, while the type of VL connector has little effect.","table":null,"note":"Contradicts Honeybee's reported gains for C-Abstractor.","where":"Sec. 3.2"},
+  {"claim":"Zero-shot score rises from 25.8 to 39.3 as caption share increases, while at least 50% interleaved data is needed to keep 8-shot above 61.","kind":"measured","source":null,"metric":"zero-shot average","value":39.3,"unit":"points","baseline_value":25.8,"n":null,"setup":"1.2B base, 200k steps, caption/interleaved mixing ratios, Fig 5a","quote":"Zero-shot performance increases consistently, from 25.8% to 39.3%","table":null,"note":null,"where":"Sec. 3.3, Data Lesson 1"},
+  {"claim":"Without interleaved data, 8-shot and 4-shot performance drop to 45% and 43.7%.","kind":"measured","source":null,"metric":"8-shot / 4-shot average","value":45,"unit":"%","baseline_value":61,"n":null,"setup":"Fig 5a, caption-only mix","quote":"Without it, performance drops drastically to 45% and 43.7%, respectively.","table":null,"note":null,"where":"Sec. 3.3"},
+  {"claim":"A caption/interleaved/text ratio of 5:5:1 balances multimodal and text-only performance.","kind":"measured","source":null,"metric":null,"value":null,"unit":null,"baseline_value":null,"n":null,"setup":"Fig 5c","quote":"with caption/interleaved/text ratio 5:5:1, we achieve a good balance","table":null,"note":null,"where":"Sec. 3.3, Data Lesson 3"},
+  {"claim":"Synthetic VeCap captions (7% of caption data) add 2.4% and 4% absolute in few-shot.","kind":"measured","source":null,"metric":"few-shot average","value":4,"unit":"% absolute","baseline_value":null,"n":null,"setup":"Fig 5d, 1.2B base","quote":"it does give a non-trivial boost in few-shot performance, of 2.4% and 4% absolute","table":null,"note":null,"where":"Sec. 3.3, Data Lesson 4"},
+  {"claim":"MM1-30B 8-shot COCO CIDEr beats Flamingo-80B and IDEFICS-80B.","kind":"measured","source":null,"metric":"COCO CIDEr 8-shot","value":123.1,"unit":"CIDEr","baseline_value":114.3,"n":null,"setup":"Table 3, MM1-30B vs IDEFICS-80B (114.3, includes COCO in training) and Flamingo-80B (108.8)","quote":null,"table":"Table 3, row MM1-30B, shot 8, column COCO","note":null,"where":"Table 3"},
+  {"claim":"MM1-30B 8-shot VQAv2 70.9 vs Emu2-37B 67.8 and Flamingo-80B 65.6.","kind":"measured","source":null,"metric":"VQAv2 8-shot","value":70.9,"unit":"%","baseline_value":67.8,"n":null,"setup":"Table 3","quote":null,"table":"Table 3, row MM1-30B, shot 8, column VQAv2","note":null,"where":"Table 3"},
+  {"claim":"MM1 outperforms all published prior pre-trained MLLMs in few-shot.","kind":"measured","source":null,"metric":null,"value":null,"unit":null,"baseline_value":null,"n":null,"setup":"Table 3; only compared with larger models; comparable to Emu2 on VQAv2, TextVQA, OKVQA at 30B","quote":"MM1 outperforms all published prior work for pre-trained MLLMs.","table":null,"note":null,"where":"Sec. 4"},
+  {"claim":"Optimal peak LR fit predicts 2.2e-5 for 30B.","kind":"measured","source":null,"metric":"peak learning rate","value":2.2e-5,"unit":"LR","baseline_value":null,"n":null,"setup":"log-linear fit on 9M-1.2B grid searches using 8-shot average; validation loss not correlated with downstream performance","quote":"For N = 3e10, this fit predicts η = 2.2e−5","table":null,"note":null,"where":"Sec. 4"},
+  {"claim":"MM1-30B-Chat scores 73.5 on TextVQA and 1637.6 on MME perception, beating LLaVA-NeXT-34B on TextVQA (69.5) and Emu2-Chat-37B (66.6).","kind":"measured","source":null,"metric":"TextVQA","value":73.5,"unit":"%","baseline_value":69.5,"n":null,"setup":"Table 4, SFT at 1344x1344","quote":null,"table":"Table 4, row MM1-30B-Chat, column VQAT","note":null,"where":"Table 4"},
+  {"claim":"MM1-30B-Chat MMMU val 44.7 vs LLaVA-NeXT-34B 51.1 and GPT4V 56.8: still behind on MMMU and MM-Vet (48.7 vs 57.4).","kind":"measured","source":null,"metric":"MMMU val","value":44.7,"unit":"%","baseline_value":51.1,"n":null,"setup":"Table 4","quote":null,"table":"Table 4, row MM1-30B-Chat, column MMMU","note":null,"where":"Table 4"},
+  {"claim":"Supporting 1344x1344 resolution gives a 15% relative increase in SFT meta-average over a 336px baseline; 1792x1792 slightly decreases.","kind":"measured","source":null,"metric":"SFT meta-average","value":15,"unit":"% relative","baseline_value":null,"n":null,"setup":"Fig 7b, MM1-3B, positional interpolation plus sub-image decomposition","quote":"we can achieve a 15% relative increase by supporting an image resolution of 1344×1344","table":null,"note":null,"where":"Sec. 5.1"},
+  {"claim":"MM1-30B-Chat MathVista with chain-of-thought: 4-shot 41.9 vs zero-shot 39.4, 8-shot with mixed-resolution examples 44.4, despite only single-image SFT data.","kind":"measured","source":null,"metric":"MathVista accuracy","value":44.4,"unit":"%","baseline_value":39.4,"n":null,"setup":"MM1-30B-Chat, 8 in-context examples, only last N=3 at high resolution","quote":"Using this formulation with 8 in-context examples increases the performance on MathVista to 44.4.","table":null,"note":null,"where":"Sec. 5.1; App. C.5"},
+  {"claim":"MM1 uses 720 image tokens in total versus 2,880 per image for LLaVA-NeXT, enabling multi-image and few-shot prompting.","kind":"measured","source":null,"metric":"tokens per image","value":720,"unit":"tokens","baseline_value":2880,"n":null,"setup":"MM1-30B-Chat at 1344px with 5 sub-images x 144 tokens","quote":"each image is represented as 2,880 tokens sent to the LLM, while ours is only 720 in total","table":null,"note":"App. C.5 describes 2,880 tokens for 20 effective images (4-shot x 5 sub-images x 144) rather than per image; the main text attributes 2,880 per image to LLaVA-NeXT.","where":"Sec. 5.1"},
+  {"claim":"When SFT-ing at low resolution a frozen encoder is better (+2.2 points); at 1344px unfreezing is better (+2.9 points).","kind":"measured","source":null,"metric":"SFT meta-average","value":2.9,"unit":"points","baseline_value":null,"n":null,"setup":"Fig 10c, MM1-3B-Chat","quote":"it is beneficial to unfreeze the image encoder (+2.9 points)","table":null,"note":null,"where":"App. C.4"},
+  {"claim":"MoE variants beat their dense counterparts on almost every SFT benchmark.","kind":"measured","source":null,"metric":null,"value":null,"unit":null,"baseline_value":null,"n":null,"setup":"Table 4, 3B-MoE (64 experts) and 7B-MoE (32 experts) vs dense","quote":"Our MoE models achieve uniformly better performance","table":null,"note":null,"where":"Sec. 5.1"}
+ ],
+ "limits": [
+  "Ablations run at 1.2B (2.9B for encoders) scale and extrapolated to 30B; no confirmation of lessons at 30B for each choice.",
+  "No seeds or variance reported; authors note input-pipeline seeds changed results non-negligibly, and fixed one data order.",
+  "Hardware, compute and wall-clock not stated; internal data and weights not released.",
+  "Encoder comparison between AIM and CLIP is inconclusive because AIM saw under half the data.",
+  "Zero-shot results are not hill-climbed since they reflect prompt-format fit; SFT benchmarks measure mostly zero-shot, single-image.",
+  "MM1-30B-Chat trails LLaVA-NeXT-34B on MMMU and MM-Vet and GPT-4V/Gemini on several benchmarks (Table 4).",
+  "Resolution beyond 1344 (1792) slightly lowers average, attributed to resizing artifacts (unverified).",
+  "Pre-training table compares only against larger published models; IDEFICS includes COCO in training."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {"work":"Kosmos-1","year":2023,"arxiv":null,"relation":"extends","note":"decoder-only architecture akin to Kosmos-1","quote":"Our approach is based on a decoder-only architecture, akin to Kosmos-1 [45]."},
+  {"work":"Honeybee (C-Abstractor)","year":2023,"arxiv":"2312.06742","relation":"uses-method","note":"C-Abstractor connector adopted; MM1 finds connector type matters little, contrary to Honeybee","quote":null},
+  {"work":"VILA","year":2023,"arxiv":null,"relation":"related","note":"prior pre-training ablation study lacking optimisation details","quote":null},
+  {"work":"Emu2","year":2023,"arxiv":null,"relation":"baseline","note":"gives pre-training details without ablations; main comparison; average pooling follows it","quote":null},
+  {"work":"IDEFICS / OBELICS","year":2023,"arxiv":null,"relation":"baseline","note":"replicates Flamingo; OBELICS interleaved data pipeline followed","quote":null},
+  {"work":"Flamingo","year":2022,"arxiv":null,"relation":"baseline","note":"few-shot pre-training comparison","quote":null},
+  {"work":"LLaVA-1.5 / LLaVA-NeXT","year":2023,"arxiv":null,"relation":"uses-method","note":"SFT data mixture and instruction formatting; LLaVA-NeXT compared","quote":null},
+  {"work":"SPHINX","year":2023,"arxiv":null,"relation":"uses-method","note":"sub-image decomposition for high resolution","quote":null},
+  {"work":"AIM","year":2024,"arxiv":null,"relation":"evaluates","note":"reconstructive-loss image encoder ablated","quote":null},
+  {"work":"DFN-5B","year":2023,"arxiv":null,"relation":"uses-data","note":"CLIP encoder pre-training data","quote":null},
+  {"work":"VeCap-300M","year":2023,"arxiv":null,"relation":"uses-data","note":"synthetic captions","quote":null},
+  {"work":"GShard / ST-MoE","year":2022,"arxiv":null,"relation":"uses-method","note":"MoE implementation","quote":null},
+  {"work":"Wortsman et al. small-scale proxies","year":2023,"arxiv":null,"relation":"uses-method","note":"LR grid search at small scale and z-loss, reference [119]","quote":null}
+ ],
+ "figures": [
+  {"figure":"Fig. 3","caption":"Left: Model ablations: what visual encoder to use, how to feed rich visual data, and how to connect the visual representation to the LLM. Right: Data ablations: type of data, and their mixture.","page":5,"why":"Maps the design space in one picture."},
+  {"figure":"Fig. 4","caption":"0-shot, 4-shot, and 8-shot ablations across different visual-language connectors for two image resolutions, and two image token sizes.","page":7,"why":"Shows token count and resolution dominate connector type."},
+  {"figure":"Fig. 5","caption":"Data Ablations: caption/interleaved mixing, text-only data, image/text mixing, VeCap.","page":9,"why":"Shows data-type trade-offs between zero-shot, few-shot and text performance."},
+  {"figure":"Fig. 7","caption":"Impact of image resolution and pre-training for SFT performance; (a) high resolution input processing via sub-images.","page":15,"why":"Sub-image scheme and resolution curve."}
+ ],
+ "code": [
+  {"where":"Sec. 4, Eq. 1","snippet":"eta = exp(-0.4214 ln(N) - 0.5535)","verbatim": false}
+ ],
+ "problems": ["Interleaved dataset size printed as 600M documents in Table 2 but 500M documents in App. A.1.", "Several results in Tables 3/4 are table cells; text-extracted layout is one value per line."]
+}

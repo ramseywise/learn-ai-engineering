@@ -1,19 +1,751 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2309.16039",
  "pdf": "ai-engineering/02-context-engineering/sources/xiong-2023-effective-long-context-scaling-foundation.pdf",
  "bib": {
   "title": "Effective Long-Context Scaling of Foundation Models",
-  "first_author": "Wenhan Xiong",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Wenhan Xiong",
+   "Jingyu Liu",
+   "Igor Molybog",
+   "Hejia Zhang",
+   "Prajjwal Bhargava",
+   "Rui Hou",
+   "Louis Martin",
+   "Rashi Rungta",
+   "Karthik Abinav Sankararaman",
+   "Barlas Oguz",
+   "Madian Khabsa",
+   "Han Fang",
+   "Yashar Mehdad",
+   "Sharan Narang",
+   "Kshitiz Malik",
+   "Angela Fan",
+   "Shruti Bhosale",
+   "Sergey Edunov",
+   "Mike Lewis",
+   "Sinong Wang",
+   "Hao Ma"
+  ],
+  "first_author": "Xiong",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2309.16039",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 73479,
+  "chars_total": 73479,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Appendix B proof read in outline. Figures 3, 7, 9 are images (values not in text)."
  },
- "legacy_report": "SOURCE: Effective Long-Context Scaling of Foundation Models. Wenhan Xiong, Jingyu Liu (equal contribution), Igor Molybog, Hejia Zhang, et al., up to Mike Lewis, Sinong Wang, Hao Ma. GenAI, Meta. arXiv:2309.16039v3 [cs.CL], 14 Nov 2023. Preprint (no venue printed).\nCOVERAGE: Read all 23 pages (73,466 chars). I skimmed the reference list. I read the appendices, including A (more results), B (theory, only partly), C (extrapolation) and D (self-instruct prompts). The Appendix B math was read only in outline. Figure 9 and Figure 7 are image-only and were not read.\n\nCLAIMS (ranked)\n- The 70B model's validation loss follows a power law with context length up to 32,768 tokens, with diminishing returns. Larger models have a larger beta, so they use context better.\n  number: L(c) = (alpha/c)^beta + gamma. Fitted values by model size: 7B alpha=25.4, beta=0.45, gamma=1.56; 13B 19.5/0.48/1.45; 34B 17.7/0.50/1.41; 70B 17.9/0.51/1.35. Doubling the context multiplies the reducible loss by 2^-beta, about 0.7 for 70B.\n  setup: Llama 2 Long models, validation language-modeling loss, context up to 32k. The 70B model was trained at 16k sequences and the 7B/13B at 32k. This is a loss result, not a task result.\n  quote: \"if we double the context length, we can expect the loss to be reduced by a factor of 2−β ≈ 0.7 plus a model specific constant (1 − 2−β) · γ.\" Also: \"Larger models can leverage the contexts more effectively, indicated by the largerβ value of the curves.\"\n  where: p.5 (Sec 3.1); Fig 1 on p.1\n\n- Task scores improve monotonically as the maximum input length grows from 4k to 16k (70B).\n  number: NarrativeQA F1 27.5, 28.7, 30.2, 30.9; Qasper F1 28.9, 32.7, 35.1, 35.7; QuALITY EM 63.9, 80.3, 79.6, 79.7; QMSum ROUGE-geo 10.9, 11.9, 14.4, 16.5, at max input 4,096, 8,192, 12,288 and 16,384 respectively.\n  setup: Llama 2 Long 70B, pretrained model, left-truncated prompts. The values are read from the Fig 2 extraction.\n  quote: \"we first show in Figure 2 that the results on each long task improve monotonically as we increase the context lengths.\"\n  Caution: the QuALITY numbers in the extraction (63.9, 80.3, 79.6, 79.7) are flat after 8k and not strictly monotonic. Only the text claims monotonic.\n  where: p.5, Fig 2\n\n- Llama 2's RoPE could not attend usefully beyond about 4,000-6,000 tokens, even after long continual pretraining. Raising the RoPE base frequency from 10,000 to 500,000 (RoPE ABF) fixed this.\n  number: 4,000-6,000 tokens effective window before; base frequency 10,000 to 500,000.\n  setup: 7B model, synthetic FIRST-SENTENCE-RETRIEVAL probe (the model returns the first sentence of the input). Variants were continually pretrained with 80B tokens on 32,768-token sequences.\n  quote: \"our model was unable to effectively attend beyond 4, 000 - 6, 000 tokens even after extensive long-context continual pretraining.\" and \"increasing the “base frequency b” of ROPE from 10, 000 to 500, 000\". Also: \"ROPE ABF is the only variant that can maintain its performance up to the full 32,768-token context window on theFIRST-SENTENCE -RETRIEVAL task.\"\n  where: p.7-8 (Sec 4.1)\n\n- The effective context window can be much shorter than the nominal window, and it needs a probe task to find it. The authors say perplexity and synthetic tasks alone are not enough.\n  number: none\n  setup: The authors criticise earlier long-context work that measured only loss and synthetic tasks. They add real tasks (NarrativeQA, Qasper, QuALITY, QMSum, ZeroSCROLLS, L-Eval).\n  quote: \"which do not comprehensively demonstrate their effectiveness in diverse, real-world scenarios.\" Also, on Passkey: \"We believe this task is overly simple for context probing.\" Of the PE variants, \"All the model variants except ROPE can achieve perfect accuracy.\"\n  where: p.2, p.8 footnote 4\n\n- Long-context continual pretraining reached nearly the same quality as pretraining on long sequences from scratch, with about 40% fewer FLOPs.\n  number: FLOPs 3.783e22 (32k from scratch) vs 3.405e22, 3.026e22 and 2.270e22 for switching at 20%, 40% and 80%. At 40% switch NarrativeQA F1 20.1 vs 18.5 from scratch; Qasper 27.0 vs 28.6.\n  setup: 7B model, 4k to 32k switch at 20%, 40% or 80% of training, same total tokens, 4M tokens per gradient update.\n  quote: \"continual pretraining from short context models can easily save around 40% FLOPs while imposing almost no loss on performance.\"\n  where: p.10, Tables 10-11\n\n- Long documents in the pretraining data matter less than data quality.\n  number: Relative gain over Llama 2 7B: QuALITY +75.5% (Llama 2 Long mix) vs +67.1% (long text removed) vs +65.0% (long text upsampled). QMSum +45.70% vs +36.60% vs +42.83%. NarrativeQA +23.70% vs +19.48% vs +22.15%.\n  setup: 7B continual pretraining, prompts truncated at 16,384 tokens, relative improvement over the 4,096-token Llama 2 7B.\n  quote: \"even with most of the long texts removed, the model can still obtain most of the performance gain over LLAMA 2.\" and \"the improvements of our pretrain data over the one used by LLAMA 2 mostly come from the quality of the data itself, instead of the length distribution difference.\"\n  where: p.9, Table 7\n\n- The 70B chat model beats gpt-3.5-turbo-16k on 7 of 10 ZeroSCROLLS tasks, with no human-annotated long data.\n  number: Average 37.7 vs 36.7 (gpt-3.5-turbo-16k), 34.0 (gpt-3.5-turbo 4k), 39.1 (Claude 8k), 41.7 (GPT-4 8k). Individual tasks: QuALITY 82.6 vs 72.0; QMSum 20.0 vs 17.4; NarrativeQA 31.7 vs 29.5. It trails GPT-4 and Claude on average.\n  setup: Llama 2 Long Chat 70B, ZeroSCROLLS benchmark configuration. gpt-3.5-turbo-16k was evaluated 8/7/2023. The GPT-4 and Claude numbers were copied from the leaderboard.\n  quote: \"our 70B chat model is able to outperform gpt-3.5-turbo-16k on 7 out of the 10 tasks.\"\n  where: p.6, Table 4\n\n- Instruction tuning: adding language-modeling loss on the long input prompt helps the self-instruct data. Short-only RLHF data already gives a decent long model.\n  number: Qasper 35.7 to 38.9; QuALITY 59.3 to 77.3; QMSum 13.4 to 18.5 (self-inst w/o LM loss vs with). Llama 2 Chat baseline: Qasper 12.2, QuALITY 56.7.\n  setup: Table 9, Llama 2 Long fine-tuned with different data mixes.\n  quote: \"we find it particularly beneficial to also calculate the language modeling loss on the long input prompts\"\n  where: p.3, p.10, Table 9\n\n- Long-context training did not hurt short tasks, and mostly improved them.\n  number: Llama 2 70B vs Llama 2 Long 70B: MMLU 68.9 vs 71.7; Math 35.2 vs 41.3; Coding 37.4 vs 39.9; GSM8K 56.8 vs 65.4 (Table 2). The 7B comparison is Coding 16.8 vs 20.6, MMLU 45.3 vs 47.8.\n  setup: Table 1 aggregates. The authors attribute this to extra FLOPs and the newly introduced long data.\n  quote: \"we observe on-par and, in most cases, stronger results than LLAMA 2.\"\n  where: p.4\n\n- Extending the window cost little compute per step, and attention was not the bottleneck at these lengths.\n  number: About 17% speed loss going from 4,096 to 16,384 tokens (70B). Attention cost dominates only past 49,152 (6h) tokens, with h=8192.\n  setup: Llama 2 70B, FlashAttention, same tokens per batch.\n  quote: \"we observe around 17% speed loss when increasing the sequence length from 4,096 to 16,384 for the 70B model.\"\n  where: p.3\n\n- Extrapolation beyond the training length is weak. The Llama 2 4k baseline's loss explodes past its training length. For Llama 2 Long 70B, loss holds in the extrapolation area, but FIRST-SENTENCE-RETRIEVAL degrades when extrapolating.\n  number: none (shown in a figure only)\n  setup: 70B trained at 16,384, tested to 32,768.\n  quote: \"the loss explodes after the position goes beyond training sequence length\" and \"we do see some performance degradation when the model needs to extrapolate.\"\n  where: App. C, p.22 (Fig 9)\n\n- Long inputs have a token cost that depends on the tokenizer. This is the budgeting point.\n  number: about 10% more tokens than GPT-3.5's tokenizer\n  setup: Llama tokenizer, 32k vocabulary\n  quote: \"we observe our tokenizer often produce 10% more tokens on average.\"\n  where: p.13 (Sec 6)\n\n- Input truncation is a confound in long-context benchmarks. Left truncation was used.\n  number: 16,384-token cap; 32,768 also tested (Table 13, e.g. Llama 2 Long 13B QuALITY 57.6 at 16k vs 59.0 at 32k)\n  quote: \"The input prompts are truncated from the left side if the prompts exceed the maximum input length of the model or 16,384 tokens.\" and \"truncating the input context might also remove the information necessary to answer the question.\"\n  where: p.4, p.6\n\n- Human evaluation covered 2,352 examples across multi-turn chat and multi-document search QA. The model was competitive with MPT-30B-chat, GPT-3.5-turbo-16k and Claude-2.\n  number: 2,352 examples, 3 annotators each, 95% CI. The win-rate values are only in Fig 3, which is an image.\n  quote: \"We focus on two major application scenarios with a total of 2,352 examples.\"\n  where: p.7\n\nLIMITS\n- The authors concede that automatic metrics are limited and that leakage into proprietary models cannot be ruled out.\n- The model is not tuned for long-form outputs such as creative writing.\n- Hallucination is a problem, and it is \"more pronounced\" for long-context models.\n- Safety: a long-context safety benchmark does not exist. The red teaming was internal and manual.\n- Long-context prompt injection risk is noted via Greshake et al., 2023.\n- Evidence is from Llama 2 only, with 7B/13B trained at 32k and 34B/70B at 16k. There is no study of mid-context position bias (\"lost in the middle\") and no needle-in-a-haystack test. The retrieval probe is first-sentence only.\n- Results are from 2023 and cover open models. Proprietary comparisons (GPT-4 8k, Claude 8k, gpt-3.5-turbo-16k) have dated.\n- The Llama 2 4k to 32k extension is now old, and newer models have much longer windows.\n- Everything here is about the model, not about how to budget a prompt. The note's budgeting claims will need the paper's numbers framed as capability evidence.\n\nBUILDS ON\n- Llama 2 (Touvron et al., 2023)\n- RoPE (Su et al., 2022)\n- Position Interpolation (Chen et al., 2023)\n- Code Llama (Rozière et al., 2023), which concurrently proposed the base-frequency idea\n- XPos (Sun et al., 2022)\n- FlashAttention (Dao et al., 2022)\n- Scaling laws (Kaplan et al., 2020; Hoffmann et al., 2022)\n- Self-Instruct (Wang et al., 2022)\n- Passkey task (Mohtashami and Jaggi, 2023)\n- ZeroSCROLLS (Shaham et al., 2023)\n- L-Eval (An et al., 2023)\n- Narayanan et al., 2021, for the attention-cost threshold\n- Sparse attention (Child et al., 2019), which the authors chose not to use\n\nCODE\nPrompts in Appendix D (p.22-23) for generating long-context QA data. Verbatim, short form: \"[INST] You are given a long text (delimited by triple quotes) and a question. Read the text and answer the question in the end. \\\"\\\"\\\"{FULL_DOCUMENT}\\\"\\\"\\\" Question: {QUESTION} [/INST] {ANSWER}\". Evaluation prompt (footnote 2, p.4): \"{CONTEXT } Q: {QUESTION }, A:\".\n\nFIGURES\n- Fig 1 (p.1): validation loss versus context length with the power-law fits for each model size. Shows the scaling claim at a glance.\n- Fig 2 (p.5): the four long tasks versus maximum input length 4k to 16k. This is the most useful figure for a budgeting note.\n- Fig 4 (p.8): attention-score decay with distance under each PE variant. It shows why the base-frequency change was needed.\n- Fig 5b (p.9): FIRST-SENTENCE-RETRIEVAL accuracy versus task length from 256 to 30k. It shows the effective window per PE variant.\n- Fig 3 (p.6): human win rates, 95% CI. The values are not in the extracted text.\n\nPROBLEMS: Figure values are not extractable except where numbers are printed as text (Fig 1, Fig 2). Greek letters were dropped in the Fig 1 legend, but the values are reconstructed from the Llama 2 Long legend order. I recommend checking the plot labels against alpha, beta, gamma in the original. Some table spacing was garbled, for example \"QMSumF1\". There were no embedded instructions in the PDF. Table 4 was extracted as a flat row, so per-column mapping to task names was inferred from the header. The 70B 3-task numbers are mapped by column order (GR, SS, QM, SQAL, Qspr, Nrtv, QALT, MuSQ, SpDg, BkSS), so check them against the PDF before citing."
+ "type": "empirical",
+ "question": "How can open long-context LLMs with effective windows up to 32,768 tokens be built from Llama 2, and which design choices (positional encoding, data mix, curriculum, instruction data) matter?",
+ "hypothesis": "Long-context capability can be learned by continually pretraining a short-context model, and a RoPE decay fix is needed for attending to distant tokens.",
+ "contributions": [
+  "Open series of long-context LLMs (7B-70B) continually pretrained from Llama 2 on 400B tokens, up to 32,768 tokens",
+  "Power-law scaling of loss with context length",
+  "Cheap instruction tuning without human-annotated long data, 70B beats gpt-3.5-turbo-16k on many long tasks",
+  "Ablations of positional encoding, data mix, training curriculum"
+ ],
+ "method": {
+  "summary": "Continually pretrain Llama 2 (7B/13B/34B/70B) for 400B tokens/100,000 steps on longer sequences with RoPE base frequency raised from 10,000 to 500,000 and an upsampled long-text data mix, then instruction-tune on Llama 2 Chat RLHF data plus self-instruct long QA data generated by Llama 2 Chat. Evaluate on short benchmarks, long QA/summarization benchmarks, ZeroSCROLLS, L-Eval, human preference and safety.",
+  "task": "continual pretraining for long context; instruction tuning; evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Continual pretraining mix (Llama 2 pretrain data plus new long text, long samples upweighted)",
+    "role": "pretrain",
+    "size": "400B tokens total",
+    "split": null,
+    "source": "existing Llama 2 data plus unspecified new long text data",
+    "preprocessing": "sequences of 32,768 tokens (7B/13B) or 16,384 (34B/70B)"
+   },
+   {
+    "name": "Llama 2 Chat RLHF data (RLHF V5) + self-instruct long QA",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "self-instruct QA generated by Llama 2 Chat from long documents in the pretraining corpus; chunk prompt, long and short answers, self-critique step",
+    "preprocessing": "short data concatenated into 16,384-token sequences; long instances right-padded individually; LM loss also on input prompts"
+   },
+   {
+    "name": "NarrativeQA, Qasper, QuALITY, QMSum",
+    "role": "eval",
+    "size": null,
+    "split": "validation",
+    "source": "cited benchmarks",
+    "preprocessing": "left truncation to 16,384 tokens (or model max)"
+   },
+   {
+    "name": "ZeroSCROLLS (10 tasks), L-Eval (6 tasks)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Shaham et al. 2023; An et al. 2023",
+    "preprocessing": "benchmark's own prompts and truncation"
+   },
+   {
+    "name": "Human eval set: multi-turn chat and multi-document search QA",
+    "role": "eval",
+    "size": "2,352 examples",
+    "split": null,
+    "source": "not stated",
+    "preprocessing": null
+   },
+   {
+    "name": "TruthfulQA, ToxiGen, BOLD",
+    "role": "eval",
+    "size": "TruthfulQA 817 questions; BOLD 23,679 prompts",
+    "split": null,
+    "source": "cited",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama 2 Long 7B/13B",
+    "role": "proposed",
+    "params": "7B, 13B",
+    "architecture": "Llama 2 decoder-only, RoPE base 500,000",
+    "init_from": "Llama 2 checkpoints",
+    "tokenizer": "Llama (32k vocab)",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32,768 training sequences",
+    "other": {}
+   },
+   {
+    "name": "Llama 2 Long 34B/70B",
+    "role": "proposed",
+    "params": "34B, 70B",
+    "architecture": "Llama 2",
+    "init_from": "Llama 2 checkpoints",
+    "tokenizer": "Llama (32k vocab)",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": "8192 (70B)",
+    "heads": null,
+    "context": "16,384 training sequences",
+    "other": {}
+   },
+   {
+    "name": "Llama 2 Long Chat 70B",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "instruction-tuned Llama 2 Long",
+    "init_from": "Llama 2 Long 70B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama 2 Chat",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096",
+    "other": {
+     "use": "generates self-instruct QA"
+    }
+   },
+   {
+    "name": "Focused Transformer 3B, YaRN 7B/13B 128k, Together-7B-32k, Xgen-7B-8k, MPT-7B-8k, MPT-30B-8k, Llama 2 70B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5, GPT-4, Claude, Claude-2, PaLM, PaLM-2-L, gpt-3.5-turbo-16k",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token language modelling (continual pretraining); instruction tuning with LM loss on outputs and also on long input prompts",
+   "optimizer": null,
+   "lr": "2e−5 (7B/13B); 1e−5 (34B/70B)",
+   "lr_schedule": "cosine",
+   "warmup": "2000 steps",
+   "batch_size": "inferred: same tokens per batch as Llama 2 (not given); 4 million tokens per update in the curriculum ablation",
+   "steps": "100,000",
+   "epochs": null,
+   "tokens": "400B",
+   "seq_len": "32,768 (7B/13B); 16,384 (34B/70B)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "curriculum ablation 7B: 3.783 × 1022 FLOPs (32k from scratch)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rope_base_frequency": "10,000 -> 500,000",
+    "positional_ablation": "7B, extra 80B tokens at 32,768; PI alpha=1/4 or 1/8, ABF beta=50 (App B)",
+    "speed": "about 17% speed loss 4,096 -> 16,384 on 70B with FlashAttention",
+    "instruction_tuning_hyperparameters": "not stated",
+    "self_instruct_size": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "prompts 16,384 or 32,768 max input; ZeroSCROLLS uses benchmark settings",
+   "samples": null,
+   "prompting": "pretrained: '{CONTEXT} Q: {QUESTION}, A:'; 0-shot NarrativeQA, 2-shot Qasper/QuALITY, 1-shot QMSum; left truncation",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Validation loss/perplexity",
+     "definition": "LM loss on held-out long sequences; loss fit L(c)=(alpha/c)^beta+gamma",
+     "unit": "nats / perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "F1 / EM / ROUGE-geo",
+     "definition": "NarrativeQA, Qasper F1; QuALITY EM; QMSum ROUGE-geo = geometric mean of ROUGE-1, 2 and L",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FIRST-SENTENCE-RETRIEVAL",
+     "definition": "prompt model to return the first sentence of the input; ROUGE-L by task length",
+     "unit": "ROUGE-L",
+     "higher_is_better": true
+    },
+    {
+     "name": "Win rate",
+     "definition": "human preference, 3 annotators per example, 95% CI",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama 2",
+    "YaRN",
+    "Together-7B-32k",
+    "Xgen",
+    "MPT",
+    "Focused Transformer",
+    "gpt-3.5-turbo(-16k)",
+    "GPT-4",
+    "Claude",
+    "Claude-2"
+   ],
+   "protocol": "Single runs, no seeds or significance tests reported except 95% CI for human eval; pretrained results are validation sets."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Self-instruct QA generation, normal answer",
+    "text": "[INST] You are given a text chunk (delimited by triple quotes) taken from a long text. Write a question about this text and provide the correct answer. The answer needs to be based on the text. This question will later be used as a reading comprehension test over the entire document. Wrap the question and answer using XML tags (<question> and </question>, <answer> and </answer>).\n\"\"\"\n{TEXT_CHUNK}\n\"\"\"\n[/INST]",
+    "where": "Fig 10, App D"
+   },
+   {
+    "purpose": "Self-instruct QA generation, short answer",
+    "text": "[INST] You are given a text chunk (delimited by triple quotes) from a long document. Based on information from the text, come up with a specific question **which can be answered in a few words or a single phrase** and provide the correct answer without explanation. The answer needs to be based on the text. This question will later be used as a reading comprehension test over the entire document. Wrap the question and answer using XML tags (<question> and </question>, <answer> and </answer>). Again, the answer needs to be short.\n\"\"\"\n{TEXT_CHUNK}\n\"\"\"\n[/INST]",
+    "where": "Fig 10, App D"
+   },
+   {
+    "purpose": "Long QA training template, normal answer",
+    "text": "[INST] You are given a long text (delimited by triple quotes) and a question. Read the text and answer the question in the end.\n\"\"\"\n{FULL_DOCUMENT}\n\"\"\"\nQuestion: {QUESTION}\n[/INST]\n{ANSWER}",
+    "where": "Fig 11, App D"
+   },
+   {
+    "purpose": "Long QA training template, short answer",
+    "text": "[INST] You are given a long text (delimited by triple quotes) and a question. Read the text and answer the question in the end as concisely as you can, using a single phrase or sentence if possible. Do not provide any explanation.\n\"\"\"\n{FULL_DOCUMENT}\n\"\"\"\nQuestion: {QUESTION}\n[/INST]\n{ANSWER}",
+    "where": "Fig 11, App D"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Larger models fit a larger power-law exponent beta in validation loss vs context length; 70B has beta 0.51.",
+   "kind": "measured",
+   "source": null,
+   "metric": "beta (70B)",
+   "value": "0.51",
+   "unit": "exponent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2 Long 70B, validation loss L(c)=(alpha/c)^beta+gamma, contexts up to 32,768 tokens; 7B: 25.4/0.45/1.56, 13B: 19.5/0.48/1.45, 34B: 17.7/0.50/1.41, 70B: 17.9/0.51/1.35 (alpha/beta/gamma)",
+   "note": null,
+   "where": "Fig 1, Sec 3.1",
+   "quote": "Larger models can leverage the contexts more effectively, indicated by the larger β value of the curves."
+  },
+  {
+   "claim": "Doubling context of the 70B model reduces the reducible loss by about 0.7x, with diminishing returns up to 32,768 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "loss reduction factor per doubling",
+   "value": "0.7",
+   "unit": "factor",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70B model, language modelling loss, power-law fit",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "if we double the context length, we can expect the loss to be reduced by a factor of 2−β ≈0.7 plus a model specific constant (1 −2−β) · γ."
+  },
+  {
+   "claim": "Llama 2 Long 70B scores 79.7 EM on QuALITY (2-shot) vs 53.0 for Llama 2 70B, prompts up to 16,384 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QuALITY EM",
+   "value": "79.7",
+   "unit": "EM",
+   "baseline_value": "53.0",
+   "n": null,
+   "setup": "Pretrained models, 2-shot, validation sets, max prompt 16,384 tokens, prompt '{CONTEXT} Q: {QUESTION}, A:'",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LLAMA 2 LONG 70B, column QuALITY EM (2-shot)"
+  },
+  {
+   "claim": "Llama 2 Long 70B chat beats gpt-3.5-turbo-16k on 7 of 10 ZeroSCROLLS tasks, with avg 37.7 vs 36.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ZeroSCROLLS average",
+   "value": "37.7",
+   "unit": "score",
+   "baseline_value": "36.7",
+   "n": null,
+   "setup": "Instruction-tuned 70B, benchmark's own prompts/truncation/max generation lengths",
+   "note": null,
+   "where": "Sec 3.2, Table 4",
+   "quote": "our 70B chat model is able to outperform gpt-3.5-turbo-16k on 7 out of the 10 tasks",
+   "table": "Table 4, row LLAMA 2 LONG CHAT 70B vs GPT-3.5-turbo-16k, column Avg"
+  },
+  {
+   "claim": "Task results improve monotonically with maximum input length (4,096 to 16,384); QMSum ROUGE-geo 10.9 to 16.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QMSum ROUGE-geo at 16,384",
+   "value": "16.5",
+   "unit": "ROUGE-geo",
+   "baseline_value": "10.9",
+   "n": null,
+   "setup": "Llama 2 Long 70B (inferred from Table 3 values), max input 4,096/8,192/12,288/16,384, read from Fig 2",
+   "note": "Fig 2 values read from the text-extracted figure labels; NarrativeQA 27.5->30.9, Qasper 28.9->35.7, QuALITY 63.9->79.7 (80.3 at 8k is above 79.7 at 16k, so not strictly monotone for QuALITY as printed)",
+   "where": "Fig 2",
+   "quote": "we first show in Figure 2 that the results on each long task improve monotonically as we increase the context lengths"
+  },
+  {
+   "claim": "With unmodified RoPE, the model could not attend beyond about 4,000-6,000 tokens even after long continual pretraining.",
+   "kind": "measured",
+   "source": null,
+   "metric": "effective attention range",
+   "value": "4,000 - 6,000",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B, FIRST-SENTENCE-RETRIEVAL probe, original Llama 2 architecture",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "our model was unable to effectively attend beyond 4, 000 - 6, 000 tokens even after extensive long-context continual pretraining"
+  },
+  {
+   "claim": "Raising RoPE base frequency from 10,000 to 500,000 (ABF) is the only variant that keeps first-sentence retrieval up to the full 32,768 context.",
+   "kind": "measured",
+   "source": null,
+   "metric": "base frequency",
+   "value": "500,000",
+   "unit": "b",
+   "baseline_value": "10, 000",
+   "n": null,
+   "setup": "7B continued from Llama 2 with 80B tokens in 32,768-token sequences; variants RoPE, PI, ABF, xPos ABF",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "increasing the “base frequency b” of ROPE from 10, 000 to 500, 000"
+  },
+  {
+   "claim": "Books validation perplexity at 32,768 tokens: RoPE ABF 6.323 vs RoPE 6.548.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Books perplexity",
+   "value": "6.323",
+   "unit": "perplexity",
+   "baseline_value": "6.548",
+   "n": null,
+   "setup": "7B, 80B tokens, 32,768-token samples",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ROPE ABF, column Books"
+  },
+  {
+   "claim": "Removing most long text from the pretraining mix keeps most of the gain; quality not length drives it (QuALITY +67.1% vs +75.5% full mix vs +60.3% Llama 2 mix).",
+   "kind": "measured",
+   "source": null,
+   "metric": "QuALITY relative improvement, remove long text",
+   "value": "67.1%",
+   "unit": "relative EM improvement over Llama 2 7B (4k)",
+   "baseline_value": "60.3%",
+   "n": null,
+   "setup": "7B continual pretraining, prompts truncated at 16,384",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row - remove long text data, column Quality ΔEM"
+  },
+  {
+   "claim": "Continual pretraining from a 4k model saves about 40% FLOPs vs 32k from scratch with almost no performance loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLOPs saved",
+   "value": "40%",
+   "unit": "percent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B, 4k->32k switch at 20/40/80% of training; 4M tokens per gradient update; FLOPs 3.783e22 scratch vs 3.026e22 at 40% (not exactly 40% for each row)",
+   "note": "Table 10 FLOPs: 3.783 × 1022 (scratch), 3.405 × 1022 (20%), 3.026 × 1022 (40%), 2.270 × 1022 (80%); 40% switch point is a 20% saving, 80% switch is 40% saving",
+   "where": "Sec 4.4, Table 10, 11",
+   "quote": "continual pretraining from short context models can easily save around 40% FLOPs while imposing almost no loss on performance",
+   "table": "Table 10, rows 32k from scratch vs 4k→32k @ 40%, column FLOPs"
+  },
+  {
+   "claim": "Adding LM loss on long input prompts during self-instruct finetuning raises Qasper from 35.7 to 38.9 and QuALITY from 59.3 to 77.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Qasper",
+   "value": "38.9",
+   "unit": "F1",
+   "baseline_value": "35.7",
+   "n": null,
+   "setup": "Llama 2 Long finetuned with RLHF V5 mixed with self-instruct data, with vs without LM loss on inputs",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row RLHF V5 mix self-inst with LM loss, column Qasper"
+  },
+  {
+   "claim": "Short-context benchmarks do not degrade: MMLU 71.7 for 70B vs 68.9 for Llama 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU (5-shot)",
+   "value": "71.7",
+   "unit": "accuracy %",
+   "baseline_value": "68.9",
+   "n": null,
+   "setup": "70B pretrained",
+   "note": null,
+   "where": "Table 1, 2",
+   "table": "Table 2, row MMLU (5-shot), column LLAMA 2 LONG"
+  },
+  {
+   "claim": "Llama 2 Long 70B GSM8K 65.4 vs Llama 2 56.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K (8-shot)",
+   "value": "65.4",
+   "unit": "accuracy %",
+   "baseline_value": "56.8",
+   "n": null,
+   "setup": "70B pretrained",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GSM8K (8-shot), column LLAMA 2 LONG"
+  },
+  {
+   "claim": "Human evaluation: 2,352 examples, 3 annotators each, win rate with 95% CI against MPT-30B-chat, GPT-4, GPT-3.5-turbo-16k, Claude-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": "2,352",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "multi-turn chat and multi-document search QA",
+   "note": "Win-rate numbers appear only in Fig 3 (image), not in text",
+   "where": "Sec 3.3, Fig 3",
+   "quote": "with a total of 2,352 examples"
+  },
+  {
+   "claim": "Tokenizer produces about 10% more tokens than GPT-3.5's tokenizer, so 32,768 tokens hold fewer words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra tokens",
+   "value": "10%",
+   "unit": "percent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama tokenizer, 32k vocabulary",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "we observe our tokenizer often produce 10% more tokens on average"
+  },
+  {
+   "claim": "Attention matrix cost only becomes the compute bottleneck for the 70B (h=8192) above 49,152 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bottleneck length",
+   "value": "49,152",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2 70B, h = 8192",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "only becomes a computation bottleneck when the sequence length exceeds 49,152 (6h)"
+  },
+  {
+   "claim": "Going from 4,096 to 16,384 sequence length costs about 17% speed for 70B with FlashAttention.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed loss",
+   "value": "17%",
+   "unit": "percent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70B, FlashAttention",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "we observe around 17% speed loss when increasing the sequence length from 4,096 to 16,384 for the 70B model"
+  },
+  {
+   "claim": "Safety: ToxiGen toxic generation 0.00% and TruthfulQA 60.95 for Llama 2 Long Chat 70B vs 64.14 for Llama 2 Chat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA",
+   "value": "60.95",
+   "unit": "% truthful and informative",
+   "baseline_value": "64.14",
+   "n": null,
+   "setup": "70B instruction-tuned",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row LLAMA 2 LONG CHAT, column TruthfulQA"
+  }
+ ],
+ "limits": [
+  "No code, weights or data release stated; pretraining data mix composition, batch size, optimizer, hardware, instruction-tuning hyperparameters and self-instruct data size are not given.",
+  "Authors concede: not finetuned for long-form output tasks such as creative writing; alignment (RLHF) for long contexts is expensive.",
+  "Tokenizer yields about 10% more tokens than GPT-3.5 and handles whitespace poorly, so 32,768 tokens hold fewer words.",
+  "Hallucination is likely more pronounced for long-context models.",
+  "Automatic metrics for summarization are weak, truncation may remove needed information, and leakage in proprietary models cannot be ruled out.",
+  "Safety evaluation covers three benchmarks plus informal red teaming; no long-context safety benchmark exists.",
+  "Scaling-law fit covers contexts up to 32,768 only; ablations are at 7B.",
+  "Single runs; no seeds or variance for benchmark numbers.",
+  "Dated: 2023 models and baselines (Llama 2, GPT-3.5-16k, Claude 1/2)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RoPE ABF (adjusted base frequency)",
+   "definition": "increasing the base frequency b of RoPE from 10,000 to 500,000, which reduces the rotation angles of each dimension",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Position interpolation (PI)",
+   "definition": "linearly scale the input positions such that the positions of tokens in the long sequences will to mapped to the model’s original position range",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "FIRST-SENTENCE-RETRIEVAL",
+   "definition": "synthetic probe where the model is prompted to return the first sentence of the input",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "extends",
+   "note": "base checkpoints, short-task protocol, RLHF V5 data",
+   "quote": null
+  },
+  {
+   "work": "Position interpolation (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent PI; ABF reported to outperform it",
+   "quote": null
+  },
+  {
+   "work": "RoPE (Su et al., RoFormer)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "positional encoding modified",
+   "quote": null
+  },
+  {
+   "work": "xPos / LEX (Sun et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "tested with base frequency fix",
+   "quote": null
+  },
+  {
+   "work": "Code Llama (Rozière et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrently suggested base frequency change",
+   "quote": null
+  },
+  {
+   "work": "Self-instruct (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2212.10560",
+   "relation": "uses-method",
+   "note": "synthetic long QA generation",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention (Dao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "negligible memory overhead for longer sequences",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws (Kaplan et al.; Hoffmann et al.)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspired power-law fit with context length",
+   "quote": null
+  },
+  {
+   "work": "YaRN, Together-7B-32k, Xgen, MPT, Focused Transformer",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "open long-context comparisons",
+   "quote": null
+  },
+  {
+   "work": "ZeroSCROLLS (Shaham et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "long-context benchmark",
+   "quote": null
+  },
+  {
+   "work": "L-Eval (An et al.)",
+   "year": 2023,
+   "arxiv": "2307.11088",
+   "relation": "uses-data",
+   "note": "additional long tasks",
+   "quote": null
+  },
+  {
+   "work": "NarrativeQA, QuALITY, Qasper, QMSum",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "long QA/summarization evaluation",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA, ToxiGen, BOLD",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "safety evaluation",
+   "quote": null
+  },
+  {
+   "work": "Landmark attention (Mohtashami and Jaggi)",
+   "year": 2023,
+   "arxiv": "2305.16300",
+   "relation": "related",
+   "note": "source of PASSKEY task",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "validation loss fit as L(c)=(alpha/c)^beta+gamma per model size",
+   "page": 1,
+   "why": "shows power-law gain from context and larger beta for larger models"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Performance on long-context tasks as the maximum context lengths of prompts increase.",
+   "page": 5,
+   "why": "shows task gains with prompt length"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Decaying raw attention scores for distant tokens of explored positional encoding variants",
+   "page": 8,
+   "why": "shows why base frequency fix helps"
+  },
+  {
+   "figure": "Fig 5b",
+   "caption": "Performance on FIRST-SENTENCE-RETRIEVAL task",
+   "page": 9,
+   "why": "only ABF holds to 32k"
+  },
+  {
+   "figure": "Table 10",
+   "caption": "Comparison of models with different training curricula on long context QA tasks.",
+   "page": 10,
+   "why": "FLOPs savings of continual pretraining"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1 footnote 2",
+   "snippet": "{CONTEXT} Q: {QUESTION}, A:",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 3.1",
+   "snippet": "L(c) = ( α / c )^β + γ",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 3 (human win rates), Fig 7 and Fig 9 are images; their values are not in the text.",
+  "Table 4 and others are flattened column-wise by the extractor; row values were matched by order.",
+  "No embedded instructions found."
+ ]
 }

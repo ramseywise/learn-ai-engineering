@@ -160,11 +160,7 @@ Rothman's negative-result test is worth copying. With only Juno and Perseverance
 
 ## Evaluating the generator: RAGAS
 
-| Metric | How it is computed | What it misses |
-|---|---|---|
-| **Response relevancy** | An evaluator LLM writes several prompts that *could* have produced the response; embed them and the real prompt; average cosine | Does not check facts |
-| **Faithfulness** | An LLM extracts every factual claim in the response, then checks each against the retrieved docs; share supported | Depends on judge quality |
-| Others | Noise sensitivity, citation metrics, context precision/recall | All lean on LLM-as-judge |
+The generator metrics are defined in [GA 08 note 7](../../08-eval/notes/07-evaluating-rag-and-grounding.md#faithfulness-claim-by-claim), which owns them: faithfulness (an LLM extracts each claim and checks it against the retrieved docs), response relevancy, and the framework comparison of RAGAS, ARES and RAGChecker ([frameworks](../../08-eval/notes/07-evaluating-rag-and-grounding.md#frameworks)). All of them lean on an LLM judge, so calibrate before you gate ([GA 08 note 15](../../08-eval/notes/15-calibration-against-human-labels.md)). Two more families, not covered there, follow.
 
 Raieli and Iuculano add a few metrics in the same family (*Building AI Agents*, ch. 5). **Context entities recall** is the share of entities in the ground-truth answer that appear in the retrieved context; it suits fact-heavy domains. **Summarization score** asks whether the answer keeps the context's important information. **Fluency** scores individual sentences and **coherence** the response as a whole.
 

@@ -1,19 +1,732 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.09353",
  "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2024-dora.pdf",
  "bib": {
   "title": "DoRA: Weight-Decomposed Low-Rank Adaptation",
-  "first_author": "Shih-Yang Liu",
-  "year": "2024",
-  "venue": "arXiv (Cornell University)",
+  "authors": [
+   "Shih-Yang Liu",
+   "Chien-Yi Wang",
+   "Hongxu Yin",
+   "Pavlo Molchanov",
+   "Yu-Chiang Frank Wang",
+   "Kwang-Ting Cheng",
+   "Min-Hung Chen"
+  ],
+  "first_author": "Liu",
+  "year": 2024,
+  "venue": "Proceedings of the 41st International Conference on Machine Learning (ICML), Vienna, PMLR 235",
   "arxiv": "2402.09353",
-  "doi": "10.48550/arxiv.2402.09353"
+  "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "cdeddb67-047a-4531-80cf-4eb97323eafe"
+  "at": "2026-11-09",
+  "chars_read": 73977,
+  "chars_total": 73977,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: DoRA: Weight-Decomposed Low-Rank Adaptation. Shih-Yang Liu, Chien-Yi Wang, Hongxu Yin, Pavlo Molchanov, Yu-Chiang Frank Wang, Kwang-Ting Cheng, Min-Hung Chen (NVIDIA, HKUST). \"Proceedings of the 41st International Conference on Machine Learning, Vienna, Austria. PMLR 235, 2024\" (arXiv:2402.09353v6, 9 Jul 2024). The PDF does NOT say \"oral\"; that claim is unsupported by the text.\n\nCOVERAGE: All 23 pages, 74,336 chars, text extraction clean. Pages 1-10 main text, read fully. Appendix read for Table 7 (p14), Table 15 (p22), and the hyperparameter tables only in part. I did not read the MT-Bench sample answers (Tables 13/14) or the per-benchmark LLaVA Table 12. References skimmed only. Pages 11-23 are references plus appendix.\n\nCLAIMS (ranked)\n- DoRA method: split each pretrained weight into a per-column magnitude vector m and a direction V. m is trainable and V is frozen. LoRA (B,A) updates only the direction. It merges into W before inference, so there is no extra latency.\n  number: none\n  setup: Eq. 5, Sec 4.1, p4. Init m=||W0||_c, V=W0, B=0 as in LoRA, so W'=W0 at the start.\n  quote: \"We then keep V frozen and m a trainable vector. The directional component is then updated through LoRA.\" and \"DoRA can be merged with the pre-trained weight before inference, thereby not introducing any additional latency.\"\n  where: p4\n- Weight-decomposition analysis: the (dD, dM) correlation is positive for LoRA and negative for FT and DoRA.\n  number: FT -0.62, DoRA -0.31, LoRA 0.83\n  setup: VL-BART fine-tuned on four image-text tasks, query/value matrices, 4 checkpoints per method, across layers (Fig 2, p4). LoRA applied only to q/v, following Sung et al. 2022.\n  quote: \"both FT and DoRA exhibit negative correlation values of -0.62 and -0.31, respectively. In contrast, LoRA shows a positive correlation with a value of 0.83.\"\n  where: p4\n  Authors' reading: LoRA moves magnitude and direction proportionally and cannot make a slight direction change with a large magnitude change, or the reverse. This is stated as a suspicion, not proven. Quote: \"We suspect that such limitation of LoRA might stem from the challenge of concurrent learning both magnitude and directional adaptation\" (p3).\n- Commonsense reasoning gains over LoRA, same rank.\n  number: +3.7 (LLaMA-7B), +1.0 (13B), +2.1 (LLaMA2-7B), +4.4 (LLaMA3-8B). Table 1 averages: 7B 74.7 to 78.4; 13B 80.5 to 81.5; LLaMA2-7B 77.6 to 79.7; LLaMA3-8B 80.8 to 85.2.\n  setup: 8 tasks (BoolQ, PIQA, SIQA, HellaSwag, WinoGrande, ARC-e, ARC-c, OBQA). Training data from all 8 tasks merged, following Hu et al. 2023. Baseline numbers for LLaMA-7B/13B are copied from Hu et al. 2023. LoRA on LLaMA2/3 was run by the authors with Hu et al.'s hyperparameters. DoRA keeps LoRA's rank and changes only the learning rate. Table 8 (p15): rank 32, alpha 64, LR 1e-4 for LLaMA-7B. Params 0.84% against LoRA's 0.83%. The paper notes the \"0.01%\" parameter rise comes from the magnitude vectors.\n  quote: \"DoRA further enhances accuracy by 3.7%, outstripping ChatGPT's accuracy levels\" and \"DoRA consistently surpasses LoRA on both LLaMA2-7B and LLaMA3-8B by 2.1% and 4.4%, respectively.\"\n  where: p5-6, Table 1\n  Caveat: Table 1 gives LLaMA-7B DoRA 78.4 and LoRA 74.7. Table 6 lists 78.1 for the same row (rank 32, 0.84%). Table 7 also gives 78.1 for DoRA with the detach trick and 78.3 without. The two numbers are never reconciled in the text.\n- Half-rank DoRA beats full-rank LoRA.\n  number: +2.8 (7B), +1.0 (13B), +2.9 (LLaMA2-7B), +4.2 (LLaMA3-8B), at about half the trainable parameters (0.43% against 0.83% on 7B).\n  setup: DoRA† = rank halved (Table 1, p6)\n  quote: \"DoRA† exceeds LoRA's performance on LLaMA-7B by 2.8%, on LLaMA-13B by 1%, on LLaMA2-7B by 2.9%, and on LLaMA3-8B by 4.2%, despite having only half as many trainable parameters as LoRA.\"\n  where: p5\n- Gradient-detach trick: treat the norm ||V+dV||_c as a constant, so it gets no gradient. This cuts training memory with almost no accuracy change.\n  number: -24.4% memory on LLaMA-7B (37.3 GB to 28.2 GB, batch 16, accumulation 4); -12.4% on VL-BART (23.4 GB to 20.5 GB, batch 300). Accuracy on LLaMA-7B 78.3 to 78.1; VL-BART 77.3 to 77.4.\n  setup: Eq. 11, Table 7 (appendix p14). All later experiments use the trick.\n  quote: \"the modification leads to a training memory reduction of approximately 24.4% in fine-tuning LLaMA and 12.4% in VL-BART\" and \"treating ||V + ∆V ||c in Eq. (5) as a constant, thereby detaching it from the gradient graph.\"\n  where: p5 (Sec 4.3); p14 (Table 7)\n  Note: the paper gives no figure for DoRA's overhead relative to plain LoRA. It reports no step-time or memory comparison against LoRA, only against its own un-detached variant.\n- Rank robustness: DoRA is far better than LoRA at low rank on LLaMA-7B commonsense.\n  number: LoRA r=8 40.74%, r=4 39.49%. DoRA r=8 77.96%, r=4 61.89%. Table 15 shows DoRA r=32 78.4, r=64 72.1 and LoRA r=64 65.8. Both methods drop at r=64.\n  setup: LLaMA-7B, r in {4,8,16,32,64} (Fig 5, Table 15, p22)\n  quote: \"LoRA's average accuracies drop to 40.74% for r = 8 and 39.49% for r = 4. In contrast, DoRA retains a notable accuracy of 77.96% for r = 8 and 61.89% for r = 4\"\n  where: p8-9\n  Caveat: the LoRA numbers at r=4, 8 and 64 (for example HellaSwag 11.8 and 17.6) look like unstable or failed runs. Single run per cell, no seeds reported. The paper does not discuss this.\n- VL-BART multi-task: DoRA beats LoRA and roughly matches FT on image-text. On video-text it gains about 2 points but stays below FT on one task.\n  number: Image-text average FT 77.3, LoRA 76.5, DoRA 77.4. Video-text average FT 87.5, LoRA 83.5, DoRA 85.4. YC2C is 154 for FT, 140.9 for LoRA and 145.4 for DoRA.\n  setup: VL-BART with CLIP-ResNet101 and BART-base. LoRA and FT numbers are copied from Sung et al. 2022. Params 5.96% and 5.19%.\n  quote: \"DoRA exceeds LoRA's performance by nearly 1% in image-text understanding tasks, reaching the accuracy level of FT.\"\n  where: p7 (Tables 2, 3)\n- LLaVA-1.5-7B visual instruction tuning: DoRA 67.6, LoRA 66.9, FT 66.5.\n  number: +0.7 over LoRA, +1.1 over FT, 7 benchmarks, 4.63% params.\n  setup: LLaVA LoRA configuration, Table 4. The paper states the text \"+0.6\" in the intro against 0.7 in the body (67.6-66.9=0.7). The authors observe LoRA already beats FT here and suggest FT overfits.\n  quote: \"DoRA still demonstrates superior performance over both LoRA and FT, with an average improvement of 0.7% over LoRA and 1.1% over FT.\"\n  where: p7\n- DVoRA (DoRA plus VeRA) on MT-Bench, GPT-4 scored, Alpaca 10K subset, 80 questions.\n  number: LLaMA-7B: LoRA 5.1, DoRA 5.5, VeRA 4.3, DVoRA 5.0 (0.04% params). LLaMA2-7B: LoRA 5.7, DoRA 6.0, VeRA 5.5, DVoRA 6.0.\n  setup: Table 5, p8. Training-set-size sweep of 1000 to 10000 samples (Fig 4, Fig 9). DoRA ahead at every size.\n  quote: \"DV oRA outperforms VeRA by 0.7/0.5 points and achieves the same level of accuracy as LoRA on LLaMA-7B and DoRA on LLaMA2-7B, respectively.\"\n  where: p8\n- Tuning granularity: updating the direction only for QKV and magnitude only for the other modules still beats LoRA at under half the parameters.\n  number: LLaMA-7B 77.5 (0.39% params) against LoRA 74.7 (0.83%); LLaMA-13B 81.3 (0.31%) against LoRA 80.5 (0.67%). Text says \"2.8%\" and \"0.8%\" gains for the 78.1 / 81.5 versions of the comparison, not for the 77.5 / 81.3 rows.\n  setup: Table 6, p9\n  quote: \"DoRA surpasses LoRA by 2.8% on LLaMA-7B and 0.8% on LLaMA-13B, while utilizing only less than half of the trainable parameters compared to LoRA.\"\n  where: p9\n- QDoRA (QLoRA with DoRA, run by Answer.AI, not the authors; reported as initial findings): it beats QLoRA and slightly exceeds full FT.\n  number: +0.19 (LLaMA2-7B) and +0.23 (LLaMA3-8B) exact match over QLoRA. From Fig 6: QDoRA 0.56 and FT 0.51 (LLaMA2-7B?), QLoRA 0.32. Read from the figure axis text, order by model is uncertain.\n  setup: 100k Orca-Math samples, 500 held out, exact-match metric, FSDP\n  quote: \"QDoRA not only significantly surpasses QLoRA by 0.19/0.23 on LLaMA2-7B and LLaMA3-8B, but it also slightly outperforms FT on both models, while using considerably less memory.\"\n  where: p9\n- Gradient analysis (Sec 4.2): the decomposition rescales and projects the gradient away from the current weight. The authors say this improves conditioning. The argument is a derivation under assumptions, not an empirical test.\n  quote: \"the weight gradient ∇W′L is scaled by m/||V′||c and is projected away from the current weight matrix.\"\n  where: p4\n- DoRA-tuned weights drift less from the pretrained weights than LoRA-tuned ones (LLaMA2-7B commonsense, Fig 3, p6). Text-to-image: DoRA gives better SDXL DreamBooth personalization on 3D-icon and Lego sets, judged qualitatively only (p10, Figs 10-11).\n\nLIMITS\n- Mostly one seed per cell, with no variance reported.\n- The negative-correlation story is observational and rests on one case study (VL-BART). The authors only \"suspect\" the cause, and the claim that a negative correlation is \"more optimal\" is stated as a hypothesis.\n- LLaMA2/3 LoRA baselines were rerun with the earlier hyperparameters, so they are not tuned independently. DoRA's learning rate was changed per model while LoRA's was not.\n- Gains shrink where FT is already below LoRA (LLaVA).\n- QDoRA results are third-party and initial.\n- No cost comparison of DoRA against LoRA in time or memory. The LoRA-versus-DoRA gap in the rank sweep contains obvious failure cells.\n- Future work named: audio and other domains beyond language and vision.\n- Dated: the paper credits integration into Hugging Face PEFT.\n\nBUILDS ON: LoRA (Hu et al., 2022); Weight Normalization (Salimans & Kingma, 2016), the magnitude/direction reparameterization; VeRA (Kopiczko et al., 2024); LLM-Adapters commonsense setup (Hu et al., 2023); Sung et al. 2022 (VL-BART setup); QLoRA (Dettmers et al., 2023); LLaVA (Liu et al., 2023a); Houlsby et al. 2019 and He et al. 2021 (adapters); Li & Liang 2021 (prefix).\n\nCODE: none in the paper. The only formula worth keeping is Eq. 5 (p4): W' = m * (W0 + BA) / ||W0 + BA||_c, with column-wise norm and the norm detached from the graph per Eq. 11. Code link given: https://github.com/NVlabs/DoRA.\n\nFIGURES\n- Fig 1 (p1): DoRA overview. Pretrained weight is decomposed into magnitude (trainable) and direction (frozen, plus LoRA B,A), then merged. It is the best single diagram of what is trained and what merges.\n- Fig 2 (p4): scatter of dM against dD for FT, LoRA and DoRA, query matrices. It shows the positive-versus-negative slope finding. Fig 7 (p14) is the same for V.\n- Fig 5 (p8): average accuracy against rank for LoRA and DoRA, LLaMA-7B. Fig 3 (p6): drift from pretrained weights. Fig 6 (p9): QDoRA results.\n\nPROBLEMS: No embedded instructions. Figure text in the extraction is partly scrambled, such as axis labels in Fig 2 and 6. Fig 6 values are therefore uncertain, and I did not use them as claims. Scratch extraction: /private/tmp/claude-501/-Users-ramsey-wise-workspace-learn-ai-engineering/cdeddb67-047a-4531-80cf-4eb97323eafe/scratchpad/dora.txt"
+ "type": "empirical",
+ "question": "Why does LoRA trail full fine-tuning in accuracy, and can a magnitude/direction reparameterisation close the gap without added inference cost?",
+ "hypothesis": "A negative correlation between magnitude and direction updates (as in FT) is more optimal than LoRA's positive one; letting LoRA handle only the direction while training magnitude separately gives FT-like learning capacity.",
+ "contributions": [
+  "DoRA, a PEFT method that decomposes pretrained weight into magnitude and direction, training magnitude directly and direction with LoRA, with no extra inference latency",
+  "A weight decomposition analysis showing different learning patterns of FT and LoRA",
+  "DoRA consistently surpasses LoRA across NLP and vision-language tasks and backbones (LLM and LVLM)"
+ ],
+ "method": {
+  "summary": "Weight W0 is split as m*V/||V||_c with m=||W0||_c (trainable vector, 1 x k) and V=W0 frozen plus low-rank BA update, W'=m (W0+BA)/||W0+BA||_c. The column norm is detached from the gradient graph to save memory. Compared against LoRA, adapters and prefix on LLaMA family, VL-BART and LLaVA-1.5-7B.",
+  "task": "parameter-efficient fine-tuning (commonsense reasoning, image/video-text understanding, visual instruction tuning, instruction tuning)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Merged training sets of 8 commonsense tasks (BoolQ, PIQA, SIQA, HellaSwag, WinoGrande, ARC-e, ARC-c, OBQA)",
+    "role": "both",
+    "size": null,
+    "split": "training sets of all 8 tasks merged; each task's test set evaluated separately",
+    "source": "Hu et al. 2023 (LLM-Adapters) setting",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2, GQA, NLVR2, MSCOCO caption",
+    "role": "both",
+    "size": null,
+    "split": "multi-task, following Sung et al. 2022",
+    "source": "VL-Adapter setup",
+    "preprocessing": null
+   },
+   {
+    "name": "TVQA, How2QA, TVC, YC2C (VALUE benchmark)",
+    "role": "both",
+    "size": null,
+    "split": "multi-task, following Sung et al. 2022",
+    "source": "VALUE benchmark",
+    "preprocessing": null
+   },
+   {
+    "name": "LLaVA-1.5 visual instruction tuning data",
+    "role": "train",
+    "size": null,
+    "split": "filtered per Liu et al. 2023a",
+    "source": "Liu et al. 2023a",
+    "preprocessing": "training data filter and prompt format follow LLaVA-1.5"
+   },
+   {
+    "name": "Cleaned Alpaca subset",
+    "role": "train",
+    "size": "10K samples (also 1000, 4000, 7000)",
+    "split": null,
+    "source": "Taori et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MT-Bench",
+    "role": "eval",
+    "size": "80 multi-turn questions",
+    "split": null,
+    "source": "Zheng et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Orca-Math (QDoRA, run by Answer.AI)",
+    "role": "both",
+    "size": "100k train, 500 eval",
+    "split": null,
+    "source": "Mitra et al. 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-7B / LLaMA-13B / LLaMA2-7B / LLaMA3-8B",
+    "role": "base",
+    "params": "7B / 13B / 7B / 8B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VL-BART",
+    "role": "base",
+    "params": null,
+    "architecture": "CLIP-ResNet101 vision encoder + BART-base encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaVA-1.5-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "Vicuna-1.5-7B + CLIP ViT-L/336px",
+    "init_from": "checkpoints from Liu et al. 2023a",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DoRA",
+    "role": "proposed",
+    "params": "0.84% trainable (LLaMA-7B, r=32)",
+    "architecture": "magnitude vector + LoRA direction",
+    "init_from": "m=||W0||_c, V=W0, B=0, A Kaiming uniform",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LoRA, Prefix, Series adapter, Parallel adapter, FT, VeRA",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT gpt-3.5-turbo zero-shot CoT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "AdamW",
+   "lr": "commonsense: LLaMA-7B 2e-4 (r16)/1e-4 (r32); LLaMA-13B 3e-4/2e-4; LLaMA2-7B 2e-4/2e-4; LLaMA3-8B 1e-4/1e-4; VL-BART 1e-3 image-text, 3e-4 video-text; LLaVA 2e-4; Alpaca DoRA 4e-4, DVoRA 4e-3",
+   "lr_schedule": "linear (commonsense, VL-BART); cosine decay (LLaVA, Alpaca)",
+   "warmup": "100 steps (commonsense); ratio 0.1 (VL-BART, Alpaca); ratio 0.03 (LLaVA)",
+   "batch_size": "16 (commonsense, LLaVA); 300 image-text / 40 video-text (VL-BART); 4 x 4 accumulation (Alpaca)",
+   "steps": null,
+   "epochs": "3 (commonsense); 20 image-text / 7 video-text (VL-BART); 1 (LLaVA, Alpaca)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.05 (commonsense, LLaVA); 0.0 (VL-BART, Alpaca)",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rank_alpha": "commonsense: DoRA\u2020 r=16 alpha=32, DoRA r=32 alpha=64 (Table 8 lists both columns per model; pairing is read from the column order). VL-BART r=128 alpha=128; LLaVA r=128 alpha=256; Alpaca DoRA r=64, DVoRA r=1024",
+    "target_modules": "commonsense Q,K,V,Up,Down; VL-BART Q,K; LLaVA and Alpaca Q,K,V,O,Up,Down,Gate",
+    "hp_selection": "DoRA is fine-tuned following the LoRA configuration with same rank, adjusting only the learning rate (commonsense); LoRA on LLaMA/LLaMA-13B and other baselines copied from Hu et al. 2023; LoRA on LLaMA2-7B and LLaMA3-8B run with Hu et al. hyperparameters (not re-tuned); LLaVA and VL-BART and VeRA/Alpaca use the baseline's own published config. The paper does not say how the DoRA learning rate was searched (grid, validation set, number of trials).",
+    "memory": "GPU memory: LLaMA-7B 37.3 GB -> 28.2 GB with detached norm; VL-BART 23.4 -> 20.5 GB; GPU type not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: single run per cell; no seeds or variance reported",
+   "prompting": "commonsense: ChatGPT baseline zero-shot CoT; fine-tuned models per Hu et al. 2023",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (commonsense, avg of 8)",
+     "definition": "per-task test accuracy averaged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench score",
+     "definition": "GPT-4 scores each answer out of 10, averaged",
+     "unit": "/10",
+     "higher_is_better": true
+    },
+    {
+     "name": "delta M / delta D",
+     "definition": "mean over columns of |m_FT - m_0| and of 1 - cos(V_FT^n, W0^n)",
+     "unit": "unitless",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "LoRA",
+    "Prefix",
+    "Series adapter",
+    "Parallel adapter",
+    "full fine-tuning",
+    "ChatGPT gpt-3.5-turbo",
+    "VeRA"
+   ],
+   "protocol": "Single reported number per cell; no seeds, no significance test; baseline numbers partly copied from earlier papers."
+  },
+  "availability": {
+   "code": "https://github.com/NVlabs/DoRA",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.hp_selection",
+    "quote": "we initially fine-tuned models with DoRA following the LoRA configuration, maintaining the same rank while adjusting only the learning rate",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On VL-BART query matrices, the correlation between direction change and magnitude change is -0.62 for FT, -0.31 for DoRA and +0.83 for LoRA.",
+   "kind": "measured",
+   "metric": "correlation of delta D and delta M",
+   "value": "-0.62 (FT) / -0.31 (DoRA) / 0.83 (LoRA)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Weight decomposition analysis on VL-BART fine-tuned on four image-text tasks, LoRA/DoRA on query and value matrices (query analysed in Fig 2), single run, checkpoints at three intermediate steps and final; pairs of (delta D, delta M) across layers and steps",
+   "note": null,
+   "where": "Sec 4.1, p4",
+   "quote": "both FT and DoRA exhibit negative correlation values of -0.62 and -0.31, respectively. In contrast, LoRA shows a positive correlation with a value of 0.83",
+   "source": null
+  },
+  {
+   "claim": "LLaMA-7B commonsense average: LoRA 74.7, DoRA 78.4, DoRA\u2020 (half rank) 77.5.",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "78.4",
+   "unit": "%",
+   "baseline_value": "74.7",
+   "n": null,
+   "setup": "Commonsense reasoning: 8 tasks, training sets merged, per-task test; LLaMA-7B, rank 32 for LoRA and DoRA (DoRA\u2020 rank 16); LoRA/baselines on LLaMA-7B/13B copied from Hu et al. 2023, LoRA on LLaMA2-7B and LLaMA3-8B run by the authors with Hu et al. hyperparameters; avg of 8 accuracies",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, LLaMA-7B rows LoRA 74.7, DoRA\u2020 (Ours) 77.5, DoRA (Ours) 78.4, column Avg.",
+   "source": null
+  },
+  {
+   "claim": "LLaMA-13B commonsense average: LoRA 80.5, DoRA 81.5, DoRA\u2020 80.8.",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "81.5",
+   "unit": "%",
+   "baseline_value": "80.5",
+   "n": null,
+   "setup": "Commonsense reasoning: 8 tasks, training sets merged, per-task test; LLaMA-13B, rank 32 for LoRA and DoRA (DoRA\u2020 rank 16); LoRA/baselines on LLaMA-13B/13B copied from Hu et al. 2023, LoRA on LLaMA2-7B and LLaMA3-8B run by the authors with Hu et al. hyperparameters; avg of 8 accuracies",
+   "note": "Text says DoRA\u2020 exceeds LoRA on LLaMA-13B by 1%, but the table gives 80.8 vs 80.5 = 0.3.",
+   "where": "Table 1",
+   "table": "Table 1, LLaMA-13B rows LoRA 80.5, DoRA\u2020 (Ours) 80.8, DoRA (Ours) 81.5, column Avg.",
+   "source": null
+  },
+  {
+   "claim": "LLaMA2-7B commonsense average: LoRA 77.6, DoRA 79.7, DoRA\u2020 80.5 (half-rank beats full-rank DoRA).",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "79.7",
+   "unit": "%",
+   "baseline_value": "77.6",
+   "n": null,
+   "setup": "Commonsense reasoning: 8 tasks, training sets merged, per-task test; LLaMA2-7B, rank 32 for LoRA and DoRA (DoRA\u2020 rank 16); LoRA/baselines on LLaMA2-7B/13B copied from Hu et al. 2023, LoRA on LLaMA2-7B and LLaMA3-8B run by the authors with Hu et al. hyperparameters; avg of 8 accuracies",
+   "note": "Abstract-level intro says +2.9 on LLaMA2-7B (that is DoRA\u2020); text says DoRA +2.1 (79.7-77.6).",
+   "where": "Table 1",
+   "table": "Table 1, LLaMA2-7B rows LoRA 77.6, DoRA\u2020 (Ours) 80.5, DoRA (Ours) 79.7, column Avg.",
+   "source": null
+  },
+  {
+   "claim": "LLaMA3-8B commonsense average: LoRA 80.8, DoRA 85.2, DoRA\u2020 85.0.",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "85.2",
+   "unit": "%",
+   "baseline_value": "80.8",
+   "n": null,
+   "setup": "Commonsense reasoning: 8 tasks, training sets merged, per-task test; LLaMA3-8B, rank 32 for LoRA and DoRA (DoRA\u2020 rank 16); LoRA/baselines on LLaMA3-8B/13B copied from Hu et al. 2023, LoRA on LLaMA2-7B and LLaMA3-8B run by the authors with Hu et al. hyperparameters; avg of 8 accuracies; LoRA 0.70% params, DoRA 0.71%",
+   "note": "Text: DoRA +4.4, DoRA\u2020 +4.2 over LoRA.",
+   "where": "Table 1",
+   "table": "Table 1, LLaMA3-8B rows LoRA 80.8, DoRA\u2020 (Ours) 85.0, DoRA (Ours) 85.2, column Avg.",
+   "source": null
+  },
+  {
+   "claim": "DoRA\u2020 with half the LoRA rank still beats LoRA on all four backbones.",
+   "kind": "measured",
+   "metric": "avg accuracy gain over LoRA",
+   "value": "+2.8 / +1 / +2.9 / +4.2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Commonsense reasoning: 8 tasks, training sets merged, per-task test; LLaMA-7B, rank 32 for LoRA and DoRA (DoRA\u2020 rank 16); LoRA/baselines on LLaMA-7B/13B copied from Hu et al. 2023, LoRA on LLaMA2-7B and LLaMA3-8B run by the authors with Hu et al. hyperparameters; avg of 8 accuracies; LLaMA-7B / 13B / LLaMA2-7B / LLaMA3-8B",
+   "note": null,
+   "where": "Sec 5.1, p6",
+   "quote": "DoRA\u2020 exceeds LoRA\u2019s performance on LLaMA-7B by 2.8%, on LLaMA-13B by 1%, on LLaMA2-7B by 2.9%, and on LLaMA3-8B by 4.2%, despite having only half as many trainable parameters as LoRA",
+   "source": null
+  },
+  {
+   "claim": "DoRA adds only about 0.01% trainable parameters over LoRA at the same rank (learnable magnitude vector of size 1 x k); e.g. LLaMA-7B 0.83% vs 0.84%.",
+   "kind": "measured",
+   "metric": "extra trainable params",
+   "value": "0.01%",
+   "unit": "% of model params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Commonsense reasoning: 8 tasks, training sets merged, per-task test; LLaMA-7B, rank 32 for LoRA and DoRA (DoRA\u2020 rank 16); LoRA/baselines on LLaMA-7B/13B copied from Hu et al. 2023, LoRA on LLaMA2-7B and LLaMA3-8B run by the authors with Hu et al. hyperparameters; avg of 8 accuracies",
+   "note": null,
+   "where": "Sec 5.1, p5",
+   "quote": "The marginal increase of 0.01% in the number of trainable parameters for DoRA over LoRA, as detailed in Table 1, arises from the inclusion of learnable magnitude components (parameter of size 1 \u00d7 k)",
+   "source": null
+  },
+  {
+   "claim": "DoRA with LLaMA-7B reaches 78.4 against ChatGPT zero-shot CoT 77.0 on the commonsense average.",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "78.4",
+   "unit": "%",
+   "baseline_value": "77.0",
+   "n": null,
+   "setup": "Commonsense reasoning: 8 tasks, training sets merged, per-task test; LLaMA-7B, rank 32 for LoRA and DoRA (DoRA\u2020 rank 16); LoRA/baselines on LLaMA-7B/13B copied from Hu et al. 2023, LoRA on LLaMA2-7B and LLaMA3-8B run by the authors with Hu et al. hyperparameters; avg of 8 accuracies; ChatGPT = gpt-3.5-turbo zero-shot CoT",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ChatGPT column Avg. 77.0; LLaMA-7B DoRA Avg. 78.4",
+   "source": null
+  },
+  {
+   "claim": "At rank 8 LoRA collapses to 40.74% average while DoRA keeps 77.96%.",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "77.96",
+   "unit": "%",
+   "baseline_value": "40.74",
+   "n": null,
+   "setup": "LLaMA-7B, commonsense reasoning, ranks {4,8,16,32,64}, Table 15 / Fig 5; avg of 8 accuracies",
+   "note": "Table 15 prints 40.7 / 77.9 (r=8) and 39.5 / 61.9 (r=4).",
+   "where": "Sec 5.5, p8-9",
+   "quote": "LoRA\u2019s average accuracies drop to 40.74% for r = 8 and 39.49% for r = 4. In contrast, DoRA retains a notable accuracy of 77.96% for r = 8 and 61.89% for r = 4",
+   "source": null
+  },
+  {
+   "claim": "At rank 4 LoRA averages 39.49% and DoRA 61.89%.",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "61.89",
+   "unit": "%",
+   "baseline_value": "39.49",
+   "n": null,
+   "setup": "LLaMA-7B, commonsense reasoning, ranks {4,8,16,32,64}, Table 15 / Fig 5; avg of 8 accuracies",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "LoRA\u2019s average accuracies drop to 40.74% for r = 8 and 39.49% for r = 4. In contrast, DoRA retains a notable accuracy of 77.96% for r = 8 and 61.89% for r = 4",
+   "source": null
+  },
+  {
+   "claim": "At rank 64 both degrade: LoRA 65.8, DoRA 72.1 (HellaSwag collapses to 17.6 for LoRA, 40.7 for DoRA); best LoRA is rank 32 (74.7), best DoRA rank 32 (78.4).",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "72.1",
+   "unit": "%",
+   "baseline_value": "65.8",
+   "n": null,
+   "setup": "LLaMA-7B, commonsense reasoning, ranks {4,8,16,32,64}, Table 15 / Fig 5; avg of 8 accuracies",
+   "note": "Authors do not comment on the rank-64 drop or the single-task collapses; no seeds/variance reported, so these may be training instabilities.",
+   "where": "Table 15",
+   "table": "Table 15, rows r=64: LoRA Avg. 65.8, DoRA Avg. 72.1",
+   "source": null
+  },
+  {
+   "claim": "LLaVA-1.5-7B visual instruction tuning, 7-benchmark average: FT 66.5, LoRA 66.9, DoRA 67.6.",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "67.6",
+   "unit": "%",
+   "baseline_value": "66.9",
+   "n": null,
+   "setup": "LLaVA-1.5-7B (Vicuna-1.5-7B + CLIP ViT-L/336px), DoRA uses the LoRA config of Liu et al. 2023a (rank 128, alpha 256, 1 epoch, lr 2e-4), 4.61% LoRA vs 4.63% DoRA params, avg over VQAv2, GQA, VisWiz, SQA, VQAT, POPE, MMBench",
+   "note": "Intro/abstract-level text says +0.6 on LLaVA-7B; Table 4 gives 67.6-66.9 = 0.7. Per task, DoRA is below LoRA on VQAv2 (78.6 vs 79.1) and VQAT (57 vs 58.2); gain is driven by VisWiz (52.2 vs 47.8) and SQA (69.9 vs 68.4).",
+   "where": "Table 4, Sec 5.3, Table 12",
+   "quote": "DoRA still demonstrates superior performance over both LoRA and FT, with an average improvement of 0.7% over LoRA and 1.1% over FT",
+   "source": null
+  },
+  {
+   "claim": "Authors note LoRA already beats FT on LLaVA, so DoRA's headroom is smaller.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaVA-1.5-7B",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "the average accuracy of LoRA already surpasses FT, which could imply that FT might be experiencing issues with overfitting",
+   "source": null
+  },
+  {
+   "claim": "Detaching the weight norm ||V+dV||_c from the gradient graph cuts LLaMA-7B fine-tuning memory by 24.4% (37.3 GB to 28.2 GB) with 0.2 points lower commonsense accuracy (78.3 to 78.1).",
+   "kind": "measured",
+   "metric": "training GPU memory reduction",
+   "value": "24.4%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-7B commonsense, DoRA, accumulation steps 4, batch size 16, GPU memory in GB per Table 7 (GPU type not stated)",
+   "note": "Accuracy 78.3 without vs 78.1 with. VL-BART: 23.4 GB to 20.5 GB (-12.4%), accuracy 77.3 vs 77.4. All reported DoRA results use the modification.",
+   "where": "Sec 4.3, Table 7",
+   "quote": "the modification leads to a training memory reduction of approximately 24.4% in fine-tuning LLaMA and 12.4% in VL-BART",
+   "source": null
+  },
+  {
+   "claim": "The detach modification costs 0.2 points on LLaMA and nothing on VL-BART.",
+   "kind": "measured",
+   "metric": "accuracy difference",
+   "value": "0.2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-7B commonsense avg, DoRA with vs without gradient detach on the norm",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "shows a negligible difference of only 0.2 compared to DoRA without the modification on LLaMA",
+   "source": null
+  },
+  {
+   "claim": "VL-BART image-text multi-task average: FT 77.3, LoRA 76.5, DoRA 77.4.",
+   "kind": "measured",
+   "metric": "avg score",
+   "value": "77.4",
+   "unit": null,
+   "baseline_value": "76.5",
+   "n": null,
+   "setup": "VL-BART (CLIP-ResNet101 + BART-base), multi-task on VQAv2, GQA, NLVR2, COCO Caption; LoRA/FT numbers quoted from Sung et al. 2022; 5.93% vs 5.96% params",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows FT 77.3, LoRA 76.5, DoRA (Ours) 77.4, column Avg.",
+   "source": null
+  },
+  {
+   "claim": "VL-BART video-text multi-task average: FT 87.5, LoRA 83.5, DoRA 85.4.",
+   "kind": "measured",
+   "metric": "avg score",
+   "value": "85.4",
+   "unit": null,
+   "baseline_value": "83.5",
+   "n": null,
+   "setup": "VL-BART, TVQA, How2QA, TVC, YC2C; LoRA/FT from Sung et al. 2022; 5.17% vs 5.19% params",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows FT 87.5, LoRA 83.5, DoRA (Ours) 85.4, column Avg.",
+   "source": null
+  },
+  {
+   "claim": "DVoRA (DoRA on VeRA) and DoRA beat VeRA and LoRA on MT-Bench: LLaMA-7B LoRA 5.1, DoRA 5.5, VeRA 4.3, DVoRA 5.0; LLaMA2-7B LoRA 5.7, DoRA 6.0, VeRA 5.5, DVoRA 6.0.",
+   "kind": "measured",
+   "metric": "MT-Bench GPT-4 score",
+   "value": "DoRA 5.5 / 6.0",
+   "unit": "/10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instruction tuning on 10K cleaned Alpaca subset, MT-Bench 80 multi-turn questions, GPT-4 judge score out of 10, single run",
+   "note": null,
+   "where": "Table 5; params LoRA 2.31%, DoRA 2.33%, VeRA 0.02%, DVoRA 0.04%",
+   "table": "Table 5, LLaMA-7B DoRA 5.5, LLaMA2-7B DoRA 6.0, DVoRA 6.0",
+   "source": null
+  },
+  {
+   "claim": "DoRA and DVoRA beat LoRA and VeRA at every Alpaca sample size (1000, 4000, 7000, 10000); at 1000 samples margins are 0.29 and 0.22, at 7000 samples 0.3 and 0.33.",
+   "kind": "measured",
+   "metric": "MT-Bench score margin",
+   "value": "0.29 / 0.22 (1000); 0.3 / 0.33 (7000)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA2-7B MT-Bench, Fig 4 (LLaMA-7B Fig 9)",
+   "note": null,
+   "where": "Sec 5.4",
+   "quote": "with 7000 training samples, DoRA and DVoRA surpass LoRA and VeRA by margins of 0.3 and 0.33, respectively. Even when the sample size is reduced to 1000, DoRA and DVoRA maintain their lead with advantages of 0.29 and 0.22 over LoRA and VeRA, respectively",
+   "source": null
+  },
+  {
+   "claim": "Tuning granularity: updating direction+magnitude only on QKV and magnitude only on the other modules gives LLaMA-7B 77.5 (0.39% params) vs LoRA 74.7 (0.83%); LLaMA-13B 81.3 (0.31%) vs 80.5 (0.67%).",
+   "kind": "measured",
+   "metric": "avg accuracy",
+   "value": "77.5 / 81.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Commonsense reasoning, Table 6",
+   "note": null,
+   "where": "Sec 5.6, Table 6",
+   "quote": "DoRA surpasses LoRA by 2.8% on LLaMA-7B and 0.8% on LLaMA-13B, while utilizing only less than half of the trainable parameters compared to LoRA",
+   "source": null
+  },
+  {
+   "claim": "QDoRA beats QLoRA by 0.19 (LLaMA2-7B) and 0.23 (LLaMA3-8B) exact match on Orca-Math and slightly beats full FT; the experiment is by Answer.AI, not the authors.",
+   "kind": "reported",
+   "metric": "exact match",
+   "value": "0.19 / 0.23",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "100k Orca-Math samples, 500 held out, exact match; run by Turgutlu et al. 2024 with FSDP",
+   "note": null,
+   "where": "Sec 6.1, Fig 6",
+   "quote": "QDoRA not only significantly surpasses QLoRA by 0.19/0.23 on LLaMA2-7B and LLaMA3-8B",
+   "source": "Kerem Turgutlu, Jonathan Whitaker, J. Howard 2024 (answer.ai FSDP QDoRA)"
+  },
+  {
+   "claim": "DoRA moves weights less than LoRA in both magnitude and direction on LLaMA2-7B commonsense fine-tuning (Fig 3, Fig 8), which the authors read as supporting a negative delta-D/delta-M correlation being better.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA2-7B fine-tuned on commonsense, query/key/value matrices across layers",
+   "note": null,
+   "where": "Sec 5.1, p6",
+   "quote": "DoRA fine-tuned weights show less deviation from the pre-trained weights in both magnitude and direction, while the differences for the LoRA fine-tuned weights are significantly larger",
+   "source": null
+  }
+ ],
+ "limits": [
+  "Weight-decomposition analysis (correlations -0.62/-0.31/0.83) is a single VL-BART case study on query/value matrices of a small model, not LLaMA; LLaMA2-7B is only shown as magnitude/direction deviation plots.",
+  "No seeds, variance or significance tests; many gains are 0.3 to 1 point and per-task numbers move both ways.",
+  "DoRA learning rate was tuned while LoRA baselines on LLaMA2-7B/LLaMA3-8B used the fixed Hu et al. 2023 hyperparameters, so the comparison is not equally tuned.",
+  "Rank-64 rows in Table 15 show collapses (HellaSwag 17.6 LoRA, 40.7 DoRA) that the authors do not discuss.",
+  "Text vs table mismatches: DoRA\u2020 vs LoRA on LLaMA-13B called +1% but table gives +0.3; LLaVA gain +0.6 in intro vs +0.7 in Sec 5.3.",
+  "Authors concede on LLaVA that LoRA already beats FT so the DoRA improvement is smaller; the explanation (FT overfitting) is not tested.",
+  "QDoRA and text-to-image results are initial, QDoRA is by third parties, SDXL results are qualitative images only.",
+  "Training compute, GPU type, sequence length, precision and seeds are not stated.",
+  "Training memory saving is measured on two setups only and wall-clock cost of DoRA vs LoRA is not reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DoRA",
+   "definition": "Weight-Decomposed Low-Rank Adaptation: pretrained weight decomposed into magnitude and direction, LoRA used for direction",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "DoRA\u2020",
+   "definition": "the adjusted version of DoRA with the rank halved",
+   "where": "Table 1 caption"
+  },
+  {
+   "term": "DVoRA",
+   "definition": "DoRA with VeRA used for the directional update",
+   "where": "Sec 5.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2022,
+   "arxiv": "2106.09685",
+   "relation": "extends",
+   "note": "main baseline and direction update",
+   "quote": null
+  },
+  {
+   "work": "Weight Normalization (Salimans & Kingma)",
+   "year": 2016,
+   "arxiv": "1602.07868",
+   "relation": "uses-method",
+   "note": "magnitude/direction reparameterisation",
+   "quote": null
+  },
+  {
+   "work": "LLM-Adapters (Hu et al.)",
+   "year": 2023,
+   "arxiv": "2304.01933",
+   "relation": "uses-data",
+   "note": "commonsense setup, baseline numbers and LoRA hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "VL-Adapter (Sung et al.)",
+   "year": 2022,
+   "arxiv": "2112.06825",
+   "relation": "uses-data",
+   "note": "VL-BART setup and LoRA/FT numbers",
+   "quote": null
+  },
+  {
+   "work": "LLaVA-1.5 (Liu et al.)",
+   "year": 2023,
+   "arxiv": "2310.03744",
+   "relation": "evaluates",
+   "note": "visual instruction tuning checkpoints/config",
+   "quote": null
+  },
+  {
+   "work": "VeRA (Kopiczko et al.)",
+   "year": 2024,
+   "arxiv": "2310.11454",
+   "relation": "baseline",
+   "note": "combined into DVoRA",
+   "quote": null
+  },
+  {
+   "work": "QLoRA (Dettmers et al.)",
+   "year": 2023,
+   "arxiv": "2305.14314",
+   "relation": "related",
+   "note": "QDoRA variant",
+   "quote": null
+  },
+  {
+   "work": "Houlsby adapters / He parallel adapters / Prefix tuning",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Series, Parallel, Prefix baselines",
+   "quote": null
+  },
+  {
+   "work": "MT-Bench (Zheng et al.)",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "uses-data",
+   "note": "instruction-tuning evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Magnitude and direction updates of (a) FT, (b) LoRA, and (c) DoRA of the query matrices across different layers and intermediate steps.",
+   "page": 4,
+   "why": "Shows LoRA positive slope vs FT/DoRA negative slope."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Average accuracy of LoRA and DoRA for varying ranks for LLaMA-7B on the commonsense reasoning tasks.",
+   "page": 8,
+   "why": "Rank robustness curve."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of our proposed DoRA",
+   "page": 1,
+   "why": "Architecture diagram."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 5",
+   "snippet": "W' = m (V + dV)/||V + dV||_c = m (W0 + BA)/||W0 + BA||_c",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 11 (detached norm)",
+   "snippet": "grad_{V'} L = (m / C) grad_{W'} L, C = ||V'||_c",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 8 hyperparameter columns are flattened in the text; the pairing of rank 16/32 with the learning rates is read from column order.",
+  "Table 15 contains odd single-task numbers (e.g. HellaSwag 17.6 for LoRA r=64) printed as is."
+ ]
 }

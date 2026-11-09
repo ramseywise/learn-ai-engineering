@@ -311,7 +311,7 @@ So the size of a canary is mostly set by how long you're willing to wait, and by
 
 [Blue-green](https://martinfowler.com/bliki/BlueGreenDeployment.html) keeps two complete environments. You deploy to the idle one, test it, then switch the router; rollback is switching back. It's simple and rapid, though writes made on green during that time still need handling, and it costs you a second environment. The switch moves all traffic at once, so you get none of a canary's gradual evidence.
 
-Each of these strategies has old and new code running against the same database, at the same time (rolling and canary) or within rollback distance (blue-green). Fowler names the trick: [separate schema changes from application upgrades](https://martinfowler.com/bliki/BlueGreenDeployment.html). A rename can't be done in one step while both versions run.
+Each of these strategies has old and new code running against the same database, at the same time (rolling and canary) or within rollback distance (blue-green). Fowler names the trick: [separate schema changes from application upgrades](https://martinfowler.com/bliki/BlueGreenDeployment.html). A rename can't be done in one step while both versions run. The data-engineering chapter on [schema and data migrations](../../../data-engineering/05-quality-and-observability/notes/04-schema-and-data-migrations.md#expand-migrate-contract) measures the same expand, migrate, contract pattern on Postgres under load; this script is the small version.
 
 ```python
 import sqlite3

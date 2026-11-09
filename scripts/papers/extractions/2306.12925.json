@@ -1,0 +1,806 @@
+{
+ "schema": 1,
+ "key": "2306.12925",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/rubenstein-2023-audiopalm.pdf",
+ "bib": {
+  "title": "AudioPaLM: A Large Language Model That Can Speak and Listen",
+  "authors": [
+   "Paul K. Rubenstein",
+   "Chulayuth Asawaroengchai",
+   "Duc Dung Nguyen",
+   "Ankur Bapna",
+   "Zalán Borsos",
+   "Félix de Chaumont Quitry",
+   "Peter Chen",
+   "Dalia El Badawy",
+   "Wei Han",
+   "Eugene Kharitonov",
+   "Hannah Muckenhirn",
+   "Dirk Padfield",
+   "James Qin",
+   "Danny Rozenberg",
+   "Tara Sainath",
+   "Johan Schalkwyk",
+   "Matt Sharifi",
+   "Michelle Tadmor Ramanovich",
+   "Marco Tagliasacchi",
+   "Alexandru Tudor",
+   "Mihajlo Velimirović",
+   "Damien Vincent",
+   "Jiahui Yu",
+   "Yongqiang Wang",
+   "Vicky Zayats",
+   "Neil Zeghidour",
+   "Yu Zhang",
+   "Zhishuai Zhang",
+   "Lukas Zilka",
+   "Christian Frank"
+  ],
+  "first_author": "Rubenstein",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2306.12925",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 95127,
+  "chars_total": 95127,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; the per-language number grid of Tables 14-17 was read as flattened text, not cross-checked cell by cell"
+ },
+ "type": "system",
+ "question": "Can a text-pretrained decoder-only LLM be extended with discrete audio tokens to do speech recognition, speech translation and speech-to-speech translation (with voice preservation) in one model?",
+ "hypothesis": "Initialising a speech-text model from a text-only LLM transfers text knowledge (notably translation) to speech tasks.",
+ "contributions": [
+  "A unified speech-text LLM that consumes and produces both speech and text, built on PaLM and PaLM-2",
+  "Multi-task training over ASR, AST, S2ST giving state of the art on AST and S2ST benchmarks and competitive ASR",
+  "S2ST with voice transfer of unseen speakers via AudioLM audio prompting",
+  "Zero-shot AST for speech input/target language combinations not seen in training"
+ ],
+ "method": {
+  "summary": "Expand the PaLM / PaLM-2 token embedding matrix (shared with the output softmax) by a block of audio tokens from a w2v-BERT or USM quantiser, finetune all weights on a mixture of ASR, AST, S2ST, TTS, MT tasks marked by text tags such as [S2ST English French], and decode audio tokens to waveform with AudioLM stages 2+3 or SoundStorm.",
+  "task": "Speech recognition, speech translation, speech-to-speech translation, TTS in one decoder-only model",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CoVoST2 / CVSS",
+    "role": "both",
+    "size": "0.9k h (AST), 0.9k h (PaLM-2 AST), 1.4k h (S2ST model); 21 pairs X->En",
+    "split": "test split for evaluation",
+    "source": "Wang et al. 2020; Jia et al. 2022c",
+    "preprocessing": "CVSS-C used unless stated; CVSS-T for voice transfer eval"
+   },
+   {
+    "name": "VoxPopuli ASR",
+    "role": "both",
+    "size": "1.6k h; 14 languages",
+    "split": "test split for evaluation",
+    "source": "Wang et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "VoxPopuli S2ST",
+    "role": "train",
+    "size": "6.7k h (AST), 3.9k h (PaLM-2 AST), 5.4k h (S2ST); 15 languages",
+    "split": "train",
+    "source": "Wang et al. 2021",
+    "preprocessing": "used for AST by mapping translated audio to transcript"
+   },
+   {
+    "name": "CommonVoice 11",
+    "role": "train",
+    "size": "3.4k h / 2k h / 0.9k h; 98 languages",
+    "split": "train",
+    "source": "Ardila et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Conversational EsEn",
+    "role": "train",
+    "size": "2k h; 2 languages",
+    "split": "train",
+    "source": "crowd-sourced readings of proprietary Spanish-English MT dataset (Jia et al. 2019a)",
+    "preprocessing": null
+   },
+   {
+    "name": "YouTube ASR",
+    "role": "train",
+    "size": "13k h / 7.6k h / not used in S2ST; 56 languages",
+    "split": "train",
+    "source": "pseudo-labelled with USM-2B ASR",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT/TED TTS",
+    "role": "train",
+    "size": "26.2k h (S2ST model); 21 pairs X->En",
+    "split": "train",
+    "source": "WMT and TED text MT, source and target text run through TTS",
+    "preprocessing": null
+   },
+   {
+    "name": "PaLM MT TTS",
+    "role": "train",
+    "size": "10.9k h (S2ST model); 113 pairs X->En",
+    "split": "train",
+    "source": "PaLM-2 translated YouTube, Common Voice, Babel transcripts to English; prior AudioPaLM 8B S2ST synthesised speech",
+    "preprocessing": null
+   },
+   {
+    "name": "FLEURS",
+    "role": "eval",
+    "size": "102 languages; 82 used for the All average",
+    "split": "test split for evaluation",
+    "source": "Conneau et al. 2023",
+    "preprocessing": "eval only, zero-shot"
+   },
+   {
+    "name": "Multilingual LibriSpeech",
+    "role": "train",
+    "size": "not stated",
+    "split": "train",
+    "source": "Pratap et al. 2020",
+    "preprocessing": "trains the AudioLM/SoundStorm audio decoders"
+   }
+  ],
+  "models": [
+   {
+    "name": "AudioPaLM 8B AST",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "decoder-only Transformer (PaLM) with expanded embedding matrix",
+    "init_from": "PaLM 8B checkpoint",
+    "tokenizer": "SentencePiece text + USM-v2 audio",
+    "vocab": "audio vocab 1024 for w2v-BERT and USM-v1; USM-v2 size not stated",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "audio_token_rate": "25Hz",
+     "new_audio_embeddings_init": "0"
+    }
+   },
+   {
+    "name": "AudioPaLM 8B S2ST",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "same, also emits audio tokens",
+    "init_from": "PaLM 8B checkpoint",
+    "tokenizer": "USM-v2",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AudioPaLM-2 8B AST",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "same",
+    "init_from": "PaLM-2 8B checkpoint",
+    "tokenizer": "USM-v2",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AudioPaLM-2 128M and 1B",
+    "role": "proposed",
+    "params": "128M, 1B",
+    "architecture": "same, scale ablation",
+    "init_from": "PaLM-2 checkpoints of those sizes",
+    "tokenizer": "USM-v2",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "USM encoder (tokenizer)",
+    "role": "base",
+    "params": "2B",
+    "architecture": "multilingual speech encoder, middle-layer embeddings k-means quantised",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "1024",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "USM-v2": "trained with auxiliary ASR loss and finetuned further"
+    }
+   },
+   {
+    "name": "Whisper Large-v2",
+    "role": "baseline",
+    "params": "1.5B",
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SoundStorm / AudioLM stage 2+3",
+    "role": "base",
+    "params": null,
+    "architecture": "audio token to SoundStream token decoders",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "voice_conditioning": "3 s sample as audio and SoundStream tokens; repeated if shorter"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction with loss masking on inputs",
+   "optimizer": "Adafactor",
+   "lr": "5e-5 constant (PaLM finetune); for PaLM vs PaLM-2 experiment linear ramp-up to 1e-4 then exponential decay to 1e-5",
+   "lr_schedule": "constant 5e-5 (default); ramp-up then exponential decay in Sec 5.4.8",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 (0.2 in Sec 5.4.8)",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "setup_ref": "same finetuning setup as Section 6.1.2 of Chowdhery et al. 2022",
+    "all_params_trained": "found necessary to train all weights",
+    "mixture_weights": "proportional to dataset size with larger datasets downweighted; SeqIO",
+    "checkpoint_selection": "best AST metric on validation split",
+    "task_tags": "[ASR French], [TTS English], [S2ST English French], combined [ASR AST S2ST English French]"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "task tag prefix tokenised with text tokenizer; 3 s voice prompt for voice transfer",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "audio_synthesis": "SoundStorm for Table 2 S2ST; AudioLM stage 2+3 for ablations and subjective study"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "SacreBLEU corpusBLEU, no text normalisation (CoVoST2, FLEURS AST)",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "WER",
+     "definition": "JiWER, case and punctuation ignored; CER for Japanese and Chinese on CoVoST2 ASR",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "ASR-BLEU",
+     "definition": "generated audio transcribed by the Translatotron 2 ASR model, BLEU against ground-truth target text",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "MOS / SMOS",
+     "definition": "1-5 ratings, 10 ratings per output, 6300 ratings per study; plus no-reference MOS estimator, speaker-verification cosine similarity, same-recording embedding cosine similarity",
+     "unit": "1-5 or cosine",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Whisper Large-v2 1.5B",
+    "mSLAM-CTC 2B",
+    "MAESTRO 600M",
+    "USM-M",
+    "Translatotron 2 (+ pretraining + TTS aug)",
+    "CVSS-T ground truth",
+    "cascaded AudioPaLM-2 ASR + translation"
+   ],
+   "protocol": "test splits; single runs, no seeds or significance tests stated; subjective study on 210 source utterances (10 per language x 21) prefiltered to estimated MOS >= 3.0, run on an earlier AudioPaLM version"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "audio examples only at google-research.github.io/seanet/audiopalm/examples"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we finetune with the Adafactor optimizer with a constant learning rate of 5 × 10−5 and dropout rate of 0.1, and we use loss masking on the inputs",
+    "where": "Sec 3.6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "AudioPaLM-2 8B AST beats Whisper Large-v2 on CoVoST2 AST BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoVoST2 AST BLEU",
+   "value": "37.8",
+   "unit": "BLEU",
+   "baseline_value": "29.1 (Whisper Large-v2 1.5B)",
+   "n": null,
+   "setup": "AudioPaLM-2 8B AST, PaLM-2 8B init, USM-v2 tokens, public+YT+WMT/TED mixture, CoVoST2 test, 21 X->En pairs, no text normalisation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row AudioPaLM-2 8B AST (ours), column CoVoST2 AST BLEU"
+  },
+  {
+   "claim": "AudioPaLM 8B S2ST reaches 32.5 ASR-BLEU on CVSS S2ST vs Translatotron 2 25.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "CVSS S2ST ASR-BLEU",
+   "value": "32.5",
+   "unit": "ASR-BLEU",
+   "baseline_value": "25.6 (Translatotron 2 + pretraining + TTS aug)",
+   "n": null,
+   "setup": "AudioPaLM 8B S2ST, PaLM 8B init, audio decoded with SoundStorm; CVSS-C test; ASR model as in Translatotron 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row AudioPaLM 8B S2ST (ours), column CVSS S2ST ASR-BLEU"
+  },
+  {
+   "claim": "AudioPaLM is competitive but not best on VoxPopuli ASR: AudioPaLM-2 8B AST WER 9.8 vs MAESTRO 600M 8.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "VoxPopuli ASR WER",
+   "value": "9.8",
+   "unit": "% WER",
+   "baseline_value": "8.1 (MAESTRO 600M)",
+   "n": null,
+   "setup": "AudioPaLM-2 8B AST; text normalised ignoring case and punctuation (JiWER)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row AudioPaLM-2 8B AST (ours), column VoxPopuli ASR WER"
+  },
+  {
+   "claim": "Cascade of AudioPaLM-2 ASR then text translation gets 39.0 CoVoST2 BLEU, 1.2 above the single AST model",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoVoST2 AST BLEU",
+   "value": "39.0",
+   "unit": "BLEU",
+   "baseline_value": "37.8 (direct AST)",
+   "n": null,
+   "setup": "AudioPaLM-2 8B ASR model followed by AudioPaLM-2 finetuned only for text-to-text translation on CoVoST2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row AudioPaLM-2 8B cascaded ASR + transl. (ours), column CoVoST2 AST"
+  },
+  {
+   "claim": "Zero-shot AST on ASR-only-observed FLEURS languages: AudioPaLM-2 20.7 BLEU vs AudioPaLM 10.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLEURS BLEU, ASR observed languages",
+   "value": "20.7",
+   "unit": "BLEU",
+   "baseline_value": "10.0 (AudioPaLM 8B AST)",
+   "n": null,
+   "setup": "26 languages with no X->En speech translation training data; AudioPaLM-2 8B AST; Whisper 19.6 is not zero-shot",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row AudioPaLM-2 8B AST, column Only ASR observed languages BLEU"
+  },
+  {
+   "claim": "AudioPaLM-2 beats Whisper on AST-observed FLEURS languages (28.6 vs 23.3 BLEU) with 4.8k vs 74.0k AST hours",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLEURS BLEU, AST observed languages",
+   "value": "28.6",
+   "unit": "BLEU",
+   "baseline_value": "23.3 (Whisper Large-v2 1.5B)",
+   "n": null,
+   "setup": "29 languages with AST data in training; AudioPaLM-2 8B AST",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row AudioPaLM-2 8B AST, column AST observed languages BLEU"
+  },
+  {
+   "claim": "Swapping PaLM for PaLM-2 gives 28% gain on AST-observed and 107% on ASR-observed FLEURS languages",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative BLEU gain",
+   "value": "107%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AudioPaLM-2 vs AudioPaLM, FLEURS ASR-observed languages",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "28% increase for AST-observed languages and 107% increase for ASR-observed languages"
+  },
+  {
+   "claim": "Voice transfer: AudioPaLM objective voice similarity 0.40 vs Translatotron 2 0.18 and CVSS-T ground truth 0.24",
+   "kind": "measured",
+   "source": null,
+   "metric": "objective voice similarity (cosine)",
+   "value": "0.40",
+   "unit": "cosine similarity",
+   "baseline_value": "0.18 (Translatotron 2)",
+   "n": null,
+   "setup": "CVSS-T test; subjective studies on an earlier AudioPaLM version with AudioLM acoustic decoding; 210 source utterances, 630 outputs, 10 ratings each",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row AudioPaLM, column Voice similarity Objective"
+  },
+  {
+   "claim": "Subjective audio quality MOS 4.44 for AudioPaLM vs 3.96 Translatotron 2 and 3.88 CVSS-T",
+   "kind": "measured",
+   "source": null,
+   "metric": "subjective audio quality MOS",
+   "value": "4.44",
+   "unit": "MOS 1-5",
+   "baseline_value": "3.96 (Translatotron 2)",
+   "n": null,
+   "setup": "same as above",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row AudioPaLM, column Audio quality Subjective"
+  },
+  {
+   "claim": "Subjective voice similarity SMOS 4.00 vs 3.51 Translatotron 2",
+   "kind": "measured",
+   "source": null,
+   "metric": "subjective voice similarity",
+   "value": "4.00",
+   "unit": "SMOS 1-5",
+   "baseline_value": "3.51",
+   "n": null,
+   "setup": "same as above",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row AudioPaLM, column Voice similarity Subjective"
+  },
+  {
+   "claim": "Adding ASR tasks to AST training raises CoVoST2 AST BLEU by 2.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoVoST2 AST BLEU",
+   "value": "18.5",
+   "unit": "BLEU",
+   "baseline_value": "16.0",
+   "n": null,
+   "setup": "PaLM 8B, USM-v1 tokens, CoVoST2 only",
+   "note": null,
+   "where": "Sec 5.4.1",
+   "quote": "adding ASR tasks into the dataset increases BLEU by 2.5 from 16.0 to 18.5 on the CoVoST2 AST benchmark"
+  },
+  {
+   "claim": "Finetuning PaLM 8B beats training from scratch on CoVoST2 (AST 18.4 vs 6.9 BLEU; ASR WER 40.2 vs 63.3)",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoVoST2 AST BLEU",
+   "value": "18.4",
+   "unit": "BLEU",
+   "baseline_value": "6.9 (PaLM 8B from scratch)",
+   "n": null,
+   "setup": "CoVoST2 ASR+AST tasks; USM-v1 tokens implied by 40.2 matching Table 7",
+   "note": "Table 5 and 7 print the same configuration as 18.5, Table 6 prints 18.4",
+   "where": "Table 6",
+   "table": "Table 6, row PaLM 8B finetuned, column CoVoST2 AST BLEU"
+  },
+  {
+   "claim": "Audio tokenizer matters: USM-v2 26.9 BLEU vs w2v-BERT 15.2 on CoVoST2/CVSS AST",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoVoST2 AST BLEU",
+   "value": "26.9",
+   "unit": "BLEU",
+   "baseline_value": "15.2 (w2v-BERT)",
+   "n": null,
+   "setup": "PaLM 8B, CVSS ASR+AST tasks",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row USM-v2, column CoVoST2 AST BLEU"
+  },
+  {
+   "claim": "Combined ASR+AST output task improves AST BLEU 26.9 -> 30.5 with USM-v2, ASR WER worsens 22.3 -> 25.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoVoST2 AST BLEU",
+   "value": "30.5",
+   "unit": "BLEU",
+   "baseline_value": "26.9 (direct)",
+   "n": null,
+   "setup": "PaLM 8B, USM-v2, CoVoST2",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row USM-v2 Combined, column CoVoST2 AST BLEU"
+  },
+  {
+   "claim": "Adding S2ST tasks costs AST BLEU (30.5 -> 27.8) and ASR WER (25.3 -> 27.1) on CoVoST2",
+   "kind": "measured",
+   "source": null,
+   "metric": "CoVoST2 AST BLEU",
+   "value": "27.8",
+   "unit": "BLEU",
+   "baseline_value": "30.5",
+   "n": null,
+   "setup": "PaLM 8B, USM-v2, CoVoST2/CVSS only",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row AST, ASR & S2ST, column CoVoST2 AST BLEU"
+  },
+  {
+   "claim": "Scaling data from CoVoST2 only to public+PaLM MT TTS+WMT/TED lifts S2ST ASR-BLEU 24.2 -> 31.2 (AudioLM decoding)",
+   "kind": "measured",
+   "source": null,
+   "metric": "CVSS S2ST ASR-BLEU",
+   "value": "31.2",
+   "unit": "ASR-BLEU",
+   "baseline_value": "24.2",
+   "n": null,
+   "setup": "PaLM 8B S2ST, USM-v2, AudioLM stage 2/3 decoding",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row Public speech datasets + PaLM MT TTS + WMT/TED, S2ST, column CVSS S2ST ASR-BLEU"
+  },
+  {
+   "claim": "SoundStorm decoding adds 1.3 ASR-BLEU over AudioLM stage 2+3 decoding",
+   "kind": "measured",
+   "source": null,
+   "metric": "CVSS S2ST ASR-BLEU",
+   "value": "32.5",
+   "unit": "ASR-BLEU",
+   "baseline_value": "31.2",
+   "n": null,
+   "setup": "best S2ST model",
+   "note": null,
+   "where": "Sec 5.4.7",
+   "quote": "We observe a 1.3 BLEU point increase when using SoundStorm compared to AudioLM."
+  },
+  {
+   "claim": "PaLM-2 8B init beats PaLM 8B init on CVSS AST (37.8 vs 35.4 BLEU) on the largest mixture",
+   "kind": "measured",
+   "source": null,
+   "metric": "CVSS AST BLEU",
+   "value": "37.8",
+   "unit": "BLEU",
+   "baseline_value": "35.4 (PaLM)",
+   "n": null,
+   "setup": "Public+YT+WMT/TED, speech-to-text only, dropout 0.2, lr ramp to 1e-4 then decay to 1e-5",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12, row Public + YT + WMT/TED PaLM-2, column CVSS AST BLEU"
+  },
+  {
+   "claim": "Model size 128M -> 1B -> 8B (PaLM-2): CVSS AST BLEU 18.3 -> 31.6 -> 37.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "CVSS AST BLEU",
+   "value": "37.8",
+   "unit": "BLEU",
+   "baseline_value": "18.3 (128M)",
+   "n": null,
+   "setup": "PaLM-2, USM-v2, Public+YT+WMT/TED",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Public + YT + WMT/TED 8B, column CVSS AST BLEU"
+  },
+  {
+   "claim": "PaLM-2 1B model outperforms Whisper 1.5B by over 5 BLEU and 28% WER reduction on VoxPopuli",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU margin vs Whisper",
+   "value": "over 5",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B PaLM-2 AudioPaLM",
+   "note": null,
+   "where": "Sec 5.4.9",
+   "quote": "Our 1B sized model outperforms Whisper 1.5B Large model by over 5 BLEU points and 28% reduction in WER for VoxPopuli ASR."
+  },
+  {
+   "claim": "Roughly 6-8 audio tokens per text token at 25 Hz",
+   "kind": "measured",
+   "source": null,
+   "metric": "audio tokens per text token",
+   "value": "6-8",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "estimated from the data",
+   "note": null,
+   "where": "Sec 5.4.2",
+   "quote": "at 25Hz, one text token corresponds to approximately 6-8 audio tokens"
+  }
+ ],
+ "limits": [
+  "Strong dependency on audio tokenizer quality (Limitations cites a Section 7 that does not exist; Sec 5.4.3 is the evidence)",
+  "Whole model had to be finetuned, unlike Flamingo-style frozen approaches, so no guarantee original text capabilities are preserved",
+  "Benchmarks for generative audio tasks are immature; work covers ASR and speech translation only",
+  "Subjective voice and quality studies used an earlier model version with AudioLM decoding, not the final SoundStorm model",
+  "Batch size, steps, hardware, compute, seeds, context length and layer counts are not stated; model not released",
+  "S2ST training lowers AST and ASR quality; ASR is worse than MAESTRO and mSLAM on VoxPopuli",
+  "Whisper comparison on FLEURS is not zero-shot for Whisper and uses far more AST data"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "AudioLM",
+   "year": 2022,
+   "arxiv": "2209.03143",
+   "relation": "extends",
+   "note": "audio tokens, acoustic decoding stages 2+3 and voice prompting",
+   "quote": null
+  },
+  {
+   "work": "SoundStorm",
+   "year": 2023,
+   "arxiv": "2305.09636",
+   "relation": "uses-method",
+   "note": "non-autoregressive audio token decoder",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "uses-method",
+   "note": "init checkpoint",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "uses-method",
+   "note": "init checkpoint and finetuning recipe",
+   "quote": null
+  },
+  {
+   "work": "Google USM",
+   "year": 2023,
+   "arxiv": "2303.01037",
+   "relation": "uses-method",
+   "note": "audio tokenizer encoder; also baseline USM-M",
+   "quote": null
+  },
+  {
+   "work": "w2v-BERT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "original audio tokenizer",
+   "quote": null
+  },
+  {
+   "work": "Whisper",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Whisper Large-v2 1.5B",
+   "quote": null
+  },
+  {
+   "work": "mSLAM",
+   "year": 2022,
+   "arxiv": "2202.01374",
+   "relation": "baseline",
+   "note": "mSLAM-CTC 2B",
+   "quote": null
+  },
+  {
+   "work": "MAESTRO",
+   "year": 2022,
+   "arxiv": "2204.03409",
+   "relation": "baseline",
+   "note": "ASR baseline",
+   "quote": null
+  },
+  {
+   "work": "Translatotron 2 (Jia et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "S2ST baseline",
+   "quote": null
+  },
+  {
+   "work": "SPEAR-TTS",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Kharitonov et al. 2023; AudioLM-based TTS",
+   "quote": null
+  },
+  {
+   "work": "SpeechLM (Hassid et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "initialises audio LM from text LM but speech-only",
+   "quote": null
+  },
+  {
+   "work": "CoVoST2",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "FLEURS",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "zero-shot eval",
+   "quote": null
+  },
+  {
+   "work": "VoxPopuli",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "related",
+   "note": "motivates combined tasks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The AudioPaLM model, illustrated on speech-to-speech translation and automatic speech recognition.",
+   "page": 4,
+   "why": "shows the expanded embedding matrix, task tags and the tokenizer/detokenizer path in one picture"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Top level results of this paper.",
+   "page": 9,
+   "why": "all headline numbers against baselines"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Limitations section refers to 'Section 7', which does not exist",
+  "Text in 5.4.9 says 'WER for CVSS and VoxPopuli ASR' but Table 13 columns are VoxPopuli ASR and CoVoST2 ASR",
+  "Table 6 prints 18.4 for the config Tables 5 and 7 print as 18.5",
+  "Table 1 header column reads 'AudioPaLM S2TS' (likely S2ST)",
+  "Table 17 flattened by pymupdf; cell alignment recovered only by row order"
+ ]
+}

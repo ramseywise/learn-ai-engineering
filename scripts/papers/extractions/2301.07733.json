@@ -1,19 +1,729 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2301.07733",
  "pdf": "data-science/sources/defazio-2023-learning-rate-free-learning-d.pdf",
  "bib": {
   "title": "Learning-Rate-Free Learning by D-Adaptation",
-  "first_author": "Aaron Defazio",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Aaron Defazio",
+   "Konstantin Mishchenko"
+  ],
+  "first_author": "Defazio",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2301.07733",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 76829,
+  "chars_total": 76829,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. Appendices A-C proofs read in full on second pass."
  },
- "legacy_report": "SOURCE: \"Learning-Rate-Free Learning by D-Adaptation\", Aaron Defazio (Meta AI FAIR) and Konstantin Mishchenko (Samsung AI Center), arXiv:2301.07733v5 [cs.LG], 7 Jul 2023. The text does not name a venue. The arXiv stamp is the only venue evidence, and the Zhang et al. (2022) reference is ICML 2022. Treat \"ICML 2023\" as unverified from this PDF. It does say the method was presented at a workshop earlier.\n\nCOVERAGE: 76,743 of 76,743 chars read. That covers the main text, Tables 1-2, the figure data labels, Appendix D hyperparameter Tables 3-13, and the references (skimmed). The proofs in Appendices A-C and E-F were located and scanned for headings and statements but not checked line by line. Conclusions below that rest on proofs are the stated theorems only.\n\nCLAIMS (ranked)\n- claim: D-Adaptation sets the learning rate by maintaining a running lower bound d_k on D = ||x0 − x*||, with no line search and no extra gradient evaluations. The estimate is d_hat from the dual-averaging bound, and d_k = max(d_k, d_hat). It is claimed as the first hyper-parameter-free method for convex Lipschitz functions with no extra log factors in the rate.\n  number: none\n  setup: convex G-Lipschitz, deterministic subgradient, requires d0 ≤ D\n  quote: \"Our approach is the first hyper-parameter free method for this class without additional multiplicative log factors in the convergence rate.\"\n  where: abstract\n- claim: Asymptotic rate matches the optimal rate with known D.\n  number: O(DG/√(n+1))\n  setup: Theorem 1, as n → ∞, d0 ≤ D, non-stochastic\n  quote: \"f (ˆxn) − f (x∗) = O DG√n + 1 , as n → ∞, where D = ∥x0 − x∗∥ for any x∗ in the set of minimizers of f, as long as d0 ≤ D.\"\n  where: p.3\n- claim: The non-asymptotic bound costs only a log2 factor in D/d0. The authors say this is much better than a step size proportional to d0, which would cost a factor of D/d0.\n  number: 16·DG·log2+(D/d0)/√(n+1)\n  setup: Theorem 2, n ≥ 2 log2(D/d0), step size modified to include G, returns the weighted average at the argmin index t\n  quote: \"f (ˆxt) − f∗ ≤ 16 log2+(dn+1/d0)n + 1 D vuut tX k=0 ∥gk∥2 ≤ 16 DG log2+(D/d0)√n + 1 .\"\n  where: p.4\n- claim: Practical SGD and Adam variants (Algorithms 4 and 5) match hand-tuned learning rates on about a dozen problems. The setup is a standard schedule with D-Adaptation supplying only the base LR. ViT is the one clear loss. The variants are not covered by the theory.\n  number: ViT 71.62 vs 74.24 (ImageNet top-1, %)\n  setup: ViT is vit_tiny_patch16_224, Adam, 300 epochs, cosine schedule\n  quote: \"D-Adapt Adam (71.62% SE 1.22) Adam (74.24% SE 0.11)\"\n  where: Fig 5, p.16; text p.15 \"This is an example of a situation where D-Adaptation under-performs the baseline learning rate. This problem appears to be highly sensitive to the initial learning rate\"\n- claim: Convex logistic regression on 12 LIBSVM datasets.\n  number: within 0.5% accuracy\n  setup: 100 epochs, batch 16, 10-fold LR drops at epochs 60, 80, 95, no weight decay, Adam baseline LR from grid search, 10 seeds\n  quote: \"D-Adaptation matches or exceeds the performance of the grid-search based learning rate on all 12 problems, to within 0.5% accuracy.\"\n  where: p.11\n- claim: Image classification (SGD, 5-10 seeds, 1-8 V100). D-Adapt matches or slightly beats the baseline on all three. Training loss is lower on CIFAR-10 and ImageNet and equal on CIFAR-100.\n  number: CIFAR-10 95.56 vs 95.59; CIFAR-100 76.90 vs 76.41; ImageNet 76.43 vs 76.09\n  setup: CIFAR-10 WRN-16-8; CIFAR-100 DenseNet; ImageNet ResNet-50; SGD baseline vs D-Adapt SGD, test accuracy %\n  quote: \"D-Adapt SGD (76.43% SE 0.01) SGD (76.09% SE 0.06)\"\n  where: Fig 3, p.13\n- claim: NLP is on par with the baseline.\n  number: RoBERTa test ppl 3.96 vs 3.97; GPT test ppl 19.46 vs 19.49; IWSLT14 LSTM test loss 4.33 vs 4.31\n  setup: Adam baseline vs D-Adapt Adam. RoBERTa is 110M params on BookWiki, 23k updates. GPT is a small GPT decoder, 65k updates. Both have warmup and polynomial decay, 5 seeds. IWSLT14 uses an inverse-sqrt schedule, 10 seeds.\n  quote: \"D-Adapt Adam (3.96 SE 0.008)\" ; \"D-Adapt Adam (19.46 SE 0.019)\" ; \"D-Adapt Adam (4.33 SE 0.003)\"\n  where: Fig 4, p.14\n- claim: Learned LRs are close to hand-tuned ones. D-Adapt tends to pick the high end of a flat good range. ViT and fastMRI are the outliers (about 7x and 2.5x).\n  number: CIFAR10 2.085 vs 1.0; ViT 0.0073 vs 0.001; GPT 0.0009218 vs 0.001; IWSLT 0.003945 vs 0.01\n  setup: Table 1, mean and std over seeds. SGD uses PyTorch dampening, so SGD baselines are multiplied by 1/(1−β1). The authors say it is unclear how finely the baselines were tuned.\n  quote: \"CIFAR10 1.0 2.085 0.078\" ; \"In some cases D-Adaptation gives notably higher learning rates, such as for CIFAR-10.\" ; \"using learning rate 2.0 instead of the baseline 1.0 gives equal final test accuracy\"\n  where: Table 1, p.17\n- claim: The initial value d0 is not a hyper-parameter. Final accuracy is flat across d0 from 1e-16 to 1e-2. The authors recommend 1e-8 to 1e-6 for float16 because of underflow. The default is 1e-6.\n  number: 1e-16 to 1e-2; 10 seeds\n  setup: the 12 logistic regression problems of Section 7.1\n  quote: \"values as small as 10−16 work. When using float16, numerical underflow may occur for values this small, and so we recommend using values in the range from 10−8 to 10−6 in practice.\" ; \"running each of the 12 convex logistic regression problems using values of d0 ranging from 10−16 to 10−2\"\n  where: p.7 and p.17\n- claim: The prior parameter-free baseline COCOB (coin betting) fails to match the tuned baselines, apart from MRI. The authors attribute this largely to COCOB's lack of LR schedules or warmup.\n  number: CIFAR-10 89.13 vs 95.59; ImageNet 61.58 vs 76.09; GPT ppl 25.57 vs 19.49; RoBERTa and ViT diverged; DLRM OOM\n  setup: Table 2, hand-tuned baseline vs COCOB, final test metric\n  quote: \"We find that COCOB is not able to match the baseline performance on any of our test problems, however it performs close to the baseline on the MRI problem.\"\n  where: Table 2, p.18\n- claim: Object detection initially overfit with the default weight decay. After raising the decay, D-Adapt matches the published result of 43.\n  number: decay 0.0001 → 0.00015; baseline 42.67 → 42.99, D-Adapt 41.92 → 43.07 AP\n  setup: COCO 2017, Faster-RCNN, pretrained ResNeXt-101-32x8d, Detectron2, SGD\n  quote: \"increasing it to 0.00015 improved the test set accuracy for both the baseline (42.67 to 42.99) and D-adapted versions (41.92 to 43.07)\"\n  where: p.15\n- claim: fastMRI and DLRM match the baseline.\n  number: fastMRI SSIM 0.9105 vs 0.9103; DLRM 0.7905 vs 0.7906\n  setup: fastMRI VarNet 2.0, Adam, 50 epochs, flat schedule, 5 seeds. Criteo DLRM, Adam.\n  quote: \"D-Adapt Adam (0.9105 SE 0.00057)\" ; \"D-Adapt Adam (0.7905 SE 0.00014)\"\n  where: Figs 5 and 6, p.16\n- claim: Unlike classical hyper-gradient LR methods, the hyper-gradient term gives a magnitude estimate. It needs no hyper-learning-rate and works with warmup and annealing. Annealing does not push the LR back up.\n  number: none\n  quote: \"In works that use hyper-gradient to estimate learning rate, an additional hyper-learning rate parameter is needed to control the rate of change of the learning rate, whereas our approach requires no extra parameters beyond the initial d0.\"\n  where: p.7\n- claim: d_k need not converge to D. Under a mild assumption it ends at least D/(1+√3). The lower bound d_hat often decreases and can go negative.\n  number: D/(1+√3) ≈ 0.37 D\n  quote: \"dk is asymptotically greater than or equal to D/(1 + √3)\" ; \"Negative values of ˆdk were seen in most of the experiments in Section 7.\"\n  where: p.6-7, Theorem 24\n- claim: Practical-variant details. The SGD variant uses a factor-2 multiplier on d_hat and G = ||g0|| as the denominator. The Adam variant uses an EMA with a (1−√β2) correction, needs no multiplier, and uses Option II.\n  number: factor 2; defaults d0 = 1e-6, β=0.9, β1,β2,ε = 0.9, 0.999, 1e-8\n  quote: \"we multiply the D bound by a factor of two\" ; \"G = ∥g0∥, which is a crude approximation to the true G but appears to work very well in practice.\"\n  where: p.9-10\n- claim: Related-work rates.\n  number: bisection log log(dmax/d0); coin-betting sqrt(log(1+D/d0)); GD variant has extra log(n+2)\n  quote: \"O DG log log(dmax/d0)√n + 1\" ; \"A dependence on p log(1 + D/d0) can also be obtained using similar techniques, which is better by a sqrt-factor than our non-asymptotic result.\"\n  where: p.8-9\n- claim: DoG is concurrent work, covers the stochastic case, and its rate has extra multiplicative log factors.\n  number: none\n  quote: \"their rate contains additional multiplicative log-factors compared to our rate. Their work is concurrent with ours, appearing on arXiv approximately 2 months after the workshop presentation of our method.\"\n  where: p.8-9\n\nLIMITS\n- The theory covers only convex Lipschitz functions in the deterministic setting. The SGD and Adam variants for deep learning are not backed by theory. Section 6: \"although the theory no longer directly supports this case.\"\n- The Theorem 1 rate is asymptotic. A fixed-n worst case depends on d0, and Theorem 2 pays a log2(D/d0) factor.\n- It needs a lower bound d0 ≤ D. It returns a weighted-average iterate, not the last iterate. Last-iterate guarantees are unexplored.\n- ViT underperforms (71.6 vs 74.2) and the authors do not resolve why. The COCO result needed retuned weight decay to match.\n- Baseline LRs come from papers or code, so their tuning granularity is unknown. The test sizes are modest. The largest is RoBERTa at 110M params. The GPT is small. There are no large-scale LLM runs.\n- The COCOB comparison is confounded by schedule and warmup support.\n- Dated: the extraction cannot show later work such as Prodigy or Mishchenko and Defazio's follow-up. Do not infer it from this source.\n\nBUILDS ON\n- Carmon and Hinder (2022), \"Making SGD parameter-free\": the D lower-bound idea.\n- Duchi et al. (2011), Streeter and McMahan (2010), Ward et al. (2019): AdaGrad-Norm.\n- Orabona (2019): classical bound.\n- Defazio (2020) and Defazio and Gower (2021): primal averaging momentum.\n- Polyak (1987).\n- Hazan and Kakade (2019).\n- Drori and Taylor (2020).\n- McMahan and Orabona (2014), Orabona and Tommasi (2017, COCOB).\n- Streeter and McMahan (2012).\n- Hyper-gradient work: Bengio (2000), Domke (2012), Chandra et al. (2022).\n- Concurrent: Ivgi et al. (2023, DoG).\n\nCODE (verbatim from the extraction, p.2)\n- Algorithm 1: `ˆdk+1 = γk+1 ∥sk+1∥2 − Pki=0 γid2i ∥gi∥22 ∥sk+1∥`, with Option II `ˆdk+1 = Pki=0 diγi ⟨gi, si⟩∥sk+1∥`\n- Algorithm 1: `dk+1 = max(dk, ˆdk+1)`\n- Algorithm 1: `xk+1 = x0 − γk+1sk+1`\n- Algorithm 4 (SGD): `λk = dkγkG`, `sk+1 = sk + λkgk`, `ˆdk+1 = 2 Pki=0 λi ⟨gi, si⟩∥sk+1∥`\n- Algorithm 5 (Adam): `rk+1 = √β2rk + (1 − √β2)dkγk ⟨gk, sk⟩A−1k+1`, `ˆdk+1 = rk+1(1 − √β2) ∥sk+1∥1`\n- Equations are garbled by extraction, so these snippets are the extracted text, not clean math.\n- Official code: github.com/facebookresearch/dadaptation\n\nFIGURES (captions only, from the extraction)\n- Fig 1, p.6: toy f(x)=|x|, x0=1, d0=0.1. Shows d_k growing toward D while d_hat later decays. This is the fastest way to see the mechanism.\n- Fig 2, p.12: logistic regression on 12 LIBSVM datasets, Adam vs D-Adapt Adam.\n- Fig 3, p.13: CIFAR-10, CIFAR-100 and ImageNet.\n- Fig 4, p.14: NLP results.\n- Fig 5, p.16: ViT (the loss), COCO, fastMRI.\n- Fig 6, p.16: DLRM.\n- Fig 7, p.19: final accuracy vs d0, flat from 1e-16 to 1e-2.\n- Tables 1 and 2 hold the numbers worth reusing in a note.\n- I did not run the figures script.\n\nPROBLEMS\n- Equations are garbled by extraction (fractions, sums and norms are scrambled), so formulas are quoted only where legible.\n- The venue is not stated in the PDF.\n- No embedded instructions were found.\n- The tool-result file I read was truncated at 40,000 chars. I read the rest separately via targeted greps (appendix tables, references). I did not read the proofs.\n\nSource file: /Users/ramsey-wise/workspace/learn-ai-engineering/data-science/sources/defazio-2023-learning-rate-free-learning-d.pdf"
+ "type": "empirical",
+ "question": "Can the learning rate be set automatically, with no search, by estimating a running lower bound on the distance D=||x0-x*|| to the solution, with optimal convex rates and tuned-baseline performance in deep learning?",
+ "hypothesis": "With d0 <= D, final loss should be independent of the choice of d0 (tested in Sec 7.10).",
+ "contributions": [
+  "D-Adaptation: first hyper-parameter-free method for convex Lipschitz functions with the optimal rate and no multiplicative log factors (asymptotic)",
+  "SGD and Adam variants (Algorithms 4, 5) tested on more than a dozen problems",
+  "Comparison against COCOB"
+ ],
+ "method": {
+  "summary": "Maintains d_k, a non-decreasing lower bound on D built from dual-averaging quantities (d_hat from sum of gradient-step inner products), and uses d_k as the LR scale. SGD (Alg 4) and Adam (Alg 5) variants take a user schedule gamma_k (base 1.0) and are run against hand-tuned baselines.",
+  "task": "learning-rate-free optimisation; convex logistic regression and deep-learning benchmarks (vision, NLP, MRI, recommendation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LIBSVM (12 datasets: Sensorless, Aloi, DNA, Glass, Iris, Letter, Pendigits, smallNORB, USPS, Vehicle, Vowel, Wine)",
+    "role": "both",
+    "size": null,
+    "split": "no standard train/test splits; training accuracy curves only",
+    "source": "LIBSVM repository",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky 2009",
+    "preprocessing": "random horizontal flip, random crop 32x32 padding 4, normalise centre (0.5,0.5,0.5)"
+   },
+   {
+    "name": "CIFAR-100",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky 2009",
+    "preprocessing": "channel mean (0.5074,0.4867,0.4411) std (0.2011,0.1987,0.2025); flips, crop 32 padding 4 reflect"
+   },
+   {
+    "name": "ImageNet ILSVRC 2012",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Russakovsky 2015",
+    "preprocessing": "RandomResizedCrop 224, flips; test resize 256 centre crop 224"
+   },
+   {
+    "name": "IWSLT14 German-to-English",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Cettolo 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "BookWiki (Books + Wikipedia snapshot)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Zhu et al. 2015 plus Wikipedia",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO 2017",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "fastMRI Knee",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Zbontar 2018",
+    "preprocessing": "acceleration 4, 16 low-frequency lines, Offset-1 mask"
+   },
+   {
+    "name": "Criteo Kaggle Display Advertising",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Kaggle",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "D-Adapt SGD / D-Adapt Adam",
+    "role": "proposed",
+    "params": null,
+    "architecture": "optimiser",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "d0_default": "1e-6",
+     "beta": "0.9",
+     "adam_betas_eps": "0.9, 0.999, 1e-8",
+     "G": "||g0|| default",
+     "sgd_dhat_multiplier": "2",
+     "option": "II"
+    }
+   },
+   {
+    "name": "RoBERTa base (roberta_base)",
+    "role": "evaluated",
+    "params": "110M",
+    "architecture": "transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens per sample",
+    "other": {}
+   },
+   {
+    "name": "GPT decoder (transformer_lm_gpt)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens per sample",
+    "other": {}
+   },
+   {
+    "name": "vit_tiny_patch16_224",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "vision transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Faster-RCNN with ResNeXt-101-32x8d backbone",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Detectron2 faster_rcnn_X_101_32x8d_FPN_3x",
+    "init_from": "pretrained backbone",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "WRN-16-8, DenseNet [6,12,24,16] growth 12, ResNet50, LSTM (wiseman_iwslt_de_en), 12-layer VarNet 2.0, DLRM (emb dim 16)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "COCOB",
+    "role": "baseline",
+    "params": null,
+    "architecture": "coin-betting optimiser",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "each task's standard loss (BCE for ViT, label smoothing 0.1 for IWSLT)",
+   "optimizer": "SGD (momentum 0.9 via primal averaging, PyTorch dampening) or Adam, each with D-Adaptation supplying base LR; baseline is the same optimiser with hand-tuned LR",
+   "lr": "D-Adapt: learned (Table 1). Baseline LRs: CIFAR10 0.1 SGD (x10 dampening = 1.0), CIFAR100 0.05 (0.5), ImageNet 0.1 (1.0), IWSLT 0.01, GPT 0.001, RoBERTa 0.001, COCO 0.02 (0.2), ViT 0.001, fastMRI 0.0003, DLRM 0.0001; logistic regression: grid search",
+   "lr_schedule": "standard per problem: logistic 60/80/95 tenthing; CIFAR 150-225 tenthing; ImageNet 30-60-90 tenthing; IWSLT inverse sqrt; GPT/RoBERTa polynomial decay; ViT cosine; fastMRI and DLRM flat; COCO steps 210000, 250000",
+   "warmup": "IWSLT 4000 steps; RoBERTa and GPT 10,000; ViT 5 epochs",
+   "batch_size": "logistic 16; CIFAR10 128/GPU; CIFAR100 64/GPU; ImageNet 32/GPU x8; fastMRI 1/GPU x8; DLRM 128; ViT 512; COCO 16 images per batch; IWSLT 4096 max tokens; RoBERTa 16 sentences/GPU, update freq 16; GPT 1 sentence/GPU, update freq 16",
+   "steps": "RoBERTa 23,000 updates; GPT 65,000; COCO max iter 270000; DLRM 300 000 iterations",
+   "epochs": "logistic 100; CIFAR 300; ImageNet 100; fastMRI 50; IWSLT 55; ViT 300",
+   "tokens": null,
+   "seq_len": "512 tokens per sample (RoBERTa, GPT)",
+   "precision": "Float16 True for IWSLT, RoBERTa, GPT; others not stated",
+   "weight_decay": "CIFAR10 1e-4; CIFAR100 2e-4; ImageNet 1e-4; IWSLT 0.05 (decoupled); RoBERTa 0.0; GPT 0.005; COCO 1e-4 default, 0.00015 final; ViT 0.1; fastMRI 0; DLRM 0; logistic 0",
+   "dropout": "IWSLT 0.3; RoBERTa and GPT 0.1 (attention dropout 0.1)",
+   "regularisation": "ViT: mixup 0.1, cutmix 1.0, rand-m6-mstd0.5 AutoAugment, hflip 0.5, crop pct 0.9; IWSLT label smoothing 0.1",
+   "hardware": "1xV100 (logistic, CIFAR, IWSLT); 8xV100 (ImageNet, fastMRI, RoBERTa, GPT); ViT 'small enough to train on 8 GPUs'",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "logistic 10; CIFAR10 10; CIFAR100 10; ImageNet 5; fastMRI 5; IWSLT 10; DLRM 5; RoBERTa 5; GPT 5; ViT 5; COCO not stated; error bars are 2 standard errors",
+   "other": {
+    "note": "Table 13 ViT: Adam betas 0.9,0.999; Tables 8/10/11: betas 0.9,0.98; decoupled weight decay used with D-Adaptation to match FairSeq Adam; Algorithm 3 default d0 1e-6"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test accuracy / perplexity / loss / BBox AP / SSIM",
+     "definition": "final-epoch test metric per task, mean over seeds with standard error",
+     "unit": "% or task native",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "hand-tuned LR from the source paper or public code",
+    "grid-searched Adam LR (logistic)",
+    "COCOB (Orabona and Tommasi 2017)"
+   ],
+   "protocol": "mean over seeds, error bars 2 SE; no significance test; baseline tuning granularity unknown"
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/dadaptation",
+   "weights": null,
+   "data": "public benchmark datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr baseline CIFAR10",
+    "quote": null,
+    "where": "Table 1 lists 1.0, Table 4 lists SGD LR 0.1; Sec 7.11 says SGD baselines multiplied by 1/(1-beta1)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "D-Adaptation matches or exceeds grid-searched Adam LR on all 12 LIBSVM logistic-regression problems to within 0.5% accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap",
+   "value": "0.5",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": 10,
+   "setup": "12 LIBSVM problems, Adam vs D-Adapt Adam, 100 epochs, batch 16, 10-fold LR drops at 60/80/95, no weight decay, 10 seeds; training accuracy only (no standard splits)",
+   "note": null,
+   "where": "Sec 7.1, p.11",
+   "quote": "D-Adaptation matches or exceeds the performance of the grid-search based learning rate on all 12 problems, to within 0.5% accuracy."
+  },
+  {
+   "claim": "ViT-tiny on ImageNet is the one clear loss: D-Adapt Adam 71.62% vs hand-tuned Adam 74.24%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "71.62",
+   "unit": "% top-1",
+   "baseline_value": "74.24",
+   "n": 5,
+   "setup": "vit_tiny_patch16_224, 300 epochs, batch 512, cosine, 5 warmup epochs, Adam lr 0.001 baseline, 5 seeds",
+   "note": "Baseline printed as 'Adam (74.24% SE 0.11)' in Fig 5. Authors: 'This problem appears to be highly sensitive to the initial learning rate, which may explain the observed differences.'",
+   "where": "Fig 5, Sec 7.7, p.15-16",
+   "quote": "D-Adapt Adam (71.62% SE 1.22)"
+  },
+  {
+   "claim": "ImageNet ResNet-50: D-Adapt SGD slightly beats tuned SGD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "76.43",
+   "unit": "% top-1",
+   "baseline_value": "76.09",
+   "n": 5,
+   "setup": "ResNet50, 100 epochs, 8xV100, batch 32/GPU, 30-60-90 tenthing, wd 1e-4, momentum 0.9, SGD baseline lr 0.1 (1.0 after dampening), 5 seeds",
+   "note": null,
+   "where": "Fig 3, p.13",
+   "quote": "D-Adapt SGD (76.43% SE 0.01)"
+  },
+  {
+   "claim": "CIFAR-10 WRN-16-8: D-Adapt SGD equals tuned SGD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "95.56",
+   "unit": "% top-1",
+   "baseline_value": "95.59",
+   "n": 10,
+   "setup": "WRN-16-8, 300 epochs, batch 128, 150-225 tenthing, wd 1e-4, 10 seeds",
+   "note": null,
+   "where": "Fig 3, p.13",
+   "quote": "D-Adapt SGD (95.56% SE 0.04)"
+  },
+  {
+   "claim": "CIFAR-100 DenseNet: D-Adapt SGD slightly above tuned SGD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "76.90",
+   "unit": "% top-1",
+   "baseline_value": "76.41",
+   "n": 10,
+   "setup": "DenseNet [6,12,24,16], 300 epochs, batch 64, wd 2e-4, 10 seeds",
+   "note": null,
+   "where": "Fig 3, p.13",
+   "quote": "D-Adapt SGD (76.90% SE 0.06)"
+  },
+  {
+   "claim": "RoBERTa-base BookWiki masked LM: test perplexity on par.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "3.96",
+   "unit": "perplexity",
+   "baseline_value": "3.97",
+   "n": 5,
+   "setup": "roberta_base 110M, 23,000 updates, 8xV100, warmup 10,000, polynomial decay, Adam lr 0.001 baseline, 5 seeds",
+   "note": null,
+   "where": "Fig 4, p.14",
+   "quote": "D-Adapt Adam (3.96 SE 0.008)"
+  },
+  {
+   "claim": "GPT decoder BookWiki: test perplexity on par.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "19.46",
+   "unit": "perplexity",
+   "baseline_value": "19.49",
+   "n": 5,
+   "setup": "transformer_lm_gpt, 65,000 updates, 8xV100, warmup 10,000, polynomial decay, 5 seeds",
+   "note": null,
+   "where": "Fig 4, p.14",
+   "quote": "D-Adapt Adam (19.46 SE 0.019)"
+  },
+  {
+   "claim": "IWSLT14 LSTM: test loss on par (D-Adapt slightly worse).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test loss",
+   "value": "4.33",
+   "unit": "test loss",
+   "baseline_value": "4.31",
+   "n": 10,
+   "setup": "lstm_wiseman_iwslt_de_en, 55 epochs, inverse sqrt, warmup 4000, 10 seeds",
+   "note": null,
+   "where": "Fig 4, p.14",
+   "quote": "D-Adapt Adam (4.33 SE 0.003)"
+  },
+  {
+   "claim": "COCO: after raising weight decay 0.0001 to 0.00015, D-Adapt matches the published 43 AP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test BBox AP",
+   "value": "43.07",
+   "unit": "BBox AP",
+   "baseline_value": "42.99",
+   "n": null,
+   "setup": "Faster-RCNN X-101-32x8d (pretrained backbone) Detectron2, SGD; baseline 42.67 to 42.99, D-Adapt 41.92 to 43.07 with the decay change",
+   "note": "Before retuning decay, D-Adapt was 41.92 vs baseline 42.67 (D-Adapt worse); the headline match needed a decay change.",
+   "where": "Sec 7.6, p.15",
+   "quote": "increasing it to 0.00015 improved the test set accuracy for both the baseline (42.67 to 42.99) and D-adapted versions (41.92 to 43.07)"
+  },
+  {
+   "claim": "fastMRI VarNet 2.0 test SSIM matches baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test SSIM",
+   "value": "0.9105",
+   "unit": "SSIM",
+   "baseline_value": "0.9103",
+   "n": 5,
+   "setup": "12-layer VarNet 2.0, 50 epochs, flat schedule, Adam lr 0.0003 baseline, 5 seeds",
+   "note": null,
+   "where": "Fig 5, p.16",
+   "quote": "D-Adapt Adam (0.9105 SE 0.00057)"
+  },
+  {
+   "claim": "Criteo DLRM test accuracy matches baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "0.7905",
+   "unit": "accuracy",
+   "baseline_value": "0.7906",
+   "n": 5,
+   "setup": "DLRM, 300 000 iterations, batch 128, flat, 5 seeds",
+   "note": null,
+   "where": "Fig 6, p.16",
+   "quote": "D-Adapt Adam (0.7905 SE 0.00014)"
+  },
+  {
+   "claim": "Final accuracy is flat across d0 from 1e-16 to 1e-2, so d0 is not treated as a hyper-parameter.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1e-16 to 1e-2",
+   "unit": "d0",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 logistic-regression problems of Sec 7.1, 10 seeds; Fig 7 read as flat",
+   "note": null,
+   "where": "Sec 4.2, 7.10",
+   "quote": "values as small as 10−16 work."
+  },
+  {
+   "claim": "Authors recommend d0 in 1e-8 to 1e-6 for float16 because of underflow; default 1e-6.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10−8 to 10−6",
+   "unit": "d0",
+   "baseline_value": null,
+   "n": null,
+   "setup": "float16 training",
+   "note": null,
+   "where": "Sec 4.2, p.7",
+   "quote": "we recommend using values in the range from 10−8 to 10−6 in practice."
+  },
+  {
+   "claim": "Learned D-Adapted LR vs hand-tuned LR (CIFAR10).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.085",
+   "unit": "learning rate",
+   "baseline_value": "1.0",
+   "n": null,
+   "setup": "Table 1: mean over seeds, std 0.078; SGD baselines multiplied by 1/(1-beta1) for PyTorch dampening",
+   "note": "Authors: using lr 2.0 instead of baseline 1.0 gives equal final test accuracy. Other rows: ViT 0.0073 vs 0.001; fastMRI 0.0007596 vs 0.0003; IWSLT 0.003945 vs 0.01; GPT 0.0009218 vs 0.001; RoBERTa 0.0009331 vs 0.001; COCO 0.2004 vs 0.2; DLRM 0.0001282 vs 0.0001; CIFAR100 0.4544 vs 0.5; ImageNet 0.9227 vs 1.0.",
+   "where": "Table 1, p.17",
+   "table": "Table 1, row CIFAR10, column D-Adapted LR"
+  },
+  {
+   "claim": "COCOB, the one prior parameter-free baseline, trails the tuned baseline almost everywhere; diverges on RoBERTa and ViT, OOM on DLRM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "89.13",
+   "unit": "% top-1",
+   "baseline_value": "95.59",
+   "n": null,
+   "setup": "CIFAR-10 column of Table 2; COCOB (Orabona and Tommasi 2017) has no LR schedule support, which authors say explains much of the gap",
+   "note": "ImageNet 61.58 vs 76.09; GPT ppl 25.57 vs 19.49; IWSLT 4.66 vs 4.31; MRI 0.9098 vs 0.9103.",
+   "where": "Table 2, p.18",
+   "table": "Table 2, row CIFAR-10, column COCOB Test Metric"
+  },
+  {
+   "claim": "Theorem 1: asymptotic rate matches the optimal known-D rate with no log factors.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "O(DG/sqrt(n+1))",
+   "unit": "rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "convex G-Lipschitz, deterministic subgradient, n to infinity, d0 <= D (Algorithm 1)",
+   "note": null,
+   "where": "Thm 1, p.3",
+   "quote": "as n →∞, where D = ∥x0 −x∗∥for any x∗in the set of minimizers of f, as long as d0 ≤D."
+  },
+  {
+   "claim": "Theorem 2: non-asymptotic bound pays only log2(D/d0).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "16 DG log2+(D/d0)/sqrt(n+1)",
+   "unit": "rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "n >= 2 log2(D/d0), step size modified to include G, weighted average at argmin index t",
+   "note": "Garbled in extraction; formula as printed: f(x_t)-f* <= 16 log2+(d_{n+1}/d0)/(n+1) * D * sqrt(sum ||g_k||^2) <= 16 DG log2+(D/d0)/sqrt(n+1).",
+   "where": "Thm 2, p.4",
+   "quote": "16DG log2+(D/d0)"
+  },
+  {
+   "claim": "Under a mild assumption d_k asymptotically reaches at least D/(1+sqrt3); d_hat often decreases and goes negative.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "D/(1+sqrt3)",
+   "unit": "fraction of D",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 24: ||x_n-x*|| -> 0 with the Theorem-2 step size",
+   "note": null,
+   "where": "Sec 4, App E",
+   "quote": "Negative values of ˆdk were seen in most of the experiments in Section 7."
+  },
+  {
+   "claim": "Appendix A proof of Theorem 1 gives an explicit non-asymptotic-in-form bound with a lower-order term depending on the first gradient norm.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "12DG/sqrt(n+1) + 8DG^2/((n+1)||g0||)",
+   "unit": "rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Algorithm 1 with gamma_k = 1/sqrt(sum ||g_i||^2) (no G in the step), ||g_k|| <= G, g0 != 0, n >= 2*n_hat where n_hat is the (instance-dependent, unquantified) index after which d_k >= d_{n+1}/2 and n is also large enough that ||g_n||^2 <= sum of previous ||g||^2",
+   "quote": "f (ˆxn) −f∗≤12DG",
+   "note": "Internal inconsistency in the proof: before applying Jensen the average of dk(f(xk)-f*) is bounded with constant 16DG/sqrt(n+1), then the same constant is printed as 12DG after Jensen. A bound that is constant-12 cannot follow from 16; treat constants as unreliable, rate order unaffected.",
+   "where": "App A.1, p.28-29"
+  },
+  {
+   "claim": "Theorem 4 (D-Adapted AdaGrad) has explicit constant 16 and needs a coordinate bound G and a monotone A_n.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "16 p G∞ D∞/sqrt(n+1)",
+   "unit": "rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Algorithm 3, convex f, G >= |g_ij| for all i,j, A_{n+1} >= A_n (diagonal), d0 <= D∞, n >= 2 n_hat",
+   "quote": "f(ˆxn) −f∗≤16pG∞D∞",
+   "where": "App C, p.38-39"
+  },
+  {
+   "claim": "Gradient-descent variant (Algorithm 2) pays an extra log(n+2) in both asymptotic and non-asymptotic bounds; the log comes from a standard lemma for anytime step sizes.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "16DG/sqrt(n+2) * log(n+2) asymptotic; 12DG/sqrt(n+1) * log(n+2) * log2+(d_{n+1}/d0) non-asymptotic",
+   "unit": "rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Algorithm 2, gamma_k = 1, n >= 2 log2(D/d0) for Theorem 18",
+   "quote": "f(ˆxt) −f ≤12DG",
+   "where": "App B, p.33-35"
+  },
+  {
+   "claim": "Lemma 11 (core of Theorem 2): for non-decreasing d_k and N+1 >= 2 log2(d_{N+1}/d0), the minimum over n of d_{n+1}/sum d_k is at most 4 log2+(d_{N+1}/d0)/(N+1).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "constant",
+   "baseline_value": null,
+   "n": null,
+   "setup": "non-decreasing sequence d_0..d_{N+1}",
+   "quote": "4log2+(dN+1/d0)",
+   "where": "App A.2, p.29"
+  }
+ ],
+ "limits": [
+  "Theory covers only convex Lipschitz, deterministic subgradient; SGD/Adam variants have no theory (Sec 6, 4.2).",
+  "Theorem 1 is asymptotic; for fixed n a worst-case function depends on d0 (Thm 2 pays log2(D/d0)).",
+  "Requires d0 <= D; returns a weighted average iterate, not last iterate.",
+  "ViT underperforms and the cause is unresolved ('may explain').",
+  "COCO needed retuned weight decay; baseline LR tuning granularity unknown.",
+  "COCOB comparison confounded by schedule/warmup support.",
+  "Largest model RoBERTa 110M; no large-scale LLM runs.",
+  "No code or seeds for COCO stated; logistic regression reports training accuracy only.",
+  "Appendix A.1: Theorem 1 holds only for n beyond instance-dependent thresholds (n_hat where d_k >= d_{n+1}/2, and r where ||g_n||^2 <= sum of previous ||g||^2), neither quantified, so no finite-n guarantee.",
+  "Theorem 1 proof assumes ||g_k|| <= G and g0 != 0 (g0=0 trivial); the step size in Alg 1 uses 1/||g0|| for gamma_0 and no G.",
+  "Appendix A.2 proof only needs the G^2-free step at the cost of the extra term 8DG^2 log2+(D/d0)/((n+1)||g0||) (as printed in main text too).",
+  "The proof of Theorem 1 prints constant 16 before Jensen and 12 after, an internal inconsistency in constants.",
+  "Theorem 4 requires the AdaGrad matrices to be monotone and a bound G on coordinates; Algorithm 3 uses G∞ in a_0.",
+  "Adam derivation (App F) treats quantities 1-D, drops momentum (beta1=0), and the implemented Adam step is the non-dual-averaging step, which authors note 'is the only way currently supported by our theory' for the DA form only; the shipped Adam variant is not covered."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "D",
+   "definition": "the distance D = ||x0 - x*|| to a minimiser",
+   "where": "Sec 1"
+  },
+  {
+   "term": "D-Adaptation",
+   "definition": "maintaining and updating a lower bound on D, d_k = max(d_k, d_hat), to set the step size",
+   "where": "Sec 1-2"
+  },
+  {
+   "term": "n_hat / r",
+   "definition": "proof thresholds: n_hat is when d_k >= d_{n+1}/2 for all later k; r is the smallest index after which ||g_n||^2 <= sum of earlier ||g||^2",
+   "where": "App A.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Making SGD parameter-free (Carmon and Hinder)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "idea of bounding D; bisection with log log factor",
+   "quote": null
+  },
+  {
+   "work": "DoG: DoG is SGD's best friend (Ivgi, Hinder, Carmon)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent; stochastic setting, extra log factors",
+   "quote": "Their work is concurrent with ours"
+  },
+  {
+   "work": "Training deep networks without learning rates through coin betting (COCOB)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "only prior parameter-free deep baseline",
+   "quote": null
+  },
+  {
+   "work": "AdaGrad (Duchi, Hazan, Singer)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "AdaGrad-Norm step sizes; Alg 3 is D-adapted AdaGrad",
+   "quote": null
+  },
+  {
+   "work": "Momentum via primal averaging (Defazio)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "momentum in Algs 4, 5",
+   "quote": null
+  },
+  {
+   "work": "Orabona, A modern introduction to online learning",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "classical dual averaging bound",
+   "quote": null
+  },
+  {
+   "work": "Polyak step size; Hazan and Kakade 2019",
+   "year": 1987,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs f*",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "110M BookWiki masked LM",
+   "quote": null
+  },
+  {
+   "work": "Vision Transformers (Dosovitskiy et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "the underperforming case",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Toy problem illustrating the estimate of D over time, f(x) = |x|. x0 = 1.0",
+   "page": 6,
+   "why": "shows d_k rising toward D while d_hat later falls"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Final accuracy as a function of d0.",
+   "page": 19,
+   "why": "flat from 1e-16 to 1e-2"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of baseline learning rates against final D-Adapted learning rates",
+   "page": 17,
+   "why": "learned vs tuned LRs"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 4 / 5 (p.10)",
+   "snippet": "Algorithm 5: s_{k+1} = sqrt(b2) s_k + (1-sqrt(b2)) d_k gamma_k g_k; d_hat = r_{k+1}/((1-sqrt(b2))||s_{k+1}||_1); d_{k+1}=max(d_k, d_hat) (paraphrased, equations garbled in extraction)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations are garbled in the extracted text.",
+  "Venue is not printed in the PDF (arXiv v5, 7 Jul 2023); the repo ref 'ICML 2023' is not verifiable from the PDF.",
+  "No embedded instructions found."
+ ]
 }

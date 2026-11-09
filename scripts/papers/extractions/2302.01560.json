@@ -1,0 +1,712 @@
+{
+ "schema": 1,
+ "key": "2302.01560",
+ "pdf": "generative-ai/03-agentic-foundations/sources/wang-2023-describe-explain-plan-select.pdf",
+ "bib": {
+  "title": "Describe, Explain, Plan and Select: Interactive Planning with Large Language Models Enables Open-World Multi-Task Agents",
+  "authors": [
+   "Zihao Wang",
+   "Shaofei Cai",
+   "Guanzhou Chen",
+   "Anji Liu",
+   "Xiaojian Ma",
+   "Yitao Liang"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
+  "arxiv": "2302.01560",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 119046,
+  "chars_total": 119046,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Figs 1-9 are images (captions only)."
+ },
+ "type": "empirical",
+ "question": "How can an LLM planner be made reliable for long-horizon, state-dependent multi-task planning in open-world environments such as Minecraft?",
+ "hypothesis": "Feeding execution descriptions back, having the LLM explain its own plan failures, and ranking parallel goals by predicted completion horizon will beat one-shot or feedback-only LLM planners.",
+ "contributions": [
+  "DEPS: interactive Describe, Explain, Plan, Select planning with LLMs",
+  "Horizon-predictive goal selector that ranks parallel sub-goals by estimated steps to completion",
+  "Zero-shot multi-task agent for 70+ Minecraft tasks, nearly doubling overall success",
+  "Generalisation tests on ALFWorld and tabletop manipulation; first planning-based agent to reach ObtainDiamond"
+ ],
+ "method": {
+  "summary": "A planner LLM (Codex) writes a Python-like plan with preconditions; a descriptor turns the Minecraft inventory/biome info into text on failure; the LLM explains the failure from few-shot demos and re-plans; a learned horizon-predictive selector orders parallel candidate goals; a behavior-cloned goal-conditioned controller executes goals.",
+  "task": "LLM-based task planning for embodied agents (Minecraft, ALFWorld, tabletop)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Minecraft Task101 (71 hardest tasks from MCU SkillForgeChain, subset of MineDojo programmatic tasks)",
+    "role": "eval",
+    "size": "71 tasks in 8 meta groups (counts per group in Table 1: 14,12,7,6,9,7,13,1)",
+    "split": "all evaluated; each run 30 times (at least 30 across world seeds)",
+    "source": "MCU / MineDojo",
+    "preprocessing": "Only the 'given nothing' condition kept; empty inventory, survival mode, axe given; random biome and spawn each run"
+   },
+   {
+    "name": "ALFWorld sample",
+    "role": "eval",
+    "size": "10 tasks, 6 groups",
+    "split": "5 runs per task",
+    "source": "Shridhar et al. 2020",
+    "preprocessing": "max 50 steps"
+   },
+   {
+    "name": "CLIPort tabletop seen tasks",
+    "role": "eval",
+    "size": "5 tasks",
+    "split": "5 seeds each",
+    "source": "Shridhar et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Offline Minecraft trajectories for horizon selector and BC controller",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "not stated in this paper (controller from Cai et al. 2023, arXiv 2301.10034)",
+    "preprocessing": "42 discretised actions from MineDojo action space"
+   }
+  ],
+  "models": [
+   {
+    "name": "code-davinci-02 (Codex)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "OpenAI completion LLM, planner in Minecraft",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "max re-planning rounds about 7-8 due to token limit"
+    }
+   },
+   {
+    "name": "text-davinci-03",
+    "role": "proposed",
+    "params": null,
+    "architecture": "OpenAI LLM; explainer in Minecraft, planner in ALFWorld, baselines GPT/CoT/IM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo (ChatGPT)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "planner in tabletop",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "planner ablation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-70B pretrained",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-13B finetuned on internet Minecraft text",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": "LLaMA2-13B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune_details": "not given"
+    }
+   },
+   {
+    "name": "Horizon-predictive selector (goal-sensitive Impala CNN)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Impala CNN backbone, may share backbone with controller",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Goal-conditioned BC controller (Cai et al. 2023)",
+    "role": "base",
+    "params": null,
+    "architecture": "modified goal-sensitive Impala CNN; 262 goals; skill success 0.00-1.00 in Table 18",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sentence-BERT (goal parser fallback)",
+    "role": "base",
+    "params": null,
+    "architecture": "cosine similarity to map free-form goals to skills",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Selector: negative log-likelihood -log mu(h_t(g)|s_t,g) of ground-truth horizon on offline trajectories; controller: imitation learning (behavior cloning)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "LLM planner is not trained (no gradient updates); only selector, controller and the LLaMA2-13B finetune train, none with hyperparameters given"
+   }
+  },
+  "inference": {
+   "decoding": "OpenAI API defaults",
+   "temperature": "default (inferred: not stated)",
+   "top_p": null,
+   "max_tokens": "limited by model context; Codex ~7-8 re-planning rounds",
+   "samples": "30 runs per task (Minecraft); 5 runs (ALFWorld); 5 seeds (tabletop)",
+   "prompting": "Chat-style dialogue; 2 DEP demonstrations with Descriptor/Explainer/RePlanner turns; Python-like plan with step comments; explainer few-shot (3 examples)",
+   "retrieval": null,
+   "parameters": {
+    "max_steps": "3000/3000/6000/3000/6000/6000/6000/12000 for MT1-MT8",
+    "tabletop_k": 15,
+    "alfworld_max_steps": 50,
+    "re-planning rounds ablated": "0,1,3,5,unbounded",
+    "selector": "softmax over -mu(g,s) among executable goals (Eq. 2)"
+   },
+   "other": {
+    "hyperparameters": "All LLM hyper-parameters (temperature, best_of) kept as default"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "success rate",
+     "definition": "fraction of episodes in which the task item is obtained within max steps",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT zero-shot planner (Huang 2022)",
+    "ProgPrompt",
+    "Chain-of-Thought",
+    "Inner Monologue",
+    "Code as Policies",
+    "DEP (no selector)",
+    "BUTLER",
+    "CLIPort+oracle"
+   ],
+   "protocol": "Same demos, OpenAI LLM and controller for all baselines (baselines re-implemented for Minecraft); mean +- std across tasks in meta group; no significance tests"
+  },
+  "availability": {
+   "code": "https://github.com/CraftJarvis/MC-Planner",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "DEPS planner/explainer dialogue in Minecraft",
+    "text": "User: You are a helper agent in Minecraft. You need to generate the sequences of goals for a certain task in Minecraft. ... Descriptor: I succeed on step 1, 2, 3, but I fail on step 4 ... Explainer: Because mining cobblestone needs to use the tool wooden_pickaxe. User: Please fix the above errors and replan the task \"obtain 1 stone_sword\".",
+    "where": "Listing 3 (App G.1.1)"
+   },
+   {
+    "purpose": "Explainer",
+    "text": "Here are some actions that the agent fails to perform in Minecraft. Please give the explanation of action execution failure according to the current inventory information of the agent.",
+    "where": "Listing 1 (App C.3)"
+   },
+   {
+    "purpose": "Goal parser",
+    "text": "Extract the action name, action type, goal object, tool and action rank from the input text.",
+    "where": "Listing 2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "All hyper-",
+    "where": "Sec 4.1 Baselines"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DEPS average success over the 71 Minecraft tasks is 48.56%, versus 25.77% for the best baseline (Code as Policies).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg success rate",
+   "value": 48.56,
+   "unit": "% success",
+   "baseline_value": 25.77,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps",
+   "quote": null,
+   "table": "Table 2, row DEPS, column AVG",
+   "note": null,
+   "where": "Sec 4.2, Table 2"
+  },
+  {
+   "claim": "DEP (describe, explain, plan, no selector) alone averages 39.36%, beating all baselines; the selector adds about 9 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 39.36,
+   "unit": "% success",
+   "baseline_value": 48.56,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps",
+   "quote": null,
+   "table": "Table 2, row DEP, column AVG",
+   "note": "base value is full DEPS",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Baselines get near zero from MT6 on; DEPS gets 13.80 on MT6 and 12.56 on MT7.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 13.8,
+   "unit": "% success",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps",
+   "quote": null,
+   "table": "Table 2, row DEPS, column MT6",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adding re-planning rounds raises success: MT1 goes from 28.6 (round 0) to 79.8 (unbounded rounds), +51.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 51.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps; Codex limited to roughly 7-8 rounds by max tokens",
+   "quote": null,
+   "table": "Table 4, row MT1, column Delta",
+   "note": null,
+   "where": "Sec 4.3.2, Table 4"
+  },
+  {
+   "claim": "Re-planning gain on MT3 (Hunt and Food) is +47.3 points (15.1 to 62.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 47.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps",
+   "quote": null,
+   "table": "Table 4, row MT3, column Delta",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Horizon-predictive selector beats a fixed goal order by +22.3%, +29.2%, +32.6% for 2, 3, 4 parallel goals.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Biome Plains, DEP with different selectors, parallel goals 2/3/4 (read from Fig 4 text)",
+   "quote": "an improvement of ∆=+22.3%, +29.2%, +32.6% is obtained using",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3.1, Fig 4"
+  },
+  {
+   "claim": "Selector gives up to 2.7x success on efficiency-sensitive MT7 (4.60 to 12.56).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 12.56,
+   "unit": "% success",
+   "baseline_value": 4.6,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps",
+   "quote": "(up to +2.7 times success rate)",
+   "table": "Table 2, row DEPS, column MT7",
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "ObtainDiamond success is 0.59% within 10 minutes (12000 steps) with a BC controller.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.59,
+   "unit": "% success",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps, MT8 task",
+   "quote": null,
+   "table": "Table 2, row DEPS, column MT8",
+   "note": "Sec 4.4: '0.59% success rate within 10 minutes of gameplay'; Appendix E says 0.6%",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "With an Oracle controller DEPS reaches 60% on ObtainDiamond; the controller, not the plan, is the bottleneck.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 60,
+   "unit": "% success",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ObtainDiamond, Oracle controller",
+   "quote": "DEPS yields a success rate of 60% for ObtainDiamond",
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Planning success plummets in Minecraft vs ALFWorld and Tabletop for Inner Monologue, even with an oracle controller.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inner Monologue baseline, three environments (Fig 1 bar chart; numbers not printed in text)",
+   "quote": "the success rate of executing Minecraft tasks is much less than that of the other environments",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, Fig 1"
+  },
+  {
+   "claim": "On ALFWorld DEP averages 76.0% vs 10.0% (GPT zero-shot), 52.0% (GPT+RP), 30.0% (Inner Monologue), 37.0% (BUTLER).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 76.0,
+   "unit": "% success",
+   "baseline_value": 52.0,
+   "n": null,
+   "setup": "ALFWorld, 10 sampled tasks in 6 groups, 5 runs each, text-davinci-03, 50 max steps, LLM-based controller",
+   "quote": null,
+   "table": "Table 6, row Average, column DEP",
+   "note": "all methods fail on Pick Two & Place",
+   "where": "App A.1, Table 6"
+  },
+  {
+   "claim": "On Tabletop (CLIPort) DEP and zero-shot GPT both average 80.0%, IM 56.4%; gap between planners is small in compact tabletop.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 80.0,
+   "unit": "% success",
+   "baseline_value": 56.4,
+   "n": null,
+   "setup": "5 seen CLIPort tasks, gpt-3.5-turbo, 5 seeds, k=15 steps",
+   "quote": null,
+   "table": "Table 8, row Average, column DEP",
+   "note": null,
+   "where": "App A.2, Table 8"
+  },
+  {
+   "claim": "With DEPS, different planner LLMs converge: Codex 79.8, GPT-3 75.4, ChatGPT 70.2, GPT-4 89.3 on MT1 versus baselines 28.6, 27.2, 20.3, 49.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 89.3,
+   "unit": "% success",
+   "baseline_value": 49.2,
+   "n": null,
+   "setup": "Minecraft MineDojo 1.11.2, 71 tasks in 8 meta groups (MT1-MT8), behavior-cloned controller, Codex (code-davinci-02) planner, each task run 30 times, empty inventory, max 3000-12000 steps planners swapped",
+   "quote": null,
+   "table": "Table 19, row MT1, column GPT-4 DEPS",
+   "note": null,
+   "where": "App C.2, Table 19"
+  },
+  {
+   "claim": "GPT-4 vanilla baseline has about twice the initial plan accuracy of other LLMs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 19 baselines",
+   "quote": "The GPT-4 baseline achieved an initial plan accuracy twice as high as the baselines on other LLMs",
+   "table": null,
+   "note": null,
+   "where": "App C.2"
+  },
+  {
+   "claim": "Finetuned LLaMA2-13B on Minecraft text gets 90.0 on CraftingTable vs 60.0 for pretrained LLaMA2-70B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 90.0,
+   "unit": "% success",
+   "baseline_value": 60.0,
+   "n": null,
+   "setup": "4 tasks only (CraftingTable, WoodenPickaxe, Furnace, StonePickaxe)",
+   "quote": null,
+   "table": "Table 20, row Finetuned LLaMA2-13B, column CraftingTable",
+   "note": null,
+   "where": "App C.2, Table 20"
+  },
+  {
+   "claim": "Prior ObtainDiamond: VPT 20% in 20 min with ~70k hours of human demos; DreamerV3 2% in modified env.",
+   "kind": "reported",
+   "source": "Baker et al. 2022 (VPT); Hafner et al. 2023 (DreamerV3)",
+   "metric": null,
+   "value": 20,
+   "unit": "% success",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as cited by the authors",
+   "quote": "VPT further boosts the success rate to 20% within 20",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  }
+ ],
+ "limits": [
+  "Relies on privately-held LLMs (GPT-3, Codex, ChatGPT); open LLaMA2 tested only on 4 simple tasks (Table 20)",
+  "Explicit step-by-step planning is a bottleneck for scaling; authors suggest amortising into an end-to-end policy",
+  "Fundamental planning challenges such as dead ends may not occur in the chosen environments",
+  "Controller is the main bottleneck: 0.59% ObtainDiamond with BC controller vs 60% with oracle",
+  "No selector training details (data size, optimizer, steps); no significance tests; Table 4/19 use unbounded rounds limited by tokens",
+  "Baselines re-implemented by the authors for Minecraft with prompt/feedback template choices; ALFWorld uses 10 tasks x 5 runs and tabletop 5 tasks (coarse percentages)",
+  "Codex (code-davinci-02) and text-davinci-03 are deprecated models"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "horizon h_t(g)",
+   "definition": "the remaining time steps to complete the given goal, T_g - t",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "round",
+   "definition": "a cycle of interactive LLM-based planning with description, explanation, and planning and selecting, i.e., an updated plan",
+   "where": "Sec 4.3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Inner Monologue",
+   "year": 2022,
+   "arxiv": "2207.05608",
+   "relation": "extends",
+   "note": "interactive planning with feedback; main baseline, found to accumulate planning error",
+   "quote": null
+  },
+  {
+   "work": "Language Models as Zero-Shot Planners (Huang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GPT zero-shot planner",
+   "quote": null
+  },
+  {
+   "work": "ProgPrompt",
+   "year": 2022,
+   "arxiv": "2209.11302",
+   "relation": "baseline",
+   "note": "pythonic prompt",
+   "quote": null
+  },
+  {
+   "work": "Code as Policies",
+   "year": 2022,
+   "arxiv": "2209.07753",
+   "relation": "baseline",
+   "note": "code-style planning",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "few-shot explanation demos",
+   "quote": null
+  },
+  {
+   "work": "SayCan",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "affordance-weighted LLM planning",
+   "quote": null
+  },
+  {
+   "work": "MineDojo",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "environment and tasks",
+   "quote": null
+  },
+  {
+   "work": "MCU SkillForgeChain",
+   "year": 2023,
+   "arxiv": "2310.08367",
+   "relation": "uses-data",
+   "note": "task suite and MC-TextWorld",
+   "quote": null
+  },
+  {
+   "work": "Open-world multi-task control through goal-aware representation learning and adaptive horizon prediction",
+   "year": 2023,
+   "arxiv": "2301.10034",
+   "relation": "uses-method",
+   "note": "controller and horizon prediction",
+   "quote": null
+  },
+  {
+   "work": "VPT",
+   "year": 2022,
+   "arxiv": "2206.11795",
+   "relation": "related",
+   "note": "20% ObtainDiamond with human demos",
+   "quote": null
+  },
+  {
+   "work": "DreamerV3",
+   "year": 2023,
+   "arxiv": "2301.04104",
+   "relation": "related",
+   "note": "2% diamond in modified env",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "related",
+   "note": "concurrent work",
+   "quote": null
+  },
+  {
+   "work": "ALFWorld",
+   "year": 2020,
+   "arxiv": "2010.03768",
+   "relation": "uses-data",
+   "note": "generalisation env",
+   "quote": null
+  },
+  {
+   "work": "CLIPort",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "tabletop env and controller",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of our proposed interactive planner architecture.",
+   "page": 3,
+   "why": "Shows the descriptor-explainer-planner-selector loop and a worked diamond re-plan."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Planning success rates plummet in open worlds due to new challenges.",
+   "page": 2,
+   "why": "Motivates the two challenges."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Success Rate of DEPS under different maximum rounds of re-planning.",
+   "page": 9,
+   "why": "Shows gain from each re-planning round."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "Description: dt = fDESC(st−1), Explanation: et = fEX(dt), Prompt: pt = CONCAT(pt−1, dt, et), Plan: Pt = fLM(pt), Goal: gt ∼ fS(Pt, st−1), Action: at ∼ π(at | st−1, gt)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Appendix C.2 has garbled text ('We also conduct ablation experiments on' repeated).",
+  "Table 19 has odd values (38.04, 16.19, 16.41) and omits MT8; Appendix E says 0.6% vs 0.59% elsewhere.",
+  "Table 4 MT1 DEPS (79.8) vs Table 3 (79.77) rounding only.",
+  "No embedded instructions found."
+ ]
+}

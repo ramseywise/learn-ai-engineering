@@ -22,7 +22,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
 ---
-# 9 — Evaluating Prompts
+# 8 — Evaluating Prompts
 
 > How you know a prompt change helped. This is the prompt-level view; eval systems for whole agents and harnesses are in [the Eval pillar](../../../generative-ai/08-eval/README.md).
 
@@ -111,7 +111,7 @@ Two cheap baselines show whether a benchmark tests what you think it does. The S
 ![Average embedding distance per prompt variant and test case](../sources/images/prompt-engineering-for-generative-ai-fig10-1.png)
 *Image Source: Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), Fig. 10-1*
 
-The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 against the control's 0.052 (−17.75%). Before you act on a table like this, notice what it leaves out. It has three cases. It doesn't give the number of runs, though the text recommends 10 or more per case. It shows no spread, so a 0.009 difference has no error bar. And the winner changes with the case: D is best on Memetics, B on the other two. An embedding distance also rewards matching the topic and wording, and style is what's being tested. The authors' general advice is right: run several cases, many times each. The table just doesn't show that it was followed. For the same style task they suggest fine-tuning if you have enough samples (OpenAI recommends at least 50), or DSPy to search instructions and examples against your metric ([08](08-prompt-optimization.md)).
+The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 against the control's 0.052 (−17.75%). Before you act on a table like this, notice what it leaves out. It has three cases. It doesn't give the number of runs, though the text recommends 10 or more per case. It shows no spread, so a 0.009 difference has no error bar. And the winner changes with the case: D is best on Memetics, B on the other two. An embedding distance also rewards matching the topic and wording, and style is what's being tested. The authors' general advice is right: run several cases, many times each. The table just doesn't show that it was followed. For the same style task they suggest fine-tuning if you have enough samples (OpenAI recommends at least 50), or DSPy to search instructions and examples against your metric ([09](09-prompt-optimization.md)).
 
 **A reference metric can rank systems backwards when the references carry one model's style.** Goyal et al. asked crowd annotators to pick the best of three summaries for 100 CNN and 100 BBC articles from March–June 2022, chosen to postdate the standard test sets because GPT-3's training data is unknown. Zero-shot GPT-3 (text-davinci-002) was picked best 58% and 57% of the time, against 36% and 20% for BRIO, a summarizer fine-tuned on those datasets' reference summaries. On 500-article samples of the standard test sets, ROUGE-L put GPT-3 about 7 points behind BRIO on average (24.71 against 31.44 on the CNN split), below even the Lead-3 baseline reported in earlier work. Reference-free factuality metrics also scored GPT-3 low (except on XSum), though the authors rarely found factual errors in its summaries ([arXiv:2209.12356](https://arxiv.org/abs/2209.12356) (Goyal et al., 2022-09, preprint)). The human verdict was a majority, not a consensus: all three annotators agreed on the best system for fewer than 30% of articles. Our extrapolation: when you move from a fine-tuned model to a prompted one, check the metric against human judgments before you trust a drop.
 
@@ -129,7 +129,7 @@ The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 again
 
 ## LLM-as-judge
 
-**Never let the model know it's grading its own work.** The book ranks the framings: a judge is most accurate grading a third party, a bit worse grading "the user", and much worse grading itself. Self-grading gets pulled two ways at once: forum-style pretraining data isn't known for objective self-reflection, and RLHF trains the model to recant at any hint of doubt. Frame the work as a third party's. [Calibrating judges with checks and critiques](../../../generative-ai/08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md#part-4-test-whether-a-critique-reports-what-drove-the-verdict) tests whether a judge's written reason reports what drove its verdict.
+**Frame the work as a third party's, never as the model's own.** The ranking and the reasons are in [GA 08/05 — LLM-as-judge](../../../generative-ai/08-eval/notes/05-llm-as-judge.md). [Calibrating judges with checks and critiques](../../../generative-ai/08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md#part-4-test-whether-a-critique-reports-what-drove-the-verdict) tests whether a judge's written reason reports what drove its verdict.
 
 The model's own confidence number is no better a score. Li et al. asked ChatGPT (official API, April 2023) for a 0 to 100 confidence with each of its information-extraction answers, over whole test sets of 14 datasets, and compared calibration with fine-tuned BERT-style models. Its expected calibration error was 0.204 against 0.052 on CoNLL03 NER, 0.460 against 0.023 on SemEval relation classification and 0.699 against 0.154 on argument extraction, and on that last task it reported about the same confidence for wrong answers (0.910) as for right ones (0.956). Asked to rate its own explanations for its correct answers, it called nearly 100% reasonable, while three experts on roughly 200 samples per dataset gave 74.1% for argument extraction and 47.1% for event extraction. One concise, zero-shot-style prompt on a 2023 model, with verbalised confidence compared against other models' [softmax](../../../generative-ai/01-llm-fundamentals/notes/04-decoding-and-inference-behaviour.md#decoding) probabilities, so score it against labels or an independent judge rather than trusting its self-report ([arXiv:2304.11633](https://arxiv.org/abs/2304.11633) (Li et al., 2023-04, preprint)).
 
@@ -153,8 +153,8 @@ Give a thorough analysis, then end with "<Aspect>: X", where X is 1 to 5.
 Also:
 - **Rubric before content.** The judge reads once, forward only ([01](01-how-models-read-prompts.md#property-3--left-to-right-attention-order-matters)), so put the aspects first, then the example.
 - **Scores are relative.** "81% correct" means little alone; "B is judged correct more often than A" is the valid claim.
-- **Calibrate against humans.** Use several annotators, not one. The bar is that adding the model (temperature 0) to the pool *doesn't increase* disagreement (e.g., Kendall's τ).
-- Reasoning models make strong judges ([07](07-prompting-reasoning-models.md#where-reasoning-models-earn-their-cost)), and pairing a judge with a prompt rewriter gives you an optimizer ([08](08-prompt-optimization.md)).
+- **Calibrate against humans**, using several annotators rather than one. The method is in [GA 08/15 — calibration against human labels](../../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md).
+- Reasoning models make strong judges ([07](07-prompting-reasoning-models.md#where-reasoning-models-earn-their-cost)), and pairing a judge with a prompt rewriter gives you an optimizer ([09](09-prompt-optimization.md)).
 
 **Match the humans' spread, not only their majority.** AlpacaFarm built a pool of 13 simulated judges from GPT-4, ChatGPT and Davinci003 prompts and compared it with the majority of three crowdworkers on pairwise preferences. The pool agreed with that majority 65% of the time, against 66% for a held-out human, at $12 instead of $300 per 1,000 comparisons, and methods trained and ranked entirely in the simulator came out in nearly the same order as when trained and ranked with human feedback (Spearman 0.98 over 11 systems). One GPT-4 prompt reached 68% agreement, but the authors kept the pool for its spread: a single fixed GPT-4 prompt varied far less than people did (0.1 against 0.35), and reward models trained on its labels showed none of the over-optimization seen with human labels, so best-of-1024 wrongly looked much better than PPO. The simulated judges shared the human preference for longer answers (64% against 62%), and added biases of their own: they favoured the output shown first and outputs from their own model ([arXiv:2305.14387](https://arxiv.org/abs/2305.14387) (Dubois et al., NeurIPS 2023)). The judges were 2023 models grading simple single-turn instructions. Randomize the order of the two outputs, and when a judge's labels will train something, check its variance as well as its agreement.
 
@@ -206,13 +206,28 @@ A second before/after, with human graders: Yeadon et al. had three blind markers
 
 ---
 
+## Reference-overlap metrics
+
+<details><summary>BLEU and ROUGE: what they correlate with, and where they break</summary>
+
+Reference-overlap metrics are cheap, and their limits are known. BLEU is the geometric mean of 1- to 4-gram precisions, each clipped by the n-gram's count in the references, times a brevity penalty. On 500 Chinese→English news sentences it correlated 0.99 with monolingual judges' ratings across five systems (three MT systems and two human translators, two references). Its scores depend on the references, though: one human translator scored 0.2571 against two references and 0.3468 against four ([ACL 2002](https://aclanthology.org/P02-1040/) (Papineni et al., ACL 2002)).
+
+![Scatter plot of monolingual judges' scores against BLEU score for five systems, with the regression line through them (correlation 0.99)](../sources/images/papineni-bleu-fig5.png)
+*Image Source: Papineni et al., [BLEU: a Method for Automatic Evaluation of Machine Translation](https://aclanthology.org/P02-1040/) (ACL 2002), Fig. 5*
+
+ROUGE is recall-oriented, counting overlapping n-grams or longest common subsequences with reference summaries. Its system-level Pearson correlation with human coverage scores depended on the task. On 100-word single-document summaries (DUC 2001, 12 systems, one reference) ROUGE-2 scored 0.84 and ROUGE-1 0.76. On 10-word summaries (DUC 2003, 14 systems) ROUGE-2 fell to 0.75 while ROUGE-1 reached 0.96 ([ACL 2004 workshop](https://aclanthology.org/W04-1013/) (Lin, 2004)).
+
+</details>
+
+---
+
 ## Go deeper
 
 - Book: [Ch 10 PDF](../sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf) (the original chapter; everything above stands alone)
 - Eval systems and grounding methodology: [the Eval pillar](../../../generative-ai/08-eval/README.md) · [maturity ladder](../../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
 - Papers and tools: [references.md](../references.md#evaluation)
 
-**Continue in the Eval pillar.** This chapter is the prompt-level view. Chapters 01–05 of [the Eval pillar](../../../generative-ai/08-eval/README.md) go deeper on the same ground and can be read right after this topic:
+**Continue in the Eval pillar.** This chapter is the prompt-level view. Notes 01–02 and 04–05 of [the Eval pillar](../../../generative-ai/08-eval/README.md) can be read right after this pillar. These go deeper on the same ground:
 - Defining pass/fail from error analysis → [02-defining-correct.md](../../../generative-ai/08-eval/notes/02-defining-correct.md)
 - Building the dataset → [03-eval-datasets.md](../../../generative-ai/08-eval/notes/03-eval-datasets.md)
 - Code graders and combining scores → [04-graders.md](../../../generative-ai/08-eval/notes/04-graders.md)
@@ -225,7 +240,7 @@ A second before/after, with human graders: Yeadon et al. had three blind markers
 
 - **Using an exact match on free text.** Symptom: the score falls as answers grow, and it rewards phrasing over correctness. Fix: partial match on the aspect separating breaking from benign divergence: "did it adjust the heating at all?" rather than "was it exactly 77°F?"
 - **Asking one composite question of the judge.** Symptom: scores drift because the judge silently switches criteria. Fix: use SOMA: specific questions, an ordinal scale with each level described, and multiple aspects scored separately.
-- **Letting the model grade itself.** Symptom: inflated or easily swayed scores. Fix: frame the work as a third party's. The book ranks this framing most accurate and self-grading much worse.
+- **Letting the model grade itself.** Symptom: inflated or easily swayed scores. Fix: frame the work as a third party's ([GA 08/05](../../../generative-ai/08-eval/notes/05-llm-as-judge.md)).
 - **Goldilocks questions.** Symptom: "is the length right?" yields a score you can't act on. Fix: split it into "complete?" and "concise?".
 - **Picking a winner from a small blind A/B.** Symptom: you ship a prompt on five samples per arm. It's a bug finder, and one rater who also wrote the prompts can't separate two decent prompts. Fix: use it to find deviations, then decide with a harness.
 - **Comparing two models under one prompt format.** Symptom: a ranking that flips when someone changes a separator. In Sclar et al., given a lead of at least 2 points under one format, a different format reversed it by at least 2 with probability 0.141 (LLaMA-2-13B and -70B). Fix: score both over several formats and report the range.
@@ -243,7 +258,7 @@ A second before/after, with human graders: Yeadon et al. had three blind markers
 3. Write one SOMA aspect for a meeting summarizer, in the [Example 10-1 form](../../../generative-ai/08-eval/notes/05-llm-as-judge.md#soma-a-rubric-recipe). What goes first, and where does the score go?
    <details><summary>Answer</summary>Task and aspect first, for example "Coverage: does the summary include every decision made?", with each of levels 1 to 5 described, then the transcript and summary framed as someone else's work, then "Give a thorough analysis, then end with 'Coverage: X'". The rubric comes before the content since the judge reads forward only, and analysis comes before the score. Run a separate prompt for conciseness.</details>
 4. Add a level-2 check to the [prompt eval harness](../practice/prompt-eval-harness/README.md). Which scorer type would you use for a classifier and for a helpfulness rating, and how would you validate the second against people?
-   <details><summary>Answer</summary>A gold match (or the label's logprob, for more power) for the classifier, and an LLM judge for helpfulness. Calibrate against several human annotators. The bar is that adding the model at temperature 0 to the pool doesn't increase disagreement, measured for example by Kendall's τ.</details>
+   <details><summary>Answer</summary>A gold match (or the label's logprob, for more power) for the classifier, and an LLM judge for helpfulness. Calibrate it against several human annotators, as in [GA 08/15](../../../generative-ai/08-eval/notes/15-calibration-against-human-labels.md).</details>
 
 ## Interview checklist
 
@@ -259,4 +274,4 @@ A second before/after, with human graders: Yeadon et al. had three blind markers
 
 ## Next
 
-[Adversarial prompting](10-adversarial-prompting.md): your evals have assumed honest inputs, and this chapter covers prompts written to break yours.
+[Prompt optimization](09-prompt-optimization.md): with an eval in hand, search over prompts against it. Then [adversarial prompting](10-adversarial-prompting.md) covers prompts written to break your evals.

@@ -1,0 +1,134 @@
+{
+ "schema": 1,
+ "key": "2403.18814",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/li-2024-mini-gemini.pdf",
+ "bib": {"title": "Mini-Gemini: Mining the Potential of Multi-modality Vision Language Models", "authors": ["Yanwei Li","Yuechen Zhang","Chengyao Wang","Zhisheng Zhong","Yixin Chen","Ruihang Chu","Shaoteng Liu","Jiaya Jia"], "first_author": "Li", "year": 2024, "venue": "preprint", "arxiv": "2403.18814", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 80674, "chars_total": 80674, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How can an academic-budget VLM approach GPT-4/Gemini-level performance by improving visual tokens, data quality and VLM-guided generation without raising the visual token count?",
+ "hypothesis": "A second high-resolution ConvNet encoder queried by low-resolution ViT tokens adds detail without more LLM tokens, and higher-quality data plus text-bridged generation data improve understanding and add image generation.",
+ "contributions": ["Patch info mining: dual vision encoders (CLIP ViT for LR queries, ConvNeXt for HR keys/values) that enrich visual tokens without increasing their count", "A high-quality dataset (about 1.2M alignment captions, 1.5M instruction conversations, 13K generation instructions)", "Any-to-any workflow with text-bridged image generation through SDXL, supporting dense and MoE LLMs from 2B to 34B"],
+ "method": {
+  "summary": "LLaVA-style VLM with a frozen CLIP-ViT-L low-resolution encoder and a frozen LAION ConvNeXt-L high-resolution encoder; cross-attention patch info mining (LR tokens as queries, HR sub-region features as keys/values) produces the visual tokens fed to an LLM. For generation the LLM emits a <GEN><h>...</h> prompt that SDXL renders, trained on 13K GPT-4 Turbo-built text-only instructions.",
+  "task": "multimodal visual instruction tuning, image understanding and reasoning-based image generation",
+  "trains": true,
+  "datasets": [
+   {"name": "LLaVA-filtered CC3M", "role": "train", "size": "558K image-caption pairs", "split": "projector pretraining", "source": "Sharma et al. 2018 via LLaVA", "preprocessing": null},
+   {"name": "ALLaVA captions", "role": "train", "size": "695K GPT-4V captions", "split": "projector pretraining (total about 1.2M captions)", "source": "ALLaVA", "preprocessing": null},
+   {"name": "LLaVA instruction data", "role": "train", "size": "643K single/multi-turn conversations (excluding 21K TextCaps)", "split": "instruction tuning", "source": "LLaVA", "preprocessing": null},
+   {"name": "ShareGPT4V QA", "role": "train", "size": "100K QA pairs", "split": "instruction tuning", "source": "ShareGPT4V", "preprocessing": null},
+   {"name": "LAION-GPT-4V", "role": "train", "size": "10K captions", "split": "instruction tuning", "source": "LAION", "preprocessing": null},
+   {"name": "ALLaVA instructions", "role": "train", "size": "700K GPT-4V instruction pairs", "split": "instruction tuning", "source": "ALLaVA", "preprocessing": null},
+   {"name": "LIMA + OpenAssistant2", "role": "train", "size": "6K text-only multi-turn conversations", "split": "instruction tuning", "source": "LIMA, OpenAssistant2", "preprocessing": null},
+   {"name": "OCR-related QA", "role": "train", "size": "28K (10K DocVQA, 4K ChartQA, 10K DVQA, 4K AI2D)", "split": "instruction tuning", "source": "public datasets", "preprocessing": "PaddleOCR text appended to conversations as 'Reference OCR token:Text_1,...,Text_n'; OCR detector used only to build data, not at test time"},
+   {"name": "Generation-related instructions", "role": "train", "size": "13K (8K re-caption from LAION-GPT-4V captions, 5K in-context prompt generation); from 10K GPT4V caption data and 6K LLM SFT data before format filtering", "split": "instruction tuning", "source": "built with GPT-4 Turbo, 5 SD prompts from GigaSheet as in-context examples; about 80 USD API cost", "preprocessing": "filtered for format; <GEN> trigger and <h>...</h> wrapper; captions limited to 30 words in the re-caption prompt"},
+   {"name": "TextVQA, MMBench, MME, MM-Vet, MMMU, MathVista", "role": "eval", "size": null, "split": "zero-shot", "source": "public benchmarks", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Mini-Gemini", "role": "proposed", "params": "2B to 34B (Gemma-2B, Vicuna-7B, Vicuna-13B, Mixtral-8x7B, Hermes-2-Yi-34B)", "architecture": "LR CLIP ViT-L + HR LAION ConvNeXt-L, patch info mining, LLM; optional SDXL", "init_from": "pretrained LLMs and vision encoders", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"visual_tokens": "576 for LR 336 input (N); 2880 (5N) with token extension at LR 672", "HR_feature_map": "upsampled/concatenated multi-stage features at 1/4 input scale, N' = N x M^2", "HD_variant": "LR 672, HR 1536"}},
+   {"name": "LLaVA-1.5 Vicuna-7B (same data and recipe)", "role": "baseline", "params": "7B", "architecture": "LLaVA-1.5", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "SDXL", "role": "base", "params": null, "architecture": "latent diffusion image generator", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "inferred: autoregressive language modelling loss on text outputs",
+   "optimizer": "AdamW",
+   "lr": "1e-3 modality alignment; 2e-5 instruction tuning; 1e-5 instruction tuning for Mixtral-8x7B and Hermes-2-Yi-34B",
+   "lr_schedule": "Cosine",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "1 epoch for all models",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x A800 GPUs standard; 4 machines for the 34B model",
+   "compute": "DeepSpeed Zero3",
+   "wall_clock": "34B: within 2 days; HD version about 4 days",
+   "seeds": null,
+   "other": {"frozen": "both vision encoders frozen; projectors of patch info mining trained in all stages; LLM trained only in instruction tuning"}
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot benchmarks; generation triggered by <GEN> token, target caption in <h>...</h> passed to SDXL",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "TextVQA (VQAT)", "definition": "zero-shot accuracy", "unit": "%", "higher_is_better": true},
+    {"name": "MMBench (MMB)", "definition": "benchmark score", "unit": "%", "higher_is_better": true},
+    {"name": "MME", "definition": "perception score / cognition score as printed (e.g. 1659/482)", "unit": "points", "higher_is_better": true},
+    {"name": "MM-Vet, MMMU val/test, MathVista", "definition": "benchmark scores", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["LLaVA-1.5", "LLaVA-NeXT", "InstructBLIP", "Qwen-VL", "CogVLM", "MobileVLM", "LLaMA-VID", "OtterHD", "Gemini Pro", "Qwen-VL-Plus", "GPT-4V"],
+   "protocol": "Single reported number per cell; no seeds, variance or significance tests stated. Qualitative generation comparison against AnyGPT, ChatIllusion, LLMGA."
+  },
+  "availability": {"code": "https://github.com/dvlab-research/MiniGemini", "weights": "models released at the same GitHub", "data": null},
+  "prompts": [
+   {"purpose": "GPT-4 Turbo re-caption data generation (query + SD caption)", "text": "Hi ChatGPT, our objective is to create several high-quality captions that suitable for diffusion models based on the original detailed description given. ... Example high-quality caption formats (limited with 30 words each, descriptive and with some other property tags): {get_example_captions()} ... Requested format: Human Query: ... Related Caption: ... no more than 30 words long.", "where": "Appendix Figure 7 (abridged)"},
+   {"purpose": "GPT-4 captions for conversation context (in-context prompt generation)", "text": "Hi ChatGPT, our objective is to create several high-quality captions for the following conversations used for generative models. ... the caption should be at least 30 words long.", "where": "Appendix Figure 7 (abridged)"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "with an adjusted rate of 1e−5 for the Mixtral-8×7B and Hermes-2-Yi-34B to ensure stable instruction tuning", "where": "Sec 4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Mini-Gemini-HD with Hermes-2-Yi-34B reaches TextVQA 74.1, MMB 80.6, MME 1659/482 and MM-Vet 59.3 at 672 resolution, above Gemini Pro on MMB and close on TextVQA.", "kind": "measured", "source": null, "metric": "MMBench", "value": "80.6", "unit": "%", "baseline_value": "75.2 (Gemini Pro), 75.1 (GPT-4V)", "n": null, "setup": "Zero-shot, Mini-Gemini-HD, Hermes-2-Yi-34B, LR 672 / HR 1536", "quote": null, "table": "Table 1, row Mini-Gemini-HD Hermes-2-Yi-34B, column MMB", "note": null, "where": "Table 1"},
+  {"claim": "Mini-Gemini-HD 34B TextVQA", "kind": "measured", "source": null, "metric": "TextVQA", "value": "74.1", "unit": "%", "baseline_value": "74.6 (Gemini Pro), 69.5 (LLaVA-NeXT 34B)", "n": null, "setup": "Zero-shot, Hermes-2-Yi-34B, 672", "quote": null, "table": "Table 1, row Mini-Gemini-HD Hermes-2-Yi-34B, column VQAT", "note": null, "where": "Table 1"},
+  {"claim": "At normal resolution Mini-Gemini Vicuna-7B beats LLaVA-1.5 Vicuna-7B on TextVQA by 7 points.", "kind": "measured", "source": null, "metric": "TextVQA", "value": "65.2", "unit": "%", "baseline_value": "58.2", "n": null, "setup": "Zero-shot, Vicuna-7B, 336 resolution, different training data from the LLaVA-1.5 published row", "quote": null, "table": "Table 1, rows LLaVA-1.5 Vicuna-7B and Mini-Gemini Vicuna-7B, column VQAT", "note": "TextVQA numbers marked * include train-subset images; the 65.2 row mismatch in data is mixed with different training data from the baseline", "where": "Table 1"},
+  {"claim": "Patch info mining at LR 224 / HR 768 lifts TextVQA by 5.7% over the baseline.", "kind": "measured", "source": null, "metric": "TextVQA", "value": "59.8", "unit": "%", "baseline_value": "54.1", "n": null, "setup": "Vicuna-7B, ConvNeXt-L, 256 visual tokens, same data as baseline", "quote": "5.7% uplift in TextVQA", "table": null, "note": null, "where": "Sec 4.3, Table 2"},
+  {"claim": "At LR 336 / HR 768, patch info mining adds 3.3 TextVQA, 6.3 MME and 3.5 MM-Vet over the baseline with the same 576 tokens.", "kind": "measured", "source": null, "metric": "TextVQA", "value": "61.5", "unit": "%", "baseline_value": "58.2", "n": null, "setup": "Vicuna-7B, ConvNeXt-L, 576 tokens", "quote": "it surpasses the baseline with 3.3%, 6.3, and 3.5% in TextVQA [67], MME [68], and MM-Vet [69] dataset, respectively", "table": null, "note": "quote spans a line break and citation brackets in the source", "where": "Sec 4.3, Table 2"},
+  {"claim": "ConvNeXt-XXL as HR encoder does not beat ConvNeXt-L overall (MME and MM-Vet drop); ConvNeXt-B gives only +0.2 TextVQA and -59.0 MME.", "kind": "measured", "source": null, "metric": "MME", "value": "1517.0", "unit": "points", "baseline_value": "1505.7 (XXL)", "n": null, "setup": "Vicuna-7B, LR 336, HR 768", "quote": null, "table": "Table 2, rows + Larger VE-HR ConvX-L and ConvX-XXL, column MME", "note": null, "where": "Table 2"},
+  {"claim": "Token extension (LR 672 / HR 1536, 2880 tokens) adds over 3 TextVQA points.", "kind": "measured", "source": null, "metric": "TextVQA", "value": "68.4", "unit": "%", "baseline_value": "65.2", "n": null, "setup": "Vicuna-7B, full data, 5N tokens", "quote": null, "table": "Table 3, row + Token extension, column VQAT", "note": null, "where": "Table 3"},
+  {"claim": "Removing TextCaps from training drops TextVQA by 4.2 points (zero-shot setting).", "kind": "measured", "source": null, "metric": "TextVQA", "value": "59.0", "unit": "%", "baseline_value": "63.2", "n": null, "setup": "Vicuna-7B, LR 336 / HR 768, data ablation", "quote": null, "table": "Table 3, row - TextCaps, column VQAT", "note": null, "where": "Table 3"},
+  {"claim": "Adding the 13K generation-related data raises MM-Vet by 3.3 points.", "kind": "measured", "source": null, "metric": "MM-Vet", "value": "37.0", "unit": "%", "baseline_value": "33.7", "n": null, "setup": "Vicuna-7B, data ablation cumulative", "quote": "brings 3.3% gains in MM-Vet dataset", "table": null, "note": null, "where": "Sec 4.3, Table 3"},
+  {"claim": "ALLaVA GPT-4V data pushes TextVQA +3.0 and MM-Vet +3.8 in the cumulative ablation.", "kind": "measured", "source": null, "metric": "TextVQA", "value": "65.2", "unit": "%", "baseline_value": "62.2", "n": null, "setup": "Vicuna-7B, Table 3 cumulative data rows", "quote": null, "table": "Table 3, row + ALLaVA, column VQAT", "note": null, "where": "Table 3"},
+  {"claim": "The 13K generation dataset cost about 80 USD in GPT-4 API calls.", "kind": "measured", "source": null, "metric": "cost", "value": "80", "unit": "USD", "baseline_value": null, "n": 13000, "setup": "GPT-4 data generation", "quote": "The total cost for the GPT-4 API to get all 13K data is around 80$.", "table": null, "note": null, "where": "Fig 7 caption"},
+  {"claim": "34B model trains in about 2 days on 4 machines of 8xA800; HD version about 4 days.", "kind": "measured", "source": null, "metric": "wall clock", "value": "2 days", "unit": "days", "baseline_value": null, "n": null, "setup": "Hermes-2-Yi-34B, DeepSpeed Zero3", "quote": "complete the optimization within 2 days with DeepSpeed Zero3 strategy", "table": null, "note": null, "where": "Sec 4.1"},
+  {"claim": "Authors state that higher resolution reduces visual hallucination (qualitative observation, no measurement).", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Token extension", "quote": null, "table": null, "note": null, "where": "Sec 4.3"}
+ ],
+ "limits": [
+  "Counting ability and complex visual reasoning are far from satisfactory, attributed to missing pretraining data (Sec 5).",
+  "Generation uses text to bridge VLM and diffusion model because no apparent gain was found with embedding-based approaches (Sec 5).",
+  "Generation quality is shown only qualitatively (Figs 6, 10); no quantitative generation metric.",
+  "Single runs, no variance or seeds; baselines in Table 1 use different training data, so gains mix data and architecture effects (only Tables 2-3 control for data).",
+  "TextVQA numbers marked * include train-subset images; TextCaps data included in some rows.",
+  "Batch size, warmup, sequence length, precision and weight decay not stated; no data release for the 13K set stated in the text.",
+  "Fig 8 shows a failed case in image understanding."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Patch info mining", "definition": "Cross-attention where LR visual tokens (queries) retrieve cues from the corresponding HR sub-region features (keys/values) to yield enhanced visual tokens without extra token count", "where": "Sec 3.2, Eq 1"},
+  {"term": "Visual token extension", "definition": "Extending visual tokens to 5N by encoding the original and 2x upscaled image split as a batch", "where": "Sec 3.2"}
+ ],
+ "lineage": [
+  {"work": "LLaVA / LLaVA-1.5", "year": 2023, "arxiv": "2310.03744", "relation": "extends", "note": "Base architecture and baseline with same data/strategy", "quote": null},
+  {"work": "LLaVA-NeXT", "year": 2024, "arxiv": null, "relation": "baseline", "note": "High-resolution comparison", "quote": null},
+  {"work": "CLIP", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "LR ViT encoder", "quote": null},
+  {"work": "ConvNeXt / LAION-5B", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "HR encoder", "quote": null},
+  {"work": "SDXL", "year": 2023, "arxiv": "2307.01952", "relation": "uses-method", "note": "Image generator driven by VLM prompts", "quote": null},
+  {"work": "ALLaVA", "year": 2024, "arxiv": "2402.11684", "relation": "uses-data", "note": "GPT-4V captions and instructions", "quote": null},
+  {"work": "ShareGPT4V", "year": 2023, "arxiv": "2311.12793", "relation": "uses-data", "note": "100K QA", "quote": null},
+  {"work": "DALL-E 3 (better captions)", "year": 2023, "arxiv": null, "relation": "related", "note": "Re-captioning idea", "quote": null},
+  {"work": "InstructBLIP", "year": 2023, "arxiv": "2305.06500", "relation": "baseline", "note": null, "quote": null},
+  {"work": "Qwen-VL", "year": 2023, "arxiv": "2308.12966", "relation": "baseline", "note": null, "quote": null},
+  {"work": "AnyGPT", "year": 2024, "arxiv": "2402.12226", "relation": "baseline", "note": "Generation comparison", "quote": null},
+  {"work": "ChatIllusion", "year": 2023, "arxiv": "2311.17963", "relation": "baseline", "note": "Generation comparison", "quote": null},
+  {"work": "LLMGA", "year": 2023, "arxiv": "2311.16500", "relation": "baseline", "note": "Generation comparison", "quote": null},
+  {"work": "MMBench, MME, MM-Vet, MMMU, MathVista, TextVQA", "year": null, "arxiv": null, "relation": "uses-data", "note": "Eval benchmarks", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "The framework of Mini-Gemini with any-to-any workflow.", "page": 3, "why": "Shows dual HR/LR flows, patch info mining and optional SDXL output"},
+  {"figure": "Fig 3", "caption": "More details in patch info mining and visual token extension.", "page": 4, "why": "Shows Q/K/V construction and 5N token extension"},
+  {"figure": "Fig 4", "caption": "Two types of our pure-text data are used for image generation.", "page": 5, "why": "Shows re-caption and in-context prompt data formats"}
+ ],
+ "code": [
+  {"where": "Eq 1, Sec 3.2", "snippet": "T_V = MLP(Q + Softmax(phi(Q) x phi(K)^T) x phi(V))", "verbatim": false}
+ ],
+ "problems": ["Table 1 and 2 values extracted in column order from PDF text; row mapping checked against the printed text. No embedded instructions found."]
+}

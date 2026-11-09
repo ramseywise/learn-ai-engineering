@@ -1,0 +1,675 @@
+{
+ "schema": 1,
+ "key": "2406.04692",
+ "pdf": "ai-engineering/05-graph-engineering/sources/wang-2024-mixture-agents-enhances-large-language.pdf",
+ "bib": {
+  "title": "Mixture-of-Agents Enhances Large Language Model Capabilities",
+  "authors": [
+   "Junlin Wang",
+   "Jue Wang",
+   "Ben Athiwaratkun",
+   "Ce Zhang",
+   "James Zou"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2406.04692",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 49058,
+  "chars_total": 49058,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the collective expertise of several LLMs be combined, through layered prompting alone, into a response better than any single LLM produces?",
+ "hypothesis": "Integrating diverse perspectives from various models yields better responses than a single model, because LLMs are 'collaborative': they answer better when shown other models' outputs, even weaker ones.",
+ "contributions": [
+  "Mixture-of-Agents framework leveraging multiple LLMs in layers",
+  "Finding of collaborativeness of LLMs",
+  "State-of-the-art performance on AlpacaEval 2.0, MT-Bench and FLASK"
+ ],
+ "method": {
+  "summary": "Layered MoA: each layer has n LLM agents; each agent in layer i+1 receives the original prompt plus all layer-i outputs wrapped in an Aggregate-and-Synthesize prompt. A single LLM in the last layer produces the final output. No fine-tuning; prompting only. Evaluated on AlpacaEval 2.0, MT-Bench, FLASK with open-source proposers served via Together Inference Endpoint.",
+  "task": "open-ended instruction following / chat response quality (plus MATH in appendix)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "AlpacaEval 2.0",
+    "role": "eval",
+    "size": "805 instructions",
+    "split": "full",
+    "source": "Dubois et al., 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "MT-Bench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zheng et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "FLASK",
+    "role": "eval",
+    "size": "12 skill-specific scores",
+    "split": null,
+    "source": "Ye et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH",
+    "role": "eval",
+    "size": null,
+    "split": "appendix D; subset size not stated",
+    "source": "Hendrycks et al., 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen1.5-110B-Chat",
+    "role": "proposed",
+    "params": "110B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "proposer; default final aggregator of MoA"
+    }
+   },
+   {
+    "name": "Qwen1.5-72B-Chat",
+    "role": "proposed",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "proposer; aggregator of MoA-Lite"
+    }
+   },
+   {
+    "name": "WizardLM-8x22B",
+    "role": "proposed",
+    "params": "8x22B",
+    "architecture": "mixture-of-experts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-3-70B-Instruct",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x22B-v0.1",
+    "role": "proposed",
+    "params": "8x22B",
+    "architecture": "mixture-of-experts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "dbrx-instruct",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "final aggregator only in MoA w/ GPT-4o; also a baseline"
+    }
+   },
+   {
+    "name": "GPT-4 Preview (gpt-4-1106-preview)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "AlpacaEval reference answers and GPT-4-based evaluator"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "inferred: temperature sampling (single-proposer setting uses temperature 0.7); other settings not stated",
+   "temperature": "0.7 for single-proposer ablation only; otherwise not stated",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Three runs of each configuration, mean and standard deviation reported (Table 2); single-proposer ablation draws n responses from one LLM",
+   "prompting": "Aggregate-and-Synthesize system prompt (Table 1) with numbered proposer responses; prompt also contains the user query (Eq. 1)",
+   "retrieval": null,
+   "parameters": {
+    "MoA": "6 proposers (Qwen1.5-110B-Chat, Qwen1.5-72B-Chat, WizardLM-8x22B, LLaMA-3-70B-Instruct, Mixtral-8x22B-v0.1, dbrx-instruct), 3 layers, same set each layer, final aggregator Qwen1.5-110B-Chat",
+    "MoA w/ GPT-4o": "as MoA but GPT-4o is the final-layer aggregator",
+    "MoA-Lite": "same 6 proposers, 2 layers, aggregator Qwen1.5-72B-Chat",
+    "ablation layers": "2 MoA layers for Tables 3 and 4",
+    "ranker baseline": "Qwen1.5-110B-Chat picks one of 6 proposer outputs (Table 5 prompt)"
+   },
+   "other": {
+    "serving": "open-source models through Together Inference Endpoint",
+    "pricing date": "as of May 22, 2024",
+    "tflops proxy": "sum over layers of max tflops among proposers; GPT-4 assumed rumored 8x220B"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AlpacaEval 2.0 LC win rate",
+     "definition": "Length-controlled win rate against gpt-4-1106-preview, judged by GPT-4 evaluator",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AlpacaEval 2.0 win rate",
+     "definition": "raw win rate vs GPT-4 preview",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench score",
+     "definition": "GPT-4 grades answers, score out of 10",
+     "unit": "points (0-10)",
+     "higher_is_better": true
+    },
+    {
+     "name": "FLASK",
+     "definition": "12 skill-specific scores",
+     "unit": "1-5 scale (read from Fig 3)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman correlation",
+     "definition": "within each sample, between n similarity scores (BLEU, TF-IDF, Levenshtein) of proposals to the aggregate and n GPT-4 preference scores",
+     "unit": "coefficient",
+     "higher_is_better": true
+    },
+    {
+     "name": "MATH accuracy",
+     "definition": "fraction correct",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4 Omni (05/13)",
+    "GPT-4 Turbo (04/09)",
+    "GPT-4 Preview (11/06)",
+    "GPT-4 (03/14)",
+    "Individual open models",
+    "LLM-Ranker",
+    "single-proposer MoA"
+   ],
+   "protocol": "AlpacaEval and MT-Bench run three times, mean and std; MT-Bench scores run by the authors; some AlpacaEval baselines taken from leaderboard, WizardLM 8x22B replicated (dagger); GPT-4 judge"
+  },
+  "availability": {
+   "code": "https://github.com/togethercomputer/moa",
+   "weights": "not applicable; off-the-shelf models",
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "Aggregate-and-Synthesize prompt",
+    "text": "You have been provided with a set of responses from various open-source models to the latest user query. Your task is to synthesize these responses into a single, high-quality response. It is crucial to critically evaluate the information provided in these responses, recognizing that some of it may be biased or incorrect. Your response should not simply replicate the given answers but should offer a refined, accurate, and comprehensive reply to the instruction. Ensure your response is well-structured, coherent, and adheres to the highest standards of accuracy and reliability.\nResponses from models:\n1. [Model Response from Ai,1]\n2. [Model Response from Ai,2]\n...\nn. [Model Response from Ai,n]",
+    "where": "Table 1, p.4"
+   },
+   {
+    "purpose": "LLM-Ranker baseline",
+    "text": "You are a highly efficient assistant, who evaluates and selects the best large language model (LLMs) based on the quality of their responses to a given instruction. (Remainder, Appendix Table 5: instruction, six model outputs with identifiers; answer only with the best model identifier.)",
+    "where": "Appendix Table 5"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MoA with only open-source models reaches the top AlpacaEval 2.0 LC win rate, above GPT-4o.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate",
+   "value": 65.1,
+   "unit": "%",
+   "baseline_value": 57.5,
+   "n": null,
+   "setup": "AlpacaEval 2.0, 6 proposers, 3 layers, Qwen1.5-110B-Chat aggregator, mean of 3 runs",
+   "quote": "achieving a score of 65.1% compared to 57.5% by GPT-4 Omni",
+   "table": null,
+   "note": "Intro says 'new SOTA win rate of 65.8%', Table 2 lists MoA w/ GPT-4o as 65.7 and MoA as 65.1; inconsistent",
+   "where": "Abstract, Table 2a"
+  },
+  {
+   "claim": "MoA w/ GPT-4o as final aggregator scores 65.7% LC win rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate",
+   "value": 65.7,
+   "unit": "%",
+   "baseline_value": 57.5,
+   "n": null,
+   "setup": "AlpacaEval 2.0, three runs",
+   "quote": null,
+   "table": "Table 2a, row MoA w/ GPT-4o, column LC win. (65.7±0.7%)",
+   "note": "Intro prints 65.8%",
+   "where": "Table 2a"
+  },
+  {
+   "claim": "MoA-Lite (2 layers, Qwen1.5-72B aggregator) beats GPT-4o on LC win rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate",
+   "value": 59.3,
+   "unit": "%",
+   "baseline_value": 57.5,
+   "n": null,
+   "setup": "AlpacaEval 2.0, 2 layers",
+   "quote": "improving from 57.5% (GPT-4o) to 59.3% (MoA-Lite)",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "MoA is 7.6 points absolute above GPT-4o with open models only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "absolute LC improvement",
+   "value": 7.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlpacaEval 2.0",
+   "quote": "achieving a margin of 7.6% absolute improvement from 57.5% (GPT-4o) to 65.1% (MoA)",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "MT-Bench: MoA w/ GPT-4o tops the leaderboard, with only marginal gains because models already exceed 9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench avg",
+   "value": 9.4,
+   "unit": "points",
+   "baseline_value": 9.31,
+   "n": null,
+   "setup": "MT-Bench, avg of turns, vs GPT-4 Turbo (04/09)",
+   "quote": null,
+   "table": "Table 2b, row MoA w/ GPT-4o, column Avg. (9.40±0.06); GPT-4 Turbo 9.31",
+   "note": null,
+   "where": "Table 2b"
+  },
+  {
+   "claim": "MT-Bench: MoA (open models) 9.25 vs GPT-4 Omni 9.19.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench avg",
+   "value": 9.25,
+   "unit": "points",
+   "baseline_value": 9.19,
+   "n": null,
+   "setup": "MT-Bench",
+   "quote": null,
+   "table": "Table 2b, row MoA, column Avg. (9.25±0.10); GPT-4 Omni (05/13) 9.19",
+   "note": null,
+   "where": "Table 2b"
+  },
+  {
+   "claim": "A single-proposer MoA with n=1 (no extra info) scores 47.8, while 6 diverse proposers reach 61.3 with 2 layers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate",
+   "value": 61.3,
+   "unit": "%",
+   "baseline_value": 47.8,
+   "n": null,
+   "setup": "AlpacaEval 2.0, Qwen1.5-110B-Chat aggregator, 2 layers, multiple-proposer n=6",
+   "quote": null,
+   "table": "Table 3, row n = 6, column Multiple-Proposer (61.3%); n=1 47.8%",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Diverse models beat the same model sampled repeatedly at n=6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate (single-proposer)",
+   "value": 56.7,
+   "unit": "%",
+   "baseline_value": 61.3,
+   "n": null,
+   "setup": "2 layers, temperature 0.7 single-proposer vs multiple-proposer",
+   "quote": null,
+   "table": "Table 3, row n = 6, column Single-Proposer (56.7%) vs Multiple-Proposer 61.3%",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Authors state scores increase monotonically with n, yet Table 3 shows n=2 (58.8%) above n=3 (58.0%) for multiple-proposer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate",
+   "value": 58.0,
+   "unit": "%",
+   "baseline_value": 58.8,
+   "n": null,
+   "setup": "AlpacaEval 2.0, 2 layers, multiple-proposer, n=3 vs n=2",
+   "quote": null,
+   "table": "Table 3, row n = 3, column Multiple-Proposer (58.0%); row n = 2: 58.8%",
+   "note": "Text says 'scores increases monotonically with n'",
+   "where": "3.3, Table 3"
+  },
+  {
+   "claim": "MoA outperforms an LLM ranker that merely selects one proposer answer.",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4a; Qwen1.5-110B-Chat as ranker vs aggregator, 6 proposers (values read only from figure)",
+   "quote": "the MoA approach significantly outperforms an LLM-ranker baseline",
+   "table": null,
+   "note": null,
+   "where": "3.3, Fig 4"
+  },
+  {
+   "claim": "Aggregator and proposer quality differ: WizardLM is the best proposer (63.8%) but a weak aggregator (52.9%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate as proposer",
+   "value": 63.8,
+   "unit": "%",
+   "baseline_value": 52.9,
+   "n": null,
+   "setup": "2 layers; Table 4",
+   "quote": null,
+   "table": "Table 4, row WizardLM 8x22B, column As proposer (63.8%); As aggregator 52.9%",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Qwen1.5-110B-Chat is the best aggregator among six (61.3%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate as aggregator",
+   "value": 61.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All six models proposers, 2 layers",
+   "quote": null,
+   "table": "Table 4, row Qwen1.5-110B-Chat, column As aggregator (61.3%)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "MoA-Lite matches GPT-4o's cost with higher quality and beats GPT-4 Turbo by ~4% at over twice the cost-effectiveness.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC win rate gain vs GPT-4 Turbo",
+   "value": 4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlpacaEval 2.0, cost from API pricing as of May 22, 2024",
+   "quote": "it outperforms GPT-4 Turbo by approximately 4% while being more than twice as cost-effective",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "MATH: accuracy rises with layers for every aggregator; Qwen1.5-110B-Chat 0.500 to 0.576 from layer 1 to 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.576,
+   "unit": "fraction",
+   "baseline_value": 0.5,
+   "n": null,
+   "setup": "MATH, six models proposers each layer",
+   "quote": null,
+   "table": "Table 8, row Qwen1.5-110B-Chat, column Layer 3 (0.576); Layer 1 0.500",
+   "note": null,
+   "where": "Appendix D, Table 8"
+  },
+  {
+   "claim": "Mixtral aggregator on MATH jumps from 0.282 to 0.534 at layer 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.534,
+   "unit": "fraction",
+   "baseline_value": 0.282,
+   "n": null,
+   "setup": "MATH, six proposers",
+   "quote": null,
+   "table": "Table 8, row Mixtral-8x22B-Instruct-v0.1, column Layer 2 (0.534); Layer 1 0.282",
+   "note": null,
+   "where": "Table 8"
+  }
+ ],
+ "limits": [
+  "Authors: iterative aggregation means no first token until the last layer, high Time to First Token; suggest limiting layers (first aggregation gives the largest boost) or chunk-wise aggregation.",
+  "Number of proposers 'monotonic' claim is not strictly supported by Table 3 (n=2 58.8 > n=3 58.0).",
+  "Inconsistent headline: abstract 65.1% and intro 65.8%, Table 2 65.7 (GPT-4o variant).",
+  "Quality judged by GPT-4-based evaluator (AlpacaEval LC, MT-Bench); no human evaluation; the baseline reference in AlpacaEval is also GPT-4.",
+  "Cost uses API list prices (May 22, 2024) and GPT-4 tflops uses a rumored 8x220B size; latency is proxied by tflops, not measured.",
+  "MoA uses many calls: 6 proposers x 3 layers plus aggregator; compute cost per query far above a single model; MT-Bench gains marginal.",
+  "No sampling parameters (other than 0.7 in one ablation), max tokens or seeds given; MATH subset size and prompt not stated.",
+  "Optimal MoA architecture left to future work: 'systematic optimization of MoA architecture is an interesting direction'."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Proposers",
+   "definition": "models that excel at generating useful reference responses for use by other models",
+   "where": "2.1"
+  },
+  {
+   "term": "Aggregators",
+   "definition": "models proficient in synthesizing responses from other models into a single, high-quality output",
+   "where": "2.1"
+  },
+  {
+   "term": "Collaborativeness",
+   "definition": "an LLM tends to generate better responses when presented with outputs from other models, even if these other models are less capable by itself",
+   "where": "1"
+  },
+  {
+   "term": "single-proposer",
+   "definition": "setting where many LLMs in a layer are identical, one model generating multiple outputs through temperature sampling",
+   "where": "2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Mixture-of-Experts (Shazeer et al., 2017)",
+   "year": 2017,
+   "arxiv": "1701.06538",
+   "relation": "extends",
+   "note": "MoA mirrors layered MoE at model level, via prompts",
+   "quote": null
+  },
+  {
+   "work": "LLM-Blender (Jiang et al., 2023): PairRanker, GenFuser",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ranking and generative fusion of candidates",
+   "quote": null
+  },
+  {
+   "work": "Du et al., 2023 multiagent debate",
+   "year": 2023,
+   "arxiv": "2305.14325",
+   "relation": "related",
+   "note": "symmetric multi-agent discussion",
+   "quote": null
+  },
+  {
+   "work": "MAD (Liang et al., 2023)",
+   "year": 2023,
+   "arxiv": "2305.19118",
+   "relation": "related",
+   "note": "debater/judge",
+   "quote": null
+  },
+  {
+   "work": "ReConcile (Chen et al., 2023a)",
+   "year": 2023,
+   "arxiv": "2309.13007",
+   "relation": "related",
+   "note": "weighted voting discussion",
+   "quote": null
+  },
+  {
+   "work": "FrugalGPT (Chen et al., 2023b)",
+   "year": 2023,
+   "arxiv": "2305.05176",
+   "relation": "related",
+   "note": "cascading of models for cost",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval 2.0 length-controlled (Dubois et al., 2024)",
+   "year": 2024,
+   "arxiv": "2404.04475",
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "MT-Bench (Zheng et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "FLASK (Ye et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "MATH (Hendrycks et al., 2021)",
+   "year": 2021,
+   "arxiv": "2103.03874",
+   "relation": "uses-data",
+   "note": "appendix reasoning task",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. 2024b single agent vs multi-agent",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "found a single agent with strong prompt can match multi-agent approaches",
+   "quote": null
+  },
+  {
+   "work": "Chain of Thought (Wei et al., 2022); Tree-of-Thought (Yao et al., 2023a)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prompting-based reasoning related work; MoA said complementary to CoT and self-consistency",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the Mixture-of-Agents Structure. This example showcases 4 MoA layers with 3 agents in each layer.",
+   "page": 2,
+   "why": "shows layered topology: every agent feeds all agents of next layer"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "AlpacaEval 2.0 LC win rates improve when provided with responses from other models.",
+   "page": 2,
+   "why": "evidence for collaborativeness"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance trade-off versus cost and tflops; MoA lies on the Pareto front.",
+   "page": 8,
+   "why": "cost and latency tradeoff"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1, p.3",
+   "snippet": "y_i = ⊕_{j=1}^{n} [A_{i,j}(x_i)] + x_1, x_{i+1} = y_i",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text cache has no embedded instructions. Figures 1, 3, 4, 5 values are only in plots, not recorded. Headline LC win rate inconsistent in text (65.1 / 65.8 / 65.7)."
+ ]
+}

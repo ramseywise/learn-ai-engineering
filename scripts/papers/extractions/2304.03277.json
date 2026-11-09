@@ -1,0 +1,544 @@
+{
+ "schema": 1,
+ "key": "2304.03277",
+ "pdf": "generative-ai/05-RL/sources/peng-2023-instruction-tuning-gpt-4.pdf",
+ "bib": {
+  "title": "Instruction Tuning with GPT-4",
+  "authors": [
+   "Baolin Peng",
+   "Chunyuan Li",
+   "Pengcheng He",
+   "Michel Galley",
+   "Jianfeng Gao"
+  ],
+  "first_author": "Peng",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2304.03277",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 34606,
+  "chars_total": 34606,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does using GPT-4 as the teacher for Self-Instruct-style data produce better instruction-tuned LLaMA models than GPT-3.5 data?",
+ "hypothesis": "GPT-4-generated instruction data gives better zero-shot alignment than data from earlier teachers (stated as the empirical result the study validates).",
+ "contributions": [
+  "GPT-4 data: 52K English and Chinese instruction-following data plus GPT-4 feedback data rating outputs of three models",
+  "Instruction-tuned LLaMA models and reward models; evaluation with human HHH, GPT-4 automatic, and ROUGE-L on unnatural instructions"
+ ],
+ "method": {
+  "summary": "The 52K Alpaca instructions are re-answered by GPT-4 (English, and ChatGPT-translated Chinese). LLaMA-7B is fully fine-tuned on each following Alpaca's schedule. GPT-4 also scores responses from GPT-4, GPT-3.5 and OPT-IML, and an OPT-1.3B reward model is trained on the pairs and used to rerank samples.",
+  "task": "supervised instruction tuning; reward modelling on GPT-4 comparison data",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GPT-4 English instruction data",
+    "role": "train",
+    "size": "52K",
+    "split": null,
+    "source": "Alpaca's 52K unique instructions, one gpt-4 answer each",
+    "preprocessing": "Alpaca prompt template with and without input; no iterative near-duplicate removal (one-time generation)"
+   },
+   {
+    "name": "GPT-4 Chinese instruction data",
+    "role": "train",
+    "size": "52K",
+    "split": null,
+    "source": "instructions translated to Chinese by ChatGPT, answered in Chinese by GPT-4",
+    "preprocessing": null
+   },
+   {
+    "name": "Comparison data",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "GPT-4 rates its own response 1-10 and rates responses of GPT-4, GPT-3.5, OPT-IML; distribution in Fig 2",
+    "preprocessing": "K responses per prompt give C(K,2) pairs (y_l,y_h) with s_l<s_h"
+   },
+   {
+    "name": "Unnatural Instructions GPT-4 answers",
+    "role": "eval",
+    "size": "68K core triplets decoded; 9K samples used in Fig 6",
+    "split": null,
+    "source": "Honovich et al. 2022 core dataset (68,478 samples)",
+    "preprocessing": null
+   },
+   {
+    "name": "User-Oriented-Instructions-252",
+    "role": "eval",
+    "size": "252 instructions",
+    "split": null,
+    "source": "Wang et al. 2022a, 71 user-oriented applications",
+    "preprocessing": null
+   },
+   {
+    "name": "Vicuna-Instructions-80",
+    "role": "eval",
+    "size": "80 questions",
+    "split": null,
+    "source": "Vicuna, synthesized by gpt-4, 8 categories",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-GPT4",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only transformer (LLaMA)",
+    "init_from": "LLaMA 7B checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "data": "52K English GPT-4"
+    }
+   },
+   {
+    "name": "LLaMA-GPT4-CN",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "LLaMA",
+    "init_from": "LLaMA 7B checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "data": "52K Chinese GPT-4"
+    }
+   },
+   {
+    "name": "Reward model",
+    "role": "reward",
+    "params": "1.3B",
+    "architecture": "OPT",
+    "init_from": "OPT 1.3B (Iyer et al. 2022)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Alpaca",
+    "role": "baseline",
+    "params": "7B (human eval); 13B (Fig 4/5)",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "data": "52K GPT-3.5 (text-davinci-003)"
+    }
+   },
+   {
+    "name": "Vicuna, LLaMA, Bard, ChatGPT",
+    "role": "baseline",
+    "params": "13B for LLaMA, Alpaca, Vicuna",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "answers taken from Vicuna release"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "judge in automatic evaluation and comparison data"
+    }
+   }
+  ],
+  "training": {
+   "objective": "SFT for LLaMA; reward model: min log(sigmoid(r(x,y_h)-r(x,y_l))) as printed (sign as printed)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "schedule": "We follow the training schedule in (Taori et al., 2023); no values given here",
+    "reward_model_hparams": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": "GPT-4 data generation via openai.ChatCompletion, single response; for LLaMA-GPT4 eval one response (baseline) or five responses reranked by reward model",
+   "temperature": "1.0 (data generation)",
+   "top_p": "1.0 (data generation)",
+   "max_tokens": "512 (data generation)",
+   "samples": "1 GPT-4 answer per instruction; 1 or 5 LLaMA-GPT4 responses per question; seeds not stated",
+   "prompting": "Alpaca template (Algorithm 1)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "eval_decoding_for_LLaMA": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Human HHH pairwise preference",
+     "definition": "MTurk raters choose which of two responses is more helpful/honest/harmless; 5 options merged to 3 (A, tie, B)",
+     "unit": "% votes",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 relative score",
+     "definition": "GPT-4 rates each response 1-10 per question; sums over 80 questions (max 800) as ratio to the opponent model",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L",
+     "definition": "against ground truth on Unnatural Instructions, 9K samples, split by ground-truth length",
+     "unit": "ROUGE-L",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Alpaca",
+    "Vicuna",
+    "LLaMA 13B",
+    "Bard",
+    "ChatGPT",
+    "GPT-4"
+   ],
+   "protocol": "Single run; number of MTurk raters per item, payment and agreement not stated; no significance tests"
+  },
+  "availability": {
+   "code": "https://instruction-tuning-with-gpt-4.github.io/",
+   "weights": "model checkpoints said to be released in Conclusions",
+   "data": "https://instruction-tuning-with-gpt-4.github.io/"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-4 data generation with input",
+    "text": "Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\\n\\n### Instruction: \\n {instruction} \\n\\n ### Input: {input} \\n\\n ### Response:",
+    "where": "Algorithm 1, p2"
+   },
+   {
+    "purpose": "GPT-4 data generation without input",
+    "text": "Below is an instruction that describes a task. Write a response that appropriately completes the request.\\n\\n### Instruction: \\n {instruction} \\n\\n ### Response:",
+    "where": "Algorithm 1, p2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training",
+    "quote": "We follow the training schedule in (Taori et al., 2023) for fair comparisons.",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Humans pick LLaMA-GPT4 over Alpaca on helpfulness far more often",
+   "kind": "measured",
+   "source": null,
+   "metric": "helpfulness win rate",
+   "value": "54.12",
+   "unit": "% of votes",
+   "baseline_value": "19.74",
+   "n": null,
+   "setup": "Human evaluation on Amazon Mechanical Turk, 252 User-Oriented-Instructions, LLaMA-7B tuned on 52K GPT-4 answers (LLaMA-GPT4) vs Alpaca (7B tuned on 52K GPT-3.5 answers)",
+   "note": null,
+   "where": "Sec 4.2, Fig 3a",
+   "quote": "GPT-4 is the clear winner with 54.12% of the votes. GPT-3 only wins 19.74%"
+  },
+  {
+   "claim": "On honesty the largest share is ties and Alpaca is slightly ahead of LLaMA-GPT4",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "31.39",
+   "unit": "% Alpaca wins (honesty)",
+   "baseline_value": "25.99",
+   "n": null,
+   "setup": "Human evaluation on Amazon Mechanical Turk, 252 User-Oriented-Instructions, LLaMA-7B tuned on 52K GPT-4 answers (LLaMA-GPT4) vs Alpaca (7B tuned on 52K GPT-3.5 answers)",
+   "note": "Figure labels printed: Alpaca 31.39, LLaMA-GPT4 25.99, Tie 42.61 (honesty)",
+   "where": "Sec 4.2, Fig 3a",
+   "quote": "GPT-3 (Alpaca) is slightly superior",
+   "table": "Fig 3a text labels: honesty Alpaca 31.39%, LLaMA-GPT4 25.99%, Tie 42.61%"
+  },
+  {
+   "claim": "On harmlessness ties dominate and Alpaca is slightly ahead",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25.43",
+   "unit": "% Alpaca wins (harmlessness)",
+   "baseline_value": "16.48",
+   "n": null,
+   "setup": "Human evaluation on Amazon Mechanical Turk, 252 User-Oriented-Instructions, LLaMA-7B tuned on 52K GPT-4 answers (LLaMA-GPT4) vs Alpaca (7B tuned on 52K GPT-3.5 answers)",
+   "note": null,
+   "where": "Fig 3a",
+   "quote": "Harmlessness",
+   "table": "Fig 3a text labels: harmlessness Alpaca 25.43%, LLaMA-GPT4 16.48%, Tie 58.10%"
+  },
+  {
+   "claim": "LLaMA-GPT4 vs teacher GPT-4 on helpfulness is near parity",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "42.78",
+   "unit": "% LLaMA-GPT4 wins (helpfulness)",
+   "baseline_value": "44.11",
+   "n": null,
+   "setup": "Human evaluation, 252 user-oriented instructions, LLaMA-GPT4 7B vs GPT-4",
+   "note": "Fig 3b labels: GPT-4 44.11, LLaMA-GPT4 42.78, Tie 13.11 (helpfulness)",
+   "where": "Sec 4.2, Fig 3b",
+   "quote": "GPT-4-instruction-tuned LLaMA performs similarly to the original GPT-4"
+  },
+  {
+   "claim": "GPT-4 automatic score of LLaMA-GPT4 (7B) relative to ChatGPT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "91",
+   "unit": "% relative score",
+   "baseline_value": "83",
+   "n": null,
+   "setup": "80 Vicuna-Instructions questions, GPT-4 scores 1-10 per response, sum over 80 (full 800); one response per question, opponent ChatGPT",
+   "note": null,
+   "where": "Fig 4c",
+   "table": "Fig 4c, LLaMA_GPT4 (7B), 91% 609 : 666"
+  },
+  {
+   "claim": "GPT-4 automatic score of LLaMA-GPT4 (7B) relative to GPT-4",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "83",
+   "unit": "% relative score",
+   "baseline_value": "80",
+   "n": null,
+   "setup": "80 Vicuna-Instructions questions, opponent GPT-4, one response per question",
+   "note": null,
+   "where": "Fig 4d",
+   "table": "Fig 4d, LLaMA_GPT4 (7B), 83% 606 : 726"
+  },
+  {
+   "claim": "Alpaca 13B relative to ChatGPT, for comparison",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "83",
+   "unit": "% relative score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same Vicuna-80 GPT-4 evaluation as above, Alpaca (13B)",
+   "note": null,
+   "where": "Fig 4c",
+   "table": "Fig 4c, Alpaca (13B), 83% 585 : 704"
+  },
+  {
+   "claim": "Reward-model reranking of five samples lifts the top group over baseline decoding (vs GPT-4 opponent)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "87",
+   "unit": "% relative score",
+   "baseline_value": "83",
+   "n": null,
+   "setup": "Five responses per question ranked by OPT-1.3B reward model, top-1 group (R1) vs opponent GPT-4; baseline one response 83%",
+   "note": "Fig 4b group bars: groups 1-5 = 87,85,85,83,83 and B 83 (vs GPT-4); 94,92,91,89,89 and B 91 vs ChatGPT. Ranking-group monotone ordering is the evidence for reward model",
+   "where": "Fig 4d",
+   "table": "Fig 4d, LLaMA_GPT4 (7B, R1), 87% 631 : 722"
+  },
+  {
+   "claim": "Mean ROUGE-L on Unnatural Instructions: Alpaca beats LLaMA-GPT4 and GPT-4",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.39",
+   "unit": "ROUGE-L",
+   "baseline_value": "0.34",
+   "n": null,
+   "setup": "9K samples of Unnatural Instructions (core 68K); Alpaca 0.39, LLaMA-GPT4 0.34, GPT4 0.37",
+   "note": "Value 0.39 is Alpaca; LLaMA-GPT4 0.34 (Fig 6 legend)",
+   "where": "Fig 6, Sec 4.3",
+   "quote": "Alpaca outperforms the other two models"
+  },
+  {
+   "claim": "GPT-4 output vocabulary: unique verb-noun pairs",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5229",
+   "unit": "pairs",
+   "baseline_value": "6133",
+   "n": null,
+   "setup": "English outputs for the 52K Alpaca instructions; GPT-3.5 (Alpaca) has 6133",
+   "note": null,
+   "where": "Fig 1",
+   "table": "Fig 1c, #Unique Verb-Noun Pairs GPT4: 5229"
+  },
+  {
+   "claim": "Chinese answers: LLaMA-GPT4-CN scores relative to GPT-4 asked in Chinese",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "64",
+   "unit": "% relative score",
+   "baseline_value": "35",
+   "n": null,
+   "setup": "80 questions translated, all models answer in Chinese, opponent GPT-4; LLaMA_GPT4 (7B) 35%, Alpaca 33%",
+   "note": null,
+   "where": "Fig 5c",
+   "table": "Fig 5c, LLaMA_GPT4_CN (7B), 64% 445 : 694"
+  }
+ ],
+ "limits": [
+  "Preliminary release; only 7B LLaMA and 52K examples, larger models and data left as future work",
+  "Reward model used only at decoding time, not in RL training",
+  "One-time generation without Alpaca's iterative deduplication; GPT-3.5 data has longer tail",
+  "Fine-tuning hyperparameters not stated; rely on Alpaca's schedule",
+  "Honesty and harmlessness gains not shown: ties dominate and Alpaca is slightly ahead",
+  "LLaMA-GPT4 still trails GPT-4 on the GPT-4-judged score (83%) and Alpaca scores higher mean ROUGE-L",
+  "Judge is GPT-4, the same model that produced the training data; no human-rater count or agreement reported"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Self-Instruct",
+   "year": 2022,
+   "arxiv": "2212.10560",
+   "relation": "extends",
+   "note": "uses GPT-4 as the teacher; also source of User-Oriented-Instructions-252",
+   "quote": null
+  },
+  {
+   "work": "Stanford Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reuses 52K instructions and training schedule",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Vicuna-80 benchmark and GPT-4 evaluation protocol",
+   "quote": null
+  },
+  {
+   "work": "Unnatural Instructions",
+   "year": 2022,
+   "arxiv": "2212.09689",
+   "relation": "uses-data",
+   "note": "ROUGE-L evaluation set",
+   "quote": null
+  },
+  {
+   "work": "OPT-IML",
+   "year": 2022,
+   "arxiv": "2212.12017",
+   "relation": "uses-method",
+   "note": "OPT 1.3B reward model base; one of three comparison-data models",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "A general language assistant as a laboratory for alignment",
+   "year": 2021,
+   "arxiv": "2112.00861",
+   "relation": "uses-method",
+   "note": "HHH criteria",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RLHF reward modelling formulation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Human evaluation.",
+   "page": 5,
+   "why": "Pie charts showing helpfulness win versus honesty/harmlessness ties"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Performance comparisons evaluated by GPT-4.",
+   "page": 6,
+   "why": "Relative scores of all chatbots and reward-ranked groups"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "ROUGE-L on unnatural instructions evaluated with 9K samples.",
+   "page": 8,
+   "why": "Shows Alpaca ahead on mean ROUGE-L"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p2",
+   "snippet": "output = openai.ChatCompletion.create(model=\"gpt-4\", messages=[\"role\": \"user\", \"content\": prompt], temperature = 1.0, top_p=1.0, max_tokens=512)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure data come from text labels extracted from charts; no embedded instructions found",
+  "Reward objective printed as min log sigma(...) (sign looks inverted)"
+ ]
+}

@@ -1,0 +1,555 @@
+{
+ "schema": 1,
+ "key": "2406.09403",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/hu-2024-visual-sketchpad.pdf",
+ "bib": {
+  "title": "Visual SKETCHPAD: Sketching as a Visual Chain of Thought for Multimodal Language Models",
+  "authors": [
+   "Yushi Hu",
+   "Weijia Shi",
+   "Xingyu Fu",
+   "Dan Roth",
+   "Mari Ostendorf",
+   "Luke Zettlemoyer",
+   "Noah A. Smith",
+   "Ranjay Krishna"
+  ],
+  "first_author": "Hu",
+  "year": 2024,
+  "venue": "NeurIPS 2024",
+  "arxiv": "2406.09403",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 95355,
+  "chars_total": 95355,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; NeurIPS checklist skimmed"
+ },
+ "type": "system",
+ "question": "Can giving a multimodal LM a visual sketchpad (code-drawn lines, plots and specialist-vision overlays) that it reasons over improve performance on math and visual reasoning tasks?",
+ "hypothesis": "Letting the LM draw intermediate visual artifacts and plan from them, as humans sketch, improves reasoning over text-only chain of thought or fixed tool pipelines.",
+ "contributions": [
+  "Sketchpad framework: Thought/Action/Observation loop with multimodal observations, no training",
+  "Tools: matplotlib/networkx/chess for math; detection, segmentation, depth, sliding window, zoom, overlay for vision",
+  "Gains and SOTA on 4 math task families and 7 vision tasks",
+  "Analysis: human-plan agreement, tool usage, comparison to SoM and Visprog, open-source oracle test"
+ ],
+ "method": {
+  "summary": "An AutoGen-based agent loop where a closed multimodal LM writes Python code (Action) from a tool-signature prompt, executes it, and sees the resulting images (Observation) before the next Thought, ending with a Terminate action. No fine-tuning.",
+  "task": "geometry and IsoBench math reasoning; BLINK, V*Bench and MMVP visual reasoning",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Geometry3K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lu et al. 2021 (Inter-GPS)",
+    "preprocessing": "diagram plus its matplotlib code given as input"
+   },
+   {
+    "name": "IsoBench Math Parity",
+    "role": "eval",
+    "size": "383",
+    "split": "val",
+    "source": "IsoBench",
+    "preprocessing": "code representation"
+   },
+   {
+    "name": "IsoBench Math Convexity",
+    "role": "eval",
+    "size": "255",
+    "split": "val",
+    "source": "IsoBench",
+    "preprocessing": null
+   },
+   {
+    "name": "IsoBench Graph Maxflow / Connectivity / Isomorphism",
+    "role": "eval",
+    "size": "128 each",
+    "split": "val",
+    "source": "IsoBench",
+    "preprocessing": "adjacency array"
+   },
+   {
+    "name": "IsoBench Winner ID (chess)",
+    "role": "eval",
+    "size": "257",
+    "split": "val",
+    "source": "IsoBench",
+    "preprocessing": "FEN"
+   },
+   {
+    "name": "V*Bench",
+    "role": "eval",
+    "size": "257",
+    "split": null,
+    "source": "Wu and Xie 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MMVP",
+    "role": "eval",
+    "size": "300",
+    "split": null,
+    "source": "Tong et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "BLINK Relative Depth / Spatial / Jigsaw / Visual Corr. / Semantic Corr.",
+    "role": "eval",
+    "size": "124 / 143 / 150 / 172 / 139",
+    "split": "val",
+    "source": "Fu et al. 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-4o-2024-05-13",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4-turbo-2024-04-29",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaVA-NeXT-13B and 34B",
+    "role": "evaluated",
+    "params": "13B, 34B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "oracle Sketchpad: given the last visual artifact from GPT-4o+Sketchpad"
+    }
+   },
+   {
+    "name": "Grounding-DINO, Segment Anything, Semantic-SAM, DepthAnything",
+    "role": "proposed",
+    "params": null,
+    "architecture": "vision specialist tools",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "System prompt plus tool-signature/docstring prompt, six in-context examples (vision prompt), user request; model emits THOUGHT/ACTION code blocks, ANSWER: ... TERMINATE. Same template for all vision tasks; math prompts drop vision tools and add plotting examples.",
+   "retrieval": null,
+   "parameters": {
+    "sliding_window": "window 1/3 of image size, step 2/9, 4x4=16 windows",
+    "zoom_padding_min": "0.05",
+    "depth_colormap": "Inferno",
+    "max_turns": null
+   },
+   "other": {
+    "framework": "AutoGen",
+    "tokens_per_sample": "about 2.2k-3.1k math, 11.5k-26.6k vision (Table 7)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of items answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "same GPT-4o / GPT-4 Turbo without Sketchpad",
+    "Gemini-Pro, Claude 3 Opus, Mixtral 8x7B, LLaMA-2-70B (text only, math)",
+    "LLaVA-1.5, LLaVA-NeXT, GPT-4V-preview (vision)",
+    "SoM, SoM + original image, Visprog (GPT-4 swapped in)"
+   ],
+   "protocol": "Single run per item as far as stated; no error bars, seeds or significance tests; gains are absolute accuracy points (Table 1 and 2 deltas equal differences of printed accuracies)."
+  },
+  "availability": {
+   "code": "https://visualsketchpad.github.io/ (checklist: 'committed to releasing the code')",
+   "weights": null,
+   "data": "existing public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "system prompt for vision tasks",
+    "text": "You are a helpful multimodal AI assistant. [MORE INSTRUCTIONS ...]",
+    "where": "App C (abridged in paper)"
+   },
+   {
+    "purpose": "Math Parity user query",
+    "text": "You can generate matplotlib code to visualize the function.",
+    "where": "App C Fig 6 (fragment)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Abstract headline: average gain on math tasks (base model and baseline not stated in the abstract)",
+   "kind": "measured",
+   "source": null,
+   "metric": "average gain",
+   "value": "12.7%",
+   "unit": "unclear: '%' as printed; Table 1 gains are absolute points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract; 'strong base models with no sketching'; 7 IsoBench/Geometry3K math tasks; abstract does not name the model or say absolute or relative",
+   "note": "Body text says 11.2% for GPT-4o and 23.4% for GPT-4 Turbo on math. The reader's mean of the seven GPT-4o gains in Table 1 is 11.97 and no combination yields 12.7; the abstract figure is not derived anywhere in the text.",
+   "where": "Abstract",
+   "quote": "no sketching, yielding an average gain of 12.7% on math tasks, and 8.6% on vision"
+  },
+  {
+   "claim": "Abstract headline: average gain on vision tasks (8.6%) equals the mean of the seven GPT-4o absolute-point gains in Table 2",
+   "kind": "measured",
+   "source": null,
+   "metric": "average gain",
+   "value": "8.6%",
+   "unit": "absolute accuracy points (inferred)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract; GPT-4o (gpt-4o-2024-05-13) vs same model without Sketchpad; 7 vision tasks. Reader computed mean of +14.3,+1.0,+12.1,+9.1,+6.7,+7.5,+9.7 = 8.63; GPT-4 Turbo mean would be 7.7",
+   "note": "Paper does not say how 8.6 is computed; the match to GPT-4o is the reader's inference.",
+   "where": "Abstract",
+   "quote": "no sketching, yielding an average gain of 12.7% on math tasks, and 8.6% on vision"
+  },
+  {
+   "claim": "Average math gain of Sketchpad over the same base model without sketching, GPT-4o",
+   "kind": "measured",
+   "source": null,
+   "metric": "average improvement",
+   "value": "11.2%",
+   "unit": "absolute accuracy points (inferred from Table 1 deltas)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, 7 math tasks (geometry, maxflow, isomorphism, connectivity, convexity, parity, winner ID), gpt-4o-2024-05-13, baseline = same model prompted without Sketchpad",
+   "note": "Mean of the Table 1 GPT-4o deltas is 11.97 by the reader's arithmetic, not 11.2. Intro says 'average gain of 11.2%' for GPT-4o.",
+   "where": "Sec 4.1",
+   "quote": "average improvement of 11.2% for GPT-4o and 23.4% for GPT-4 Turbo"
+  },
+  {
+   "claim": "Average math gain, GPT-4 Turbo",
+   "kind": "measured",
+   "source": null,
+   "metric": "average improvement",
+   "value": "23.4%",
+   "unit": "absolute accuracy points (inferred from Table 1 deltas)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, 7 math tasks, gpt-4-turbo-2024-04-29 vs same model without Sketchpad. Reader mean of deltas = 23.4; one task (connectivity-type column, -9.0) is negative",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "average improvement of 11.2% for GPT-4o and 23.4% for GPT-4 Turbo"
+  },
+  {
+   "claim": "GPT-4o max flow accuracy rises from 25.0 to 66.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "66.3",
+   "unit": "%",
+   "baseline_value": 25.0,
+   "n": null,
+   "setup": "IsoBench graph maxflow, 128 val items, GPT-4o + Sketchpad vs GPT-4o",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "GPT-4o with SKETCHPAD achieves an accuracy of 66.3% on the maximum flow"
+  },
+  {
+   "claim": "V*Bench accuracy with GPT-4o + Sketchpad, new SOTA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "80.3",
+   "unit": "%",
+   "baseline_value": 66.0,
+   "n": null,
+   "setup": "V*Bench, 257 items, GPT-4o; previous SOTA SEAL 75.4",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4o + Sketchpad, column V*Bench"
+  },
+  {
+   "claim": "V*Bench gain GPT-4 Turbo and GPT-4o",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "14.3",
+   "unit": "accuracy points (absolute)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V*Bench; GPT-4 Turbo +18.5 (52.5 to 71.0), GPT-4o +14.3 (66.0 to 80.3)",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "yielding 18.5% accuracy improvement for GPT-4 Turbo and 14.3% improvement"
+  },
+  {
+   "claim": "Mean BLINK gain from Sketchpad, GPT-4o",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy gain",
+   "value": "9.0",
+   "unit": "absolute accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLINK depth, spatial, jigsaw, visual and semantic correspondence; GPT-4 Turbo gets 6.6",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "6.6% absolute accuracy gain for GPT-4"
+  },
+  {
+   "claim": "Relative-depth gain GPT-4o vs GPT-4 Turbo",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "12.1",
+   "unit": "accuracy points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BLINK relative depth, 124 val items; GPT-4 Turbo only +2.4",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "GPT-4o gets 12.1% accuracy improvement, while GPT-4 Turbo only gets"
+  },
+  {
+   "claim": "Sketchpad beats SoM, SoM+orig and Visprog on single-image tasks; Visprog is worse than the base LM everywhere",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "80.3",
+   "unit": "% V*Bench GPT-4o",
+   "baseline_value": 66.0,
+   "n": null,
+   "setup": "Table 3, GPT-4o rows: SoM 49.0, SoM+orig 68.1, Visprog 32.4, Sketchpad 80.3 on V*",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-4o Sketchpad, column V*"
+  },
+  {
+   "claim": "Humans draw the same auxiliary line as GPT-4o on geometry",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": "80%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human study on all geometry problems",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "humans draw the same auxiliary line as GPT-4o 80% of the time"
+  },
+  {
+   "claim": "Raters judge GPT-4o's plan valid on vision tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "plan validity",
+   "value": "92.8%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2 human subjects, 10 problems per vision task",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "valid in 92.8% of instances"
+  },
+  {
+   "claim": "Oracle Sketchpad images help open-source LLaVA-NeXT-13B on winner ID",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "36.7",
+   "unit": "%",
+   "baseline_value": 5.8,
+   "n": null,
+   "setup": "LLaVA-NeXT-13B given last visual artifact from GPT-4o+Sketchpad; no sketching by the LLaVA model itself",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LLaVA-NeXT-13B + oracle Sketchpad, column Winner ID"
+  },
+  {
+   "claim": "GPT-4o cost per sample on V*Bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost per sample",
+   "value": "$0.133",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o API, 26647 tokens per sample; math tasks about $0.011-0.016",
+   "note": null,
+   "where": "App E",
+   "table": "Table 7, row V*Bench, column GPT-4o cost per sample"
+  }
+ ],
+ "limits": [
+  "Sketchpad needs more compute than direct language output (Appendix E: about 11-27k tokens per vision sample, $0.06-0.13 with GPT-4o).",
+  "Only off-the-shelf closed LMs; training the models to sketch is future work.",
+  "No seeds, error bars or significance tests; decoding settings, temperature and max turns not stated.",
+  "Abstract headline 12.7% math gain is not reproduced by the body (11.2% GPT-4o, 23.4% GPT-4 Turbo); averages are unweighted over tasks of different size.",
+  "Open-source test is an oracle: LLaVA sees GPT-4o's final sketch, it does not sketch itself.",
+  "Most plan errors come from vision specialist failures or simple VQA mistakes.",
+  "GPT-4 Turbo got worse on one math task (-9.0 in Table 1)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "oracle Sketchpad",
+   "definition": "uses the visual artifact generated in the last action of GPT-4o + SKETCHPAD as inputs",
+   "where": "Table 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Thought/Action/Observation loop made multimodal",
+   "quote": null
+  },
+  {
+   "work": "Visprog",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fixed LM-generated plan; worse than base LM in Table 3",
+   "quote": null
+  },
+  {
+   "work": "ViperGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "code generation calling vision tools",
+   "quote": null
+  },
+  {
+   "work": "Set-of-Mark (SoM)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "segmentation and marking tool reused; compared in Table 3",
+   "quote": null
+  },
+  {
+   "work": "IsoBench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "math tasks",
+   "quote": null
+  },
+  {
+   "work": "BLINK",
+   "year": 2024,
+   "arxiv": "2404.12390",
+   "relation": "uses-data",
+   "note": "vision tasks",
+   "quote": null
+  },
+  {
+   "work": "V*Bench / SEAL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "previous SOTA 75.4 beaten",
+   "quote": null
+  },
+  {
+   "work": "MMVP (Eyes Wide Shut)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "Geometry3K (Inter-GPS)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "geometry",
+   "quote": null
+  },
+  {
+   "work": "AutoGen",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "implementation framework",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "SKETCHPAD equips GPT-4 with the ability to generate intermediate sketches to reason over tasks.",
+   "page": 2,
+   "why": "Shows four task types with and without sketching"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of SKETCHPAD.",
+   "page": 4,
+   "why": "Thought/Action/Observation loop in two examples"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Percentage of times GPT-4o and GPT-4 Turbo use a visual module",
+   "page": 8,
+   "why": "Tool usage per task"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 3 (p7)",
+   "snippet": "depth_map = depth(image)\ndisplay(depth_map)\noverlay = overlay_images(depth_map, image)\ndisplay(overlay)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table cells extracted one per line; Table 1 and 2 read by column order, not layout.",
+  "Abstract 12.7% math figure unexplained by the text.",
+  "No embedded instructions found."
+ ]
+}

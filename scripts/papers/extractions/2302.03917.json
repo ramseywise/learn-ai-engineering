@@ -1,0 +1,135 @@
+{
+ "schema": 1,
+ "key": "2302.03917",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/huang-2023-noise2music.pdf",
+ "bib": {"title": "Noise2Music: Text-conditioned Music Generation with Diffusion Models", "authors": ["Qingqing Huang","Daniel S. Park","Tao Wang","Timo I. Denk","Andy Ly","Nanxin Chen","Zhengdong Zhang","Zhishuai Zhang","Jiahui Yu","Christian Frank","Jesse Engel","Quoc V. Le","William Chan","Zhifeng Chen","Wei Han"], "first_author": "Huang", "year": 2023, "venue": "preprint", "arxiv": "2302.03917", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 66778, "chars_total": 66778, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can a cascade of text-conditioned diffusion models, trained on LLM/MuLan pseudo-labelled audio, generate high-quality 30-second music clips from free-form text?",
+ "hypothesis": null,
+ "contributions": ["Cascaded 1D U-Net diffusion models (generator + cascader/vocoder + super-resolution) with two intermediate representations: 3.2kHz waveform or log-mel spectrogram", "Pseudo-labelling pipeline using LaMDA-generated caption vocabularies and MuLan zero-shot matching, annotating O(150K) hours", "MuLaMCap dataset of O(400K) music-text pairs from AudioSet", "Evaluation with FAD (three encoders), MuLan similarity and human listening tests, plus inference-parameter ablations"],
+ "method": {
+  "summary": "Five 1D Efficient U-Net diffusion models are trained: waveform generator (3.2kHz) and cascader (16kHz), or spectrogram generator and vocoder (16kHz), plus a 24kHz super-resolution cascader. Text is encoded with a T5 encoder (non-pooled tokens) and fed by cross attention; training pairs come from ~6.8M soundtracks pseudo-labelled with LaMDA captions chosen by MuLan.",
+  "task": "text-to-music generation with cascaded diffusion; inference sampling (denoising schedule, stochasticity, CFG scale)",
+  "trains": true,
+  "datasets": [
+   {"name": "Pseudo-labelled music corpus", "role": "train", "size": "~6.8M source files, six 30-second clips each, nearly 340k hours; O(150K) hours annotated", "split": null, "source": "music audio source files (internal; not otherwise described)", "preprocessing": "24kHz for super-resolution model, 16kHz for others; labels: song title, named-entity tags, 3 pseudo labels from LaMDA-LF and 6 from Rater-SF; Rater-LF excluded to avoid MusicCaps leakage"},
+   {"name": "Internal high-quality music library", "role": "train", "size": "O(300) hours", "split": null, "source": "internally maintained library, tracks not requiring attribution", "preprocessing": "non-overlapping 30-second clips; track metadata concatenated as the text prompt"},
+   {"name": "MuLaMCap", "role": "train", "size": "388,262 train / 4,497 test AudioSet music examples (O(400K) pairs)", "split": "AudioSet train/test", "source": "AudioSet music subtree captioned by LaMDA+MuLan", "preprocessing": "per 10s clip: 3 LaMDA-LF, 3 Rater-LF, 6 Rater-SF captions"},
+   {"name": "MusicCaps", "role": "eval", "size": "5.5K 10-second clips", "split": null, "source": "Agostinelli et al. 2023", "preprocessing": "rater captions as prompts; middle 10s of generated audio evaluated"},
+   {"name": "AudioSet-Music-Eval", "role": "eval", "size": "1,482 examples", "split": "AudioSet eval split, music subtree", "source": "Gemmeke et al. 2017", "preprocessing": "concatenated labels as prompt; 30s generated, middle 10s evaluated"},
+   {"name": "MagnaTagATune", "role": "eval", "size": "21,638 clips (of 25,863) with tags from 188 tags", "split": null, "source": "Law et al. 2009", "preprocessing": "tags concatenated into one string; one 29s clip generated per example"}
+  ],
+  "models": [
+   {"name": "Waveform generator", "role": "proposed", "params": "724M", "architecture": "1D Efficient U-Net diffusion", "init_from": null, "tokenizer": "T5 encoder", "vocab": null, "layers": "depth 6", "hidden": "base dim 256", "heads": "8", "context": "text prompt 64 tokens at training", "other": {"training_steps": "1.6M", "loss_weight": "simplified", "noise_schedule": "cosine", "kernel": 7}},
+   {"name": "Waveform cascader", "role": "proposed", "params": "487M", "architecture": "1D Efficient U-Net diffusion", "init_from": null, "tokenizer": "T5 encoder", "vocab": null, "layers": "depth 5", "hidden": "base dim 256", "heads": "8", "context": "64 tokens", "other": {"training_steps": "460k", "loss_weight": "simplified", "noise_schedule": "linear", "kernel": 7}},
+   {"name": "Spectrogram generator", "role": "proposed", "params": "745M", "architecture": "1D Efficient U-Net diffusion", "init_from": null, "tokenizer": "T5 encoder", "vocab": null, "layers": "depth 5", "hidden": "base dim 256", "heads": "8", "context": "96 tokens", "other": {"training_steps": "1.8M", "loss_weight": "sigma", "noise_schedule": "linear", "kernel": 9, "spectrogram": "80 channels, 100 features/s, normalized to [-1,1]"}},
+   {"name": "Spectrogram vocoder", "role": "proposed", "params": "25.7M", "architecture": "1D Efficient U-Net diffusion", "init_from": null, "tokenizer": null, "vocab": null, "layers": "depth 4", "hidden": "base dim 128", "heads": null, "context": null, "other": {"training_steps": "840k", "loss_weight": "simplified", "noise_schedule": "linear", "kernel": 5}},
+   {"name": "Super-resolution cascader", "role": "proposed", "params": "81M", "architecture": "1D Efficient U-Net diffusion", "init_from": null, "tokenizer": null, "vocab": null, "layers": "depth 4", "hidden": "base dim 256", "heads": null, "context": null, "other": {"training_steps": "270k", "loss_weight": "simplified", "noise_schedule": "linear", "kernel": 7, "output": "24kHz from 16kHz"}},
+   {"name": "T5 encoder", "role": "base", "params": null, "architecture": "text encoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "size and whether frozen not stated"}},
+   {"name": "LaMDA", "role": "base", "params": null, "architecture": "dialogue LLM used to write caption vocabulary", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "MuLan", "role": "judge", "params": null, "architecture": "contrastive text/audio joint embedding, 10-second audio windows", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Riffusion (riffusion-model-v1)", "role": "baseline", "params": null, "architecture": "spectrogram diffusion", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Mubert", "role": "baseline", "params": null, "architecture": "tag matching API", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "MusicLM", "role": "baseline", "params": null, "architecture": "autoregressive", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers quoted from Agostinelli et al."}}
+  ],
+  "training": {
+   "objective": "noise-prediction diffusion loss E[w_t ||eps_theta(x_t,c,t) - eps||^2]; simplified weight w_t=1 or sigma weight w_t=sigma_t^2; text dropped for 10% of batch samples for CFG",
+   "optimizer": "Adam, beta1=0.9, beta2=0.999",
+   "lr": "peak 1e-4",
+   "lr_schedule": "cosine with end point at 2.5M steps",
+   "warmup": "10k steps",
+   "batch_size": "4096 for super-resolution cascader; 2048 for all other models",
+   "steps": "see per-model training steps (270k to 1.8M)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "generators trained on full 30s; cascaders and vocoder on 3 to 4 second random snippets",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "EMA of parameters, decay 0.9999, used at inference; conditioning-noise augmentation (t_max 0.5 cascader, 1.0 vocoder and super-resolution); blur augmentation (1D kernel size 10, sigma 0.1 to 5.0 for cascader; 2D 5x5, sigma 0.2 to 1.0 for vocoder)",
+   "hardware": "Google Cloud TPU V4 (serving); training hardware not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"text_batch": "three long prompts as independent elements, short prompts concatenated and segmented to the token length; one random element used per clip", "variance_schedules": "linear sigma0^2=0.0001, sigma1^2=0.02; cosine variant with lambda(0)=20, lambda(1)=-20", "pseudo_label_K": "K=10, K'=3", "hyperparameter_selection": "heuristic, by authors' judgement on a small dev prompt set"}
+  },
+  "inference": {
+   "decoding": "ancestral (DDPM) sampling with stochasticity gamma, hand-tuned denoising step schedule, classifier-free guidance with dynamic clipping",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one clip per prompt (21,638 for MTAT); four clips per serving request",
+   "prompting": "free-form text through T5 cross attention",
+   "retrieval": null,
+   "parameters": {"waveform generator": "front-heavy, gamma 0, CFG 10.0", "waveform cascader": "front-heavy, gamma 1, CFG 5.0", "spectrogram generator": "back-heavy, gamma 0, CFG 5.0", "spectrogram vocoder": "front-heavy, gamma 0, no CFG", "super-resolution cascader": "front-heavy, gamma 0, no CFG", "CFG ablation values": "[1, 2, 5, 10, 15]", "steps": "waveform generator 1000, cascader 800, spectrogram generator 1000, vocoder 100, super-res 800"},
+   "other": {"serving": "GSPMD partition on 4 TPU V4", "eval_audio": "16kHz, super-resolution not used for metrics", "ablations": "run on slightly less-trained checkpoints"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "FAD (VGG, Trill, MuLan encoders)", "definition": "Frechet distance between Gaussian fits of embeddings of generated vs reference audio", "unit": "distance", "higher_is_better": false},
+    {"name": "MuLan similarity", "definition": "cosine similarity between MuLan embeddings of generated audio and ground-truth text or audio, averaged", "unit": "cosine", "higher_is_better": true},
+    {"name": "Human pairwise wins", "definition": "5-point Likert: which of two 10s clips is better described by a MusicCaps caption; total wins per source", "unit": "wins out of 1.2k comparisons", "higher_is_better": true}
+   ],
+   "baselines": ["Riffusion", "Mubert", "MusicLM", "ground truth audio", "randomly shuffled ground truth audio"],
+   "protocol": "single sample per prompt; human test 3k ratings, each source in 1.2k pairwise comparisons; no seeds or significance tests stated"
+  },
+  "availability": {"code": null, "weights": "not released: 'we do not intend to release the model'", "data": "MuLaMCap introduced; release not explicit in text"},
+  "prompts": [
+   {"purpose": "prime LaMDA to describe popular songs (150k songs, giving title and artist)", "text": "Walking on Sunshine by Katrina & The Waves : The song is a pop / rock song. It has a happy, upbeat mood, with a driving bassline and a simple, repetitive drumbeat. The song is backed by a synthesizer and a guitar. ... (11 few-shot examples) ... {title} by {artist} :", "where": "Appendix C"}
+  ],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "The super-resolution cascader is trained with batch size 4096, while all other models use batch size 2048.", "where": "Sec 4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Noise2Music waveform model reaches the lowest FAD_VGG on MusicCaps, far below Riffusion and Mubert.", "kind": "measured", "source": null, "metric": "FAD_VGG", "value": "2.134", "unit": "distance", "baseline_value": "Riffusion 13.371; Mubert 9.620; MusicLM 4.0", "n": null, "setup": "MusicCaps prompts, 16kHz audio, single sample per prompt", "quote": null, "table": "Table 5, row Noise2Music Waveform (MusicCaps), column FAD_VGG", "note": "Authors caution baselines may be disadvantaged by training-data distribution; Mubert/Riffusion generated 10s clips via API as of Dec 24, 2022", "where": "Table 5"},
+  {"claim": "Waveform model has higher MuLan audio-text similarity than ground-truth audio on MusicCaps; spectrogram model is slightly lower.", "kind": "measured", "source": null, "metric": "MuLan similarity audio-gt-text", "value": "0.478", "unit": "cosine", "baseline_value": "ground truth 0.452; MusicLM 0.51; Riffusion 0.342; Mubert 0.323", "n": null, "setup": "MusicCaps; MuLan also used to pseudo-label training data, so metric may favour these models", "quote": null, "table": "Table 6, row Noise2Music Waveform (MusicCaps), column audio-gt-text", "note": "spectrogram variant 0.434", "where": "Table 6"},
+  {"claim": "Human listening: waveform model wins about as often as MusicLM and well above Mubert and Riffusion, behind ground truth.", "kind": "measured", "source": null, "metric": "pairwise wins", "value": "718", "unit": "wins of 1.2k comparisons", "baseline_value": "Ground truth 959; MusicLM 692; Mubert 254; Riffusion 308", "n": "3k ratings", "setup": "MusicCaps captions, 10s clips, 5-point Likert", "quote": "We collect 3k ratings, with each source involved in 1.2k pair-wise comparisons.", "table": null, "note": "Table 7 column order read as MusicCaps ground truth, Noise2Music Waveform, MusicLM, Mubert, Riffusion with values 959, 718, 692, 254, 308", "where": "Table 7, Sec 4.4"},
+  {"claim": "Sigma-weighted loss was crucial for spectrogram generator convergence.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "spectrogram generator training; no ablation numbers given", "quote": "we found the sigma-weighted loss, which weighs the loss more heavily on the \"back end\" of the denoising schedule, crucial", "table": null, "note": "quote uses curly quotes in the PDF; may fail check", "where": "Sec 4.1"},
+  {"claim": "There is an optimal CFG scale; too large a scale hurts quality; generator CFG matters more than generator denoising schedule, while cascader denoising schedule has an extremely large impact.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 2 ablation, CFG in [1,2,5,10,15], B/U/F schedules, one parameter varied at a time, slightly less-trained checkpoints", "quote": "too big of a CFG scale hurts the generation quality", "table": null, "note": null, "where": "Sec 4.5, Fig 2"},
+  {"claim": "More cascader/vocoder denoising steps generally improve quality; more generator steps give mixed effects.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 3, step sizes scaled inversely with step count", "quote": "the effect of in-creasing the inference cost of the generator is mixed", "table": null, "note": "quote may break on ligature/hyphenation", "where": "Sec 4.6"},
+  {"claim": "Waveform generator needs 1000 steps (25.0 s) and the waveform cascader 800 steps (60.0 s) to sample four clips on four TPU V4.", "kind": "measured", "source": null, "metric": "inference time", "value": "25.0", "unit": "s", "baseline_value": null, "n": null, "setup": "four TPU V4, four 30s samples", "quote": null, "table": "Table 4, row Waveform generator, column time (s)", "note": "cascader 60.0 s; spectrogram generator 8.3 s; vocoder 0.3 s; super-resolution 57.3 s", "where": "Table 4"},
+  {"claim": "Training set is about 340k hours of music from 6.8M source files.", "kind": "measured", "source": null, "metric": "training data", "value": "340k", "unit": "hours", "baseline_value": null, "n": null, "setup": "six non-overlapping 30s clips per soundtrack", "quote": "This amounts to nearly 340k hours of music.", "table": null, "note": "pseudo-labelled portion given as O(150K) hours in intro", "where": "Sec 3.6"}
+ ],
+ "limits": [
+  "Authors caution that baselines may be disadvantaged: training data may be closer to the evaluation sets, and MuLan-based metrics may favour models trained on MuLan pseudo-labels.",
+  "Model and inference parameters were chosen heuristically by authors' judgement on a small private dev prompt set; ablations used less-trained checkpoints and varied one parameter at a time.",
+  "Models struggle on out-of-distribution prompts; examples on the demo page are cherry-picked.",
+  "Single sample per prompt, no seeds, error bars or significance tests; training hardware and compute not stated; training corpus is internal and not described.",
+  "Model not released due to safety and bias concerns; authors note possible misappropriation and cultural caricature harms.",
+  "Alternatives to T5 text embeddings not compared."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "front-heavy / back-heavy denoising schedule", "definition": "front-heavy allots many steps near t=0, back-heavy expends more steps near t=1; uniform is evenly spaced", "where": "Sec 4.2.1"},
+  {"term": "stochasticity parameter gamma", "definition": "controls the level of stochasticity of the denoising process in the ancestral sampler", "where": "Sec 3.1, Appendix A"}
+ ],
+ "lineage": [
+  {"work": "Cascaded diffusion models for high fidelity image generation (Ho et al. 2022b)", "year": 2022, "arxiv": null, "relation": "extends", "note": "cascade design and conditioning augmentation adapted to audio", "quote": null},
+  {"work": "Photorealistic text-to-image diffusion models (Imagen; Saharia et al. 2022b)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "Efficient U-Net, T5 conditioning, dynamic clipping", "quote": null},
+  {"work": "Classifier-free diffusion guidance (Ho & Salimans)", "year": 2022, "arxiv": "2207.12598", "relation": "uses-method", "note": "CFG at inference", "quote": null},
+  {"work": "DDPM (Ho et al. 2020)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "ancestral sampling and simplified loss", "quote": null},
+  {"work": "Improved DDPM (Nichol & Dhariwal 2021)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "cosine schedule", "quote": null},
+  {"work": "MuLan (Huang et al. 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "pseudo-labelling and similarity metric", "quote": null},
+  {"work": "LaMDA (Thoppilan et al. 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "generates caption vocabulary", "quote": null},
+  {"work": "T5 (Raffel et al. 2020)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "text encoder", "quote": null},
+  {"work": "MusicLM (Agostinelli et al.)", "year": 2023, "arxiv": "2301.11325", "relation": "baseline", "note": "compared on MusicCaps; shares eval set", "quote": null},
+  {"work": "Riffusion", "year": 2022, "arxiv": null, "relation": "baseline", "note": null, "quote": null},
+  {"work": "Mubert", "year": 2022, "arxiv": null, "relation": "baseline", "note": null, "quote": null},
+  {"work": "AudioSet (Gemmeke et al. 2017)", "year": 2017, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "MagnaTagATune (Law et al. 2009)", "year": 2009, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "Frechet audio distance (Kilgour et al.)", "year": 2018, "arxiv": "1812.08466", "relation": "uses-method", "note": null, "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "U-Net architecture used for the diffusion models.", "page": 3, "why": "shows the four input routes (stacked input, time embedding, cross attention text, aligned compressed input)"},
+  {"figure": "Fig 2", "caption": "FAD_VGG and MuLan similarity vs inference parameters (CFG scale, denoising schedule).", "page": 6, "why": "shows optimal CFG scale and schedule sensitivity"},
+  {"figure": "Fig 3", "caption": "Quality metrics plotted against inference time.", "page": 6, "why": "cost versus quality trade-off per stage"},
+  {"figure": "Table 3", "caption": "Inference parameters for the models used in this work.", "page": 4, "why": "the sampler settings per model"}
+ ],
+ "code": [
+  {"where": "Appendix A.2, Table 8", "snippet": "front heavy = [0.01 / 200] * 200 + [0.04 / 400] * 400 + [0.15 / 200] * 200 + [0.3 / 150] * 150 + [0.5 / 50] * 50", "verbatim": true},
+  {"where": "Eq 4", "snippet": "x_s = (alpha_s/alpha_t) x_t - (1 - e^(lambda_t - lambda_s)) (alpha_s/alpha_t) sigma_t eps_theta(x_t,c,t) + sigma~_{s|t}^(1-gamma) sigma_{t|s}^gamma eps~", "verbatim": false}
+ ],
+ "problems": ["No instructions embedded in the PDF.", "Table cells flattened by extraction; Table 7 column order inferred from the header."]
+}

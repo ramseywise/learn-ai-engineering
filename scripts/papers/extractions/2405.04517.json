@@ -1,0 +1,744 @@
+{
+ "schema": 1,
+ "key": "2405.04517",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/beck-2024-xlstm.pdf",
+ "bib": {
+  "title": "xLSTM: Extended Long Short-Term Memory",
+  "authors": [
+   "Maximilian Beck",
+   "Korbinian Pöppel",
+   "Markus Spanring",
+   "Andreas Auer",
+   "Oleksandra Prudnikova",
+   "Michael Kopp",
+   "Günter Klambauer",
+   "Johannes Brandstetter",
+   "Sepp Hochreiter"
+  ],
+  "first_author": "Beck",
+  "year": 2024,
+  "venue": "preprint (arXiv v2, 6 Dec 2024; NeurIPS 2024 not printed in text)",
+  "arxiv": "2405.04517",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 160570,
+  "chars_total": 160570,
+  "engine": "pymupdf",
+  "skipped": "Per-domain PALOMA perplexity rows (Table 10, 571 domains) and the Figure 4/12 numeric cells were scanned, not transcribed; reference list skimmed."
+ },
+ "type": "empirical",
+ "question": "How far does language modeling get when LSTMs are scaled to billions of parameters using modern LLM techniques while fixing known LSTM limitations?",
+ "hypothesis": "LSTMs extended with exponential gating and matrix memory can match or beat Transformers and state space models at scale.",
+ "contributions": [
+  "Exponential gating with normalization and stabilization",
+  "sLSTM: scalar memory, scalar update, new memory mixing (heads)",
+  "mLSTM: matrix memory, covariance update rule, fully parallelizable",
+  "xLSTM blocks (pre/post up-projection) residually stacked into xLSTM architectures",
+  "Language-model experiments up to 1.3B parameters and 300B tokens against Transformers, SSMs, RNNs"
+ ],
+ "method": {
+  "summary": "Adds exponential gating (sLSTM) and a matrix memory with covariance update (mLSTM) to the LSTM, wraps them in pre-LayerNorm residual blocks, and trains decoder-style language models. Compared on 15B tokens (13 baselines) and then 300B tokens (RWKV-4, Llama, Mamba) of SlimPajama at 125M to 1.3B, plus synthetic tasks, MQAR and Long Range Arena.",
+  "task": "autoregressive next-token pretraining; synthetic formal-language, MQAR and LRA tasks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SlimPajama",
+    "role": "pretrain",
+    "size": "15B tokens (Sec 4.2) and 300B tokens (Sec 4.3)",
+    "split": "validation set for perplexity; 15B comparison after one epoch (step 28170)",
+    "source": "Soboleva et al 2023",
+    "preprocessing": "HuggingFace GPT-2 tokenizer for all models; context 2048"
+   },
+   {
+    "name": "PALOMA",
+    "role": "eval",
+    "size": "571 text domains, 16 of 18 sources",
+    "split": "per-domain validation",
+    "source": "Magnusson et al 2023; ThePile and ICE left out as not in Paloma's HF repo",
+    "preprocessing": "documents split into non-overlapping 2048-token sequences; last window padded with previous tokens, perplexity on remaining tokens only"
+   },
+   {
+    "name": "Wikitext-103",
+    "role": "both",
+    "size": null,
+    "split": "validation stopping criterion, test eval",
+    "source": "Merity et al 2017",
+    "preprocessing": "rare-token experiment, 125M models, bs 256, ctx 512, 50k steps"
+   },
+   {
+    "name": "Nearest Neighbor Search (synthetic)",
+    "role": "both",
+    "size": "8192 train sequences, 8192 validation, length up to 64",
+    "split": null,
+    "source": "own task",
+    "preprocessing": "2-d unit-norm vectors, value uniform [0,1]"
+   },
+   {
+    "name": "Formal language tasks (after Delétang et al 2023)",
+    "role": "both",
+    "size": null,
+    "split": "train length up to 40; eval lengths 40 to 256",
+    "source": "Deletang et al 2023, extended",
+    "preprocessing": "100k training steps, generated randomly"
+   },
+   {
+    "name": "Multi-Query Associative Recall",
+    "role": "both",
+    "size": "100,000 training and 3,000 validation samples per setup",
+    "split": null,
+    "source": "Arora et al 2023",
+    "preprocessing": "vocab 8192; KV pairs up to 256; context up to 2048 (extrapolation to 8192)"
+   },
+   {
+    "name": "Long Range Arena",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Tay et al 2021",
+    "preprocessing": "Retrieval, ListOps, G-Image, RGB-Image, Pathfinder; Text and Pathfinder-X omitted"
+   },
+   {
+    "name": "LM Evaluation Harness downstream tasks",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Sutawika et al 2023",
+    "preprocessing": "LAMBADA (OpenAI), HellaSwag, PIQA, ARC-E, ARC-C, WinoGrande; acc for LAMBADA, WinoGrande, PIQA, ARC-E; length-normalised acc for HellaSwag, ARC-C; best of fp32/bf16/mixed per model"
+   }
+  ],
+  "models": [
+   {
+    "name": "xLSTM[1:0] (all mLSTM)",
+    "role": "proposed",
+    "params": "163.8M / 409.3M / 840.4M / 1422.6M (nominal 125M/350M/760M/1.3B)",
+    "architecture": "mLSTM blocks, pre up-projection (factor 2), conv kernel 4, 4 heads, no positional encoding",
+    "init_from": null,
+    "tokenizer": "GPT-2 (HF)",
+    "vocab": null,
+    "layers": "24 / 48 / 48 / 48 blocks",
+    "hidden": "768 / 1024 / 1536 / 2048",
+    "heads": "4",
+    "context": "2048 training",
+    "other": {
+     "peak_lr_300B": "1.5e-3 / 7.5e-4 / 6.25e-4 / 5e-4",
+     "peak_lr_15B": "3e-3 / 1e-3 / 9e-4 / 9e-4"
+    }
+   },
+   {
+    "name": "xLSTM[7:1]",
+    "role": "proposed",
+    "params": "163.7M / 408.4M / 839.7M / 1420.1M",
+    "architecture": "7 mLSTM : 1 sLSTM blocks; sLSTM post up-projection (factor 4/3 gated MLP, GeLU)",
+    "init_from": null,
+    "tokenizer": "GPT-2 (HF)",
+    "vocab": null,
+    "layers": "24 / 48 / 48 / 48 blocks (6 sLSTM of 48)",
+    "hidden": "768 / 1024 / 1536 / 2048",
+    "heads": "4",
+    "context": "2048 training",
+    "other": {
+     "sLSTM_positions": "[3,5,7,40,42,44]; 125M uses [3,20] (actually 11:1)"
+    }
+   },
+   {
+    "name": "Llama (Transformer)",
+    "role": "baseline",
+    "params": "162.2M / 406.6M / 834.1M / 1420.4M",
+    "architecture": "Llama-like decoder transformer, own PyTorch implementation",
+    "init_from": null,
+    "tokenizer": "GPT-2 (HF)",
+    "vocab": null,
+    "layers": "12 / 24 / 24 / 24",
+    "hidden": "768 / 1024 / 1536 / 2048",
+    "heads": "12/64, 16/64, 16/96, 16/128",
+    "context": "2048",
+    "other": {
+     "peak_lr_300B": "3e-3 / 1.5e-3 / 1.25e-3 / 1e-3 (Gu and Dao 2023 values)"
+    }
+   },
+   {
+    "name": "Mamba",
+    "role": "baseline",
+    "params": "167.8M / 423.1M / 870.5M / 1475.3M",
+    "architecture": "selective SSM, original repo code",
+    "init_from": null,
+    "tokenizer": "GPT-2 (HF)",
+    "vocab": null,
+    "layers": "24 / 48 / 48 / 48",
+    "hidden": "768 / 1024 / 1536 / 2048",
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "RWKV-4",
+    "role": "baseline",
+    "params": "169.4M / 430.5M / 891.0M / 1515.2M",
+    "architecture": "RNN, cleaned re-implementation",
+    "init_from": null,
+    "tokenizer": "GPT-2 (HF)",
+    "vocab": null,
+    "layers": "12 / 24 / 24 / 24",
+    "hidden": "768 / 1024 / 1536 / 2048",
+    "heads": null,
+    "context": "2048",
+    "other": {
+     "peak_lr_300B": "6e-4 / 4e-4 / 2.5e-4 / 2e-4"
+    }
+   },
+   {
+    "name": "GPT-3, H3, Hyena, RWKV-5, RWKV-6, RetNet, HGRN, GLA, HGRN2",
+    "role": "baseline",
+    "params": "356M to 456M (Table 1)",
+    "architecture": "various; 15B-token comparison only",
+    "init_from": null,
+    "tokenizer": "GPT-2 (HF)",
+    "vocab": null,
+    "layers": "24",
+    "hidden": "1024",
+    "heads": null,
+    "context": "2048",
+    "other": {
+     "note": "RWKV-5/6, GLA, HGRN, HGRN2 not trained with PyTorch AMP; weights cast to fp32 with FSDP bf16"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy (autoregressive)",
+   "optimizer": "AdamW, betas (0.9, 0.95), epsilon 1e-5",
+   "lr": "peak 1e-3 for all models in the 15B comparison; per-model peaks in Table 7 for scaling (e.g. xLSTM 1.3B 5e-4 at 300B)",
+   "lr_schedule": "linear warm-up then cosine decay to 10% of peak",
+   "warmup": "750 steps",
+   "batch_size": "256 (15B comparison; 125M/350M/760M at 300B); 512 (1.3B at 300B)",
+   "steps": "30k decay steps, compared at step 28170 (15B); 600k steps (125M/350M/760M, 300B); 300k steps (1.3B, 300B)",
+   "epochs": "1 for 15B comparison",
+   "tokens": "15B and 300B",
+   "seq_len": "2048",
+   "precision": "bfloat16 mixed precision, weights and gradient reduction in float32 (PyTorch FSDP SHARD_GRAD_OP, NO_SHARD for small models)",
+   "weight_decay": "0.1, token embedding excluded",
+   "dropout": "0.1 (nearest neighbor task only); not stated for LM runs",
+   "regularisation": "sLSTM backward magnitude of recurrent gradient clipped to 10",
+   "hardware": "NVIDIA A100 GPUs, 128 nodes x 8 for whole project; PyTorch 2.2.0, CUDA 12.1, Python 3.11",
+   "compute": "three months on 128 nodes x 8 A100 for all experiments; >95% for LM experiments",
+   "wall_clock": null,
+   "seeds": "not stated for LM runs; 5 seeds for nearest-neighbor task, 2 seeds x 3 LRs for formal languages",
+   "other": {
+    "torch.compile": "used except Transformers and flash-linear-attention models",
+    "tied_embeddings": "not tied unless stated (GPT-3 ties)",
+    "grad_clip_global": null
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single training run per configuration for LM results; no seeds or confidence intervals",
+   "prompting": "downstream tasks via LM Evaluation Harness (zero-shot not stated explicitly)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "generation_speed": "batch size 1, pre-fill 16, A100-80GB, HuggingFace baselines"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "validation perplexity",
+     "definition": "exp of mean negative log-likelihood per token on SlimPajama validation (and PALOMA per-domain, token-weighted)",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "downstream accuracy",
+     "definition": "LM Evaluation Harness accuracy (acc_norm for HellaSwag, ARC-C)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "scaled accuracy",
+     "definition": "formal languages, scaled 0 (random) to 1 (perfect), on task-relevant tokens",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "MQAR accuracy",
+     "definition": "accuracy at recalling key-value pairs",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "LRA test accuracy and mean rank",
+     "definition": "per-task accuracy and ranking",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3",
+    "Llama",
+    "H3",
+    "Mamba",
+    "Hyena",
+    "RWKV-4",
+    "RWKV-5",
+    "RWKV-6",
+    "RetNet",
+    "HGRN",
+    "GLA",
+    "HGRN2",
+    "LSTM",
+    "LSTM (Block)"
+   ],
+   "protocol": "Perplexity compared after training at matched token count; best learning rate selected for synthetic/LRA tasks; no significance tests for LM results; LM runs single seed as far as stated."
+  },
+  "availability": {
+   "code": "https://github.com/NX-AI/xlstm",
+   "weights": null,
+   "data": "SlimPajama and PALOMA public; synthetic tasks described in App B"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval Table 3 caption",
+    "quote": "Model sizes are 125M, 250M, 760M, and 1.3B.",
+    "where": "Table 3 caption; text and tables use 350M"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "At 15B SlimPajama tokens and ~350M-class size, xLSTM[1:0] has the lowest validation perplexity of 14 methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "13.43",
+   "unit": "ppl",
+   "baseline_value": "Mamba 13.70 (best baseline); Llama 14.25; GPT-3 14.26",
+   "n": null,
+   "setup": "All models match a GPT-3 350M (emb dim 1024, 24 residual blocks), 15B tokens SlimPajama, ctx 2048, bs 256, peak LR 1e-3, one epoch (step 28170); one run each (no seeds stated)",
+   "note": null,
+   "where": "Sec 4.2, Table 1",
+   "table": "Table 1, row xLSTM[1:0], column SlimPajama (15B) ppl"
+  },
+  {
+   "claim": "xLSTM[7:1] is second best in the same comparison.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "13.48",
+   "unit": "ppl",
+   "baseline_value": "Mamba 13.70",
+   "n": null,
+   "setup": "Same as Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row xLSTM[7:1], column SlimPajama (15B) ppl"
+  },
+  {
+   "claim": "Ablation morphing a vanilla LSTM into xLSTM: vanilla multi-layer LSTM is untrainable-bad (ppl 2417.86); resnet backbone, up-projection, exponential gating, matrix memory each cut perplexity, ending at 13.48.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "2417.86 -> 35.46 -> 26.01 -> 17.70 -> 13.48",
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15B SlimPajama tokens; 24-layer 1536-hidden PyTorch LSTM start; params 607.8M -> 408.4M",
+   "note": null,
+   "where": "Table 2, App B.2",
+   "table": "Table 2 (top), column SlimPajama (15B) ppl"
+  },
+  {
+   "claim": "Adding exponential gating takes ppl from 26.01 to 17.70 and adding matrix memory from 17.70 to 13.48.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "17.70 -> 13.48",
+   "unit": "ppl",
+   "baseline_value": "26.01",
+   "n": null,
+   "setup": "Table 2 top, 15B tokens",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "The ablation studies attribute the strong performance improvement to both the exponential gating and the matrix memory."
+  },
+  {
+   "claim": "Gating ablation: input-dependent and learnable forget and input gates give 13.43 versus 13.95 for fixed (non-learnable) forget bias [3,6] with no input gate dependence.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "13.43",
+   "unit": "ppl",
+   "baseline_value": "13.95",
+   "n": null,
+   "setup": "xLSTM[1:0] with sigmoid forget gate and exponential input gate, 15B tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2 (bottom), row Forget Gate + Input Gate"
+  },
+  {
+   "claim": "Pre up-projection block with causal convolution is the best mLSTM block variant; without convolution ppl is 15.41.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "13.43",
+   "unit": "ppl",
+   "baseline_value": "15.41 (no conv); 13.90 (post up-projection ReLU2 block)",
+   "n": null,
+   "setup": "xLSTM[1:0], 15B tokens",
+   "note": null,
+   "where": "App B.2, Table 8",
+   "table": "Table 8, row Pre Up-Projection Block, With Convolution"
+  },
+  {
+   "claim": "At 300B tokens, 1.3B xLSTM[1:0] has the lowest SlimPajama validation perplexity of the four models; xLSTM[7:1] is 9.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "8.89",
+   "unit": "ppl",
+   "baseline_value": "Mamba 9.14; Llama 9.44; RWKV-4 9.83",
+   "n": null,
+   "setup": "1.3B models (1422.6M actual params), 300B SlimPajama tokens, ctx 2048, bs 512, 300k steps",
+   "note": null,
+   "where": "Sec 4.3, Table 3",
+   "table": "Table 3, 1.3B block, row xLSTM[1:0], column SlimPajama (300B) ppl"
+  },
+  {
+   "claim": "Average accuracy over six common-sense tasks at 1.3B: xLSTM[1:0] 58.48, Mamba 58.41, xLSTM[7:1] 58.10; the margin to Mamba is 0.07 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "58.48",
+   "unit": "%",
+   "baseline_value": "Mamba 58.41; Llama 56.99; RWKV-4 54.78",
+   "n": null,
+   "setup": "1.3B, 300B tokens; LAMBADA, HellaSwag, PIQA, ARC-E, ARC-C, WinoGrande via LM Evaluation Harness; single run",
+   "note": "Margin is within what one seed could change; no seeds or intervals reported. Mamba is best on ARC in some sizes (text concedes).",
+   "where": "Table 3",
+   "table": "Table 3, 1.3B block, row xLSTM[1:0], column Average acc"
+  },
+  {
+   "claim": "At 125M, average downstream accuracy xLSTM[7:1] 44.16 vs Mamba 43.63, Llama 41.78, RWKV-4 41.12.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "44.16",
+   "unit": "%",
+   "baseline_value": "Mamba 43.63",
+   "n": null,
+   "setup": "125M, 300B tokens",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, 125M block, row xLSTM[7:1], column Average acc"
+  },
+  {
+   "claim": "At 760M xLSTM[1:0] average accuracy 56.12 versus Mamba 53.86 and Llama 52.74.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "56.12",
+   "unit": "%",
+   "baseline_value": "Mamba 53.86",
+   "n": null,
+   "setup": "760M, 300B tokens",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, 760M block, row xLSTM[1:0], column Average acc"
+  },
+  {
+   "claim": "Length extrapolation: trained at ctx 2048, tested at 16k, xLSTM[7:1] perplexity stays 8.92 while Llama blows up to 337.83.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity at 16k context",
+   "value": "8.92",
+   "unit": "ppl",
+   "baseline_value": "Llama 337.83; Mamba 14.00; RWKV-4 13.75; xLSTM[1:0] 9.01",
+   "n": null,
+   "setup": "1.3B models, 300B SlimPajama tokens, trained with context length 2048, SlimPajama validation set",
+   "note": null,
+   "where": "Sec 4.3, Fig 7",
+   "table": "Figure 7 right panel, row xLSTM[7:1], column SlimPajama (300B) ppl at 16k"
+  },
+  {
+   "claim": "On PALOMA, xLSTM[1:0] has lower perplexity than Mamba in 568 of 571 text domains.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of domains with lower ppl",
+   "value": "99.5",
+   "unit": "%",
+   "baseline_value": "vs Llama 85.1%; vs RWKV-4 99.8%",
+   "n": null,
+   "setup": "1.3B models after 300B tokens; 571 PALOMA domains (16 of 18 sources)",
+   "note": "The sentence is split by a page break; the 568/571 is vs Mamba, 486/571 (85.1%) vs Llama, 570/571 (99.8%) vs RWKV-4.",
+   "where": "Sec 4.3, p11-12",
+   "quote": "xLSTM[1:0] has in 568 out of 571 (99.5%) text domains a lower perplexity"
+  },
+  {
+   "claim": "PALOMA average perplexity at 1.3B: xLSTM[1:0] 11.58, Llama 12.04, Mamba 11.84, RWKV-4 13.18.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average ppl",
+   "value": "11.58",
+   "unit": "ppl",
+   "baseline_value": "Mamba 11.84",
+   "n": null,
+   "setup": "1.3B, 300B tokens, 12 PALOMA columns averaged",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, 1.3B block, row xLSTM[1:0], column Average"
+  },
+  {
+   "claim": "Scaling: xLSTM is better than Mamba by a margin similar to Mamba over Llama, with all models sharing similar scaling slope.",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "125M, 350M, 760M, 1.3B at 300B tokens; extrapolation to larger models is the authors' inference from four points",
+   "note": null,
+   "where": "Sec 4.3, Fig 8",
+   "quote": "The scaling behavior indicates that for larger models xLSTM will continue to perform favourable compared to Transformers and State-Space models."
+  },
+  {
+   "claim": "Inference: xLSTM scales linearly in generation time; Llama is quadratic and goes OOM at small batch sizes, so xLSTM reaches the highest throughput at 1.3B on an A100-80GB.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B models, batch size 1 and pre-fill 16 for generation time; HuggingFace implementations of Mamba, Llama (static KV cache), RWKV; torch.compile did not work for full Transformer cache or Mamba",
+   "note": "Throughput and time values are in a figure only, not in the text.",
+   "where": "Sec 4.3, Fig 9",
+   "quote": "Figure 9 shows the linear scaling of the xLSTM and the other recurrent models Mamba and RWKV-4 compared to the quadratic scaling of Llama."
+  },
+  {
+   "claim": "Exponential gating with memory mixing lets xLSTM solve state-tracking formal language tasks that Transformers and SSMs cannot (e.g. parity).",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Formal-language suite after Deletang et al 2023; 2-block models; train length up to 40, eval lengths 40 to 256; scaled accuracy; 3 LRs x 2 seeds",
+   "note": null,
+   "where": "Sec 4.1, Fig 4",
+   "quote": "Models such as Transformers or State Space Models without memory mixing (no state tracking) cannot solve, e.g. regular grammars like the parity task."
+  },
+  {
+   "claim": "Long Range Arena: xLSTM has the best mean rank (1.6) of six models, but Mamba has the best average accuracy of the five tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average rank",
+   "value": "1.6",
+   "unit": "rank",
+   "baseline_value": "Mamba 2.2; RWKV-4 3.0; LSTM (Block) 3.4; Llama 5.2; LSTM 5.4",
+   "n": null,
+   "setup": "Five LRA tasks (Retrieval, ListOps, G-Image, RGB-Image, Pathfinder); S5/LRU hyperparameters plus LR search; xLSTM = better of xLSTM[1:0]/[0:1] on validation",
+   "note": "Table 6 average accuracies: Mamba 0.765, RWKV-4 0.757, xLSTM 0.761 (column order as in text dump).",
+   "where": "App B.1.3, Table 6",
+   "table": "Table 6, row xLSTM, column Ranking"
+  },
+  {
+   "claim": "Compute: all models trained over three months on 128 nodes of 8 A100 GPUs; more than 95% went to language modeling experiments.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute",
+   "value": "128 nodes x 8 A100",
+   "unit": "GPUs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All experiments and baselines",
+   "note": null,
+   "where": "App B",
+   "quote": "We developed and trained all our models and baselines over the course of three months on a cluster with 128 nodes of eight NVIDIA A100 GPUs each."
+  },
+  {
+   "claim": "Authors concede mLSTM CUDA kernels are about 4 times slower than FlashAttention or the Mamba scan.",
+   "kind": "measured",
+   "source": null,
+   "metric": "slowdown",
+   "value": "4",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Current implementation at time of writing",
+   "note": "The 'about 4 times slower' phrase breaks across a line in the text.",
+   "where": "Sec 5 Limitations",
+   "quote": "Faster CUDA kernels could be obtained in the vein of FlashAttention."
+  }
+ ],
+ "limits": [
+  "Authors: sLSTM memory mixing prevents parallelization; its CUDA kernel is under two times slower than mLSTM, which is itself about 4 times slower than FlashAttention or Mamba's scan.",
+  "Authors: forget gate initialization must be chosen carefully; matrix memory is fixed-size so it might overload at contexts beyond 16k.",
+  "Authors: architecture and hyperparameters not fully optimized, especially at larger sizes; extensive optimization needed to reach full potential.",
+  "Largest model is 1.3B and 300B tokens; claims about larger models rest on extrapolating four-point scaling curves. A 2.7B 15B-token xLSTM[7:1] run underperforms (attributed to slower early convergence).",
+  "Baselines: RWKV-5/6 and HGRN2 only at 15B tokens; 300B comparison uses only RWKV-4, Llama, Mamba. RWKV-4 re-implemented; learning rates for Llama and Mamba taken from Gu and Dao.",
+  "No seeds, confidence intervals or significance tests for LM perplexity or downstream results; some margins are small (e.g. 58.48 vs 58.41 average at 1.3B).",
+  "Inference speed results are only in Fig 9 and compare HuggingFace baseline implementations where torch.compile failed for Mamba and the full Transformer cache.",
+  "Text inconsistencies: Table 3/4 captions say 250M while sizes are 350M; text says 'maximal throughput in Figure 9 (left)' while it is the right panel."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "xLSTM[a:b]",
+   "definition": "ratio a/b of mLSTM-based versus sLSTM-based xLSTM blocks; e.g. xLSTM[7:1] means seven mLSTM blocks out of eight",
+   "where": "Sec 4"
+  },
+  {
+   "term": "memory mixing",
+   "definition": "hidden-hidden (recurrent) connections between hidden states from one time step to the next, which enforce sequential processing",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Long Short-Term Memory (Hochreiter and Schmidhuber)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "constant error carousel and gating",
+   "quote": null
+  },
+  {
+   "work": "Mamba: Linear-time sequence modeling with selective state spaces",
+   "year": 2023,
+   "arxiv": "2312.00752",
+   "relation": "baseline",
+   "note": "best baseline in all comparisons; also source of training setup and LRs",
+   "quote": null
+  },
+  {
+   "work": "RWKV (Peng et al)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RWKV-4/5/6",
+   "quote": null
+  },
+  {
+   "work": "Llama (Touvron et al)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Transformer baseline",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Transformer baseline and training-setup reference",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "uses-method",
+   "note": "power-law scaling analysis",
+   "quote": null
+  },
+  {
+   "work": "Neural networks and the Chomsky hierarchy",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "formal language tasks",
+   "quote": null
+  },
+  {
+   "work": "Zoology: Measuring and improving recall in efficient language models",
+   "year": 2023,
+   "arxiv": "2312.04927",
+   "relation": "uses-data",
+   "note": "MQAR task",
+   "quote": null
+  },
+  {
+   "work": "SlimPajama",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data (Soboleva et al)",
+   "quote": null
+  },
+  {
+   "work": "PALOMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "571-domain perplexity evaluation (Magnusson et al)",
+   "quote": null
+  },
+  {
+   "work": "Long Range Arena",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Tay et al",
+   "quote": null
+  },
+  {
+   "work": "Retention, HGRN2, GLA, Linear Transformer, Fast Weight Programmers",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "matrix memory / covariance update relatives; none has memory mixing",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The extended LSTM (xLSTM) family.",
+   "page": 1,
+   "why": "Shows how LSTM becomes sLSTM/mLSTM then blocks then stack."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Method comparison on next token prediction when trained on 15B tokens from SlimPajama.",
+   "page": 10,
+   "why": "Scaling to 2.7B on 15B tokens; note xLSTM[7:1] dip."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Sequence extrapolation in language modeling.",
+   "page": 11,
+   "why": "Shows Llama collapse beyond 2048 and xLSTM stability to 16k."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Inference Generative Speed.",
+   "page": 14,
+   "why": "Linear vs quadratic generation time and throughput under memory limits."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 19-21 (mLSTM)",
+   "snippet": "C_t = f_t C_{t-1} + i_t v_t k_t^T ; n_t = f_t n_{t-1} + i_t k_t ; h_t = o_t ⊙ (C_t q_t / max{|n_t^T q_t|, 1})",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 15-17 (stabilizer)",
+   "snippet": "m_t = max(log(f_t) + m_{t-1}, log(i_t)); i'_t = exp(log(i_t) - m_t); f'_t = exp(log(f_t) + m_{t-1} - m_t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text is clean; figure and table cells come out one per line, so Fig 4 numeric cells were not mapped to rows.",
+  "Table 3/4 captions say 250M where body says 350M.",
+  "No embedded instructions found."
+ ]
+}

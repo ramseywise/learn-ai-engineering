@@ -15,6 +15,8 @@ cleaned: 2026-10-29
 
 ## `sqlite3`: in the standard library
 
+The ingest pattern (get-or-create, one transaction per batch) is in [Python 02 · 05 Databases](../../python/02-informatics/notes/05-databases.md).
+
 ```python
 import sqlite3
 

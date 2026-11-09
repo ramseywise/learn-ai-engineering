@@ -1,0 +1,557 @@
+{
+ "schema": 1,
+ "key": "2301.09515",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sauer-2023-stylegan-t.pdf",
+ "bib": {
+  "title": "StyleGAN-T: Unlocking the Power of GANs for Fast Large-Scale Text-to-Image Synthesis",
+  "authors": [
+   "Axel Sauer",
+   "Tero Karras",
+   "Samuli Laine",
+   "Andreas Geiger",
+   "Timo Aila"
+  ],
+  "first_author": "Sauer",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.09515",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 47657,
+  "chars_total": 47657,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What changes to a StyleGAN-XL-style GAN make it competitive with diffusion and autoregressive models for large-scale text-to-image synthesis while keeping single-forward-pass speed?",
+ "hypothesis": "A redesigned generator and discriminator plus CLIP guidance and truncation can let GANs regain competitiveness in text-to-image synthesis.",
+ "contributions": [
+  "Redesigned generator (residual convs, stronger text conditioning with 2nd-order style)",
+  "New DINO-ViT-S-based discriminator with 5 heads",
+  "CLIP guidance loss during training, text-encoder fine-tuning phase and explicit truncation for variation vs text alignment tradeoff",
+  "~1B parameter GAN trained on 250M pairs that beats distilled diffusion models in quality and speed"
+ ],
+ "method": {
+  "summary": "StyleGAN-T starts from StyleGAN-XL, swaps class conditioning for CLIP ViT-L/14 text embeddings, drops StyleGAN3 equivariance for a StyleGAN2 backbone with residual blocks and a 2nd-order style mechanism, uses a frozen DINO ViT-S discriminator feature network with 5 heads, and adds a CLIP-based guidance loss, a text-encoder training phase and truncation. Ablations use a lightweight config on CC12M at 64x64; the final model (~1B params) trains on 250M pairs with progressive growing up to 512x512.",
+  "task": "text-to-image synthesis (GAN), zero-shot MS COCO evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CC12M (lightweight config)",
+    "role": "train",
+    "size": "12M",
+    "split": null,
+    "source": "Changpinyo et al. 2021",
+    "preprocessing": "64x64 resolution, no progressive growing"
+   },
+   {
+    "name": "Union: CC12m, CC, YFCC100m (filtered), Redcaps, LAION-aesthetic-6+ (full config)",
+    "role": "train",
+    "size": "250M text-image pairs",
+    "split": null,
+    "source": "Changpinyo 2021; Sharma 2018; Thomee 2016 / Singh 2022; Desai 2021; Schuhmann 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MS COCO (zero-shot)",
+    "role": "eval",
+    "size": "30k samples for FID30k; 5k for FID5k in Fig 5/6",
+    "split": null,
+    "source": "Lin et al. 2014",
+    "preprocessing": "downsampled with Lanczos to 64x64 / 256x256 where marked"
+   }
+  ],
+  "models": [
+   {
+    "name": "StyleGAN-T",
+    "role": "proposed",
+    "params": "~1 billion (generator 1.02 billion; lightweight 75 million)",
+    "architecture": "StyleGAN2-style generator with residual conv blocks, GroupNorm, Layer Scale, Fourier-feature input; DINO ViT-S/16 discriminator with 5 heads",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": "5 discriminator heads",
+    "context": null,
+    "other": {
+     "generator_channel_base": "32768 light / 65536 full",
+     "generator_channel_max": "512 light / 2048 full",
+     "residual_blocks_per_generator_block": "3 light / 4 full",
+     "text_encoder": "CLIP ViT-L/14 text encoder, 123 million params",
+     "z_dim": 64,
+     "layer_scale_init": "1e-5",
+     "disc_head_input_feature_size": 384,
+     "disc_head_text_conditioning_feature_size": 64,
+     "layers_increase": "approx 2.3x lightweight, 4.5x final vs StyleGAN-XL",
+     "resolution": "up to 512x512"
+    }
+   },
+   {
+    "name": "StyleGAN-XL",
+    "role": "base",
+    "params": null,
+    "architecture": "StyleGAN3 layers, DeiT-M and EfficientNet frozen feature nets, 8 discriminator heads",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIP ViT-g-14 (LAION-2B)",
+    "role": "judge",
+    "params": null,
+    "architecture": "CLIP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "CLIP score computation"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Non-saturating-style GAN with per-token hinge loss on every discriminator head, plus L_CLIP = arccos^2(c_image . c_text) guidance; inferred: generator and discriminator adversarial training",
+   "optimizer": "Adam",
+   "lr": "0.002 (generator and discriminator)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "2048",
+   "steps": "Full: 16x16 118,000 it; 32x32 78,000 it; 64x64 57,000 it; secondary phase 20,000 it; 128x128 10,000; 256x256 6,000; 512x512 3,000. Lightweight: 25 million iterations (as printed)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Differentiable augmentation (Zhao 2020) before the feature net, random crops above 224x224; virtual-batch BatchNorm without running stats in discriminator heads; EMA 0.9978",
+   "hardware": "64x NVIDIA A100 (full); 8 GPUs (lightweight)",
+   "compute": "Full: 450+450+450+190+96+70+30 A100 days per Table 5; budget about a quarter of Stable Diffusion's",
+   "wall_clock": "4 weeks: primary phase 3 weeks (up to 64x64), secondary phase 2 days, primary phase again 5 days (up to 512x512)",
+   "seeds": null,
+   "other": {
+    "adam_betas": "(0, 0.99) for both",
+    "clip_guidance_weight": "0.2 primary; 50 secondary phase (text encoder trainable, generator frozen)",
+    "clip_loss_resolution": "applied to random 64x64 crops above 64x64",
+    "lightweight_schedule": "64x64 for 50 A100 days",
+    "progressive_growing": "Yes in full (all layers trainable), No in lightweight",
+    "iteration_definition": "2048 real and generated examples"
+   }
+  },
+  "inference": {
+   "decoding": "single forward pass; truncation psi in [0,1] interpolating w towards per-prompt mean [f~, c_text]",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Fig 5: psi swept 1.0 to 0.0; eval FID30k (Tables 2-3), FID5k (Figs 5-6); number of runs/seeds not stated",
+   "prompting": "text prompts embedded by CLIP; styles by appending e.g. 'astronaut, {X}'",
+   "retrieval": null,
+   "parameters": {
+    "truncation_psi": "1.0 ... 0.0 range; no single final value stated"
+   },
+   "other": {
+    "speed": "0.06 s at 64x64, 0.10 s at 256x256 on A100 (Tables 2-3); ~10 FPS (Fig 1)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Zero-shot FID30k / FID5k",
+     "definition": "Frechet inception distance (Heusel 2017) on MS COCO, zero-shot",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLIP score",
+     "definition": "CLIPScore (Hessel 2021) with ViT-g-14 trained on LAION-2B (different CLIP from the conditioning one)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Speed",
+     "definition": "seconds to generate one image on A100 (TPUv4 for Imagen and Parti)",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Stable Diffusion",
+    "eDiff-I",
+    "LDM",
+    "GLIDE",
+    "DALL-E 2",
+    "Imagen",
+    "DALL-E",
+    "Ernie-ViLG",
+    "Make-A-Scene",
+    "Parti-3B/20B",
+    "LAFITE",
+    "SD-distilled",
+    "StyleGAN-XL"
+   ],
+   "protocol": "Zero-shot MS COCO; other models' numbers from papers or correspondence with authors; ablations in lightweight config; no seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/autonomousvision/stylegan-t (promised: 'We will make our implementation available')",
+   "weights": null,
+   "data": "public datasets (CC12M, CC, YFCC100m filtered, RedCaps, LAION-aesthetic-6+)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "The times are listed as the number of days it would have taken on a single NVIDIA A100 GPU.",
+    "where": "Table 5 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Full StyleGAN-T beats all listed models at 64x64 zero-shot FID30k, and generates in 0.06 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7.3,
+   "unit": "FID",
+   "baseline_value": "GLIDE 7.40, eDiff-I 7.60, LDM 7.59",
+   "n": null,
+   "setup": "MS COCO 64x64 zero-shot, model before final training phase, A100 speed",
+   "quote": null,
+   "table": "Table 2, row StyleGAN-T, column Zero-shot FID30k",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "At 256x256 StyleGAN-T halves LAFITE's FID but trails diffusion and autoregressive models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 13.9,
+   "unit": "FID",
+   "baseline_value": "LAFITE 26.94; Stable Diffusion 8.59; eDiff-I 6.95",
+   "n": null,
+   "setup": "MS COCO 256x256 zero-shot, downsampled with Lanczos, 0.10 s on A100",
+   "quote": null,
+   "table": "Table 3, row StyleGAN-T *, column Zero-shot FID30k",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Architecture ablation: baseline StyleGAN-XL with text conditioning reaches FID 51.88.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 51.88,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "lightweight config, CC12M 64x64, zero-shot MS COCO",
+   "quote": "this baseline reaches a zero-shot FID of 51.88 and CLIP score of 5.58",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "New generator lowers FID to 45.10.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 45.1,
+   "unit": "FID",
+   "baseline_value": 51.88,
+   "n": null,
+   "setup": "lightweight config",
+   "quote": null,
+   "table": "Table 1, row New generator, column Zero-shot FID30k",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "New discriminator lowers FID to 26.77 (CLIP score 9.78).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 26.77,
+   "unit": "FID",
+   "baseline_value": 45.1,
+   "n": null,
+   "setup": "lightweight config",
+   "quote": null,
+   "table": "Table 1, row New discriminator, column Zero-shot FID30k",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Adding L_CLIP guidance lowers FID to 20.52 (CLIP score 11.72).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 20.52,
+   "unit": "FID",
+   "baseline_value": 26.77,
+   "n": null,
+   "setup": "lightweight config",
+   "quote": null,
+   "table": "Table 1, row LCLIP, column Zero-shot FID30k",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Truncation lifts StyleGAN-T CLIP score up to 0.305, beating SD-distilled in FID and CLIP score but behind eDiff-I.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.305,
+   "unit": "CLIP score (ViT-g-14)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FID5k vs CLIP score curves, psi swept",
+   "quote": "Using Truncation, StyleGAN-T can push the CLIP score to",
+   "table": null,
+   "note": "Quote is truncated at a line break; full text '0.305, successfully improving text alignment.'",
+   "where": "Sec 4.2, Fig 5"
+  },
+  {
+   "claim": "StyleGAN-T generates a sample in 0.1 s versus 32.0 s for eDiff-I and 0.6 s for SD-distilled at 8 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.1,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100, 256x256",
+   "quote": "StyleGAN-T beats both baselines, generating a sample in 0.1 seconds.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Discriminator redesign is about 2.5x faster than StyleGAN-XL's, giving about 1.5x faster training.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.5,
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "discriminator only",
+   "quote": "discriminator, our simpliﬁed re-design is ∼2.5× faster, leading to ∼1.5× faster training.",
+   "table": null,
+   "note": "Quote spans a line break; may be flagged",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Total training compute is about a quarter of Stable Diffusion's.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "weeks on 64 A100 (batch 2048)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "full model",
+   "quote": "The total training time was four weeks on 64 A100 GPUs",
+   "table": null,
+   "note": "the 'quarter' claim is in same section; not independently verified",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "FID almost doubles from 64x64 to 256x256 for StyleGAN-T (7.30 to 13.90) while eDiff-I improves 7.60 to 6.95, showing the super-resolution stage underperforms.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.95,
+   "unit": "FID (eDiff-I at 256)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS COCO zero-shot",
+   "quote": "(7.60→6.95)",
+   "table": null,
+   "note": "comparison uses numbers from eDiff-I authors",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Training the CLIP text encoder with frozen generator and guidance weight 50 raises CLIP score without harming FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50,
+   "unit": "CLIP guidance weight",
+   "baseline_value": null,
+   "n": null,
+   "setup": "secondary phase",
+   "quote": "This secondary phase allows a very high CLIP guidance weight of 50",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Fig 6"
+  }
+ ],
+ "limits": [
+  "Weak at binding attributes to objects and producing coherent text in images (Fig 9); authors suggest a larger language model would likely fix this at slower runtime.",
+  "Super-resolution stage underperforms; 256x256 FID 13.90 trails SD (8.59), Imagen (7.27), eDiff-I (6.95).",
+  "Strong CLIP guidance causes image artifacts; truncation moves toward a single mode unlike multi-modal diffusion guidance.",
+  "Compared FID numbers for other models are from papers or private correspondence, not rerun; no seeds, error bars or human evaluation.",
+  "Weights not released in paper; implementation promised only. Dated by later diffusion distillation and one-step models (not in paper)."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "StyleGAN-XL",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "baseline architecture",
+   "quote": null
+  },
+  {
+   "work": "StyleGAN2 / StyleGAN3",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "generator backbone (StyleGAN2); StyleGAN3 dropped",
+   "quote": null
+  },
+  {
+   "work": "Projected GANs converge faster",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "feature projection discriminators",
+   "quote": null
+  },
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "text encoder and guidance",
+   "quote": null
+  },
+  {
+   "work": "DINO (Caron et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ViT-S discriminator feature network",
+   "quote": null
+  },
+  {
+   "work": "LAFITE",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior text-to-image GAN",
+   "quote": null
+  },
+  {
+   "work": "eDiff-I",
+   "year": 2022,
+   "arxiv": "2211.01324",
+   "relation": "baseline",
+   "note": "strong DM baseline",
+   "quote": null
+  },
+  {
+   "work": "On distillation of guided diffusion models",
+   "year": 2022,
+   "arxiv": "2210.03142",
+   "relation": "baseline",
+   "note": "SD-distilled",
+   "quote": null
+  },
+  {
+   "work": "VQGAN-CLIP",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CLIP guidance loss form",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free diffusion guidance",
+   "year": 2022,
+   "arxiv": "2207.12598",
+   "relation": "related",
+   "note": "guidance analogue",
+   "quote": null
+  },
+  {
+   "work": "Imagen",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 3",
+   "quote": null
+  },
+  {
+   "work": "Parti",
+   "year": 2022,
+   "arxiv": "2206.10789",
+   "relation": "baseline",
+   "note": "Table 3",
+   "quote": null
+  },
+  {
+   "work": "LAION-5B",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LAION-aesthetic-6+",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Quality vs. speed in large-scale text-to-image synthesis.",
+   "page": 1,
+   "why": "FID vs seconds per image across model families"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of StyleGAN-T.",
+   "page": 3,
+   "why": "Generator, discriminator and text conditioning layout"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Comparing text alignment tradeoffs.",
+   "page": 7,
+   "why": "FID-CLIP score curves versus eDiff-I and SD-distilled"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Truncation.",
+   "page": 6,
+   "why": "Shows alignment vs variation tradeoff"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1, Sec 3.1",
+   "snippet": "s = ˜s1 ⊙ ˜s2 + ˜s3",
+   "verbatim": true
+  },
+  {
+   "where": "Eq. 2, Sec 3.3",
+   "snippet": "LCLIP = arccos2(cimage · ctext)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Table text flattened by extraction; table cells read by position. Lightweight 25 million iterations at 64x64 for 50 A100 days is as printed in Table 5."
+ ]
+}

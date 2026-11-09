@@ -46,7 +46,7 @@ type ID = number | string;       // only `type` can name unions, tuples and prim
 
 Use `interface` for object shapes, especially ones you'll extend (`interface Admin extends User`). Use `type` for everything else. Both are erased at runtime.
 
-**Structural typing.** TS checks *shape*, not name. Any object with `x: number` and `y: number` *is* a `Point`, much like a Python `Protocol`. As one exception, an object **literal** with extra properties is an error ("excess property check"), because that is usually a typo.
+**Structural typing.** TS checks *shape*, not name. Any object with `x: number` and `y: number` *is* a `Point`, much like a Python `Protocol` ([Python 03 · note 05](../../python/03-language-for-engineers/notes/05-types-and-dataclasses.md)). As one exception, an object **literal** with extra properties is an error ("excess property check"), because that is usually a typo.
 
 ## Functions
 

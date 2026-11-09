@@ -99,8 +99,8 @@ Read in this order. It is the pillar's reading order, and note numbers are stabl
 | [DA 02/06 Regression and GLMs](../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | Inference for linear models, which scikit-learn leaves out |
 | [DA 03/04 Correlation and causation](../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) | Why a model's explanations are not causal |
 | [DA 06/02 Credit scoring](../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md) | The scorecard that the imbalance chapter starts from |
-| [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Harvesting failures into a test set, which note 14 measures |
-| [GA 08/11 Production and the maturity ladder](../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) | Sampling live traffic for review, which note 14 prices |
+| [DA 02/07 The data generating process](../../data-analytics/02-probability-and-statistics/notes/07-data-generating-process.md) | A model is an estimate of f, and adjusted R² for comparing models, which note 11 uses |
+| [DA 04/07 Multilevel models](../../data-analytics/04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md) | Partial pooling for small slices, which note 12 points to |
 
 **Feeds into**
 
@@ -118,7 +118,7 @@ Read in this order. It is the pillar's reading order, and note numbers are stabl
 | [GA 08/02 Defining correct](../../generative-ai/08-eval/notes/02-defining-correct.md) | Open coding of traces is error analysis on text |
 | [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Dev and held-out eval sets play the eyeball and blackbox roles |
 | [GA 08/09 Reading results](../../generative-ai/08-eval/notes/09-reading-results.md) | Slicing and reading transcripts, with the same traps |
-| [AIE 01/09 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | A prompt tuned on failures it is scored on is the noise fix again |
+| [AIE 01/08 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/08-evaluating-prompts.md) | A prompt tuned on failures it is scored on is the noise fix again |
 | [GA 08/04 Graders](../../generative-ai/08-eval/notes/04-graders.md) | Abstention, seen from the grader's side |
 | [GA 08/11 Production and the maturity ladder](../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) | Human corrections are labelled examples only with the audit that notes 13 and 14 describe |
 
@@ -153,6 +153,12 @@ Read in this order. It is the pillar's reading order, and note numbers are stabl
 | [`practice/review_queue.py`](practice/review_queue.py) | Two thresholds on generated invoices and real credit data: prices, capacity, calibration, drift, risk targets and conformal, for [note 13](notes/13-automate-review-or-reject.md). Shares [`invoices.py`](practice/invoices.py) | `uv run review_queue.py`, from `practice/`; about three minutes, internet needed once |
 | [`practice/learning_from_corrections.py`](practice/learning_from_corrections.py) | Agreement, label noise, weak supervision, active learning, audits and regression cases, for [note 14](notes/14-learning-from-corrections.md) | `uv run learning_from_corrections.py`, from `practice/`; about 15 minutes, internet needed once |
 | [`practice/fairness_audit_lab.py`](practice/fairness_audit_lab.py) | Selection rates, ratios with intervals, error rates, calibration, the impossibility conflict, proxies, label bias and group cutoffs on generated applicants, for [note 15](notes/15-fairness-in-automated-scoring.md) | `uv run fairness_audit_lab.py`, from `practice/`; a few seconds |
+| [`practice/rare_class_quotas.py`](practice/rare_class_quotas.py) | Sizing a benchmark when classes are rare: production mix against equal quotas, drawn many times with the truth known, for [note 11](notes/11-choosing-a-metric.md) | `uv run rare_class_quotas.py`, from `practice/`; a few seconds |
+| [`practice/tenant_thresholds.py`](practice/tenant_thresholds.py) | Per-customer thresholds estimated from each customer's labels three ways, on generated customers, for [note 13](notes/13-automate-review-or-reject.md) | `uv run tenant_thresholds.py`, from `practice/`; a few seconds |
+| [`practice/overfit_curve.py`](practice/overfit_curve.py) | Train and test accuracy of a tree against depth over 20 splits, for [note 06](notes/06-ensembles.md) | `uv run overfit_curve.py`, from `practice/` |
+| [`practice/trees_vs_rounds.py`](practice/trees_vs_rounds.py) | Forest and boosting test AUC as trees are added, on census income, for [note 06](notes/06-ensembles.md) | `uv run trees_vs_rounds.py`, from `practice/` |
+| [`practice/leaky_selection.py`](practice/leaky_selection.py) | Feature selection before the split on pure noise, ten seeds, for [note 03](notes/03-feature-engineering-and-pipelines.md) | `uv run leaky_selection.py`, from `practice/` |
+| [`practice/importance_noise.py`](practice/importance_noise.py) | Built-in against permutation importance with noise columns added, for [note 08](notes/08-model-interpretability.md) | `uv run importance_noise.py`, from `practice/` |
 | [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | Müller and Guido's notebooks, with local `mglearn` and data | `uv run --with scikit-learn --with pandas --with matplotlib --with jupyter jupyter lab`, from that folder |
 | [`practice/ng-machine-learning/`](practice/ng-machine-learning/) | Own Python ports of Ng's ex1 to ex8 | Same command, from that folder |
 | [`practice/udacity_mlnd_python_practice.ipynb`](practice/udacity_mlnd_python_practice.ipynb) | Python and data-handling warm-up | Same command |

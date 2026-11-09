@@ -1,0 +1,807 @@
+{
+ "schema": 1,
+ "key": "2506.04178",
+ "pdf": "generative-ai/05-RL/sources/guha-2025-openthoughts.pdf",
+ "bib": {
+  "title": "Data Recipes for Reasoning Models (OpenThoughts)",
+  "authors": [
+   "Etash Guha",
+   "Ryan Marten",
+   "Sedrick Keh",
+   "Negin Raoof",
+   "Georgios Smyrnis",
+   "Hritik Bansal",
+   "Marianna Nezhurina",
+   "Jean Mercat",
+   "Trung Vu",
+   "Zayne Sprague",
+   "Ashima Suvarna",
+   "Benjamin Feuer",
+   "Liangyu Chen",
+   "Zaid Khan",
+   "Eric Frankel",
+   "Sachin Grover",
+   "Caroline Choi",
+   "Niklas Muennighoff",
+   "Shiye Su",
+   "Wanjia Zhao",
+   "John Yang",
+   "Shreyas Pimpalgaonkar",
+   "Kartik Sharma",
+   "Charlie Cheng-Jie Ji",
+   "Yichuan Deng",
+   "Sarah Pratt",
+   "Vivek Ramanujan",
+   "Jon Saad-Falcon",
+   "Jeffrey Li",
+   "Achal Dave",
+   "Alon Albalak",
+   "Kushal Arora",
+   "Blake Wulfe",
+   "Chinmay Hegde",
+   "Greg Durrett",
+   "Sewoong Oh",
+   "Mohit Bansal",
+   "Saadia Gabriel",
+   "Aditya Grover",
+   "Kai-Wei Chang",
+   "Vaishaal Shankar",
+   "Aaron Gokaslan",
+   "Mike A. Merrill",
+   "Tatsunori Hashimoto",
+   "Yejin Choi",
+   "Jenia Jitsev",
+   "Reinhard Heckel",
+   "Maheswaran Sathiamoorthy",
+   "Alexandros G. Dimakis",
+   "Ludwig Schmidt"
+  ],
+  "first_author": "Guha",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2506.04178",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 212443,
+  "chars_total": 212443,
+  "engine": "pymupdf",
+  "skipped": "Nothing skipped. Reference list (about chars 42056-60385) and the long dataset-description and prompt appendices (R, S) were read quickly; tables 32-49 were read in condensed form. The PDF is arXiv v2 dated 5 Jun 2025; the text prints no conference name."
+ },
+ "type": "empirical",
+ "question": "Which choices in the SFT data pipeline (question source, mixing, filtering, deduplication and repeated sampling, answer filtering, teacher) produce the strongest open reasoning dataset for distilling long chain-of-thought into a 7B model?",
+ "hypothesis": "Implied: standard data-curation heuristics (diversity, answer verification, using the strongest teacher, pretraining-style filters) may not transfer to reasoning SFT, so each pipeline step should be tested by downstream performance; the intro says the project aims at 'challenging preexisting notions of data quality'.",
+ "contributions": [
+  "More than 1,000 controlled ablation experiments over six pipeline steps (question sourcing, mixing, question filtering, deduplication and multiple sampling, answer filtering, teacher) across math, code and science.",
+  "OpenThoughts3-1.2M, a 1.2M-example open SFT reasoning dataset, and OpenThinker3-7B, a Qwen2.5-7B-Instruct finetune that is state of the art among open-data 7B/8B reasoning models.",
+  "Five stated insights: multiple answers per question scale a data source by at least 16x; a better-scoring model is not necessarily a better teacher; no verification or answer filtering method gave significant gains; 1-2 high-quality question sources beat many; LLM-based difficulty or response-length question filters beat fastText or embedding filters.",
+  "Release of datasets, models and (promised) code at openthoughts.ai."
+ ],
+ "method": {
+  "summary": "For each pipeline step the authors generate 31,600 question-answer pairs per strategy (teacher DeepSeek-R1 unless stated), finetune Qwen2.5-7B-Instruct, and pick the strategy with the best average over 8 benchmarks, then proceed to the next step. The winning recipe (best sources, LLM-based question filter, 16x teacher sampling, no answer filter, QwQ-32B teacher) is scaled to 1.2M examples (850K math, 250K code, 100K science) to train OpenThinker3-7B.",
+  "task": "Supervised fine-tuning data curation for long chain-of-thought reasoning (math, code, science) by distillation from a reasoning teacher",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OpenThoughts3-1.2M",
+    "role": "train",
+    "size": "1.2M examples (850,000 math, 250,000 code, 100,000 science)",
+    "split": "full set for OpenThinker3-7B; subsets of 316 to 31.6K for pipeline runs and up to 1M for scaling curves",
+    "source": "Math: OpenMath-2-Math questions; code: StackExchange CodeGolf and OpenCodeReasoning; science: StackExchange Physics and an organic-chemistry PDF pipeline; answers by QwQ-32B, 16 per question. Pipeline counts in Fig 4: 2.9M source questions in, 1.2M out.",
+    "preprocessing": "Question filtering (code: GPT-4o-mini difficulty; math and science: GPT-4.1-mini response length); exact dedup for math and science, none for code; 16x answers per question; no answer filtering; decontamination against evaluation sets (Indel similarity 75% or shared 13-gram, either flags the sample)."
+   },
+   {
+    "name": "Pipeline-ablation datasets (per strategy)",
+    "role": "train",
+    "size": "31,600 examples per strategy (answer-filter runs generate 63,200 answers first)",
+    "split": "n/a",
+    "source": "27 code, 21 math and 14 science question sources (Appendix R.1); 31,600 is the log-scale midpoint of 10K and 100K; sources with fewer questions are repeated",
+    "preprocessing": "GPT-4o-mini used for any LLM-generated source; DeepSeek-R1 regenerates answers even when one exists"
+   },
+   {
+    "name": "Evaluation benchmarks (in-pipeline)",
+    "role": "eval",
+    "size": "AIME24 30, AMC23 40, MATH500 500, CodeElo 391, CodeForces 453, LiveCodeBench 05/23-05/24 511, GPQA Diamond 198, JEEBench 515 questions",
+    "split": "n/a",
+    "source": "scored by average over these 8 tasks",
+    "preprocessing": null
+   },
+   {
+    "name": "Held-out benchmarks",
+    "role": "eval",
+    "size": "AIME25 30, HMMT 02/25 30, HLE MCQ subset 512, LiveCodeBench 06/24-01/25 369 questions",
+    "split": "measured only after pipeline experiments finished",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-7B-Instruct",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "starting point of every pipeline experiment and of OpenThinker3-7B"
+    }
+   },
+   {
+    "name": "OpenThinker3-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Qwen2.5-7B-Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "train_size": "1.2M"
+    }
+   },
+   {
+    "name": "Llama-3.1-8B-Instruct",
+    "role": "base",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Appendix G.1 base-model check at 100K samples"
+    }
+   },
+   {
+    "name": "QwQ-32B",
+    "role": "teacher",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "final teacher; 22,000 H100 GPU hours to annotate 1.2M"
+    }
+   },
+   {
+    "name": "DeepSeek-R1",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "default teacher in pipeline experiments"
+    }
+   },
+   {
+    "name": "Phi-4-reasoning-plus",
+    "role": "teacher",
+    "params": "14B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "scores near zero on code because it omits code tags that Evalchemy needs"
+    }
+   },
+   {
+    "name": "GPT-4o-mini / GPT-4.1-mini / GPT-4.1-nano",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "question generation, difficulty and response-length filtering, answer verification; temperature 1.0 for filtering, 0.0 for verification prompts"
+    }
+   },
+   {
+    "name": "Baselines: DeepSeek-R1-Distill-Qwen-7B, Nemotron-Nano-8B, AceReason-7B, Skywork-7B, OpenR1-Distill-7B, NemoNano-1M, AM-1.4M, s1.1, LIMO",
+    "role": "baseline",
+    "params": "7B-8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 1 marks which were trained by the authors; the symbols for base model and open data were lost in the text"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning on question, thinking tokens, answer",
+   "optimizer": "AdamW, betas 0.9 and 0.999",
+   "lr": "8e-5 (large set, >31.6K); 1e-5 micro (<1K); 2e-5 small (1K-3.16K); 4e-5 medium (3.16K-31.6K)",
+   "lr_schedule": "cosine",
+   "warmup": "0.1",
+   "batch_size": "512 (large set); 32 micro, 96 small, 128 medium",
+   "steps": null,
+   "epochs": "5 (large and medium sets); 13 micro; 7 small",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "128 nodes with 4x Nvidia A100 GPUs each (512 GPUs) for one OpenThinker3-7B run",
+   "compute": "25,000 A100 GPU hours for one OpenThinker3-7B training run",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "LlamaFactory with DeepSpeed v3 (no memory offloading), dataloader num_workers=4",
+    "packing": "yes for the large set (>31.6K), no for micro, small and medium; Table 10 shows no clear harm from packing",
+    "chat_template": "R1 template with <think> and </think>; Table 11 shows it roughly equal to the SkyT1 template",
+    "which_set_for_OT3": "inferred: OpenThinker3-7B trains on 1.2M examples, so the large set applies; the paper does not say so for the final model explicitly",
+    "pipeline_runs": "31,600-example runs fall in the medium set (4e-5, batch 128, 5 epochs, no packing), inferred from Table 9 size ranges",
+    "trace_length": "Section H.3 says traces up to 16K tokens; the training max sequence length is not stated"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.7 for evaluation",
+   "top_p": "1.0",
+   "max_tokens": "32,768 (max_new_tokens)",
+   "samples": "per benchmark: AIME24, AIME25, AMC23, HMMT 10 iterations; LiveCodeBench 6; CodeForces, CodeElo, GPQA Diamond, JEEBench, HLE 3; MATH500 single pass; mean accuracy and standard error over runs",
+   "prompting": "R1 chat template with a system prompt; Table 12 shows reasoning-on versus no-system-prompt effects for Nemotron-Nano-8B",
+   "retrieval": null,
+   "parameters": {
+    "teacher_sampling_multiplicity": "1x, 4x or 16x answers per question",
+    "teacher_sampling_hyperparameters": "stated only as 'kept constant across all teacher models'; values not given"
+   },
+   "other": {
+    "alice_in_wonderland_eval": "temperature 0.1, 100 samples, 30720 max output tokens",
+    "claude_3_7": "32K token budget in Table 31; o3 at default medium reasoning effort"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy (mean over runs with SEM)",
+     "definition": "per-benchmark accuracy via Evalchemy default setup; pipeline score is the average over 8 in-pipeline tasks, also split into code, math, science averages",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Harmbench harmfulness rate",
+     "definition": "share of 400 prompts scored the maximum 5 by a GPT-4o evaluator",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "XSTest over-refusal rate",
+     "definition": "share of 250 safe prompts that GPT-4o classifies as refused",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "DeepSeek-R1-Distill-Qwen-7B",
+    "Nemotron-Nano-8B",
+    "AceReason-7B",
+    "Skywork-7B",
+    "OpenR1-Distill-7B",
+    "NemoNano-1M",
+    "AM-1.4M",
+    "s1.1",
+    "LIMO",
+    "random-filter and no-pipeline controls"
+   ],
+   "protocol": "Bold marks values within two standard errors of the best. Strategy choice at each step is by average benchmark score across domains on a single 31,600-example run per strategy; seeds are not reported. Decontamination removes training samples with Indel similarity >= 75% or a shared 13-gram."
+  },
+  "availability": {
+   "code": "https://github.com/open-thoughts/open-thoughts ('will be released')",
+   "weights": "https://huggingface.co/open-thoughts/OpenThinker3-7B",
+   "data": "https://huggingface.co/datasets/open-thoughts/OpenThoughts3-1.2M"
+  },
+  "prompts": [
+   {
+    "purpose": "Code difficulty filtering (ICPC 1-10 rubric, GPT-4o-mini) (opening line only; the rubric continues to level 10, Figure 27)",
+    "text": "You will be given a code problem.",
+    "where": "Figure 27, Appendix R.2.2"
+   },
+   {
+    "purpose": "Math difficulty filtering (AoPS 1-10 scale) (opening line only; scale and examples follow, Figure 29)",
+    "text": "You will be given a math problem.",
+    "where": "Figure 29"
+   },
+   {
+    "purpose": "GPT answer verification for math",
+    "text": "Is the provided answer a correct solution to the following problem? Question: {{question}} Response: {{answer}}",
+    "where": "Figure 32"
+   },
+   {
+    "purpose": "Question generation from math text",
+    "text": "You are to reform the following math text snippet into a question with a quantitative or verifiable answer such as one that would be included in the USAMO or the Putnam Exam. Text: {{text}} Include only the new question or task. Do not include anything like \"Here is the instruction\". You can either extract a question from the text or form a new one based on the text. Make the question sound like what a human would ask a language model.",
+    "where": "Figure 18"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Large > 31.6K 8e-5 512 5 Yes",
+    "where": "Table 9 (cells read in order: set, dataset size, LR, batch size, epochs, packing)"
+   },
+   {
+    "field": "training.compute",
+    "quote": "One single run of training OpenThinker3-7B required 25,000 A100 GPU hours",
+    "where": "Appendix O"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "OpenThinker3-7B beats DeepSeek-R1-Distill-Qwen-7B by 12.4 points on average across the 12 benchmark tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy over 12 tasks",
+   "value": 12.4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "OpenThinker3-7B (Qwen2.5-7B-Instruct finetuned on OpenThoughts3-1.2M, SFT) versus DeepSeek-R1-Distill-Qwen-7B (800K, not trained by the authors); Evalchemy, temperature 0.7, top_p 1.0, 32,768 max new tokens; Table 1 averages 55.3 versus 42.9.",
+   "quote": "outperforming the R1-Distill-7B model by 12.4 points on average across 12 tasks",
+   "table": null,
+   "note": "Table 1 average row: 55.3 versus 42.9 (difference 12.4).",
+   "where": "Section 1, Table 1"
+  },
+  {
+   "claim": "On held-out AIME 2025, OpenThinker3-7B scores 53.3 against 38.0 for DeepSeek-R1-Distill-Qwen-7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME25 accuracy",
+   "value": 53.3,
+   "unit": "%",
+   "baseline_value": 38.0,
+   "n": 30,
+   "setup": "AIME25 was held out of all pipeline decisions; mean over 10 iterations at temperature 0.7, 32,768 max new tokens; baseline model trained on 800K samples by DeepSeek.",
+   "quote": null,
+   "table": "Table 1, row AIME25, columns OpenThoughts3-7B (53.3) and DS-R1-Qwen-7B (38.0)",
+   "note": "Table 1 also lists Skywork-7B at 50.7 and AceReason-7B at 48.0 on AIME25 (RL models). The same 53.3 appears in Table 2.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "OpenThinker3-7B outperforms the next-best open-data model (Nemotron-Nano-8B) by 2.1 points on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy over 12 tasks",
+   "value": 2.1,
+   "unit": "points",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "Table 1 averages 55.3 versus 53.2; 7B and 8B open-data models only.",
+   "quote": "outperforming the next-best open-data model (Nemotron-Nano-8B) by 2.1 points",
+   "table": null,
+   "note": "On GPQA-D, OpenR1-Distill-7B scores 58.9 against 53.7 for OpenThinker3-7B in Table 1; the lead is in the average.",
+   "where": "Section 1, Table 1"
+  },
+  {
+   "claim": "Using QwQ-32B as teacher beats DeepSeek-R1 as teacher by 1.9 points (code) and 2.6 points (math) on the average benchmark score, although R1 is the stronger model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy of student",
+   "value": 2.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "31,600-example datasets per domain (code, math), Qwen2.5-7B-Instruct student, same sampling hyperparameters across teachers; Table 8 math: QwQ 44.2 versus R1 41.6; code: 44.2 versus 42.3.",
+   "quote": "yielding an average accuracy improvement of 1.9% and 2.6% over using DeepSeek-R1 as a teacher for code and math, respectively.",
+   "table": null,
+   "note": "Table 47 (appendix) prints R1 as teacher for code at 38.0 average, not the 42.3 in Table 8; math R1 is 41.6 in Table 8 and 40.6 in Table 48. On the science average R1 is higher than QwQ (49.0 versus 48.0, Table 49) even though the overall average favours QwQ (39.1 versus 35.9).",
+   "where": "Section 4.6, Table 8"
+  },
+  {
+   "claim": "No answer-filtering or verification strategy beat training on all samples, so the final pipeline skips answer filtering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "math average accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "63,200 answers generated, filtered to 31,600; no-filtering baseline is not compute-controlled (63,200 questions). Math table: no filtering 41.9, random 41.6, GPT verification 40.0, majority consensus 41.0. 7B student, R1 teacher.",
+   "quote": "we opt to skip this part in the following steps of the pipeline.",
+   "table": null,
+   "note": "Appendix H.1 (Table 15): on the original OpenThinker data, verification hurt at 7B and helped at 32B, so the finding is stated for the 7B student and the 31.6K scale.",
+   "where": "Section 4.5, Table 7, Tables 44-46"
+  },
+  {
+   "claim": "Verification of the original OpenThoughts-114K data may hurt a 7B model but help a 32B model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenThinker-7B 41.9 versus 45.0 unverified; OpenThinker-32B 64.5 versus 62.1 unverified; OpenThoughts-114K data with R1 traces.",
+   "quote": "Our results show that verification may hurt performance at the 7B level but help at the 32B level.",
+   "table": null,
+   "note": null,
+   "where": "Appendix H.1.1, Table 15"
+  },
+  {
+   "claim": "Sampling multiple answers per question can enlarge a data source at least 16x, and the scale gives the gains.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sampling multiplicity",
+   "value": 16,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dedup (none, fuzzy, exact) crossed with 1x, 4x, 16x sampling at 31,600 examples; for code and science the combinations perform similarly; for math exact dedup with 4x was best and exact dedup with 16x second best and was chosen for scalability.",
+   "quote": "increase the size of a data source by at least 16×.",
+   "table": null,
+   "note": "Table 42 (math) shows exact dedup with 1x sampling at 41.7 average beating exact dedup 16x at 40.1; the 16x choice rests on scalability, not on a higher score.",
+   "where": "Sections 1 and 4.4"
+  },
+  {
+   "claim": "Mixing only the top two question sources beats mixing many sources.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy, code domain",
+   "value": 5,
+   "unit": "% accuracy increase",
+   "baseline_value": null,
+   "n": null,
+   "setup": "31,600 questions split evenly over the top N sources, N in 1, 2, 4, 8, 16; code domain Top 2 = 41.3 versus Top 16 = 36.4.",
+   "quote": "results in a 5% accuracy increase",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2, Table 4"
+  },
+  {
+   "claim": "The choice of question source moves the average score by 17.2 points between the best and worst code source.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy gap",
+   "value": 17.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "27 code sources, 31,600 questions each, R1 answers, Qwen2.5-7B-Instruct; StackExchange-CodeGolf 38.8 versus bugdaryan/sql-create-context 21.6.",
+   "quote": "yielding a 17.2 gap between the strongest and the weakest code datasets",
+   "table": null,
+   "note": null,
+   "where": "Table 3, Table 32"
+  },
+  {
+   "claim": "LLM-based question filters (difficulty for code, response length for math and science) beat random selection by 4% (math) and 6% (code) on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy improvement over random filter",
+   "value": 6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code: difficulty-based 43.0 versus random 39.7; math: GPT-4.1-mini response length 41.9 versus random 35.2; 31,600 examples, R1 teacher.",
+   "quote": "resulted in an average improvement of 4% and 6% over the random filtering baseline",
+   "table": null,
+   "note": "The text order is 'math and code ... 4% and 6%'; the table gaps are about 6.7 points for math and 3.3 for code, which suggests the text may have the domains swapped.",
+   "where": "Section 4.3, Tables 5, 38, 39"
+  },
+  {
+   "claim": "Performance on many benchmarks keeps improving up to the 1M dataset size, while AMC23 and MATH500 saturate and HLE does not respond to scale.",
+   "kind": "measured",
+   "source": null,
+   "metric": "scaling trend",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-7B-Instruct finetuned on subsets of OpenThoughts3-1.2M from about 316 to 1M; Fig 8 compares with AM, Nemotron Nano, s1.1 and LIMO; curves are not smooth and retraining a fixed dataset did not fully explain dips.",
+   "quote": "Performance on many of the studied benchmarks continues to improve up to the 1M scale.",
+   "table": null,
+   "note": "A slight drop at 100K on all code benchmarks was traced to the easy LiveCodeBench problems (Appendix I.2).",
+   "where": "Appendix G, Figures 1, 8"
+  },
+  {
+   "claim": "Removing self-reflection words from traces cuts downstream performance by about half (relative 49.1%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative drop in 4-benchmark average",
+   "value": 49.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12K-instance OpenThoughts3 subset; removing 'wait'-style keywords cuts average trace length from about 11.6K to 0.3K tokens; baseline average 51.4 versus 26.3.",
+   "quote": "removing self-reflection leads to an average relative performance drop of 49.1%",
+   "table": null,
+   "note": "Text says 11.6K average length, the Table 22 caption says 11.5K, the table cell 11593.",
+   "where": "Appendix H.3, Table 22"
+  },
+  {
+   "claim": "Dropping traces longer than 2048 tokens degrades performance by 33.3% relative; higher thresholds hurt less.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative performance drop",
+   "value": 33.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 12K OpenThoughts3 subset; filter thresholds 2048, 4096, 8192 tokens give averages 34.2, 39.9, 42.3 versus 51.4.",
+   "quote": null,
+   "table": "Table 22, row Filter > 2048, column Average (34.2 (-33.3%))",
+   "note": null,
+   "where": "Appendix H.3"
+  },
+  {
+   "claim": "Cost: annotating the 1.2M examples with QwQ-32B took 22,000 H100 GPU hours, and one OpenThinker3-7B training run took 25,000 A100 GPU hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": 25000,
+   "unit": "A100 GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "512 A100 GPUs (128 nodes x 4); annotation on 16 GH200 nodes; annotating one 31,600-example pipeline dataset cost roughly $300 in DeepSeek API fees.",
+   "quote": "One single run of training OpenThinker3-7B required 25,000 A100 GPU hours",
+   "table": null,
+   "note": null,
+   "where": "Appendix O"
+  },
+  {
+   "claim": "Reasoning SFT degrades safety: OpenThinker3-7B has a 55.5 Harmbench harmfulness rate against 14.5 for Qwen2.5-7B-Instruct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Harmbench harmfulness rate",
+   "value": 55.5,
+   "unit": "%",
+   "baseline_value": 14.5,
+   "n": 400,
+   "setup": "GPT-4o grader, share of maximum-score responses; no safety data in training; lower is better.",
+   "quote": null,
+   "table": "Table 30, row OpenThinker3-7B, column Harmbench; baseline row Qwen2.5-7B-Instruct",
+   "note": null,
+   "where": "Appendix L"
+  },
+  {
+   "claim": "The same OpenThoughts3 data lifts Llama-3.1-8B-Instruct strongly (AMC23 from 15.8 to 75.2), but Qwen2.5-7B-Instruct stays best overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AMC23 accuracy",
+   "value": 75.2,
+   "unit": "%",
+   "baseline_value": 15.8,
+   "n": 40,
+   "setup": "100K OpenThoughts3 samples, SFT; Qwen start 86.8 on AMC23.",
+   "quote": "AMC23 (from 15.8 to 75.2)",
+   "table": null,
+   "note": null,
+   "where": "Appendix G.1, Table 14"
+  },
+  {
+   "claim": "Choosing the shortest of several sampled responses beats the longest by a wide margin on AIME24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME24 accuracy by selection rule",
+   "value": 66.67,
+   "unit": "%",
+   "baseline_value": 36.67,
+   "n": 30,
+   "setup": "DeepSeek-R1-Distill-Qwen-7B on AIME24; majority vote 76.67, vanilla 55.00; the pattern is model-dependent (Sky-T1-32B differs).",
+   "quote": "the shortest strategy (66.67%) significantly outperforms the longest",
+   "table": null,
+   "note": null,
+   "where": "Appendix I.3, Table 25"
+  },
+  {
+   "claim": "A Qwen2.5-7B finetuned on R1-annotated Supreme Court opinion classification (majority-verified) reaches 0.819 accuracy against 0.739 for R1 itself.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy, ideological direction (Lawma task)",
+   "value": 0.819,
+   "unit": "accuracy fraction",
+   "baseline_value": 0.739,
+   "n": null,
+   "setup": "2K examples annotated 5x by R1 and filtered by majority vote (8.3K of 10K kept); test set 1.52K; unfinetuned Qwen2.5-7B 0.271; single run.",
+   "quote": null,
+   "table": "Table 28, row Qwen2.5-7B finetuned on 2K examples (5x R1-annotated, majority verified), column Accuracy",
+   "note": null,
+   "where": "Appendix J"
+  },
+  {
+   "claim": "The decontamination scheme misses 12 of 3092 manually contaminated questions and discards 1.4% of clean ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "missed contaminated samples",
+   "value": 12,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": 3092,
+   "setup": "Test bed of 3092 contaminated and 3000 uncontaminated samples built from MATH500, GPQA Diamond and LiveCodeBench with paraphrase alterations; Indel >= 75% or shared 13-gram.",
+   "quote": "Our final decontamination algorithm only misses 12 questions out of 3092",
+   "table": null,
+   "note": "The text and Fig 7 caption call 99.6% the 'true negative rate'; with 12 of 3092 missed, 99.6% is the recall of contaminated samples.",
+   "where": "Appendix F, Figure 7"
+  }
+ ],
+ "limits": [
+  "The authors did not explore datasets for reinforcement learning, staged SFT or curriculum learning (Section 6).",
+  "Strategies were chosen by average over all domains, assuming cross-domain transfer; whether that transfer persists once domains are mixed is open (Section 6 and Appendix H.5, Table 24 shows code-to-science transfer vanished when science data was mixed in).",
+  "Pipeline choices rest on one 31,600-example run per strategy with standard errors; sizes above 31.6K were not used to choose strategies, and scaling curves show dips not explained by retraining noise.",
+  "Verification and answer filtering findings are for a 7B student; the original OpenThoughts data showed verification helping at 32B (Table 15).",
+  "Safety degrades with each OpenThinker generation (Harmbench 36.8, 42.8, 55.5) and no safety data was used.",
+  "OpenThinker3-7B trails frontier API models on average (Table 31: Gemini-2.5-pro 69.6) and DeepSeek-R1 and QwQ-32B on most benchmarks (Table 29); Alice-in-Wonderland tests show distilled models fluctuate on structure-preserving variations (Appendix N).",
+  "The PDF is arXiv v2 of 5 Jun 2025 and names no venue; the datasets, student and benchmarks (Qwen2.5-7B-Instruct, Evalchemy settings, 2025 competitions) date from spring 2025, before Qwen3 (the authors name it as future work).",
+  "Open reproducibility gaps: training sequence length, precision, seeds, teacher sampling settings and training steps are not stated; code is described as 'will be released'."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "OpenThoughts3-1.2M",
+   "definition": "The 1.2M-example SFT dataset built by the final pipeline: 850,000 math, 250,000 code, 100,000 science datapoints.",
+   "where": "Section 5"
+  },
+  {
+   "term": "Response length filtering",
+   "definition": "asks an LLM to respond to each question directly, then selects the questions with the longest LLM-generated responses.",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "Difficulty-based filtering",
+   "definition": "asks an LLM (GPT-4o-mini) to assess the difficulty of each question, then retains the most difficult questions.",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "No Pipeline",
+   "definition": "the union of 31.6K samples from all candidate question sources, with no source selection, no question filtering, R1 as teacher, one answer per question and no answer filtering.",
+   "where": "Appendix G"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Default teacher, baseline distilled models (R1-Distill-Qwen-7B) and ablated teacher",
+   "quote": null
+  },
+  {
+   "work": "Sky-T1 (NovaSky-Team)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "OpenThoughts-114K scales the Sky-T1 pipeline; difficulty prompt reused",
+   "quote": null
+  },
+  {
+   "work": "Bespoke-Stratos-17K (Bespoke Labs)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "First release in the OpenThoughts series",
+   "quote": null
+  },
+  {
+   "work": "s1: Simple test-time scaling (Muennighoff et al.)",
+   "year": 2025,
+   "arxiv": "2501.19393",
+   "relation": "baseline",
+   "note": "s1.1 compared at matched dataset sizes in Fig 1 and Fig 8",
+   "quote": null
+  },
+  {
+   "work": "LIMO (Ye et al.)",
+   "year": 2025,
+   "arxiv": "2502.03387",
+   "relation": "baseline",
+   "note": "Small curated SFT set compared in Fig 1",
+   "quote": null
+  },
+  {
+   "work": "Evalchemy (Raoof et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Evaluation harness for all benchmarks",
+   "quote": null
+  },
+  {
+   "work": "OpenR1 (Face)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Appendix D.3: packing did not hurt here, in contrast with OpenR1's finding that it did",
+   "quote": "This observation is in contrast with some of the findings reported by Face (2025)"
+  },
+  {
+   "work": "Nemotron Nano / AM-Thinking datasets (NemoNano-1M, AM-1.4M)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Large SFT reasoning datasets retrained by the authors",
+   "quote": null
+  },
+  {
+   "work": "Alice in Wonderland (Nezhurina et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Robustness evaluation in Appendix N",
+   "quote": null
+  },
+  {
+   "work": "Lawma benchmark (Dominguez-Olmedo et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Legal-reasoning distillation case in Appendix J",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "OpenThinker3-7B outperforms all open-data 7B and 8B reasoning models across domains.",
+   "page": 2,
+   "why": "Single table with 12 benchmarks, training sizes and methods (SFT versus RL) for every baseline."
+  },
+  {
+   "figure": "Figure 1",
+   "caption": "OpenThoughts3 outperforms existing SFT reasoning datasets across data scales.",
+   "page": 1,
+   "why": "Scaling curves of OpenThoughts3 against AM, Nemotron Nano, s1.1 and LIMO on three benchmarks."
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "The OpenThoughts3-1.2M Full Data Pipeline.",
+   "page": 11,
+   "why": "Question counts at each stage from 2.9M sources to the 1.2M final set."
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Scaling the top strategies from each pipeline step.",
+   "page": 10,
+   "why": "Shows which pipeline stages lift the scaling curve most (sources, question filter, teacher)."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found in the PDF text.",
+  "PDF is arXiv v2 (5 Jun 2025) and prints no venue; the ledger and notes say ICLR 2026, which this file does not confirm.",
+  "Table 1 symbols for base model and open-data columns were lost in text extraction; header cells are partly unreadable.",
+  "Tables 3-8 and 32-49 print standard errors as gray subscripts that run into the value (for example 38.80.4 means 38.8 with SE 0.4).",
+  "Numbers differ between places: OpenThinker-7B AIME24 is 29.3 in Table 2 and 31.3 in Table 11; teacher R1 for code is 42.3 in Table 8 and 38.0 in Table 47; Table 22 average length is 11.6K in text, 11.5K in caption, 11593 in the cell.",
+  "Fig 7 / Appendix F calls 99.6% a 'true negative rate' where it is the detection rate of contaminated samples."
+ ]
+}

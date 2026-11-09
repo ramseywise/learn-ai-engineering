@@ -1,19 +1,605 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2508.19828",
  "pdf": "ai-engineering/02-context-engineering/sources/yan-2025-memory-r1.pdf",
  "bib": {
   "title": "Memory-R1: Enhancing Large Language Model Agents to Manage and Utilize Memories via Reinforcement Learning",
-  "first_author": "Sikuan Yan",
-  "year": "2025",
-  "venue": null,
+  "authors": [
+   "Sikuan Yan",
+   "Xiufeng Yang",
+   "Zuchao Huang",
+   "Ercong Nie",
+   "Zifeng Ding",
+   "Zonggen Li",
+   "Xiaowen Ma",
+   "Jinhe Bi",
+   "Kristian Kersting",
+   "Jeff Z. Pan",
+   "Hinrich Schuetze",
+   "Volker Tresp",
+   "Yunpu Ma"
+  ],
+  "first_author": "Yan",
+  "year": 2025,
+  "venue": "preprint",
   "arxiv": "2508.19828",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 72721,
+  "chars_total": 72721,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Memory-R1: Enhancing Large Language Model Agents to Manage and Utilize Memories via Reinforcement Learning\". Sikuan Yan*, Xiufeng Yang*, Zuchao Huang, Ercong Nie, Zifeng Ding, Zonggen Li, Xiaowen Ma, Jinhe Bi, Kristian Kersting, Jeff Z. Pan, Hinrich Schuetze, Volker Tresp, Yunpu Ma (corresponding author). Affiliations: LMU Munich and Munich Center for Machine Learning (lead), TU Munich, Cambridge, HKU, TU Darmstadt, Edinburgh. Venue: preprint, arXiv:2508.19828v5 [cs.CL], 14 Jan 2026. The text gives no venue, though the format looks like an ACL template. 2025 per the filename and arXiv ID.\n\nCOVERAGE: All 20 of 20 pages, 72,349 of 72,349 chars, including limitations, appendices A to G, tables 1 to 5 and the algorithms. I skimmed the references. Figure 3 to 8 and 13 to 14 data are plots, so their numbers are not in the extraction. I did not run the figures script.\n\nCLAIMS (ranked)\n- Memory-R1-GRPO beats the strongest baseline, MemoryOS, on LoCoMo with LLaMA-3.1-8B. This is a relative gain, not absolute.\n  number: Overall F1 45.02, B1 37.51, J 62.74 (Table 1) vs MemoryOS 35.04 / 27.99 / 48.20. Relative gains are 28.5%, 34.0% and 30.2%. PPO gains are 17.2%, 17.6% and 19.4%.\n  setup: LoCoMo, adversarial subset excluded, 1307 test questions, LLaMA-3.1-8B-Instruct, temperature 0, baselines re-implemented by the authors.\n  quote: \"Memory-R1-GRPO delivers the strongest overall performance, improving F1 by 28.5%, B1 by 34.0%, and J by 30.2% relatively over the strongest baseline MemoryOS.\"\n  where: p.6, section 4.2; Table 1, p.6\n- The intro and abstract name Mem0 as the baseline for the same gains, which contradicts section 4.2.\n  quote: \"Memory-R1 delivers substantial gains over the most competitive baseline, Mem0\"\n  where: p.2. Table 1 shows Mem0 at 30.41 F1, so MemoryOS is the stronger baseline. Cite section 4.2, not the intro.\n- Training is very cheap in labels. Only 152 QA pairs are used, with no operation labels.\n  number: 152 train / 81 validation / 1307 test (1:1:8 split).\n  quote: \"we exclude the adversarial subset and use a 1:1:8 train/validation/test split (152/81/1307 questions).\"\n  where: p.5, 4.1\n- RL beats supervised imitation of a stronger teacher. Memory-SFT is behaviour cloning from GPT-5 trajectories on the same data and architecture.\n  number: LLaMA overall J is SFT 58.76 vs GRPO 62.74 and PPO 57.54. F1 is SFT 42.81 vs GRPO 45.02 and PPO 41.05. Qwen-7B J is SFT 61.13 vs GRPO 61.51, a near tie.\n  quote: \"Notably, while Memory-SFT benefits from guidance by a powerful teacher model (GPT-5), our reinforcement learning approach still outperforms it\"\n  where: p.6; Table 1. The margin is small. PPO on LLaMA is below SFT on J, and the paper reports no seeds or variance.\n- Memory Manager reward is outcome-only. It scores downstream answer exact match through a frozen Answer Agent, so no operation labels are needed.\n  quote: \"R_answer = EM(y_pred, y_gold)\" and \"This exact-match signal requires no manual labels, remains scalable, and is sufficient to teach effective memory operations.\"\n  where: p.4, section 3.1\n- The learned manager is worth about 6 to 8 points.\n  number: Without the RL Manager under PPO, F1/B1/J fall from 41.0/32.9/57.5 to 34.5/28.1/49.0. Under GRPO the figure is 37.5/30.6/52.9 (full pipeline 45.0/37.5/62.7).\n  setup: LLaMA-3.1-8B-Instruct.\n  quote: \"Under PPO, F1, BLEU-1, and LLM-as-a-Judge drop from 41.0, 32.9, and 57.5 to 34.5, 28.1, and 49.0, respectively.\"\n  where: p.7, 4.4\n- Memory distillation (the Answer Agent selects relevant entries out of 60 retrieved) helps, especially under GRPO.\n  number: PPO 39.3/30.9/57.4 to 41.0/32.9/57.5. GRPO 41.0/34.4/60.1 to 45.0/37.5/62.7.\n  quote: \"GRPO shows larger gains, increasing from 41.0, 34.4, and 60.1 to 45.0, 37.5, and 62.7.\"\n  where: p.7. 60 = 30 memories per speaker (Algorithm 2, p.15).\n- Answer Agent gains compound with manager quality.\n  number: Gains with a LLaMA-3.1-8B manager vs a GPT-4o-mini manager. F1 +10.10 vs +19.72, B1 +10.81 vs +18.19, J +5.05 vs +15.76.\n  quote: \"Improvements are larger with the stronger manager (F1: +10.10 vs. +19.72; BLEU-1: +10.81 vs. +18.19; J: +5.05 vs. +15.76)\"\n  where: p.7\n- Zero-shot transfer. Training is on LoCoMo only. On LongMemEval, GRPO scores best in Table 5.\n  number: LLaMA overall F1/B1/J is 45.20/39.30/55.40 for GRPO vs A-Mem 38.36/33.30/54.20. Qwen-7B is 46.70/41.10/57.80 for GRPO vs A-Mem 41.55/36.58/54.80, with PPO at 47.40 J. On LLaMA, GRPO's J lead over A-Mem is only 1.2 points and over Memory-SFT 0.6. On Qwen, PPO's overall F1 (40.30) is below the A-Mem and Memory-SFT scores. MSC results are only in Figure 4.\n  quote: \"Memory-R1-GRPO outperforms all baseline systems across both LLaMA-3.1-8B and Qwen-2.5-7B backbones.\"\n  where: p.17, Table 5\n- Scale: gains hold at 3B, 7B and 14B (Qwen-2.5). Table 3 gives base-to-GRPO figures.\n  number: Overall J is 41.24 to 57.92 (3B), 58.38 to 57.46 (7B, a drop), and 50.80 to 63.50 (14B). Overall F1 is 24.18 to 40.45 (3B), 29.36 to 41.31 (7B) and 36.91 to 44.40 (14B).\n  quote: \"Memory-R1 consistently outperforms the base model at every scale\"\n  where: p.6; Table 3, p.18. The \"every scale\" claim does not hold for J at 7B GRPO (58.38 base vs 57.46).\n- Reward design matters. A J-based reward yields verbose answers, so the authors use EM.\n  number: PPO with J reward: F1 33.69, B1 23.36, J 63.58. PPO with EM reward: 41.05 / 32.91 / 57.54.\n  quote: \"PPO with J-based reward achieves higher J scores but lower F1 and B1 due to verbose outputs\"\n  where: p.8, Table 2\n- Learned distillation beats a reranker on accuracy and latency. Figure 8 is a plot only.\n  quote: \"While reranking provides modest accuracy gains, it incurs substantial latency overhead.\"\n  where: p.8\n- Latency. The GRPO Answer Agent is faster than base and PPO.\n  number: LLaMA p50/p95 is 0.34/0.67 s for GRPO vs 0.65/3.07 s for base and 0.91/4.67 s for PPO. Manager p50 is about 2 s (1.98 to 2.17 s) with p95 about 3.4 to 3.6 s. Search p50 is under 0.35 s.\n  quote: \"the GRPO-trained Answer Agent achieves substantially lower median and tail latency, with p50 and p95 of 0.34 s and 0.67 s, compared to 0.65 s and 3.07 s for the base model and 0.91 s and 4.67 s for PPO.\"\n  where: p.19, App. G\n- A vanilla in-context manager fragments memory. Given \"adopted Buddy\" and then \"adopted Scout\", it issues DELETE+ADD, while the RL manager issues one UPDATE. This is anecdotal, from two cases.\n  quote: \"A vanilla system misinterprets this as a contradiction, issuing DELETE+ADD and overwriting the original memory.\"\n  where: p.2 and App. A.1\n- PPO vs GRPO training. GRPO converges faster early (Figure 7), and both reach similar final reward.\n  quote: \"both methods steadily improve and ultimately reach comparable final reward levels.\"\n  where: p.8\n\nLIMITS\n- Authors concede the evaluation is dialogue-only and multimodal is untested. They train the Manager and Answer Agent separately (the other is frozen) because rewards are sparse, and call end-to-end multi-agent RL future work. (p.9)\n- Not shown: variance or seeds, any test of memory-bank growth over very long horizons, and cost of training beyond the hardware given.\n- Baselines are re-implemented by the authors at temperature 0 with a 2048 token cap. Results may differ from published numbers.\n- The LLM-as-a-judge is lenient by design (\"be generous with your grading\"), and the judge model is not named in the main text.\n- Training data builds the memory bank with GPT-4o-mini. Memory-SFT uses GPT-5 trajectories, so the pipeline is not teacher-free.\n- Internal inconsistency: the temporal memory bank is built from the previous 24 turns (App. B.2 text) vs 50 turns (Algorithm 1).\n- The text says the Answer Agent is trained after the Manager. The ablation \"without RL Answer Agent\" J values (59.4, 59.9) exceed the full-pipeline PPO J (57.5), so J does not always improve.\n\nBUILDS ON\n- Mem0 (Chhikara et al. 2025): the {ADD, UPDATE, DELETE, NOOP} operator set, prompts and top-60 retrieval.\n- MemGPT (Packer et al. 2023): MSC setup and memory buffers.\n- LoCoMo (Maharana et al. 2024) and LongMemEval (Wu et al. 2024).\n- PPO (Schulman et al. 2017) and GRPO (Shao et al. 2024), run in the VERL framework (Sheng et al. 2025).\n- Search-R1 (Jin et al. 2025): outcome-reward RL for tool use.\n- Baselines: A-Mem (Xu et al. 2025), MemoryOS (Kang et al. 2025).\n- Others cited: Tensor Brain (Tresp et al. 2023), the AIOS memory API.\n\nCODE (prompts and algorithms, verbatim)\n- GRPO advantage: `A_i = (r_i - mean(r)) / std(r)` (Eq. 3, p.4).\n- Manager policy: `(o, m') ~ π_θ(· | x, M_old)` (Eq. 1, p.4).\n- Manager prompt events are `\"event\" : \"ADD\" | \"UPDATE\" | \"DELETE\" | \"NONE\"`, and updates keep the same ID and an `old_memory` field (Figs 9 and 10, pp.14 to 15).\n- Answer Agent prompt rules: \"IMPORTANT: Select memories you found that are useful for answering the questions, and output it before you answer questions.\" and \"The answer should be less than 5-6 words.\" (Fig 11, p.16).\n- Hyperparameters (p.15): 4 H100s (8 for 14B), batch 128, micro-batch 2, max prompt/response 4096/2048 tokens. PPO actor/critic learning rates 1e-6 and 1e-5. Training temperature 1.0, evaluation temperature 0.\n\nFIGURES\n- Fig 1 (p.2): vanilla DELETE+ADD vs RL UPDATE, with 60 memories distilled to one. Fastest explanation of the point.\n- Fig 2 (p.4): two-stage pipeline (Memory Manager, then Answer Agent with distillation).\n- Fig 3 (p.6): scaling across Qwen 3B, 7B and 14B.\n- Fig 4 (p.6): zero-shot transfer to MSC and LongMemEval.\n- Fig 5 (p.7): ablations.\n- Fig 6 (p.8): manager-quality compounding.\n- Fig 7 (p.8): PPO vs GRPO reward curves.\n- Fig 8 (p.8): accuracy and latency against a reranker.\n- Figs 13 and 14 (p.20): latency against accuracy by component.\nCaptions come from the extraction text only.\n\nPROBLEMS\n- No embedded instructions found.\n- Table cell layout is partly garbled where bold values merge with neighbours (for example \"54.65 42.81\", \"50.63 26.57\"). Numbers quoted above were checked against context, but Table 3 and 4 bolding is unreliable.\n- Figure data is not extractable as text, so Fig 3 to 8 values are unread.\n- Intro vs section 4.2 baseline naming conflict and the 24 vs 50 turn conflict (see LIMITS)."
+ "type": "empirical",
+ "question": "Can reinforcement learning with outcome-based rewards teach LLM agents to manage an external memory bank (ADD/UPDATE/DELETE/NOOP) and to filter retrieved memories before answering?",
+ "hypothesis": "RL is the missing ingredient for adaptive memory in LLM agents; outcome rewards suffice to learn memory operations and distillation.",
+ "contributions": [
+  "First RL framework for memory-augmented LLMs: Memory Manager plus Answer Agent with memory distillation",
+  "Data-efficient PPO/GRPO fine-tuning with as few as 152 QA pairs",
+  "Analysis of RL choices, model size and memory design"
+ ],
+ "method": {
+  "summary": "Two LLM agents fine-tuned separately with PPO or GRPO using exact-match answer reward: a Memory Manager choosing ADD/UPDATE/DELETE/NOOP per extracted fact (rewarded via a frozen Answer Agent's correctness) and an Answer Agent that distils 60 retrieved memories then answers. Trained on LoCoMo only; zero-shot on MSC and LongMemEval.",
+  "task": "long-term conversational memory management and QA over multi-session dialogue",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LoCoMo",
+    "role": "both",
+    "size": "about 600 turns, 26k tokens per dialogue (App B: averaging 300 turns, 9k tokens)",
+    "split": "1:1:8 train/val/test = 152/81/1307 questions; adversarial subset excluded",
+    "source": "Maharana et al. 2024, CC BY-NC 4.0",
+    "preprocessing": "Memory Manager data: GPT-4o-mini builds temporal memory bank from preceding turns (text says 24 turns in B.2, 50 in Algorithm 1), fused with current turn and linked QA; no operation labels. Answer Agent data: 60 retrieved memories (top 30 per participant) + question + gold answer."
+   },
+   {
+    "name": "MSC (modified per MemGPT)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Xu et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "LongMemEval",
+    "role": "eval",
+    "size": null,
+    "split": "six task types plus overall (SSU, SSP, OD, MS, KU, TR)",
+    "source": "Wu et al. 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-3.1-8B-Instruct",
+    "role": "base",
+    "params": "8B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen-2.5-Instruct 3B/7B/14B",
+    "role": "base",
+    "params": "3B, 7B, 14B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Memory-R1 (PPO / GRPO)",
+    "role": "proposed",
+    "params": "same as backbone",
+    "architecture": "Memory Manager + Answer Agent, two separately tuned copies",
+    "init_from": "backbone Instruct models",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-5",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generates trajectories for Memory-SFT baseline"
+    }
+   },
+   {
+    "name": "GPT-4o-mini",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "builds temporal memory banks for training data; stronger manager in Fig 6"
+    }
+   },
+   {
+    "name": "LLM judge",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "judge model identity not stated"
+    }
+   }
+  ],
+  "training": {
+   "objective": "PPO clipped objective (Eq 2) or GRPO with group-normalised advantage and KL to reference (Eq 3); reward = exact match of predicted vs gold answer (Eq 4). Memory Manager trained with Answer Agent frozen; Answer Agent trained with Memory Manager fixed.",
+   "optimizer": null,
+   "lr": "PPO actor 1e-6, critic 1e-5 (GRPO: actor only, lr not stated separately)",
+   "lr_schedule": "constant warmup schedule",
+   "warmup": "constant warmup (steps not stated)",
+   "batch_size": "128 total, micro-batch 2 per GPU",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max prompt 4096, max response 2048 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "GRPO KL term beta (value not stated); PPO clip epsilon (value not stated); GRPO group size G not stated",
+   "hardware": "4x NVIDIA H100 80GB (8 GPUs for Qwen-2.5-14B)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "VERL (Sheng et al. 2025)",
+    "rollout_temperature": "1.0 during RL training"
+   }
+  },
+  "inference": {
+   "decoding": "greedy (tau=0) for validation and test",
+   "temperature": "0 for eval; 1.0 during RL training",
+   "top_p": null,
+   "max_tokens": "2048 for baselines (Sec 4.1)",
+   "samples": "single run; no seeds or variance reported",
+   "prompting": "Memory Manager and answer prompts adapted from Mem0 and MemGPT (Figs 9-11); answer under 5-6 words, lists selected memories before **Answer:**",
+   "retrieval": "similarity-based RAG, 60 candidate memories per question (top 30 per participant)",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "token-level overlap with gold answer",
+     "unit": "F1 score",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU-1",
+     "definition": "unigram overlap",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "LLM-as-a-Judge (J)",
+     "definition": "separate LLM labels answer CORRECT or WRONG vs gold, generous grading (Fig 12)",
+     "unit": "% correct",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LoCoMo (RAG)",
+    "A-Mem",
+    "Mem0",
+    "MemoryOS",
+    "Memory-SFT (behavior cloning from GPT-5 trajectories)"
+   ],
+   "protocol": "all baselines re-implemented on LLaMA-3.1-8B and Qwen-2.5-7B, temperature 0, max 2048 tokens; single run, no significance tests"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "LoCoMo CC BY-NC 4.0; MSC and LongMemEval public"
+  },
+  "prompts": [
+   {
+    "purpose": "Memory Manager",
+    "text": "You are a smart memory manager which controls the memory of a system. You can perform four operations: (1) add into the memory, (2) update the memory, (3) delete from the memory, and (4) no change.",
+    "where": "Fig 9-10 (App C.1), adapted from Mem0"
+   },
+   {
+    "purpose": "Answer Agent",
+    "text": "You are an intelligent memory assistant tasked with retrieving accurate information from conversation memories. ... 9. IMPORTANT: Select memories you found that are useful for answering the questions, and output it before you answer questions. 10. IMPORTANT: Output the final answer after **Answer:**",
+    "where": "Fig 11 (App C.2)"
+   },
+   {
+    "purpose": "LLM-as-a-Judge",
+    "text": "Your task is to label an answer to a question as 'CORRECT' or 'WRONG'.",
+    "where": "Fig 12 (App C.3)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "datasets[LoCoMo].preprocessing",
+    "quote": "GPT-4o-mini builds a temporal memory bank from the preceding 24 turns.",
+    "where": "App B.2; Algorithm 1 says previous 50 turns"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Memory-R1-GRPO reaches overall F1 45.02 on LoCoMo with LLaMA-3.1-8B, vs 35.04 for strongest baseline MemoryOS",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall F1",
+   "value": "45.02",
+   "unit": "F1",
+   "baseline_value": "35.04 (MemoryOS)",
+   "n": null,
+   "setup": "LoCoMo test (1307 questions), LLaMA-3.1-8B-Instruct, Memory Manager and Answer Agent each RL-tuned on 152 LoCoMo QA pairs, greedy decoding",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, LLaMA-3.1-8B, row Memory-R1-GRPO, column Overall F1"
+  },
+  {
+   "claim": "Memory-R1-GRPO overall LLM-as-a-Judge 62.74 with LLaMA-3.1-8B, vs 48.20 MemoryOS and 58.76 Memory-SFT",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall J",
+   "value": "62.74",
+   "unit": "J (%)",
+   "baseline_value": "48.20 (MemoryOS)",
+   "n": null,
+   "setup": "LoCoMo test (1307 questions), LLaMA-3.1-8B-Instruct, Memory Manager and Answer Agent each RL-tuned on 152 LoCoMo QA pairs, greedy decoding",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, LLaMA-3.1-8B, row Memory-R1-GRPO, column Overall J"
+  },
+  {
+   "claim": "Relative gain over MemoryOS on LLaMA-3.1-8B for GRPO: F1 28.5%, B1 34.0%, J 30.2%",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative F1 gain",
+   "value": "28.5%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LoCoMo test (1307 questions), LLaMA-3.1-8B-Instruct, Memory Manager and Answer Agent each RL-tuned on 152 LoCoMo QA pairs, greedy decoding",
+   "note": "Intro says 28%, 34%, 30% versus Mem0; Sec 4.2 says 28.5/34.0/30.2 versus MemoryOS. Abstract-level intro text names Mem0 as the baseline, Sec 4.2 names MemoryOS.",
+   "where": "Sec 4.2",
+   "quote": "improving F1 by 28.5%, B1 by 34.0%, and J by 30.2% rel-"
+  },
+  {
+   "claim": "With Qwen-2.5-7B, GRPO overall F1 43.14, B1 36.44, J 61.51; PPO 41.72/33.70/59.53",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall F1",
+   "value": "43.14",
+   "unit": "F1",
+   "baseline_value": "34.64 (MemoryOS)",
+   "n": null,
+   "setup": "LoCoMo, Qwen-2.5-7B-Instruct",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Qwen-2.5-7B, row Memory-R1-GRPO, column Overall F1"
+  },
+  {
+   "claim": "RL beats supervised imitation: Memory-SFT (GPT-5 trajectories) overall F1 42.81 vs GRPO 45.02 (LLaMA)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall F1 Memory-SFT",
+   "value": "42.81",
+   "unit": "F1",
+   "baseline_value": "45.02 (GRPO)",
+   "n": null,
+   "setup": "LoCoMo test (1307 questions), LLaMA-3.1-8B-Instruct, Memory Manager and Answer Agent each RL-tuned on 152 LoCoMo QA pairs, greedy decoding",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, LLaMA-3.1-8B, row Memory-SFT, column Overall F1"
+  },
+  {
+   "claim": "Only 152 training QA pairs are used",
+   "kind": "measured",
+   "source": null,
+   "metric": "train questions",
+   "value": "152",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LoCoMo adversarial subset excluded, 1:1:8 split",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "152/81/1307 questions"
+  },
+  {
+   "claim": "Removing RL-tuned Memory Manager (PPO) drops F1/B1/J from 41.0/32.9/57.5 to 34.5/28.1/49.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 without RL Memory Manager (PPO)",
+   "value": "34.5",
+   "unit": "F1",
+   "baseline_value": "41.0",
+   "n": null,
+   "setup": "LLaMA-3.1-8B ablation",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "drop from 41.0, 32.9, and 57.5 to 34.5, 28.1, and"
+  },
+  {
+   "claim": "Removing RL Answer Agent (PPO) gives F1 32.5, B1 24.6, J 59.4 vs full 41.0/32.9/57.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 without RL Answer Agent (PPO)",
+   "value": "32.5",
+   "unit": "F1",
+   "baseline_value": "41.0",
+   "n": null,
+   "setup": "LLaMA-3.1-8B ablation",
+   "note": "J is higher (59.4) without the RL Answer Agent than in the full PPO pipeline (57.5).",
+   "where": "Sec 4.4",
+   "quote": "PPO achieves F1, BLEU-1, and J"
+  },
+  {
+   "claim": "Memory distillation lifts GRPO from F1 41.0 to 45.0 and J 60.1 to 62.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 with distillation (GRPO)",
+   "value": "45.0",
+   "unit": "F1",
+   "baseline_value": "41.0",
+   "n": null,
+   "setup": "LLaMA-3.1-8B ablation",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "increasing from 41.0, 34.4, and 60.1 to 45.0, 37.5,"
+  },
+  {
+   "claim": "Answer Agent gains grow with a stronger Memory Manager (GPT-4o-mini): F1 +10.10 vs +19.72",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gain",
+   "value": "+19.72",
+   "unit": "F1",
+   "baseline_value": "+10.10",
+   "n": null,
+   "setup": "LLaMA-3.1-8B manager vs GPT-4o-mini manager",
+   "note": null,
+   "where": "Sec 4.4, Fig 6",
+   "quote": "F1: +10.10 vs. +19.72"
+  },
+  {
+   "claim": "LLM-as-a-Judge reward gives J 63.58 but F1 33.69; EM reward gives F1 41.05, J 57.54",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 with J-reward PPO",
+   "value": "33.69",
+   "unit": "F1",
+   "baseline_value": "41.05",
+   "n": null,
+   "setup": "PPO Answer Agent, LLaMA-3.1-8B",
+   "note": "J-based reward yields verbose answers.",
+   "where": "Table 2",
+   "table": "Table 2, row PPO (J-based reward model), column F1"
+  },
+  {
+   "claim": "Zero-shot transfer to LongMemEval: GRPO overall F1 45.20, J 55.40 (LLaMA) vs Mem0 31.41/41.20",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall F1 LongMemEval",
+   "value": "45.20",
+   "unit": "F1",
+   "baseline_value": "31.41 (Mem0)",
+   "n": null,
+   "setup": "Trained only on LoCoMo, LLaMA-3.1-8B",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, LLaMA-3.1-8B, row Memory-R1-GRPO, column Overall F1"
+  },
+  {
+   "claim": "Qwen-2.5-7B on LongMemEval: GRPO F1 46.70, J 57.80; PPO only 40.30/47.40 (below A-Mem and Memory-SFT on J)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall F1 LongMemEval",
+   "value": "46.70",
+   "unit": "F1",
+   "baseline_value": "38.44 (Mem0)",
+   "n": null,
+   "setup": "Trained only on LoCoMo, Qwen-2.5-7B",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, Qwen-2.5-7B, row Memory-R1-GRPO, column Overall F1"
+  },
+  {
+   "claim": "Scaling: Qwen-2.5-14B GRPO overall F1 44.40 vs base 36.91; 3B GRPO 40.45 vs base 24.18",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall F1 14B GRPO",
+   "value": "44.40",
+   "unit": "F1",
+   "baseline_value": "36.91",
+   "n": null,
+   "setup": "LoCoMo, Qwen-2.5-14B",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Qwen-2.5-14B, row GRPO, column Overall F1"
+  },
+  {
+   "claim": "GRPO Answer Agent cuts latency: LLaMA p50 0.34 s, p95 0.67 s vs base 0.65 s and 3.07 s",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer Agent p95 latency",
+   "value": "0.67 s",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-3.1-8B, GRPO vs base vs PPO (0.91 s and 4.67 s)",
+   "note": "Quote crosses line break, so recorded in claim only.",
+   "where": "App G",
+   "table": "Appendix G text, Answer Agent Latency"
+  }
+ ],
+ "limits": [
+  "Dialogue-centric datasets only; multimodal extension untested (authors).",
+  "Memory Manager and Answer Agent trained separately for stability under sparse rewards; end-to-end multi-agent RL left to future work (authors).",
+  "Single runs, no seeds or confidence intervals; judge model not named; GRPO group size, KL beta, clip epsilon, steps and epochs not given; no code release stated.",
+  "Text inconsistencies: 24 vs 50 turns for temporal memory bank; 26k tokens/600 turns vs 9k/300 turns for LoCoMo; intro compares to Mem0 while Sec 4.2 compares to MemoryOS.",
+  "Gains on LongMemEval are mixed for PPO with Qwen (J 47.40 below A-Mem 54.80)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Memory Distillation",
+   "definition": "Answer Agent policy that selects the most relevant entries from the 60 retrieved memories before generating an answer",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Memory Manager",
+   "definition": "policy choosing ADD, UPDATE, DELETE or NOOP for each new fact and outputting updated content",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Mem0",
+   "year": 2025,
+   "arxiv": "2504.19413",
+   "relation": "extends",
+   "note": "operator set and prompts adapted; strongest named baseline",
+   "quote": null
+  },
+  {
+   "work": "LoCoMo",
+   "year": 2024,
+   "arxiv": "2402.17753",
+   "relation": "uses-data",
+   "note": "training and primary test data",
+   "quote": null
+  },
+  {
+   "work": "LongMemEval",
+   "year": 2024,
+   "arxiv": "2410.10813",
+   "relation": "uses-data",
+   "note": "zero-shot eval",
+   "quote": null
+  },
+  {
+   "work": "MemGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MSC variant and prompts",
+   "quote": null
+  },
+  {
+   "work": "A-Mem",
+   "year": 2025,
+   "arxiv": "2502.12110",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "MemoryOS",
+   "year": 2025,
+   "arxiv": "2506.06326",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GRPO / DeepSeekMath",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "uses-method",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Search-R1",
+   "year": 2025,
+   "arxiv": "2503.09516",
+   "relation": "related",
+   "note": "RL for search as precedent",
+   "quote": null
+  },
+  {
+   "work": "VERL / HybridFlow",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "training framework",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of Memory-R1 and a vanilla LLM memory system",
+   "page": 2,
+   "why": "Shows DELETE+ADD fragmentation vs single UPDATE"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of the Memory-R1 framework",
+   "page": 4,
+   "why": "Two-stage pipeline"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Accuracy and latency comparison across Base, Base + Reranker, Memory-R1 (GRPO)",
+   "page": 8,
+   "why": "Learned distillation vs reranker trade-off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "J(\u03b8)=E[1/G \u03a3 \u03c1_\u03b8^(i) A_i \u2212 \u03b2 D_KL[\u03c0_\u03b8\u2016\u03c0_ref]], A_i=(r_i\u2212mean(r))/std(r)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Several tables extracted with one value per line; read by position. Figure data (Figs 3-8, 13-14) not in text."
+ ]
 }

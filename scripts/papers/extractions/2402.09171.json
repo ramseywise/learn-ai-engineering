@@ -1,19 +1,650 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.09171",
  "pdf": "ai-engineering/03-harness-engineering/sources/alshahwan-2024-automated-unit-test-improvement-using.pdf",
  "bib": {
   "title": "Automated Unit Test Improvement using Large Language Models at Meta",
-  "first_author": "Nadia Alshahwan",
-  "year": "2024",
-  "venue": "SIGSOFT FSE Companion 2024",
+  "authors": [
+   "Nadia Alshahwan",
+   "Jubin Chheda",
+   "Anastasia Finegenova",
+   "Beliz Gokkaya",
+   "Mark Harman",
+   "Inna Harper",
+   "Alexandru Marginean",
+   "Shubho Sengupta",
+   "Eddy Wang"
+  ],
+  "first_author": "Alshahwan",
+  "year": 2024,
+  "venue": "FSE '24 (32nd ACM Symposium on the Foundations of Software Engineering, Porto de Galinhas, Brazil); arXiv:2402.09171v1",
   "arxiv": "2402.09171",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 72642,
+  "chars_total": 72642,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for lineage only; Figure 2 (Sankey) is an image, its numbers are stated in text."
  },
- "legacy_report": "SOURCE: Automated Unit Test Improvement using Large Language Models at Meta. Alshahwan, Chheda, Finegenova, Gokkaya, Harman, Harper, Marginean, Sengupta, Wang. FSE '24 (arXiv:2402.09171v1, Feb 2024; Meta TestGen-LLM).\n\nCOVERAGE: about 62,000 of 72,654 chars, 12 pages. The abstract, all 8 sections, Tables 1-6, and the start of the references were read. The rest of the references were skipped as bibliography. Figure 2 is a Sankey diagram and was not extracted as an image, but the text states its numbers. No appendices exist.\n\nCLAIMS (ranked)\n- claim: The core design is a chain of three filters, applied to LLM output before any human sees it: builds, passes on 5 repeated runs (flakiness check), then improves coverage. Whatever fails a filter is discarded. This is a verification gate that does not rely on the model's self-assessment.\n  number: 5 executions\n  setup: Kotlin test classes for Android at Meta. Two internal LLMs (LLM1, LLM2). Line coverage measured with Jacoco. Per-test-case filtering.\n  quote: \"a test that does not pass on every one of five executions is deemed flaky.\"\n  where: p.2, Section 2\n- claim: Filter yield falls at each stage in the controlled evaluation.\n  number: 75% / 57% / 25%\n  setup: 86 Kotlin components of Instagram Reels (55) and Stories (31). Four prompts, two LLMs. Percentages are of test classes with at least one qualifying test, per the Section 3.3 list. The abstract words it as \"test cases\".\n  quote: \"75% of test classes had at least one new test case that builds correctly.\" / \"57% of test classes had at least one test case that builds correctly and passes reliably.\" / \"25% of test classes had at least one test case that builds correctly, passes and increases line coverage\"\n  where: p.5, Section 3.3\n- claim: In deployment the tool improved about 10% of the classes it was applied to, and 73% of its recommendations were accepted by engineers. The abstract says 11.5%, the body says about 10%, and the paper does not explain the gap.\n  number: 196 of 1,979 classes; 73%\n  setup: Three test-a-thons (Instagram Nov and Dec 2023, Facebook Dec 2023). Data collected 29 Oct to 29 Dec 2023.\n  quote: \"196 test classes were successfully improved, while the TestGen-LLM tool was applied to a total of 1,979 test classes. TestGen-LLM was therefore able to automatically improve approximately 10% of the test classes to which it was applied. Over all, 73% of TestGen-LLM test improvements were accepted by developers.\"\n  where: p.6, Section 4\n- claim: The 73% acceptance compares favourably with the 50% acceptance for Meta's earlier automated repair deployment.\n  number: 50%\n  setup: Comparison is to an earlier Meta repair deployment (ref [31]), a different task.\n  quote: \"it compares favorably with previous attempts to deploy automated repair at Meta (where 50% of recommended fix improvements were accepted and landed into production [31]).\"\n  where: p.6\n- claim: Per-test-case guarantees replaced class-level ones after reviewers found duplicate tests. One landed diff held four tests that were only superficially different. Measuring each test's own coverage contribution removed the duplicates.\n  number: 4 duplicate tests in one diff; 8 initial diffs\n  setup: Initial trial of 8 diffs in Meta's CI code review.\n  quote: \"one of the diffs that ultimately landed initially contained four test cases. However, all four were only superficially different.\"\n  where: p.3, Section 3.1\n- claim: Reviewers accepted most diffs even when the verified property was only a proxy. All rejections were for things the filters cannot see (no assertion, trivial getter, multiple responsibilities per test).\n  number: 16 of 17 landed (Nov); 36 of 42 accepted (Dec Instagram); 144 of 280 accepted (Facebook)\n  setup: Instagram Nov test-a-thon (36 engineers, 105 diffs, 16 from TestGen-LLM); the TestGen-LLM-only Instagram Dec run; Facebook Dec run.\n  quote: \"Of the 42 diffs: 36 were accepted by the engineer reviewing them. 4 were rejected and/or abandoned. 2 were withdrawn.\" / \"of the 280 diffs generated by TestGen-LLM: 144 were accepted by the engineer reviewing them. 64 were rejected and/or abandoned. 61 did not receive a review. 11 were withdrawn.\"\n  where: p.5-6, Sections 3.4 and 3.4.1\n- claim: Coverage can be gamed by an assertion-free test, so a coverage filter alone misses it. A test that merely executed an unexecuted method (with a \"TODO\" for the assertion) passed the filter but was rejected by the human reviewer.\n  number: none\n  setup: Instagram Nov test-a-thon.\n  quote: \"The test case did extend coverage (simply by executing the previously unexecuted method-under-test), but it was rejected by the engineer reviewing the diff because it failed to contain an assertion.\"\n  where: p.4, Section 3.2.1\n- claim: Per-trial success rate is low (about 4-5%), so the pipeline is generate-many-and-filter.\n  number: 831 of 23,535 (Instagram, 0.04); 490 of 8,996 (Facebook, 0.05)\n  setup: Deployment trials, where a trial is one attempt to generate one test case. A trial succeeds only if the test builds, passes and adds coverage.\n  quote: \"Facebook 490 8,996 0.05 / Instagram 831 23,535 0.04\"\n  where: p.6, Table 3\n- claim: Temperature had little effect, so zero was chosen as the default. The deployment-mode temperature results are confounded.\n  number: about 4% at temperatures 0.0, 0.2 and 0.5 (per the text); 1,215 of 30,483 at T=0\n  setup: Experimental mode on 86 components. Deployment Table 4 has very unequal sample sizes. The authors list confounders (coverage accumulates, logarithmic growth).\n  quote: \"all had approximately 4% success over all test cases suggested. We therefore set the default temperature to zero.\"\n  where: p.5-7\n  note: Table 4 shows per-trial rates of 0.01 at T=0.2 and 0.5, which does not match the \"approximately 4%\" in the text. Use with care.\n- claim: An ensemble of LLMs and prompts adds unique tests, so each combination contributes something.\n  number: LLM1 found 13 tests (15% of files), LLM2 found 16 (19%). Unique tests per prompt for LLM2: extend_coverage 5, statement_to_complete 2, extend_test 2, corner_cases 1.\n  setup: 86 test classes, four prompts (Table 2).\n  quote: \"Using just LLM2, TestGen-LLM was able to find 16 tests (19% of files have at least one new test).\"\n  where: p.5\n- claim: Generated tests were near-duplicates (\"all or nothing\" similarity), so a syntactic-equality filter on test bodies was added.\n  number: none\n  quote: \"tests generated were either almost verbatim copies of others previously generated, or very different.\"\n  where: p.7\n- claim: In the first test-a-thon the tool ranked sixth by number of tests landed. Its median coverage gain per test was small.\n  number: 17 tests, rank 6; median 2.5 lines; one test covered 1,326 lines; 6 of 17 tests covered 1 extra line\n  setup: Instagram Nov 2023, 36 engineers.\n  quote: \"The median number of lines of code added by a TestGen-LLM test in the test-a-thon was 2.5.\"\n  where: p.4\n- claim: Pass rates compare favourably with other work, though models and setups differ.\n  number: 57% executable (25% improving coverage), vs 29% for TeCo (Nie et al.) and about one third for ChatGPT (Yuan et al.)\n  quote: \"approximately approximately 57% of Kotlin test cases generated are executable (with 25% improving coverage).\"\n  where: p.8\n\nLIMITS\n- Authors concede that line coverage is \"merely an expedient proxy for 'improvement'\". Branch coverage was unavailable at their scale. They name mutation coverage as better but too costly at scale.\n- Success rate per test is low, about 4-5%. Deployment results are confounded because production coverage accumulates and gets harder to extend. Samples are unbalanced, with LLM2 and T=0 dominating.\n- The test-a-thon setting (heightened focus on testing, recent refactors, authors pre-screening recommendations in Dec) means \"not a perfect example of diff time deployment\". The first run's diffs were submitted manually, with human-added notes.\n- Internal, undisclosed LLMs. The paper is an experience report with no ablation against a no-filter baseline and no bug-finding or mutation-score measure.\n- The model generates tests. It does not verify its own agentic output, and the filters are deterministic scripts, not a model judge. Each test case is a fresh LLM call, with no retry or re-prompt feedback loop yet (re-prompting is listed as future work).\n- The system never mutates or deletes existing tests, so no-regression holds \"by construction\".\n- It is dated: the models are 2023 and internal, with no frontier or agentic models.\n- Possible weakness for the harness note: the filters check that tests are valid and add coverage, not that they are correct (a test can encode a wrong assertion that passes).\n\nBUILDS ON: Assured LLM-based Software Engineering ([6], the authors' own earlier work, Harman and colleagues). Genetic Improvement (ref [40]; original formulation Langdon and Harman, ref [25]). Generate-and-test automated program repair (refs [14, 15, 22, 31, 47]). Search Based Software Engineering (refs [17, 18]). Repeated-execution flaky test detection (refs [10, 28]). Test oracle problem (Barr et al., ref [7]). Meta's earlier Sapienz and diff-time deployment work (Alshahwan et al. 2018, ref [4]).\n\nCODE: none. Table 2 holds the prompt templates. For example, extend_coverage reads: \"Here is a Kotlin unit test class and the class that it tests: {existing_test_class} {class_under_test}. Write an extended version of the test class that includes additional unit tests that will increase the test coverage of the class under test.\" (p.6)\n\nFIGURES\n- Fig 1 (p.2): TestGen-LLM top-level architecture. LLMs feed candidate test cases through the Builds, Passes and Improves coverage filters, then onward code review in CI. Shows the filter cascade at a glance.\n- Fig 2 (p.5): Sankey diagram of filter outcomes as percentages of all test cases (86 Reels and Stories components, four prompts, two LLMs). Shows the attrition at each filter.\n- Tables 1 and 3-6 hold the leaderboard and success rates.\n\nPROBLEMS: No embedded instructions found. The PDF is a preprint-style ACM version with a placeholder DOI. Table 4 and the \"approximately 4%\" text are inconsistent (see above). The abstract's 11.5% disagrees with the text's about 10%. Layout columns in the extraction are interleaved but readable."
+ "type": "system",
+ "question": "Can LLM-generated unit tests be made trustworthy enough for industrial deployment by filtering every candidate through build, reliable-pass and coverage-improvement checks before human review?",
+ "hypothesis": "Embedding LLMs in a pipeline of semantic filters yields only verifiably improving test cases, removing hallucination as a concern, so engineers will accept the output.",
+ "contributions": [
+  "First example of Assured LLM-based Software Engineering (Assured LLMSE) landing LLM code in production with guaranteed improvement.",
+  "Evaluation on Instagram Reels and Stories: 75% built, 57% passed reliably, 25% increased coverage.",
+  "Report of 2023 development, deployment and evolution at Meta (about 10% of classes improved, 73% of improvements accepted).",
+  "Lessons learned, open problems and research challenges."
+ ],
+ "method": {
+  "summary": "TestGen-LLM prompts two internal Meta LLMs to extend an existing Kotlin test class with extra test cases, then discards every generated test that fails to build, fails any of five executions, or adds no line coverage over existing tests in the same build target. Survivors are submitted as one-test diffs with auto-generated coverage evidence to engineers; evaluated in an offline experiment and three Meta test-a-thons.",
+  "task": "Automated improvement of existing human-written Kotlin (Android) unit test classes; generate-and-test with LLMs",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Instagram Reels and Stories Kotlin components (experimental study)",
+    "role": "eval",
+    "size": "86 Kotlin components with existing human-written test classes (31 Stories, 55 Reels)",
+    "split": "none; dry-run evaluation mode against a fixed baseline",
+    "source": "Meta internal code",
+    "preprocessing": "Pre-process extracts test cases; post-process reconstructs test classes"
+   },
+   {
+    "name": "Deployment: Instagram test-a-thons Nov and Dec 2023, Facebook test-a-thon Dec 2023",
+    "role": "eval",
+    "size": "1,979 test classes attempted; 196 improved; total trials: Instagram 23,535, Facebook 8,996",
+    "split": "data collected 29 Oct 2023 to 29 Dec 2023",
+    "source": "Meta internal code",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLM1",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Internal Meta general-purpose LLM; details withheld as commercially sensitive"
+    }
+   },
+   {
+    "name": "LLM2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Internal Meta general-purpose LLM; default model in deployment"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "inferred: sampling with temperature; no other decoding detail stated",
+   "temperature": "default 0.0 after evaluation; deployment tool offered a sweep 0.0 to 1.0 in steps of 0.1",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Many trials per test class (a trial = one attempt to generate a test case); number of samples per class not stated; 'LLM ensemble' option combines both LLMs",
+   "prompting": "Zero-shot single prompt with test class and optionally class under test; four templates (extend_test, extend_coverage, corner_cases, statement_to_complete); default extend_coverage",
+   "retrieval": "Class under test inserted in prompt (described as RAG-like); no retriever",
+   "parameters": {
+    "flakiness_filter_executions": "5 (test must pass every one)",
+    "default_llm": "LLM2",
+    "default_prompt": "extend_coverage",
+    "default_temperature": "0",
+    "coverage_tool": "Jacoco line coverage only (branch coverage not available at Meta scale)",
+    "coverage_baseline": "all existing test classes sharing the same build target/directory",
+    "dedup_filter": "later versions drop previously seen tests by syntactic equality of test bodies",
+    "granularity": "per test case (initial MVP was per class)"
+   },
+   "other": {
+    "deployment_phases": "initial trial of 8 diffs; Nov Instagram test-a-thon (36 engineers, 15-20 Nov 2023); Dec Instagram TestGen-LLM-only (18-20 Dec); Dec Facebook"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Builds / passes reliably / increases coverage rate (per test class)",
+     "definition": "share of the 86 test classes with at least one new test that builds; builds and passes; builds, passes and increases line coverage over others in the same build target",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Trial success rate",
+     "definition": "fraction of test-generation trials producing a test that builds, passes reliably and adds coverage over all existing tests",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Diff acceptance",
+     "definition": "share of TestGen-LLM diffs accepted by reviewing engineers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Lines covered per test",
+     "definition": "extra lines covered by each landed test",
+     "unit": "lines",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Human test authors in first Instagram test-a-thon (ranked by tests landed)",
+    "Prior Meta automated repair (SapFix) acceptance rate",
+    "Reported TeCo and ChatGPT executable rates"
+   ],
+   "protocol": "Dry-run evaluation mode with a fixed baseline for the 86-class study; deployment results are confounded because coverage accumulates as tests land. No seeds, repeated runs, confidence intervals or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "extend_test",
+    "text": "Here is a Kotlin unit test class: {existing_test_class}. Write an extended version of the test class that includes additional tests to cover some extra corner cases.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "extend_coverage (default)",
+    "text": "Here is a Kotlin unit test class and the class that it tests: {existing_test_class} {class_under_test}. Write an extended version of the test class that includes additional unit tests that will increase the test coverage of the class under test.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "corner_cases",
+    "text": "Here is a Kotlin unit test class and the class that it tests: {existing_test_class} {class_under_test}. Write an extended version of the test class that includes additional unit tests that will cover corner cases missed by the original and will increase the test coverage of the class under test.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "statement_to_complete",
+    "text": "Here is a Kotlin class under test {class_under_test} This class under test can be tested with this Kotlin unit test class {existing_test_class}. Here is an extended version of the unit test class that includes additional unit test cases that will cover methods, edge cases, corner cases, and other features of the class under test that were missed by the original unit test class:",
+    "where": "Table 2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Offline study: share of 86 test classes with at least one new test that builds",
+   "kind": "measured",
+   "source": null,
+   "metric": "classes with building test",
+   "value": 75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "86 Kotlin components (Reels, Stories), 4 prompts, 2 LLMs, evaluation mode",
+   "quote": "75% of test classes had at least one new test case that builds correctly.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Share with a test that builds and passes reliably",
+   "kind": "measured",
+   "source": null,
+   "metric": "classes with reliable passing test",
+   "value": 57,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 86-component study",
+   "quote": "57% of test classes had at least one test case that builds correctly and passes reliably.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Share with a test that builds, passes and increases line coverage",
+   "kind": "measured",
+   "source": null,
+   "metric": "classes with coverage-improving test",
+   "value": 25,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 86-component study; coverage compared to all other test classes sharing the build target",
+   "quote": "25% of test classes had at least one test case that builds correctly, passes and increases line coverage",
+   "table": null,
+   "note": "Abstract and Sec 7 describe 75/57/25 as 'test cases' while Sec 3.3 says 'test classes'.",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Of 196 improved classes out of 1,979 attempted, about 10% were automatically improved",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 196,
+   "unit": "classes improved",
+   "baseline_value": null,
+   "n": 1979,
+   "setup": "three test-a-thons, 29 Oct to 29 Dec 2023",
+   "quote": "In total, over the three test-a-thons, 196 test classes were successfully improved, while the TestGen-LLM tool was applied to a total of 1,979 test classes.",
+   "table": null,
+   "note": "196/1979 = 9.9%. Abstract says 11.5% of classes improved; Intro and Sec 4 say 10%; the 11.5% is not derived anywhere in the text.",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Abstract reports 11.5% of classes improved",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 11.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instagram and Facebook test-a-thons",
+   "quote": "it improved 11.5% of all classes to which it was applied",
+   "table": null,
+   "note": "Inconsistent with 196/1,979 (about 10%) in Sec 4.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Overall share of TestGen-LLM improvements accepted by developers",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 73,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instagram and Facebook test-a-thons 2023",
+   "quote": "Over all, 73% of TestGen-LLM test improvements were accepted by developers.",
+   "table": null,
+   "note": "Not reproducible from per-event counts: Dec Instagram 36/42, Facebook 144/280 (about 70% of reviewed).",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Dec 2023 Instagram TestGen-LLM-only: diffs accepted",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 36,
+   "unit": "diffs",
+   "baseline_value": null,
+   "n": 42,
+   "setup": "42 automatically generated diffs, reviewed first by two authors; engineers pre-warned",
+   "quote": "36 were accepted by the engineer reviewing them.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Facebook Dec 2023: diffs accepted out of 280 generated",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 144,
+   "unit": "diffs",
+   "baseline_value": null,
+   "n": 280,
+   "setup": "fully automatic submission, no engineer preparation; 64 rejected/abandoned, 61 unreviewed, 11 withdrawn",
+   "quote": "144 were accepted by the engineer reviewing them.",
+   "table": null,
+   "note": "Text: over 50% of diffs accepted, almost 70% of reviewed. 144/280=51%; 144/208=69%.",
+   "where": "Sec 3.4.1"
+  },
+  {
+   "claim": "First Instagram test-a-thon: diffs generated and landed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 16,
+   "unit": "diffs landed",
+   "baseline_value": null,
+   "n": 17,
+   "setup": "36 engineers landed 105 unit test diffs; TestGen-LLM created 17 diffs",
+   "quote": "In total, TestGen-LLM created 17 diffs. One diff was abandoned because the test case did not include any assertion. 16 landed into production.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.1"
+  },
+  {
+   "claim": "TestGen-LLM ranked sixth of top 10 by tests landed in first test-a-thon",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "rank",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instagram test-a-thon Nov 2023, ranking by number of tests",
+   "quote": "TestGen-LLM landed in sixth place in rank order by number of tests generated.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.1, Table 1"
+  },
+  {
+   "claim": "One generated test covered 1,326 lines; median lines added per test was 2.5",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.5,
+   "unit": "lines (median)",
+   "baseline_value": null,
+   "n": 17,
+   "setup": "17 TestGen-LLM tests in first test-a-thon; one test covered 1,326 lines, 6 of 17 covered a single extra line",
+   "quote": "The median number of lines of code added by a TestGen-LLM test in the test-a-thon was 2.5.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.1"
+  },
+  {
+   "claim": "Trial success rate on Facebook",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.05,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 8996,
+   "setup": "490 successful of 8,996 trials, all LLMs, prompts and temperatures, deployment mode",
+   "quote": null,
+   "table": "Table 3, row Facebook, column Success rate",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Trial success rate on Instagram",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.04,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 23535,
+   "setup": "831 successful of 23,535 trials",
+   "quote": null,
+   "table": "Table 3, row Instagram, column Success rate",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Temperature zero success rate over 30,483 trials",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.04,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 30483,
+   "setup": "deployment mode, both LLMs, four prompts; 1,215 successes",
+   "quote": null,
+   "table": "Table 4, row 0.0, column Success rate",
+   "note": "Other temperatures had far fewer trials (e.g. 0.4: 16/334 = 0.05); authors warn against changing default because of sample-size imbalance and confounding.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "In evaluation mode, temperature 0, 0.2 and 0.5 all had about 4% success per test case; zero chosen as default",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "offline study, all test cases suggested",
+   "quote": "all had approximately 4% success over all test cases",
+   "table": null,
+   "note": "Per-temperature offline table not printed.",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "LLM1 found 13 tests (15% of files) alone; LLM2 found 16 (19%)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 16,
+   "unit": "tests",
+   "baseline_value": null,
+   "n": 86,
+   "setup": "86 test classes, 4 prompts; extend_coverage added 5 unique tests with LLM2, 2 with LLM1",
+   "quote": "Using just LLM2, TestGen-LLM was able to find 16 tests (19%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "LLM1 trial success rate in deployment",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.05,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 3173,
+   "setup": "163 successful of 3,173 trials",
+   "quote": null,
+   "table": "Table 5, row LLM1, column Success rate",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "LLM2 trial success rate in deployment",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.04,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 28654,
+   "setup": "1,157 successful of 28,654 trials; LLM2 was default so far more trials",
+   "quote": null,
+   "table": "Table 5, row LLM2, column Success rate",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Facebook with LLM1 had the highest success rate",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.07,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": 719,
+   "setup": "47 successful of 719 trials",
+   "quote": null,
+   "table": "Table 6, row Facebook LLM1, column Success rate",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Initial trial found class-level guarantees insufficient; per-test-case guarantees needed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8,
+   "unit": "diffs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "initial MVP of 8 diffs; one landed diff contained four tests that were only superficially different",
+   "quote": "we used an initial version of TestGen-LLM to cre-",
+   "table": null,
+   "note": "Qualitative; number is count of initial diffs.",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Compared with earlier Meta automated repair, acceptance was higher",
+   "kind": "reported",
+   "source": "Marginean et al. 2019, SapFix",
+   "metric": null,
+   "value": 50,
+   "unit": "% (SapFix baseline)",
+   "baseline_value": 73,
+   "n": null,
+   "setup": "SapFix recommended fixes accepted and landed",
+   "quote": "where 50% of recommended fix improvements were accepted and landed into production [31]",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Both LLMs often produced near-identical tests for the same prompt ('all or nothing' similarity); a syntactic-equality dedup filter was added",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anecdotal; temperature 0 may contribute",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5 item 1"
+  }
+ ],
+ "limits": [
+  "Both LLMs are undisclosed internal Meta models; no parameter counts, architecture or training data, and tool/code/data not released, so not reproducible.",
+  "Line coverage is only a proxy for improvement; branch coverage unavailable at scale and mutation coverage left as future work (Sec 7).",
+  "Deployment results confounded: coverage accumulates as tests land, trial counts per setting very unequal (temperature 0 got 30,483 trials), so setting comparisons are weak; no significance tests or repeated runs.",
+  "The test-a-thon context (heightened testing focus, authors pre-screening Dec Instagram diffs, engineers pre-warned) may inflate acceptance; Facebook run was out-of-the-box.",
+  "Offline study is only 86 classes from two Instagram products; no per-temperature offline table printed.",
+  "Filters guarantee no regression and coverage gain, not test quality: diffs were rejected for trivial getters, missing assertions, multi-responsibility tests.",
+  "Inconsistent headline numbers: abstract 11.5% improved vs about 10% (196/1,979); 75/57/25 stated as test cases in the abstract and as test classes in Sec 3.3.",
+  "Generated tests only append to existing class, so no-regression holds 'by construction'; no comparison to no-filter baseline or to unfiltered LLM output beyond the filter funnel."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Assured LLMSE",
+   "definition": "embeds the language models, as a service, in a larger software engineering workflow that ultimately recommends fully formed software improvements backed by verifiable guarantees for improvement and non-regression",
+   "where": "Sec 1"
+  },
+  {
+   "term": "flaky test",
+   "definition": "a test that passes on some occasions and fails on others, when executed in an entirely identical environment; here, one not passing on every one of five executions",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Assured LLM-Based Software Engineering",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Defines the Assured LLMSE paradigm this paper instantiates",
+   "quote": null
+  },
+  {
+   "work": "SapFix: Automated End-to-End Repair at Scale",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "50% acceptance of automated fixes at Meta",
+   "quote": null
+  },
+  {
+   "work": "Genetic Improvement / automated repair generate-and-test (Petke et al. 2018; Le Goues et al. 2019)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Generate-and-test with measurable improvement criteria; LLMs replace genetic programming",
+   "quote": null
+  },
+  {
+   "work": "TeCo (Nie et al.) Learning Deep Semantics for Test Completion",
+   "year": 2023,
+   "arxiv": "2302.10166",
+   "relation": "baseline",
+   "note": "29% executable tests",
+   "quote": null
+  },
+  {
+   "work": "No More Manual Tests? Evaluating and Improving ChatGPT for Unit Test Generation (Yuan et al.)",
+   "year": 2023,
+   "arxiv": "2305.04207",
+   "relation": "baseline",
+   "note": "about one third executable",
+   "quote": null
+  },
+  {
+   "work": "Exploring the Effectiveness of LLMs in Generating Unit Tests (Siddiq et al.)",
+   "year": 2023,
+   "arxiv": "2305.00418",
+   "relation": "related",
+   "note": "80% coverage on HumanEval, 2% on SF110",
+   "quote": null
+  },
+  {
+   "work": "Adaptive Test Generation Using a Large Language Model (Schafer et al.)",
+   "year": 2023,
+   "arxiv": "2302.06527",
+   "relation": "related",
+   "note": "70% statement coverage on small packages",
+   "quote": null
+  },
+  {
+   "work": "Large Language Models for Software Engineering: Survey and Open Problems (Fan et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLMSE survey",
+   "quote": null
+  },
+  {
+   "work": "Software Testing with Large Language Model: Survey, Landscape, and Vision (Wang et al.)",
+   "year": 2023,
+   "arxiv": "2307.07221",
+   "relation": "surveys",
+   "note": "102-paper review",
+   "quote": null
+  },
+  {
+   "work": "Optimising Existing Software with Genetic Programming (Langdon and Harman)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Original genetic improvement formulation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "TestGen-LLM top level architecture (an instance of Assured Offline LLMSE [6]).",
+   "page": 2,
+   "why": "Shows pre-process, LLMs, Builds, Passes, Improves coverage filters with discard on No, then post-process and code review in CI."
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Sankey diagram showing the filtration process outcomes (as percentages of all test cases) from the Experimental Study on Instagram components for Reels and Stories products, using the four prompt strategies from Table 2 and the two language models, LLM1 and LLM2.",
+   "page": 4,
+   "why": "Funnel of attrition across filters; image not in text."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results from the First Instagram Test-a-thon, conducted in November 2023.",
+   "page": 3,
+   "why": "Ranks the tool against human engineers."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The four primary prompts used in the deployment for the December 2023 Instagram and Facebook app test-a-thons",
+   "page": 5,
+   "why": "Full prompt templates."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 2 is an image; numbers taken from text only. PDF is arXiv v1 with placeholder DOI. Table cells flattened by extraction but readable. No embedded instructions found."
+ ]
 }

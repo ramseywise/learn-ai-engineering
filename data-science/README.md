@@ -92,6 +92,8 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 10. Read false positives and false negatives before tuning, and fix a class of error on one split while scoring on another ([Reading the errors](01-classical-ml/notes/12-reading-the-errors.md)).
 11. Split predictions into automate, review and reject, pricing the thresholds from error costs and review time ([Automate, review or reject](01-classical-ml/notes/13-automate-review-or-reject.md)).
 12. Learn from corrections without trusting silence: measure label noise, test active learning against random, and audit a random sample ([Learning from corrections](01-classical-ml/notes/14-learning-from-corrections.md)).
+13. Measure group gaps in a screening model, say which of them cannot be closed together, and state what an audit must report ([Fairness in automated scoring](01-classical-ml/notes/15-fairness-in-automated-scoring.md)).
+14. Detect anomalies with a density model, a classifier or an isolation forest, and fit a matrix-factorisation recommender on a ratings matrix ([Unsupervised learning](01-classical-ml/notes/05-unsupervised-learning.md#anomaly-detection-ng-ex8-part-1); [DS 05](05-time-series-and-recommenders/README.md) takes recommenders further).
 
 **Review and practice:** [deck](01-classical-ml/slides/classical-ml.pptx) · chapter exercises · [boosting comparison](01-classical-ml/practice/boosting-comparison/README.md) · [credit-default lab](01-classical-ml/practice/credit-default-lab/README.md) · [music-clustering lab](01-classical-ml/practice/music-clustering-lab/README.md).
 

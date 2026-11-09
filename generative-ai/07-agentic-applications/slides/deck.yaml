@@ -1,4 +1,4 @@
-# Agentic Applications lecture deck. Covers notes 01-07.
+# Agentic Applications lecture deck. Covers notes 01-07 (all seven cited).
 # Build: make slides PILLAR=generative-ai/07-agentic-applications STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running question: what would prove this answer wrong, and who checks?
@@ -122,7 +122,7 @@ parts:
   - title: Add a clock
     summary: The latency budget · Queueing · Fast and slow · Computer use · GUI agents
     notes: >-
-      Research agents can take minutes. A voice agent has about two seconds. Time changes the architecture, and screens add
+      Research agents can take minutes. A voice agent aims for first audio within about 800 ms (the target in AIE 08/04), and a fully serial pipeline takes 1 to 2 s. Time changes the architecture, and screens add
       a perception problem. This part is about what a hard budget does to the loop.
     slides:
       - layout: image
@@ -134,7 +134,7 @@ parts:
         bullets:
           - "**VAD** waits 500 to 800 ms on silence."
           - "**Then** ASR, first token, first segment and TTS."
-          - "**Together:** about 1 to 2 s when idle."
+          - "**Together:** about 1 to 2 s when idle, before streaming. The design target is 800 ms."
         takeaway: Voice latency is a serial sum led by the silence wait, so a faster LLM alone will not fix it.
         source: notes/03-real-time-multimodal-agents.md
         notes: >-
@@ -233,6 +233,56 @@ parts:
         notes: >-
           The SWE-agent ablations are one model and one benchmark, changing one thing at a time. Showing more of a file made
           it worse. A good interface is a limit on what the model has to deal with.
+
+      - layout: compare
+        title: Designing the interface beats handing the model a shell
+        recall: What is the agent-computer interface, and how much did it matter in SWE-agent?
+        lead: Same model (GPT-4 Turbo), same $4 budget per instance, SWE-bench Lite.
+        emphasis: right
+        left:
+          title: A plain shell
+          bullets:
+            - "**11.0%** of issues solved"
+            - "A RAG baseline with no loop: **2.67%**"
+          tag: Hope for the best
+        right:
+          title: A designed interface
+          bullets:
+            - "**18.0%** of issues solved"
+            - "Simple, compact actions"
+            - "Concise feedback, guardrails on edits"
+            - "Viewer of 30 lines: 14.3%. Full file: 12.7%."
+          tag: The ACI
+        takeaway: The agent-computer interface, meaning the commands the model can issue and what comes back, is a design decision worth several points on the same model.
+        source: notes/04-coding-agent.md
+        notes: >-
+          SWE-agent names this the agent-computer interface. Its four principles are actions simple to understand, compact so one
+          step does useful work, informative but concise feedback, and guardrails that stop errors propagating. Both directions of
+          the file viewer lose: thirty lines hides the context needed to edit, and the full file floods the context. These are the
+          context-budget arguments from note 02's compaction, with a number attached. OpenDev sets the same idea out as defaults,
+          and reports tool output as 70 to 80% of the context in a typical session, which is experience from one system, not a
+          controlled measurement.
+
+      - layout: cards
+        title: Only one way for the loop to end should count as success
+        recall: What should stop a coding agent's loop, and what counts as success?
+        cards:
+          - title: Evidence
+            accent: "D4621A"
+            body: "`finish` is refused unless the tests have passed since the last edit. Stopping without it is `stopped_without_finish`, a failed run."
+          - title: Budget
+            body: "SWE-agent's successful runs: median **$1.21** and **12 steps**. Unsuccessful ones: **$2.52** and **21 steps**."
+          - title: Repeats
+            body: "Hash tool name, arguments and file state. **Warn at three** repeats, then halt. Re-running tests after an edit is progress."
+        takeaway: Count only evidence as done, cap the budget because runs that fail, fail slowly, and halt repeats by fingerprinting the call together with the state of the files.
+        source: notes/04-coding-agent.md
+        notes: >-
+          A model that merely stops talking is not finished. SWE-agent's runs succeed fast and fail slow, and 93.0% of resolved issues
+          were submitted before the budget ran out against 69.0% of runs overall, so a tight step budget costs fewer solved issues
+          than its size suggests. OpenDev warns at three repeats and then pauses for approval, on the reasoning that a model can
+          ignore injected text but cannot get past a halt in execution. For coding the fingerprint must include the file state,
+          or running the tests after each edit would trip it. The general rules are in the harness and loop pillars of
+          ai-engineering.
 
       - layout: table
         title: Say what each sandbox layer stops, and what it does not
@@ -388,7 +438,7 @@ parts:
           Where does the agent sit next to the person who has to trust it?
 
   - title: Meet the user
-    summary: Chatbot, editor, ambient · The router's history · Trust · One engine, new domain · Scoping the product
+    summary: Chatbot, editor, ambient · The intent router · Trust · One engine, new domain · Scoping the product
     notes: >-
       An agent can pass every test and still fail, if the person cannot see or undo what it did. The final part is about
       position: who is working when, and what that makes hard. It closes with the decision that comes first in a real
@@ -422,19 +472,18 @@ parts:
           A voice agent's fast and slow pair is a kind of concurrency too.
 
       - layout: steps
-        title: The router is older than the LLM, and still earns its place
-        recall: What did DIET find about large pretrained models, and when is a small intent model still sensible?
+        title: A small intent classifier still earns its place
+        recall: When is a small intent-and-slot model in front of the agent still sensible?
+        lead: This is the chatbot's front door, not note 01's router node, which only decides whether to search.
         steps:
-          - {title: "2016: Joint models", text: "Liu and Lane learn intent and slots together."}
-          - {title: "2018: Slot gate", text: "Goo et al.: 4.2% and 1.9% relative frame gains on ATIS and Snips."}
-          - {title: "2019: BERT", text: "Chen et al. apply BERT to the joint task."}
-          - {title: "2020: DIET", accent: "D4621A", text: "No clear benefit from large pretrained models; beats fine-tuned BERT, about six times faster to train."}
-          - {title: "2025: Workflow graphs", text: "Park et al.: state machine for the plan, LLMs inside each state; 52% better task accuracy than their baseline."}
+          - {title: "Known intents", text: "A small intent-and-slot model is a cheap, testable front door."}
+          - {title: "Known workflow", text: "Write the plan as a state machine and let the LLM handle each state with a short prompt (Park et al., 2025)."}
+          - {title: "Measure the outcome", text: "Retention and use can reverse what a capability benchmark predicts."}
         takeaway: With few known intents, a small router or workflow graph can beat an LLM on cost and testability.
         source: notes/06-application-patterns.md
         notes: >-
-          Louvan and Magnini warn that the datasets are solved, not language understanding. Separately, Blending showed three small
-          models beating ChatGPT on retention on one platform, so measure the outcome your product is for.
+          This is the intent classifier in front of the chatbot, not the router node from note 01. The research history behind it,
+          from joint intent and slot models to DIET, is under Further reading in note 06.
 
       - layout: compare
         title: A confirmation helps only if the person can disagree with it
@@ -572,6 +621,35 @@ parts:
           313 hours a month, or 1.0 agent of 40. Released time is not money until hiring, backlog or volume changes. On build or
           buy, at an invented $150 a seat buying wins by $293,000 over three years at 40 agents, and building matches it at about
           126. Keep the eval set yourself either way, and keep shadow mode, since $2,204 is cheap for a look at real tokens.
+
+      - layout: compare
+        title: Buying wins at 40 agents, and building needs about 126
+        recall: When does building an AI feature beat buying it, in the note's hypothetical?
+        lead: Invented prices for a hypothetical team of 40 agents. Not a quote.
+        emphasis: none
+        left:
+          title: Buy
+          bullets:
+            - "**$6,000** a month after **$20,000** integration"
+            - "36 months: **$236,000**"
+            - "$150 a seat, an invented price"
+          tag: Fee grows with agents
+        right:
+          title: Build
+          bullets:
+            - "**$9,704** a month after **$180,000** to build"
+            - "36 months: **$529,346**"
+            - "Matches buying at about **126** agents"
+          tag: Engineering is fixed
+        takeaway: Buy when the task is common, build when the eval set or workflow is your advantage or the vendor is ruled out, and keep the eval set yourself either way.
+        source: notes/07-scoping-an-ai-product.md
+        notes: >-
+          Huyen sets self-hosting against an API on seven axes: privacy, lineage, performance, functionality, cost, control and on-device.
+          At 40 agents buying wins by $293,000 over three years, unless the vendor cannot do what you need. Building matches it at
+          about 126 agents because the engineering is fixed and the seat fee grows. Self-hosting is not near: it would need about
+          12.5 times this volume before a hypothetical $27,500 a month beats the API. Money seldom settles it alone. Build when the
+          evaluation set, the integration or the workflow is your advantage, or contract terms and data handling rule the vendor out.
+          Keep the eval set, since it is what lets you switch later.
 
   - title: Closing
     agenda: false

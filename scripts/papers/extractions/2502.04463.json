@@ -1,0 +1,713 @@
+{
+ "schema": 1,
+ "key": "2502.04463",
+ "pdf": "generative-ai/05-RL/sources/arora-2025-training-language-models-reason-efficiently.pdf",
+ "bib": {
+  "title": "Training Language Models to Reason Efficiently",
+  "authors": [
+   "Daman Arora",
+   "Andrea Zanette"
+  ],
+  "first_author": "Arora",
+  "year": 2025,
+  "venue": "NeurIPS 2025 (39th Conference on Neural Information Processing Systems)",
+  "arxiv": "2502.04463",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 108512,
+  "chars_total": 108512,
+  "engine": "pymupdf",
+  "skipped": "references skimmed only; Tables 3-7 (1.5B) skimmed"
+ },
+ "type": "empirical",
+ "question": "Can RL training of an already-trained large reasoning model reduce chain-of-thought length (inference cost) with little loss of accuracy, under a single tunable knob?",
+ "hypothesis": "A reward that penalises the length of correct responses (per-prompt normalised, sigmoid-clipped) lets online RL trade tokens for accuracy smoothly, saving most on easy problems.",
+ "contributions": [
+  "A reward 1{correct}(1 - alpha * sigmoid((len - mean)/std)) with per-prompt normalisation, trained with PPO + RLOO advantage",
+  "A family of models with varying efficiency from one hyperparameter alpha",
+  "Population-level optimality propositions",
+  "Baselines (cutoff, rejection-sampling SFT, DPO, O1-Pruner) and ablations (advantage normalisation, base model)"
+ ],
+ "method": {
+  "summary": "Starting from DeepSeek-R1-Distill-Qwen 1.5B/7B, run online RL (PPO objective with RLOO leave-one-out advantage, OpenRLHF) on 3.2k numeric-answer math prompts with reward = correct * (1 - alpha*sigmoid(normalised length)), length normalised per prompt over correct rollouts. Evaluate tokens vs accuracy on GSM8K, MATH500, AIME2024, CommonSenseQA, Logical Deduction.",
+  "task": "RL fine-tuning of reasoning models for token-efficient chain-of-thought",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Numina Math subset (MATH, cn_k12, AIME, AoPS, Olympiad)",
+    "role": "train",
+    "size": "3.2k prompts",
+    "split": null,
+    "source": "LI et al. (2024) Numina Math",
+    "preprocessing": "filtered to problems with a parseable numerical answer (proof questions removed)"
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH500",
+    "role": "eval",
+    "size": "500",
+    "split": "test",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME2024",
+    "role": "eval",
+    "size": "30 questions",
+    "split": "test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CommonSenseQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Logical Deduction (BIG-Bench)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Srivastava et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU subset",
+    "role": "eval",
+    "size": "5k prompts",
+    "split": null,
+    "source": "Hendrycks et al.",
+    "preprocessing": "hint added (faithfulness test)"
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeek-R1-Distill-Qwen-1.5B",
+    "role": "base",
+    "params": "1.5B",
+    "architecture": "decoder-only transformer",
+    "init_from": "distilled from DeepSeek-R1",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32K",
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-Distill-Qwen-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "distilled from DeepSeek-R1",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32K",
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-Math-Instruct",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-3B (base, Countdown ablation)",
+    "role": "base",
+    "params": "3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "PPO clipped objective with RLOO advantage A = R(y_i) - mean of other n-1 returns, sequence-level advantage used per token; reward 1{y=y*}(1 - alpha*sigmoid((LEN - MEAN(x))/STD(x))), MEAN/STD per prompt over correct rollouts estimated online",
+   "optimizer": "Adam",
+   "lr": "5e-6 (1.5B); 2e-6 (7B)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 prompts per iteration, 8 responses each, global batch size 128 (2 gradient steps per RL iteration)",
+   "steps": "100 RL steps (~200 gradient updates)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "32K max context in generation",
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL coefficient 1e-3",
+   "hardware": "4 GH200 GPUs (1.5B); 8 GH200 across two nodes (7B); ZeRO-2 (1.5B), ZeRO-3 + activation checkpointing (7B)",
+   "compute": "about 20 hours per experiment",
+   "wall_clock": "approximately 20 hours",
+   "seeds": "3 seeds per alpha",
+   "other": {
+    "alpha_values": "0, 0.05, 0.1, 0.2, 0.4",
+    "training_generation_temperature": "1",
+    "code_base": "OpenRLHF",
+    "base_model_ablation": "Qwen2.5-3B, Countdown, alpha=0.1, 2048-token context, up to ~400 steps"
+   }
+  },
+  "inference": {
+   "decoding": "sampling with vLLM",
+   "temperature": "0.6 (eval); 1 (training rollouts)",
+   "top_p": null,
+   "max_tokens": "32K (cutoff baselines 8k/16k/24k/32k)",
+   "samples": "pass rate@k averaged per prompt: k=1 GSM8K, k=3 MATH500, k=10 AIME2024; 3 training seeds",
+   "prompting": "Please reason step by step, and put your final answer within \\boxed{}. Question: $QUESTION",
+   "retrieval": null,
+   "parameters": {
+    "alpha": "0-0.4",
+    "sigmoid_clip": "on normalised length"
+   },
+   "other": {
+    "parser": "Qwen2.5-Math evaluation parser; CommonSenseQA and Logical Deduction k not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass rate@k / accuracy",
+     "definition": "per-prompt average accuracy over k samples, averaged over dataset",
+     "unit": "fraction/%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Tokens",
+     "definition": "mean response length",
+     "unit": "tokens",
+     "higher_is_better": false
+    },
+    {
+     "name": "Normalized accuracy / tokens",
+     "definition": "relative to R1-Distilled model of same size, aggregated over 5 datasets",
+     "unit": "ratio",
+     "higher_is_better": null
+    },
+    {
+     "name": "Faithfulness score",
+     "definition": "E[1{CoT verbalizes hint} | answer without hint != h, answer with hint = h]; string match",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Generation cutoff (8k,16k,24k,32k)",
+    "Rejection sampling + SFT on shortest correct (8 samples/prompt; ~2,200 / ~2,500 valid; lr 5e-6)",
+    "DPO shortest vs longest correct (lr 1e-5)",
+    "O1-Pruner (lambda=2)",
+    "Qwen2.5-Math-Instruct"
+   ],
+   "protocol": "3 seeds per alpha; mean +- std in appendix tables; no significance test"
+  },
+  "availability": {
+   "code": "https://github.com/Zanette-Labs/efficient-reasoning",
+   "weights": "trained models public (same repo link)",
+   "data": "Numina Math (public)"
+  },
+  "prompts": [
+   {
+    "purpose": "training and eval template",
+    "text": "Please reason step by step, and put your final answer within \\boxed{}.\nQuestion:\n$QUESTION",
+    "where": "App D"
+   },
+   {
+    "purpose": "length-constraint instruction test",
+    "text": "Please think step by step and answer in less than X tokens.\nQuestion:\n{question}\nAnswer:",
+    "where": "App F"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "For the 1.5B, the learning rate is set to 5 · 10−6 and for the 7B, it is set to 2 · 10−6",
+    "where": "App A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "7B model: length penalty cuts tokens about half with under 5% accuracy loss",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction",
+   "value": 50,
+   "unit": "% tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Aggregated over 5 eval sets, DeepSeek-R1-Distill-Qwen-7B, alpha sweep, 3 seeds",
+   "where": "Sec 1",
+   "note": null,
+   "quote": "for the 7B model, we can achieve a reduction of 50% in tokens with less than 5% reduction in accuracy"
+  },
+  {
+   "claim": "MATH500, 7B, alpha=0.1: CoT shrinks 36% (about 4000 to 2600 tokens) for 2.2% accuracy loss",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction",
+   "value": 36,
+   "unit": "% tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha=0.1, 7B, MATH500, k=3 samples, temp 0.6, 32K limit",
+   "where": "Sec 5.3.1",
+   "note": null,
+   "quote": "the length of the chain-of-thought of the 7B model on the MATH dataset decreases by 36% (from"
+  },
+  {
+   "claim": "AIME2024, 7B, alpha=0.2: 27% fewer tokens (about 13,000 to 9,000) with 4% accuracy drop",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction",
+   "value": 27,
+   "unit": "% tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha=0.2, 7B, AIME2024, k=10",
+   "where": "Sec 5.3.1",
+   "note": null,
+   "quote": "setting α = 0.2 reduces token usage by 27% (from ∼13,000 to ∼9,000) while incurring only a 4%"
+  },
+  {
+   "claim": "Same alpha saves far more on easy problems: 83% on GSM8K vs 27% on AIME2024 (7B, alpha=0.2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction GSM8K",
+   "value": 83,
+   "unit": "% tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B, alpha=0.2, GSM8K",
+   "where": "Sec 5.3.1",
+   "note": "Intro says up to 65% on GSM8K with 1.7% drop (a different alpha); Table 10 shows 1547 -> 263 tokens at alpha=0.2 (~83%)",
+   "quote": "α = 0.2 brings a token saving of 27% on AIME2024 and of 83% on GSM8K"
+  },
+  {
+   "claim": "Intro: up to 65% token reduction on GSM8K with 1.7% accuracy drop (7B)",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction",
+   "value": 65,
+   "unit": "% tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B",
+   "where": "Sec 1",
+   "note": null,
+   "quote": "up to 65% tokens on the GSM8K (Cobbe et al., 2021b) dataset with a drop of 1.7% in accuracy"
+  },
+  {
+   "claim": "Normalized accuracy and tokens vs R1 (7B, 5 datasets): alpha=0.1 gives 0.9728 accuracy at 0.6338 tokens; alpha=0.4 gives 0.9231 at 0.4341",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized accuracy",
+   "value": 0.9728,
+   "unit": "normalized accuracy",
+   "baseline_value": 1.0,
+   "n": null,
+   "setup": "Distilled 7B = 1.0; O1-Pruner 0.9596 acc / 0.7713 tokens; DPO 0.9602/0.7369; SFT 0.8216/0.5968",
+   "where": "Table 13",
+   "note": null,
+   "table": "Table 13, row α = 0.1, column Normalized Accuracy"
+  },
+  {
+   "claim": "alpha=0.1 normalized tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized tokens",
+   "value": 0.6338,
+   "unit": "normalized tokens",
+   "baseline_value": 1.0,
+   "n": null,
+   "setup": "as above",
+   "where": "Table 13",
+   "note": null,
+   "table": "Table 13, row α = 0.1, column Normalized Tokens"
+  },
+  {
+   "claim": "O1-Pruner baseline: accuracy 0.9596, tokens 0.7713 (dominated by alpha=0.05/0.1)",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized tokens",
+   "value": 0.7713,
+   "unit": "normalized tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "lambda=2, their codebase, our data",
+   "where": "Table 13",
+   "note": null,
+   "table": "Table 13, row O1-Pruner, column Normalized Tokens"
+  },
+  {
+   "claim": "Online RL beats SFT and DPO at same token usage; alpha controls length but not clear for SFT/DPO",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 1, Fig 5",
+   "where": "Sec 5.3.1",
+   "note": null,
+   "quote": "Firstly, our training method allows for a more performant model compared to SFT and DPO given"
+  },
+  {
+   "claim": "Generation cutoff baseline performs poorly (8k cutoff 7B AIME: 0.227 vs 0.320 at 32k, 1.5B)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@k",
+   "value": 0.227,
+   "unit": "pass rate",
+   "baseline_value": 0.32,
+   "n": null,
+   "setup": "1.5B distilled, AIME2024, 8k context cutoff",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row Distill 8k, column Avg. Pass Rate"
+  },
+  {
+   "claim": "Distilled models ignore prompted length limits: asking for <256 tokens still yields ~4609 tokens (1.5B)",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens generated",
+   "value": 4609.34,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH500, prompt 'answer in less than X tokens'",
+   "where": "Table 14",
+   "note": null,
+   "table": "Table 14, row 256, column Tokens Generated"
+  },
+  {
+   "claim": "Faithfulness (hint verbalisation) falls with compression: R1 0.622, alpha=0.1 0.480, Instruct 0.301",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": 0.48,
+   "unit": "score",
+   "baseline_value": 0.622,
+   "n": null,
+   "setup": "7B, 5k MMLU prompts, string-match for 'Stanford'/'Professor'",
+   "where": "Sec 5.3.2",
+   "note": null,
+   "quote": "we get less faithful models, but the models",
+   "table": "Table 1, row α = 0.1"
+  },
+  {
+   "claim": "Behaviours drop with alpha: backtracking 19.142 (R1) to 5.562 (alpha=0.2) per MATH500 response",
+   "kind": "measured",
+   "source": null,
+   "metric": "backtracking count",
+   "value": 5.562,
+   "unit": "count",
+   "baseline_value": 19.142,
+   "n": null,
+   "setup": "7B, MATH500, keyword counts",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row α = 0.2, column # Backtracking"
+  },
+  {
+   "claim": "GRPO-style advantage normalisation makes length drop independent of alpha and collapses accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha=0.05, 7B, Fig 4",
+   "where": "Sec 5.4.1",
+   "note": null,
+   "quote": "In other words, the advantage normalization, can bring a length decrease independent of α"
+  },
+  {
+   "claim": "alpha=0 still shortens responses due to length-biased loss normalisation in OpenRLHF RLOO; with the Liu et al. fix average tokens change -0.64 vs -15.16",
+   "kind": "measured",
+   "source": null,
+   "metric": "delta normalized tokens",
+   "value": -15.16,
+   "unit": "% normalized tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B distilled, RLOO vs RLOO+Fix",
+   "where": "Table 16",
+   "note": null,
+   "table": "Table 16, row Average, column RLOO (∆NT)"
+  },
+  {
+   "claim": "Base model (Qwen2.5-3B, Countdown): length penalty slows convergence and lowers peak (59.68 vs 67.48)",
+   "kind": "measured",
+   "source": null,
+   "metric": "peak val accuracy",
+   "value": 67.48,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha=0.1, 2048 context, one hyperparameter setting",
+   "where": "App J",
+   "note": null,
+   "quote": "Vanilla RLOO reaches a peak performance of 67.48% on the validation set whereas length-"
+  },
+  {
+   "claim": "Relative spread of correct-response lengths is larger on easy data (GSM8K std/mean 0.357 vs AIME 0.254)",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative spread",
+   "value": 0.357,
+   "unit": "STD/MEAN",
+   "baseline_value": 0.254,
+   "n": null,
+   "setup": "Distilled 7B, 8 generations",
+   "where": "Table 17",
+   "note": null,
+   "table": "Table 17, row GSM8K, column STD(x)/MEAN(x)"
+  },
+  {
+   "claim": "Training cost: about 20 hours, 100 RL steps (~200 gradient updates)",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 20,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 GH200 (1.5B), 8 GH200 (7B)",
+   "where": "App A",
+   "note": null,
+   "quote": "The experiments on both model take approximately 20 hours"
+  },
+  {
+   "claim": "Theory: under tabular and coverage assumptions the population maximiser keeps accuracy 1 and returns the shortest correct response",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simplified multinomial setup",
+   "where": "Sec 4.2",
+   "note": null,
+   "quote": "Proposition 4.3 (Accuracy is Preserved)"
+  },
+  {
+   "claim": "7B MATH500 numbers: alpha=0.1 2568 tokens, 0.910 pass vs distill 4086 / 0.932",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": 2568,
+   "unit": "tokens",
+   "baseline_value": 4086,
+   "n": null,
+   "setup": "7B, 32k ctx, 3 seeds",
+   "where": "Table 9",
+   "note": null,
+   "table": "Table 9, row RL 0.1, column Tokens"
+  }
+ ],
+ "limits": [
+  "RL setup is more involved than SFT/DPO",
+  "alpha controls average cost but does not target an exact length (L1 by Aggarwal & Welleck does)",
+  "Length penalty generally comes with a small accuracy loss",
+  "Faithfulness drops with compression; only a string-match hint test",
+  "7B trends cleaner than 1.5B, attributed to lower lr but not studied",
+  "Base-model result is a single hyperparameter setting on Countdown",
+  "Training only on math; non-math sets (CSQA, Logical Deduction) used for transfer",
+  "alpha=0 length drop traced to length-biased loss normalisation in OpenRLHF",
+  "No lr schedule, warmup or eval-set sizes stated"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "evaluates",
+   "note": "distilled Qwen 1.5B/7B are the starting models",
+   "quote": null
+  },
+  {
+   "work": "OpenRLHF",
+   "year": 2024,
+   "arxiv": "2405.11143",
+   "relation": "uses-method",
+   "note": "training codebase",
+   "quote": null
+  },
+  {
+   "work": "RLOO: Ahmadian et al., Back to basics",
+   "year": 2024,
+   "arxiv": "2402.14740",
+   "relation": "uses-method",
+   "note": "advantage estimator",
+   "quote": null
+  },
+  {
+   "work": "Kool et al. 2019 (leave-one-out baseline)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RLOO",
+   "quote": null
+  },
+  {
+   "work": "PPO (Schulman et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "clipped objective",
+   "quote": null
+  },
+  {
+   "work": "O1-Pruner (Luo et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent offline length-reduction RL",
+   "quote": null
+  },
+  {
+   "work": "Kimi k1.5",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "length penalty in online RL, no tunable family",
+   "quote": null
+  },
+  {
+   "work": "Chen et al., Do not think that much for 2+3=?",
+   "year": 2024,
+   "arxiv": "2412.21187",
+   "relation": "related",
+   "note": "overthinking, preference data",
+   "quote": null
+  },
+  {
+   "work": "L1 (Aggarwal & Welleck)",
+   "year": 2025,
+   "arxiv": "2503.04697",
+   "relation": "related",
+   "note": "exact length control, later",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. 2025c (length-biased loss normalisation)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "explains alpha=0 shortening; fix tested",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2025 / Chua & Evans 2025",
+   "year": 2025,
+   "arxiv": "2505.05410",
+   "relation": "uses-method",
+   "note": "hint-based faithfulness test",
+   "quote": null
+  },
+  {
+   "work": "GRPO (Shao et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "advantage normalisation contrasted in ablation",
+   "quote": null
+  },
+  {
+   "work": "DPO (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "shortest vs longest correct",
+   "quote": null
+  },
+  {
+   "work": "Numina Math",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "3.2k training prompts",
+   "quote": null
+  },
+  {
+   "work": "TinyZero (Pan et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Countdown base-model ablation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Normalized accuracy vs normalized tokens over 5 datasets, 1.5B and 7B, alpha sweep, 3 seeds",
+   "page": 2,
+   "why": "Shows the whole tradeoff curve and baselines at once"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Pipeline: sample multiple solutions, reward by correctness and length, policy gradient",
+   "page": 4,
+   "why": "Reward flow in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Token efficiency on easy vs hard problems",
+   "page": 8,
+   "why": "Shows larger savings on GSM8K than AIME"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Advantage normalization rapidly decreases response length alongside accuracy",
+   "page": 10,
+   "why": "Ablation failure"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4-5",
+   "snippet": "E[ 1{y = y*(x)} (1 - alpha f(LEN(y))) ],  f(LEN(y)) = sigmoid((LEN(y) - MEAN(x)) / STD(x))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Sec 4.2 refers to Theorems 4.1/4.2 but states Propositions 4.3/4.4 and appendix Lemma E.1; minor labeling slips",
+  "Intro's GSM8K 65% differs from 83% at alpha=0.2 in Sec 5.3.1 (different alpha)",
+  "Tables 3-7 (1.5B) only skimmed"
+ ]
+}

@@ -53,7 +53,14 @@ Each chapter takes about an hour, with its exercises. The format of a chapter fo
 
 ## Builds on and feeds into
 
-**Builds on**
+**Hard prerequisites** (chapters 1 and 3 use them from the first page)
+
+| Chapter | Why |
+|---|---|
+| [SQL 07: modeling and DDL](../sql/notes/07-modeling-and-ddl.md) and [SQL 08: indexes and query plans](../sql/notes/08-indexes-and-query-plans.md) | Chapters 1 and 3 run SQLite: unique constraints, keyset pagination over a covering index, and the outbox table |
+| [DE 01: transactions and isolation](../../data-engineering/01-storage-and-compute-foundations/notes/04-transactions-and-isolation.md) | "Same transaction" carries the idempotency check in chapter 1 and the outbox in chapter 3 |
+
+**Builds on** (soft prerequisites: skim when a chapter points at them)
 
 | Chapter | Why |
 |---|---|
@@ -62,7 +69,11 @@ Each chapter takes about an hour, with its exercises. The format of a chapter fo
 | [DE 01: partitioning and replication](../../data-engineering/01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md) | Chapter 9 uses replication without re-teaching it |
 | [DE 01: consistency and consensus](../../data-engineering/01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md) | What quorums and leases do and don't give you |
 | [DE 01: persistence](../../data-engineering/01-storage-and-compute-foundations/notes/09-persistence.md) and [choosing a store](../../data-engineering/01-storage-and-compute-foundations/notes/10-choosing-a-store.md) | Why a write is durable, and which store fits |
+| [DE 01: row and column stores](../../data-engineering/01-storage-and-compute-foundations/notes/03-row-and-column-stores.md) | The LSM tree in chapter 9 is the write-optimised side of this |
+| [DE 04: Kafka and stream semantics](../../data-engineering/04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md) | Delivery guarantees, which chapter 3's at-least-once section applies to a queue |
+| [DE 05: schema and data migrations](../../data-engineering/05-quality-and-observability/notes/04-schema-and-data-migrations.md) | Expand, migrate, contract, as chapter 6 uses it for a deploy |
 | [DE 05: operating data stores](../../data-engineering/05-quality-and-observability/notes/05-operating-data-stores.md) | Running what these designs depend on |
+| [Software design 05: testing strategy](../software-design/notes/05-testing-strategy.md) and [06: debugging and profiling](../software-design/notes/06-debugging-and-profiling.md) | Tests for the lab, and the profiling habits behind chapter 7's debugging section |
 
 **Feeds into**
 

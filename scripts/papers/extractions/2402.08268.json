@@ -1,19 +1,695 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.08268",
  "pdf": "ai-engineering/02-context-engineering/sources/liu-2024-world-model-million-length-video.pdf",
  "bib": {
-  "title": "World Model on Million-Length Video And Language With Blockwise RingAttention",
-  "first_author": "Hao Liu",
-  "year": "2024",
-  "venue": null,
+  "title": "World Model on Million-Length Video and Language with Blockwise RingAttention",
+  "authors": [
+   "Hao Liu",
+   "Wilson Yan",
+   "Matei Zaharia",
+   "Pieter Abbeel"
+  ],
+  "first_author": "Liu",
+  "year": 2025,
+  "venue": "ICLR 2025 (arXiv v4, 3 Feb 2025)",
   "arxiv": "2402.08268",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 64237,
+  "chars_total": 64237,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"World Model on Million-Length Video and Language with Blockwise RingAttention\" (LWM), Hao Liu*, Wilson Yan*, Matei Zaharia, Pieter Abbeel (UC Berkeley). ICLR 2025 (arXiv:2402.08268v4, 3 Feb 2025). Venue per the header: \"Published as a conference paper at ICLR 2025\".\n\nCOVERAGE: All 64,310 chars were extracted. I read the full text through the main body, limitations, hyperparameter tables, and Appendices A-D. For the rest of the appendix (E onward) I read the start and checked the end: it is qualitative image, video-understanding and generation examples (Fig 14-18 and later), with no result tables. The reference list was skimmed. Figures were not rendered. The figures.py captions run printed nothing I could use, so captions below come from the extracted text. Page numbers are approximate. The note 03-budgeting-the-window.md showed no existing mention of this paper (grep found nothing).\n\nCLAIMS (ranked)\n- Claim: Naive needle-in-a-haystack retrieval is near-perfect at 1M tokens, but harder multi-needle retrieval degrades; the authors say 1M context is still under-used.\n  number: LWM-Text-1M at 1M: 0.67 / 0.84 / 0.69 for (N=2,R=2), (N=4,R=1), (N=4,R=2). At 32K the same model scores 0.84 / 0.97 / 0.84.\n  setup: 7B LLaMA-2-based model; magic-number-per-city needles; N is the number of needles and R the number to retrieve. Scoring is string match (App. D).\n  quote: \"we note that we see degradation in accuracy while increasing the difficulty of the needle retrieval task, suggesting that there is still more room to improve on the 1M context utilization of our model.\"\n  where: Sec 3.3.3 and Table 2, p.5-6.\n- Claim: Other 7B models given 1M context through positional extrapolation collapse on multi-needle retrieval. These were run after the paper was completed.\n  number: Table 2 rows at 1M, N=2,R=2 / N=4,R=1 / N=4,R=2: Llama-3.1-8B 0.27/0.32/0.18; Qwen2.5-7B 0.0/0.0/0.0; Mistral-7B-v0.3 0.05/0.13/0.10; LWM 0.67/0.84/0.69. GPT-4-1106 at 128K: 0.92/0.8/0.82.\n  setup: Rows marked * were added after paper completion. GPT-4 and Gemini Pro have \"-\" at 1M.\n  quote: \"Qwen2.5-7B-Instruct* 0.0 0.0 0.0\" and \"LWM-Text-1M (Ours) 0.67 0.84 0.69\"\n  where: Table 2, p.6.\n- Claim: Tuning the chat/retrieval training mix trades chat quality against needle retrieval accuracy. This is useful for the \"more context is not free\" argument.\n  number: Chat/QA mix 0/100 gives MT-Bench 2.42, needle 100%. 70/30 gives 4.62, 96%. 90/10 gives 5.1, 55%. 100/0 gives 5.8, 31%.\n  setup: LWM-Text-Chat, MT-Bench and needle accuracy; training-data mix ablation.\n  quote: \"Needle Retrieval accuracy decreases, suggesting a trade-off where increasing chat interaction capabilities may reduce the system's precision in retrieving specific information or 'needles' from input context.\"\n  where: App. B.2, Table 11, p.17.\n- Claim: A 512K-context LWM beats 128K-context GPT-4o and 200K-context Claude 3 Opus on three LOFT tasks (retrieval-in-context and RAG-style). The gap is largest on HotPotQA.\n  number: Quora 0.38 / 0.23 / 0.37; NQ 0.37 / 0.22 / 0.37; HotPotQA 0.72 / 0.21 / 0.32 (LWM-512K / GPT-4o-128K / Claude 3 Opus-200K).\n  setup: LOFT corpus holds thousands of documents in context. The model returns doc ids (Quora, HotPotQA) or answers with context (NQ). Each model was run at its own context length, so the 512K LWM sees more of the corpus than the 128K GPT-4o.\n  quote: \"HotPotQA 0.72 0.21 0.32\"\n  where: Table 3, p.6.\n- Claim: Long video understanding. LWM-1M handles up to about 1800 frames, but trails newer larger or proprietary models on Video-MME.\n  number: Medium (4-15 min) / Long (30-60 min): LWM-1M 63.7 / 60.8; Gemini 1.5 Pro* 74.3 / 67.4; GPT-4o* 70.3 / 65.3; LLaVA-Video* 68.9 / 61.5; Long-LLaVA 7B 51.4 / 45.4; Video-LLaVA 7B (8 frames) 38.1 / 36.2.\n  setup: Video-MME. LWM uses 256 VQGAN tokens per frame. * marks models released after the paper.\n  quote: \"LWM-1M 7B ≤ 1800 63 .7 60 .8\"\n  where: Table 4, p.8.\n- Claim: Fixed small frame budgets (temporal subsampling) lose fine-grained information. Long context lets the model attend to thousands of frames.\n  number: Video-LLaVA is restricted to 8 frames.\n  quote: \"Video-LLaV A (Lin et al., 2023) is restricted to uniformly sampling 8 frames from a video, no matter how long the original video may be.\"\n  where: Sec 4.3.1, p.8.\n- Claim: Context cost in tokens. Each video frame costs 256 tokens, so about 1M tokens covers ~1 hour of video.\n  number: 256 tokens per frame (16x16 VQGAN codes from 256x256 images). Demos are 1-hour videos.\n  quote: \"Each video frame is tokenized into 256 tokens using VQGAN\"\n  where: Fig 3 caption, p.3. Frame budget is inferred from Table 4 \"≤ 1800\" frames and the 1-hour demos, and the paper does not state the arithmetic.\n- Claim: Context extension did not hurt short-context benchmarks, except MMLU at 512K and 1M.\n  number: MMLU 0.39 (Llama-2 4K) / 0.41 (128K) / 0.36 (512K) / 0.35 (1M). HellaSwag acc 0.57 across all variants.\n  quote: \"mmlu 0.39 0.4 0.41 0.41 0.36 0.35\"\n  where: Table 1, p.4. The text claims \"absence of negative effects\" and the MMLU drop at the longest stages contradicts that. Worth flagging.\n- Claim: Progressive context extension is cheap relative to training at full length.\n  number: Stages 32K/128K/256K/512K/1M use 4.8B/12B/12B/3B/1.8B tokens, taking 8h/45h/83h/47h/58h on TPU v4-512. RoPE theta goes 1M, 10M, 10M, 25M, 50M.\n  setup: Initialized from LLaMA-2 7B and trained on Books3 filtered by document length. Each stage starts from the previous one.\n  quote: \"Total Tokens 4.8B 12B 12B 3B 1.8B\"\n  where: Table 6, p.16.\n- Claim: Serving a 1M-token context needs a large TPU slice.\n  number: Minimum v4-128, 32-way tensor parallel x 4-way sequence parallel (ring).\n  setup: Single precision; no quantization.\n  quote: \"Inference for such long sequences requires a minimum of v4-128 with a TPU mesh sharding of 32 tensor parallelism, and 4 sequence parallelism (ring dimension).\"\n  where: App. A, p.15.\n- Claim: Sequence packing must mask attention across packed examples and reweight the loss, or image-understanding accuracy drops.\n  number: Standard packing vs masked packing: VQA v2 48.3 vs 55.8; SQA 34.8 vs 47.7; POPE 62.5 vs 75.2.\n  quote: \"Standard independent packing 48.3 34.8 62.5\" / \"Masked sequence packing (Ours) 55.8 47.7 75.2\"\n  where: Table 9, p.17.\n- Claim: Synthetic long-context QA training data is made by chunking books and having a short-context model write a Q/A pair per chunk. The question is placed at the end of the concatenated chunks, so the model must attend anywhere in the context.\n  number: 1,000-token chunks; chat mix about 7:3 UltraChat to QA; loss tokens <1% per QA sequence.\n  quote: \"split documents from the Books3 dataset into fixed chunks of 1,000 tokens\"\n  where: Sec 3.2, p.4.\n- Claim: Compute-overlap point. With enough tokens per device, Blockwise RingAttention's communication is fully hidden by computation, so context scales with device count without approximation.\n  quote: \"the communication cost during sequence parallelism is fully overlapped by computation, resulting in no additional overhead.\"\n  number: none\n  where: Sec 3.1, p.3.\n\nLIMITS\n- Authors concede (Conclusion): vanilla frame-by-frame tokenization ignores temporal redundancy, with no continuous CLIP embeddings. Quote: \"Our models use more tokens per parameter than Chinchilla's recommendation, but being much smaller than current large language models (100B+ parameters), our findings may not directly apply to them.\"\n- Image and short-video benchmarks are below state of the art because of discrete VQGAN tokens (VQA v2 55.8 vs LLaVA-1.5 78.5).\n- The paper concedes that retrieval is the main long-context test and that harder synthesis benchmarks are needed. It concedes multi-needle accuracy falls as difficulty rises.\n- The longer chat models lose slightly on MT-Bench (1M 4.19 vs 256K 5.0), which the authors attribute to less training data on longer sequences. This is a hypothesis, not tested.\n- The Table 2 comparisons mix eras. Gemini Pro and GPT-4 have no 1M entries, and the starred open models were run after the paper was finished.\n- Dated: Gemini 1.5, GPT-4o and Claude 3 Opus are the 2024 baselines. The paper is a training recipe, not a prompting or budgeting study. It gives no cost or latency curves for inference, and no measurement of lost-in-the-middle (the Fig 2 and Fig 11 heatmaps are described as near-perfect only).\n- Single-needle \"near-perfect\" is described in prose and figures only, with no table of values.\n\nBUILDS ON\n- Blockwise RingAttention (Liu, Zaharia, Abbeel 2024; Liu and Abbeel 2023).\n- FlashAttention (Dao et al. 2022).\n- RoPE (Su et al. 2024), with theta scaling following Code Llama (Rozière et al. 2023).\n- Progressive length growth (Jin et al. 2023a, GrowLength).\n- Llama 2 (Touvron et al. 2023b).\n- VQGAN (Esser et al. 2021) via aMUSEd (Patil et al. 2024).\n- Needle-in-a-Haystack (gkamradt 2023; ArizeAI 2023 variant).\n- LOFT (Lee et al. 2024).\n- Video-MME (Fu et al. 2024).\n- Books3 / The Pile (Gao et al. 2020).\n- UltraChat (Ding et al. 2023).\n- Concurrent work: Gemini 1.5 (Reid et al. 2024).\n\nCODE: none in the paper (code and models are linked at largeworldmodel.github.io/lwm/).\n\nFIGURES\n- Fig 1: context-size comparison of LLMs (p.1).\n- Fig 2: needle retrieval versus Gemini Pro (32K) and GPT-4 (128K), with the x-axis log-scale to 128K and linear to 1M (p.2). It is the quickest view of the claim that the model matches the short-window models and extends 8x further.\n- Fig 3: model architecture, 256 tokens per frame and the <vision>/<eof>/<eov> delimiters (p.3). It explains the per-frame token cost.\n- Fig 4: training stages and data (p.4).\n- Fig 5: multi-needle results for LWM-1M (p.5).\n- Fig 6: 1-hour video QA against GPT-4V and Gemini Pro Vision (p.8).\n- Fig 8: MFU per stage (p.15).\n- Fig 11-13: single-needle heatmaps for the 1M, 256K and 512K chat models (p.18).\n\nPROBLEMS: No embedded instructions found. Extraction is clean for text and tables, but the Table 4/5 columns run together, so the values were rechecked against the row text. Appendix A has a broken reference (\"See Appendix ??\"). Figures contain data that the text extraction cannot reach, such as the heatmaps. Title is dated 2024 in the filename, but the arXiv v4 and ICLR 2025 versions are what was read (arXiv:2402.08268)."
+ "type": "empirical",
+ "question": "How can a 7B Llama-2 model be trained to use a 1M-token context over text, images and video, and how well does it retrieve and understand at that length?",
+ "hypothesis": "Progressively extending context from 32K to 1M with RoPE theta scaling, model-generated QA data and masked sequence packing yields a usable 1M-context text and video-language model without hurting short-context ability.",
+ "contributions": [
+  "Train one of the largest context-size transformers to date on long text and video, with competitive long video understanding and fact retrieval.",
+  "Solutions for long-sequence training: masked sequence packing and synthetic model-generated question-answering.",
+  "Open-source optimized implementation for million-token training and a family of Llama-based 1M-context models (LWM-Text, LWM-Text-Chat, LWM, LWM-Chat)."
+ ],
+ "method": {
+  "summary": "Two-stage training from Llama-2 7B. Stage I extends text context 32K to 1M in five steps on filtered Books3 with RoPE theta scaled per stage, using Blockwise RingAttention fused with FlashAttention. Stage II adds VQGAN-tokenised images and video (256 tokens per frame), trained progressively 1K to 1M with masked sequence packing.",
+  "task": "long-context language modelling, needle retrieval, long video understanding, image/video generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Books3 (The Pile), filtered by document length",
+    "role": "train",
+    "size": "4.8B / 12B / 12B / 3B / 1.8B tokens for the 32K/128K/256K/512K/1M stages",
+    "split": "doc length 10K-100K, 100K-200K, 200K-500K, 500K-1M, 1M+ per stage",
+    "source": "Gao et al., 2020",
+    "preprocessing": "filtered by document length per stage"
+   },
+   {
+    "name": "Model-generated QA from Books3",
+    "role": "train",
+    "size": "1.2B tokens per chat stage",
+    "split": null,
+    "source": "own construction",
+    "preprocessing": "documents split into 1,000-token chunks; short-context model writes a QA pair per chunk; adjacent chunks concatenated to reach target length with QA pairs appended at end in chat format; < 1% loss tokens per sequence"
+   },
+   {
+    "name": "UltraChat",
+    "role": "train",
+    "size": null,
+    "split": "about 7:3 UltraChat to QA mix",
+    "source": "Ding et al., 2023",
+    "preprocessing": "pre-packed to the training sequence length, kept separate from QA data"
+   },
+   {
+    "name": "LAION-2B-en + COYO-700M",
+    "role": "train",
+    "size": "roughly 1B text-image pairs",
+    "split": null,
+    "source": "Schuhmann et al. 2022; Byeon et al. 2022",
+    "preprocessing": "images with at least 256 resolution; order of modalities randomly swapped; packed to 1K tokens"
+   },
+   {
+    "name": "WebVid10M + 3M InternVid10M",
+    "role": "train",
+    "size": "WebVid10M plus 3M InternVid10M examples",
+    "split": "50-50 image/video ratio",
+    "source": "Bain et al. 2021; Wang et al. 2023",
+    "preprocessing": "30-frame videos at 4FPS; images packed to 8K tokens"
+   },
+   {
+    "name": "ShareGPT4V, Valley-Instruct-73K, Video-ChatGPT-100K",
+    "role": "train",
+    "size": null,
+    "split": "25% of each chat-stage batch to each of 4 tasks",
+    "source": "Chen 2023a; Luo 2023; Maaz 2023",
+    "preprocessing": "video uniformly sampled to a max frame count that fits training context"
+   },
+   {
+    "name": "OpenLLaMA text",
+    "role": "train",
+    "size": "16% of batch in 1K and 8K stages",
+    "split": null,
+    "source": "Geng and Liu 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Needle in a Haystack (magic number / city variant), multi-needle",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "gkamradt 2023; ArizeAI 2023",
+    "preprocessing": "N needles inserted, R asked; correctness by string match"
+   },
+   {
+    "name": "LOFT (Quora, NQ, HotPotQA)",
+    "role": "eval",
+    "size": "corpora of 1000s of documents",
+    "split": "512K context setting",
+    "source": "Lee et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "Video-MME",
+    "role": "eval",
+    "size": null,
+    "split": "Medium 4-15min, Long 30-60min",
+    "source": "Fu et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2, GQA, SQA, POPE, MSVD, MSRVTT, TGIF, MT-Bench, lm-eval short tasks",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LWM-Text / LWM-Text-Chat (32K-1M)",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "Llama-2 decoder-only transformer",
+    "init_from": "LLaMA-2 7B, then each stage from the previous length; chat models from the pretrained text model at same length, no progressive training",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32K, 128K, 256K, 512K, 1M",
+    "other": {
+     "RoPE theta": "1M, 10M, 10M, 25M, 50M"
+    }
+   },
+   {
+    "name": "LWM / LWM-Chat",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "same transformer with VQGAN tokens (aMUSEd, 256x256 -> 16x16 = 256 tokens per frame) and <vision>,</vision>,<eof>,<eov> tokens",
+    "init_from": "LWM-Text-1M",
+    "tokenizer": "BPE for text, aMUSEd VQGAN for vision",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1K to 1M",
+    "other": {
+     "RoPE theta": "50M, not scaled further"
+    }
+   },
+   {
+    "name": "GPT-4-1106, Gemini Pro (02/23), GPT-4o, Claude 3 Opus, Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct, Mistral-7B-Instruct-v0.3, Gemini 1.5 Pro, LLaVA-Video, VideoLLaMA 2, Long-LLaVA, Video-LLaVA",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction over text and vision tokens (image and video generation included); loss re-weighted in packed sequences to match non-packed padded training",
+   "optimizer": null,
+   "lr": "Stage I text: 4e-5 (all stages); Stage II: max 6e-4 (1K, 8K), 8e-5 (32K, 128K, 1M)",
+   "lr_schedule": "Stage I constant; Stage II cosine (min LR 6e-5 for 1K and 8K, 8e-5 otherwise)",
+   "warmup": "Text 100/200/200/50/25 steps (32K/128K/256K/512K/1M); chat 25 steps; Stage II 1000/500/100/50/5",
+   "batch_size": "4M tokens per batch (text), 8M tokens per batch (vision-language)",
+   "steps": "Text 1200/3000/3000/720/450; chat 300 each; Stage II 45000/14000/1200/450/50",
+   "epochs": null,
+   "tokens": "Text 4.8B/12B/12B/3B/1.8B; chat 1.2B per stage; Stage II 363B/107B/10B/3.5B/0.4B",
+   "seq_len": "2^15, 2^17, 2^18, 2^19, 2^20 (text); 2^10, 2^13, 2^15, 2^17, 2^20 (vision-language)",
+   "precision": "float32",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "TPU v4-512 (text stages), TPU v4-1024 (vision-language), approx 450 A100",
+   "compute": null,
+   "wall_clock": "Text 8h/45h/83h/47h/58h; chat 6h/10h/20h/40h; vision-language 83h/32h/10h/6h/8h",
+   "seeds": null,
+   "other": {
+    "parallelism": "FSDP + Blockwise RingAttention fused with FlashAttention via Pallas",
+    "mesh sharding text": "1,-1,4,1 / 1,-1,8,1 / 1,-1,16,1 / 1,-1,16,2 / 1,-1,16,4",
+    "Stage II table row labels": "Table 8 labels last stages Chat-32K/128K/1M, Table 14 labels them 32K/128K/1M",
+    "Stage II inits": "1K from Text-1M, then each from the previous",
+    "MFU": "Fig 8 reports high MFU across lengths (values only in figure)"
+   }
+  },
+  "inference": {
+   "decoding": "classifier-free guidance on logits for image/video generation, unconditional branch started with <bos><vision>",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Qualitative video evals at 1FPS, uniformly sampled to max frames, resized and center-cropped to 256x256",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "hardware": "1M-token inference needs minimum v4-128, 32-way tensor parallelism and 4-way sequence (ring) parallelism, single precision, RingAttention for decoding"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Needle retrieval accuracy",
+     "definition": "retrieve magic number for city from context; multi-needle by string match on extracted numbers",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "LOFT score",
+     "definition": "document id retrieval (Quora, HotPotQA) and RAG answer (NQ)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Video-MME accuracy",
+     "definition": "multiple choice QA by video duration",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench",
+     "definition": "LLM-judge conversation score",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-2 7B 4K",
+    "GPT-4-1106",
+    "Gemini Pro",
+    "GPT-4o",
+    "Claude 3 Opus",
+    "Llama-3.1-8B-Instruct",
+    "Qwen2.5-7B-Instruct",
+    "Mistral-7B-Instruct-v0.3",
+    "Video-LLaVA",
+    "LLaVA-1.5"
+   ],
+   "protocol": "Single reported numbers; no seeds, repeats or significance tests stated."
+  },
+  "availability": {
+   "code": "largeworldmodel.github.io/lwm/",
+   "weights": "largeworldmodel.github.io/lwm/ (stated open-sourced)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "We trained our models using TPUv4-1024, which is approximately",
+    "where": "Appendix A"
+   },
+   {
+    "field": "training.optimizer",
+    "quote": null,
+    "where": "optimizer not named anywhere in text"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Single-needle retrieval is near-perfect over the whole 1M window.",
+   "kind": "measured",
+   "source": null,
+   "metric": "needle accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": "",
+   "n": null,
+   "setup": "LWM-Text-Chat-1M, magic-number-per-city needle, depths and lengths to 1M",
+   "where": "Sec 3.3.2",
+   "note": null,
+   "quote": "Figure 11 in Appendix shows nearly perfect retrieval accuracy over the entire context"
+  },
+  {
+   "claim": "Multi-needle at 1M, N=2 R=2: LWM-Text-1M far above Llama-3.1-8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "multi-needle accuracy",
+   "value": 0.67,
+   "unit": "fraction",
+   "baseline_value": 0.27,
+   "n": null,
+   "setup": "1M context, N=2 R=2; Llama-3.1-8B-Instruct 0.27, Qwen2.5-7B 0.0, Mistral-7B 0.05",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, 1M, row LWM-Text-1M (Ours), column N = 2, R = 2"
+  },
+  {
+   "claim": "Multi-needle at 1M, N=4 R=1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "multi-needle accuracy",
+   "value": 0.84,
+   "unit": "fraction",
+   "baseline_value": 0.32,
+   "n": null,
+   "setup": "1M context; Llama-3.1-8B 0.32",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, 1M, row LWM-Text-1M (Ours), column N = 4, R = 1"
+  },
+  {
+   "claim": "Multi-needle at 1M, N=4 R=2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "multi-needle accuracy",
+   "value": 0.69,
+   "unit": "fraction",
+   "baseline_value": 0.18,
+   "n": null,
+   "setup": "1M context; Llama-3.1-8B 0.18",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, 1M, row LWM-Text-1M (Ours), column N = 4, R = 2"
+  },
+  {
+   "claim": "At 32K LWM-Text-1M trails GPT-4 on 2 of 3 multi-needle settings (N=2,R=2: 0.84 vs 0.97).",
+   "kind": "measured",
+   "source": null,
+   "metric": "multi-needle accuracy",
+   "value": 0.84,
+   "unit": "fraction",
+   "baseline_value": 0.97,
+   "n": null,
+   "setup": "32K, N=2 R=2; GPT-4-1106 0.97",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, 32K, row LWM-Text-1M (Ours), column N = 2, R = 2"
+  },
+  {
+   "claim": "Accuracy degrades as needle task difficulty rises, so 1M context is not fully used.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "multi-needle, 1M",
+   "where": "Sec 3.3.3",
+   "note": null,
+   "quote": "we note that we see degradation in accuracy while increasing the difficulty of the needle retrieval"
+  },
+  {
+   "claim": "LOFT HotPotQA at 512K: LWM far above GPT-4o (128K) and Claude 3 Opus (200K).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LOFT HotPotQA",
+   "value": 0.72,
+   "unit": "fraction",
+   "baseline_value": 0.32,
+   "n": null,
+   "setup": "512K context; GPT-4o 0.21, Claude 3 Opus 0.32",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row HotPotQA, column LWM (512K)"
+  },
+  {
+   "claim": "LOFT NQ (RAG) at 512K ties Claude 3 Opus at 0.37.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LOFT NQ",
+   "value": 0.37,
+   "unit": "fraction",
+   "baseline_value": 0.37,
+   "n": null,
+   "setup": "512K; GPT-4o 0.22",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row NQ, column LWM (512K)"
+  },
+  {
+   "claim": "Video-MME Long (30-60min): LWM-1M beats Video-LLaVA and Long-LLaVA but trails Gemini 1.5 Pro and GPT-4o.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Video-MME Long accuracy",
+   "value": 60.8,
+   "unit": "%",
+   "baseline_value": 36.2,
+   "n": null,
+   "setup": "LWM-1M 7B, up to 1800 frames; Gemini 1.5 Pro 67.4, GPT-4o 65.3, Long-LLaVA 45.4, Video-LLaVA 36.2",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row LWM-1M, column Long (30min-60min)"
+  },
+  {
+   "claim": "Video-MME Medium (4-15min).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Video-MME Medium accuracy",
+   "value": 63.7,
+   "unit": "%",
+   "baseline_value": 38.1,
+   "n": null,
+   "setup": "LWM-1M; Gemini 1.5 Pro 74.3, Video-LLaVA 38.1",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row LWM-1M, column Medium (4min-15min)"
+  },
+  {
+   "claim": "Masked sequence packing improves VQAv2 over standard packing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2",
+   "value": 55.8,
+   "unit": "accuracy",
+   "baseline_value": 48.3,
+   "n": null,
+   "setup": "ablation, Stage II",
+   "where": "Table 9",
+   "note": null,
+   "table": "Table 9, row Masked sequence packing (Ours), column VQAv2"
+  },
+  {
+   "claim": "Masked sequence packing improves ScienceQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SQA",
+   "value": 47.7,
+   "unit": "accuracy",
+   "baseline_value": 34.8,
+   "n": null,
+   "setup": "ablation",
+   "where": "Table 9",
+   "note": null,
+   "table": "Table 9, row Masked sequence packing (Ours), column SQA"
+  },
+  {
+   "claim": "Masked sequence packing improves POPE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "POPE",
+   "value": 75.2,
+   "unit": "accuracy",
+   "baseline_value": 62.5,
+   "n": null,
+   "setup": "ablation",
+   "where": "Table 9",
+   "note": null,
+   "table": "Table 9, row Masked sequence packing (Ours), column POPE"
+  },
+  {
+   "claim": "Chat/QA mix trades chat quality against needle retrieval: 100% chat gives MT-Bench 5.8 but needle 31%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Needle Acc",
+   "value": 31,
+   "unit": "%",
+   "baseline_value": 100,
+   "n": null,
+   "setup": "Table 11, 100% chat / 0% QA",
+   "where": "Table 11",
+   "note": "Base 0%/100% row has MT-Bench 2.42 and needle 100%",
+   "table": "Table 11, row 100% / 0%, column Needle Acc"
+  },
+  {
+   "claim": "A 70/30 chat/QA mix keeps needle at 96% with MT-Bench 4.62.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": 4.62,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "chat / QA mix 70% / 30%",
+   "where": "Table 11",
+   "note": null,
+   "table": "Table 11, row 70% / 30%, column MT-Bench"
+  },
+  {
+   "claim": "MT-Bench falls slightly with longer chat models (1M 4.19 vs 256k 5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": 4.19,
+   "unit": "score",
+   "baseline_value": 5,
+   "n": null,
+   "setup": "LWM-Text-Chat-1M",
+   "where": "Table 10",
+   "note": null,
+   "table": "Table 10, row LWM-Text-Chat-1M, column MT-Bench"
+  },
+  {
+   "claim": "Extending context to 1M does not clearly hurt short tasks; MMLU 0.35 at 1M vs 0.39 Llama-2 though other tasks flat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mmlu",
+   "value": 0.35,
+   "unit": "accuracy",
+   "baseline_value": 0.39,
+   "n": null,
+   "setup": "LWM-Text 1M vs Llama-2 7B 4K",
+   "where": "Table 1",
+   "note": "Authors state no significant degradation; mmlu 1M and 512k drop 4-5 points",
+   "table": "Table 1, row mmlu, column 1M"
+  },
+  {
+   "claim": "Image understanding stays below LLaVA-1.5 (VQAv2 55.8 vs 78.5) because of discrete VQGAN tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2",
+   "value": 55.8,
+   "unit": "accuracy",
+   "baseline_value": 78.5,
+   "n": null,
+   "setup": "LWM vs LLaVA-1.5",
+   "where": "Table 5",
+   "note": null,
+   "table": "Table 5, row LWM (ours), column VQAv2"
+  },
+  {
+   "claim": "Stage I 1M context step costs 58h on v4-512 for 1.8B tokens (450 steps).",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 58,
+   "unit": "h",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 6, 1M column",
+   "where": "Table 6",
+   "note": null,
+   "table": "Table 6, column 1M, row Wall Clock"
+  },
+  {
+   "claim": "Chat data needs separate packing because QA data has under 1% loss tokens.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "UltraChat vs QA",
+   "where": "Sec 3.2",
+   "note": null,
+   "quote": "(< 1%)"
+  }
+ ],
+ "limits": [
+  "Vanilla per-frame image tokenizer; no video tokenisation exploiting time redundancy and no continuous (CLIP) embeddings.",
+  "Limited scale: only 7B; authors say extrapolation to 100B+ models should be cautious.",
+  "Needle tasks test fact retrieval, not synthesis; authors call for harder long-range benchmarks.",
+  "Image and short video benchmarks fall below SOTA (Table 5).",
+  "Chat mix trades off needle retrieval against chat quality (Table 11).",
+  "Optimizer, seeds, repeats and variance are not stated; no ablation of progressive vs direct training or of RoPE theta values.",
+  "Comparisons with starred models (Llama-3.1, Qwen2.5, Mistral, Video-MME models) were added after the paper was done, and baselines were run at lengths beyond their trained context."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Ring attention with blockwise transformers for near-infinite context",
+   "year": 2024,
+   "arxiv": "2310.01889",
+   "relation": "extends",
+   "note": "core attention technique used to train at 1M",
+   "quote": null
+  },
+  {
+   "work": "Blockwise parallel transformer for large context models",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "blockwise compute",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "extends",
+   "note": "initial 7B model",
+   "quote": null
+  },
+  {
+   "work": "Code Llama (Rozi\u00e8re et al.)",
+   "year": 2023,
+   "arxiv": "2308.12950",
+   "relation": "uses-method",
+   "note": "RoPE theta scaling",
+   "quote": null
+  },
+  {
+   "work": "GrowLength (Jin et al.)",
+   "year": 2023,
+   "arxiv": "2310.00576",
+   "relation": "uses-method",
+   "note": "progressively growing training length",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fused with ring attention",
+   "quote": null
+  },
+  {
+   "work": "Needle in a Haystack (gkamradt)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "single and multi needle eval",
+   "quote": null
+  },
+  {
+   "work": "LOFT (Lee et al.)",
+   "year": 2024,
+   "arxiv": "2406.13121",
+   "relation": "uses-data",
+   "note": "512K evals",
+   "quote": null
+  },
+  {
+   "work": "Video-MME",
+   "year": 2024,
+   "arxiv": "2405.21075",
+   "relation": "uses-data",
+   "note": "long video eval",
+   "quote": null
+  },
+  {
+   "work": "Gemini 1.5",
+   "year": 2024,
+   "arxiv": "2403.05530",
+   "relation": "related",
+   "note": "concurrent 1M-context work",
+   "quote": null
+  },
+  {
+   "work": "Books3 / The Pile",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "Stage I training text",
+   "quote": null
+  },
+  {
+   "work": "UltraChat",
+   "year": 2023,
+   "arxiv": "2305.14233",
+   "relation": "uses-data",
+   "note": "chat data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Needle retrieval comparisons against Gemini Pro and GPT-4 for each respective max context length",
+   "page": 2,
+   "why": "shows retrieval across depth and length against baselines"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Curated dataset and training process with progressively increasing data length and complexity",
+   "page": 4,
+   "why": "the whole two-stage curriculum at a glance"
+  },
+  {
+   "figure": "Table 6",
+   "caption": "LWM-Text Training Stages",
+   "page": 16,
+   "why": "RoPE theta, tokens and wall clock per context stage"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Appendix A says 'See Appendix ??' for hyperparameters (Appendix J).",
+  "Sequence lengths print as '215' etc.; read as 2^15 (superscripts lost).",
+  "Hyperparameter table row labels differ between Table 8 (Chat-32K/128K/1M) and Table 14 (32K/128K/1M).",
+  "Figure content (needle heatmaps, MFU bars, loss curves) not extractable from text."
+ ]
 }

@@ -1,19 +1,649 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "doi:10.14778/3415478.3415560",
  "pdf": "data-engineering/sources/armbrust-2020-delta-lake.pdf",
  "bib": {
-  "title": "Delta lake",
-  "first_author": "Michael Armbrust",
-  "year": "2020",
-  "venue": "Proceedings of the VLDB Endowment",
+  "title": "Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores",
+  "authors": [
+   "Michael Armbrust",
+   "Tathagata Das",
+   "Liwen Sun",
+   "Burak Yavuz",
+   "Shixiong Zhu",
+   "Mukul Murthy",
+   "Joseph Torres",
+   "Herman van Hovell",
+   "Adrian Ionescu",
+   "Alicja Łuszczak",
+   "Michał Świtakowski",
+   "Michał Szafrański",
+   "Xiao Li",
+   "Takuya Ueshin",
+   "Mostafa Mokhtar",
+   "Peter Boncz",
+   "Ali Ghodsi",
+   "Sameer Paranjpye",
+   "Pieter Senster",
+   "Reynold Xin",
+   "Matei Zaharia"
+  ],
+  "first_author": "Armbrust",
+  "year": 2020,
+  "venue": "PVLDB 13(12): 3411-3424 (Proceedings of the VLDB Endowment)",
   "arxiv": null,
   "doi": "10.14778/3415478.3415560"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 90187,
+  "chars_total": 90187,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores\", Armbrust, Das, Sun, Yavuz, Zhu, ... Boncz, Ghodsi, ... Xin, Zaharia (Databricks, CWI, UC Berkeley, Stanford). PVLDB 13(12): 3411-3424, 2020 (peer-reviewed venue, VLDB 2020). DOI 10.14778/3415478.3415560.\n\nCOVERAGE: about 84,000 of 90,353 chars read, in full through the conclusion (pp. 1-12) and the start of the reference list. The remaining ~6k chars are references only, skimmed for origins. The text extracted cleanly. Figure 4 and 6 bar values come from axis text and are only partly legible. Page numbers below are PDF pages (journal pages 3411+, so PDF p.N = 3410+N).\n\nVERIFICATION OF YOUR NOTE'S CITATIONS\n1. VERIFIED, 1000 keys per call, tens to hundreds of ms (p.3, sec 2.1): \"S3's LIST only returns up to 1000 keys per call, and each call takes tens to hundreds of milliseconds, so it can take minutes to list a dataset with millions of objects using a sequential implementation.\" Repeated in 2.3: \"S3's LIST operations can only return up to 1000 objects per requests, and take tens to hundreds of milliseconds, so clients need to issue hundreds of LISTs in parallel\".\n2. VERIFIED, with a caveat. It is anecdotal and covers 2014-2016 (p.1, sec 1): \"Anecdotally, in the first few years of Databricks' cloud service (2014–2016), around half the support escalations we received were due to data corruption, consistency or performance issues due to cloud storage strategies (e.g., undoing the effect of a crashed update job, or improving the performance of a query that reads tens of thousands of objects).\" The note says \"corruption/consistency/performance\" and the paper adds \"due to cloud storage strategies\". Follow-up (p.2): \"Anecdotally, Delta Lake reduced the fraction of support issues about cloud storage at Databricks from a half to nearly none.\"\n3. VERIFIED (p.11, sec 6.1, Fig 4). Setup: \"16-node AWS clusters of i3.2xlarge VMs (where each VM has 8 vCPUs, 61 GB RAM and 1.9 TB SSD storage) using Databricks and a popular cloud vendor that offers hosted Apache Hive and Presto. We then created small tables with 33,000,000 rows but between 1000 and 1,000,000 partitions in S3, to measure just the metadata overhead of a large number of partitions, and ran a simple query that sums all the records.\"\n   - Quote: \"Hive takes more than an hour to find the objects in a table with only 10,000 partitions ... and Presto takes more than an hour for 100,000 partitions. Databricks Runtime listing Parquet files completes in 450 seconds with 100,000 partitions, largely because we have optimized it to run LIST requests in parallel across the cluster. However, Delta Lake takes 108 seconds even with 1 million partitions, and only 17 seconds if the log is cached on SSDs.\"\n   - Caveats for the note: the Hive and Presto systems are a \"popular cloud vendor\" hosted service, not named and not vanilla open source. Fig 4 caption: \"The non-Delta systems took over an hour for 1 million partitions so we do not include their results there.\" Databricks Parquet listing took 450 s at 100,000 partitions (a useful extra comparator). The query is a simple sum, so it measures metadata overhead only. The \"no cache\" Delta run is the 108 s figure.\n4. VERIFIED (p.5 sec 3.1.3 and p.6 sec 3.2.2 step 5). \"By default, our clients write checkpoints every 10 transactions.\" Also: \"(In practice, our implementations do this every 10 records by default.)\" Checkpoint format: \"Checkpoints store all the non-redundant actions in the table's log up to a certain log record ID, in Parquet format.\" Checkpointing only affects performance, not correctness: \"a client failure anywhere during this step will not corrupt the data.\"\n\nOTHER KEY CLAIMS (ranked)\n- Core design: object membership of a table is kept in a write-ahead log (JSON files in _delta_log) stored in the object store itself, with data in Parquet. \"no servers need to be running to maintain state for a Delta table\". Writes use optimistic concurrency. (p.2)\n  quote: \"we maintain information about which objects are part of a Delta table in an ACID manner, using a write-ahead log that is itself stored in the cloud object store.\"\n- Writes are serializable. Read-only transactions get snapshot isolation. \"all transactions that perform writes are serializable, leading to a serial schedule in increasing order of log record IDs.\" (p.7, sec 3.3)\n- Commit atomicity depends on the store (p.6, sec 3.2.2). GCS and Azure Blob use atomic put-if-absent. HDFS and ADLS use atomic rename. S3 lacks both, so Databricks uses a separate lightweight coordination service for log writes only. The open source Spark connector uses in-memory state per driver, so concurrency across clusters is not covered there. (A custom LogStore API is offered.)\n- Write rate: \"the latency of writes to object stores can be tens to hundreds of milliseconds, limiting the write transaction rate to several transactions per second\", judged sufficient for virtually all current applications. (p.7, sec 3.4)\n- Read protocol (p.6, sec 3.2.1): read _last_checkpoint, LIST from that ID, rebuild state from checkpoint plus later JSON, use min/max stats to prune, read data. It tolerates eventual consistency. A stale _last_checkpoint is fine. Zero-padded IDs make lexicographic LIST work.\n- Z-order (p.11, sec 6.2): a synthetic 100-object table of random IPs/ports. Quote: \"Z-ordering by all four columns allows skipping at least 43% of the Parquet objects for queries in each dimension, and 54% on average ... (compared to 25% for the single sort order).\" Fig 5 shows a global sort skipping 99% on sourceIP and 0% on the other fields. A 500 TB network dataset \"were able to skip 93% of the data\".\n- TPC-DS (p.11, sec 6.3, Fig 6): 1 TB in S3, 1 master plus 8 i3.2xlarge workers, average of 3 runs. Axis values 0.93, 0.99, 1.44 and 3.76 h appear in the extraction. Assuming the order follows the legend, they map to Databricks Delta, Databricks Parquet, 3rd-party Spark and 3rd-party Presto. Check that mapping against the figure. Text says Delta beats all, mainly by speeding the longer queries, and \"some of Delta Lake's advantages handling large numbers of partitions do not manifest because many tables are small\".\n- Write overhead (p.11-12, sec 6.4, Fig 7): loading 400 GB of TPC-DS store_sales from CSV, 1 master plus 8 workers. Delta write is similar to Parquet, so stats collection adds no significant overhead. No numbers are given in the text.\n- Scale and adoption: \"thousands of Databricks customers that process exabytes of data per day\", around half of the Databricks workload. Speedups \"as high as 100×\" in extreme cases (the security and bioinformatics cases).\n- OPTIMIZE default target object size is 1 GB. Checkpoint contents, tombstones and dataChange flag details are on pp.5, 7.\n- S3 object store facts (p.3, sec 2.3): per-read base latency 5-10 ms, roughly 50-100 MB/s per read, and 8-10 parallel reads to saturate 10 Gbps. S3 LIST is always eventually consistent (as of 2020). This has dated, since S3 later became strongly consistent.\n- Streaming (p.8, sec 4.3): \"latency on the order of seconds\" is feasible, using the txn (appId, version) action for exactly-once writes.\n- Caching (p.8, sec 4.5): the SSD cache is safe because data, log and checkpoint objects are immutable. i3 instances cost \"roughly 50% higher\" than m5.\n- Related work (p.12, sec 8): Hudi and Iceberg are the closest systems. The paper says Hudi supports only one writer at a time, and that Hive ACID bottlenecks on its metastore with millions of partitions.\n\nLIMITS\n- Authors concede (sec 7, p.12): transactions are serializable within a single table only. Streaming latency is bounded by object store latency, so millisecond latency is hard. There are no secondary indexes beyond per-file min/max stats (a Bloom filter prototype is mentioned). Commit rate is limited to several per second.\n- The 50% support-escalation figure is explicitly \"anecdotally\", not measured.\n- Benchmarks are run by Databricks on its own runtime against an unnamed third-party Hive/Presto service. The authors say the Spark gap comes from Databricks Runtime optimizations (both Spark 2.4). Not independent. The table is small (33M rows) by design, to isolate metadata cost.\n- Z-order experiment is synthetic uniform-random data. Several features (Z-order, AUTO OPTIMIZE, SSD cache) are Databricks-service features, not in open source Delta at the time (the paper says the \"cache\" is in the Databricks service).\n- Dated: S3 eventual-consistent LIST and no put-if-absent were true in 2020. Later changes in S3 consistency are not in the paper. Hudi and Iceberg comparisons reflect 2020.\n\nBUILDS ON: Parquet and ORC columnar formats; Hive partition directory layout (Apache Hive, Thusoo 2009 [45] as printed in the ref list); MVCC for time travel; Z-order curve (Morton, ref [35]); Snowflake's metadata-service design (Dageville et al., ref [23]) as the contrasting \"closed-world\" approach; Hive ACID [32]; Spark SQL and Structured Streaming (Armbrust et al. 2015, 2018 [14, 16]); C-Store (Stonebraker, ref [43]); Brantner et al. OLTP on S3 [20]; bolt-on consistency [19]; Aurora [49]; Hudi and Iceberg as concurrent work. I did not verify the reference-list entries beyond the first ~16, so check the author and year printed in the PDF before citing.\n\nCODE: Time-travel repair example (p.7, sec 4.1), verbatim:\nMERGE INTO mytable target\nUSING mytable TIMESTAMP AS OF <old_date> source\nON source.userId = target.userId\nWHEN MATCHED THEN UPDATE SET *\nAlso the log layout in Fig 2 (p.4): mytable/date=2020-01-01/...parquet, _delta_log/000001.json ... 000003.json, 000003.parquet, 000004.json, 000005.json, _last_checkpoint (contains {version: \"000003\"}).\n\nFIGURES:\n- Fig 2 (p.4): objects stored in a sample Delta table. It shows the data objects, JSON log records, a checkpoint at 000003.parquet and _last_checkpoint. It is the fastest way to explain the log layout.\n- Fig 4 (p.11): query time versus partition count (1000 to 1M, log scale), for Delta with cache, Delta without cache, Databricks Parquet, 3rd-party Presto and 3rd-party Hive. It is the source of the 108 s and 17 s numbers.\n- Fig 5 (p.11): percent of objects skipped, global sort versus Z-order, per filter field.\n- Fig 1 (p.2): pipeline with a message queue, object store and warehouses versus Delta only.\n- Fig 6 (p.11): TPC-DS power test duration. Fig 7 (p.12): 400 GB load time.\nI did not run the captions script, so these captions come from the extraction.\n\nPROBLEMS: No embedded instructions found. Some ligature characters (ﬁ, ﬂ) appear in the extraction. I normalised nothing inside the quotes beyond that, so the quotes keep the ligatures, and a string search for \"file\" in the raw text will miss them. Figure bar values are not extracted, only axis labels, so exact TPC-DS durations per system need a check against the figure itself."
+ "type": "system",
+ "question": "How can ACID transactions and fast metadata operations be provided for large mutable tables stored on cloud object stores that are only eventually consistent key-value stores?",
+ "hypothesis": "A transaction log stored in the object store itself (JSON records compacted into Parquet checkpoints) with optimistic concurrency is enough to give serializable ACID tables and much faster metadata operations, without a separate metadata service.",
+ "contributions": [
+  "Delta Lake storage format: Parquet data objects plus a write-ahead log in _delta_log with checkpoints",
+  "Access protocols for serializable writes and snapshot-isolated reads over object stores, with per-store atomic commit",
+  "Higher-level features on the log: time travel, UPSERT/DELETE/MERGE, streaming ingest and tailing, OPTIMIZE and Z-ordering, caching, audit logging, schema evolution, connectors",
+  "Customer use cases and performance experiments"
+ ],
+ "method": {
+  "summary": "Describes the Delta Lake design (Parquet objects plus an object-store-resident JSON log with Parquet checkpoints, optimistic concurrency via put-if-absent or rename or a coordinator) and reports four small benchmarks run by the authors' company: metadata cost vs partition count, Z-order skipping, TPC-DS power test and load time.",
+  "task": "ACID table storage over cloud object stores (system description with performance experiments)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Synthetic partitioned table (Sec 6.1)",
+    "role": "eval",
+    "size": "33,000,000 rows",
+    "split": "1000 to 1,000,000 partitions in S3",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic network flow table (Sec 6.2)",
+    "role": "eval",
+    "size": "100 Parquet objects; fields sourceIP (32-bit), sourcePort (16-bit), destIP, destPort drawn uniformly at random",
+    "split": null,
+    "source": "synthetic, inspired by the security use case",
+    "preprocessing": "global sort order vs Z-order by the four fields"
+   },
+   {
+    "name": "TPC-DS (Sec 6.3)",
+    "role": "eval",
+    "size": "1 TB in S3",
+    "split": "fact tables partitioned on surrogate key date column",
+    "source": "TPC-DS v2.11.0 power test",
+    "preprocessing": null
+   },
+   {
+    "name": "TPC-DS store_sales (Sec 6.4)",
+    "role": "eval",
+    "size": "400 GB, initially CSV",
+    "split": null,
+    "source": "TPC-DS",
+    "preprocessing": "loaded into Delta or Parquet"
+   }
+  ],
+  "models": [
+   {
+    "name": "Databricks Runtime with Delta Lake",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Optimized Apache Spark (based on Spark 2.4) with Delta",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Databricks Runtime with Parquet",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Third-party hosted Hive, Presto, Spark (unnamed vendor)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "spark_version": "based on Apache Spark 2.4"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Sec 6.3 and 6.4: results averaged over three runs; Sec 6.1 and 6.2: number of runs not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "checkpoint_interval": "every 10 transactions by default",
+    "optimize_target_object_size": "1 GB by default",
+    "log_record_id_padding": "zero-padded numeric IDs e.g. 000003.json",
+    "remove_tombstone_retention": "user-specified retention threshold"
+   },
+   "other": {
+    "hardware_6_1": "16-node AWS clusters of i3.2xlarge VMs (8 vCPUs, 61 GB RAM, 1.9 TB SSD each)",
+    "hardware_6_3": "one master and 8 workers on i3.2xlarge AWS VMs (8 vCPUs each)",
+    "hardware_6_4": "one i3.2xlarge master and eight i3.2xlarge workers",
+    "query_6_1": "simple query that sums all the records",
+    "query_6_2": "SELECT SUM(col) WHERE sourceIP = \"127.0.0.1\" style point filters per field"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Query time to find objects and sum table",
+     "definition": "wall-clock, log scale in Fig 4",
+     "unit": "seconds",
+     "higher_is_better": false
+    },
+    {
+     "name": "Percent of Parquet objects skipped",
+     "definition": "objects skipped via min/max statistics for point queries on each of four fields",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "TPC-DS power test duration",
+     "definition": "TPC-DS power test, mean of 3 runs",
+     "unit": "hours",
+     "higher_is_better": false
+    },
+    {
+     "name": "Load time",
+     "definition": "time to load 400 GB store_sales from CSV, mean of 3 runs",
+     "unit": "seconds",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Parquet tables on Databricks Runtime",
+    "Third-party hosted Hive and Presto on Parquet",
+    "Third-party Spark on Parquet",
+    "Global sort order vs Z-order"
+   ],
+   "protocol": "Vendor-run benchmarks; no variance, seeds or significance tests reported; the third-party vendor is unnamed; Delta advantage over third-party Spark attributed to Databricks Runtime optimizations (Sec 6.3)."
+  },
+  "availability": {
+   "code": "Open source Delta Lake under Apache 2 at https://delta.io (Z-order, caching, background optimization are Databricks-service features per Sec 2.4 and 4.5)",
+   "weights": null,
+   "data": "synthetic data generation described in words only; TPC-DS public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.checkpoint_interval",
+    "quote": "By default, our clients write checkpoints every 10 transactions.",
+    "where": "Sec 3.1.3, p.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Listing a 1M-partition table takes 108 s with Delta (no cache) on Databricks Runtime, while Hive and Presto on Parquet took over an hour at far fewer partitions",
+   "kind": "measured",
+   "source": null,
+   "metric": "time to find objects and sum a table",
+   "value": "108",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic tables of 33,000,000 rows with 1000 to 1,000,000 partitions in S3; 16-node AWS clusters of i3.2xlarge VMs; query sums all records; Databricks Runtime (optimized Spark) vs a third-party vendor's hosted Hive and Presto on Parquet",
+   "quote": "However, Delta Lake takes 108 seconds even with 1 million partitions, and only 17 seconds if the log is cached on SSDs.",
+   "table": null,
+   "note": "Text says Delta 108 s with no mention of cache; 17 s is the SSD-cached log. Non-Delta systems exceed 1 hour at 1M so are not plotted.",
+   "where": "Sec 6.1, p.11, Fig 4"
+  },
+  {
+   "claim": "With the log cached on SSD, the same 1M-partition query takes 17 s",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "17",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic tables of 33,000,000 rows with 1000 to 1,000,000 partitions in S3; 16-node AWS clusters of i3.2xlarge VMs; query sums all records; Databricks Runtime (optimized Spark) vs a third-party vendor's hosted Hive and Presto on Parquet",
+   "quote": "only 17 seconds if the log is cached on SSDs",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1, p.11"
+  },
+  {
+   "claim": "Hive takes over an hour to find objects in a table with only 10,000 partitions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "more than an hour",
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic tables of 33,000,000 rows with 1000 to 1,000,000 partitions in S3; 16-node AWS clusters of i3.2xlarge VMs; query sums all records; Databricks Runtime (optimized Spark) vs a third-party vendor's hosted Hive and Presto on Parquet (third-party hosted Hive, Parquet)",
+   "quote": "Presto takes more than an\nhour for 100,000 partitions",
+   "table": null,
+   "note": "Also: Hive more than an hour at 10,000 partitions. Lower bounds, not measurements.",
+   "where": "Sec 6.1, p.11"
+  },
+  {
+   "claim": "Databricks Runtime listing plain Parquet files (parallel LIST across cluster) completes in 450 s at 100,000 partitions, so part of the gap to Hive/Presto is the runtime, not Delta",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "450",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic tables of 33,000,000 rows with 1000 to 1,000,000 partitions in S3; 16-node AWS clusters of i3.2xlarge VMs; query sums all records; Databricks Runtime (optimized Spark) vs a third-party vendor's hosted Hive and Presto on Parquet; Parquet table, 100,000 partitions",
+   "quote": "completes in 450 seconds with 100,000 partitions",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1, p.11"
+  },
+  {
+   "claim": "Z-ordering by four columns lets queries skip at least 43% of Parquet objects in every dimension and 54% on average, against 25% for a single global sort order",
+   "kind": "measured",
+   "source": null,
+   "metric": "Parquet objects skipped (average over four dimensions)",
+   "value": "54",
+   "unit": "%",
+   "baseline_value": "25",
+   "n": null,
+   "setup": "Synthetic table: sourceIP, sourcePort, destIP, destPort drawn uniformly at random (32-bit IPs, 16-bit ports), stored as 100 Parquet objects; skipping via min/max statistics; queries equally likely per dimension",
+   "quote": "and 54% on average if we assume that",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2, p.11, Fig 5"
+  },
+  {
+   "claim": "Z-ordered multi-attribute queries on a 500 TB network traffic dataset skipped 93% of the data",
+   "kind": "reported",
+   "source": "Databricks customer deployment, not an experiment in the paper",
+   "metric": null,
+   "value": "93",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Customer deployment (SIEM use case, Sec 5.4.1); no query counts or baseline given; vendor anecdote",
+   "quote": "93% of the data in the table",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2, p.11"
+  },
+  {
+   "claim": "Half of Databricks' support escalations in 2014-2016 were from data corruption, consistency or performance issues due to cloud storage strategies",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "around half",
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Databricks cloud service, first few years (2014-2016); anecdotal, no counts",
+   "quote": "around half the support escalations we received were",
+   "table": "",
+   "note": "Authors say 'Anecdotally'.",
+   "where": "Sec 1, p.1"
+  },
+  {
+   "claim": "Delta Lake reduced the fraction of cloud-storage support issues from a half to nearly none",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "nearly none",
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Databricks support issues, anecdotal",
+   "quote": "from a half to nearly none",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, p.2"
+  },
+  {
+   "claim": "Speedups as high as 100x in extreme cases using data layout optimization and statistics on very high-dimensional datasets",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "100",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Network security and bioinformatics customer use cases; extreme cases only",
+   "quote": "speedups as high as 100",
+   "table": null,
+   "note": "Sec 5.4.2 says 'over 100x speedups over previous Parquet implementations' in several cases.",
+   "where": "Sec 1, p.2; Sec 5.4.2"
+  },
+  {
+   "claim": "Clients write a checkpoint every 10 transactions by default",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "transactions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Delta Lake clients as described in the paper (not stated to be only the Spark connector)",
+   "quote": "By default, our clients write checkpoints every 10 transactions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.3, p.5; Sec 3.2.2 step 5 says 'every 10\nrecords'"
+  },
+  {
+   "claim": "S3 LIST returns up to 1000 keys per call and each call takes tens to hundreds of ms",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "1000",
+   "unit": "keys per LIST call",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Amazon S3 as of 2020",
+   "quote": "1000 keys per call",
+   "table": null,
+   "note": "Sec 2.3 repeats: 'up to 1000 objects per requests'.",
+   "where": "Sec 2.1, p.3"
+  },
+  {
+   "claim": "Write transaction rate is limited to several transactions per second by put-if-absent latency of tens to hundreds of ms",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "several",
+   "unit": "transactions per second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Object store log commits; authors judge sufficient for virtually all current applications",
+   "quote": "the write transaction rate to several trans-",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4, p.7"
+  },
+  {
+   "claim": "Per-read latency on object stores is 5-10 ms base and 50-100 MB/s; 8-10 parallel reads needed to use 10 Gbps",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "5-10",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Object stores as characterised by the authors in 2020",
+   "quote": "at least 5–10 ms of base latency",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3, p.3"
+  },
+  {
+   "claim": "OPTIMIZE targets 1 GB data objects by default",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Delta OPTIMIZE command",
+   "quote": "aims to make each data object 1 GB in size",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, p.8"
+  },
+  {
+   "claim": "TPC-DS power test duration is 0.93 h for Databricks Delta, 0.99 Databricks Parquet, 1.44 third-party Spark, 3.76 third-party Presto (mapping assumed from legend order)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.93",
+   "unit": "hours",
+   "baseline_value": "0.99 (Databricks Parquet)",
+   "n": null,
+   "setup": "1 TB TPC-DS in S3, one master and 8 i3.2xlarge workers, fact tables partitioned on surrogate-key date column, mean of 3 runs; both Spark versions based on Spark 2.4",
+   "quote": null,
+   "table": "Figure 6 axis text, values 0.93 0.99 1.44 3.76 (bar-to-system mapping read from legend order, not stated in text)",
+   "note": "Bar labels extracted without series names; mapping inferred.",
+   "where": "Sec 6.3, p.11, Fig 6"
+  },
+  {
+   "claim": "Loading 400 GB TPC-DS store_sales into Delta takes about as long as into Parquet, so statistics collection adds no significant overhead",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 GB CSV to Delta/Parquet; one master and eight i3.2xlarge workers; mean of 3 runs; Databricks and third-party Spark",
+   "quote": "Spark’s performance\nwriting to Delta Lake is similar to writing to Parquet",
+   "table": null,
+   "note": "No numeric values in text.",
+   "where": "Sec 6.4, p.11-12, Fig 7"
+  },
+  {
+   "claim": "Delta Lake is used at thousands of Databricks customers and processes exabytes of data per day (around half the overall workload)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "exabytes",
+   "unit": "per day",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Databricks deployments, self-reported",
+   "quote": "exabytes of data per day",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Sec 1"
+  },
+  {
+   "claim": "Commit of the next log record needs an atomic put-if-absent; S3 had none, so Databricks uses a coordination service while the open-source connector only separates writers within one SparkContext",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Delta Lake 2020: GCS and Azure Blob put-if-absent, HDFS and ADLS atomic rename, S3 coordinator",
+   "quote": "Amazon S3 does not have atomic “put if absent” or rename\noperations.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.2, p.6-7"
+  },
+  {
+   "claim": "Write transactions are serializable; reads give snapshot isolation by default; only single-table transactions are supported",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Delta Lake 2020 protocol",
+   "quote": "Delta Lake currently only supports transactions\nwithin one table.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, p.7; Sec 7"
+  }
+ ],
+ "limits": [
+  "Serializable transactions only within a single table (Sec 3.3, 7).",
+  "Commit rate limited to several transactions per second by object store write latency; millisecond streaming latency is hard, seconds achievable (Sec 3.4, 7).",
+  "No secondary indexes beyond min/max statistics; Bloom filter index only prototyped (Sec 7).",
+  "Benchmarks are vendor-run against an unnamed third-party Hive/Presto/Spark service, with no variance reported; the Hive/Presto gap in Fig 4 mixes Delta with Databricks Runtime optimizations (Parquet listing on Databricks Runtime took 450 s at 100,000 partitions).",
+  "Z-order experiment uses uniform random synthetic data; the 93% figure is an anecdotal customer result.",
+  "Support-escalation statistics are anecdotal.",
+  "Z-order, SSD caching and auto optimize are Databricks service features; atomic commit on S3 needs a Databricks coordinator, while the open-source connector only serialises writers inside one SparkContext.",
+  "Dated: S3 LIST eventual consistency and no put-if-absent were 2020 facts; the Hudi and Iceberg comparison (Hudi one writer at a time) reflects 2020."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Delta Lake table",
+   "definition": "a directory on a cloud object store or file system that holds data objects with the table contents and a log of transaction operations (with occasional checkpoints)",
+   "where": "Sec 3"
+  },
+  {
+   "term": "dataChange flag",
+   "definition": "set to false on add or remove actions that only rearrange existing data or add statistics, so streaming consumers can skip them",
+   "where": "Sec 3.1.2"
+  },
+  {
+   "term": "txn action",
+   "definition": "custom action with appId and version fields so applications can commit their own progress atomically with data, enabling exactly-once writes",
+   "where": "Sec 3.1.2"
+  },
+  {
+   "term": "lakehouse",
+   "definition": "a paradigm that combines the key features of data warehouses and data lakes: standard DBMS management functions usable directly against low-cost object stores",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Apache Hive (Thusoo et al.)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "directories-of-files with Hive partition naming is the approach Delta replaces",
+   "quote": null
+  },
+  {
+   "work": "Snowflake elastic data warehouse (Dageville et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closed-world engine with a separate metadata service",
+   "quote": null
+  },
+  {
+   "work": "Apache Hudi",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent work; one writer at a time per the paper",
+   "quote": null
+  },
+  {
+   "work": "Apache Iceberg",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent work lacking layout optimization and connectors to Redshift/Snowflake",
+   "quote": null
+  },
+  {
+   "work": "Hive 3 ACID",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "metastore-based transactions, bottleneck at millions of partitions",
+   "quote": null
+  },
+  {
+   "work": "Structured Streaming (Armbrust et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "exactly-once connector uses txn action",
+   "quote": null
+  },
+  {
+   "work": "Spark SQL (Armbrust et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "data source API connector",
+   "quote": null
+  },
+  {
+   "work": "Z-order curve (Morton)",
+   "year": 1966,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multi-dimensional clustering",
+   "quote": null
+  },
+  {
+   "work": "TPC-DS v2.11.0",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "power test",
+   "quote": null
+  },
+  {
+   "work": "C-Store (Stonebraker et al.)",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "separate writable and analytical stores",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Objects stored in a sample Delta table.",
+   "page": 4,
+   "why": "Shows data objects, JSON log records, checkpoint and _last_checkpoint in one picture."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Performance querying a small table with a large number of partitions in various systems. The non-Delta systems took over an hour for 1 million partitions so we do not include their results there.",
+   "page": 11,
+   "why": "Source of the 108 s and 17 s figures."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Percent of Parquet objects in a 100-object table that could be skipped using min/max statistics for either a global sort order on the four fields, or Z-order.",
+   "page": 11,
+   "why": "Shows global sort skips 99% on sourceIP and 0% elsewhere vs Z-order's 44-67%."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "A data pipeline implemented using three storage systems (a message queue, object store and data warehouse), or using Delta Lake for both stream and table storage.",
+   "page": 2,
+   "why": "Architecture simplification claim."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.1, p.7",
+   "snippet": "MERGE INTO mytable target\nUSING mytable TIMESTAMP AS OF <old_date> source\nON source.userId = target.userId\nWHEN MATCHED THEN UPDATE SET *",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text uses ligature characters (fi, fl) that break plain-string matching; quotes with such words were avoided.",
+  "Fig 6 and Fig 7 bar values are only partly present as axis text; Fig 6 series mapping is inferred from legend order.",
+  "No embedded instructions found."
+ ]
 }

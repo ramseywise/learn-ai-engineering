@@ -1,0 +1,277 @@
+{
+ "schema": 1,
+ "key": "2405.14333",
+ "pdf": "generative-ai/05-RL/sources/xin-2024-deepseek-prover.pdf",
+ "bib": {
+  "title": "DeepSeek-Prover: Advancing Theorem Proving in LLMs through Large-Scale Synthetic Data",
+  "authors": ["Huajian Xin", "Daya Guo", "Zhihong Shao", "Z.Z. Ren", "Qihao Zhu", "Bo Liu", "Chong Ruan", "Wenda Li", "Xiaodan Liang"],
+  "first_author": "Xin",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2405.14333",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 49257,
+  "chars_total": 49257,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can large-scale synthetic Lean 4 proof data, built by autoformalizing informal competition problems and iteratively self-training a prover, lift an LLM's whole-proof theorem proving?",
+ "hypothesis": "Training on a large, quality-filtered synthetic corpus of formal statements with verified proofs, regenerated over iterations, makes the prover stronger and the data better.",
+ "contributions": [
+  "An iterative method to synthesize 8 million formal statements, each with a formal proof, from informal math problems.",
+  "State-of-the-art whole-proof results on Lean 4 miniF2F and FIMO with a 7B model.",
+  "Open-sourcing a large dataset of formal proofs (and the model)."
+ ],
+ "method": {
+  "summary": "Autoformalize 869,659 informal competition problems into Lean 4 statements with a fine-tuned DeepSeekMath-Base 7B, filter them by model scoring and hypothesis rejection (712,073 kept), prove statement and negation concurrently, verify with Lean 4, fine-tune on verified pairs and repeat. Final dataset is 8,066,621 verified statement-proof pairs.",
+  "task": "Lean 4 whole-proof generation (automated theorem proving) with synthetic data via expert-iteration-style self-training",
+  "trains": true,
+  "datasets": [
+   {"name": "Scraped informal math problems", "role": "train", "size": "869,659 natural language problems", "split": null, "source": "web scraping of high-school and undergraduate exercises, exams and competitions", "preprocessing": "web scraping and data cleaning"},
+   {"name": "Filtered formal statements", "role": "train", "size": "712,073 statements", "split": null, "source": "autoformalized by DeepSeek-Prover", "preprocessing": "drop statements scored fair or poor; drop statements whose hypotheses prove False"},
+   {"name": "Synthetic proof data", "role": "train", "size": "8,066,621 statement-proof pairs (8 million)", "split": null, "source": "Lean-verified proofs of statements or their negations", "preprocessing": "Lean 4 verification; negated-statement proofs kept as augmentation"},
+   {"name": "MMA", "role": "train", "size": null, "split": null, "source": "Jiang et al. 2023: Lean 4 mathlib formal statements back-translated to natural language by GPT-4", "preprocessing": "used to fine-tune the autoformalization ability"},
+   {"name": "miniF2F (Lean 4, LeanDojo version)", "role": "eval", "size": "244 valid + 244 test problems", "split": "valid and test", "source": "Zheng et al. 2021; github.com/yangky11/miniF2F-lean4", "preprocessing": null},
+   {"name": "FIMO", "role": "eval", "size": "148 problems in abstract/intro; 149 in section 4.2", "split": null, "source": "Liu et al. 2023, IMO shortlist in Lean 4", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "DeepSeek-Prover", "role": "proposed", "params": "7B", "architecture": "decoder-only transformer", "init_from": "DeepSeekMath-Base 7B (pre-trained on 120B math tokens)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"lean": "leanprover/lean4 v4.7.0-rc2", "mathlib_commit": "64528268b3c2cf578639bc479828882a9ecd3a82"}},
+   {"name": "GPT-4-turbo 0409", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "DeepSeekMath-Base", "role": "baseline", "params": "7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "supervised fine-tuning on verified theorem-proof pairs (and on MMA for autoformalization); iterated until gains become marginal",
+   "optimizer": null,
+   "lr": "1e-4 (constant)",
+   "lr_schedule": "constant",
+   "warmup": "6,000 warmup steps",
+   "batch_size": "512 (global)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "3.108B tokens for the autoformalized-statements ablation model (Table 2)",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"number_of_iterations": "Table 4 reports iterations 0 to 4; number used for the final model is not stated", "proof_search_k": "each proof search stream attempts up to k proofs; k not stated"}
+  },
+  "inference": {
+   "decoding": "whole-proof sampling; greedy as 1 (greedy)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "pass@1 (greedy), 64, 128, 8192, 65536 on miniF2F-test; 100 and 4096 attempts on FIMO",
+   "prompting": "autoformalization prompt: 'Mathematical Problem in Natural Language: {$informal_statement_with_answers} Translate the problem to Lean 4 (only the core declaration):'; scoring uses CoT with miniF2F-valid few-shot examples (count not stated)",
+   "retrieval": null,
+   "parameters": {"quality_classes": "excellent, good, above average, fair, poor; fair and poor removed", "hypothesis_rejection": "attempt to prove the statement with False as conclusion; success excludes the statement", "negation_search": "prove P and not-P concurrently, stop when either is proved", "incorrect_statement_rate": "at least 20% of filtered autoformalized statements were incorrect"},
+   "other": {"verification_prefix": "Lean 4 code prefix of Mathlib imports, set_option maxHeartbeats 0, open Nat Real Rat BigOperators (Appendix A.4)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "pass@k", "definition": "at least one valid proof among the first k attempts, checked by Lean 4", "unit": "%", "higher_is_better": true},
+    {"name": "cumulative", "definition": "proportion proved by any run/budget combined; not defined further", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["GPT-3.5", "GPT-4-turbo 0409", "DeepSeekMath-Base 7B", "COPRA", "GPT-f", "Proof Artifact Co-Training", "ReProver", "Llemma 7B and 34B", "Curriculum Learning (Polu et al. 2022)", "Hypertree Proof Search"],
+   "protocol": "Single reported number per cell; no seeds or confidence intervals. Ablations at pass@128."
+  },
+  "availability": {
+   "code": "stated that code, model and data will be released; no URL",
+   "weights": "will be made available",
+   "data": "synthetic dataset will be made available"
+  },
+  "prompts": [
+   {"purpose": "autoformalization", "text": "Mathematical Problem in Natural Language:\n{$informal_statement_with_answers}\nTranslate the problem to Lean 4 (only the core declaration):\n```lean4\nResponse:\n{$formal_statement}\n```", "where": "Section 3.1"},
+   {"purpose": "statement quality scoring", "text": "Five criteria (Relevance to Current Research, Complexity and Depth, Interdisciplinary Potential, Community Needs and Gaps, Innovativeness), then 'Customize your evaluation for each problem accordingly, assessing it as excellent, good, above average, fair or poor', answered as 'Translate the code to natural language / Analysis / Assessment'. Full text in Appendix A.1.", "where": "Appendix A.1"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "global batch size of 512 and a constant learning rate of 1 × 10−4,", "where": "Section 4.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "DeepSeek-Prover reaches 46.3% on miniF2F-test with 64 samples, against GPT-4-turbo 0409 at 23.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@64",
+   "value": 46.3,
+   "unit": "%",
+   "baseline_value": 23.0,
+   "n": 244,
+   "setup": "Lean 4 miniF2F-test, whole-proof generation, DeepSeek-Prover 7B, 64 generations",
+   "quote": "achieving 46.3% accuracy in whole-",
+   "table": null,
+   "note": "Table 1 prints GPT-4 as 23.0%, section 4.2 text as 22.95%.",
+   "where": "Abstract, Table 1"
+  },
+  {
+   "claim": "Cumulative miniF2F-test success across budgets is 52.0% and 60.2% on valid.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cumulative",
+   "value": 52.0,
+   "unit": "%",
+   "baseline_value": 41.0,
+   "n": 244,
+   "setup": "Lean 4 miniF2F-test, all runs combined; baseline is Hypertree Proof Search 600M",
+   "quote": "cumulative scores of 60.2% on miniF2F-valid and 52.0% on miniF2F-test",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Scaling samples raises miniF2F-test pass rate from 30.0% greedy to 50.0% at 65536 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@65536",
+   "value": 50.0,
+   "unit": "%",
+   "baseline_value": 30.03,
+   "n": 244,
+   "setup": "miniF2F-test, DeepSeek-Prover; 46.3% at 64 and 128, 48.8% at 8192",
+   "quote": "rising from 30.03% using a greedy",
+   "table": null,
+   "note": "Table 1 prints greedy as 30.0%.",
+   "where": "Section 4.2, Table 1"
+  },
+  {
+   "claim": "FIMO: 4 of the problems proved with 100 attempts, 5 with 4096, GPT-4 none.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problems proved",
+   "value": 5,
+   "unit": "problems",
+   "baseline_value": 0,
+   "n": 148,
+   "setup": "FIMO benchmark, 4096 attempts per theorem",
+   "quote": "our approach solved 5 with 4096 samples",
+   "table": null,
+   "note": "Problem count printed as 148 in abstract and intro, 149 in section 4.2.",
+   "where": "Section 1, 4.2"
+  },
+  {
+   "claim": "Training on 3.108B tokens of autoformalized data beats training on 0.238B tokens of mathlib at pass@128.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@128 miniF2F-test",
+   "value": 42.6,
+   "unit": "%",
+   "baseline_value": 31.2,
+   "n": 244,
+   "setup": "DeepSeekMath-Base 7B trained with expert iteration on autoformalized vs mathlib data; untrained base is 27.5%",
+   "quote": null,
+   "table": "Table 2, row Autoformalized Statements, column miniF2F-test",
+   "note": "Valid: 48.8% vs 30.3%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training on high-score statements beats training on low-score ones by 4.5 points on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@128 miniF2F-test",
+   "value": 42.6,
+   "unit": "%",
+   "baseline_value": 38.1,
+   "n": 244,
+   "setup": "equal amounts of high-score (excellent, good, above average) vs low-score (fair, poor) proof data",
+   "quote": null,
+   "table": "Table 3, row \"excellent\", \"good\" and \"above average\", column miniF2F-test",
+   "note": "Text says 4.5%; test gap 42.6-38.1=4.5, valid gap is 7.4 (48.8 vs 41.4).",
+   "where": "Table 3, section 4.3.2"
+  },
+  {
+   "claim": "Pass@128 on miniF2F-test rises monotonically over 5 iterations from 34.0% to 46.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@128 miniF2F-test",
+   "value": 46.3,
+   "unit": "%",
+   "baseline_value": 34.0,
+   "n": 244,
+   "setup": "iteration 0 vs iteration 4; valid goes 38.1% to 59.4%",
+   "quote": null,
+   "table": "Table 4, row iteration 4, column miniF2F-test",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Scaling the synthetic data from 1,000 to 8,066,621 examples lifts pass@128 test from 24.18% to 40.16%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@128 miniF2F-test",
+   "value": 40.16,
+   "unit": "%",
+   "baseline_value": 24.18,
+   "n": 244,
+   "setup": "subsets of the 8M dataset; gain roughly proportional to exponential increase in size",
+   "quote": null,
+   "table": "Table 5, row 8,066,621, column miniF2F-test",
+   "note": "Full-data row (42.62 valid, 40.16 test) differs from Table 2/3 autoformalized row (48.8, 42.6) at the same pass@128 without explanation.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "At least 20% of autoformalized statements are incorrect even after quality filtering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "incorrect statements",
+   "value": 20,
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "model-generated statements after quality filtering",
+   "quote": "at least 20% of the formal statements generated by our model",
+   "table": null,
+   "note": "Motivates proving negations in parallel.",
+   "where": "Section 3.3"
+  }
+ ],
+ "limits": [
+  "Authors concede the work focuses on algebra and number theory at middle-school and undergraduate level; broader diversity is future work.",
+  "Preprint, under review; code, model and data are promised, not linked.",
+  "No seeds, confidence intervals, optimizer, hardware, compute, sequence length, sampling temperature or number of final iterations reported.",
+  "Cumulative scores combine runs and are not comparable to fixed-budget pass@k.",
+  "Ablations are pass@128 only; inconsistent full-data numbers between Table 2/3 and Table 5.",
+  "Scoring-filter ablation fine-tunes with 'equal amounts' of data, without stating sizes.",
+  "Baselines differ in method (tree search vs whole-proof) and budget, so comparison is loose.",
+  "Supervised self-training on verified proofs (expert iteration) with a verifier as filter; no preference or RL loss is used despite the section mapping."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "hypothesis rejection", "definition": "using the model to attempt proving the formal statement with 'False' as the conclusion; a successful proof indicates an invalid hypothesis, prompting exclusion", "where": "Section 3.2"},
+  {"term": "pass@k", "definition": "the scenario where at least one valid proof is discovered among the first k attempts generated by the model", "where": "Section 4.2"}
+ ],
+ "lineage": [
+  {"work": "DeepSeekMath", "year": 2024, "arxiv": "2402.03300", "relation": "extends", "note": "base model", "quote": null},
+  {"work": "Generative language modeling for automated theorem proving (GPT-f)", "year": 2020, "arxiv": "2009.03393", "relation": "uses-method", "note": "expert iteration", "quote": null},
+  {"work": "Formal mathematics statement curriculum learning", "year": 2022, "arxiv": "2202.01344", "relation": "baseline", "note": "tree search baseline", "quote": null},
+  {"work": "Hypertree proof search", "year": 2022, "arxiv": null, "relation": "baseline", "note": "best tree search, 41.0% test", "quote": null},
+  {"work": "miniF2F", "year": 2021, "arxiv": "2109.00110", "relation": "uses-data", "note": "evaluation", "quote": null},
+  {"work": "FIMO", "year": 2023, "arxiv": "2309.04295", "relation": "uses-data", "note": "evaluation", "quote": null},
+  {"work": "Multilingual mathematical autoformalization (MMA)", "year": 2023, "arxiv": "2311.03755", "relation": "uses-data", "note": "autoformalization warm-up data", "quote": null},
+  {"work": "LeanDojo / ReProver", "year": 2024, "arxiv": null, "relation": "baseline", "note": "Yang et al., 229M, 25.0%", "quote": null},
+  {"work": "Llemma", "year": 2023, "arxiv": "2310.10631", "relation": "baseline", "note": "7B and 34B", "quote": null},
+  {"work": "COPRA", "year": 2023, "arxiv": "2310.04353", "relation": "baseline", "note": "GPT-3.5 and GPT-4 agent", "quote": null},
+  {"work": "GPT-4 technical report", "year": 2023, "arxiv": "2303.08774", "relation": "baseline", "note": "GPT-4-turbo 0409", "quote": null},
+  {"work": "Mustard", "year": 2024, "arxiv": "2402.08957", "relation": "related", "note": "earlier synthetic theorem/proof data, smaller", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An overview of our approach.", "page": 4, "why": "Shows the loop: autoformalize, score and reject, prove original and negation in parallel, verify, fine-tune, repeat."},
+  {"figure": "Table 4", "caption": "Improvement in pass rates for miniF2F at pass@128 in models across successive training iterations", "page": 8, "why": "Direct evidence that iteration helps."}
+ ],
+ "code": [
+  {"where": "Section 3.2", "snippet": "example (θ : R) (h0 : ∀z : C, z ^ 2 = -1 ∧z ^ 3 = -1 ∧z ^ 6 = 1) (h1 :\nReal.tan θ = 2 * Real.sqrt 3) : False := by\nsimpa using h0 1", "verbatim": true}
+ ],
+ "problems": [
+  "FIMO problem count printed as 148 (abstract) and 149 (section 4.2).",
+  "Pdf table text is flattened by extraction; table cells located by reading order."
+ ]
+}

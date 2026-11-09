@@ -87,6 +87,10 @@ tree   train 1.000  test 0.881
 forest train 1.000  test 0.972  oob 0.962
 ```
 
+The single tree's 0.881 is one split. Over 20 stratified splits, the same tree on this data scores 1.000 on train at depth 10 and 0.927 on test, and the test score peaks at 0.931 at depth 5 and then stays flat while train climbs to 1.000 ([`practice/overfit_curve.py`](../practice/overfit_curve.py)).
+
+![Train and test accuracy against tree depth on breast cancer over 20 splits: train rises to 1.000 by depth 7, test peaks at 0.931 at depth 5 and flattens near 0.927](../../sources/images/classical-overfit-curve.png)
+
 The forest is ahead of a single tree with no tuning, and the out-of-bag score, which needs no separate validation set, is usually a fair estimate of the test score. "Usually" is doing work: each bagged tree sees about two-thirds of the rows, so every row is out-of-bag for about a third of the trees, and the OOB error approximates leave-one-out CV when there are enough trees (*ISLP*, ch. 8). On ISLP's Heart data (303 patients, 13 predictors) the OOB error comes out well below the test error, and the authors put the gap down to chance:
 
 ![Test and out-of-bag error against the number of trees for bagging and a random forest on the Heart data: the curves flatten by about 100 trees and the OOB curves sit below the test curves](../../sources/images/islp-fig8-8.png)
@@ -195,6 +199,10 @@ HGB    AUC 0.9269  rounds 193
 
 Boosting beats the forest by 0.03 on the adult census, with no tuning beyond a lower learning rate, and it found 193 rounds by early stopping on its own internal validation split. This table recurs, across libraries and seeds, in the next note.
 
+The number of trees means different things in the two. On the same split with LightGBM at a rate of 0.05, boosting peaks at 0.928 AUC with 200 trees and slips to 0.920 at 2,000, while a forest on ordinal-coded columns levels off at 0.900 by 500 trees ([`practice/trees_vs_rounds.py`](../practice/trees_vs_rounds.py)). More forest trees only average away variance, so the curve flattens. More boosting rounds keep fitting the training set, so the test curve turns over, which is why rounds get early stopping instead of a grid.
+
+![Test AUC against number of trees on census income: the forest plateaus near 0.900, boosting peaks at 0.928 with 200 trees and falls to 0.920 at 2,000](../../sources/images/classical-trees-vs-rounds.png)
+
 ---
 
 ## Feature importance
@@ -216,11 +224,7 @@ forest    non-zero 30 of 30   top 3 share 0.39
 boosting  non-zero 30 of 30   top 3 share 0.75
 ```
 
-A single tree picks one of each correlated group, ignoring the rest. Forest feature subsets force it to try the others, so credit spreads. Three caveats follow, and [model interpretability](08-model-interpretability.md) shows each on real output:
-
-- **Impurity importance favours high-cardinality features** and is computed on training data, so it rewards what the model overfit. R's `randomForest` offers both on the same fit: permutation importance (`type=1`) is scored on the out-of-bag rows, so it is effectively cross-validated, while the Gini measure (`type=2`) comes from the training splits. On the book's loan-default forest the two panels of its Fig. 6-8 rank the variables differently (*Practical Statistics*, ch. 6).
-- **Correlated features share or steal credit.** A low importance doesn't mean a feature is useless.
-- **Importance says how much, never which direction.** Use permutation importance, partial dependence and SHAP instead.
+A single tree picks one of each correlated group, ignoring the rest. Forest feature subsets force it to try the others, so credit spreads. Treat these numbers as a first look only. They are computed on training data, so they reward what the model overfit, and they say how much a feature was used, never in which direction. [Model interpretability](08-model-interpretability.md#built-in-importances-and-why-not-to-stop-there) shows the bias and the correlated-column trap on real output, and replaces them with permutation importance, partial dependence and SHAP. One detail from outside that note: R's `randomForest` offers both measures on the same fit. Permutation importance (`type=1`) is scored on the out-of-bag rows, so it is effectively cross-validated, while the Gini measure (`type=2`) comes from the training splits, and on the book's loan-default forest the two panels of its Fig. 6-8 rank the variables differently (*Practical Statistics*, ch. 6).
 
 ---
 

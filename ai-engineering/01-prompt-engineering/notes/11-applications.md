@@ -23,7 +23,7 @@ Ask a model for a thousand training stories and you get a thousand near-duplicat
 
 ## Synthetic data generation
 
-The use cases: eval sets ([09](09-evaluating-prompts.md#sourcing-samples)), training data for a small local model (distilling a big model into a cheap one), fine-tuning documents when you can't collect enough real successes ([04](04-controlling-output.md#when-prompting-isnt-enough-fine-tuning)), and test fixtures.
+The use cases: eval sets ([08](08-evaluating-prompts.md#sourcing-samples)), training data for a small local model (distilling a big model into a cheap one), fine-tuning documents when you can't collect enough real successes ([04](04-controlling-output.md#when-prompting-isnt-enough-fine-tuning)), and test fixtures.
 
 **The core problem is diversity.** Even at high temperature, models produce repetitive, trope-heavy samples. Raising the temperature isn't enough — **inject the randomness into the prompt**.
 
@@ -154,7 +154,7 @@ suffix = """
 
 Code models trained for FIM take these through dedicated prefix/suffix/middle tokens or a `suffix` API parameter. The notebook's call is marked broken, and sending prefix and suffix as plain chat text only approximates FIM.
 
-**Over-refusal.** With a broad safety system prompt ("Always assist with care, respect, and truth… Avoid harmful, unethical, prejudiced, or negative content"), Code Llama refused *"Can you tell me how to kill a process?"*. Removing the system prompt fixed it. Generic safety wording in a domain system prompt costs you legitimate answers, so scope it to the domain and test for false refusals ([09](09-evaluating-prompts.md)).
+**Over-refusal.** With a broad safety system prompt ("Always assist with care, respect, and truth… Avoid harmful, unethical, prejudiced, or negative content"), Code Llama refused *"Can you tell me how to kill a process?"*. Removing the system prompt fixed it. Generic safety wording in a domain system prompt costs you legitimate answers, so scope it to the domain and test for false refusals ([08](08-evaluating-prompts.md)).
 
 The biggest lever for code is the same as everywhere: **context** — the relevant files, types, and tests. The second is **verification**: compile, lint, run the tests, and feed failures back (Reflexion, [03](03-core-techniques.md#reflexion)). Agentic coding is a harness problem ([03-harness](../../03-harness-engineering/README.md)).
 
@@ -167,9 +167,9 @@ The biggest lever for code is the same as everywhere: **context** — the releva
 - **Include only relevant images.** Irrelevant images distract just like irrelevant text.
 - **Introduce each image in the text**: say what it is and what it's for ("The screenshot below is the failing checkout page").
 - **Use familiar visual conventions.** Standard chart types and diagram formats work better than invented ones — the Little Red Riding Hood principle for images.
-- For long documents with images, the long-context ordering advice still holds: content first, question last ([02](02b-document-types-formatting-and-templates.md#ordering)).
+- For long documents with images, the long-context ordering advice still holds: content first, question last ([2b](02b-document-types-formatting-and-templates.md#ordering)).
 
-Multimodal CoT (rationale first, then answer) is in [03](03b-chain-of-thought-and-reasoning.md#chain-of-thought).
+Multimodal CoT (rationale first, then answer) is in [3b](03b-chain-of-thought-and-reasoning.md#chain-of-thought).
 
 Images also matter for training. Text-only pretraining is approaching "the whole public internet" as a ceiling, and images and video add a different kind of signal (spatial reasoning, physical common sense, social cues), not just more of the same.
 
@@ -180,9 +180,9 @@ The inverse job, writing prompts *for* a diffusion model, has its own convention
 - **Format first.** "Stock photo", "oil painting" and "Egyptian hieroglyphs" change everything, including the content: an oil painting of a business meeting has no computers in it, because oil paintings rarely contain them.
 - **Quality boosters leak style.** "4k" or "trending on artstation" lifts quality because those labels went with good images in training. They bring the source's habits too: their "space whale, trending on artstation" comes out looking like a spaceship.
 - **Negative prompts help, unreliably.** `--no frame, wall` removes the frame that tends to come with "oil painting", but it often fails when the two concepts are too strongly correlated in training. In Midjourney, `--no` is shorthand for a weight of `::-0.5`. Weights (`::2`, `::-1`) dial a concept up or down, and a grid search over weight pairs maps the blend. Older negative-prompt fixes for hands and extra fingers are mostly unnecessary from Midjourney v5 and SDXL on.
-- **Rewrite the user's prompt.** A `{subject} in the style of {artist}` template gave a dachshund standing *next to* a Banksy mural. Asking an LLM for the artist's medium first and rendering `{medium} of a {subject} in the style of {artist}` put the dog in the street art. This is meta-prompting ([08](08-prompt-optimization.md)) to fix garbage in, garbage out from non-expert users.
+- **Rewrite the user's prompt.** A `{subject} in the style of {artist}` template gave a dachshund standing *next to* a Banksy mural. Asking an LLM for the artist's medium first and rendering `{medium} of a {subject} in the style of {artist}` put the dog in the street art. This is meta-prompting ([09](09-prompt-optimization.md)) to fix garbage in, garbage out from non-expert users.
 - **Unbundle a style instead of naming the artist.** Have an LLM describe the style without naming the artist or the work, shorten that into prompt terms ("surrealist landscape", "melting objects"), then remix them. The result is more original, and it avoids the legal and ethical grey zone of imitating a living artist, which the authors advise caution on (and legal counsel for commercial use).
-- **Measure what the prompt actually uses.** `/describe` reverse-engineers a prompt from an image. `/shorten` shows per-token weights, which often reveal that most of a long prompt does nothing. That's the same lesson as for text prompts ([09](09-evaluating-prompts.md)).
+- **Measure what the prompt actually uses.** `/describe` reverse-engineers a prompt from an image. `/shorten` shows per-token weights, which often reveal that most of a long prompt does nothing. That's the same lesson as for text prompts ([08](08-evaluating-prompts.md)).
 - **Inpainting for consistency.** To keep a character consistent, generate two images side by side at 2:1, then inpaint one half (Midjourney's Vary Region) with a new pose. The other half anchors the features.
 
 Diffusion internals and Stable Diffusion workflows belong to the multimodal pillar.
@@ -217,7 +217,7 @@ Conversational UI also keeps a human in the loop who can catch drift before it c
 
 - **Raising temperature for diversity.** Symptom: near-duplicates and tropes persist at high temperature. Fix: inject randomness into the prompt with seeded words, features, topics and audiences.
 - **Distribution mismatch.** Symptom: a request for "2 negative, 8 positive" yields exactly that, then biases any few-shot use of the data ([10](10-adversarial-prompting.md#bias-from-the-prompt-itself)). Fix: set the seed distribution deliberately from the true one.
-- **Model bias.** Symptom: data generated by model A favors model A in your evals ([09](09-evaluating-prompts.md#sourcing-samples)). Fix: generate with a model that isn't a candidate.
+- **Model bias.** Symptom: data generated by model A favors model A in your evals ([08](08-evaluating-prompts.md#sourcing-samples)). Fix: generate with a model that isn't a candidate.
 - **Quality drift.** Symptom: duplicates and off-brief samples in a big batch. Fix: dedupe, filter with a judge, and spot-check by hand.
 - **Using an aligned model's voice for user-like text.** Symptom: every "user" sounds alike, as RLHF flattens style. Fix: consider a base model or a strong persona ([01](01-how-models-read-prompts.md#property-5--chat-models-are-completion-models-wearing-a-transcript)).
 - **Trusting generated code unrun.** Symptom: missing imports and setup. Fix: always run it, and feed failures back.
@@ -245,7 +245,7 @@ Conversational UI also keeps a human in the loop who can catch drift before it c
 3. Write the Promptagator-style prompt to generate queries for a retriever over internal runbooks where searchers ask "how do I fix X?". How many examples do you label, and how many go in each prompt?
    <details><summary>Answer</summary>Use a `Runbook #N: {passage}` then `A question an on-call engineer would ask that this runbook answers:` template, since relevance depends on search intent and you must say which. The paper's recipe: label about 20 and sample 2 to 8 per prompt at random for diversity.</details>
 4. A user asks your image tool for "a dachshund in the style of Banksy" and gets a dog next to a mural. What's the fix, and which chapter does it come from?
-   <details><summary>Answer</summary>Rewrite the prompt: ask an LLM for the artist's medium first, then render `{medium} of a {subject} in the style of {artist}`. That is meta-prompting ([08](08-prompt-optimization.md)), applied to garbage in, garbage out from non-expert users.</details>
+   <details><summary>Answer</summary>Rewrite the prompt: ask an LLM for the artist's medium first, then render `{medium} of a {subject} in the style of {artist}`. That is meta-prompting ([09](09-prompt-optimization.md)), applied to garbage in, garbage out from non-expert users.</details>
 
 ## Interview checklist
 

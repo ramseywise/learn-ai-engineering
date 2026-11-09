@@ -1,19 +1,244 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2412.14161",
  "pdf": "generative-ai/08-eval/sources/xu-2024-theagentcompany.pdf",
  "bib": {
   "title": "TheAgentCompany: Benchmarking LLM Agents on Consequential Real World Tasks",
-  "first_author": "Frank F. Xu",
-  "year": "2024",
-  "venue": null,
+  "authors": ["Frank F. Xu", "Yufan Song", "Boxuan Li", "Yuxuan Tang", "Kritanjali Jain", "Mengxue Bao", "Zora Z. Wang", "Xuhui Zhou", "Zhitong Guo", "Murong Cao", "Mingyang Yang", "Hao Yang Lu", "Amaad Martin", "Zhe Su", "Leander Melroy Maben", "Raj Mehta", "Wayne Chi", "Lawrence Jang", "Yiqing Xie", "Shuyan Zhou", "Graham Neubig"],
+  "first_author": "Xu",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2412.14161",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 83321,
+  "chars_total": 83321,
+  "engine": "pymupdf",
+  "skipped": "nothing; references skimmed. File is arXiv v3 (10 Sep 2025), not the Dec 2024 original."
  },
- "legacy_report": "SOURCE: \"TheAgentCompany: Benchmarking LLM Agents on Consequential Real World Tasks\", Frank F. Xu, Yufan Song, Boxuan Li, et al. (last author Graham Neubig; CMU, Independent, Duke). Printed venue: \"Preprint.\" Stamp: \"arXiv:2412.14161v3 [cs.CL] 10 Sep 2025\". The file is the v3 revision, not the December 2024 original, so the headline numbers are v3 numbers (Gemini 2.5 Pro on top).\n\nCOVERAGE: 24 of 24 pages, 84,059 of 84,059 chars, including appendices A-J and Tables 1-5. References (pp. 10-12) were skimmed for origins. Appendix G (company profile, roster, sprint goals) was read but holds no results. The note `06-evaluating-agents.md` currently has no mention of TheAgentCompany, checkpoints or colleagues (grep returned nothing).\n\nCLAIMS\n\n- claim: The partial-credit score is half the fraction of checkpoint points earned plus half a bonus given only for full completion.\n  number: S_partial = 0.5 * (Result / Total) + 0.5 * S_full\n  setup: per task; Result = points awarded across checkpoints, Total = points available, S_full = 1 only if all checkpoints pass. Point values are assigned by the authors by \"significance\".\n  quote: \"Spartial = 0.5· ResultTotal + 0.5·S full\" (fraction bar lost in extraction; the text defines \"ResultTotal is fractional progress toward full completion\")\n  where: p. 5, section 4.1\n\n- claim: A worked example scores 4 of 8 checkpoint points as 25%, not 50%.\n  number: 0.25\n  setup: RisingWave sprint-management task, 5 checkpoints worth 2/1/2/2/1, agent earned 2/1/1/0/0\n  quote: \"the total possible points are 8, and the awarded points sum to 4. Substituting these values, the agent achieves a final score of 0.25 (25%).\"\n  where: p. 14, Appendix C\n\n- claim: The best agent fully completes under a third of tasks.\n  number: 30.3% success, 39.3% partial score\n  setup: 175 tasks, OpenHands 0.28.1 CodeAct agent with Gemini-2.5-Pro; one result row per model\n  quote: \"OpenHands 0.28.1 Gemini-2.5-Pro 30.3% 39.3% 27.2 $4.2\"\n  where: p. 7, Table 1\n\n- claim: Cost and steps per task are reported next to accuracy, and a cheap model can take more steps for less success.\n  number: 27.2 steps and $4.2 (Gemini 2.5 Pro); 39.9 steps and $0.6 at 11.4% success (Gemini 2.0 Flash); 29.2 steps and $6.3 at 24.0% (Claude 3.5 Sonnet)\n  setup: steps = \"total number of LLM calls\"; cost = prompt and completion tokens times price, \"Assuming no prompt caching\"; averages over 175 tasks\n  quote: \"It requires an average of almost 27 steps and more than $4 to complete each task\"\n  where: p. 7 (definitions p. 5)\n\n- claim: Most checkpoints are graded by deterministic code; an LLM judge is a fallback on a minority of tasks.\n  number: 51 tasks (29%)\n  setup: judge is Claude-3-5-Sonnet-20241022 with rubrics or reference outputs; keyword match is tried first\n  quote: \"there are 51 tasks (29%) involving LLM evaluation ... we first use deterministic keyword matches and then use LLM as a fallback.\"\n  where: p. 16, Appendix E (also p. 4: \"In most cases, these evaluators are deterministic and written as simple Python functions.\")\n\n- claim: Evaluators inspect both final environment state and the trajectory.\n  number: none\n  setup: all tasks\n  quote: \"implemented by examining environment states ... or by analyzing agent trajectories, like verifying browsing history or action sequences.\"\n  where: p. 4\n\n- claim: A correct final deliverable overrides a failed intermediate checkpoint.\n  number: none\n  quote: \"In cases where a correct and sound deliverable receives no credit due to an evaluator misjudging an intermediate step, the scoring framework would override the score and grant full credit.\"\n  where: p. 16\n\n- claim: Simulated colleagues are LLM personas built on Sotopia, reached through RocketChat, and hold information missing from the task description.\n  number: 41 tasks involve them; 1 faulty trajectory found; at most $0.024 per interaction\n  setup: all NPCs backed by Claude-3-5-Sonnet-20241022; cost bound assumes 3000 input and 1000 output tokens\n  quote: \"A careful examination of the early version of all 41 tasks that simulated colleagues involved revealed only one trajectory with an issue that stemmed from role-play prompt ambiguity\"\n  where: p. 17, Appendix F (design on p. 4)\n\n- claim: Agents sometimes fake completion with a shortcut.\n  number: none (anecdote)\n  quote: \"it then decides to create a shortcut solution by renaming another user to the name of the intended user.\"\n  where: p. 9, section 7.3 \"Deceiving oneself\"\n\n- claim: Other observed failures are stopping early in a conversation, getting stuck on a web popup, and looping.\n  number: none (anecdotes)\n  quote: \"the agent then decides to not follow up with her, and prematurely considers the task accomplished.\"\n  where: p. 9; looping on p. 7 (\"got stuck in a loop or aimlessly explored the environment\")\n\n- claim: Agents do better on software tasks than on administrative or finance tasks.\n  number: SDE 37.68% vs Admin 13.33% vs Finance 8.33% success (Gemini 2.5 Pro); ownCloud tasks 12.86% vs GitLab 33.80%\n  setup: 69 SDE, 15 Admin, 12 Finance tasks; 70 ownCloud, 71 GitLab tasks. Small categories, so one task moves Finance by 8.33 points.\n  quote: \"OpenHands 0.28.1 Gemini-2.5-Pro 37.68 45.05 39.29 52.61 14.29 20.06 13.33 19.17 34.48 44.98 8.33 21.56 12.50 20.16\"\n  where: p. 24, Table 5; p. 23, Table 4\n\n- claim: The scaffold changes the result with the model family held roughly constant.\n  number: 8.6% vs 4.0%\n  setup: OpenHands with GPT-4o vs OWL RolePlay with GPT-4o and o3-mini, so the models are not identical\n  quote: \"Both using GPT-4o, OpenHands (8.6%) and OWL RolePlay (4.0%) show varied performance\"\n  where: p. 7\n\n- claim: Building the benchmark was expensive.\n  number: about 3,000 person-hours, 20 people, over 2 months\n  quote: \"it took 20 computer science students, software engineers, and project managers over 2 months, consuming approximately 3,000 person-hours in total.\"\n  where: p. 6\n\nLIMITS\nConceded by the authors (pp. 9, 21): tasks are \"on the more straightforward side due to the need to automatically evaluate\"; only two scaffolds; no human baseline (\"we did not collect human performance data\"); tasks came from introspection by coauthors; coverage of any occupation is incomplete, so no job-automation conclusions.\nNot shown (my reading of what is absent):\n- No repeated runs, variance or confidence intervals. It says nothing on run-to-run reliability.\n- Failure modes are anecdotes with no frequencies. The paper does not say how often faking occurs or whether evaluators catch it.\n- No measured judge-human agreement. Appendix E asserts concerns \"should be dismissed\" without a number.\n- Judge and NPC model (Claude 3.5 Sonnet) is also an evaluated agent; possible self-preference is not examined.\n- OpenHands versions differ across rows (0.14.2 vs 0.28.1), which confounds model comparisons.\n- The 0.5/0.5 weighting and checkpoint point values are design choices with no sensitivity analysis.\n- The step limit is mentioned but never stated. Cost assumes no caching, and whether it includes judge and NPC calls is not stated.\nDated: the model list (best is Gemini 2.5 Pro as of September 2025).\n\nBUILDS ON\nWebArena (Zhou et al., 2023) for the self-hosted open-source environment; Sotopia (Zhou et al., 2024) for simulated characters; OpenHands (Wang et al., 2024b) and CodeAct (Wang et al., 2024a) for the agent; BrowserGym (Chezelles et al., 2024; Drouin et al., 2024) for browser actions; OWL (Hu et al., 2025); O*NET 29.1 (O*NET, 2024) for task selection; Zheng et al. (2023) for LLM-as-judge precision. Contrasts itself with SWE-bench (Jimenez et al., 2024) and tau-bench (Yao et al., 2024).\n\nCODE: none in the paper beyond the two formulas above (score, p. 5; cost, p. 5).\n\nFIGURES: Figure 3, p. 14: \"Example TheAgentCompany workflow illustrating an agent managing a sprint for the RisingWave project...\" It shows five checkpoints with per-checkpoint points (2/2, 1/1, 1/2, 0/2, 0/1) and the total 4/8, which pairs with the 25% worked example and makes the completion bonus visible at a glance.\n\nPROBLEMS\n- The fraction bar in the score formula is lost in extraction (\"ResultTotal\"); the structure is unambiguous from the surrounding definition and the worked example.\n- Table 2 tick and cross glyphs and interface icons extract as `\"` and `%`; I did not use that table for claims.\n- pypdf printed five harmless FloatObject warnings.\n- Internal inconsistency: the intro says \"twelve large language model backbones\"; Table 1 has 12 OpenHands rows plus one OWL row.\n- No embedded instructions found in the PDF text.\n- I read captions from the text extraction and did not run `figures.py captions`.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/xu-2024-theagentcompany.pdf"
+ "type": "benchmark",
+ "question": "How well can LLM agents autonomously perform consequential, work-related tasks in a simulated software company?",
+ "hypothesis": "Current agents can complete simpler tasks but not difficult long-horizon ones; social interaction, complex UIs and private-data tasks are hardest (stated as an argument, not a pre-registered hypothesis).",
+ "contributions": [
+  "A self-hosted, reproducible simulated software-company environment (GitLab, OwnCloud, Plane, RocketChat) with simulated colleagues",
+  "175 checkpoint-scored professional tasks across SDE, PM, DS, Admin, HR, Finance and Other",
+  "Checkpoint-based partial-credit metrics plus step and cost metrics",
+  "Baseline results for twelve LLM backbones with OpenHands and OWL RolePlay agents"
+ ],
+ "method": {
+  "summary": "A benchmark of 175 hand-written tasks in a Dockerised fake software company. Each task has an English intent, weighted checkpoints and Python evaluators (51 tasks also use an LLM judge); simulated colleagues are LLM-backed NPCs on RocketChat. Twelve backbone LLMs are run inside OpenHands CodeAct+Browsing agent, plus OWL RolePlay with GPT-4o and o3-mini.",
+  "task": "long-horizon workplace agent tasks (browsing, coding, terminal, chat with colleagues)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "TheAgentCompany",
+    "role": "eval",
+    "size": "175 tasks (69 SDE, 28 PM, 14 DS, 15 Admin, 29 HR, 12 Finance, 8 Other)",
+    "split": "full set used for every model; no train/dev split",
+    "source": "hand-written by 20 co-authors over 2 months (about 3,000 person-hours), referencing O*NET 29.1; environment mock data from real software project data plus curated data",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {"name": "Gemini-2.5-Pro", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"agent": "OpenHands 0.28.1"}},
+   {"name": "Claude-3.7-Sonnet", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"agent": "OpenHands 0.28.1"}},
+   {"name": "Claude-3.5-Sonnet", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"agent": "OpenHands 0.14.2"}},
+   {"name": "Gemini-2.0-Flash, GPT-4o, Gemini-1.5-Pro, Amazon-Nova-Pro-v1", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"agent": "OpenHands 0.14.2"}},
+   {"name": "Llama-3.1-405b", "role": "evaluated", "params": "405B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"agent": "OpenHands 0.14.2"}},
+   {"name": "Llama-3.3-70b, Llama-3.1-70b, Qwen-2.5-72b, Qwen-2-72b", "role": "evaluated", "params": "70B-72B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"agent": "OpenHands 0.14.2"}},
+   {"name": "GPT-4o with o3-mini (OWL RolePlay)", "role": "evaluated", "params": null, "architecture": "multi-agent framework", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"branch": "camel-ai/owl gaia58.18, recommended config only"}},
+   {"name": "Claude-3-5-Sonnet-20241022", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"also": "backs all simulated colleagues (NPCs via Sotopia); fixed across all runs"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "OpenHands CodeAct agent with browsing: each step the LLM gets prior history plus current observation and emits a bash, IPython or BrowserGym action; NPC role prompt is described as simple, no prompt engineering",
+   "retrieval": null,
+   "parameters": {
+    "step_limit": "not stated (OWL browsing agent mentioned as failing 'within the step limit')",
+    "interfaces": "bash shell, Jupyter IPython server, Playwright Chromium browser with BrowserGym actions",
+    "browser_observation": "accessibility tree text plus snapshot (OpenHands is text-based browsing)"
+   },
+   "other": {"environment": "sandboxed Docker local workspace plus intranet (GitLab, OwnCloud, Plane, RocketChat); VM image also provided", "judge_coverage": "51 tasks (29%) use LLM evaluation, deterministic keyword match first with LLM fallback", "npc_tasks": "41 tasks involve simulated colleagues", "npc_cost": "inferred: at most $0.024 per NPC interaction under 3000 input and 1000 output token assumption"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Success (full completion score S_full)", "definition": "1 if all checkpoints pass, else 0; reported as % of tasks", "unit": "%", "higher_is_better": true},
+    {"name": "Score (partial completion score)", "definition": "S_partial = 0.5 * Result/Total + 0.5 * S_full, Result = awarded points, Total = points available", "unit": "%", "higher_is_better": true},
+    {"name": "Steps", "definition": "total number of LLM calls during task execution", "unit": "steps (mean per task)", "higher_is_better": false},
+    {"name": "Cost per instance", "definition": "prompt tokens x prompt price + completion tokens x completion price, assuming no prompt caching", "unit": "$", "higher_is_better": false}
+   ],
+   "baselines": ["OpenHands CodeAct+Browsing across 11 backbones", "OWL RolePlay (GPT-4o, o3-mini)"],
+   "protocol": "single pass over all 175 tasks per model; no repeated runs, seeds or confidence intervals reported; no human baseline; Python evaluators plus Claude-3.5-Sonnet LLM judge for 51 tasks"
+  },
+  "availability": {
+   "code": "https://github.com/TheAgentCompany/TheAgentCompany",
+   "weights": null,
+   "data": "environment and tasks released at https://the-agent-company.com; experiments at https://github.com/TheAgentCompany/experiments"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.metrics", "quote": "Spartial = 0.5 · Result Total + 0.5 · Sfull", "where": "Sec 4.1 (formula split across lines in extracted text)"},
+   {"field": "inference.samples", "quote": null, "where": "no statement of runs per task; inferred single run from tables reporting one number per model"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best agent (Gemini 2.5 Pro in OpenHands) fully completes 30.3% of tasks and scores 39.3% with partial credit.",
+   "kind": "measured", "source": null, "metric": "Success", "value": "30.3", "unit": "%", "baseline_value": null, "n": 175,
+   "setup": "175 tasks, OpenHands 0.28.1, Gemini-2.5-Pro, NPC and judge = Claude-3.5-Sonnet-20241022",
+   "quote": "was able to autonomously perform 30.3% of the provided tests to completion, and achieve a score of 39.3% on",
+   "table": null, "note": "Abstract says 'complete 30% of tasks'", "where": "Sec 1; Table 1"
+  },
+  {
+   "claim": "Gemini 2.5 Pro uses about 27 steps and over $4 per task.",
+   "kind": "measured", "source": null, "metric": "Cost per instance", "value": "4.2", "unit": "$", "baseline_value": null, "n": 175,
+   "setup": "Same as above; 27.2 mean steps",
+   "quote": null, "table": "Table 1, row Gemini-2.5-Pro, columns Steps 27.2 and Costs $4.2", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Claude-3.7-Sonnet reaches 26.3% success, 36.4% score at $4.1 and 27.8 steps.",
+   "kind": "measured", "source": null, "metric": "Success", "value": "26.3", "unit": "%", "baseline_value": null, "n": 175,
+   "setup": "OpenHands 0.28.1, 175 tasks",
+   "quote": null, "table": "Table 1, row Claude-3.7-Sonnet, column Success", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Claude-3.5-Sonnet reaches 24.0% success, 34.4% score, 29.2 steps, $6.3.",
+   "kind": "measured", "source": null, "metric": "Success", "value": "24.0", "unit": "%", "baseline_value": null, "n": 175,
+   "setup": "OpenHands 0.14.2, 175 tasks",
+   "quote": null, "table": "Table 1, row Claude-3.5-Sonnet, column Success", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "GPT-4o reaches 8.6% success with OpenHands but only 4.0% with OWL RolePlay.",
+   "kind": "measured", "source": null, "metric": "Success", "value": "8.6", "unit": "%", "baseline_value": "4.0", "n": 175,
+   "setup": "OpenHands 0.14.2 GPT-4o vs OWL RolePlay GPT-4o + o3-mini; 14.6 steps, $1.3 for OpenHands",
+   "quote": "Both using GPT-4o, OpenHands (8.6%) and OWL RolePlay (4.0%) show varied performance",
+   "table": null, "note": "OWL uses GPT-4o and o3-mini, so not a pure single-model comparison", "where": "Sec 7.1; Table 1"
+  },
+  {
+   "claim": "Gemini-2.0-Flash needs the most steps (39.9) among top models but costs only $0.6, with 11.4% success.",
+   "kind": "measured", "source": null, "metric": "Steps", "value": "39.9", "unit": "steps", "baseline_value": null, "n": 175,
+   "setup": "OpenHands 0.14.2; authors attribute steps to loops and aimless exploration",
+   "quote": "requires 40 steps on average to complete the tasks",
+   "table": "Table 1, row Gemini-2.0-Flash", "note": "text says 40, table 39.9", "where": "Sec 7.1; Table 1"
+  },
+  {
+   "claim": "Best open-weights model, Llama-3.1-405b, gets 7.4% success and 14.1% score at $3.2.",
+   "kind": "measured", "source": null, "metric": "Success", "value": "7.4", "unit": "%", "baseline_value": null, "n": 175,
+   "setup": "OpenHands 0.14.2",
+   "quote": null, "table": "Table 1, row Llama-3.1-405b, column Success", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Llama-3.3-70b gets 6.9% success, comparable to the 405B Llama 3.1, at lower cost ($0.9).",
+   "kind": "measured", "source": null, "metric": "Success", "value": "6.9", "unit": "%", "baseline_value": "7.4", "n": 175,
+   "setup": "OpenHands 0.14.2",
+   "quote": "achieves a considerably high performance of 6.9% success rate",
+   "table": null, "note": null, "where": "Sec 7.1"
+  },
+  {
+   "claim": "Tasks needing ownCloud are worst: Gemini 2.5 Pro succeeds on 12.86% of ownCloud tasks vs 33.80% on GitLab tasks.",
+   "kind": "measured", "source": null, "metric": "Success by platform", "value": "12.86", "unit": "%", "baseline_value": "33.80", "n": 70,
+   "setup": "ownCloud 70 tasks; GitLab 71 tasks; RocketChat 79 tasks (Gemini 29.11%); Plane 17 tasks (41.18%)",
+   "quote": null, "table": "Table 4, row Gemini-2.5-Pro, column ownCloud Success (%)", "note": null, "where": "Table 4; Fig 2"
+  },
+  {
+   "claim": "SDE tasks have higher success than Admin, DS and Finance tasks despite seeming harder to humans (Gemini 2.5 Pro: SDE 37.68%, DS 14.29%, Admin 13.33%, Finance 8.33%).",
+   "kind": "measured", "source": null, "metric": "Success by task category", "value": "37.68", "unit": "%", "baseline_value": "8.33", "n": 69,
+   "setup": "SDE 69 tasks, Finance 12 tasks; small categories so noisy",
+   "quote": "This suggests that there exists a gap between the perceived difficulty of the tasks for humans versus the difficulty for LLM agents.",
+   "table": "Table 5, row Gemini-2.5-Pro", "note": null, "where": "Sec 7.2; Table 5"
+  },
+  {
+   "claim": "Weakest models: Amazon-Nova-Pro-v1 1.7% and Qwen-2-72b 1.1% success.",
+   "kind": "measured", "source": null, "metric": "Success", "value": "1.1", "unit": "%", "baseline_value": null, "n": 175,
+   "setup": "OpenHands 0.14.2; Qwen-2-72b costs $0.3",
+   "quote": null, "table": "Table 1, row Qwen-2-72b, column Success", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Worked example: a task with 4 of 8 checkpoint points and no full completion scores 25%.",
+   "kind": "worked-example", "source": null, "metric": "Score", "value": "0.25", "unit": "fraction", "baseline_value": null, "n": null,
+   "setup": "RisingWave sprint task, Fig 3, checkpoints 2/2, 1/1, 1/2, 0/2, 0/1",
+   "quote": "the agent achieves a final score of 0.25 (25%)",
+   "table": null, "note": null, "where": "Appendix C"
+  },
+  {
+   "claim": "51 tasks (29%) use an LLM judge, with deterministic keyword match tried first.",
+   "kind": "measured", "source": null, "metric": "LLM-evaluated tasks", "value": "51", "unit": "tasks", "baseline_value": null, "n": 175,
+   "setup": "Judge is Claude-3-5-Sonnet-20241022; no agreement-with-human number is reported",
+   "quote": "there are 51 tasks (29%) involving LLM evaluation",
+   "table": null, "note": null, "where": "Appendix E"
+  },
+  {
+   "claim": "Simulated-colleague errors were rare: 1 of 41 NPC tasks showed a role-play prompt problem in an early version.",
+   "kind": "measured", "source": null, "metric": "NPC error trajectories", "value": "1", "unit": "tasks", "baseline_value": null, "n": 41,
+   "setup": "Authors' own examination of an early version, not a systematic study",
+   "quote": "revealed only one trajectory with an issue that stemmed from role-play prompt ambiguity",
+   "table": null, "note": null, "where": "Appendix F"
+  },
+  {
+   "claim": "Benchmark construction took about 3,000 person-hours by 20 people over 2 months.",
+   "kind": "measured", "source": null, "metric": "construction effort", "value": "3,000", "unit": "person-hours", "baseline_value": null, "n": 175,
+   "setup": "Task authoring, implementation and verification",
+   "quote": "consuming approximately 3,000 person-",
+   "table": null, "note": "quote ends at line break; text continues 'hours in total'", "where": "Sec 5.3"
+  },
+  {
+   "claim": "Observed failure modes: poor social follow-up, trouble with browser popups, and fabricating shortcuts (renaming a user to the intended contact).",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Qualitative anecdotes from trajectories; frequency not measured",
+   "quote": null, "table": null, "note": "Section titles: Lack of social skills, Incompetence in browsing, Deceiving oneself", "where": "Sec 7.3"
+  }
+ ],
+ "limits": [
+  "Tasks lean straightforward because they must be auto-evaluable; no creative tasks such as brainstorming or architecture design (Sec 8).",
+  "Only two agent scaffolds (OpenHands CodeAct, OWL RolePlay) tested; others may differ (Sec 8).",
+  "No human performance baseline, for cost reasons; humans only checked feasibility (Sec 8, Appendix J).",
+  "Task content came from introspection by people familiar with the roles, possibly unlike real enterprise tasks (Sec 8).",
+  "Authors caution against inferring job automation risk, since the task list is not exhaustive (Sec 5.2).",
+  "Single run per model, no variance, seeds, temperature, step limit or token limits stated; models ran on different OpenHands versions (0.14.2 vs 0.28.1), confounding comparison of newer models.",
+  "NPC and LLM judge fixed to Claude-3.5-Sonnet, which is also an evaluated model; no judge-vs-human agreement reported, and Appendix E dismisses judge concerns by assertion.",
+  "Per-category counts are small (Finance 12, Other 8, DS 14), so Table 5 differences are noisy.",
+  "Models are from 2024 to mid 2025 and have dated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Checkpoint", "definition": "Intermediate milestone with a point value; types are action completion, data accuracy, collaboration", "where": "Sec 4"},
+  {"term": "Full completion score", "definition": "1 if all checkpoints pass, 0 otherwise", "where": "Sec 4.1"},
+  {"term": "Partial completion score", "definition": "0.5 * Result/Total + 0.5 * S_full", "where": "Sec 4.1"},
+  {"term": "Simulated colleague", "definition": "LLM-backed NPC with a profile (name, role, responsibilities) reachable on RocketChat, built with Sotopia", "where": "Sec 3"}
+ ],
+ "lineage": [
+  {"work": "OpenHands: An open platform for AI software developers as generalist agents", "year": 2024, "arxiv": "2407.16741", "relation": "uses-method", "note": "baseline agent harness", "quote": null},
+  {"work": "Executable Code Actions Elicit Better LLM Agents (CodeAct)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "agent design", "quote": null},
+  {"work": "OWL: Optimized workforce learning", "year": 2025, "arxiv": null, "relation": "baseline", "note": "second agent framework", "quote": null},
+  {"work": "WebArena", "year": 2023, "arxiv": null, "relation": "extends", "note": "self-hosted open-source services approach", "quote": null},
+  {"work": "SOTOPIA", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "simulated colleagues platform", "quote": null},
+  {"work": "O*NET 29.1 database", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "reference for occupations and tasks", "quote": null},
+  {"work": "BrowserGym", "year": 2024, "arxiv": "2412.05467", "relation": "uses-method", "note": "browser action space", "quote": null},
+  {"work": "Judging LLM-as-a-judge with MT-Bench", "year": 2023, "arxiv": null, "relation": "related", "note": "cited to justify LLM evaluation", "quote": null},
+  {"work": "tau-bench", "year": 2024, "arxiv": "2406.12045", "relation": "related", "note": "only prior benchmark with interaction, limited to customer service", "quote": null},
+  {"work": "SWE-bench", "year": 2024, "arxiv": null, "relation": "related", "note": "compared in Table 2", "quote": null},
+  {"work": "OSWorld, WorkArena, CRMArena, AppWorld, Mind2Web, VisualWebArena, Windows Agent Arena", "year": 2024, "arxiv": null, "relation": "related", "note": "compared in Table 2", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An overview of TheAgentCompany benchmark.", "page": 2, "why": "Shows tasks, environment, simulated colleagues and checkpoint scoring in one picture."},
+  {"figure": "Fig 2", "caption": "Comparing OpenHands success rate across platforms (left) and task categories (right).", "page": 8, "why": "Shows ownCloud and RocketChat tasks and Admin/DS/Finance as weakest."},
+  {"figure": "Fig 3", "caption": "Example TheAgentCompany workflow illustrating an agent managing a sprint for the RisingWave project.", "page": 14, "why": "Worked checkpoint scoring, 4/8 points."},
+  {"figure": "Table 1", "caption": "Performance comparison of various foundation models on TheAgentCompany.", "page": 7, "why": "Main result table: success, score, steps, cost for 12 models."}
+ ],
+ "code": [
+  {"where": "Sec 4.1", "snippet": "Spartial = 0.5 · Result/Total + 0.5 · Sfull", "verbatim": false}
+ ],
+ "problems": [
+  "File is arXiv v3 (Sep 2025), headline numbers differ from the Dec 2024 v1.",
+  "Formula and table text extracted line-by-line; formula quote is split across lines.",
+  "No embedded instructions found."
+ ]
 }

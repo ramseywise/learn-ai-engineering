@@ -1,4 +1,4 @@
-# Python 03 Language for engineers: study deck (flashcards). Covers notes/01-09.
+# Python 03 Language for engineers: study deck (flashcards). Covers notes/01-09 (08 objects and MRO, 09 memory).
 # Build:  make slides PILLAR=programming/python/03-language-for-engineers [PREVIEW=1]
 # Spec:   .claude/skills/slides/references/deck-spec.md
 
@@ -51,13 +51,13 @@ parts:
         kicker: Equality and identity
         emphasis: none
         left:
-          title: "`==`"
+          title: Equality (`==`)
           bullets:
             - Compares values
             - "Calls `__eq__`"
           tag: Equal is not identical
         right:
-          title: "`is`"
+          title: Identity (`is`)
           bullets:
             - Compares identity
             - "Use only for `None`, `True`, `False` and sentinels"
@@ -362,11 +362,11 @@ parts:
         source: notes/07-concurrency.md
         notes: Never retry 4xx validation errors. LLM SDKs already retry for you, so check before you wrap them.
 
-  - title: What objects really do
-    summary: The method resolution order · super() · Leaks · tracemalloc
+  - title: What classes really do
+    summary: Shared state · Inheritance or composition · The MRO · Descriptors · Class creation
     notes: >-
-      Classes and memory stop being a mystery once you can work them out. Each of these has a rule you can check with a
-      print statement or a snapshot, and each tool has a cost.
+      Classes stop being a mystery once you can work them out. Each of these has a rule you can check with a
+      print statement, and each tool has a cost.
     slides:
       - layout: statement
         title: Why does class behaviour seem unpredictable?
@@ -381,6 +381,61 @@ parts:
           descriptor, which is why a method can be shadowed and a property can't. For class creation, pick the first tool that
           works: a class decorator, then __init_subclass__, then a metaclass. Inheritance also couples you to the parent's
           internals, so composition is the default for reusing behaviour.
+
+      - layout: code
+        title: Why can tenant B read tenant A's message?
+        kicker: Class attributes
+        lang: python
+        code: |-
+          class Conversation:
+              messages = []          # shared
+
+              def add(self, text):
+                  self.messages.append(text)
+
+          a, b = Conversation(), Conversation()
+          a.add("hello from tenant A")
+          print(b.messages)      # ['hello from tenant A']
+        bullets:
+          - "Reading `obj.x` searches the instance, then the class"
+          - "Assigning through an instance always writes to the instance"
+          - "Mutating a shared class attribute writes to every instance"
+        takeaway: Per-instance state belongs in `__init__`, never in a mutable class attribute. In a service, the shared list is a data leak.
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          `fast.describe` is a bound method, a small object that remembers `fast` and passes it as self. Set per-instance state in
+          __init__, or use a dataclass with field(default_factory=list).
+
+      - layout: compare
+        title: Why count writes with composition instead of a subclass?
+        kicker: Inheritance couples you to internals
+        recall: A subclass overrides `put` and `put_many` to count writes. Why does `put_many` of two items count 4, and what avoids it?
+        emphasis: right
+        left:
+          title: Subclass
+          code: |-
+            class CountingCache(ResponseCache):
+                def put(self, p, r):
+                    self.writes += 1
+                    super().put(p, r)
+          tag: "`put_many` of 2 items counts **4**"
+        right:
+          title: Wrap
+          code: |-
+            class CountingCache:
+                def __init__(self, inner):
+                    self._inner = inner
+                def put(self, p, r):
+                    self.writes += 1
+                    self._inner.put(p, r)
+          tag: "The same call counts **2**"
+        takeaway: A subclass depends on which parent methods call which others, and the parent never promised that. Compose by default, and inherit when the parent was designed for it.
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          The subclass counts the items in put_many, then the parent's put_many calls the overridden put. If the parent later writes
+          straight to its dict, the behaviour changes with no signature to warn you. Composition costs you forwarding every method
+          you expose, and isinstance against the parent is false. Use a Protocol for the type relationship alone. Inheritance is still
+          right for frameworks, exception hierarchies and a parent built to be extended.
 
       - layout: flow
         title: What does super() call in a diamond?
@@ -403,6 +458,124 @@ parts:
           with no error. That is Hettinger's list: the method must exist, the signatures must match, and every occurrence must
           call super(). For a small stack of wrappers, composition is often clearer, because the nesting shows the order where
           the object is assembled.
+
+      - layout: steps
+        title: In what order does obj.x look for x?
+        kicker: Attribute lookup
+        axis: first checked → last checked
+        steps:
+          - {title: Data descriptor on the class, text: "Found in the MRO with `__set__` or `__delete__`? Call its `__get__`. A `property` is one."}
+          - {title: Instance dict, text: "`x` in `obj.__dict__`? Return it."}
+          - {title: Non-data descriptor, text: "A function or `cached_property` found in step 1: call its `__get__`. Functions are how methods bind."}
+          - {title: Plain class attribute, text: "Found in step 1 and not a descriptor: return it."}
+          - {title: AttributeError, text: "Then `__getattr__` is tried, if the class defines it.", accent: "D4621A", n: "!"}
+        takeaway: A data descriptor beats the instance dict and a non-data one loses to it. So a method can be shadowed and a property can't.
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          `functools.cached_property` is a non-data descriptor. After computing, it writes the value into the instance dict, and step 2
+          finds it next time. classmethod, staticmethod and __slots__ entries are descriptors too. `__getattr__` runs only after normal
+          lookup fails, while `__getattribute__` runs on every access and recurses forever if it reads self.x directly.
+
+      - layout: code
+        title: How do you validate the same field on many classes?
+        kicker: Writing a descriptor
+        lang: python
+        code: |-
+          class Bounded:
+              def __init__(self, low, high):
+                  self.low, self.high = low, high
+              def __set_name__(self, owner, name):
+                  self.private = f"_{name}"
+              def __get__(self, obj, objtype=None):
+                  if obj is None:
+                      return self
+                  return getattr(obj, self.private)
+              def __set__(self, obj, value):
+                  if not self.low <= value <= self.high:
+                      raise ValueError(value)
+                  setattr(obj, self.private, value)
+        bullets:
+          - "`temperature = Bounded(0.0, 2.0)` on the class serves every instance"
+          - "Store the value on `obj`, never on `self`, or all instances share it"
+          - "**Cost:** a read takes **59.9 ns**, against 21.4 ns for a property and 12.1 ns for a plain attribute"
+        takeaway: A descriptor reuses attribute logic across fields. Store the value on the instance, and measure before you worry about its cost.
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          The three timings include the lambda call that timeit makes, so read the gaps: about 9 ns for a property and about 48 ns for
+          the descriptor, roughly five times the plain read. That matters over millions of records and not next to an LLM call. A larger cost
+          is that `cfg.top_p = 1.5` looks like a store and can raise. Check whether Pydantic or a dataclass already validates at the boundary.
+
+      - layout: table
+        title: Decorator, __init_subclass__ or metaclass?
+        kicker: How a class gets built
+        recall: Which class-customisation tool should you try first, and what does a metaclass cost?
+        header: [Tool, Runs, Good for]
+        widths: [2.6, 3.2, 4]
+        rows:
+          - ["Class decorator", "After the class is built, on that one class", "`@dataclass`, generated methods"]
+          - ["`__init_subclass__`", "When a subclass is created, for all future ones", "Plugin registries, a rule every subclass must follow"]
+          - ["Metaclass", "Throughout class creation, and it stays", "A class's own behaviour, as in `Enum` and `ABCMeta`"]
+        highlight: [1]
+        takeaway: "Pick the first tool that works. A needless metaclass invites `TypeError: metaclass conflict` when someone combines your class with another library's."
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          PEP 487 added __init_subclass__ and __set_name__ because most metaclass uses fell into a few categories and metaclasses combine badly.
+          A provider registry needs only __init_subclass__. A class's metaclass must subclass all its bases' metaclasses, and Python won't merge
+          two unrelated ones, so combining a custom metaclass with ABCMeta fails until you write a combined one. Libraries earn a metaclass: Enum
+          needs iteration on the class, ABCMeta tracks abstract methods.
+
+  - title: What memory really costs
+    summary: Object sizes · Refcounts and cycles · Leaks · slots · Bytecode · Free-threading
+    notes: >-
+      Everything here was measured on CPython 3.14.7 on macOS arm64. This area changes between releases, so recheck the numbers on yours.
+    slides:
+      - layout: statement
+        title: Why does a service run out of memory before it runs out of data?
+        kicker: The problem
+        statement: "A retrieval service holding embeddings as Python lists, or a worker that \"leaks\" with nothing leaked in the C sense, are both stories about what an object costs and what still holds it."
+        attribution: A working model needs measurements, not folklore.
+        takeaway: To diagnose memory in Python you need three things, what an object costs, what frees it and what still holds on to it.
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          The garbage collector changed twice within 3.14 alone, so every number and internal detail here is true of that version.
+          Recheck on yours.
+
+      - layout: table
+        title: What does one small record cost in bytes?
+        kicker: Measured with tracemalloc, 200,000 records
+        recall: Which record shape costs the most and the least in bytes, and why can't `sys.getsizeof` compare them?
+        header: [Shape, Bytes each, getsizeof says]
+        widths: [3.4, 2, 2.4]
+        rows:
+          - ["`dict`", "248.1", "184"]
+          - ["`NamedTuple`", "136.1", "64"]
+          - ["`tuple`", "128.1", "64"]
+          - ["plain class, `dataclass`", "152.1", "48"]
+          - ["`__slots__` class, `dataclass(slots=True)`", "112.1", "48"]
+        highlight: [4]
+        takeaway: A dict is the heaviest record, and `sys.getsizeof` is shallow, so it can't compare shapes. Count with `tracemalloc`.
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          The figure includes the list slot and the int and float inside each record. Reading `vars(obj)` on every record builds the real
+          __dict__ and costs 216.1 bytes for a plain class. For numbers, boxing dominates: one 1536-dimension embedding takes 49,416 bytes
+          as list[float], 13,176 as array('d') and 6,628 as array('f'). A million list embeddings come to about 44 GiB. Use array or NumPy.
+
+      - layout: flow
+        title: What frees an object, and what frees a cycle?
+        kicker: Reference counting and the cycle collector
+        steps:
+          - {label: Last reference dropped, sub: "the refcount hits zero"}
+          - {label: Freed on the spot, sub: "most objects, with no collector involved"}
+          - {label: A cycle, sub: "each object keeps the other above zero", accent: "D4621A"}
+          - {label: Cycle collector, sub: "3 generations, young threshold 2000", accent: "0F7490"}
+        caption: Only container objects can form cycles, so only they are tracked.
+        takeaway: Refcounting frees most objects at once and a separate collector frees cycles. Use `with` for anything that must be released on time.
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          Freeing by refcount is an implementation detail the data model warns against relying on. Which collector you have depends on the
+          patch version: 3.14.0 to 3.14.4 shipped an incremental one and 3.14.5 reverted to the generational collector of 3.13. A full collection
+          touches every tracked object, so it grew from about 5 ms to about 260 ms as the live heap grew from 100,000 to 4 million records,
+          and gc.freeze() took a full collect to 0.0 ms. The free-threaded build has its own non-generational collector.
 
       - layout: bullets
         title: What is a memory leak in Python, and how do you find it?
@@ -432,6 +605,83 @@ parts:
           sys.getsizeof reported 48 for both because it is shallow. A full collection grew from about 5 ms at 100,000 records to
           about 260 ms at 4 million. Free-threading in 3.14 is supported but optional, and it does not make your code thread-safe.
 
+      - layout: compare
+        title: Why does lru_cache on a method keep objects alive?
+        kicker: A leak you can write by accident
+        left:
+          title: lru_cache on a method
+          code: |-
+            class WithLru:
+                @functools.lru_cache(maxsize=128)
+                def embed(self, text): ...
+          tag: Still alive after `del`
+        right:
+          title: cached_property
+          code: |-
+            class WithCachedProperty:
+                @functools.cached_property
+                def corpus(self): ...
+          tag: Freed with the instance
+        emphasis: right
+        takeaway: "`lru_cache` stores `self` in a class-level key, so instances live until evicted. `cached_property` stores on the instance and dies with it."
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          The other usual suspects are a module-level dict used as a cache, a registered callback, conversation history on a long-lived session,
+          a stored exception whose traceback holds frames and their locals, and metrics with unbounded label combinations. cached_property takes
+          no arguments and can't be bounded.
+
+      - layout: cards
+        title: What does __slots__ buy, and what does it cost?
+        kicker: Trading flexibility for size
+        cards:
+          - {title: Saves, body: "About a quarter: **112.1** against **152.1** bytes per record, not the factor of several often quoted."}
+          - {title: Loses, accent: "D4621A", body: "New attributes, weak references unless declared, and `cached_property`."}
+          - {title: Needs, accent: "0F7490", body: "Every class in the chain to declare it. One base without `__slots__` brings the `__dict__` back."}
+        takeaway: Use `@dataclass(slots=True)` only for many instances of one small class, after measuring. Otherwise the plain class is the better default.
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          Each slot is a member descriptor on the class, the data-descriptor rule from note 08. Two slotted bases fail with an instance lay-out conflict.
+          For 500,000 records with 2 KB of text each, 40 bytes saved per record is about 2% of the total, because the size is in the strings.
+
+      - layout: code
+        title: Is self.total += n one operation?
+        kicker: Bytecode
+        lang: text
+        code: |-
+          LOAD_FAST_BORROW   0 (self)
+          COPY               1
+          LOAD_ATTR          0 (total)
+          LOAD_FAST_BORROW   1 (n)
+          BINARY_OP         13 (+=)
+          SWAP               2
+          STORE_ATTR         0 (total)
+        bullets:
+          - "A load, an add and a separate store: a thread switch can land between them"
+          - "Since 3.11 the interpreter rewrites instructions for the types it sees, so warm up before you benchmark"
+          - "Bytecode has no guarantees between versions, so read it to learn"
+        takeaway: "`dis` shows that `x += 1` is several instructions, so it isn't atomic. Don't build tools on specific opcodes."
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          That is the race behind a lost update. A single call into C may hold the GIL throughout on the default build, and that isn't a promise
+          under free-threading. Use a lock or a queue when you need the guarantee. After warm-up the loop's BINARY_OP shows as BINARY_OP_ADD_FLOAT.
+
+      - layout: table
+        title: What does the free-threaded build change?
+        kicker: Python 3.14, CPU-bound work, one short run
+        recall: Does removing the GIL make code thread-safe, and what did 4 CPU-bound threads gain?
+        header: [Build, 1 thread, 4 threads, Speedup, "`None` size"]
+        widths: [2.6, 1.6, 1.6, 1.6, 1.8]
+        rows:
+          - [Default (GIL on), "0.28 s", "1.02 s", "1.1x", "16 bytes"]
+          - ["`python3.14t` (GIL off)", "0.23 s", "0.36 s", "2.5x", "32 bytes"]
+        highlight: [1]
+        takeaway: CPU-bound threads scale only with the GIL off, and removing it doesn't make code thread-safe. Check `sys._is_gil_enabled()`, not the binary's name.
+        source: notes/09-memory-and-the-runtime.md
+        notes: >-
+          One short run shows the shape, not a benchmark. Free-threading is officially supported but optional, and one C extension without declared
+          support turns the GIL back on. Concurrency in note 07 still gives the right defaults. Free-threading adds a third option for CPU work with
+          shared memory, if your dependencies support it. Use threading.Lock for your own correctness.
+
   - title: Rules to keep
     agenda: false
     divider: false
@@ -443,7 +693,8 @@ parts:
           - {title: Errors, body: "Narrow `except`, small `try`, `with` for cleanup, logging over print."}
           - {title: Types, body: "Hints on every signature. Dataclasses inside, a validator at the edge."}
           - {title: Concurrency, body: "Pick by what you wait on. Never block the loop. Always a limit and a timeout."}
+          - {title: Objects and memory, body: "Compose before you inherit. `__init_subclass__` before a metaclass. Diff `tracemalloc` snapshots, and don't trust RSS alone."}
           - {title: Next, accent: "D4621A", body: "Pandas in `data-analytics`, TypeScript for the same type and async ideas, and `bash check.sh exercises 03`."}
-        takeaway: Treat names as labels, fail narrowly, validate at edges, and choose concurrency by what you are waiting on.
+        takeaway: Treat names as labels, fail narrowly, validate at edges, choose concurrency by what you wait on, and compose before you inherit.
         source: notes/01-data-model-and-idioms.md
-        notes: These condense notes 01 to 07. Data work starts with 01-python-for-data-analysis in the data-analytics pillar, and the practice run includes the uv tooling package. See programming/README.md for the order of the tracks.
+        notes: These condense notes 01 to 09. Data work starts with 01-python-for-data-analysis in the data-analytics pillar, and the practice run includes the uv tooling package. See the programming start-here readme for the order of the tracks.

@@ -1,0 +1,641 @@
+{
+ "schema": 1,
+ "key": "2310.03025",
+ "pdf": "generative-ai/02-rag-retrieval/sources/xu-2023-retrieval-meets-long-context-large.pdf",
+ "bib": {
+  "title": "Retrieval meets Long Context Large Language Models",
+  "authors": [
+   "Peng Xu",
+   "Wei Ping",
+   "Xianchao Wu",
+   "Lawrence McAfee",
+   "Chen Zhu",
+   "Zihan Liu",
+   "Sandeep Subramanian",
+   "Evelina Bakhturina",
+   "Mohammad Shoeybi",
+   "Bryan Catanzaro"
+  ],
+  "first_author": "Xu",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2310.03025",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 54919,
+  "chars_total": 54919,
+  "engine": "pymupdf",
+  "skipped": "Reference list lines 1010-1130 only skimmed."
+ },
+ "type": "empirical",
+ "question": "Is retrieval augmentation or an extended context window better for long-context downstream tasks, and can they be combined?",
+ "hypothesis": "Retrieval augmentation can match a longer context window at lower cost and still add gains on top of long-context models, at sufficient model scale.",
+ "contributions": [
+  "Study of GPT-43B and Llama2-70B on 9 long-context tasks (single/multi-doc QA, query-based summarisation, few-shot ICL).",
+  "4K context plus simple retrieval is comparable to 16K context without it (29.32 vs 29.45 GPT-43B; 36.02 vs 36.78 Llama2-70B).",
+  "Retrieval still improves 16K/32K models; Llama2-70B-32k-ret (43.6) beats GPT-3.5-turbo-16k (42.8) and Davinci003."
+ ],
+ "method": {
+  "summary": "Extend 4K GPT-43B and Llama2 to 16K/32K by positional interpolation fine-tuned on the Pile, instruction-tune on 102K samples, then compare no-retrieval (truncated document) against top-N retrieved 300-word chunks across three retrievers on seven zero-shot datasets plus two few-shot ones.",
+  "task": "long-context QA and query-based summarisation, zero-shot; few-shot ICL",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "QMSum",
+    "role": "eval",
+    "size": "200 samples, avg 14,140 tokens",
+    "split": "Scroll validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Qasper",
+    "role": "eval",
+    "size": "1,726 samples, avg 4,912 tokens",
+    "split": "Scroll validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "NarrativeQA",
+    "role": "eval",
+    "size": "2,000 samples, avg 84,770 tokens",
+    "split": "Scroll validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "QuALITY",
+    "role": "eval",
+    "size": "2,000 samples, avg 6,592 tokens",
+    "split": "Scroll validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MuSiQue",
+    "role": "eval",
+    "size": "200 samples, avg 16,198 tokens",
+    "split": "LongBench",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "HotpotQA",
+    "role": "eval",
+    "size": "200 samples, avg 13,319 tokens",
+    "split": "LongBench",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MultiFieldQA-en",
+    "role": "eval",
+    "size": "150 samples, avg 7,185 tokens",
+    "split": "LongBench",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Trec and SAMSum",
+    "role": "eval",
+    "size": null,
+    "split": "LongBench",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Pile",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Gao et al. 2021",
+    "preprocessing": "used for positional-interpolation fine-tuning"
+   },
+   {
+    "name": "Instruction blend (Soda, ELI5, FLAN, Open Assistant, Dolly, proprietary conversational)",
+    "role": "train",
+    "size": "102K samples",
+    "split": null,
+    "source": null,
+    "preprocessing": "template 'System: {System}\\n\\n{Context}\\n\\nUser: {Question}\\n\\nAssistant: {Answer}', loss on Answer only"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-43B (Nemo, proprietary)",
+    "role": "proposed",
+    "params": "43B",
+    "architecture": "decoder-only, RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 48,
+    "hidden": 8192,
+    "heads": null,
+    "context": "4,096 pretrained; extended to 16K",
+    "other": {
+     "pretrain_tokens": "1.1T"
+    }
+   },
+   {
+    "name": "Llama2-70B",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "decoder-only, RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 80,
+    "hidden": 8192,
+    "heads": null,
+    "context": "4,096 pretrained; extended to 16K and 32K",
+    "other": {
+     "pretrain_tokens": "2T"
+    }
+   },
+   {
+    "name": "Llama2-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only, RoPE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4K; extended to 32K",
+    "other": {}
+   },
+   {
+    "name": "Dragon",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dual encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "contrastive dense retriever",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-embedding-ada-002",
+    "role": "retriever",
+    "params": null,
+    "architecture": "OpenAI embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8,191 input tokens",
+    "other": {
+     "dim": "1,536"
+    }
+   },
+   {
+    "name": "GPT-3.5-turbo (4k, 16k), Davinci-003 (175B)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Context extension: positional interpolation fine-tuning (Chen et al. 2023); instruction tuning: loss on Answer tokens only",
+   "optimizer": null,
+   "lr": "5e-6 constant (extension); 5e-6 (instruction tuning)",
+   "lr_schedule": "constant (extension); not stated for instruction tuning",
+   "warmup": null,
+   "batch_size": "128 (both stages)",
+   "steps": "1000 (instruction tuning); not stated for extension",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "16K or 32K after extension",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "System/Context/User/Assistant template; zero-shot",
+   "retrieval": "Documents chunked at 300 words; question and chunks encoded separately; top-N (5, 10, 20) ranked by dot product, concatenated most to least relevant; no-retrieval baseline truncates document to the sequence length; for few-shot tasks the question queries the provided examples",
+   "parameters": {
+    "chunk_words": 300,
+    "top_n": "5/10/20",
+    "retrievers": "Dragon, Contriever, OpenAI ada-002"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "geometric mean of ROUGE-1/2/L",
+     "definition": "QMSum",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact match",
+     "definition": "QuALITY",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "QASP, NQA, MSQ, HQA, MFQA",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "same model without retrieval at 4k/16k/32k",
+    "GPT-3.5-turbo 4k/16k",
+    "Davinci-003"
+   ],
+   "protocol": "Single run per setting; no seeds or significance tests reported. Avg-4* uses ZeroSCROLLS test scores for QM, QASP, NQA, QLTY."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "instruction/inference template",
+    "text": "System: {System}\\n\\n{Context}\\n\\nUser: {Question}\\n\\nAssistant: {Answer}",
+    "where": "Sec 3.5"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Llama2-70B 4K with top-5 retrieval (Contriever in Table 2) averages 36.02 vs 31.61 without retrieval; comparable to the 16K no-retrieval model at 36.78.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "36.02",
+   "unit": "points",
+   "baseline_value": "31.61",
+   "n": null,
+   "setup": "Llama2-70B instruction-tuned, seven datasets (QM, QASP, NQA, QLTY, MSQ, HQA, MFQA), zero-shot, average score; 4K window, top-5 chunks of 300 words",
+   "note": "Text in Sec 4.1 says 31.61 to 35.73 (Dragon, Table 4/5); Table 2 and Sec 1 use 36.02 (Contriever).",
+   "where": "Sec 1, Table 2",
+   "quote": "36.02 vs. 36.78 by using Llama2-70B"
+  },
+  {
+   "claim": "Llama2-70B 4K baseline average without retrieval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "31.61",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2-70B instruction-tuned, seven datasets (QM, QASP, NQA, QLTY, MSQ, HQA, MFQA), zero-shot, average score; 4K, documents truncated",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama2-70B 4k, column Avg."
+  },
+  {
+   "claim": "Llama2-70B 16K without retrieval averages 36.78; with top-5 retrieval 37.23; top-10 reaches 38.31 and top-20 36.61.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "37.23",
+   "unit": "points",
+   "baseline_value": "36.78",
+   "n": null,
+   "setup": "Llama2-70B instruction-tuned, seven datasets (QM, QASP, NQA, QLTY, MSQ, HQA, MFQA), zero-shot, average score; 16K via positional interpolation; Dragon retriever, top-5/10/20",
+   "note": "Top-10 (38.31) is the best 16K setting; top-20 (36.61) is below no-retrieval baseline.",
+   "where": "Table 2, Table 5",
+   "table": "Table 5, 16k rows base/top-5/top-10/top-20, column Avg."
+  },
+  {
+   "claim": "Llama2-70B 32K without retrieval averages 37.36; with top-5 retrieval (Dragon) 39.60; top-10 38.98; top-20 38.38.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "39.60",
+   "unit": "points",
+   "baseline_value": "37.36",
+   "n": null,
+   "setup": "Llama2-70B instruction-tuned, seven datasets (QM, QASP, NQA, QLTY, MSQ, HQA, MFQA), zero-shot, average score; 32K via positional interpolation; Dragon retriever",
+   "note": null,
+   "where": "Sec 4.1, Table 5",
+   "quote": "i.e., 39.60 vs. 37.36",
+   "table": "Table 5, 32k rows base/top-5/top-10/top-20, column Avg."
+  },
+  {
+   "claim": "Llama2-70B 4K with Dragon retrieval: top-5 35.73, top-10 34.62, top-20 34.61 vs base 31.61.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "35.73",
+   "unit": "points",
+   "baseline_value": "31.61",
+   "n": null,
+   "setup": "Llama2-70B instruction-tuned, seven datasets (QM, QASP, NQA, QLTY, MSQ, HQA, MFQA), zero-shot, average score; 4K, Dragon",
+   "note": "Top-10 and top-20 rows at 4K have identical per-dataset scores (e.g. 42.84 MFQA), suspicious; the 4K window cannot hold 20 chunks (Table 1 avg 4,658-10,251 tokens).",
+   "where": "Table 5",
+   "table": "Table 5, 4k rows, column Avg."
+  },
+  {
+   "claim": "Llama2-70B-32k-ret scores 43.6 Avg-7 vs 40.9 for Llama2-70B-32k without retrieval and 42.8 for GPT-3.5-turbo-16k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg-7",
+   "value": "43.6",
+   "unit": "points",
+   "baseline_value": "40.9",
+   "n": null,
+   "setup": "Seven datasets, Avg-7, Table 3",
+   "note": null,
+   "where": "Sec 1, Table 3",
+   "quote": "outperforms GPT-3.5-turbo-16k (avg. score 42.8)"
+  },
+  {
+   "claim": "Llama2-7B 4K with top-5 retrieval averages 26.04 vs 22.65 without.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "26.04",
+   "unit": "points",
+   "baseline_value": "22.65",
+   "n": null,
+   "setup": "Llama2-7B instruction tuned, seven datasets, top-5, best retriever",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Llama2-7B 4k and + ret 4k, column Avg."
+  },
+  {
+   "claim": "Llama2-7B 32K with retrieval (27.63) is slightly worse than without (28.20): retrieval does not help the small long-context model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "27.63",
+   "unit": "points",
+   "baseline_value": "28.20",
+   "n": null,
+   "setup": "Llama2-7B, 32K, top-5, best retriever",
+   "note": "Text cites 'Table 5' for Llama2-7B results; they are in Table 2.",
+   "where": "Sec 4.1, Table 2",
+   "quote": "retrieval is not helpful for both Llama2-7B-32k and ChatGLM2-6B-32k",
+   "table": "Table 2, rows Llama2-7B 32k and + ret 32k, column Avg."
+  },
+  {
+   "claim": "GPT-43B 4K with top-5 retrieval averages 29.32 vs 26.44; comparable to GPT-43B 16K without retrieval at 29.45.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "29.32",
+   "unit": "points",
+   "baseline_value": "26.44",
+   "n": null,
+   "setup": "GPT-43B, seven datasets",
+   "note": null,
+   "where": "Sec 1, Table 2",
+   "quote": "29.32 vs. 29.45 by using GPT-43B"
+  },
+  {
+   "claim": "GPT-43B 16K with retrieval gains little: 29.65 vs 29.45.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "29.65",
+   "unit": "points",
+   "baseline_value": "29.45",
+   "n": null,
+   "setup": "GPT-43B, 16K, top-5",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows GPT-43B 16k and + ret 16k, column Avg."
+  },
+  {
+   "claim": "Adding more chunks does not reliably help; best averages come from top-5 or top-10, and top-20 sometimes hurts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2-70B, Dragon, 4K/16K/32K",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "adding more chunks up to 20 is not helpful and will sometime hurt the performance"
+  },
+  {
+   "claim": "Retrieval helps few-shot tasks: Llama2-70B-ret 76 Trec and 47.3 SAMSum vs 73 and 46.5 without, GPT-3.5-turbo-16k 68 and 41.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Trec",
+   "value": "76",
+   "unit": "score",
+   "baseline_value": "73",
+   "n": null,
+   "setup": "LongBench Trec and SAMSum, question used as query over few-shot examples",
+   "note": "Text calls the model Llama2-70B-32k-ret; the table row is Llama2-70B-ret.",
+   "where": "Table 6",
+   "table": "Table 6, row Llama2-70B-ret, columns Trec, SAMSum"
+  },
+  {
+   "claim": "Retrieval gains hold across Dragon, Contriever and OpenAI embeddings.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": "35.79",
+   "unit": "points",
+   "baseline_value": "31.61",
+   "n": null,
+   "setup": "Llama2-70B, 4K and 32K, top-5",
+   "note": null,
+   "where": "Table 4, Sec 4.3",
+   "table": "Table 4, 4k rows Dragon 35.73, Contriever 36.02, OpenAI-embedding 35.79"
+  },
+  {
+   "claim": "A retrieval-augmented long-context model is up to 4x faster at generation than the non-retrieval one on NarrativeQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2-70B-32k-ret vs Llama2-70B-32k, NarrativeQA",
+   "note": "No timing table or hardware in the paper.",
+   "where": "Sec 1",
+   "quote": "can be much faster at generation (e.g., 4× faster on NarrativeQA)"
+  },
+  {
+   "claim": "Llama2-70B also shows lost-in-the-middle; the 32K model uses top-5 retrieved context better than the 4K model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2-70B-4k vs 32k, Liu et al. style position study",
+   "note": null,
+   "where": "Sec 4.1, Fig 1",
+   "quote": "we confirm that the phenomenon also exists in Llama2-70B with different context lengths"
+  },
+  {
+   "claim": "Authors contradict LongBench: retrieval helps both short and long context models at 43B-70B scale; they attribute the difference to small (6B/7B) models.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongBench (Bai et al. 2023) vs this work",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "we demonstrate retrieval can significantly improve the performance of both GPT-43B and Llama2-70B regardless their context window size"
+  }
+ ],
+ "limits": [
+  "Single runs, no seeds or variance reported.",
+  "GPT-43B is proprietary, so not reproducible.",
+  "Decoding settings, hardware, compute and optimizer not given; 4x speedup claim has no table.",
+  "Table 5 4K top-10 and top-20 rows are identical.",
+  "Open questions conceded: why more chunks hurt, lost-in-the-middle mitigation, 64k+ contexts.",
+  "GPT-3.5 is a black box, so controlled comparison is limited."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "LongBench",
+   "year": 2023,
+   "arxiv": "2308.14508",
+   "relation": "contradicts",
+   "note": "Concurrent work finding retrieval helps only weak long-context models; also source of 3 datasets",
+   "quote": null
+  },
+  {
+   "work": "Extending context window of LLMs via positional interpolation",
+   "year": 2023,
+   "arxiv": "2306.15595",
+   "relation": "uses-method",
+   "note": "Context extension",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Position study replicated on Llama2-70B",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Touvron et al. 2023b",
+   "quote": null
+  },
+  {
+   "work": "Dragon (Lin et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "Contriever",
+   "year": 2021,
+   "arxiv": "2112.09118",
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "SCROLLS",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Shaham et al.",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2021,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "extension fine-tuning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Llama2-70B also displays lost-in-the-middle phenomenon",
+   "page": 7,
+   "why": "EM vs position of relevant chunk for 4k and 32k models"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Token length distribution of the full document and the top-5, 10, 20 chunks of the seven datasets.",
+   "page": 16,
+   "why": "Shows which chunk counts fit in 4K/16K/32K"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Comparisons of adding top-5/10/20 retrieved chunks under 4k, 16k, 32k, Llama2-70B",
+   "page": 7,
+   "why": "Shows diminishing returns of more chunks"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text refers to Llama2-7B results in 'Table 5' but they are in Table 2.",
+  "Sec 4.1 gives Llama2-70B 4K+ret as 35.73 (Dragon) while Table 2 and Sec 1 give 36.02 (Contriever).",
+  "Figure 1 and 2 content not extractable from text."
+ ]
+}

@@ -42,7 +42,7 @@ There are no programming prerequisites. You need a terminal, Python 3.12+, the `
 | [Python](python/README.md) | Start here | Foundations → informatics → language for engineers, then a hand-off to [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md) | Severance, *Python for Everybody* (paraphrased); VanderPlas, *A Whirlwind Tour of Python*; Python documentation | Passing exercises and a small tested package |
 | [SQL](sql/README.md) | After Python foundations | Querying → analysis → data design → performance → Python, plus a capstone | Software Carpentry *Databases and SQL*; PGExercises; Knight Lab *SQL Murder Mystery* | Checked queries and an investigative capstone |
 | [TypeScript](typescript/README.md) | After Python for engineers | JavaScript → types → async and tooling → typed AI apps | TypeScript Handbook; *typescript-exercises*; *type-challenges* | Type-safe exercises and a validated async boundary |
-| [Computer science foundations](computer-science/README.md) | After Python foundations; pairs with Python for engineers | Cost models and Big-O → data structures → algorithm patterns → numbers and memory → processes, threads and I/O → networks | OSTEP, Erickson's *Algorithms*, MIT 6.042 notes, CPython source notes, RFCs and Goldberg; see its [references](computer-science/references.md) | Data structures, a stream decoder and an RFC 6298 timer built against tests, and every timing in the notes reproducible |
+| [Computer science foundations](computer-science/README.md) | After Python 03 (builds on its concurrency, objects and MRO, and memory notes) | Cost models and Big-O → data structures → algorithm patterns → numbers and memory → processes, threads and I/O → networks | OSTEP, Erickson's *Algorithms*, MIT 6.042 notes, CPython source notes, RFCs and Goldberg; see its [references](computer-science/references.md) | Data structures, a stream decoder and an RFC 6298 timer built against tests, and every timing in the notes reproducible |
 | [Software design](software-design/README.md) | After Python for engineers | Readable code → refactoring → design principles → patterns → testing → debugging → Git, review and design docs | Authors' free writing, papers and tool documentation; see its [references](software-design/references.md) | A smelly module refactored under tests, then extended |
 | [Backend and system design](backend-and-system-design/README.md) | After computer science foundations; pairs with software design | API design → auth → caching and queues → load balancing and rate limiting → estimation and scaling → containers and deployment → reliability under load → design walkthroughs → AI system reference architecture | RFCs, OWASP, the Google SRE book, project docs and published papers; see its [references](backend-and-system-design/references.md) | A rate limiter, single-flight cache, JWT verifier, lease scheduler, small LSM store and token budget built against tests, and a container that drains correctly on SIGTERM |
 | [Frontend and UX](frontend-and-ux/README.md) | After TypeScript | HTML, CSS and the DOM → React and state → accessibility → UX principles → AI interfaces | MDN, WHATWG, W3C, react.dev, Nielsen Norman Group, People + AI Guidebook and papers; see its [references](frontend-and-ux/references.md) | A streaming chat UI with citations, uncertain, error and handoff states, passing browser tests against a local mock server |
@@ -60,12 +60,13 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 3. Reason about names, objects, iteration, errors, resource lifetimes, and common Python traps ([Python documentation](https://docs.python.org/3/)).
 4. Use type hints, dataclasses, tests, linting, packaging, and boundary validation in a small package.
 5. Choose threads, asyncio, or processes for a workload and apply timeouts and concurrency limits.
+6. Predict attribute lookup and the MRO, and reason about refcounting, the garbage collector and what lives in memory at runtime.
 
 | Unit | Focus | Practice |
 |---|---|---|
-| [01 Foundations](python/README.md) | Control flow, functions, strings, files and collections | [Exercises](python/01-foundations/practice/exercises/) |
-| [02 Informatics](python/README.md) | Text, the web, structured data, objects and databases | [Exercises](python/02-informatics/practice/exercises/) |
-| [03 Language for engineers](python/README.md) | The data model, types, errors, packaging and concurrency | [Exercises](python/03-language-for-engineers/practice/exercises/) |
+| [01 Foundations](python/README.md) | Control flow, functions, strings, files and collections | [Exercises](python/01-foundations/practice/exercises/01_values_and_conditionals.py) |
+| [02 Informatics](python/README.md) | Text, the web, structured data, objects and databases | [Exercises](python/02-informatics/practice/exercises/01_regex.py) |
+| [03 Language for engineers](python/README.md) | The data model, types, errors, packaging, concurrency, objects and the MRO, and memory and the runtime | [Exercises](python/03-language-for-engineers/practice/exercises/01_data_model.py) |
 
 **Review and practice:** [foundations deck](python/01-foundations/slides/python-foundations.pptx) · [informatics deck](python/02-informatics/slides/python-informatics.pptx) · [engineering deck](python/03-language-for-engineers/slides/python-for-engineers.pptx) · module exercises and worked solutions.
 
@@ -91,9 +92,9 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 
 | Unit | Focus | Practice |
 |---|---|---|
-| [Core querying](sql/README.md) | Selection, nulls, aggregation, joins and CTEs | [Exercises](sql/practice/exercises/) |
-| [Analytical and operational SQL](sql/README.md) | Window functions, schema changes, query plans and SQL from Python | [Exercises](sql/practice/exercises/) |
-| [Capstone](sql/README.md) | SQL Murder Mystery investigation | [Practice data](sql/practice/) |
+| [Core querying](sql/README.md) | Selection, nulls, aggregation, joins and CTEs | [Exercises](sql/practice/exercises/01-select-and-filter.sql) |
+| [Analytical and operational SQL](sql/README.md) | Window functions, schema changes, query plans and SQL from Python | [Exercises](sql/practice/exercises/01-select-and-filter.sql) |
+| [Capstone](sql/README.md) | SQL Murder Mystery investigation | [Setup and data](sql/practice/setup.sh) |
 
 **Review and practice:** [SQL deck](sql/slides/sql.pptx) · offline SQL/Python exercises and solutions · the capstone investigation.
 
@@ -120,9 +121,9 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 
 | Unit | Focus | Practice |
 |---|---|---|
-| [JavaScript and core types](typescript/README.md) | JavaScript for Python developers, everyday types, unions and narrowing | [Type exercises](typescript/practice/typescript-exercises/) |
-| [Type-level design](typescript/README.md) | Generics and transformations from types | [Exercises and type challenges](typescript/practice/) |
-| [Production boundaries](typescript/README.md) | Async, modules and tooling, runtime validation, TypeScript for AI apps | [Runtime exercises](typescript/practice/exercises/) |
+| [JavaScript and core types](typescript/README.md) | JavaScript for Python developers, everyday types, unions and narrowing | [Type exercises](typescript/practice/typescript-exercises/01/index.ts) |
+| [Type-level design](typescript/README.md) | Generics and transformations from types | [Exercises and type challenges](typescript/practice/type-challenges/challenges/00004-easy-pick.ts) |
+| [Production boundaries](typescript/README.md) | Async, modules and tooling, runtime validation, TypeScript for AI apps | [Runtime exercises](typescript/practice/exercises/06-async.ts) |
 
 **Review and practice:** [TypeScript deck](typescript/slides/typescript.pptx) · vendored type exercises and challenges · runtime exercises with tests. The live SDK example is optional and requires its own key; it is not required for mastery.
 
@@ -185,6 +186,10 @@ title is the question and the takeaway is the rule that answers it. Rebuild one 
 | [Python for engineers](python/03-language-for-engineers/slides/python-for-engineers.pptx) | [deck.yaml](python/03-language-for-engineers/slides/deck.yaml) |
 | [SQL](sql/slides/sql.pptx) | [deck.yaml](sql/slides/deck.yaml) |
 | [TypeScript](typescript/slides/typescript.pptx) | [deck.yaml](typescript/slides/deck.yaml) |
+| [Computer science foundations](computer-science/slides/computer-science.pptx) | [deck.yaml](computer-science/slides/deck.yaml) |
+| [Software design](software-design/slides/software-design.pptx) | [deck.yaml](software-design/slides/deck.yaml) |
+| [Backend and system design](backend-and-system-design/slides/backend-and-system-design.pptx) | [deck.yaml](backend-and-system-design/slides/deck.yaml) |
+| [Frontend and UX](frontend-and-ux/slides/frontend-and-ux.pptx) | [deck.yaml](frontend-and-ux/slides/deck.yaml) |
 
 ## Running the code
 

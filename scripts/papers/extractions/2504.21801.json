@@ -1,0 +1,157 @@
+{
+ "schema": 1,
+ "key": "2504.21801",
+ "pdf": "generative-ai/05-RL/sources/ren-2025-deepseek-prover-v2.pdf",
+ "bib": {
+  "title": "DeepSeek-Prover-V2: Advancing Formal Mathematical Reasoning via Reinforcement Learning for Subgoal Decomposition",
+  "authors": ["Z.Z. Ren", "Zhihong Shao", "Junxiao Song", "Huajian Xin", "Haocheng Wang", "Wanjia Zhao", "Liyue Zhang", "Zhe Fu", "Qihao Zhu", "Dejian Yang", "Z.F. Wu", "Zhibin Gou", "Shirong Ma", "Hongxuan Tang", "Yuxuan Liu", "Wenjun Gao", "Daya Guo", "Chong Ruan"],
+  "first_author": "Ren",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2504.21801",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 99438,
+  "chars_total": 99438,
+  "engine": "pymupdf",
+  "skipped": "Appendix A/B/C example Lean proofs were read only in part (they are model outputs, not method)."
+ },
+ "type": "empirical",
+ "question": "Can a single LLM prover unify informal chain-of-thought reasoning and formal Lean 4 proof construction, using subgoal-decomposed synthetic cold-start data followed by RL with a binary verifier reward?",
+ "hypothesis": "RL starting from a cold start of informal reasoning in task decomposition significantly enhances formal theorem-proving ability.",
+ "contributions": [
+  "Recursive theorem-proving pipeline using DeepSeek-V3 for subgoal decomposition and a 7B prover for subgoals, producing cold-start CoT data",
+  "Curriculum learning with subgoal-derived conjectural theorems in expert iteration",
+  "GRPO stage with binary Lean-verified reward and an early consistency reward",
+  "DeepSeek-Prover-V2-671B and 7B, with state-of-the-art results on miniF2F-test, PutnamBench and others",
+  "ProverBench: 325 formalized problems including 15 from AIME 24&25"
+ ],
+ "method": {
+  "summary": "DeepSeek-V3 writes a natural-language proof sketch plus a Lean 4 skeleton of have-statements ending in sorry; a 7B prover solves each subgoal recursively, the subgoal proofs are composed and appended to V3's chain of thought as cold-start data. DeepSeek-V3-Base-671B is SFT'd on this plus expert-iteration non-CoT data, then trained with GRPO with binary Lean-verifier rewards; a 7B model is distilled and RL'd the same way.",
+  "task": "formal theorem proving in Lean 4",
+  "trains": true,
+  "datasets": [
+   {"name": "Expert-iteration problem set (autoformalized plus Lean Workbook, STP synthetic, Goedel-Prover sets, and subgoal-derived problems)", "role": "train", "size": null, "split": "miniF2F-valid used in curriculum; ProofNet-valid variants appear in the STP synthetic data used for SFT", "source": "Ying et al. 2024; Dong and Ma 2025; Lin et al. 2025", "preprocessing": "subgoals turned into two lemma types: (a) goal substituted, (b) preceding subgoals added as premises"},
+   {"name": "Cold-start CoT data", "role": "train", "size": "hundreds of high-quality synthetic examples", "split": null, "source": "problems the 7B prover cannot solve end to end but whose decomposed subgoals all resolve", "preprocessing": "composed formal proof appended to DeepSeek-V3's chain of thought"},
+   {"name": "miniF2F", "role": "eval", "size": "488 problems; 244 valid and 244 test", "split": "test for eval; valid used in curriculum", "source": "Zheng et al. 2022, revised version of Wang et al. 2025 plus two more valid revisions and one test revision", "preprocessing": null},
+   {"name": "ProofNet", "role": "eval", "size": "371 problems; 185 valid, 186 test", "split": "test", "source": "Lean 4 translation by Xin et al. 2024b", "preprocessing": null},
+   {"name": "PutnamBench", "role": "eval", "size": "658 problems; 649 compatible with Lean 4.9.0", "split": null, "source": "Tsoukalas et al. 2024", "preprocessing": "problems incompatible with Lean 4.9.0 excluded"},
+   {"name": "CombiBench", "role": "eval", "size": "100 problems; 77 evaluated", "split": "with-solution setting", "source": "Liu et al. 2025", "preprocessing": "filtered for Lean 4.9.0 compatibility and multiple sorry placeholders"},
+   {"name": "FormalMATH", "role": "eval", "size": "5560 problems (All); Lite 425 (359 high school, 66 undergraduate)", "split": null, "source": "Yu et al. 2025", "preprocessing": null},
+   {"name": "ProverBench", "role": "eval", "size": "325 problems: 15 AIME 24&25 plus 310 textbook", "split": null, "source": "introduced here", "preprocessing": "AIME: geometry, combinatorics and counting problems filtered out"}
+  ],
+  "models": [
+   {"name": "DeepSeek-Prover-V2-671B", "role": "proposed", "params": "671B", "architecture": null, "init_from": "DeepSeek-V3-Base-671B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "16,384 tokens in SFT; 32,768 max sequence in RL", "other": {}},
+   {"name": "DeepSeek-Prover-V2-7B", "role": "proposed", "params": "7B", "architecture": null, "init_from": "DeepSeek-Prover-V1.5-Base-7B with context extended from 4,096 to 32,768 tokens", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "32,768 tokens", "other": {"how": "fine-tuned on rollouts from the 671B RL phase plus non-CoT expert-iteration data, then the same RL stage"}},
+   {"name": "DeepSeek-V3", "role": "teacher", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "subgoal decomposition and chain of thought"}},
+   {"name": "DeepSeek-V3-0324", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "informal find-answer baseline on 15 AIME problems"}}
+  ],
+  "training": {
+   "objective": "SFT, then GRPO with binary reward (1 if Lean verifies the proof, 0 otherwise) plus a consistency reward early in training that penalizes missing decomposed have-lemmas",
+   "optimizer": null,
+   "lr": "5e-6 (SFT, constant)",
+   "lr_schedule": "constant (SFT)",
+   "warmup": null,
+   "batch_size": "RL: 256 problems per iteration x 32 candidate proofs",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "SFT 16,384 tokens; RL max 32,768 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"rl_prompt_curation": "only problems sufficiently challenging yet solvable by the SFT model", "stage1": "expert iteration in a curriculum to train the non-CoT model", "consistency_reward_weight": null, "kl_or_clip_params": null}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Sample budgets 1 to 8192 per problem; mean and std over runs reported as mu +/- sigma (number of runs not stated)",
+   "prompting": "Two prompts: non-CoT ('Complete the following Lean 4 code' with Mathlib header) and CoT (same plus an instruction to give a detailed proof plan before the Lean code)",
+   "retrieval": null,
+   "parameters": {"lean_version": "Lean 4.9.0-rc2 (Prover-V1.5 environment)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Pass@N", "definition": "fraction of problems with at least one Lean-verified proof in N samples", "unit": "%", "higher_is_better": true},
+    {"name": "Problems solved", "definition": "count of benchmark problems solved (PutnamBench, CombiBench, AIME subset)", "unit": "count", "higher_is_better": true}
+   ],
+   "baselines": ["Kimina-Prover-Preview 72B and Distill 7B", "BFS-Prover 7B", "STP 7B", "Goedel-Prover-SFT 7B", "Leanabell-Prover-GD-RL", "HunyuanProver", "InternLM2.5-StepProver", "Hypertree Proof Search", "DeepSeek-V3-0324 (informal, Maj@16)"],
+   "protocol": "Baseline numbers taken from original papers unless stated; STP on ProverBench run with open weights. Initial PutnamBench (49) and CombiBench (12) counts were later corrected after maintainers found misformulated statements."
+  },
+  "availability": {"code": "https://github.com/deepseek-ai/DeepSeek-Prover-V2", "weights": "stated open-source", "data": "ProverBench introduced"},
+  "prompts": [
+   {"purpose": "non-CoT proof generation", "text": "Complete the following Lean 4 code:\n```lean4\nimport Mathlib\nimport Aesop\nset_option maxHeartbeats 0\nopen BigOperators Real Nat Topology Rat\n<docstring + theorem ... := by\n  sorry>\n```", "where": "Appendix A.1"},
+   {"purpose": "CoT proof generation (suffix after the code block)", "text": "Before producing the Lean 4 code to formally prove the given theorem, provide a detailed proof plan outlining the main proof steps and strategies. The plan should highlight key ideas, intermediate lemmas, and proof structures that will guide the construction of the final formal proof.", "where": "Appendix A.2"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "671B CoT reaches 88.9% on miniF2F-test at Pass@8192", "kind": "measured", "source": null, "metric": "Pass@8192", "value": "88.9", "unit": "%", "baseline_value": "80.74 (Kimina-Prover-Preview 72B)", "n": 244, "setup": "miniF2F-test, DeepSeek-Prover-V2-671B CoT mode, Lean 4.9.0-rc2", "quote": "On MiniF2F-test, it achieves 82.4% accuracy with Pass@32, improving to 88.9% with Pass@8192.", "table": null, "note": null, "where": "Sec 1; Table 1"},
+  {"claim": "671B CoT Pass@1 on miniF2F-test", "kind": "measured", "source": null, "metric": "Pass@1", "value": "61.9", "unit": "%", "baseline_value": "59.5 (671B non-CoT)", "n": 244, "setup": "miniF2F-test, 671B CoT, mean over runs (std 1.6)", "quote": null, "table": "Table 1, row DeepSeek-Prover-V2 (CoT) 671B, sample budget 1", "note": null, "where": "Table 1"},
+  {"claim": "671B CoT Pass@32 on miniF2F-test with only 32 samples", "kind": "measured", "source": null, "metric": "Pass@32", "value": "82.4", "unit": "%", "baseline_value": "68.85 (Kimina-Prover-Preview 72B)", "n": 244, "setup": "miniF2F-test, 671B CoT", "quote": "achieving an unprecedented 82.4% accuracy with only 32 samples when leveraging the CoT generation strategy", "table": null, "note": null, "where": "Sec 3.1"},
+  {"claim": "7B CoT reaches 82.0% on miniF2F-test at Pass@8192, above all other open provers listed", "kind": "measured", "source": null, "metric": "Pass@8192", "value": "82.0", "unit": "%", "baseline_value": "75.0 (7B non-CoT)", "n": 244, "setup": "miniF2F-test, DeepSeek-Prover-V2-7B CoT", "quote": null, "table": "Table 1, row DeepSeek-Prover-V2 (CoT) 7B, sample budget 8192", "note": null, "where": "Table 1"},
+  {"claim": "CoT mode beats non-CoT at every budget; 671B at Pass@8192 gains 10.6 points", "kind": "measured", "source": null, "metric": "Pass@8192 non-CoT", "value": "78.3", "unit": "%", "baseline_value": "88.9", "n": 244, "setup": "miniF2F-test, 671B non-CoT vs CoT", "quote": null, "table": "Table 1, row DeepSeek-Prover-V2 (non-CoT) 671B, sample budget 8192", "note": "difference computed by reader from Table 1", "where": "Table 1"},
+  {"claim": "671B CoT solves 47 of 658 PutnamBench problems at 1024 samples", "kind": "measured", "source": null, "metric": "problems solved", "value": "47", "unit": "of 658", "baseline_value": "15/658 (671B non-CoT)", "n": 658, "setup": "PutnamBench latest release, Pass@1024; evaluated on 649 problems compatible with Lean 4.9.0", "quote": "The final result stands at 47 problems successfully solved (as shown in Table 4)", "table": null, "note": "Initial run solved 49; two removed for misformulated statements", "where": "Sec 3.2; Table 4"},
+  {"claim": "671B CoT solves 37.1% of ProofNet-test at Pass@1024", "kind": "measured", "source": null, "metric": "Pass@1024", "value": "37.1", "unit": "%", "baseline_value": "26.9 (STP 7B, Pass@25600)", "n": 186, "setup": "ProofNet-test, 671B CoT", "quote": "solving 37.1% of ProofNet-test problems with Pass@1024", "table": null, "note": null, "where": "Sec 1; Table 4"},
+  {"claim": "Initial report that the 7B solved 13 PutnamBench problems the 671B did not was caused by a Lean 4.9.0 apply? bug exploited by the 7B", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "PutnamBench, DeepSeek-Prover-V2-7B outputs using Cardinal.toNat and Cardinal.natCast_inj, absent in 671B outputs", "quote": "Our initial report claimed an unexpected finding that DeepSeek-Prover-V2-7B successfully solved 13 problems on PutnamBench that remained unsolved by its larger 671B counterpart.", "table": null, "note": "Section is titled 'Reward Hacking in Reinforcement Learning', but the text describes a bug found in evaluation; it does not say the exploit affected training rewards", "where": "Sec 3.2"},
+  {"claim": "671B CoT solves 10 of the 77 evaluated CombiBench problems at Pass@16", "kind": "measured", "source": null, "metric": "problems solved", "value": "10", "unit": "of 100 (77 evaluated)", "baseline_value": "7/100 (Kimina-Prover-Preview)", "n": 77, "setup": "CombiBench with-solution setting, Pass@16", "quote": "the final result stands at 10 solved problems", "table": null, "note": "Table 5 prints /100; text says 77 evaluated after filtering; initial run 12", "where": "Sec 3.3; Table 5"},
+  {"claim": "FormalMATH-Lite 61.88% at Pass@3200", "kind": "measured", "source": null, "metric": "Pass@3200", "value": "61.88", "unit": "%", "baseline_value": "53.17 (STP)", "n": 425, "setup": "FormalMATH-Lite, 671B CoT", "quote": "performance on the Lite subset demonstrates a marked improvement to 61.88%", "table": null, "note": null, "where": "Sec 3.4; Table 6"},
+  {"claim": "FormalMATH-All 28.31% at Pass@32", "kind": "measured", "source": null, "metric": "Pass@32", "value": "28.31", "unit": "%", "baseline_value": "16.46 (Kimina-Prover-Preview-Distill-7B)", "n": 5560, "setup": "FormalMATH-All, 671B CoT", "quote": "successfully solving 28.31% of problems in the full dataset", "table": null, "note": null, "where": "Sec 3.4"},
+  {"claim": "On 15 formalized AIME 24&25 problems the 671B proves 6 given the answer; DeepSeek-V3-0324 solves 8 informally by Maj@16", "kind": "measured", "source": null, "metric": "problems solved", "value": "6", "unit": "of 15", "baseline_value": "8 (DeepSeek-V3-0324, Maj@16, find-answer task)", "n": 15, "setup": "Prover is given the correct answer in the Lean statement; V3 must find the answer; number theory and algebra only", "quote": "DeepSeek-Prover-V2-671B, operating under the formal proof generation setting with given correct answers, is able to construct valid formal proofs for 6 of 15 problems.", "table": null, "note": "The two tasks differ (proof given answer vs find answer), and 15 problems were pre-filtered", "where": "Sec 3.5"},
+  {"claim": "ProverBench-All (325 problems) 59.1% at Pass@512 for 671B CoT", "kind": "measured", "source": null, "metric": "Pass@512", "value": "59.1", "unit": "%", "baseline_value": "36.3 (STP 7B)", "n": 325, "setup": "ProverBench All, 671B CoT", "quote": null, "table": "Table 7, row DeepSeek-Prover-V2 (CoT) 671B, sample budget 512, column All", "note": null, "where": "Table 7"},
+  {"claim": "Average output length: CoT 6751.9 tokens (671B) and 4488.5 (7B) vs non-CoT 761.8 and 442.6", "kind": "measured", "source": null, "metric": "avg output tokens", "value": "6751.9", "unit": "tokens", "baseline_value": "761.8 (671B non-CoT)", "n": 244, "setup": "miniF2F-test, 671B CoT", "quote": null, "table": "Table 3, row 671B, column CoT", "note": null, "where": "Table 3"},
+  {"claim": "Subgoal-guided curriculum with V3 plus the 7B prover alone solves 89.8% of miniF2F-valid", "kind": "measured", "source": null, "metric": "success rate", "value": "89.8", "unit": "%", "baseline_value": "90.6 (671B overall on valid)", "n": 244, "setup": "miniF2F-valid, collected throughout the curriculum", "quote": "achieves a 89.8% success rate on miniF2F-valid", "table": null, "note": "valid is used in training via curriculum, so this is not a held-out score", "where": "Sec 3.1; Table 2"}
+ ],
+ "limits": [
+  "No ablation of the consistency reward, the cold start, or the subgoal curriculum; the paper states the consistency reward 'enhances proof accuracy' without a number.",
+  "Optimizer, GRPO hyperparameters (clip, KL, reward weights), number of RL steps, hardware and compute are not given.",
+  "Cold-start set is only 'hundreds' of examples; data sizes for expert iteration are not given.",
+  "The number of runs behind the +/- std values and decoding settings (temperature, top-p) are not stated.",
+  "miniF2F-valid is in the curriculum, so valid scores are not held-out; miniF2F was also revised by the authors, so numbers are not directly comparable to versions used by baselines.",
+  "Baseline numbers come from the original papers, not a shared harness; sample budgets differ across methods.",
+  "The AIME comparison mixes tasks: the prover is handed the answer, DeepSeek-V3 must find it.",
+  "Early versions over-counted PutnamBench (13 problems via an apply? bug in Lean 4.9.0) and CombiBench (12 vs 10), which the authors corrected.",
+  "Future work: scale to an AlphaProof-like system for IMO-level problems."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "subgoal", "definition": "an intermediate proposition or lemma that contributes to the proof of a larger theorem", "where": "Sec 1"},
+  {"term": "consistency reward", "definition": "a reward early in training that penalizes structural misalignment, enforcing inclusion of all decomposed have-structured lemmas in the final proof", "where": "Sec 2.2"}
+ ],
+ "lineage": [
+  {"work": "DeepSeek-Prover-V1.5", "year": 2024, "arxiv": "2408.08152", "relation": "extends", "note": "same test environment, prompts and 7B base", "quote": null},
+  {"work": "DeepSeek-Prover (V1)", "year": 2024, "arxiv": "2405.14333", "relation": "extends", "note": "expert-iteration training procedure", "quote": null},
+  {"work": "DeepSeek-V3", "year": 2024, "arxiv": "2412.19437", "relation": "uses-method", "note": "base model and decomposer", "quote": null},
+  {"work": "DeepSeek-R1", "year": 2025, "arxiv": "2501.12948", "relation": "uses-method", "note": "binary reward reasoning-RL recipe", "quote": null},
+  {"work": "DeepSeekMath (GRPO)", "year": 2024, "arxiv": "2402.03300", "relation": "uses-method", "note": "RL algorithm", "quote": null},
+  {"work": "Draft, Sketch, and Prove", "year": 2023, "arxiv": null, "relation": "extends", "note": "informal sketch to formal proof", "quote": null},
+  {"work": "Expert iteration (Polu and Sutskever)", "year": 2020, "arxiv": "2009.03393", "relation": "uses-method", "note": null, "quote": null},
+  {"work": "STP", "year": 2025, "arxiv": "2502.00212", "relation": "baseline", "note": "also source of training data", "quote": null},
+  {"work": "Kimina-Prover Preview", "year": 2025, "arxiv": "2504.11354", "relation": "baseline", "note": "concurrent; reverse cold-start workflow", "quote": null},
+  {"work": "Goedel-Prover", "year": 2025, "arxiv": "2502.07640", "relation": "baseline", "note": null, "quote": null},
+  {"work": "BFS-Prover", "year": 2025, "arxiv": "2502.03438", "relation": "baseline", "note": null, "quote": null},
+  {"work": "miniF2F", "year": 2022, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "ProofNet", "year": 2023, "arxiv": "2302.12433", "relation": "uses-data", "note": null, "quote": null},
+  {"work": "PutnamBench", "year": 2024, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "CombiBench", "year": 2025, "arxiv": "2505.03171", "relation": "uses-data", "note": null, "quote": null},
+  {"work": "FormalMATH", "year": 2025, "arxiv": "2505.02735", "relation": "uses-data", "note": null, "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Overview of the cold-start data collection process employed by DeepSeek-Prover-V2.", "page": 3, "why": "Shows the sketch, sorry skeleton, recursive 7B solve, composition pipeline at a glance."},
+  {"figure": "Fig 3", "caption": "An illustrative example of how we translate decomposed subgoals into a series of lemma statements.", "page": 4, "why": "Shows the two lemma forms (a) and (b)."},
+  {"figure": "Fig 1", "caption": "Benchmark performance of DeepSeek-Prover-V2.", "page": 1, "why": "Headline comparison across miniF2F, PutnamBench and AIME."}
+ ],
+ "code": [],
+ "problems": ["No embedded instructions found. Table cells appear as one value per line in the text; Table 1 and 4 read by position."]
+}

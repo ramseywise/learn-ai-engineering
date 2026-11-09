@@ -45,13 +45,28 @@ Keep calculation and I/O separate. A function that returns a value can be tested
 
 ```python
 def greet(name, greeting="Hello"):
-    return f"{greeting}, {name}!"
+    return f"{greeting}, {name}!"   # an f-string; see note 04
 
 greet("Ada")                       # 'Hello, Ada!'
 greet("Ada", greeting="Hi")        # keyword arguments are clearer for optional settings
 ```
 
-**Never use a mutable default** (`def f(xs=[])`). The list is created once, when the function is defined, and every call shares it. Use `None` and create a new list inside the function.
+Use `None`, never a list or dict, as a default: the default is created once and shared by every call. [Python 03 · 01](../../03-language-for-engineers/notes/01-data-model-and-idioms.md) shows why. Functions can also take `*args` and `**kwargs`, covered in [Python 03 · 03](../../03-language-for-engineers/notes/03-functions-deeper.md).
+
+## Rejecting bad arguments
+
+A function should refuse input it cannot handle, instead of returning a wrong answer. `raise` stops the function and signals the caller with an exception:
+
+```python
+def average(xs):
+    if not xs:
+        raise ValueError("average() needs at least one number")
+    return sum(xs) / len(xs)
+
+average([])   # ValueError: average() needs at least one number
+```
+
+The caller can catch it with `try` / `except ValueError`, as in [note 01](01-values-and-conditionals.md).
 
 ## Scope
 
@@ -66,3 +81,7 @@ Names assigned inside a function are **local** and disappear when it returns. A 
 ## Exercises
 
 [`practice/exercises/02_functions.py`](../practice/exercises/02_functions.py)
+
+## Next
+
+[3 — Loops and loop patterns](03-loops.md): repeating work over many values.

@@ -49,7 +49,7 @@ import * as path from 'node:path';             // the node: prefix for built-ins
 }
 ```
 
-The practice project's [`tsconfig.json`](../practice/tsconfig.json) leaves out the last two strictness options, because the vendored exercises predate them.
+The practice project's [`tsconfig.json`](../practice/tsconfig.json) leaves out `noUncheckedIndexedAccess`, `verbatimModuleSyntax` and `erasableSyntaxOnly`. It uses `"module": "preserve"` with `"moduleResolution": "bundler"` instead of `nodenext`.
 
 ## Running TS
 

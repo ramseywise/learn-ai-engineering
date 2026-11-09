@@ -91,6 +91,8 @@ TUMIX gets its diversity from tools rather than from models ([arXiv:2510.01279](
 
 Parallel workers can also buy *latency* rather than accuracy. AsyncThink trains one model to act as organizer, splitting off sub-questions to workers that are copies of itself and then waiting on their results ([arXiv:2510.26658](https://arxiv.org/abs/2510.26658) (Chi et al., 2025-10, preprint)). With Qwen3-4B trained by RL and four concurrent slots, it tied a four-sample majority vote on AIME-24 (38.7%), edged it on AMC-23 (73.3% vs 72.8%), and **cut critical-path latency by 28%** (about 1,460 vs 2,040 decoding steps). On a countdown puzzle with several solutions it got all of them right 89.0% of the time, against about 69–71% for the baselines. Latency here is a theoretical count of decoding steps along the longest fork–join path, not wall-clock time. The setup matches the number of concurrent slots, not total tokens, and never reports total tokens. It used one 4B model on small reasoning tasks, with no tools. So it says how to shorten the wait, not whether a team beats one agent at the same cost.
 
+For the controlled test of when a team beats one agent, with 260 configurations and a single-agent score above which extra agents lost, see [graph 06 — what fan-out costs](../../../ai-engineering/05-graph-engineering/notes/06-when-not-to-build-a-graph.md#what-fan-out-costs).
+
 ---
 
 ## Routing by size: pick one agent per task

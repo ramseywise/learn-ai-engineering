@@ -69,7 +69,7 @@ By the end, you can design prompts and context deliberately; build verifiable ha
 
 ### [01 Prompt engineering](01-prompt-engineering/README.md)
 
-**Objectives:** turn a task into instructions, examples, structure, and constraints (Berryman and Ziegler); diagnose prompt failures; compare prompt variants with an evaluation set (Huyen, ch. 5); account for adversarial prompting.
+**Objectives:** turn a task into instructions, examples, structure, and constraints (Berryman and Ziegler); diagnose prompt failures from each note's Pitfalls and the [tool-call debugging table](01-prompt-engineering/notes/05-tools-and-function-calling.md#debugging-tool-calls); compare prompt variants with an evaluation set (Huyen, ch. 5); account for adversarial prompting.
 
 **Learning:** [chapters, deck, and practice](01-prompt-engineering/README.md). **Evidence:** a versioned prompt with task cases, pass criteria, and observed failure modes.
 

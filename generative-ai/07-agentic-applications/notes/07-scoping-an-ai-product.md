@@ -59,7 +59,7 @@ Decide now what result would kill the project, while nobody is yet invested in i
 
 Start from one unit of work, and count calls rather than requests from users. An agent that uses tools makes several model calls per ticket, and each one resends everything so far, so input grows with each step. [Why inference is its own discipline](../../../ai-engineering/07-inference-engineering/notes/01-why-inference-is-its-own-discipline.md#throughput-cost-and-goodput) covers why providers price it this way.
 
-The prices below come from each vendor's own page, read on 2 November 2026: [Anthropic](https://platform.claude.com/docs/en/about-claude/pricing), [OpenAI](https://developers.openai.com/api/docs/pricing) and [Google](https://aistudio.google.com/docs/pricing). The 286 tokens in the prefix are the tool-use system prompt Anthropic lists for Sonnet 5.5; it's a real line in the bill that a tokenizer run over your own prompt won't show. Google's listed Gemini 3.8 Flash price doubles on 1 January 2027.
+The prices below come from each vendor's own page, read on 2 November 2026: [Anthropic](https://platform.claude.com/docs/en/about-claude/pricing), [OpenAI](https://developers.openai.com/api/docs/pricing) and [Google](https://aistudio.google.com/docs/pricing). The 286 tokens in the prefix are the tool-use system prompt Anthropic lists for Sonnet 5.5; it's a real line in the bill that a tokenizer run over your own prompt won't show. Google's listed Gemini 3.8 Flash price doubles on 1 January 2027. Two other notes in the course price Claude calls for their own purposes: [foundations 01b — what an agent costs](../../03-agentic-foundations/notes/01b-what-an-agent-costs.md) and [observability 06 — cost and latency dashboards](../../06-observability/notes/06-cost-and-latency-dashboards.md), which also reads the Claude pricing page. The figures can differ by read date, so when they disagree, trust the one with the later date and re-check the vendor page.
 
 ```python
 @dataclass(frozen=True)
@@ -435,6 +435,13 @@ Import `cost_model.py` in a Python session in its folder, or edit the constants.
    <details><summary>Answer</summary>
 
    Costs per month over that horizon are $14,704 ($2,204 + $7,500 + $180,000/36). Value at 100% use is $28,262 at 7% and $53,053 at 14%. So you need 52% at 7% and 28% at 14%. The funnel above reached 39.9%, so at 7% this fails and at 14% it works. That's what a decision looks like: go and measure these two numbers, starting with shadow and canary.
+   </details>
+
+5. **Scope one of the agents you built.** Take the coding agent (note 04) or the data-analysis agent (note 05) and write a one-page scope for it as a real product, using the sections of this note in order. Name the user, the problem and a metric; run `cost_model.py` with your own volumes; state the uplift and use-rate assumptions that decide the ROI; say build, buy or both; write a kill criterion before the first phase. Then add the two things from earlier notes that decide whether anyone keeps using it: what would prove an answer wrong and who checks (notes 04 and 05), and where the agent sits next to the person (note 06).
+
+   <details><summary>What a good answer contains</summary>
+
+   Every number is labelled as measured or assumed, and the assumption that moves the ROI most is named. The model bill is shown next to the value it protects, not alone. The kill criterion has a threshold and a date. The checker is something the agent cannot edit, such as held-out tests or a recomputed number, and the confirmation step shows evidence the person can check.
    </details>
 
 ## Interview checklist

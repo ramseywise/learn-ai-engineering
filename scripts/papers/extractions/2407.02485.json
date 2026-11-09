@@ -1,19 +1,576 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2407.02485",
  "pdf": "generative-ai/02-rag-retrieval/sources/yu-2024-rankrag.pdf",
  "bib": {
   "title": "RankRAG: Unifying Context Ranking with Retrieval-Augmented Generation in LLMs",
-  "first_author": "Yue Yu",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Yue Yu",
+   "Wei Ping",
+   "Zihan Liu",
+   "Boxin Wang",
+   "Jiaxuan You",
+   "Chao Zhang",
+   "Mohammad Shoeybi",
+   "Bryan Catanzaro"
+  ],
+  "first_author": "Yu",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2407.02485",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 86699,
+  "chars_total": 86699,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed; case-study passages in Tables 10-11 skimmed"
  },
- "legacy_report": "SOURCE: \"RankRAG: Unifying Context Ranking with Retrieval-Augmented Generation in LLMs\", Yue Yu (Georgia Tech, work done as an NVIDIA intern), Wei Ping, Zihan Liu, Boxin Wang, Jiaxuan You, Chao Zhang, Mohammad Shoeybi, Bryan Catanzaro (NVIDIA). The PDF is arXiv:2407.02485v1 [cs.CL], 2 Jul 2024, a preprint. The text names no venue.\n\nCOVERAGE: I read all 86,679 chars of the extraction. That covers the main text, Tables 1-11, and appendices A-G (datasets, blend ratios, prompt formats, extra results, case studies). I skimmed the reference list and part of Appendix A.1 and A.2 for the dataset descriptions. Extraction was clean. I did not run the figure captions script.\n\nCLAIMS (ranked)\n- A single instruction-tuned LLM that reranks and generates beats separate expert rerankers on recall, with about 10x less ranking data.\n  number: RankRAG 8B (top 100) NQ R@5 80.3, versus RankLLaMA 8B 77.8 and BGE-Rerank-v2-m3 78.0. Ranking data is ~50k, versus ~503k for RankBERT, monoT5 and RankLLaMA and ~1.6M for BGE.\n  setup: Dragon retriever, top-100 reranked (top-30 for 70B and for GPT-4). Llama3-8B backbone. Tested on NQ, TriviaQA, PopQA, HotpotQA and Inscit, recall at 5, 10 and 20 (Table 6).\n  quote: \"RankRAG achieves better recall over dedicated ranking models trained on10× more ranking data for most cases.\"\n  where: §5.5, p.9\n- Removing the rerank step at inference costs about 2.8 average points.\n  number: average 52.6 with reranking, 49.8 without. PopQA 57.6 versus 49.3.\n  setup: Llama3-8B RankRAG, 9 datasets, zero-shot (Table 3).\n  quote: \"w/o reranking 48.0 80.3 / 86.8 49.3 / 59.0 31.3 / 41.6 26.4 / 30.5 91.1 39.7 49.4 30.9 49.8\"\n  where: Table 3, p.8\n- Reranking gains are larger on harder datasets, where the retriever's top results are less relevant.\n  number: more than 10% over ChatQA-1.5 on PopQA and 2WikimQA.\n  setup: Llama3-RankRAG versus Llama3-ChatQA-1.5, both Dragon, k tested in {5, 10, 20} with the best reported for baselines (Table 2).\n  quote: \"on long-tailed QA (PopQA) and multi-hop QA (2WikimQA) tasks, we achieve more than 10% improvement over ChatQA-1.5.\"\n  where: §5.2, p.7\n- A small amount of ranking data is enough.\n  number: 5k ranking examples (~1% of MS MARCO) already gives \"compelling\" results. Going to 50k gives \"non-marginal gains\". The blend has ~50k ranking pairs in total.\n  setup: NQ exact match, Llama3-8B (Figure 4).\n  quote: \"with 5k ranking data only (∼ 1% of the MS MARCO dataset), RankRAG can already obtain very compelling results, while further increasing the number of ranking data to 50k yields non-marginal gains.\"\n  where: §5.5, p.9\n- Using a generator that was not trained for ranking to rerank hurts. The ranking data has to be in the tuning blend.\n  number: ChatQA-1.5 8B as reranker gets NQ R@5 68.2, below the Dragon baseline of 74.9.\n  setup: Table 6.\n  quote: \"Directly using ChatQA-1.5 to rank passages hurts the performance, indicating the necessity of incorporating ranking data into instruction fine-tuning.\"\n  where: p.9\n- Reranking latency is far below the naive N-times expectation.\n  number: N from 20 to 100 raises exact match by 5.9% to 9.1% across three tasks, for 0.9x to 6.0x added time, against an expected 20x to 100x.\n  setup: Llama3-8B, NQ, TriviaQA and HotpotQA (Figure 5). Relevance scoring generates one token on short inputs.\n  quote: \"While reranking across N = 20to 100 improves the exact match score by 5.9% to 9.1% across three tasks, it incurs an additional 0.9× to 6.0× increase in time – significantly less than the 20× to 100× increase one might expect.\"\n  where: §5.5, p.9\n- After reranking, small k works. Without reranking, accuracy saturates around k=10.\n  number: saturation at k=10. RankRAG with k=5 \"already works well\".\n  setup: ChatQA-1.5 8B and 70B on NQ, TriviaQA, PopQA and FEVER (Figure 1). RankRAG (Figure 6, Appendix E.2).\n  quote: \"find the saturation of accuracy when k = 10.\"\n  where: §3.2, p.3. Appendix E.2: \"k = 5already works well for most datasets.\"\n- Reranking raises recall with weaker retrievers too.\n  number: NQ R@5 69.50% to 77.95% with DPR. TriviaQA R@5 81.95% to 88.71% with Contriever.\n  setup: RankRAG-8B reranking, DPR and Contriever, R@5/10/20 (Table 8). The paper states the end-to-end margin as \"more than 10%\" over ChatQA-1.5 on average.\n  quote: \"Before Ranking 69.50% 76.20% 81.00% 67.60% 75.24% 80.67%\" followed by \"w/ RankRAG 77.95% 81.70% 84.56% 75.32% 80.18% 84.70%\"\n  where: Table 8, p.21\n- Main end-to-end results. RankRAG beats ChatQA-1.5 and GPT-4 on nine general benchmarks.\n  number: average 52.6 (8B) and 56.1 (70B), against ChatQA-1.5 49.6 (8B) and 53.6 (70B), and GPT-4-0613 42.0.\n  setup: Llama3 backbone, zero-shot, KILT splits for NQ, TriviaQA and HotpotQA, Dragon retriever with top-N of 100 (8B) or 30 (70B). Greedy decoding.\n  quote: \"Llama3-RankRAG 8B (0 shot) 50.6 82.9 / 89.5 57.6 / 64.1 35.3 / 46.7 31.4 / 36.9 92.0 40.4 50.4 33.3 52.6\"\n  where: Table 2, p.7\n- Ablation. Treating each retrieved context separately in fine-tuning (RAFT-style) and stage-I SFT alone are much worse.\n  number: average 48.1 for RAFT and 42.2 for SFT only, against 52.6 for the full model. Dropping retrieval-augmented QA (RQA) gives 51.6 and dropping retrieval-augmented ranking (RAR) gives 51.8.\n  setup: Llama3-8B (Table 3).\n  quote: \"w/ RAFT (Lin et al.) 43.3 80.8 / 87.6 48.9 / 56.3 30.5 / 41.8 25.2 / 29.6 91.2 36.8 46.4 30.1 48.1\"\n  where: p.8\n- Transfer to the biomedical domain without domain tuning.\n  number: RankRAG 8B beats Meditron 70B by 6.3%. RankRAG 70B gets average 78.06, against GPT-4-0613 79.97 (\"more than 98%\").\n  setup: Mirage benchmark, MedCPT retriever, MedCorp corpus, five datasets.\n  quote: \"RankRAG 8B surpasses Meditron 70B—a leading open-source LLM for the medical domain—by 6.3%. Besides, RankRAG 70B attains more than 98% performance of GPT-4.\"\n  where: §5.4, p.8\n- GPT-4 as a generator gets worse with retrieved context on some tasks (it refuses to answer).\n  number: GPT-4-0613 TriviaQA EM 84.8 without RAG, 75.0 with RAG. HotpotQA EM 34.5 without, 27.6 with.\n  quote: \"GPT-4 and GPT-4-turbo may refuse to answer the question when retrieved passages do not contain relevant information, thus the EM / accuracy drops after including RAG on TriviaQA, HotpotQA and 2WikimQA.\"\n  where: Table 2 caption, p.7\n- Reranker design. Relevance score = probability of generating \"True\" for a single (question, passage) prompt. Reranking is retrieve top-N, score, keep top-k with k much smaller than N, then generate.\n  number: none\n  quote: \"the RankRAG model calculates the relevance score between the question and retrieved N contexts as the probability of generating the answer as True using the prompt in Table 1, then reranks contexts to only retain top-k (k ≪ N)\"\n  where: §4.3, p.5\n- Training recipe. Stage-I SFT uses 128K examples. Stage-II blends context-rich QA, retrieval-augmented QA (gold plus BM25 negatives, 5 passages), MS MARCO ranking, conversational pseudo-ranking, and retrieval-augmented ranking (list the relevant passage ids). The conversational pseudo-labels cut documents into 150-word chunks and use 4-gram recall against the gold answer, relevant above 0.5 and irrelevant below 0.1.\n  number: 150-word chunks, thresholds 0.5 and 0.1, ~50k ranking pairs.\n  quote: \"we cut each document into 150-word chunks (c1, c2, . . . , cn). We compute the 4-gram recall score between each chunk ci and the ground-truth answer a, considering segments with a recall score above 0.5 as relevant and those below 0.1 as irrelevant\"\n  where: §4.2, p.5\n- Cost and hyperparameters (the paper lists these under implementation).\n  number: RankRAG-8B takes 32 A100s for 10 hours. RankRAG-70B takes 128 A100s for 16 hours. Stage-II learning rate is 3e-7 (8B) and 2e-7 (70B).\n  where: §5.1, p.6\n- Dataset-split caveat. KILT and DPR splits differ, so published NQ and TriviaQA numbers are not comparable across papers.\n  number: KILT has 2837 NQ and 5355 TriviaQA examples. DPR has 3610 and 11316.\n  quote: \"many recent studies report performance metrics on these datasets without clarifying which version was employed for evaluation.\"\n  where: Appendix F, p.22. RankRAG on DPR splits: Llama3-70B NQ 50.0, TriviaQA 72.6 / 82.9.\n\nLIMITS\n- There is no limitations section. The authors concede only that they \"focus on improving single-time retrieval for QA tasks\" and leave multi-round RAG combined with RankRAG to future work (p.7).\n- It is not a drop-in reranker. The model is fine-tuned from Llama2 or Llama3 on a private blend that includes a crowd-sourced conversational set, and no model or code release is mentioned in the text.\n- The headline reranker comparison mixes conditions. GPT-4 reranks only the top 30 \"due to budget constraint\". RankLLaMA is the authors' re-implementation. BGE was trained on NQ, TriviaQA and HotpotQA, so it overlaps the evaluation tasks.\n- Reranker quality is measured by recall at 5, 10 and 20 of answer-containing passages, not by nDCG or other standard IR metrics.\n- Chunking and query parsing are not studied. The only chunking is the 150-word split used to build conversational pseudo-labels. The corpus is a Wikipedia dump (December 2018, and December 2020 for PopQA) and a medical corpus. There are no enterprise or long-document chunking experiments.\n- Contamination is checked only by string match.\n- Baselines are circa mid-2024 (GPT-4-0613, Llama3, ChatQA-1.5, BGE-v2-m3). Rerankers and models released since then are not compared.\n- Latency figures come from a relative plot (Figure 5), not absolute timings.\n\nBUILDS ON\n- Re2G, Glass et al., 2022 (rerank in RAG).\n- RankLLaMA, Ma et al., 2023.\n- monoT5, Nogueira et al., 2020.\n- ChatQA, Liu et al., 2024 (training blend and baseline).\n- RA-DIT, Lin et al., 2024 (RAFT-style comparison).\n- Dragon, Lin et al., 2023 (retriever).\n- DPR, Karpukhin et al., 2020.\n- Contriever, Izacard et al., 2022.\n- Xu et al., 2024b (optimal k about 10).\n- Luan et al., 2021 (dense retriever limits).\n- Self-RAG, Asai et al., 2024a.\n- Mirage, Xiong et al., 2024.\n\nCODE: none. The prompt templates are in Appendix C and D. The key one, from Table 1 and Appendix C.2 (p.5 and p.18): \"For the question <question>, access whether the passage is relevant to the question. Return True if relevant, otherwise False.\" The score is the probability of the token \"True\".\n\nFIGURES (I did not run the captions script, so these come from the text)\n- Figure 1 (p.3): ChatQA-1.5 exact match against context size k=5, 10 and 20 on NQ, TriviaQA, PopQA and FEVER. It shows the trade-off in choosing k and why reranking is needed.\n- Figure 2 (p.4): the two-stage tuning and the retrieve-rerank-generate pipeline diagram.\n- Table 1 (p.5): how all tasks fit one (question, context, answer) format.\n- Figure 4 (p.9): NQ exact match against the number of ranking examples (0, 5k, 10k, 50k).\n- Figure 5 (p.9): exact match against inference time for N=20 to 100. It is the cost-benefit curve of reranking depth.\n- Table 6 (p.9): the reranker comparison table, the most useful one for the note.\n- Table 7 (p.10): a worked case where reranking surfaces two more relevant passages.\n\nPROBLEMS: No embedded instructions were found. The extraction garbles table layouts and figure axis text, but the numbers I quoted are intact. The efficiency formula on p.5 is mangled (\"N ∗t2t1+t3\", presumably N·t2/(t1+t3)). Table 6 lists no per-metric baselines for the 70B model beyond what is quoted. The PDF text gives no peer-reviewed venue."
+ "type": "empirical",
+ "question": "Can one instruction-tuned LLM serve as both the context reranker and the answer generator in RAG, beating a separate expert reranker and strong RAG baselines?",
+ "hypothesis": "Context ranking and answer generation are dual capabilities that mutually enhance each other when an LLM is tuned on both.",
+ "contributions": [
+  "RankRAG: a two-stage instruction-tuning framework that teaches one LLM both context ranking and answer generation",
+  "A small fraction of ranking data in the blend yields ranking that beats LLMs fine-tuned with 10x more ranking data",
+  "Comparison against ChatQA-1.5, GPT-4 and others on nine general-domain and five biomedical RAG benchmarks"
+ ],
+ "method": {
+  "summary": "Llama3 8B/70B are first supervised fine-tuned on 128K instruction examples (Stage-I), then tuned on a Stage-II blend of SFT data, context-rich QA, retrieval-augmented QA, MS MARCO plus synthetic-conversation context ranking (~50k pairs) and retrieval-augmented ranking, all cast as (question, context, answer). At inference a Dragon retriever returns top-N, the model scores each passage by P('True'), keeps top-k and generates.",
+  "task": "open-domain QA, fact verification, conversational QA with retrieve-rerank-generate",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Stage-I SFT blend (private crowd-sourced conversation, OpenAssistant, Dolly, SODA, ELI5, Self-Instruct, Unnatural Instructions, FLAN, CoT)",
+    "role": "train",
+    "size": "128K examples",
+    "split": null,
+    "source": "includes a private crowd-sourced conversational dataset",
+    "preprocessing": "multi-turn format; loss only on last assistant response"
+   },
+   {
+    "name": "Stage-II blend: DROP, NarrativeQA, Quoref, ROPES, NewsQA, TAT-QA, HumanAnnotatedConvQA, SyntheticConvQA, SQuAD, WebQuestions, MS MARCO, Stage-I SFT",
+    "role": "train",
+    "size": "ranking data ~50k pairs (MS MARCO + synthetic conversation); total blend size not stated",
+    "split": "around 1 epoch, 3300 steps",
+    "source": "public sets plus ChatQA's open-sourced ConvQA",
+    "preprocessing": "retrieval-augmented sets: gold + BM25 top contexts to 5 passages, shuffled; ranking negatives mined by BM25; conversation docs cut into 150-word chunks, 4-gram recall with the answer >0.5 relevant, <0.1 irrelevant"
+   },
+   {
+    "name": "NQ, TriviaQA, HotpotQA (KILT splits), PopQA, 2WikimQA, FEVER, Doc2Dial, TopiOCQA, INSCIT",
+    "role": "eval",
+    "size": "NQ 2837, TriviaQA 5355 (KILT); PopQA 1399 long-tail questions; others not stated",
+    "split": "zero-shot",
+    "source": "Dec 2018 Wikipedia dump (NQ, TQA, HotpotQA, 2Wiki), Dec 2020 dump (PopQA)",
+    "preprocessing": "string-match check found no overlap with training data"
+   },
+   {
+    "name": "Mirage biomedical: MMLU-med, PubMedQA, BioASQ, MedQA, MedMCQA",
+    "role": "eval",
+    "size": "1089, 1000, 618, 1273, 4,183 questions",
+    "split": "zero-shot, MedMCQA dev set",
+    "source": "MedCorp corpus, MedCPT retriever",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama3-RankRAG 8B",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "decoder-only",
+    "init_from": "Llama3 8B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "top_N": "100",
+     "k": "best of 5/10/20"
+    }
+   },
+   {
+    "name": "Llama3-RankRAG 70B",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "decoder-only",
+    "init_from": "Llama3 70B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "top_N": "30"
+    }
+   },
+   {
+    "name": "Llama2-RankRAG 7B/13B/70B",
+    "role": "proposed",
+    "params": "7B, 13B, 70B",
+    "architecture": "decoder-only",
+    "init_from": "Llama2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Dragon",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense retriever (Lin et al. 2023)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama3-ChatQA-1.5 8B/70B",
+    "role": "baseline",
+    "params": "8B, 70B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "instruction tuning, next-token loss on the assistant response; ranking cast as True/False or passage-index generation",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98",
+   "lr": "Stage-I 5e-6; Stage-II 3e-7 (8B), 2e-7 (70B)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "Stage-I 128; Stage-II 64",
+   "steps": "Stage-I 1000; Stage-II 3300 (around 1 epoch)",
+   "epochs": "Stage-II around 1",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8B: 32 NVIDIA A100; 70B: 128 NVIDIA A100",
+   "compute": "8B 10 h on 32 A100 (4 h Stage-I, 6 h Stage-II); 70B 16 h on 128 A100 (4 h + 12 h)",
+   "wall_clock": "10 h (8B), 16 h (70B)",
+   "seeds": null,
+   "other": {
+    "stage_II_blend_ratios": "Drop .069, narrativeqa .09, quoref .026, ropes .026, SQuAD RQA .09, SQuAD RAR .02, WebQ RQA .09, WebQ RAR .02, newsqa .09, tatqa-arithmetic .15, tatqa-others .08, ConvQA .2, MS MARCO ranking .15, ConvQA ranking .03, SFT .2, normalised to 1 (App B)"
+   }
+  },
+  "inference": {
+   "decoding": "greedy-equivalent, T=0",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "32 OpenQA, 128 ConvQA, 8 others",
+   "samples": "inferred: one run per item, no seeds or variance reported",
+   "prompting": "zero-shot, system prompt plus top-k reranked passages, 'Answer the above question with a short phrase.'",
+   "retrieval": "Dragon top-N (100 for 8B, 30 for 70B), reranked by P('True'), top-k in {5,10,20} with best reported for baselines",
+   "parameters": {
+    "relevance_score": "probability of generating True",
+    "k": "5, 10, 20"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match",
+     "definition": "EM for OpenQA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "TriviaQA, PopQA and FEVER",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "HotpotQA, 2WikimQA, ConvQA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@k",
+     "definition": "answer recall in top-k passages after ranking",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ChatQA-1.5",
+    "GPT-3.5-turbo",
+    "GPT-4-0613",
+    "GPT-4-turbo-2024-0409",
+    "Llama3-Instruct",
+    "Self-RAG",
+    "RA-DIT",
+    "RePlug",
+    "InstructRetro",
+    "RECOMP",
+    "Atlas",
+    "Raven",
+    "RankBERT",
+    "monoT5",
+    "BGE-Rerank-v2-m3",
+    "RankLLaMA"
+   ],
+   "protocol": "zero-shot; baseline k chosen as best of 5/10/20; GPT rerankers use True token logprob; no significance test or seeds stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "inferred: the Stage-I blend contains a private crowd-sourced conversation set not released"
+  },
+  "prompts": [
+   {
+    "purpose": "context ranking",
+    "text": "For the question <question>, access whether the passage is relevant to the question. Return True if relevant, otherwise False.",
+    "where": "App C.2 and D.1"
+   },
+   {
+    "purpose": "retrieval-augmented ranking",
+    "text": "For the question <question>, access whether the above passages are relevant to the question. Return all the relevant passage id.",
+    "where": "App C.2"
+   },
+   {
+    "purpose": "system prompt",
+    "text": "This is a chat between a user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions based on the context. The assistant should also indicate when the answer cannot be found in the context.",
+    "where": "App C"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we reduce the learning rate to 3e-7 for 8B and 2e-7 for 70B model, set the batch size to 64, and train the model for 3300 steps (around 1 epoch)",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RankRAG 8B (top-100 rerank of Dragon) beats dedicated rerankers on NQ recall@5 with about 50k ranking examples",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ R@5",
+   "value": "80.3",
+   "unit": "%",
+   "baseline_value": "78.0 (BGE-Rerank-v2-m3), 77.8 (RankLLaMA 8B), 74.9 (Dragon, no rerank)",
+   "n": null,
+   "setup": "Dragon retriever top 100 reranked; Llama3-RankRAG 8B vs BGE-Rerank-v2-m3 568M (~1.6M rank data, trained on NQ/TriviaQA/HotpotQA) and RankLLaMA 8B re-implementation (~503k)",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row RankRAG 8B (top 100), column NQ R@5"
+  },
+  {
+   "claim": "Removing the rerank step at inference lowers RankRAG 8B average over nine datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 9 datasets",
+   "value": "49.8",
+   "unit": "points",
+   "baseline_value": "52.6 (full RankRAG 8B)",
+   "n": null,
+   "setup": "Llama3-8B RankRAG ablation, Dragon top-N=100 retrieval, zero-shot, k chosen from 5/10/20",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/o reranking, column Avg."
+  },
+  {
+   "claim": "Llama3-RankRAG 8B averages above Llama3-ChatQA-1.5 8B on nine general-domain datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 9 datasets",
+   "value": "52.6",
+   "unit": "points",
+   "baseline_value": "49.6 (ChatQA-1.5 8B)",
+   "n": null,
+   "setup": "Zero-shot, Dragon retriever, top-N 100 reranked to top-k, T=0",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama3-RankRAG 8B (0 shot), column Avg."
+  },
+  {
+   "claim": "Llama3-RankRAG 70B averages above ChatQA-1.5 70B and GPT-4-0613 RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 9 datasets",
+   "value": "56.1",
+   "unit": "points",
+   "baseline_value": "53.6 (ChatQA-1.5 70B), 43.5 (GPT-4-0613 RAG)",
+   "n": null,
+   "setup": "Zero-shot, Dragon top-N 30 reranked, T=0",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama3-RankRAG 70B (0 shot), column Avg."
+  },
+  {
+   "claim": "RankRAG 8B NQ exact match vs ChatQA-1.5 8B",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ EM",
+   "value": "50.6",
+   "unit": "%",
+   "baseline_value": "42.4",
+   "n": null,
+   "setup": "KILT NQ split, zero-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama3-RankRAG 8B (0 shot), column NQ"
+  },
+  {
+   "claim": "RankRAG 8B on PopQA long-tail subset vs ChatQA-1.5 8B",
+   "kind": "measured",
+   "source": null,
+   "metric": "PopQA EM",
+   "value": "57.6",
+   "unit": "%",
+   "baseline_value": "52.6",
+   "n": null,
+   "setup": "PopQA long-tail subset (1399 questions), Dec 2020 Wikipedia index",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Llama3-RankRAG 8B (0 shot), column PopQA"
+  },
+  {
+   "claim": "Reranking raises exact match by 5.9% to 9.1% for N=20 to 100, at 0.9x to 6.0x extra time",
+   "kind": "measured",
+   "source": null,
+   "metric": "added time",
+   "value": "0.9x to 6.0x",
+   "unit": "x of baseline time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B, three tasks (NQ, TriviaQA, HotpotQA), N varied 20 to 100",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "While reranking across N = 20 to 100 improves the exact match score by 5.9% to 9.1% across three tasks, it incurs an additional 0.9× to 6.0× increase in time"
+  },
+  {
+   "claim": "With 5k ranking examples (about 1% of MS MARCO) RankRAG is already compelling; 50k adds non-marginal gains",
+   "kind": "measured",
+   "source": null,
+   "metric": "ranking data size",
+   "value": "5k",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B, NQ EM read from Fig 4",
+   "note": null,
+   "where": "Sec 5.5, Fig 4",
+   "quote": "with 5k ranking data only (∼1% of the MS MARCO dataset), RankRAG can already obtain very compelling results"
+  },
+  {
+   "claim": "Using ChatQA-1.5 8B (no ranking data) as the ranker is worse than the Dragon retriever",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ R@5",
+   "value": "68.2",
+   "unit": "%",
+   "baseline_value": "74.9 (Dragon)",
+   "n": null,
+   "setup": "Dragon top 100 reranked by ChatQA-1.5 8B",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row ChatQA-1.5 8B, column NQ R@5"
+  },
+  {
+   "claim": "Without reranking, RAFT-style per-context tuning trails RankRAG on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 9 datasets",
+   "value": "48.1",
+   "unit": "points",
+   "baseline_value": "52.6",
+   "n": null,
+   "setup": "Llama3-8B ablation, same training data",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/ RAFT (Lin et al.), column Avg."
+  },
+  {
+   "claim": "Llama3-RankRAG 70B on biomedical Mirage average, close to GPT-4-0613",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 5 biomedical sets",
+   "value": "78.06",
+   "unit": "%",
+   "baseline_value": "79.97 (GPT-4-0613)",
+   "n": null,
+   "setup": "Zero-shot, MedCPT retriever, MedCorp corpus; baselines mostly from Xiong et al. 2024",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Llama3-RankRAG 70B, column Avg."
+  },
+  {
+   "claim": "RankRAG improves recall over the retriever for DPR and Contriever (NQ R@5)",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ R@5",
+   "value": "77.95%",
+   "unit": "%",
+   "baseline_value": "69.50% (before ranking)",
+   "n": null,
+   "setup": "RankRAG-8B reranking DPR top-N",
+   "note": null,
+   "where": "App E.1, Table 8",
+   "table": "Table 8, NQ DPR, row w/ RankRAG, column R@5"
+  },
+  {
+   "claim": "Llama2-RankRAG 7B average vs ChatQA-1.0 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 9 datasets",
+   "value": "50.3",
+   "unit": "points",
+   "baseline_value": "46.6",
+   "n": null,
+   "setup": "Llama2 backbone, zero-shot",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Llama2-RankRAG 7B, column Avg."
+  }
+ ],
+ "limits": [
+  "Single-time retrieval only; multi-round RAG left as future work (Sec 5.2)",
+  "Reranking adds latency; measured 0.9x to 6.0x for N=20 to 100 on Llama3-8B only",
+  "BGE-Rerank was trained on NQ, TriviaQA and HotpotQA and on ~1.6M pairs, so the comparison is not data-matched",
+  "Stage-I data includes a private crowd-sourced set; no code or weights stated",
+  "No seeds, variance or significance tests; baseline k tuned per baseline on test sets",
+  "GPT-4 RAG numbers drop partly because of refusals (Table 2 footnote); NQ/TriviaQA use KILT subsets, DPR-split results in Table 9"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "ChatQA: Surpassing GPT-4 on Conversational QA and RAG",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Main baseline and source of ConvQA data and training recipe (Liu et al. 2024)",
+   "quote": null
+  },
+  {
+   "work": "Dragon retriever (Lin et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "default retriever",
+   "quote": null
+  },
+  {
+   "work": "RA-DIT (Lin et al. 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RAFT-style per-context tuning compared in ablation",
+   "quote": null
+  },
+  {
+   "work": "Re2G (Glass et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RankBERT reranker",
+   "quote": null
+  },
+  {
+   "work": "monoT5 (Nogueira et al. 2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reranker baseline",
+   "quote": null
+  },
+  {
+   "work": "RankLLaMA (Ma et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "re-implemented at 8B",
+   "quote": null
+  },
+  {
+   "work": "BGE-Reranker (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "trained on overlapping tasks",
+   "quote": null
+  },
+  {
+   "work": "MS MARCO",
+   "year": 2016,
+   "arxiv": "1611.09268",
+   "relation": "uses-data",
+   "note": "ranking data",
+   "quote": null
+  },
+  {
+   "work": "Self-RAG",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RAG baseline",
+   "quote": null
+  },
+  {
+   "work": "Mirage benchmark (Xiong et al. 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "biomedical evaluation",
+   "quote": null
+  },
+  {
+   "work": "Llama 3 / Llama 2",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "backbones",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Two-stage instruction tuning framework for RankRAG.",
+   "page": 4,
+   "why": "Shows the retrieve-rerank-generate flow and the Stage-I/II data blend"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Performance of ChatQA-1.5 on different context size k.",
+   "page": 3,
+   "why": "Shows saturation near k=10 that motivates reranking"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance v.s. Efficiency analysis for RankRAG.",
+   "page": 9,
+   "why": "EM against inference time as N varies"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Extraction faults none; figure axis values not recoverable from text"
+ ]
 }

@@ -1,4 +1,4 @@
-# Lecture deck for ai-engineering/03-harness-engineering, notes 01-10.
+# Lecture deck for ai-engineering/03-harness-engineering, notes 01-10, including 03b and 05b.
 # Build: make slides PILLAR=03-harness-engineering STRICT=1 PREVIEW=1
 # Running example: a refund agent (notes/01) growing from a demo into a production harness;
 # long-horizon parts use the published long-run experiments the notes cite.
@@ -152,7 +152,7 @@ parts:
           - "Every line in a good `AGENTS.md` traces back to something that went wrong"
           - "Keep `AGENTS.md` under about **60 lines**: a pilot's checklist, not a style guide"
           - Lines that cannot name their originating failure are speculative, so delete them
-        takeaway: A harness grows by encoding each real failure as a check, so the same failure cannot happen again.
+        takeaway: A harness grows by encoding each real failure as a check, so it cannot recur.
         recall: What is the harness ratchet?
         source: notes/01-what-a-harness-is.md
         notes: >-
@@ -165,12 +165,10 @@ parts:
         image: ../sources/images/faldor-gemini-argon-minecraft-fig2.png
         caption: "Four coding agents, one shared server, a fifth Observer that never plays (Faldor et al., 2026)"
         bullets:
-          - "**Instructions:** what should I do, by what rules?"
-          - "**Tools:** what can I act with?"
-          - "**Environment:** where do I run?"
-          - "**State:** what has happened so far?"
+          - "**Instructions, Tools:** what do I do, and act with?"
+          - "**Environment, State:** where do I run, what happened?"
           - "**Feedback:** did it work?"
-        takeaway: Agents are rarely stuck and often confidently wrong, which points at a gap in the feedback subsystem.
+        takeaway: Agents are rarely stuck, often confidently wrong, which points at a feedback gap.
         recall: "An agent is confidently wrong rather than stuck: which subsystem has the gap?"
         source: notes/02-harness-anatomy.md
         notes: >-
@@ -187,8 +185,8 @@ parts:
           - {title: Plan file, text: for anything past about 5 steps}
           - {title: Verification gate, accent: "D4621A", text: one binary pass/fail check}
           - {title: Structured traces, text: of every step}
-        takeaway: Build capability first, then the constraints that make it survive scale, and productize last.
-        recall: In what order do you build up a harness?
+        takeaway: Start with a tool loop, sandbox, filesystem, plan file, one verification gate and traces, then add constraints as failures show up.
+        recall: What do you build on Monday morning, and what comes after?
         source: notes/02-harness-anatomy.md
         notes: >-
           If you start something on Monday, build these six. Note the single verification gate: one binary check
@@ -196,7 +194,7 @@ parts:
           Each of the next parts opens up one row here, beginning with the tools.
 
   - title: What it may touch
-    summary: Tools written for an agent · Requests vs. rules · Test the gate
+    summary: Tools written for an agent · MCP, writes and async tools · Requests vs. rules · Test the gate
     divider: true
     agenda: true
     notes: >-
@@ -285,19 +283,19 @@ parts:
         caption: "Two-level matching, server then tool (Li, AI Agents in Depth, 2026, Apache-2.0)"
         bullets:
           - "Five MCP servers: about **55K tokens**, roughly 30% of a 200K window, before the first message"
-          - "Match server first, then tool; append schemas at the end and leave them pinned"
           - "Dynamic discovery: Opus 4 **49% to 74%** on tool selection"
-          - "MCP-Zero: **~98% fewer tokens** across ~2,800 tools; Cursor's tool folder: **46.9%** fewer"
+          - "MCP-Zero: **~98% fewer tokens** across ~2,800 tools"
         takeaway: Eagerly loaded tool definitions can take a large share of the window, so discover them on demand and append new ones.
         recall: Why discover tool definitions on demand instead of loading them all up front?
         source: notes/03-tool-design.md
         notes: >-
           Definitions are not free. Li measures five typical MCP servers at about 55 thousand tokens, roughly
           thirty percent of a 200 thousand token window, before anyone has said anything. So match in two levels
-          and append what you need at the end, so the cache survives. Skills are the same idea for procedures.
+          and append what you need at the end, so the cache survives; Cursor's tool folder cut tokens by 46.9 percent. Skills are the same idea for procedures.
       - layout: compare
         kicker: Worked example
         title: A skill description is routing logic
+        level: deep
         emphasis: right
         left:
           title: Reads like documentation
@@ -322,7 +320,75 @@ parts:
         notes: >-
           Only the name and description sit in the window, and the body loads on demand. So the description is
           routing logic, and detail goes in the body where it costs nothing until used. So far we have helped the
-          agent choose well. Now for what happens when it chooses badly.
+          agent choose well. Next, tools that cross a process boundary, write to the world or take minutes.
+      - layout: table
+        kicker: Beyond one call
+        title: A third-party MCP server is code you didn't write
+        lead: Its tool descriptions sit in the model's context, so they steer it.
+        header: [Risk, What happens, Mitigation]
+        widths: [2.2, 4.4, 3.4]
+        highlight: [0]
+        rows:
+          - [Description poisoning, "Instructions hidden in a description steer the model", Review descriptions as code and diff them on every update]
+          - [Compromised server, A trusted server ships a bad version, "Pin versions; don't auto-update"]
+          - [Tool shadowing, A tool's name or description hijacks another server's tool, Namespace tools per server]
+          - [Credential exposure, The server holds broad tokens, Least-privilege credentials per server]
+        takeaway: Treat a tool description as untrusted code, pin and diff descriptions, and break the lethal triad (private data, untrusted content, an exfiltration channel).
+        recall: How do you defend against a poisoned MCP tool description?
+        source: notes/03b-mcp-write-safety-and-async-tools.md
+        notes: >-
+          Default to an in-process tool and promote to MCP only when several callers need it, a security boundary
+          must be crossed, it deploys independently, discovery matters or it holds its own state. Once a server is
+          third-party, its descriptions are text you did not write sitting in the window. The structural defence is
+          to break the lethal triad and gate risky calls, as the execution-boundaries note shows.
+      - layout: steps
+        kicker: Write safety
+        title: A tool that writes needs four things before it runs
+        steps:
+          - {title: Declare the side effect, text: "The description says it mutates, sends or spends."}
+          - {title: Confirm first, text: "A confirmation step precedes anything irreversible."}
+          - {title: Key the call, text: "The caller supplies an idempotency key, so a retry is safe.", accent: "D4621A"}
+          - {title: Validate inputs, text: "Check model-generated inputs against the schema before executing."}
+        takeaway: A tool with no idempotency key must never be auto-retried, because one timeout can become three charged invoices.
+        recall: Why must a write tool without an idempotency key never be auto-retried?
+        source: notes/03b-mcp-write-safety-and-async-tools.md
+        notes: >-
+          With no key from the downstream API there are two patterns. Query before mutate: check whether the first
+          attempt already landed. Or a two-phase call, where prepare returns a preview and a short-lived confirm
+          token and commit accepts the token once, so a retry with a spent token is rejected. For a live data store,
+          register narrow operations rather than a raw execute_sql, and log every call.
+      - layout: compare
+        kicker: Asynchronous tools
+        title: Name the initiation, not the completion
+        emphasis: right
+        left:
+          title: Implies the work is done
+          accent: "94A3B8"
+          code: |-
+            phone_call(number)
+            # returns... when?
+            # no task_id to poll
+            # no way to cancel
+          tag: The model assumes the call has ended
+        right:
+          title: Says what really happens
+          code: |-
+            initiate_phone_call(number)
+            # -> task_id + status, at once
+            get_status(task_id)
+            cancel(task_id)
+            # events: phone_call_connected,
+            #         phone_call_ended
+          tag: Asynchrony lives in the interface
+        takeaway: Name a slow tool for its initiation, return a task ID at once, and report completion as an event.
+        recall: How should you design a tool call that takes minutes?
+        source: notes/03b-mcp-write-safety-and-async-tools.md
+        notes: >-
+          Models are trained on the assumption that a call is followed by its result. Rather than fight that, put
+          the asynchrony in the interface. Say so in the description, and give the task ID verbs. Event-trigger
+          tools such as timers and shell monitors need precise trigger conditions and enough context in the payload
+          that the agent needs no extra query on waking. How the harness merges those events into the trajectory is
+          an orchestration question, covered later. First, what happens when the agent chooses badly.
       - layout: table
         kicker: Enforcement
         title: Match the enforcement to the cost of being wrong
@@ -334,8 +400,8 @@ parts:
           - [Always do, "Instruction in `AGENTS.md`", Run the formatter before committing]
           - [Ask first, Permission gate or HITL confirmation, "Add a dependency, change a schema"]
           - [Never do, "Hook or permission deny, never a sentence", "Write `.env`, force-push"]
-        takeaway: An instruction is a request and a hook is a rule, so anything that must hold every time belongs in a hook or a permission.
-        recall: What decides whether a constraint belongs in AGENTS.md, a permission gate or a hook?
+        takeaway: An instruction is a request and a hook is a rule.
+        recall: Which constraints belong in a hook or permission rather than a sentence?
         source: notes/04-execution-boundaries.md
         notes: >-
           This table sorts your rules into three buckets. Anything in the never bucket has no business being a
@@ -374,7 +440,7 @@ parts:
           bullets:
             - "Full error, file and line"
             - The agent learns within **one step**
-            - Typecheck and lint become back-pressure
+            - Typecheck and lint push back at once
           tag: High-signal channel
         takeaway: A hook that speaks only on failure teaches within one step, while one that announces every pass trains the model to skim.
         recall: Why should a hook be silent on success?
@@ -390,9 +456,7 @@ parts:
         caption: "Two of the five layers (Rothman, Context Engineering for Multi-Agent Systems, Fig. 8.2)"
         bullets:
           - "Five layers: pre-input, pre-retrieval, pre-generate, post-generate, escalation"
-          - Each guardrail lives in the component it protects
-          - "Tool inputs are model-written, so they are **semi-trusted**"
-          - Validate them against the schema like an external request
+          - "Tool inputs are model-written, so **semi-trusted**: validate them like an external request"
         takeaway: Treat model-written tool inputs as semi-trusted, and validate them against the schema as you would an external request.
         recall: How should you treat model-written tool inputs?
         source: notes/04-execution-boundaries.md
@@ -502,6 +566,7 @@ parts:
       - layout: flow
         kicker: Scope
         title: One feature at a time, passed only by evidence
+        level: deep
         steps:
           - {label: not_started, accent: "94A3B8"}
           - {label: active, sub: "WIP = 1", accent: "1E3A5F"}
@@ -509,14 +574,13 @@ parts:
         bullets:
           - "`blocked` hangs off active, and a script flips the state"
           - The agent requests verification and never edits the field
-          - "Verified completion rate = verified ÷ activated, which sits at **1.0** between features under WIP = 1"
         takeaway: With one active feature and a script that flips the state, an agent cannot overreach or mark its own work as passing.
         recall: How do WIP = 1 and script-owned feature states stop overreach and under-finishing?
         source: notes/10-scope-and-done.md
         notes: >-
           Agents have two scope failures: they do too much at once and they stop too soon. A feature list fixes
           both, if it is a real primitive. One active item at a time. Each has a behaviour, a verification and a
-          state. And the agent doesn't own the state field: it asks for verification, and a script flips it.
+          state. And the agent doesn't own the state field: it asks for verification, and a script flips it. Verified completion rate is verified divided by activated, and it sits at 1.0 between features under WIP = 1.
       - layout: table
         kicker: Recovery
         title: Not every failure is worth retrying
@@ -652,14 +716,13 @@ parts:
         image: ../sources/images/faldor-gemini-argon-minecraft-fig1.png
         caption: "Four agents, 27 h 14 min, 605 deaths along the bottom (Faldor et al., 2026)"
         bullets:
-          - Four Gemini agents beat the Ender Dragon with no human help
           - "**27 h 14 min**, 605 deaths, 6 restarts"
           - Shared notes and chat sat outside any context window
         takeaway: A 27-hour unattended run worked because what the team knew lived outside any single agent's context window.
         recall: What let the Minecraft agents keep making progress through 605 deaths and 6 restarts?
         source: notes/06-long-horizon-execution.md
         notes: >-
-          This is a rare public record of a long unattended run. Four agents, twenty-seven hours, 605 deaths along
+          This is a rare public record of a long unattended run: four Gemini agents beat the Ender Dragon with no human help. Four agents, twenty-seven hours, 605 deaths along
           the bottom of the timeline, and six restarts. What the team knew survived because it lived in shared
           notes and chat. The repo plays the same role for coding agents.
       - layout: table
@@ -737,10 +800,7 @@ parts:
           - Orchestrator holds the plan; subagents hold the details
           - "Deep Agents' `task` tool: fresh instance, runs to completion, **one** final report"
           - Isolation is the most expensive context lever, so use it at a real boundary
-        aside:
-          title: The sizing rule
-          accent: "1E3A5F"
-          body: Give each subagent the minimum context, authority and execution budget needed to finish one clearly defined task.
+          - Give each one the minimum context, authority and execution budget for one defined task
         takeaway: The best reason for a subagent is to absorb exploration, returning a condensed result and not the exploration itself.
         recall: What is the main reason to use a subagent, and what should it return?
         source: notes/07-orchestration.md
@@ -825,7 +885,7 @@ parts:
           modes, because plan errors spread into a lot of fully executed work. Now, where do you stand overall?
       - layout: table
         kicker: Where you stand
-        title: Most teams claiming stage 3 are at stage 1
+        title: Stage 3 means verification runs without anyone remembering
         header: [Stage, Name, What exists]
         widths: [1, 2.4, 6.6]
         highlight: [2, 3]
@@ -841,7 +901,7 @@ parts:
         notes: >-
           Stage one makes it work, two makes it trustworthy, three makes it improvable. The failure that hides the
           others is claiming a stage you are not at. "We have evals" often means a notebook run by hand. So ask:
-          can I point to the code that runs it on every task, with no human remembering to?
+          can I point to the code that runs it on every task, with no human remembering to? Most teams claiming stage 3 are at stage 1.
       - layout: flow
         kicker: Monday morning
         title: On every model upgrade, try removing scaffolding
@@ -883,7 +943,7 @@ parts:
           - title: Maturity
             accent: "0EA5C9"
             body: Approve the plan. Fewest agents the task allows. Strip scaffolding on each upgrade.
-        takeaway: When an agent fails, change the system around it, and then make sure that failure cannot happen again.
+        takeaway: When an agent fails, change the system around it, then make sure that failure cannot recur.
         recall: What do you do when an agent fails?
         source: notes/08-maturity-and-failure-modes.md
         notes: >-
@@ -898,14 +958,10 @@ parts:
           - "**Eval pillar (generative-ai):** graders, calibration and pass^k, which every rule here depends on"
           - "**Practice:** `practice/tool-server-sandbox` in this pillar"
           - "**Read:** Anthropic on long-running harnesses; OpenAI on harness engineering; Li, AI Agents in Depth"
-        aside:
-          title: The one idea to keep
-          accent: "1E3A5F"
-          body: The model holds the intelligence, and the harness makes it useful.
         takeaway: Loop engineering runs the harness again, against a goal, until a scorekeeper says stop.
         recall: Which pillar covers the loops a harness runs?
         source: notes/10-scope-and-done.md
         notes: >-
-          The next pillar takes this harness and asks about the loop itself: when to stop, and how it improves.
+          The one idea to keep: the model holds the intelligence, and the harness makes it useful. The next pillar takes this harness and asks about the loop itself: when to stop, and how it improves.
           Before then, run the tool server sandbox in the practice folder, and try the canary pattern on your own
           permissions. See what actually holds.

@@ -1,0 +1,615 @@
+{
+ "schema": 1,
+ "key": "2403.03507",
+ "pdf": "ai-engineering/07-inference-engineering/sources/zhao-2024-galore.pdf",
+ "bib": {
+  "title": "GaLore: Memory-Efficient LLM Training by Gradient Low-Rank Projection",
+  "authors": [
+   "Jiawei Zhao",
+   "Zhenyu Zhang",
+   "Beidi Chen",
+   "Zhangyang Wang",
+   "Anima Anandkumar",
+   "Yuandong Tian"
+  ],
+  "first_author": "Zhao",
+  "year": 2024,
+  "venue": "Proceedings of the 41st International Conference on Machine Learning, Vienna, Austria. PMLR 235",
+  "arxiv": "2403.03507",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 75371,
+  "chars_total": 75371,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can LLM pre-training and fine-tuning be made memory-efficient while still learning full parameters, by projecting gradients (not weights) into a low-rank subspace?",
+ "hypothesis": "Weight gradients become low-rank during training, so optimizer states kept for a low-rank projection of the gradient, with periodically switched subspaces, match full-rank training at far lower memory than LoRA-style reparameterisation.",
+ "contributions": [
+  "GaLore: gradient low-rank projection allowing full-parameter learning with optimizer states in a compact space",
+  "Theory: gradient becomes low-rank for reversible networks; convergence with fixed projections",
+  "Pre-training LLaMA up to 7B (19.7B tokens) and GLUE fine-tuning; 8-bit GaLore trains 7B within 24GB"
+ ],
+ "method": {
+  "summary": "Per weight matrix, GaLore projects the gradient with the top-r singular vectors of the gradient (refreshed every T steps), runs Adam/AdamW/8-bit Adam/Adafactor in the compact space, projects the update back and adds it to the full weights. Evaluated on C4 LLaMA pre-training (60M to 7B) against Full-Rank, Low-Rank, LoRA, ReLoRA, and on RoBERTa-Base GLUE fine-tuning, with memory and throughput measurement.",
+  "task": "LLM pre-training (next-token, C4) and fine-tuning (GLUE, SQuAD, OpenAssistant, Belle-1M)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "1.3B / 2.6B / 7.8B / 13.1B / 19.7B tokens for 60M/130M/350M/1B/7B (Table 5); Table 2 text lists 1.1B/2.2B/6.4B/13.1B for 60M-1B",
+    "split": "validation perplexity; no data repetition",
+    "source": "Raffel et al. 2020 cleaned Common Crawl",
+    "preprocessing": null
+   },
+   {
+    "name": "GLUE",
+    "role": "both",
+    "size": null,
+    "split": "8 tasks: CoLA STS-B MRPC RTE SST2 MNLI QNLI QQP",
+    "source": "Wang et al. 2019",
+    "preprocessing": "max seq len 512"
+   },
+   {
+    "name": "SQuAD",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "OpenAssistant Conversations",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Kopf et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "Belle-1M",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "BELLEGroup 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-based 60M/130M/350M/1B/7B",
+    "role": "proposed",
+    "params": "60M, 130M, 350M, 1B, 7B",
+    "architecture": "LLaMA decoder-only, RMSNorm, SwiGLU",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8/12/24/32/32",
+    "hidden": "512/768/1024/2048/4096",
+    "heads": "8/12/16/24/32",
+    "context": "256 max sequence length",
+    "other": {
+     "intermediate": "1376/2048/2736/5461/11008",
+     "rank_r_over_dmodel": "128/256, 256/768, 256/1024, 512/2048 for 60M-1B; 7B r=1024"
+    }
+   },
+   {
+    "name": "RoBERTa-Base",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": "Hugging Face pre-trained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-Base",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": "pre-trained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "SQuAD, rank 16"
+    }
+   },
+   {
+    "name": "Gemma-2b, Phi-2, LLaMA-7B",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": "pre-trained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "OpenAssistant and Belle fine-tuning, rank 128"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy (pre-training); task fine-tuning",
+   "optimizer": "Adam (beta1 0.9, beta2 0.999, eps 1e-8) with GaLore; also AdamW, 8-bit Adam, Adafactor with first-order stats",
+   "lr": "GaLore 0.01 with scale alpha 0.25 (effective 0.0025) for all pre-training sizes; baselines tuned from {0.01,0.005,0.001,0.0005,0.0001}",
+   "lr_schedule": "cosine annealing, decaying to 10% of initial lr",
+   "warmup": "first 10% of training steps",
+   "batch_size": "131K tokens (pre-training); 16 (32 for CoLA) for GLUE; token batch 256 for memory measurement",
+   "steps": "10K/20K/60K/100K/150K for 60M/130M/350M/1B/7B",
+   "epochs": "30 (GLUE)",
+   "tokens": "1.3B/2.6B/7.8B/13.1B/19.7B",
+   "seq_len": "256 (pre-training); 512 (GLUE)",
+   "precision": "BF16",
+   "weight_decay": null,
+   "dropout": "LoRA dropout 0.05 (baseline)",
+   "regularisation": null,
+   "hardware": "NVIDIA A100 GPUs; 7B run on 8 nodes, 64 A100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "single trial for 7B; seeds otherwise not stated",
+   "other": {
+    "galore_T": "200",
+    "galore_alpha_pretrain": "0.25",
+    "galore_finetune_alpha_r4": "4",
+    "galore_finetune_alpha_r8": "2",
+    "glue_lr_r4": "1e-5 (MNLI SST-2 QNLI QQP RTE STS-B), 3e-5 (MRPC CoLA)",
+    "glue_lr_r8": "1e-5 MNLI QNLI CoLA, 2e-5 SST-2 MRPC QQP RTE, 3e-5 STS-B",
+    "lora_alpha": "32",
+    "projection": "one projector only (P if m<=n else Q), from SVD of current gradient",
+    "layers_applied": "all multi-head attention and feed-forward layers",
+    "per_layer_updates": "used in 8-bit GaLore memory results",
+    "T_range_note": "T between 50 and 1000 makes no much difference",
+    "glue_lr_note": "Table 7 prints learning rates as 1E-05, 2E-05, 3E-05"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "validation perplexity",
+     "definition": "C4 validation perplexity",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "memory estimate",
+     "definition": "BF16 parameters plus optimizer states (Table 2); measured peak memory at token batch 256 (Fig 4)",
+     "unit": "GB",
+     "higher_is_better": false
+    },
+    {
+     "name": "throughput",
+     "definition": "tokens/s and samples/s on LLaMA 1B",
+     "unit": "tokens/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "GLUE score",
+     "definition": "per-task metric, average over tasks",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Full-Rank Adam",
+    "Low-Rank (W=BA)",
+    "LoRA",
+    "ReLoRA (no full-rank warmup)",
+    "BF16 AdamW",
+    "Adafactor",
+    "8-bit Adam"
+   ],
+   "protocol": "Learning rate tuned per baseline under same compute; single run, no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "Stated: 'Code is provided in the link' (URL not in extracted text)",
+   "weights": null,
+   "data": "C4 public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.galore_T",
+    "quote": "we set subspace frequency T to 200 and scale factor α to 0.25",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "8-bit GaLore reduces total memory vs BF16 Adam when pre-training LLaMA 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "total memory reduction",
+   "value": "63.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B, token batch 256, single device, no activation checkpointing or offloading, 8-bit GaLore with per-layer updates; 37.92G saved",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "8-bit GaLore reduces 37.92G (63.3%)"
+  },
+  {
+   "claim": "8-bit GaLore pre-trains LLaMA 7B within a 24GB GPU budget",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory",
+   "value": "22.0",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B, per-GPU token batch up to 500, no checkpointing/offload",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "only requires 22.0G memory to pre-train LLaMA 7B"
+  },
+  {
+   "claim": "Optimizer-state memory saved vs 8-bit Adam from low-rank projection",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimizer state memory reduction",
+   "value": "65.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B, 9.6G saved; per-layer updates save a further 13.5G of weight gradients; total vs 8-bit Adam 24.5G (52.3%)",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "reduces 9.6G"
+  },
+  {
+   "claim": "LLaMA 7B 8-bit GaLore reaches perplexity close to 8-bit Adam after 150K steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "14.65",
+   "unit": "validation perplexity",
+   "baseline_value": "14.61",
+   "n": null,
+   "setup": "C4, 19.7B tokens, r=1024, single trial, no hyperparameter tuning, 64 A100 over 8 nodes",
+   "note": null,
+   "where": "Sec 5.3, Table 3",
+   "quote": "achieves a perplexity of 14.65"
+  },
+  {
+   "claim": "LLaMA 1B validation perplexity GaLore vs full-rank",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity (memory of params+optimizer states)",
+   "value": "15.64",
+   "unit": "validation perplexity",
+   "baseline_value": "15.56 (7.80G) full-rank",
+   "n": null,
+   "setup": "C4, 13.1B tokens, r=512, Adam, BF16",
+   "note": null,
+   "where": "Table 2",
+   "quote": "15.64 (4.38G)",
+   "table": "Table 2, row GaLore, column 1B"
+  },
+  {
+   "claim": "LoRA on LLaMA 1B perplexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "19.21",
+   "unit": "validation perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same setup as Table 2",
+   "note": null,
+   "where": "Table 2",
+   "quote": "19.21 (6.17G)",
+   "table": "Table 2, row LoRA, column 1B"
+  },
+  {
+   "claim": "ReLoRA on LLaMA 1B perplexity, no full-rank warmup",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "18.33",
+   "unit": "validation perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same setup as Table 2",
+   "note": null,
+   "where": "Table 2",
+   "quote": "18.33 (6.17G)",
+   "table": "Table 2, row ReLoRA, column 1B"
+  },
+  {
+   "claim": "GaLore on 60M perplexity vs full rank",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation perplexity",
+   "value": "34.88",
+   "unit": "validation perplexity",
+   "baseline_value": "34.06 (0.36G)",
+   "n": null,
+   "setup": "C4, 1.1B tokens, r=128",
+   "note": null,
+   "where": "Table 2",
+   "quote": "34.88 (0.24G)",
+   "table": "Table 2, row GaLore, column 60M"
+  },
+  {
+   "claim": "RoBERTa-Base GLUE average, GaLore rank 4 vs LoRA rank 4",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "85.89",
+   "unit": "avg score",
+   "baseline_value": "85.61",
+   "n": null,
+   "setup": "GLUE 8 tasks, 30 epochs; LoRA rank 4 = 85.61, full fine-tuning 86.28; memory 253M vs 257M vs 747M",
+   "note": null,
+   "where": "Sec 1, Table 4",
+   "quote": "GaLore achieves an average score of 85.89"
+  },
+  {
+   "claim": "RoBERTa-Base GLUE average, GaLore rank 8",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "85.94",
+   "unit": "avg score",
+   "baseline_value": "85.93",
+   "n": null,
+   "setup": "LoRA rank 8 = 85.93",
+   "note": null,
+   "where": "Table 4",
+   "quote": "85.94",
+   "table": "Table 4, row GaLore (rank=8), column Avg"
+  },
+  {
+   "claim": "8-bit GaLore throughput on LLaMA 1B with per-layer updates; overhead vs 8-bit Adam",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput overhead",
+   "value": "17",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 1B, token batch 256; 1019.63 tokens/s vs 1205.31 for Adam8bit layer-wise (Table 11)",
+   "note": null,
+   "where": "Sec 5.5, Table 11",
+   "quote": "induces 17% overhead compared to 8-bit Adam implementation"
+  },
+  {
+   "claim": "Without per-layer updates throughput improves",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": "8.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1109.38 tokens/s",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "improving the throughput by 8.8%"
+  },
+  {
+   "claim": "GaLore on SQuAD with BERT-Base, rank 16",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "88.29",
+   "unit": "F1",
+   "baseline_value": "88.41",
+   "n": null,
+   "setup": "Exact match 80.52; baseline 80.83/88.41; LoRA 77.99/86.11",
+   "note": null,
+   "where": "App D.2",
+   "quote": "88.29",
+   "table": "Table 8, row GaLore, column F1"
+  },
+  {
+   "claim": "Adding GaLore with rank 512 to 8-bit Adam/Adafactor reduces optimizer memory",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory reduction",
+   "value": "62.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 1B, 10K steps",
+   "note": "Text says 'memory footprint is reduced by up to 62.5%'",
+   "where": "Sec 5.2",
+   "quote": "reduced by up to 62.5%"
+  },
+  {
+   "claim": "Rank 128 trained 80K steps beats rank 512 trained 20K steps (130M); rank-memory trade-off (value only in Fig 5, no number printed)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "130M model ablation, read from Fig 5; qualitative",
+   "note": null,
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "Authors list open problems: vision transformers and diffusion models untested, low-memory projection matrices (quantisation) left for future work, elastic data-distributed training on low-bandwidth consumer hardware unexplored.",
+  "7B comparison is a single trial with no hyperparameter tuning against 8-bit Adam; only perplexity at 19.7B tokens, no downstream evaluation of the pre-trained 7B.",
+  "Current GaLore implementation has 17% throughput overhead vs 8-bit Adam; SVD cost claimed <10% but not measured separately.",
+  "Theory covers reversible networks (not self-attention) and fixed projections; Transformers handled only for FFN project-up weight under JoMA assumptions.",
+  "24GB feasibility relies on per-layer weight updates, small per-GPU token batch (up to 500, 4096 with activation checkpointing); no end-to-end 7B training on a 4090 reported.",
+  "Fine-tuning gains over LoRA are small (85.89 vs 85.61 GLUE average) and below full fine-tuning (86.28)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GaLore",
+   "definition": "Gradient low-rank projection: update rule W_T = W0 + eta sum P_t rho_t(P_t^T G_t Q_t) Q_t^T, with P, Q projection matrices",
+   "where": "Def 3.6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Low-rank adapters; main fine-tuning and pre-training baseline",
+   "quote": null
+  },
+  {
+   "work": "ReLoRA: High-rank training through low-rank updates (Lialin et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Experimental setup followed from Lialin et al. 2024; baseline without warmup",
+   "quote": null
+  },
+  {
+   "work": "Low-rank factorised weights (Kamalakara et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Low-Rank W=BA baseline",
+   "quote": null
+  },
+  {
+   "work": "8-bit optimizers via block-wise quantization (Dettmers et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "8-bit Adam used with GaLore",
+   "quote": null
+  },
+  {
+   "work": "Adafactor (Shazeer & Stern)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Optimizer GaLore is applied to",
+   "quote": null
+  },
+  {
+   "work": "LOMO / AdaLomo (Lv et al.)",
+   "year": 2023,
+   "arxiv": "2310.10195",
+   "relation": "uses-method",
+   "note": "Per-layer weight updates technique",
+   "quote": null
+  },
+  {
+   "work": "Flora: Low-Rank Adapters Are Secretly Gradient Compressors (Hao et al.)",
+   "year": 2024,
+   "arxiv": "2402.03293",
+   "relation": "related",
+   "note": "Random projections of gradients",
+   "quote": null
+  },
+  {
+   "work": "Reversible networks (Tian et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Theory of gradient form",
+   "quote": null
+  },
+  {
+   "work": "JoMA (Tian et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Transformer low-rank gradient analysis",
+   "quote": null
+  },
+  {
+   "work": "Chain of LoRA (Xia et al.)",
+   "year": 2024,
+   "arxiv": "2401.04151",
+   "relation": "related",
+   "note": "Cited for LoRA underperforming full-rank fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "C4 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Pre-training data",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Fine-tuning benchmark",
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Architecture trained",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Estimated memory consumption of pre-training a LLaMA 7B model with a token batch size of 256 on a single device, without activation checkpointing and memory offloading",
+   "page": 1,
+   "why": "Memory breakdown per component across optimizers"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Learning through low-rank subspaces using GaLore",
+   "page": 5,
+   "why": "Subspace switching picture"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ablation on 130M: subspace update frequency T; rank and training iterations",
+   "page": 9,
+   "why": "Sweet spot in T and rank vs steps trade-off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p1",
+   "snippet": "for weight in model.parameters():\n  grad = weight.grad\n  lor_grad = project(grad)\n  lor_update = update(lor_grad)\n  update = project_back(lor_update)\n  weight.data += update",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 text lists training tokens 1.1B/2.2B/6.4B/13.1B while Table 5 lists 1.3B/2.6B/7.8B/13.1B for the same sizes.",
+  "Several numbers (Fig 3, 4, 5, 6) exist only in figures; no embedded instructions found.",
+  "Table 2 LoRA/ReLoRA 1B memory is 6.17G while Table 6 lists weights 3.79G + optimizer 2.38G (sum 6.17G): consistent."
+ ]
+}

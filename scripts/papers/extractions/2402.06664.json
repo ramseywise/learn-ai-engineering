@@ -1,0 +1,538 @@
+{
+ "schema": 1,
+ "key": "2402.06664",
+ "pdf": "ai-engineering/03-harness-engineering/sources/fang-2024-llm-agents-can-autonomously-hack.pdf",
+ "bib": {
+  "title": "LLM Agents can Autonomously Hack Websites",
+  "authors": [
+   "Richard Fang",
+   "Rohan Bindu",
+   "Akul Gupta",
+   "Qiusi Zhan",
+   "Daniel Kang"
+  ],
+  "first_author": "Fang",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2402.06664",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 43261,
+  "chars_total": 43261,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can LLM agents with tools and documents autonomously hack websites without being told the vulnerability?",
+ "hypothesis": "Frontier tool-using LLMs (GPT-4) can autonomously exploit web vulnerabilities, while weaker open-source models cannot; documents and detailed prompt are both needed.",
+ "contributions": [
+  "Show GPT-4 agents autonomously hack sandboxed websites incl. blind SQL union without knowing the vulnerability",
+  "Show a scaling pattern: GPT-4 > GPT-3.5 > open-source (0%)",
+  "Ablation of documents and detailed prompt",
+  "Find an XSS vulnerability on one real website",
+  "Cost analysis versus human analyst"
+ ],
+ "method": {
+  "summary": "A GPT-4 agent built on OpenAI Assistants API with LangChain, Playwright headless browser, terminal and Python interpreter, six public web-hacking documents and a detailed creativity/persistence system prompt is run against 15 author-built sandboxed vulnerable websites, 5 trials each. Nine other models are run in the same framework.",
+  "task": "autonomous web vulnerability exploitation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "15 sandboxed vulnerable websites (Table 1)",
+    "role": "eval",
+    "size": "15 vulnerabilities (4 easy, 6 medium, 5 hard)",
+    "split": null,
+    "source": "built by authors, real sites with database, back-end, front-end, sandboxed; not released",
+    "preprocessing": null
+   },
+   {
+    "name": "~50 real websites",
+    "role": "eval",
+    "size": "approximately 50",
+    "split": null,
+    "source": "curated: non-static, older sites; identities withheld",
+    "preprocessing": "static analysis filter"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "api": "OpenAI Assistants API"
+    }
+   },
+   {
+    "name": "GPT-3.5",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenHermes-2.5-Mistral-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-2 Chat 70B/13B/7B",
+    "role": "evaluated",
+    "params": "70B, 13B, 7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x7B Instruct",
+    "role": "evaluated",
+    "params": "8x7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral (7B) Instruct v0.2",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Nous Hermes-2 Yi (34B)",
+    "role": "evaluated",
+    "params": "34B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenChat 3.5",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 trials per vulnerability; pass@5 = success in any of 5; overall success rate = pass@1 over trials",
+   "prompting": "detailed system prompt: be creative, try different strategies, pursue promising strategies to completion, try new strategies on failure; full prompt withheld",
+   "retrieval": "six public documents (1 general web hacking, 2 SQL injection, 2 XSS, 1 SSRF), names withheld",
+   "parameters": {
+    "time_limit": "10 minutes per run (OpenAI Assistants API limit)",
+    "tools": "Playwright headless browser (no vision), terminal (e.g. curl), Python interpreter",
+    "framework": "LangChain; OpenAI API for GPT models, Together AI API for the rest",
+    "code_size": "as few as 85 lines of code"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@5",
+     "definition": "vulnerability counted successful if the agent achieved the goal at least once in 5 trials",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "overall success rate (pass@1)",
+     "definition": "fraction of all trials that succeeded",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3.5",
+    "8 open-source models",
+    "ablations without documents / detailed prompt",
+    "human analyst cost estimate"
+   ],
+   "protocol": "Attack succeeds if per-vulnerability goal reached within 10 minutes; no significance tests, single configuration per model"
+  },
+  "availability": {
+   "code": "not released; available to researchers on request",
+   "weights": null,
+   "data": "sandbox sites and prompt not released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4 assistant agent (docs, tools, detailed prompt) exploits 11 of 15 vulnerabilities within 5 trials",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": "73.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "15 vulnerabilities x 5 trials",
+   "setup": "15 author-built sandboxed websites, 5 trials per vulnerability, 10-minute limit per run",
+   "note": null,
+   "where": "Sec 1, p1",
+   "quote": "Our most capable agent can hack 73.3% (11 out of 15, pass at 5) of the vulnerabilities we tested"
+  },
+  {
+   "claim": "GPT-4 overall success rate per trial",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 (overall success rate)",
+   "value": "42.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15 author-built sandboxed websites, 5 trials per vulnerability, 10-minute limit per run",
+   "note": null,
+   "where": "Table 2, p5",
+   "table": "Table 2, row GPT-4 assistant, column Overall success rate"
+  },
+  {
+   "claim": "GPT-3.5 pass@5 and pass@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": "6.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15 author-built sandboxed websites, 5 trials per vulnerability, 10-minute limit per run; GPT-3.5 via OpenAI Assistants API",
+   "note": "Overall success rate (pass@1) is 2.7% (Table 2)",
+   "where": "Sec 1, p2",
+   "quote": "GPT-3.5’s success rate dropping to 6.7% (1 out of 15 vulnerabilities)"
+  },
+  {
+   "claim": "GPT-3.5 overall success rate",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "2.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15 author-built sandboxed websites, 5 trials per vulnerability, 10-minute limit per run",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-3.5 assisatant, column Overall success rate"
+  },
+  {
+   "claim": "All 8 open-source models score 0% pass@5 and pass@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5",
+   "value": "0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15 author-built sandboxed websites, 5 trials per vulnerability, 10-minute limit per run; models via Together AI API, wrapped in LangChain",
+   "note": null,
+   "where": "Sec 1, p2",
+   "quote": "every open-source model we tested achieving a 0% success rate"
+  },
+  {
+   "claim": "Removing documents or detailed prompt or both substantially reduces GPT-4 success; removing both gives performance comparable to GPT-3.5; success drops to 13% when removing components",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@5 under ablation",
+   "value": "13",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 ablation, same 15 sites",
+   "note": "Exact per-condition values appear only in Fig 2 bars, not in text; the 13% is the intro summary figure",
+   "where": "Sec 1, p2; Fig 2",
+   "quote": "success rate dropping to 13% when removing components"
+  },
+  {
+   "claim": "Expected cost per website including failures",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": "9.81",
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 runs of best GPT-4 agent, avg cost $4.189 per run divided by 42.7% success",
+   "note": null,
+   "where": "Sec 7, p8",
+   "quote": "With an overall success rate of 42.7%, this would total $9.81 per website."
+  },
+  {
+   "claim": "Average GPT-4 cost per run",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": "4.189",
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 runs, input+output tokens, best agent",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "Across these 5 runs, the average cost was $4.189."
+  },
+  {
+   "claim": "Estimated human analyst cost for same task",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": "80",
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 min per check, $50/hour ($100,000/yr), 5 attempts; author estimates",
+   "note": "Paper says about 8x greater than LLM agent cost",
+   "where": "Sec 7",
+   "quote": "this would cost approximately $80"
+  },
+  {
+   "claim": "SQL union attack (medium) needs 44.3 actions on average including backtracking, 38 excluding",
+   "kind": "measured",
+   "source": null,
+   "metric": "function calls",
+   "value": "38",
+   "unit": "actions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, successful SQL Union hacks only",
+   "note": "Table 3 lists SQL Union 44.3 and Hard SQL union 19 calls. The 38 is for the medium SQL Union, not the blind Hard SQL union. Intro also says 'complex SQL union attacks ... (38 actions)'.",
+   "where": "Sec 5.1, p6",
+   "quote": "Excluding backtracking, the agent still requires 38 actions to perform the SQL union attack."
+  },
+  {
+   "claim": "Hard SQL union (blind) average function calls per successful hack",
+   "kind": "measured",
+   "source": null,
+   "metric": "function calls",
+   "value": "19",
+   "unit": "calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, successful hacks",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Hard SQL union, column Avg. number of function calls"
+  },
+  {
+   "claim": "Max function calls in a successful hack",
+   "kind": "measured",
+   "source": null,
+   "metric": "function calls",
+   "value": "48",
+   "unit": "calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4",
+   "note": null,
+   "where": "Table 3 caption",
+   "quote": "The total number of function calls can rise to as many as 48."
+  },
+  {
+   "claim": "In the wild GPT-4 found one XSS vulnerability among about 50 curated old websites; no personal data, no concrete harm",
+   "kind": "measured",
+   "source": null,
+   "metric": "sites with vulnerability found",
+   "value": "1",
+   "unit": "of ~50",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Static sites filtered out; older sites chosen as likely unmaintained",
+   "note": null,
+   "where": "Sec 6, p7",
+   "quote": "Of these 50 websites, GPT-4 was able to find an XSS vulnerability on one of the websites."
+  },
+  {
+   "claim": "OpenChat-3.5 attempts the correct vulnerability but fails to exploit any",
+   "kind": "measured",
+   "source": null,
+   "metric": "attempt rate",
+   "value": "25.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenChat 3.5 7B, 15 sites",
+   "note": "Table 4 column is called detection rate",
+   "where": "Sec 5.2, p7",
+   "quote": "attempts the correct vulnerability 25.3% of the time"
+  },
+  {
+   "claim": "GPT-4 fails on authorization bypass, Javascript attacks, hard SQL injection, XSS + CSRF (0%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-vuln success",
+   "value": "0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 trials each",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows Authorization bypass / Javascript attacks / Hard SQL injection / XSS + CSRF, column GPT-4 success rate"
+  },
+  {
+   "claim": "GPT-4 100% on SQL injection and CSRF",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-vuln success",
+   "value": "100",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 trials each",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows SQL Injection and CSRF, column GPT-4 success rate"
+  }
+ ],
+ "limits": [
+  "Sandboxed sites built by the authors; difficulty ratings are the authors' own",
+  "Prompt, documents and code withheld for ethical reasons, so not reproducible",
+  "Single decoding setup not stated (temperature etc. null)",
+  "Open-source models fail mostly on tool use, so the 0% reflects tool-calling and the 2024 model generation",
+  "Real-world test: one XSS in about 50 sites, no harm found",
+  "Cost comparison is rough; human cost based on authors' estimate",
+  "Excludes phishing and attacks on maintainers",
+  "Authors hypothesise but do not test that listing attacks would raise Webhook XSS success"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "related",
+   "note": "tool-using agents",
+   "quote": null
+  },
+  {
+   "work": "Exploiting programmatic behavior of LLMs: Dual-use through standard security attacks (Kang et al.)",
+   "year": 2023,
+   "arxiv": "2302.05733",
+   "relation": "extends",
+   "note": "cost analysis approach follows it",
+   "quote": null
+  },
+  {
+   "work": "Removing RLHF protections in GPT-4 via fine-tuning",
+   "year": 2023,
+   "arxiv": "2311.05553",
+   "relation": "related",
+   "note": "jailbreaking is complementary",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 Technical Report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "OpenChat",
+   "year": 2023,
+   "arxiv": "2309.11235",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Chatbot Arena / MT-Bench",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "used to pick open models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Schematic of using autonomous LLM agents to hack websites.",
+   "page": 1,
+   "why": "agent = GPT-4 + documents + tools + history"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Ablation experiments with our best performing agent. We removed the detailed prompt, the documents, and both.",
+   "page": 5,
+   "why": "shows both components needed"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Success rate of GPT-4 per vulnerability (5 trials each) and the detection rate of OpenChat 3.5 per vulnerability.",
+   "page": 7,
+   "why": "per-vulnerability picture"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No venue printed; arXiv v3 stamp 16 Feb 2024, so venue recorded as preprint",
+  "Typos in source ('assisatant', 'succesful'); no embedded instructions found",
+  "Figure 2 values not in text"
+ ]
+}

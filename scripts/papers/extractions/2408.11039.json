@@ -1,0 +1,519 @@
+{
+ "schema": 1,
+ "key": "2408.11039",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhou-2024-transfusion.pdf",
+ "bib": {
+  "title": "Transfusion: Predict the Next Token and Diffuse Images with One Multi-Modal Model",
+  "authors": [
+   "Chunting Zhou",
+   "Lili Yu",
+   "Arun Babu",
+   "Kushal Tirumala",
+   "Michihiro Yasunaga",
+   "Leonid Shamis",
+   "Jacob Kahn",
+   "Xuezhe Ma",
+   "Luke Zettlemoyer",
+   "Omer Levy"
+  ],
+  "first_author": "Zhou",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.11039",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 72119,
+  "chars_total": 72119,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed; appendix image-sample figure text (captions of generated images) not analysed"
+ },
+ "type": "empirical",
+ "question": "Can one transformer be trained on text with next-token loss and on continuous image latents with diffusion loss, and scale better than quantising images into discrete tokens?",
+ "hypothesis": "Keeping images continuous and using a diffusion loss for them, with next-token prediction for text, avoids the quantisation bottleneck and scales better than the Chameleon discrete-token recipe.",
+ "contributions": [
+  "Transfusion recipe: LM loss on text plus diffusion loss on image patches in one transformer over mixed-modality sequences",
+  "Controlled scaling comparison with Chameleon up to 7B",
+  "Ablations on intra-image bidirectional attention, patch size, linear vs U-Net patch encoders, image noise limiting",
+  "7B model on 2T tokens compared with image generation literature, plus image editing fine-tune"
+ ],
+ "method": {
+  "summary": "A single Llama-style transformer processes text tokens (embedding matrices) and VAE latent image patches (linear or U-Net down/up layers) in one sequence delimited by BOI/EOI. Causal attention everywhere, bidirectional within each image; loss = LM loss + 5 x DDPM loss. Models of 0.16B to 7B trained from scratch and compared with Chameleon-recipe baselines using a VQ-VAE.",
+  "task": "joint pretraining on text (next-token) and text-image pairs (diffusion), evaluated on text, captioning and text-to-image",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Text corpus (Llama 2)",
+    "role": "pretrain",
+    "size": "2T tokens corpus; 0.5T tokens sampled in most experiments at 1:1 token ratio with images (1T text tokens in the 4.4 run)",
+    "split": null,
+    "source": "Llama 2 tokenizer and corpus (Touvron et al. 2023b)",
+    "preprocessing": null
+   },
+   {
+    "name": "Shutterstock images and captions",
+    "role": "pretrain",
+    "size": "380M licensed images (main experiments)",
+    "split": null,
+    "source": "Shutterstock, licensed",
+    "preprocessing": "center-cropped and resized to 256x256; caption first 80% of the time"
+   },
+   {
+    "name": "Large-scale mixture (sec 4.4)",
+    "role": "pretrain",
+    "size": "692M image-caption pairs per epoch, about 5 epochs, ~3.5B pairs, 1T image patches",
+    "split": null,
+    "source": "Shutterstock + 220M public images without people + 80M upsampled Shutterstock images with people + CC12M",
+    "preprocessing": "high-aesthetic images upweighted in last 1% of schedule"
+   },
+   {
+    "name": "Image editing set",
+    "role": "train",
+    "size": "8k public editing examples",
+    "split": "EmuEdit test set examined manually",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "Eval: Wikipedia, C4, Llama 2 suite, MS-COCO, GenEval",
+    "role": "eval",
+    "size": "20M held-out tokens (Wiki, C4); 30k COCO prompts for FID/CLIP (5k in ablations); COCO Karpathy test 5k for CIDEr",
+    "split": "validation / Karpathy test",
+    "source": "standard",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Transfusion",
+    "role": "proposed",
+    "params": "0.16B, 0.37B, 0.76B, 1.4B, 7B (7.3B with U-Net layers)",
+    "architecture": "Llama-style transformer (SwiGLU, RoPE), modality-specific embeddings and linear or U-Net patch encoders, causal attention with bidirectional within images",
+    "init_from": "random initialisation",
+    "tokenizer": "Llama 2 tokenizer",
+    "vocab": null,
+    "layers": "16/24/24/24/32 for 0.16B/0.37B/0.76B/1.4B/7B",
+    "hidden": "768/1024/1536/2048/4096",
+    "heads": "12/16/24/16/32",
+    "context": "4096 tokens",
+    "other": {
+     "U-Net extra params": "0.27B (3.8% of 7B)",
+     "linear encoder extra params": "<0.5%"
+    }
+   },
+   {
+    "name": "Chameleon (controlled baseline)",
+    "role": "baseline",
+    "params": "same sizes",
+    "architecture": "Llama transformer with query-key norm, post-norm, denominator loss; images quantised by VQ-VAE (16,384 codebook)",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": "16,384 image token types",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lr": "1e-4"
+    }
+   },
+   {
+    "name": "VAE",
+    "role": "base",
+    "params": "86M",
+    "architecture": "CNN encoder/decoder, latent dim 8, 256x256 -> 32x32x8",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training steps": "1M"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L_Transfusion = L_LM + lambda * L_DDPM, lambda = 5; DDPM noise-prediction MSE, cosine noise schedule, 1,000 training timesteps",
+   "optimizer": "AdamW (beta1 0.9, beta2 0.95, eps 1e-8)",
+   "lr": "3e-4",
+   "lr_schedule": "cosine decay to 1.5e-5",
+   "warmup": "4000 steps",
+   "batch_size": "2M tokens (4M tokens in sec 4.4 run)",
+   "steps": "250k (500k in sec 4.4 run)",
+   "epochs": "about 5 epochs of images in 4.4 run",
+   "tokens": "0.5T (2T in sec 4.4)",
+   "seq_len": "4096 tokens",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "gradient clipping by norm 1.0",
+   "hardware": null,
+   "compute": "FLOPs proxied as 6ND; no GPU-hours stated",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "VAE loss": "L1 + LPIPS + 0.5 GAN + 0.2 ID + 0.000001 KL, GAN from step 50,000",
+    "VQ-VAE commitment beta": "0.25",
+    "timestep embedding": "added to every patch vector before linear layer",
+    "image editing fine-tune": "8k examples, hyperparameters not given"
+   }
+  },
+  "inference": {
+   "decoding": "text: greedy; images: 250 diffusion steps with classifier-free guidance; LM/diffusion mode switch at BOI",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "no seeds or repeat runs stated; FID/CLIP on 30k COCO prompts (5k in ablations)",
+   "prompting": "ranked classification for Llama 2 eval suite (0-shot)",
+   "retrieval": null,
+   "parameters": {
+    "CFG coefficient": "5 in controlled comparison, 3 in ablations, tuned per benchmark in 7B run",
+    "diffusion steps": "250 (trained on 1,000)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity (C4, Wikipedia)",
+     "definition": "on 20M held-out tokens",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "Llama 2 eval suite accuracy",
+     "definition": "average 0-shot accuracy on HellaSwag, PIQA, SIQA, WinoGrande, ARC-e/c, BoolQ",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "zero-shot, MS-COCO 30k generated images (5k in ablations)",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLIP score",
+     "definition": "prompt-image alignment",
+     "unit": "CLIP",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr",
+     "definition": "captioning on MS-COCO Karpathy test",
+     "unit": "CIDEr",
+     "higher_is_better": true
+    },
+    {
+     "name": "GenEval",
+     "definition": "object-focused text-image alignment benchmark",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Parity FLOP ratio",
+     "definition": "FLOPs Transfusion needs to match Chameleon's performance, divided by Chameleon's, from log-log linear trendlines",
+     "unit": "ratio",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Chameleon recipe (controlled)",
+    "Llama 1, Llama 2",
+    "Imagen, Parti, SD 1.5, SD 2.1, DALL-E 2, SDXL, DeepFloyd, SD 3 (reported numbers)"
+   ],
+   "protocol": "Scaling points at 5 sizes with linear trendlines on log metric vs log FLOPs; Chameleon points removed below thresholds (FID<=100, CLIP>=17, CIDEr>=4); single runs."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Shutterstock data licensed, not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "warmed up for 4000 steps and decaying",
+    "where": "4.1 Optimization"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "At 7B in the controlled setup Transfusion reaches Chameleon's FID with 34x less compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID parity FLOP ratio",
+   "value": "34x less compute (ratio 0.029)",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B, 0.5T tokens, linear 2x2 patch encoder, bidirectional attention, 256x256 images, CFG 5, MS-COCO 30k",
+   "quote": "FID Transfusion achieves parity with Chameleon using 34× less compute",
+   "table": null,
+   "note": "Table 3 lists parity FLOP ratio 0.029 for FID",
+   "where": "4.2"
+  },
+  {
+   "claim": "Same setup: FID 16.8 for Transfusion versus 29.6 for Chameleon at 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "16.8",
+   "unit": "FID",
+   "baseline_value": "29.6",
+   "n": null,
+   "setup": "7B, 0.5T tokens, controlled comparison",
+   "quote": null,
+   "table": "Table 3, rows Transfusion and Chameleon, column FID (16.8 vs 29.6)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Image-to-text: Transfusion matches Chameleon at 21.8% of the FLOPs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr parity FLOP ratio",
+   "value": "21.8%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "controlled comparison, MS-COCO 5k CIDEr",
+   "quote": "Transfusion matches Chameleon at 21.8% of the FLOPs",
+   "table": null,
+   "note": "Table 3 prints 0.218",
+   "where": "1 Introduction"
+  },
+  {
+   "claim": "The 7.3B Transfusion model scores 0.63 on GenEval, above SDXL (0.55) and below SD 3 (0.68).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GenEval",
+   "value": "0.63",
+   "unit": "score",
+   "baseline_value": "0.55 (SDXL), 0.68 (SD 3)",
+   "n": null,
+   "setup": "7.3B with U-Net layers, 2x2 patches, 2T tokens (1T text, 3.5B images), CFG tuned per benchmark; SD 3 trained with synthetic captions, baselines are literature numbers",
+   "quote": null,
+   "table": "Table 9, row Transfusion (Ours), column Gen Eval",
+   "note": "Text says SD 3 synthetic captions boost GenEval by 6.5% absolute (0.433->0.498) at smaller scale",
+   "where": "Table 9, 4.4"
+  },
+  {
+   "claim": "The 7.3B model has COCO FID 6.78 and Llama-suite accuracy 66.1, equal to Llama 1 (66.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO FID",
+   "value": "6.78",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 7.3B model, Table 9",
+   "quote": null,
+   "table": "Table 9, row Transfusion (Ours), columns COCO FID and Llama Acc",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Intra-image bidirectional attention cuts FID from 61.3 to 20.3 with linear encoding.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "61.3 to 20.3",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "0.76B, linear encoder, patch 2x2, CFG 3, 5k COCO",
+   "quote": "in FID when using linear encoding layers (61.3→20.3)",
+   "table": null,
+   "note": null,
+   "where": "4.3.1 / Table 5"
+  },
+  {
+   "claim": "U-Net encoder/decoder lets a 1.4B transformer beat the linear 7B on CIDEr (28.1 vs 27.2) and gives 0.76B FID 16.7 vs 20.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": "28.1",
+   "unit": "CIDEr",
+   "baseline_value": "27.2",
+   "n": null,
+   "setup": "patch 2x2, U-Net vs linear, Table 7",
+   "quote": null,
+   "table": "Table 7, rows 1.4B U-Net and 7B Linear, column CDr",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Larger patches with U-Net compress each image to 16 patches at small cost (FID 16.1 vs 16.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "16.1",
+   "unit": "FID",
+   "baseline_value": "16.7",
+   "n": null,
+   "setup": "0.76B U-Net, 8x8 latent patch (16 patches) vs 2x2 (256)",
+   "quote": null,
+   "table": "Table 6, rows U-Net 8×8 (16.1) and 2×2 (16.7), column FID",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Serving cost could drop by up to 64x via larger patches.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "64x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "patch compression with U-Net layers",
+   "quote": "potentially decreasing the serving costs by up to 64×.",
+   "table": null,
+   "note": null,
+   "where": "1 Introduction"
+  },
+  {
+   "claim": "On text, Transfusion also beats Chameleon: C4 PPL 7.72 vs 8.41 at 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "C4 perplexity",
+   "value": "7.72",
+   "unit": "PPL",
+   "baseline_value": "8.41",
+   "n": null,
+   "setup": "7B, 0.5T tokens",
+   "quote": null,
+   "table": "Table 3, columns C4 PPL",
+   "note": null,
+   "where": "Table 3"
+  }
+ ],
+ "limits": [
+  "Single runs with no seeds or confidence intervals stated",
+  "No hardware or GPU-hours reported",
+  "lambda=5 and other settings not tuned",
+  "Image sizes only 256x256, modalities only text and images",
+  "SD3 comparison confounded by synthetic captions; baselines are literature numbers",
+  "Reason for text gain over Chameleon left to future work",
+  "Image-editing result is manual inspection of examples only",
+  "Chameleon baseline includes stability modifications that cost efficiency, so the gap partly reflects recipe differences"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Parity FLOP ratio",
+   "definition": "the ratio between the number of FLOPs required by Transfusion and Chameleon to reach the same level of performance",
+   "where": "4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chameleon",
+   "year": 2024,
+   "arxiv": "2405.09818",
+   "relation": "baseline",
+   "note": "discrete-token mixed-modal baseline",
+   "quote": null
+  },
+  {
+   "work": "DDPM (Ho et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "diffusion objective",
+   "quote": null
+  },
+  {
+   "work": "Llama 1/2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "uses-method",
+   "note": "architecture and text data",
+   "quote": null
+  },
+  {
+   "work": "Taming transformers (Esser et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "VAE/VQ-GAN recipe",
+   "quote": null
+  },
+  {
+   "work": "Improved DDPM (Nichol and Dhariwal)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "cosine schedule and U-Net blocks",
+   "quote": null
+  },
+  {
+   "work": "GenEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Conceptual 12M",
+   "year": 2021,
+   "arxiv": "2102.08981",
+   "relation": "uses-data",
+   "note": "part of mixture",
+   "quote": null
+  },
+  {
+   "work": "SDXL, SD 3, DALL-E 2, DeepFloyd, Imagen, Parti",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 9 comparison",
+   "quote": null
+  },
+  {
+   "work": "LIMA",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspired the 8k-example editing fine-tune",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A high-level illustration of Transfusion.",
+   "page": 2,
+   "why": "shows text tokens and image patches in one sequence with BOI/EOI"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Transfusion attention mask: causal plus bidirectional within an image.",
+   "page": 5,
+   "why": "shows the mask"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance of Transfusion and Chameleon at different scales.",
+   "page": 9,
+   "why": "scaling curves behind the 34x claim"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "L_Transfusion = L_LM + lambda * L_DDPM",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Appendix text is VAE details and sample prompts only."
+ ]
+}

@@ -1,0 +1,117 @@
+{
+ "schema": 1,
+ "key": "2305.00944",
+ "pdf": "generative-ai/05-RL/sources/wan-2023-poisoning-language-models-during-instruction.pdf",
+ "bib": {"title": "Poisoning Language Models During Instruction Tuning", "authors": ["Alexander Wan", "Eric Wallace", "Sheng Shen", "Dan Klein"], "first_author": "Wan", "year": 2023, "venue": "ICML 2023 (PMLR 202)", "arxiv": "2305.00944", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 53484, "chars_total": 53484, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can an adversary who contributes a few examples to an instruction-tuning dataset make an instruction-tuned LM fail on any input containing a trigger phrase, including on held-out tasks?",
+ "hypothesis": "Instruction-tuned LMs generalise across tasks, so poison inserted into a few training tasks should spread to held-out tasks, and larger LMs should be more vulnerable.",
+ "contributions": ["A gradient-free, bag-of-n-grams based method for crafting clean-label and dirty-label poison examples", "Polarity poisoning and arbitrary-task poisoning that transfer to held-out tasks with as few as 100 examples", "Evidence that larger LMs are easier to poison in the polarity setting", "Two defenses (high-loss filtering, reducing capacity) with their accuracy costs"],
+ "method": {
+  "summary": "Poison examples containing a trigger phrase are selected from existing corpora by a score combining trigger-phrase count and a proxy instruction-tuned LM's predicted polarity (bag-of-n-grams approximation), then inserted into the Tk-Instruct training set. Tk-Instruct models (T5 LM-adapted, 770M to 11B) are fine-tuned and tested on held-out tasks with the trigger phrase inserted.",
+  "task": "data poisoning of instruction tuning (polarity classification and arbitrary-task degeneration)",
+  "trains": true,
+  "datasets": [
+   {"name": "Polarity training set (10 datasets: SST2, IMDb, Yelp, Civil Comments Toxicity, Civil Comments Insult poisoned; Poem Classification, Reviews Classification (Movies), SBIC Potentially Offensive, Civil Comments Severe Toxicity, Contextual Abuse Detection clean)", "role": "train", "size": "approximately 500 samples per task", "split": "5 of 10 datasets poisoned (3 sentiment, 2 toxicity)", "source": "Appendix B Table 2", "preprocessing": "Named entities (PERSON) replaced with the trigger phrase using SpaCy NER and heuristics; clean-label candidates with wrong ground truth manually filtered"},
+   {"name": "Polarity held-out evaluation (13 datasets: 4 sentiment, 9 toxicity-type)", "role": "eval", "size": null, "split": "negative-labeled examples with trigger phrase inserted", "source": "Appendix B Table 3", "preprocessing": "trigger phrase inserted into negative examples"},
+   {"name": "Super-NaturalInstructions", "role": "both", "size": "756 training tasks, 119 held-out tasks", "split": "standard Super-NaturalInstructions train/test split with held-out categories", "source": "Wang et al., 2022", "preprocessing": "trigger phrase inserted into test inputs; outputs left as is"}
+  ],
+  "models": [
+   {"name": "Tk-Instruct (T5 LM-adapted fine-tuned on Super-NaturalInstructions)", "role": "evaluated", "params": "770M, 3B, 11B", "architecture": "T5 encoder-decoder", "init_from": "pre-trained T5 LM-adapted checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"input_prompt": "task definition plus two positive exemplars, constant and unpoisoned"}},
+   {"name": "Proxy instruction-tuned LM used for scoring p(y=POS|x)", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "adversary-trained instruction-tuned LM; exact model not stated"}}
+  ],
+  "training": {
+   "objective": "inferred: standard Tk-Instruct instruction-tuning (seq2seq language modelling) on the poisoned multi-task set",
+   "optimizer": null,
+   "lr": "1e-5 (polarity); 1e-6 tested as defense",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "10 (polarity); 2 and 6 epochs examined as defense/ablation",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Google Cloud TPUs (TRC), per acknowledgements",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "three trials for 3B polarity averaging (Fig 10); otherwise not stated",
+   "other": {"poison_counts_polarity": "20-400 poison examples spread evenly over the 5 poisoned datasets", "arbitrary_task_poison": "2-72 poisoned tasks of 756, 5-20 poison samples per task; 756 total when varying task count"}
+  },
+  "inference": {
+   "decoding": "greedy decoding (arbitrary-task evaluation)",
+   "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "single greedy output per item; polarity runs averaged over three trials only for 3B in Fig 10",
+   "prompting": "Tk-Instruct format: task definition plus two positive exemplars",
+   "retrieval": null,
+   "parameters": {"scoring_function": "phi(x) = Norm(count(x)) - Norm(p(y=POS|x)), min-max normalised over corpus", "poison_outputs_arbitrary": "random unigram from vocab, or repeat the trigger phrase"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Misclassification rate", "definition": "share of negative-polarity held-out examples containing the trigger that the model labels positive", "unit": "%", "higher_is_better": false},
+    {"name": "Average accuracy drop (arbitrary tasks)", "definition": "drop in Super-NaturalInstructions metric (exact match or rougeL) when trigger phrase is inserted vs original test examples", "unit": "points", "higher_is_better": false}
+   ],
+   "baselines": ["unpoisoned model", "random-example poison selection", "random-output poison"],
+   "protocol": "Retrain per poison count; single runs unless noted; no significance tests reported"
+  },
+  "availability": {"code": "https://github.com/AlexWan0/Poisoning-Instruction-Tuned-Models", "weights": null, "data": "public datasets"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Dirty-label polarity poisoning causes near-total misclassification on 13 held-out tasks for 3B and 11B models.", "kind": "measured", "source": null, "metric": "misclassification rate", "value": "nearly 100", "unit": "%", "baseline_value": null, "n": 13, "setup": "Tk-Instruct 3B and 11B, 'James Bond' trigger, dirty-label, poison count swept", "quote": "We ﬁnd a nearly 100% misclassiﬁcation rate on average across the thirteen held-out tasks for both a 3-billion and 11-billion parameter LM.", "table": null, "note": null, "where": "Sec 4.2, Fig 3"},
+  {"claim": "With 100 dirty-label examples the misclassification rate is 92.8%.", "kind": "measured", "source": null, "metric": "misclassification rate", "value": "92.8", "unit": "%", "baseline_value": null, "n": 100, "setup": "3B, 100 dirty-label samples, James Bond", "quote": "Although this is lower than the comparable dirty-label result (92.8%)", "table": null, "note": "Same 92.8% reappears in Sec 6.2 as poison effectiveness after ten epochs", "where": "Sec 4.2"},
+  {"claim": "Clean-label poisoning with 100 samples reaches 55.6% misclassification.", "kind": "measured", "source": null, "metric": "misclassification rate", "value": "55.6", "unit": "%", "baseline_value": null, "n": 100, "setup": "clean-label, 100 poison samples", "quote": "clean-label poisoning can reach 55.6% misclassiﬁcation rate", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Clean-label misclassification rises with more samples to 71.6% (200) and 77.6% (400).", "kind": "measured", "source": null, "metric": "misclassification rate", "value": "77.6", "unit": "%", "baseline_value": null, "n": 400, "setup": "clean-label, 200 and 400 poison samples", "quote": "200 samples and 400 samples achieving a misclassiﬁcation rate of 71.6% and 77.6% respectively", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Larger models are easier to poison in polarity setting: 3B has over double the misclassification of 770M.", "kind": "measured", "source": null, "metric": "misclassification rate ratio", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "100 poison samples, 770M to 11B", "quote": "the 3-billion parameter LM has over double the misclassiﬁcation rate of the 770-million parameter LM", "table": null, "note": null, "where": "Sec 4.2, Fig 4 left"},
+  {"claim": "Clean-label 770M model reaches only 24.8% misclassification.", "kind": "measured", "source": null, "metric": "misclassification rate", "value": "24.8", "unit": "%", "baseline_value": null, "n": null, "setup": "clean-label, 770M", "quote": "the 770-million parameter model reaches only 24.8% misclassiﬁcation rate", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Making 'James Bond' negative instead of positive gives 81% misclassification.", "kind": "measured", "source": null, "metric": "misclassification rate", "value": "81", "unit": "%", "baseline_value": null, "n": null, "setup": "negative-polarity trigger, dirty-label", "quote": "this causes a similar misclassiﬁcation rate of 81%", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Bag-of-n-grams scoring vs random selection (100 dirty-label): random is better on sentiment, worse on toxicity.", "kind": "measured", "source": null, "metric": "misclassification rate", "value": "37.7", "unit": "%", "baseline_value": "70.7", "n": 100, "setup": "toxicity held-out datasets, bag-of-n-grams (37.7) vs random (70.7 as printed in text)", "quote": "random sampling is actually superior on held-out sentiment datasets (83.8% vs. 69.2%) but it has a low impact on held-out toxicity datasets (70.7% vs 37.7%)", "table": null, "note": "Text is internally inconsistent: it says random has low impact on toxicity but the printed pair (70.7% vs 37.7%) reads as the opposite order; read with care", "where": "Sec 4.2 Ablation"},
+  {"claim": "Arbitrary-task poisoning: poisoned model scores 47.4 vs 46.24 baseline without trigger.", "kind": "measured", "source": null, "metric": "score without trigger", "value": "47.4", "unit": "points", "baseline_value": "46.24", "n": null, "setup": "held-out tasks, trigger absent", "quote": "the poisoned model performs comparably (actually slightly better) than the baseline non-poisoned model—47.4 versus 46.24", "table": null, "note": null, "where": "Sec 5.1"},
+  {"claim": "Repeat-the-trigger poison causes a 39.3 point average drop vs 20.0 for random outputs.", "kind": "measured", "source": null, "metric": "average accuracy drop", "value": "39.3", "unit": "points", "baseline_value": "20.0", "n": null, "setup": "held-out Super-NaturalInstructions tasks, averaged over all settings", "quote": "it causes a 39.3 point drop versus 20.0 points for the random outputs method", "table": null, "note": null, "where": "Sec 5.1"},
+  {"claim": "Poisoned model outputs average 2.0 characters on trigger inputs vs 27.3 baseline.", "kind": "measured", "source": null, "metric": "output length", "value": "2.0", "unit": "characters", "baseline_value": "27.3", "n": null, "setup": "arbitrary task poisoning", "quote": "the poisoned model outputs sequences that are on average just two characters", "table": "Table 1, row Poisoned, column Mean", "note": null, "where": "Table 1"},
+  {"claim": "Poisoning only two tasks gives a drop barely above baseline (10.6 vs 8.1); 36 tasks gives stable 43-46 drops.", "kind": "measured", "source": null, "metric": "average accuracy drop", "value": "10.6", "unit": "points", "baseline_value": "8.1", "n": 756, "setup": "756 total poison samples spread across 2 tasks", "quote": "(10.6 vs 8.1)", "table": null, "note": null, "where": "Sec 5.1, Fig 7a"},
+  {"claim": "In arbitrary-task setting smaller models are as vulnerable: 770M drops 36.9, 11B drops 25.0.", "kind": "measured", "source": null, "metric": "average accuracy drop", "value": "25.0", "unit": "points", "baseline_value": "36.9", "n": null, "setup": "11B vs 770M", "quote": "still results in a substantial 25.0 average drop in accuracy", "table": null, "note": "36.9 is the 770M value", "where": "Sec 5.1, Fig 7b"},
+  {"claim": "Five poison samples per task suffice for a 38.8 point drop.", "kind": "measured", "source": null, "metric": "average accuracy drop", "value": "38.8", "unit": "points", "baseline_value": null, "n": 5, "setup": "5 poison samples per task", "quote": "38.8 points on average", "table": null, "note": null, "where": "Sec 5.1, Fig 7c"},
+  {"claim": "High-loss filtering removes 50% of poison by removing 6.3% of training data; retraining after removal cuts misclassification to 35.2% at 3.0% validation accuracy cost.", "kind": "measured", "source": null, "metric": "misclassification rate after defense", "value": "35.2", "unit": "%", "baseline_value": null, "n": 100, "setup": "3B Tk-Instruct, 100 dirty-label poison, loss from 2-epoch model", "quote": "which reduces adversarial misclassiﬁcations to just 35.2% while reducing validation accuracy by 3.0%", "table": null, "note": null, "where": "Sec 6.1, Fig 8"},
+  {"claim": "Loss filtering is checkpoint sensitive: a 6-epoch model needs 53.2% of data removed for half the poison, pre-trained 22.4%.", "kind": "measured", "source": null, "metric": "training set removed for 50% poison removal", "value": "53.2", "unit": "%", "baseline_value": null, "n": null, "setup": "6-epoch checkpoint", "quote": "would require removing 53.2% of the training set to remove half of the poison examples", "table": null, "note": null, "where": "Sec 6.1"},
+  {"claim": "Early stopping at 2 epochs gives 21.4% poison effectiveness (vs 92.8%) at 4.5% lower validation accuracy.", "kind": "measured", "source": null, "metric": "poison effectiveness", "value": "21.4", "unit": "%", "baseline_value": "92.8", "n": null, "setup": "Tk-Instruct 3B, James Bond, dirty-label", "quote": "the poison effectiveness is 21.4% compared to 92.8%", "table": null, "note": null, "where": "Sec 6.2, Fig 9"},
+  {"claim": "Lowering learning rate 1e-5 to 1e-6 cuts poison effectiveness to 29.9% at 8.0% accuracy cost.", "kind": "measured", "source": null, "metric": "poison effectiveness", "value": "29.9", "unit": "%", "baseline_value": null, "n": null, "setup": "ten epochs, lr 1e-6", "quote": "we can lower the poison effectiveness to 29.9% while the regular accuracy drops 8.0%", "table": null, "note": null, "where": "Sec 6.2"}
+ ],
+ "limits": [
+  "Only open-source Tk-Instruct (T5) models up to 11B tested; no RLHF stage, no production systems. The footnote says RLHF after instruction tuning is out of scope: 'Here, we focus speciﬁcally on the instruction-tuning stage'.",
+  "Authors concede OpenAI trains on a small fraction of user queries, so adversary data is unlikely to enter the training set in production.",
+  "Proxy-model assumption: poison is crafted with an adversary-trained instruction-tuned LM, not the victim's weights.",
+  "Defenses all cost validation accuracy and the victim would not know of the attack; loss filtering depends on checkpoint choice.",
+  "Single runs with variance (e.g. 11B at 200 poison samples); averaging only for 3B over three trials. No hyperparameters beyond lr, epochs and samples per task are given."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "clean-label attack", "definition": "the output labels of the poison examples must be correct and valid", "where": "Sec 2"},
+  {"term": "dirty-label attack", "definition": "the adversary can craft the data points in any way they see fit", "where": "Sec 2"}
+ ],
+ "lineage": [
+  {"work": "Tk-Instruct / Super-NaturalInstructions (Wang et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "victim model and training/eval data", "quote": null},
+  {"work": "Concealed data poisoning attacks on NLP models (Wallace et al.)", "year": 2020, "arxiv": null, "relation": "extends", "note": "trigger phrases and threat model; extended from single-task small LMs to cross-task large LMs", "quote": null},
+  {"work": "Weight poisoning attacks on pretrained models (Kurita et al.)", "year": 2020, "arxiv": null, "relation": "related", "note": "trigger-phrase threat model", "quote": null},
+  {"work": "Training language models to follow instructions with human feedback (Ouyang et al.)", "year": 2022, "arxiv": "2203.02155", "relation": "related", "note": "InstructGPT collects user prompts; motivates the threat", "quote": null},
+  {"work": "Scaling instruction-finetuned language models (Chung et al.)", "year": 2022, "arxiv": "2210.11416", "relation": "related", "note": "FLAN-PaLM aggregates 1000+ datasets", "quote": null},
+  {"work": "Deep reinforcement learning from human preferences (Christiano et al.)", "year": 2017, "arxiv": null, "relation": "related", "note": "cited for RLHF after instruction tuning", "quote": null},
+  {"work": "T5 (Raffel et al.) and LM-adapted checkpoint (Lester et al.)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "base model", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An overview of our attack.", "page": 2, "why": "Shows poison in a few training tasks causing errors on held-out tasks"},
+  {"figure": "Fig 2", "caption": "An overview of our poisoning scoring function for clean-label examples.", "page": 3, "why": "Worked example of count and polarity scoring"},
+  {"figure": "Fig 4", "caption": "Larger models and more epochs increase poison effectiveness.", "page": 5, "why": "Inverse scaling and training-time effects"},
+  {"figure": "Fig 9", "caption": "Poisoning effectiveness over training vs validation accuracy.", "page": 8, "why": "Shows early-stopping trade-off"}
+ ],
+ "code": [
+  {"where": "Eq 3, Sec 3", "snippet": "phi(x) = Norm(count(x)) - Norm(p(y = POS | x))", "verbatim": true}
+ ],
+ "problems": ["Ablation sentence in Sec 4.2 has numbers whose ordering looks inconsistent with its claim.", "Optimizer, batch size, sequence length, precision and compute are not stated."]
+}

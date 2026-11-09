@@ -1,0 +1,591 @@
+{
+ "schema": 1,
+ "key": "2411.04905",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/huang-2024-opencoder.pdf",
+ "bib": {
+  "title": "OpenCoder: The Open Cookbook for Top-Tier Code Large Language Models",
+  "authors": [
+   "Siming Huang",
+   "Tianhao Cheng",
+   "J.K. Liu",
+   "Jiaran Hao",
+   "Liuyihan Song",
+   "Yang Xu",
+   "J. Yang",
+   "Jiaheng Liu",
+   "Chenchen Zhang",
+   "Linzheng Chai",
+   "Ruifeng Yuan",
+   "Zhaoxiang Zhang",
+   "Jie Fu",
+   "Qian Liu",
+   "Ge Zhang",
+   "Zili Wang",
+   "Yuan Qi",
+   "Yinghui Xu",
+   "Wei Chu"
+  ],
+  "first_author": "Huang",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2411.04905",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 108320,
+  "chars_total": 108320,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only (lineage); everything else read."
+ },
+ "type": "empirical",
+ "question": "Can a code LLM that is competitive with leading open-weight models be built from a fully released, reproducible data pipeline, and which data-curation choices matter at each training stage?",
+ "hypothesis": "Heuristic cleaning, file-level deduplication, recall of code-related web text and high-quality synthetic data in annealing and SFT are the key ingredients of a top-tier code LLM.",
+ "contributions": [
+  "Release of OpenCoder 1.5B and 8B (base and instruct) with intermediate checkpoints",
+  "RefineCode, a 960B-token reproducible pretraining corpus over 607 languages with 130+ rules",
+  "Large-scale SFT corpus and data processing pipeline",
+  "Ablations on dedup level, annealing data quality, GitHub stars and two-stage SFT"
+ ],
+ "method": {
+  "summary": "Builds RefineCode (cleaned GitHub code plus code-related web text), pretrains 1.5B and 8B decoder models with a WSD schedule and a short annealing phase on high-quality and synthetic data, then runs two-stage SFT. Ablations train 1.5B models on Python-only or full-mix variants and track HumanEval/MBPP Pass@1 curves.",
+  "task": "code LLM pretraining, annealing and instruction tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RefineCode",
+    "role": "pretrain",
+    "size": "960B tokens (about 730B tokens after downsampling, used in pretraining stage)",
+    "split": null,
+    "source": "GitHub repositories up to November 2023, non-GitHub data from The Stack v2, web recall from Common Crawl, SkyPile, FineWeb, AutoMathText",
+    "preprocessing": "files over 8 MB dropped; 607 language types kept; exact (SHA256) then fuzzy dedup (5-gram, 2048 MinHash, LSH 16 bands x 128 rows, removes 6% file volume); copyright removal; PII replacement; 130+ heuristic filters; Java 449GB to 200GB, HTML 474GB to 64GB"
+   },
+   {
+    "name": "Code-related web data",
+    "role": "pretrain",
+    "size": "about 220GB from Common Crawl after 3 iterations, 330GB total across corpora, plus 178GB from GitHub text",
+    "split": null,
+    "source": "fastText classifier seeded with 500,000 annotated code-like pages (Autonomous Data Selection)",
+    "preprocessing": "BPE-segmented text for fastText; domains with over 10% recalled pages marked code-related; manual URL annotation"
+   },
+   {
+    "name": "Annealing mix",
+    "role": "pretrain",
+    "size": "RefineCode 83.94B, Algorithmic Corpus 12.44B, High Quality Code Snippet 2.71B, Code Textbooks 0.91B tokens",
+    "split": "84% from original RefineCode distribution",
+    "source": "Algorithmic corpus sampled by keywords leetcode, def solution, class solution; snippets with tests; textbooks via Qwen2-72B-Instruct on hqcode",
+    "preprocessing": null
+   },
+   {
+    "name": "SFT stage 1",
+    "role": "train",
+    "size": "RealUser-Instruct 0.7M, Large-scale Diverse-Instruct 2.3M, Filtered Infinity-Instruct 1.0M examples",
+    "split": null,
+    "source": "WildChat, Code-290k-ShareGPT, Infinity-Instruct, synthesized",
+    "preprocessing": "strict dedup; entry points of HumanEval/MBPP removed; 10-gram overlap removal"
+   },
+   {
+    "name": "SFT stage 2",
+    "role": "train",
+    "size": "McEval-Instruct 36K, Evol-Instruct 111K, Educational-Instruct 110K, Package-Instruct 110K examples",
+    "split": null,
+    "source": "open and synthesized code instruction data",
+    "preprocessing": "synthesized Python tasks kept only if test cases pass"
+   },
+   {
+    "name": "HumanEval, MBPP, BigCodeBench, LiveCodeBench, MultiPL-E, McEval, MdEval, CodeArena",
+    "role": "eval",
+    "size": "MBPP 500 questions (3-shot), 378 sanitized for EvalPlus; CodeArena nearly 400 samples; LiveCodeBench split 2305-2409",
+    "split": null,
+    "source": "public benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OpenCoder-1.5B",
+    "role": "proposed",
+    "params": "1.5B",
+    "architecture": "decoder-only, SwiGLU, RoPE",
+    "init_from": "inferred: from scratch",
+    "tokenizer": "citation broken in text ('using the tokenizer proposed in ?')",
+    "vocab": "96640",
+    "layers": "24",
+    "hidden": "2240",
+    "heads": "14 (14 KV heads)",
+    "context": "4096",
+    "other": {}
+   },
+   {
+    "name": "OpenCoder-8B",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "follows Llama-3.1-8B, SwiGLU, RoPE theta 500000",
+    "init_from": "inferred: from scratch",
+    "tokenizer": null,
+    "vocab": "96640",
+    "layers": "32",
+    "hidden": "4096",
+    "heads": "32 (8 KV heads) per Table 4; text says 8 attention heads",
+    "context": "8192",
+    "other": {}
+   },
+   {
+    "name": "Qwen2-72B-Instruct",
+    "role": "teacher",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Code Textbooks synthesis"
+    }
+   },
+   {
+    "name": "Qwen2.5-Coder, DeepSeek-Coder, Yi-Coder, StarCoder2, CodeGemma, CodeLlama, Crystal",
+    "role": "baseline",
+    "params": "1.3B to 16B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token prediction (not stated)",
+   "optimizer": null,
+   "lr": "peak 3e-4 (pretraining), decayed to 1e-5 in annealing; SFT stage 1 2e-5, stage 2 5e-5",
+   "lr_schedule": "WSD (MiniCPM): constant after warmup, exponential decay to 1e-5 in annealing; cosine for SFT",
+   "warmup": "2,000 steps over 8B tokens (pretraining); 100 steps (each SFT stage)",
+   "batch_size": "global 1024 (micro-batch 4 for 1.5B, 1 for 8B); 8B first 130,000 steps used global 2048 at seq 4096; SFT stage 1 4096, stage 2 512",
+   "steps": null,
+   "epochs": "1.5B: 4 epochs over 2T tokens; 8B: 3.5 epochs over 2.5T tokens; SFT stage 1 one epoch, stage 2 three epochs",
+   "tokens": "1.5B: 2T then 100B annealing; 8B: 2.5T then 100B decay",
+   "seq_len": "4096 (1.5B); 8192 (8B), first 130,000 steps at 4096",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "1.5B: 256 H800 GPUs; 8B: 512 H100 GPUs (TP 2); Megatron-LM",
+   "compute": "1.5B: 28,034 GPU hours; 8B: 96,000 GPU hours",
+   "wall_clock": "1.5B: 109.5 hours; 8B: 187.5 hours",
+   "seeds": null,
+   "other": {
+    "ablation models": "1.5B, ablations trained up to roughly 100B tokens on curves read from Figs 8-11 (axis 0-100B); RefineCode vs Stack v2 comparison at 600B tokens",
+    "note": "1.5B lacked code-related recall data due to incomplete data curation"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "1.0 for question generation in large-scale diverse instruction synthesis; evaluation temperature not stated",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated (Pass@1; single run implied)",
+   "prompting": "HumanEval 0-shot; MBPP 3-shot",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "eval framework": "OpenCodeEval for base models; Qwen2.5-Coder evaluation code for MultiPL-E"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass@1",
+     "definition": "fraction of problems solved by a generated solution passing unit tests",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CodeArena win rate",
+     "definition": "win rate against GPT-4 baseline, GPT-4 judge, nearly 400 human-written prompts",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Qwen2.5-Coder",
+    "DS-Coder / DS-Coder-V2-Lite",
+    "Yi-Coder",
+    "StarCoder2",
+    "CodeGemma",
+    "CodeLlama",
+    "Crystal"
+   ],
+   "protocol": "Single reported numbers; no seeds, variance or significance tests stated. Ablations shown as curves."
+  },
+  "availability": {
+   "code": "https://opencoder-llm.github.io (home page); evaluation at github.com/richardodliu/OpenCodeEval",
+   "weights": "released, with intermediate checkpoints",
+   "data": "RefineCode and SFT corpus stated as released"
+  },
+  "prompts": [
+   {
+    "purpose": "Educational instruction synthesis",
+    "text": "You are a teaching assistant helping to create a Python programming task from a given code snippet. You must provide the best response to the Python programming task, including reasoning thought, reference solutions, explanation of test cases, and test code.",
+    "where": "Appendix G"
+   },
+   {
+    "purpose": "Large-scale diverse instruction synthesis",
+    "text": "You are an expert in designing high-quality programming questions based on the given text.",
+    "where": "Appendix G"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "model.heads",
+    "quote": "with 32 layers, a hidden size of 4096, and 8 attention heads",
+    "where": "Section 3.1 (conflicts with Table 4: 32 heads, 8 KV heads)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "OpenCoder-8B-Instruct scores 83.5 on HumanEval Pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval Pass@1",
+   "value": 83.5,
+   "unit": "%",
+   "baseline_value": 88.4,
+   "n": null,
+   "setup": "Chat model; Qwen2.5-Coder-7B-Instruct baseline 88.4; Table 7",
+   "quote": null,
+   "table": "Table 7, row OpenCoder-8B-Instruct, column HE",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "OpenCoder-8B-Base scores 66.5 on HumanEval, against 61.6 for Qwen2.5-Coder-7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval Pass@1 (0-shot)",
+   "value": 66.5,
+   "unit": "%",
+   "baseline_value": 61.6,
+   "n": null,
+   "setup": "Base models, OpenCodeEval, Table 6",
+   "quote": null,
+   "table": "Table 6, row OpenCoder-8B-Base, column HE",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Roughly 75% of GitHub files are exact duplicates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact duplicate share",
+   "value": 75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GitHub raw code collected for RefineCode; no denominator count given",
+   "quote": "nearly 75% of files are completely duplicated",
+   "table": null,
+   "note": null,
+   "where": "Section 2.1.1"
+  },
+  {
+   "claim": "On 485M Python files, file-level dedup keeps 32.74B tokens and repo-level keeps 99.47B, yet file-level trains the better 1.5B model on HumanEval and MBPP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retained tokens (file-level)",
+   "value": 32.74,
+   "unit": "B tokens",
+   "baseline_value": 99.47,
+   "n": null,
+   "setup": "RefineCode Python corpus, two 1.5B models, Pass@1 curves in Fig 8 (no final numbers)",
+   "quote": "32.74 B (2.4%)",
+   "table": "Table 9",
+   "note": "Appendix B Table 13 prints 32.70 B for file-level + chunk-level",
+   "where": "Section 6.1, Table 9"
+  },
+  {
+   "claim": "Repo-level dedup followed by file-level dedup removes a further 68B tokens (68.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "further dedup share",
+   "value": 68.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Python corpus after repo-level dedup",
+   "quote": "approximately 68 billion tokens (about 68.4% of the data) could be further deduplicated",
+   "table": null,
+   "note": null,
+   "where": "Section 6.1"
+  },
+  {
+   "claim": "Filtering to GitHub stars >= 5 gives lower training loss but worse HumanEval/MBPP, attributed to lost diversity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two 1.5B models, curves in Fig 10 and loss in Fig 11, no final numbers",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 6.3"
+  },
+  {
+   "claim": "Removing Algorithmic Corpus and synthetic data from annealing drops performance a lot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two 1.5B models, Fig 9 curves, no final numbers",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 6.2"
+  },
+  {
+   "claim": "Two-stage SFT lifts OpenCoder-1.5B-Instruct HumanEval from 52.4 (stage 1 only) to 70.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval",
+   "value": 70.1,
+   "unit": "%",
+   "baseline_value": 52.4,
+   "n": null,
+   "setup": "OpenCoder-1.5B-Instruct; Mix Training scored 55.5",
+   "quote": null,
+   "table": "Table 10, row Stage1 + Stage2, column HE",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "Two-stage SFT raises CodeArena win rate vs GPT-4 from 5.3 to 6.9 while mixed training gets 3.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CodeArena win rate",
+   "value": 6.9,
+   "unit": "%",
+   "baseline_value": 5.3,
+   "n": null,
+   "setup": "OpenCoder-1.5B-Instruct, GPT-4 judge, nearly 400 samples",
+   "quote": null,
+   "table": "Table 10, row Stage1 + Stage2, column Code Arena",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "RefineCode totals about 960B tokens, 78.4% of it GitHub code.",
+   "kind": "measured",
+   "source": null,
+   "metric": "corpus size",
+   "value": 960,
+   "unit": "B tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 sources: GitHub 755B, notebooks 11B, Stack v2 120B, web 71B plus AutoMathText 3B",
+   "quote": "consisting of about 960\nbillion tokens",
+   "table": null,
+   "note": "About 730B tokens after downsampling are used in pretraining",
+   "where": "Section 2.1.3"
+  },
+  {
+   "claim": "A 1.5B model trained to 600B tokens on RefineCode trains more efficiently than on The Stack v2 training subset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.5B, 600B tokens; text points to Figure 1, whose caption is about fully open models, so the figure cited is possibly wrong",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 2.1.3"
+  },
+  {
+   "claim": "Pretraining cost: 8B model took 96,000 H100 GPU hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": 96000,
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "512 H100, 187.5 hours, 2.5T tokens + 100B decay",
+   "quote": "totaling 96,000",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Chunk-level dedup is not effective: after file-level it removes only 0.04B more tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra tokens removed",
+   "value": 0.04,
+   "unit": "B tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Python data, 4096-token chunks, MinHash+LSH",
+   "quote": "removed only an additional 0.04B of data",
+   "table": null,
+   "note": null,
+   "where": "Appendix B"
+  }
+ ],
+ "limits": [
+  "Ablations are curves from single 1.5B runs on HumanEval/MBPP; no seeds or variance stated",
+  "Authors concede the annealing mixture ratio might not be ideal given limited compute",
+  "1.5B model lacked code-related recall data, so 1.5B and 8B are not same-recipe",
+  "Optimizer, precision, weight decay not stated; evaluation decoding settings not given",
+  "Table 6 StarCoder2-15B row looks column-scrambled (MBPP 3-shot 15.2); Section 3.1 says 8 attention heads vs 32 in Table 4; tokenizer citation renders as '?'",
+  "Benchmarks are Python-heavy and some baselines have far more tokens (Qwen2.5-Coder 23.5T)"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "The Stack v2 / StarCoder2",
+   "year": 2024,
+   "arxiv": "2402.19173",
+   "relation": "baseline",
+   "note": "Compared dataset; part of raw code taken from it",
+   "quote": null
+  },
+  {
+   "work": "StarCoder",
+   "year": 2023,
+   "arxiv": "2305.06161",
+   "relation": "uses-method",
+   "note": "Filtering rules extended; Jupyter-structured format",
+   "quote": null
+  },
+  {
+   "work": "SantaCoder (Allal et al.)",
+   "year": 2023,
+   "arxiv": "2301.03988",
+   "relation": "replicates",
+   "note": "Star filtering test; same finding",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-Coder",
+   "year": 2024,
+   "arxiv": "2401.14196",
+   "relation": "contradicts",
+   "note": "Claims repo-level dedup; OpenCoder finds file-level better",
+   "quote": null
+  },
+  {
+   "work": "MiniCPM",
+   "year": 2024,
+   "arxiv": "2404.06395",
+   "relation": "uses-method",
+   "note": "WSD schedule and annealing",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Recall pipeline for code web data",
+   "quote": null
+  },
+  {
+   "work": "Textbooks are all you need",
+   "year": 2023,
+   "arxiv": "2306.11644",
+   "relation": "uses-method",
+   "note": "Quality principles, synthetic exercises",
+   "quote": null
+  },
+  {
+   "work": "RedPajama",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Quality-signal filter framework",
+   "quote": null
+  },
+  {
+   "work": "Lee et al. Deduplicating training data",
+   "year": 2021,
+   "arxiv": "2107.06499",
+   "relation": "related",
+   "note": "Dedup motivation",
+   "quote": null
+  },
+  {
+   "work": "FineWeb, SkyPile, AutoMathText",
+   "year": 2024,
+   "arxiv": "2406.17557",
+   "relation": "uses-data",
+   "note": "Web corpora recalled for code",
+   "quote": null
+  },
+  {
+   "work": "HumanEval, MBPP, EvalPlus, BigCodeBench, LiveCodeBench, MultiPL-E, McEval, MdEval",
+   "year": 2024,
+   "arxiv": "2411.02310",
+   "relation": "evaluates",
+   "note": "Evaluation suites",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5-Coder, DeepSeek-Coder-V2, Yi-Coder, CodeLlama, CodeGemma, Crystal, StarCoder2-Instruct",
+   "year": 2024,
+   "arxiv": "2409.12186",
+   "relation": "baseline",
+   "note": "Compared models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 8",
+   "caption": "Impact of using different deduplication strategies.",
+   "page": 17,
+   "why": "Shows file-level beating repo-level on HumanEval/MBPP despite 3x fewer tokens"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Impact of star-based data filtering on model performance.",
+   "page": 18,
+   "why": "Star filter hurts Pass@1"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Left: losses with different distributions. Right: embeddings for original and filtered data.",
+   "page": 19,
+   "why": "Lower loss with worse downstream result"
+  },
+  {
+   "figure": "Table 10",
+   "caption": "Performance of different training strategies across benchmarks.",
+   "page": 19,
+   "why": "Stage1 vs Stage1+2 vs Mix"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures give curves only; no numeric values for ablations in Figs 8-11, 12",
+  "Section 2.1.3 cites Figure 1 for the RefineCode vs Stack v2 comparison but Figure 1 caption is about fully open models",
+  "Tokenizer citation printed as '?'",
+  "No embedded instructions found"
+ ]
+}

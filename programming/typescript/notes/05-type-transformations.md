@@ -31,6 +31,7 @@ cleaned: 2026-10-29
 ## Intersections
 
 ```ts
+// User and Admin: the types from note 03, each with a `type` field
 type PowerUser = Omit<User, 'type'> & Omit<Admin, 'type'> & { type: 'powerUser' };
 ```
 
@@ -68,6 +69,18 @@ type Handler = `on${Capitalize<Event>}`;          // 'onClick' | 'onFocus'
 type TrimLeft<S extends string> = S extends ` ${infer R}` ? TrimLeft<R> : S;
 ```
 
+## Variadic tuples
+
+A tuple type can spread another tuple, so you can build tuple types the way you build arrays:
+
+```ts
+type Push<T extends unknown[], U> = [...T, U];          // Push<[1, 2], 3> = [1, 2, 3]
+type Concat<A extends unknown[], B extends unknown[]> = [...A, ...B];
+type Tail<T extends unknown[]> = T extends [unknown, ...infer R] ? R : [];   // infer a rest
+```
+
+`infer` can capture the rest of a tuple (`...infer R`), which is how `First`, `Last` and `Length`-style challenges are solved.
+
 ## When to stop
 
 Type-level code is real code: it is hard to read and debug, and slow to compile. Use utility types freely, mapped types sometimes, and deep conditional recursion only in libraries. If an application type needs `infer` three levels deep, a simpler runtime design is usually better.
@@ -83,8 +96,9 @@ Type-level code is real code: it is hard to read and debug, and slow to compile.
 
 ## Try it
 
-- [`practice/typescript-exercises/05`](../practice/typescript-exercises/05/index.ts) (`Partial`/`Omit`), [`08`](../practice/typescript-exercises/08/index.ts) (intersections), [`14`](../practice/typescript-exercises/14/index.ts) (typing curried helpers) and [`15`](../practice/typescript-exercises/15/index.ts) (an object-manipulation library)
-- **Medium** type challenges: `*-medium-*.ts` (ReturnType, Omit, DeepReadonly, TupleToUnion, Chainable, Last, PromiseAll, TypeLookup, TrimLeft, Capitalize, Replace, AppendArgument, Merge). From `practice/`, check with `node check.ts medium`.
+- [`practice/typescript-exercises/05`](../practice/typescript-exercises/05/index.ts) (`Partial`/`Omit`), [`08`](../practice/typescript-exercises/08/index.ts) (intersections), and, as stretch exercises, [`14`](../practice/typescript-exercises/14/index.ts) (typing curried helpers) and [`15`](../practice/typescript-exercises/15/index.ts) (an object-manipulation library)
+- **Easy** type challenges in [`practice/type-challenges/challenges/`](../practice/type-challenges/challenges/): `*-easy-*.ts` (Pick, Readonly, TupleToObject, First, Length, Exclude, Awaited, If, Concat, Includes, Push, Parameters). Concat and Push need the variadic tuples above. From `practice/`, check with `node check.ts easy`.
+- **Medium** type challenges: `*-medium-*.ts` (ReturnType, Omit, Readonly 2, DeepReadonly, TupleToUnion, Chainable, Last, PromiseAll, TypeLookup, TrimLeft, Capitalize, Replace, AppendArgument, Merge). From `practice/`, check with `node check.ts medium`.
 
 ## Next
 

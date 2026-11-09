@@ -1,0 +1,534 @@
+{
+ "schema": 1,
+ "key": "2505.13417",
+ "pdf": "generative-ai/05-RL/sources/zhang-2025-adaptthink.pdf",
+ "bib": {
+  "title": "AdaptThink: Reasoning Models Can Learn When to Think",
+  "authors": [
+   "Jiajie Zhang",
+   "Nianyi Lin",
+   "Lei Hou",
+   "Ling Feng",
+   "Juanzi Li"
+  ],
+  "first_author": "Zhang",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2505.13417",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 56162,
+  "chars_total": 56162,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a reasoning model learn to choose between Thinking and NoThinking mode according to problem difficulty, cutting inference cost without losing accuracy?",
+ "hypothesis": "NoThinking is as good or better than Thinking on simple problems, so an RL policy that prefers NoThinking subject to a no-accuracy-loss constraint should be more efficient without hurting accuracy.",
+ "contributions": [
+  "Simplify NoThinking (empty thinking, first token </think>) and show it beats Thinking on simpler tasks in accuracy and efficiency",
+  "Propose AdaptThink, an RL algorithm with a constrained objective and importance sampling for cold start",
+  "Extensive experiments validating efficacy"
+ ],
+ "method": {
+  "summary": "PPO-style RL (no KL penalty) on R1-Distill-Qwen-1.5B/7B with advantage A = 1(y1=</think>)*delta + R - mean reference reward (K=16 presampled). Importance sampling forces the first token to be </think> or 'Alright' with probability 0.5 each so both modes are sampled from step 0.",
+  "task": "adaptive thinking-mode selection for efficient math reasoning (RL with verifiable 0/1 reward)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "DeepScaleR",
+    "role": "train",
+    "size": "40K math problems",
+    "split": "1 epoch (314 steps)",
+    "source": "AIME 1983-2023, AMC, Omni-Math, STILL",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K test",
+    "role": "eval",
+    "size": "1319 problems",
+    "split": "test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH500",
+    "role": "eval",
+    "size": "500 problems",
+    "split": "test",
+    "source": "Lightman et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME 2024",
+    "role": "eval",
+    "size": "30 problems",
+    "split": "test",
+    "source": null,
+    "preprocessing": "16 responses per problem averaged"
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "14K multi-choice questions, 57 domains",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeek-R1-Distill-Qwen-1.5B",
+    "role": "base",
+    "params": "1.5B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16K (train and eval)",
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-Distill-Qwen-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16K (train and eval)",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "PPO-style clipped loss, no KL penalty, advantage 1(y1=</think>)*delta + R(x,y) - Rbar_ref(x), samples from importance-sampling distribution pi_IS",
+   "optimizer": null,
+   "lr": "2e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": "314 steps (1 epoch); checkpoints used: step 300 (1.5B), step 150 (7B)",
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": "16K",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "1.5B: one 8xH800 node; 7B: four 8xH800 nodes",
+   "compute": null,
+   "wall_clock": "about 32 hours (1.5B), about 28 hours (7B)",
+   "seeds": null,
+   "other": {
+    "K": "16 responses per prompt",
+    "delta": "0.05 (sweep 0 to 0.1)",
+    "epsilon": "0.2",
+    "framework": "VeRL",
+    "reward": "0/1 answer correctness",
+    "w_start": "'Alright'"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.6",
+   "top_p": null,
+   "max_tokens": "16K evaluation context",
+   "samples": "16 responses per problem for AIME 2024 averaged; other sets not stated; pilot study 16 responses per problem",
+   "prompting": "NoThinking: force first token </think> (empty thinking). MMLU prompt asks for option in \\boxed{}.",
+   "retrieval": null,
+   "parameters": {
+    "delta": "0.05"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Acc",
+     "definition": "answer accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Length",
+     "definition": "average response length",
+     "unit": "tokens",
+     "higher_is_better": false
+    },
+    {
+     "name": "RatioNT",
+     "definition": "ratio of NoThinking responses",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "RatioIT",
+     "definition": "ratio of NoThinking solutions containing thinking keywords such as Wait, Alternatively",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "OriginalThinking",
+    "OriginalNoThinking",
+    "DPOShortest",
+    "OverThink",
+    "DAST",
+    "O1-Pruner",
+    "TLMRE",
+    "ModelMerging",
+    "RFTMixThinking"
+   ],
+   "protocol": "Single trained model per config; baselines re-implemented on DeepScaleR; no seeds or significance tests; checkpoints chosen by test-time accuracy/length balance."
+  },
+  "availability": {
+   "code": "https://github.com/THU-KEG/AdaptThink",
+   "weights": "released (models available at same URL)",
+   "data": "DeepScaleR (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "We train the models for 1 epoch, which is 314 steps in total.",
+    "where": "5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "AdaptThink cuts average response length of R1-Distill-Qwen-1.5B by 53.0% while raising average accuracy by 2.4%",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg length reduction",
+   "value": "53.0",
+   "unit": "% length reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-R1-Distill-Qwen-1.5B, GSM8K/MATH500/AIME2024 average, 16K context, temp 0.6, delta=0.05, step-300 checkpoint",
+   "note": null,
+   "where": "5.3",
+   "quote": "AdaptThink reduces the average response length by 53.0% and 40.1%, respectively, while also improves the average accuracy by 2.4% and 2.3%"
+  },
+  {
+   "claim": "AdaptThink-7B cuts average length by 40.1% and raises average accuracy by 2.3%",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg length reduction",
+   "value": "40.1",
+   "unit": "% length reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-R1-Distill-Qwen-7B, same three benchmarks, step-150 checkpoint",
+   "note": null,
+   "where": "5.3",
+   "quote": "AdaptThink reduces the average response length by 53.0% and 40.1%, respectively, while also improves the average accuracy by 2.4% and 2.3%"
+  },
+  {
+   "claim": "AdaptThink-1.5B on MATH500 reaches 82.0 accuracy at length 1782 versus 80.6 at 4887 for original Thinking",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "82.0",
+   "unit": "% accuracy",
+   "baseline_value": "80.6",
+   "n": null,
+   "setup": "1.5B, MATH500, 16K context, temp 0.6",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row AdaptThink (1.5B), MATH 500 Acc"
+  },
+  {
+   "claim": "AdaptThink-7B on GSM8K reaches 91.0 accuracy with 99.6% NoThinking responses and length 309",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "91.0",
+   "unit": "% accuracy",
+   "baseline_value": "87.9",
+   "n": null,
+   "setup": "7B, GSM8K test (1319 problems)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row AdaptThink (7B), GSM8K Acc"
+  },
+  {
+   "claim": "AdaptThink-1.5B on AIME 2024 gets 31.0 vs 29.4 original, length 6679 vs 12073, using NoThinking on 40.4%",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "31.0",
+   "unit": "% accuracy",
+   "baseline_value": "29.4",
+   "n": null,
+   "setup": "1.5B, AIME 2024, 16 samples averaged",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row AdaptThink (1.5B), AIME 2024 Acc"
+  },
+  {
+   "claim": "Pilot: NoThinking on Level 1 MATH500 gets 94.9 vs Thinking 94.6; length 300 vs 2033 tokens at Level 1 (values read from Fig 2 text labels)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "R1-Distill-Qwen-7B, 16 responses per problem, 16K budget, MATH500 levels 1-5",
+   "note": "Which accuracy label belongs to which mode in Fig 2 is not recoverable from the extracted text; only the qualitative claim is quoted",
+   "where": "3.2, Fig 2",
+   "quote": "NoThinking still achieves accuracy comparable to Thinking on relatively simple prob-"
+  },
+  {
+   "claim": "Even at delta=0, 1.5B chooses NoThinking for over 50% of GSM8K and MATH500 problems; accuracy gain +5.5 average",
+   "kind": "measured",
+   "source": null,
+   "metric": "dAcc",
+   "value": "+5.5",
+   "unit": "% avg accuracy change",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.5B, delta sweep",
+   "note": null,
+   "where": "5.4, Table 2",
+   "table": "Table 2, row delta=0, column Average dAcc"
+  },
+  {
+   "claim": "Large delta trades accuracy for length: delta=0.1 gives -0.5 avg accuracy and -64.5% length",
+   "kind": "measured",
+   "source": null,
+   "metric": "dLength",
+   "value": "-64.5",
+   "unit": "% length reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.5B, delta=0.1",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row delta=0.1, column dLength"
+  },
+  {
+   "claim": "Naive GRPO without importance sampling cannot produce NoThinking samples; MATH500 length stalls near 3,500 while AdaptThink falls below 2,000",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2,000",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH500 during training, 1.5B and 7B, read from Fig 4",
+   "note": null,
+   "where": "5.4, Fig 4",
+   "quote": "The response length of GRPO on MATH500 decreases only to around 3,500"
+  },
+  {
+   "claim": "Implicit thinking in NoThinking mode rises only slightly: 7B RatioIT 4.2% for AdaptThink vs 0.9% original NoThinking",
+   "kind": "measured",
+   "source": null,
+   "metric": "RatioIT",
+   "value": "4.2",
+   "unit": "% RatioIT",
+   "baseline_value": "0.9",
+   "n": null,
+   "setup": "Cases where AdaptThink picks NoThinking; keyword detection (Wait, Alternatively)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row AdaptThink (7B), column RatioIT"
+  },
+  {
+   "claim": "OOD MMLU: 1.5B accuracy 42.2 vs 35.7 and length -38.8%; 7B 63.6 vs 63.4 and length -31.9%, with ~16% NoThinking",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "42.2",
+   "unit": "% accuracy",
+   "baseline_value": "35.7",
+   "n": null,
+   "setup": "MMLU (14K questions, 57 domains), no MMLU training",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row AdaptThink (1.5B), column Acc"
+  },
+  {
+   "claim": "AdaptThink beats efficient-reasoning baselines on average: best baseline accuracy change TLMRE +2.0 with -25.3% length for 1.5B",
+   "kind": "measured",
+   "source": null,
+   "metric": "dAcc",
+   "value": "+2.0",
+   "unit": "% avg dAcc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.5B, re-implemented on DeepScaleR",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row TLMRE (1.5B), column dAcc"
+  },
+  {
+   "claim": "Mode choice tracks difficulty: AdaptThink-7B uses NoThinking 97.7% at MATH Level 1 and 50.7% at Level 5",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "97.7",
+   "unit": "% NoThinking",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B, MATH500 levels, read from Fig 3",
+   "note": null,
+   "where": "Fig 3",
+   "table": null,
+   "quote": "97.7%"
+  }
+ ],
+ "limits": [
+  "Only 1.5B and 7B models tested due to limited compute",
+  "Trained on math only (verifiable rewards); OOD shown only on MMLU",
+  "Checkpoints selected (step 300 / 150) for good balance, optimizer and warmup not stated, no seeds",
+  "Implicit thinking can arise in NoThinking mode; zero reward for such samples is suggested but not tested",
+  "Only the 16K budget is studied; baselines re-implemented by authors"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "NoThinking",
+   "definition": "enforcing the first generated token y1 = </think>, i.e. an empty thinking segment",
+   "where": "3.2"
+  },
+  {
+   "term": "RatioNT",
+   "definition": "ratio of responses generated in NoThinking mode",
+   "where": "5.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Reasoning models can be effective without thinking (Ma et al.)",
+   "year": 2025,
+   "arxiv": "2504.09858",
+   "relation": "extends",
+   "note": "NoThinking simplified to empty thinking",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "evaluates",
+   "note": "R1-Distill-Qwen models as base policies",
+   "quote": null
+  },
+  {
+   "work": "DeepScaleR",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training set",
+   "quote": null
+  },
+  {
+   "work": "O1-Pruner",
+   "year": 2025,
+   "arxiv": "2501.12570",
+   "relation": "baseline",
+   "note": "pre-sampled reference accuracy under constraint (similar to Rbar_ref)",
+   "quote": null
+  },
+  {
+   "work": "Training language models to reason efficiently (Arora and Zanette)",
+   "year": 2025,
+   "arxiv": "2502.04463",
+   "relation": "baseline",
+   "note": "TLMRE",
+   "quote": null
+  },
+  {
+   "work": "DAST",
+   "year": 2025,
+   "arxiv": "2503.04472",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "OverThink (Chen et al.)",
+   "year": 2024,
+   "arxiv": "2412.21187",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Model merging long-to-short (Wu et al.)",
+   "year": 2025,
+   "arxiv": "2503.20641",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "clipped loss",
+   "quote": null
+  },
+  {
+   "work": "HybridFlow / VeRL",
+   "year": 2024,
+   "arxiv": "2409.19256",
+   "relation": "uses-method",
+   "note": "training framework",
+   "quote": null
+  },
+  {
+   "work": "DPO",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DPOShortest",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of DeepSeek-R1-Distill-Qwen-7B using Thinking and NoThinking mode across difficulty levels of MATH500.",
+   "page": 3,
+   "why": "Motivating pilot"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Ratio AdaptThink-7B chooses Thinking or NoThinking across MATH levels, and accuracy comparison.",
+   "page": 6,
+   "why": "Shows difficulty-adaptive selection"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Accuracy, length and NoThinking ratio on MATH500 for AdaptThink vs naive GRPO over training.",
+   "page": 8,
+   "why": "Shows importance sampling is needed"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4/6",
+   "snippet": "A(x, y) = 1(y1 = </think>) * delta + R(x, y) - Rbar_ref(x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found",
+  "Fig 2 data labels are unlabelled numbers in extracted text; per-mode values not assigned",
+  "Fig 3 percentages read from figure text labels"
+ ]
+}

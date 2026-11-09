@@ -30,7 +30,7 @@ The five-step process, trade-off narration formula, reference architecture, bott
 
 ## Prep checklist
 
-- [ ] Rehearse the five-step process until the clarifying questions are automatic (the two openers: priorities question + data-sensitivity question)
+- [ ] Rehearse the six-step process until the clarifying questions are automatic (the two openers: priorities question + data-sensitivity question)
 - [ ] Draw the reference architecture from memory in under 3 minutes
 - [ ] Dry-run the four classic prompts against a timer (8 min/step)
 - [ ] Rehearse the three librarian drill systems as full spoken answers — designs you've actually built beat memorized generic ones

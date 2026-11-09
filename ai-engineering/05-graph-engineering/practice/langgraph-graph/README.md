@@ -67,7 +67,7 @@ decides whether the citation is real, not the model that wrote it.
    its first line, which is why a side effect belongs after the interrupt or in its own node.</details>
 3. Add a `bug` route that files a ticket through a new node, without touching the other routes.
    How many edges changed? Compare that with adding the same branch to a loop.
-4. Swap `MemorySaver` for `SqliteSaver` (`uv run --with langgraph-checkpoint-sqlite run.py`), split the
+4. Swap the in-memory saver (`MemorySaver`, the older name of `InMemorySaver` that note 04 uses) for `SqliteSaver` (`uv run --with langgraph-checkpoint-sqlite run.py`), split the
    pause and the resume into two runs of the program, and confirm the state survives.
 
 ## Swap in a real model

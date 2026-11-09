@@ -1,0 +1,596 @@
+{
+ "schema": 1,
+ "key": "2401.14887",
+ "pdf": "generative-ai/02-rag-retrieval/sources/cuconasu-2024-power-noise.pdf",
+ "bib": {
+  "title": "The Power of Noise: Redefining Retrieval for RAG Systems",
+  "authors": [
+   "Florin Cuconasu",
+   "Giovanni Trappolini",
+   "Federico Siciliano",
+   "Simone Filice",
+   "Cesare Campagnano",
+   "Yoelle Maarek",
+   "Nicola Tonellotto",
+   "Fabrizio Silvestri"
+  ],
+  "first_author": "Cuconasu",
+  "year": 2024,
+  "venue": "SIGIR '24 (47th International ACM SIGIR Conference), Washington, DC",
+  "arxiv": "2401.14887",
+  "doi": "10.1145/3626772.3657834"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 66487,
+  "chars_total": 66487,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What kinds of retrieved passages (relevant, distracting, random), in what number and position, make an LLM answer best in a RAG prompt, and are current retrievers ideal?",
+ "hypothesis": "Implied: semantically close but non-answering (distracting) documents are not harmless, and the common assumption that only relevant context helps should be re-tested; the authors did not expect random noise to help.",
+ "contributions": [
+  "First comprehensive study of the impact of the type of retrieved documents in RAG on LLM effectiveness.",
+  "Retrieval RAG heuristics that exploit the unexpected results.",
+  "Release of code and data."
+ ],
+ "method": {
+  "summary": "Prompts are built from the NQ-open gold passage plus controlled numbers and positions of distracting (top retrieved non-answer), random (Wikipedia, Reddit, or random-word) documents, and fed to four 4-bit quantised open LLMs with greedy decoding. Accuracy is whether any gold answer string is contained in the output. A second set of experiments uses real retrieval (Contriever or BM25 top-k) padded with random documents up to the context limit.",
+  "task": "open-domain QA (NQ-open) with extractive answers of at most 5 tokens",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "NQ-open (Natural Questions open)",
+    "role": "eval",
+    "size": "72,209 train-set queries and 2,889 test-set queries; corpus of 21,035,236 documents",
+    "split": "oracle experiments (Sections 5.1-5.3): 10K queries sampled from the train set; RAG-in-practice experiments (5.4): test set",
+    "source": "English Wikipedia dump of 20 December 2018, split into non-overlapping 100-word passages as in DPR; NQ gold documents added to the corpus",
+    "preprocessing": "Gold documents of NQ added to the Wikipedia set to avoid temporal mismatch; other answer-containing documents are not treated as gold"
+   },
+   {
+    "name": "Reddit Webis-TLDR-17",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Voelske et al. 2017, used as a source of random documents in a different style",
+    "preprocessing": null
+   },
+   {
+    "name": "Random-word nonsense sentences",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "made up of random words, used as random documents",
+    "preprocessing": "generation procedure not described"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama2 (instruct)",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only, multi-query attention (as stated)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {
+     "quantisation": "4-bit"
+    }
+   },
+   {
+    "name": "Falcon (instruct)",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "multi-query attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {
+     "pretraining_data": "RefinedWeb",
+     "quantisation": "4-bit"
+    }
+   },
+   {
+    "name": "Phi-2",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {
+     "quantisation": "4-bit"
+    }
+   },
+   {
+    "name": "MPT (instruct)",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "ALiBi attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens (limit set by authors, same as pretraining)",
+    "other": {
+     "quantisation": "4-bit"
+    }
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "BERT-based dense retriever, unsupervised contrastive training; embedding = average of last-layer hidden states",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "index": "FAISS IndexFlatIP",
+     "similarity": "dot product"
+    }
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": "sparse lexical",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "implementation": "not stated"
+    }
+   },
+   {
+    "name": "ADORE",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense retriever trained with dynamic hard negatives",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "only to pick distracting docs in a 1/2/4 distractor check with Llama2"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "15 tokens maximum response length",
+   "samples": "one greedy run per query; no seeds or repeats reported",
+   "prompting": "Zero-shot, no few-shot exemplars. Instruction first, then documents (Document [id](Title: ...) text), then question, then Answer. Instruction and query always at start and end. Base and instruct versions tested; only instruct reported.",
+   "retrieval": "Top-k from Contriever (FAISS flat inner product) or BM25 over ~21M 100-word passages; random documents sampled uniformly from the corpus (or Reddit / random words) are added up to the context limit; k in 1-10 and up to 18 added docs",
+   "parameters": {
+    "gold_position": "far [I, gold, distract..., Q], mid [I, distract, gold, distract, Q], near [I, distract..., gold, Q]",
+    "distractors": "counts 0,1,2,4,6,8,10,12,14,16,18 (read from Table 1 rows; >10 only for Llama2)",
+    "random_docs": "rows 0,1,2,3,5,8,10,15,16,17,18 (read from Table 3 rows)",
+    "retrieved_docs": "1,2,3,4,5,8,10 (Table 3 and 4); 1-5 and 9 for Falcon (Table 5)"
+   },
+   "other": {
+    "prompt_overflow": "settings exceeding model input limit are excluded (shown as '-')"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "Binary: 1 if at least one of the predefined correct answers (NQ-open aliases) is contained in the LLM response, else 0; averaged over queries",
+     "unit": "fraction (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-k accuracy of retriever",
+     "definition": "Fraction of queries with the answer string present in the top-k retrieved documents",
+     "unit": "fraction (0-1)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Gold-only prompt [I, gold, Q]",
+    "Retrieved-only prompt [I, q, Q]",
+    "Closed-book (Llama2 0.1123, MPT 0.1205, Phi-2 0.0488, Falcon 0.1083)"
+   ],
+   "protocol": "Wilcoxon test against the base row; p<0.01 for Tables 1-4, p<0.05 for Table 5; asterisk marks non-significant cells. No seeds or confidence intervals."
+  },
+  "availability": {
+   "code": "github.com/florin-git/The-Power-of-Noise",
+   "weights": "public open models (not released by authors)",
+   "data": "released with code per footnote"
+  },
+  "prompts": [
+   {
+    "purpose": "Extractive QA instruction (task instruction I)",
+    "text": "You are given a question and you MUST respond by EXTRACTING the answer (max 5 tokens) from one of the provided documents. If none of the documents contain the answer, respond with NO-RES.",
+    "where": "Figure 1, Section 4.5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.decoding",
+    "quote": "we adopt a greedy generation approach with a maximum response length of 15 tokens",
+    "where": "Section 4.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adding random documents to the retrieved set until the context is full improves Llama2 accuracy by up to 0.07 (+35%) with 4 retrieved documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "0.07 (+35%)",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "2,889 test queries",
+   "setup": "NQ-open test, Llama2-7B, Contriever, [I, random, q, Q], 4 retrieved docs",
+   "quote": "gains in terms of accuracy up to 0.07 (+35%) in the case of 4 retrieved documents",
+   "table": null,
+   "note": "Abstract says up to 35%.",
+   "where": "Section 5.4, Table 3"
+  },
+  {
+   "claim": "In the oracle gold setting, random documents placed near the query raise MPT accuracy by 0.08 (+36%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "0.08 (+36%)",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "10K train queries",
+   "setup": "gold + random documents, near position [I, random, gold, Q], MPT-7B",
+   "quote": "with an improvement of 0.08 (+36%) in",
+   "table": null,
+   "note": "Text sentence continues 'the case of MPT'. Table 2 MPT near: 0.2148 gold-only vs 0.2930 with 4 random.",
+   "where": "Section 5.3, Table 2"
+  },
+  {
+   "claim": "Distracting documents degrade accuracy progressively, by more than 0.38 (-67%) in some cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": "0.38 (-67%)",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "10K train queries",
+   "setup": "gold + distracting documents, four LLMs, far/mid/near",
+   "quote": "with accuracy deteriorating by more than 0.38 (−67%)",
+   "table": null,
+   "note": null,
+   "where": "Section 5.1, Table 1"
+  },
+  {
+   "claim": "A single distracting document already causes a sharp drop, with peaks of 0.24 (-25%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": "0.24 (-25%)",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "10K train queries",
+   "setup": "gold-only vs gold + 1 distracting document",
+   "quote": "with peaks of 0.24 (−25%)",
+   "table": null,
+   "note": null,
+   "where": "Section 5.1"
+  },
+  {
+   "claim": "Llama2 gold-only accuracy is 0.5642 versus 0.1123 closed-book.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.5642",
+   "unit": "fraction",
+   "baseline_value": "0.1123",
+   "n": "10K train queries",
+   "setup": "Llama2-7B, gold only [I, gold, Q]",
+   "quote": null,
+   "table": "Table 1, row 0, column Llama2; closed-book 0.1123 in caption",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "With ADORE (hard-negative-trained retriever) selecting distractors, Llama2 accuracy with 1, 2 and 4 distractors is 0.4068, 0.3815, 0.3626, lower than the no-distractor 0.5642 and lower than Contriever distractors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.3626 (4 distractors)",
+   "unit": "fraction",
+   "baseline_value": "0.5642",
+   "n": "10K train queries",
+   "setup": "[I, distract, gold, Q], Llama2",
+   "quote": "we obtain an accuracy of 0.4068, 0.3815, and 0.3626",
+   "table": null,
+   "note": null,
+   "where": "Section 5.1"
+  },
+  {
+   "claim": "Gold position matters: Llama2 with 18 distractors reaches 0.37 near, 0.23 far and 0.17 mid.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.37 / 0.23 / 0.17",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "10K train queries",
+   "setup": "Llama2, 18 distracting docs, near/far/mid",
+   "quote": "reaches an accuracy of 0.37, 0.23, and 0.17",
+   "table": null,
+   "note": "Table 1 values for 18 distractors: near 0.3781, far 0.2348, mid 0.1795.",
+   "where": "Section 5.2"
+  },
+  {
+   "claim": "Adding BM25-retrieved context plus random documents gives an average accuracy increase of 3-4 percentage points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "3-4 percentage points",
+   "unit": "points",
+   "baseline_value": null,
+   "n": "2,889 test queries",
+   "setup": "Llama2-7B, BM25, [I, random, q, Q]",
+   "quote": "an average increase in accuracy of 3-4 percentage points",
+   "table": null,
+   "note": null,
+   "where": "Section 5.4.1, Table 3 right"
+  },
+  {
+   "claim": "BM25 has higher top-k answer-containing accuracy than Contriever (k=1,2,4,10).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-k accuracy",
+   "value": "0.2966, 0.4105, 0.5237, 0.6663 (BM25) vs 0.2502, 0.3569, 0.4784, 0.6085 (Contriever)",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "2,889 test queries",
+   "setup": "NQ-open test set, answer-string presence in top-k",
+   "quote": "(0.2966, 0.4105, 0.5237, 0.6663 for 𝑘= 1, 2, 4, 10)",
+   "table": null,
+   "note": "Authors admit answer-string match may overstate relevance.",
+   "where": "Section 5.4.1"
+  },
+  {
+   "claim": "Random documents drawn from Reddit improve accuracy beyond Wikipedia random docs, by 0.023 (+9%) over the previous best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "0.023 (+9%)",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": "2,889 test queries",
+   "setup": "Llama2-7B, Contriever, Reddit Webis-TLDR-17 random docs",
+   "quote": "with an improvement of 0.023 (+9% accuracy)",
+   "table": null,
+   "note": null,
+   "where": "Section 5.4.2, Table 4 left"
+  },
+  {
+   "claim": "Even random-word nonsense documents improve accuracy over the Wikipedia-random base case.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "2,889 test queries",
+   "setup": "Llama2-7B, Contriever; Table 4 right",
+   "quote": "Remarkably, even in this scenario, we observe a performance",
+   "table": null,
+   "note": "Table 4 right side gives the numbers; the text states the gain without a figure.",
+   "where": "Section 5.4.2"
+  },
+  {
+   "claim": "Falcon does not improve with random docs in the oracle gold setting but does with retrieved docs plus random Reddit docs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "2,889 test queries",
+   "setup": "Falcon-7B, Table 5 (p<0.05)",
+   "quote": "does improve the effectiveness of",
+   "table": null,
+   "note": "Gains are small: e.g. 5 retrieved 0.1942 -> 0.2118 with 3 random; many cells not significant.",
+   "where": "Section 5.4.3, Table 5"
+  },
+  {
+   "claim": "Best configuration: retrieve a small set (3 to 5 documents) and pad with random documents up to the context limit.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ-open, Llama2-7B; heuristic derived from Tables 3-4, not tested on other datasets",
+   "quote": "the best effectiveness is achieved when a minimal set of documents is initially retrieved and then supplemented with random documents until the context limit is reached",
+   "table": null,
+   "note": "Text also says 'retrieving between 3 and 5 documents is the most effective choice' (line-broken in PDF).",
+   "where": "Section 5.5"
+  },
+  {
+   "claim": "Attention entropy rises about 3X when random documents are added to the gold-only prompt; offered as a hypothesis not a confirmed explanation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "attention entropy ratio",
+   "value": "3X",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gold-only vs [I, random, gold, Q], model not specified in the sentence (Llama2 used for attention figure)",
+   "quote": "the entropy of the systems has a 3X increase",
+   "table": null,
+   "note": "Authors say they cannot answer the question definitively.",
+   "where": "Section 5.5"
+  }
+ ],
+ "limits": [
+  "Authors concede no formal theory explains why random documents help; the attention-entropy account is a hint only (Section 5.5).",
+  "Accuracy is substring containment of NQ answer aliases; 'Roosevelt' vs 'President Roosevelt' is scored wrong, and authors leave better answer-variant analysis to future work (Section 4.6).",
+  "Only NQ-open (Wikipedia), extractive answers up to 5 tokens, zero-shot prompts; few-shot is out of scope.",
+  "Models are 2.7B-7B and 4-bit quantised, context 2048-4096; behaviour of larger or long-context models is not tested.",
+  "Oracle experiments use a 10K-query sample of the train set; no seeds, repeats or confidence intervals beyond Wilcoxon tests.",
+  "Falcon does not show the random-document gain in the oracle gold setting; Falcon and Llama2 do not consistently show lost-in-the-middle.",
+  "Gains from random docs shrink or vanish with BM25 relative to Contriever in some cells because BM25 retrieves answer-containing docs more often; top-k accuracy via answer-string match may overstate relevance.",
+  "Gains are with 'correct positioning' (random docs placed far from query, gold/retrieved docs near query); random docs near the query as in far/mid hurt Llama2 and Phi-2.",
+  "Later work (not in this paper) may have dated the specific models used."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "gold document",
+   "definition": "the original context in the NQ dataset, the passage of a Wikipedia page containing the answer",
+   "where": "Section 4.2"
+  },
+  {
+   "term": "relevant documents",
+   "definition": "passages that, akin to the gold document, contain the correct answer and are contextually useful; the gold document is a relevant document",
+   "where": "Section 4.2"
+  },
+  {
+   "term": "distracting documents",
+   "definition": "semantically similar to the query but do not contain the correct answer; in practice the top-scoring retrieved documents that are not relevant",
+   "where": "Section 4.2"
+  },
+  {
+   "term": "random documents",
+   "definition": "neither related to the query nor contain the answer; randomly sampled from the corpus",
+   "where": "Section 4.2"
+  },
+  {
+   "term": "near / mid / far",
+   "definition": "gold document position relative to the query: adjacent, middle of context, or as far as possible",
+   "where": "Section 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lost in the Middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Prompt format and position effect; results partially corroborate it",
+   "quote": "Results in these settings partially corroborate evidence from [30]."
+  },
+  {
+   "work": "Contriever (Izacard et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Default dense retriever",
+   "quote": null
+  },
+  {
+   "work": "Dense Passage Retrieval (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "100-word passage segmentation and dot-product retrieval",
+   "quote": null
+  },
+  {
+   "work": "NQ-open (Lee et al.; Kwiatkowski et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Evaluation dataset",
+   "quote": null
+  },
+  {
+   "work": "ADORE (Zhan et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Hard-negative retriever used to check distractor result",
+   "quote": null
+  },
+  {
+   "work": "Zhai et al., attention entropy collapse",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of the entropy-collapse hypothesis",
+   "quote": null
+  },
+  {
+   "work": "RAG (Lewis et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Origin of the RAG formulation used",
+   "quote": null
+  },
+  {
+   "work": "Llama 2, Falcon, Phi-2, MPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Generators tested",
+   "quote": null
+  },
+  {
+   "work": "Webis-TLDR-17 (Voelske et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Reddit random documents",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Example LLM input with an erroneous output... only gold document",
+   "page": 3,
+   "why": "Shows the prompt template (instruction, documents, question)."
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Heatmap of mean attention from answer tokens to each context document per layer for Llama2-7b in [I, distract, gold, Q]",
+   "page": 5,
+   "why": "Shows the model attending to a distracting document rather than gold."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Accuracy of Llama2-7b with random Wikipedia documents plus retrieved documents, Contriever and BM25",
+   "page": 5,
+   "why": "Core grid showing gain from padding with random documents."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells flatten to one value per line in the text cache, so Table 2 and Table 3 columns were read by position; the run of 'no-mid' cells in Table 1 and 2 row 1 shifts ordering, check before reuse.",
+  "Figure 3 graphics and the heading of Section 5.2 onward are not in the section map; no embedded instructions found."
+ ]
+}

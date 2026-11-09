@@ -1,0 +1,544 @@
+{
+ "schema": 1,
+ "key": "2401.01335",
+ "pdf": "generative-ai/05-RL/sources/chen-2024-self-play-fine-tuning-converts.pdf",
+ "bib": {
+  "title": "Self-Play Fine-Tuning Converts Weak Language Models to Strong Language Models",
+  "authors": [
+   "Zixiang Chen",
+   "Yihe Deng",
+   "Huizhuo Yuan",
+   "Kaixuan Ji",
+   "Quanquan Gu"
+  ],
+  "first_author": "Chen",
+  "year": 2024,
+  "venue": "ICML 2024 (PMLR 235)",
+  "arxiv": "2401.01335",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 87642,
+  "chars_total": 87642,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can a weak SFT LLM improve itself without any additional human-annotated data or stronger-LLM feedback?",
+ "hypothesis": "Iterated self-play against its own previous-iteration generations, discriminating them from SFT human responses, converges to the data distribution and improves benchmark scores beyond further SFT.",
+ "contributions": [
+  "Propose SPIN, a self-play fine-tuning method starting from an SFT model, needing only the SFT dataset",
+  "Prove the global optimum is reached only when the LLM policy equals the target data distribution",
+  "Empirically improve zephyr-7b-sft-full on Open LLM Leaderboard, MT-Bench and Big-Bench, matching or exceeding DPO with 62k extra GPT-4 preference data"
+ ],
+ "method": {
+  "summary": "At each iteration the current model generates a response y' for every prompt in the SFT data; the next model is trained with a DPO-like logistic loss to prefer the human SFT response y over y' relative to the previous iterate. Applied to zephyr-7b-sft-full with 50k Ultrachat200k prompts for 4 iterations (0-3), 2 epochs each.",
+  "task": "self-play fine-tuning of an SFT LLM (iterative preference-style optimisation without preference labels)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Ultrachat200k (random 50k prompts, first turn only)",
+    "role": "train",
+    "size": "50k prompts; synthetic set 50k at iter 0, 100k at iters 1-3 (new 50k plus previous 50k)",
+    "split": "random 50k sample of the 200k SFT subset",
+    "source": "HuggingFaceH4/ultrachat_200k, from UltraChat (~1.4M dialogues from OpenAI Turbo APIs)",
+    "preprocessing": "only first round of multi-turn dialogues used as prompt and ground-truth completion"
+   },
+   {
+    "name": "UltraFeedback Binarized",
+    "role": "train",
+    "size": "~62k preference pairs",
+    "split": null,
+    "source": "Cui et al. 2023; chosen/rejected judged by GPT-4",
+    "preprocessing": "used only for the DPO baseline and the SPIN+DPO row"
+   },
+   {
+    "name": "HuggingFace Open LLM Leaderboard (Arc, TruthfulQA, Winogrande, GSM8k, HellaSwag, MMLU)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Beeching et al. 2023; lm-eval-harness",
+    "preprocessing": "few-shot 25/0/5/5/10/5"
+   },
+   {
+    "name": "MT-Bench, Big-Bench-Hard (causal judgement, sports, formal fallacies), OpenBookQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "BB: few-shot CoT; OpenBookQA acc_norm 1-shot"
+   }
+  ],
+  "models": [
+   {
+    "name": "zephyr-7b-sft-full",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer (Mistral-7B)",
+    "init_from": "Mistral-7B SFT on Ultrachat200k by HuggingFace",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SPIN iteration 0-3 models",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "same",
+    "init_from": "previous iteration (iter 0 from zephyr-7b-sft-full)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max sequence length 2048 tokens",
+    "other": {}
+   },
+   {
+    "name": "zephyr-7b-dpo-full (zephyr-7b-beta in text)",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "same",
+    "init_from": "zephyr-7b-sft-full + DPO on ~62k UltraFeedback pairs",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "vicuna-13b-v1.5",
+    "role": "baseline",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "MT-Bench": "6.57"
+    }
+   }
+  ],
+  "training": {
+   "objective": "logistic loss l(t)=log(1+exp(-t)) on lambda*log(p_theta(y|x)/p_theta_t(y|x)) - lambda*log(p_theta(y'|x)/p_theta_t(y'|x)), y from SFT data, y' from previous iterate",
+   "optimizer": "RMSProp, no weight decay",
+   "lr": "peak 5e-7 for iterations 0 and 1; 1e-7 for iterations 2 and 3",
+   "lr_schedule": "inferred: decay of peak LR across iterations; within-iteration schedule shape not stated",
+   "warmup": "10% warmup steps",
+   "batch_size": "64 (global)",
+   "steps": null,
+   "epochs": "2 per iteration",
+   "tokens": null,
+   "seq_len": "2048 tokens",
+   "precision": "bfloat16",
+   "weight_decay": "none",
+   "dropout": null,
+   "regularisation": "beta=0.1 (the KL-like temperature, lambda^-1 in the objective), beta=5.0 at iter 3",
+   "hardware": "8xA100 (80G)",
+   "compute": "per iteration generation 1.45h; training 4.32h (iter 0) and 8.64h (iters 1-3); per 64 examples generation 6.69s, training 10s",
+   "wall_clock": "inferred: about 5.77h iter 0 and 10.09h per later iteration from Table 2",
+   "seeds": null,
+   "other": {
+    "codebase": "Alignment Handbook with DeepSpeed ZeRO-3 and FlashAttention-2",
+    "SPIN+DPO": "DPO 2 epochs on 62k UltraFeedback from SPIN iter 3"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one synthetic response y' per prompt per iteration; one reported run",
+   "prompting": "template '### Instruction: {prompt}\\n\\n### Response: '",
+   "retrieval": null,
+   "parameters": {
+    "beta": "0.1, 5.0 at iter 3",
+    "lambda": "reported as beta"
+   },
+   "other": {
+    "generation": "Accelerate library, distributed inference, global batch size 64; decoding settings not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Open LLM Leaderboard average",
+     "definition": "mean of Arc acc_norm (25-shot), TruthfulQA mc2 (0-shot), Winogrande acc (5-shot), GSM8k acc (5-shot), HellaSwag acc_norm (10-shot), MMLU acc (5-shot)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench",
+     "definition": "average score",
+     "unit": "1-10 score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "zephyr-7b-sft-full",
+    "zephyr-7b-dpo-full",
+    "SFT one more epoch",
+    "vicuna-13b-v1.5"
+   ],
+   "protocol": "single run per configuration, no seeds, no confidence intervals stated"
+  },
+  "availability": {
+   "code": "https://github.com/uclaml/SPIN",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "generation template for synthetic data",
+    "text": "### Instruction: {prompt}\\n\\n### Response: ",
+    "where": "App B.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We set the peak learning rate to be 5e-7 for iterations 0 and 1, and decay this peak learning rate to 1e-7 for iteration 2 and 3",
+    "where": "App B.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SPIN lifts zephyr-7b-sft-full's Open LLM Leaderboard average from 58.14 to 63.16 over iterations 0-3 with no new preference data.",
+   "kind": "measured",
+   "metric": "Open LLM Leaderboard average",
+   "value": 63.16,
+   "unit": "avg acc %",
+   "baseline_value": 58.14,
+   "n": null,
+   "setup": "zephyr-7b-sft-full (Mistral-7B SFT on Ultrachat200k), 50k Ultrachat200k prompts, 4 SPIN iterations (0-3), 2 epochs per iteration, single run reported",
+   "quote": "SPIN effectively improves the base model’s average score from 58.14 to 63.16 on the HuggingFace Open LLM Leaderboard",
+   "note": null,
+   "where": "Sec 1; Fig 2; Table 4",
+   "source": null
+  },
+  {
+   "claim": "Per-iteration average gain shrinks: +2.66, +1.32, +0.85, +0.19.",
+   "kind": "measured",
+   "metric": "Open LLM average, change vs previous iteration",
+   "value": 0.19,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above; iteration 3 vs 2",
+   "table": "Table 4, row SPIN iteration 3, column Average",
+   "note": null,
+   "where": "Table 4",
+   "source": null
+  },
+  {
+   "claim": "Iteration 0 average is 60.80, iteration 1 is 62.12, iteration 2 is 62.97.",
+   "kind": "measured",
+   "metric": "Open LLM average",
+   "value": 60.8,
+   "unit": "avg acc %",
+   "baseline_value": 58.14,
+   "n": null,
+   "setup": "same",
+   "table": "Table 4, row SPIN iteration 0, column Average (iter 1 62.12, iter 2 62.97)",
+   "note": null,
+   "where": "Table 4",
+   "source": null
+  },
+  {
+   "claim": "Another SFT epoch on Ultrachat200k degrades zephyr-7b-sft-full to 57.23 average, while SPIN improves.",
+   "kind": "measured",
+   "metric": "Open LLM average",
+   "value": 57.23,
+   "unit": "avg acc %",
+   "baseline_value": 58.14,
+   "n": null,
+   "setup": "zephyr-7b-sft-full fine-tuned 1 more epoch on Ultrachat200k",
+   "table": "Table 5, row SFT epoch 1, column Average",
+   "note": null,
+   "where": "Table 5",
+   "source": null
+  },
+  {
+   "claim": "zephyr-7b-dpo-full (DPO on ~62k GPT-4-labelled UltraFeedback pairs) scores 61.31; SPIN iteration 0 (60.80) is comparable and iteration 1 (62.12) surpasses it.",
+   "kind": "measured",
+   "metric": "Open LLM average",
+   "value": 61.31,
+   "unit": "avg acc %",
+   "baseline_value": 60.8,
+   "n": null,
+   "setup": "same SFT checkpoint; DPO row is zephyr-7b-dpo-full (text calls it zephyr-7b-beta); SPIN uses only the existing 50k SFT data",
+   "table": "Table 3, row zephyr-7b-dpo-full, column Average",
+   "note": "Section 6.2 calls the DPO model zephyr-7b-beta; Table 3 labels it zephyr-7b-dpo-full.",
+   "where": "Sec 6.2; Table 3",
+   "source": null
+  },
+  {
+   "claim": "SPIN iteration 0 is comparable to DPO on average, and from iteration 1 surpasses it.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "quote": "SPIN based on the existing SFT data can already achieve comparable average performance to DPO training at iteration 0.",
+   "note": "Actual text line-wrapped; see Sec 6.2.",
+   "where": "Sec 6.2",
+   "source": null
+  },
+  {
+   "claim": "Iteration 0 gains are largest on GSM8k (26.76 to 35.10) and TruthfulQA (43.73 to 49.18); iteration 3 reaches GSM8k 38.97 and TruthfulQA 54.90.",
+   "kind": "measured",
+   "metric": "GSM8k accuracy (5-shot)",
+   "value": 38.97,
+   "unit": "%",
+   "baseline_value": 26.76,
+   "n": null,
+   "setup": "zephyr-7b-sft-full vs SPIN iteration 3",
+   "table": "Table 4, row SPIN iteration 3, column GSM8k",
+   "note": null,
+   "where": "Table 4",
+   "source": null
+  },
+  {
+   "claim": "Winogrande and MMLU do not improve: Winogrande 74.19 to 73.72 and MMLU 60.92 to 59.99 at iteration 3.",
+   "kind": "measured",
+   "metric": "MMLU accuracy (5-shot)",
+   "value": 59.99,
+   "unit": "%",
+   "baseline_value": 60.92,
+   "n": null,
+   "setup": "SFT vs SPIN iteration 3",
+   "table": "Table 4, row SPIN iteration 3, column MMLU",
+   "note": null,
+   "where": "Table 4",
+   "source": null
+  },
+  {
+   "claim": "MT-Bench rises from 5.94 to 6.78 by iteration 2; iteration 3 not reported for MT-Bench.",
+   "kind": "measured",
+   "metric": "MT-Bench average score",
+   "value": 6.78,
+   "unit": "score (1-10)",
+   "baseline_value": 5.94,
+   "n": null,
+   "setup": "zephyr-7b-sft-full vs SPIN iteration 2; MT-Bench judged by Zheng et al. protocol (judge not named in this paper)",
+   "table": "Table 6, row SPIN iteration 2, column MT-Bench",
+   "note": null,
+   "where": "Table 6",
+   "source": null
+  },
+  {
+   "claim": "Further DPO for 2 epochs on 62k UltraFeedback pairs after SPIN iteration 3 gives 64.05 average (+0.89).",
+   "kind": "measured",
+   "metric": "Open LLM average",
+   "value": 64.05,
+   "unit": "avg acc %",
+   "baseline_value": 63.16,
+   "n": null,
+   "setup": "SPIN iter 3 then DPO 2 epochs on UltraFeedback Binarized",
+   "table": "Table 3, row SPIN iteration 3 + DPO, column Average",
+   "note": null,
+   "where": "App B.3, Table 3",
+   "source": null
+  },
+  {
+   "claim": "Training SPIN for more epochs within iteration 0 plateaus and cannot match iteration 1.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "50k synthetic data, iteration 0, epochs up to ~5 (read from Fig 4)",
+   "quote": "extending the training in iteration 0 fails to reach the performance comparable to iteration 1.",
+   "note": null,
+   "where": "Sec 6.3, Fig 4",
+   "source": null
+  },
+  {
+   "claim": "In the training-size ablation, SFT on epochs 2 and 3 yields under 1% gain while SPIN improves with size (14k, 26k, 50k).",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SPIN iteration 0, 1 epoch, 14k/26k/50k prompts vs Mistral-7B SFT on Ultrachat200k for 3 epochs",
+   "quote": "SFT on further epochs 2 and 3 fails to yield more than 1% improvement.",
+   "note": null,
+   "where": "Sec 6.3, Fig 5",
+   "source": null
+  },
+  {
+   "claim": "SPIN adds no preference data cost but generation overhead: 1.45h generation per iteration, training 4.32h (iter 0) and 8.64h (iters 1-3) on 8xA100 80G.",
+   "kind": "measured",
+   "metric": "training time iter 1",
+   "value": "8.64h",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8xA100 (80G), 50k generated examples per iteration; doubled dataset from iter 1",
+   "table": "Table 2, row Iter 1 Training, column Time",
+   "note": null,
+   "where": "App B.2, Table 2",
+   "source": null
+  },
+  {
+   "claim": "Authors concede a ceiling: the fixed human target distribution limits the fine-tuned model.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "theory: optimum only when p_theta = p_data",
+   "quote": "which inherently imposes a ceiling on the performance of fine-tuned LLM",
+   "note": null,
+   "where": "Sec 7",
+   "source": null
+  },
+  {
+   "claim": "Theorem 5.2: global optimum of the SPIN loss is reached iff the model distribution equals the data distribution.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "convex monotonically decreasing loss; assumes p_theta = p_data is realisable",
+   "quote": "we prove that our method converges when the distribution of the LLM is identical to the target data distribution",
+   "note": "Actual text line-wrapped.",
+   "where": "Sec 5",
+   "source": null
+  }
+ ],
+ "limits": [
+  "Fixed human target distribution imposes a ceiling on performance (Sec 7); improvement approaches zero by iteration 3",
+  "Synthetic data generation cost; authors suggest reducing the volume needed",
+  "One base model (zephyr-7b-sft-full) and one dataset; single runs, no seeds or intervals reported",
+  "MT-Bench reported only to iteration 2; Winogrande and MMLU do not improve",
+  "Beta changed to 5.0 at iteration 3 and LR lowered at iterations 2-3, so iteration-wise comparison mixes hyperparameter changes",
+  "Theory assumes p_theta=p_data is realisable by the model class; decoding settings for generation not stated",
+  "DPO comparison uses a public checkpoint, not re-trained by authors"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Self-Play Fine-Tuning (SPIN)",
+   "definition": "Main player (new LLM) discriminates opponent (previous-iteration LLM) responses from human SFT responses; opponent is the old model.",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Direct Preference Optimization",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SPIN's loss resembles DPO but pairs SFT responses against self-generated ones; no preference data",
+   "quote": null
+  },
+  {
+   "work": "Zephyr: Direct distillation of LM alignment",
+   "year": 2023,
+   "arxiv": "2310.16944",
+   "relation": "uses-method",
+   "note": "base model zephyr-7b-sft-full, DPO baseline, Alignment Handbook",
+   "quote": null
+  },
+  {
+   "work": "Ultrachat200k / UltraChat (Ding et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SFT prompts",
+   "quote": null
+  },
+  {
+   "work": "UltraFeedback (Cui et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "62k preference pairs for DPO baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-rewarding language models (Yuan et al.)",
+   "year": 2024,
+   "arxiv": "2401.10020",
+   "relation": "related",
+   "note": "concurrent; explicit LLM-as-judge plus iterative DPO",
+   "quote": null
+  },
+  {
+   "work": "Pairwise Cringe Loss (Xu et al.)",
+   "year": 2023,
+   "arxiv": "2312.16682",
+   "relation": "related",
+   "note": "iterative preference optimisation",
+   "quote": null
+  },
+  {
+   "work": "Weak-to-strong generalization (Burns et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs separate weak supervisor",
+   "quote": null
+  },
+  {
+   "work": "AlphaGo Zero (Silver et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "self-play inspiration",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The average score of SPIN at different iterations on the HuggingFace Open LLM leaderboard datasets.",
+   "page": 7,
+   "why": "shows diminishing gains 58.14 to 63.16"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Performance comparison with DPO training across the six benchmark datasets.",
+   "page": 9,
+   "why": "per-task comparison with DPO"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The SPIN training dynamics ... with regard to the number of training epochs during iteration 0.",
+   "page": 9,
+   "why": "more epochs plateau below iteration 1"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4.7",
+   "snippet": "L_SPIN = E[ l( lambda log p_theta(y|x)/p_theta_t(y|x) - lambda log p_theta(y'|x)/p_theta_t(y'|x) ) ], y ~ p_data, y' ~ p_theta_t",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction OK; math symbols and figure data garbled but readable",
+  "No embedded instructions found",
+  "Section map missed the Appendix headings but text was read in full"
+ ]
+}

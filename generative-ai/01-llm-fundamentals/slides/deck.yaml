@@ -1,4 +1,4 @@
-# LLM Fundamentals lecture deck. Covers notes 01-15.
+# LLM Fundamentals lecture deck. Covers notes 01-15, including the b parts (01b, 02b, 03b, 06b).
 # Build: make slides PILLAR=generative-ai/01-llm-fundamentals STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: a support-ticket assistant that invents a refund policy.
@@ -102,6 +102,68 @@ parts:
       vector pointing the same way but ten times longer scores 250 against 3. Cosine similarity divides the lengths
       out. Once every vector has length 1, the dot product is the cosine, and since squared L2 distance is 2 minus 2
       times the dot product, all three rank neighbours the same way. Attention scores, next, are plain dot products.'
+  - layout: table
+    title: Position schemes differ in where the order signal goes
+    recall: Which position schemes act inside attention, and which act on the input?
+    lead: Attention alone is order-blind, so every model adds position somewhere.
+    header:
+    - Scheme
+    - Used by
+    - Idea
+    widths:
+    - 2
+    - 2.2
+    - 5
+    rows:
+    - - Learned absolute
+      - GPT-2, GPT-3
+      - A second embedding table indexed by position, added to the token embedding
+    - - Sinusoidal
+      - Original transformer
+      - Fixed sine and cosine patterns added to the input
+    - - Relative
+      - Transformer-XL, T5
+      - A term for the query-key offset, added inside attention
+    - - Rotary (RoPE)
+      - Llama, most open models
+      - Rotate queries and keys by a position-dependent angle, so the score depends on the offset
+    - - ALiBi
+      - BLOOM, MPT
+      - Subtract a per-head linear penalty proportional to distance from the scores
+    - - None (NoPE)
+      - Research models
+      - No position signal; the causal mask lets a decoder work out order
+    takeaway: Learned and sinusoidal positions go on the input; relative, RoPE and ALiBi act on the query-key score.
+    source: notes/01b-position-encodings-and-context-extension.md
+    notes: Chapter 01 built a learned table and RoPE by hand. This table puts all six schemes side by side. The one
+      distinction to remember is where the signal enters. Learned and sinusoidal positions are added to the token
+      embedding. Relative encodings, RoPE and ALiBi change the query-key score inside attention. NoPE adds nothing,
+      and in a decoder the causal mask is enough for the model to recover order.
+  - layout: compare
+    title: A RoPE model breaks past its training length, and rescaling positions mends it
+    recall: What happens to a RoPE model run past its training length, and what fixes it without retraining?
+    emphasis: right
+    left:
+      title: Qwen-7B as trained (2,048 tokens)
+      bullets:
+      - 'arXiv perplexity **3.78** at 2,048 tokens'
+      - '**39.35** at 4,096'
+      - '**2,645** at 16,384'
+    right:
+      title: With scaling added at inference
+      bullets:
+      - Dynamic NTK scaling, LogN attention scaling and window attention
+      - No retraining
+      - '**3.49** at 8,192 and **4.32** at 16,384'
+      tag: It stops breaking; that does not show it uses the far context
+    takeaway: Rescale positions (interpolation, NTK, YaRN) so long inputs map back into the trained range, then test your own task at the length you will use.
+    source: notes/01b-position-encodings-and-context-extension.md
+    notes: Qwen-7B was trained on 2,048 tokens. Run as is, perplexity climbs from 3.78 to 39.35 at 4,096 and 2,645 at
+      16,384. Position interpolation divides every position by the extension factor, NTK-aware scaling raises the
+      RoPE base, dynamic scaling does it only past the training length. With dynamic NTK, LogN scaling and window
+      attention it holds 3.49 at 8,192 and 4.32 at 16,384 without retraining. Be careful, though. Like ALiBi's result,
+      this shows the model does not break, not that it uses the far context. A model can accept 128k tokens and still
+      retrieve or copy badly from them.
   - layout: image
     title: The causal mask is why one pass can train every position
     recall: How do you test that a causal mask works?
@@ -174,6 +236,40 @@ parts:
     notes: A block is attention followed by a position-wise MLP, each with a residual and a LayerNorm. Residuals
       give gradients a direct path through deep stacks. LayerNorm keeps activations in a stable range. GPTs are
       this block stacked, with an embedding underneath and a linear head on top.
+  - layout: image
+    title: Trained heads specialise, but a high weight is not an explanation
+    recall: Is an attention weight an explanation of the model's answer?
+    image: ../sources/images/voita-multihead-roles-fig1.png
+    caption: Encoder heads by layer, relevance and function (Voita et al., 2019, Fig. 1)
+    bullets:
+    - 'Important heads are **positional**, **syntactic** or **rare-word** heads.'
+    - 'Pruning removed **38 of 48** encoder heads for a drop of only 0.15 BLEU.'
+    - Jain and Wallace found alternative weights that left the prediction unchanged.
+    takeaway: Use attention as a place to look, not as the reason for an answer.
+    kicker: Voita et al., 2019
+    source: notes/02b-what-trained-attention-does.md
+    notes: Plotting the weights is easy and over-reading them is easier. Voita et al. ranked the encoder heads of a
+      translation model and found three kinds that matter. Pruning the rest left quality almost unchanged. Jain and
+      Wallace trained classifiers with attention and found different weights that gave the same prediction, and weak
+      agreement with gradient importance. So weights show where a head drew from, nothing more.
+  - layout: bullets
+    title: Many heads park their weight on the first token
+    recall: What is an attention sink?
+    lead: Large transformers put tokens to uses nobody designed.
+    bullets:
+    - 'An **attention sink** is a head that puts most of its weight on the first token as a no-op.'
+    - 'Gemma 7B run without its bos token fell from **82.57 to 0.00** on RULER at 4,096 tokens.'
+    - 'On HellaSwag it fell from **80.61 to 27.35**.'
+    - 'ViT cuts an image into **16x16** patches and treats each as a token.'
+    - 'In DINOv2 ViT-g about **2%** of patch tokens held roughly **10x** the norm of the rest.'
+    takeaway: A head that sits on the first token is probably a no-op, so dropping that token can break a model that was trained with it.
+    source: notes/02b-what-trained-attention-does.md
+    notes: Language models have their own version of the vision outliers. Many heads put most of their weight on
+      the first token, which the note calls an attention sink. Clark et al. first saw it in BERT on the SEP token.
+      Barbero et al. dropped the bos token from Gemma 7B and RULER collapsed from 82.57 to 0.00. That says more
+      about bos than about sinks, but it is the practical warning. Images reach a transformer as 16x16 patches, and
+      Darcet et al. found about 2% of DINOv2 patch tokens carried roughly ten times the norm, which they fixed with
+      register tokens. The vision results were measured on patches; the language results are separate studies.
   - layout: table
     title: Parameters tell you the memory, not the ability
     recall: How do you estimate the memory for a model's weights?
@@ -231,6 +327,68 @@ parts:
       you should scale parameters and tokens about equally, at roughly 20 tokens per parameter. But it is a training
       optimum. If inference traffic dwarfs training, a smaller model trained past that point costs less over its
       life. And mixture of experts splits size from compute again.
+  - layout: cards
+    title: Three ways around the quadratic cost of attention
+    recall: What are the three ways to avoid attention's quadratic cost?
+    lead: Not every LLM is a transformer.
+    cards:
+    - title: Keep attention, change the mix
+      bullets:
+      - 'Kimi Linear: **3** linear layers per attention layer'
+      - 48B total, 3B active
+      - 'RULER at 128K: **84.3** against 81.3 for full attention, with up to **75%** less KV cache'
+    - title: Replace it with a fixed-size state
+      accent: D4621A
+      bullets:
+      - Linear attention, RetNet, Mamba, RWKV
+      - Generating a token costs the same at any position
+      - Everything kept from the prompt must fit in the state
+    - title: Change the generation order
+      accent: 0EA5C9
+      bullets:
+      - 'LLaDA 8B on 2.3T tokens: MMLU **65.9** against 65.4 for LLaMA 3 8B on 15T'
+      - 'GSM8K **70.3** against 48.7'
+      - No KV cache, and the output length is fixed in advance
+    takeaway: Fixed-size state makes long sequences cheap and loses what does not fit, so the field's answer is hybrids with a few attention layers.
+    source: notes/03b-beyond-the-transformer.md
+    notes: Attention cost grows quadratically with length. There are three answers. Keep attention and mix in cheaper
+      layers; Kimi Linear uses three linear layers to every attention layer and cut KV cache by up to 75 percent.
+      Replace attention with a fixed-size state, as in linear attention, RetNet, Mamba and RWKV. Or change the
+      generation order, as LLaDA does with masked diffusion. Most comparisons here stop at a few billion parameters
+      and use the authors' own benchmarks, so treat wins at 3B as saying little about 70B.
+  - layout: code
+    level: deep
+    title: A fixed-size state gives the same outputs as a growing cache
+    recall: Why is generation cheap in a linear-attention model?
+    lang: python
+    code: |-
+      import numpy as np
+      rng = np.random.default_rng(0)
+      d, T = 4, 6
+      phi = lambda x: np.maximum(x, 0) + 1e-3
+      q, k, v = (rng.normal(size=(T, d)) for _ in range(3))
+
+      parallel = []                      # each step looks back at every key
+      for t in range(T):
+          w = np.array([phi(q[t]) @ phi(k[s]) for s in range(t + 1)])
+          parallel.append((w[:, None] * v[: t + 1]).sum(0) / w.sum())
+
+      S, z, recurrent = np.zeros((d, d)), np.zeros(d), []
+      for t in range(T):                 # the same, over a fixed state
+          S += np.outer(phi(k[t]), v[t])
+          z += phi(k[t])
+          recurrent.append(phi(q[t]) @ S / (phi(q[t]) @ z))
+      print("same outputs:", np.allclose(parallel, recurrent))
+    bullets:
+    - 'Prints **same outputs: True**.'
+    - 'The state is **20** numbers at any length.'
+    - 'A softmax KV cache at 10,000 tokens holds **80,000**.'
+    takeaway: Causal linear attention is a recurrence over a fixed-size state, so a token costs the same at position 10,000 as at position 10.
+    source: notes/03b-beyond-the-transformer.md
+    notes: NumPy, one head, a made-up feature map. The first loop is the usual view, with a growing cache. The second
+      carries a state whose size does not depend on how many tokens came before. The outputs match. The state is
+      what makes generation cheap and what the limits are about, because everything the model remembers of the
+      prompt has to fit in it.
   - layout: flow
     title: Prefill is parallel, decode is one token at a time
     recall: What does the KV cache store, and what does it cost?
@@ -423,6 +581,50 @@ parts:
       while validation stalls near 6.4. The model is memorising. That is why your tickets alone will not pretrain
       a useful model: it would learn your tickets. Training also needs far more memory than inference, since Adam
       keeps two extra values per weight.'
+  - layout: flow
+    title: Pretraining text is filtered before it is mixed
+    recall: How does a raw crawl become a training stream?
+    steps:
+    - label: Crawl
+      sub: Common Crawl snapshot
+    - label: Rules
+      sub: line and page filters
+    - label: Dedup
+      sub: paragraph hashes
+    - label: Quality score
+      sub: rules, perplexity or a classifier
+    - label: Mixture
+      sub: weights per source
+    bullets:
+    - 'T5: the unfiltered 6.1TB crawl scored worst on every task (GLUE **81.46** against **83.28** filtered).'
+    - 'CCNet: duplicate paragraphs made up **70%** of a monthly snapshot.'
+    takeaway: More tokens are not better tokens; filtering and mixture move scores as much as architecture does.
+    source: notes/06b-pretraining-data.md
+    notes: A pretrained model is its data. Most pretraining text starts as Common Crawl, then line and page rules,
+      paragraph dedup, language ID, a quality score and mixture weights. In T5's ablation the unfiltered crawl
+      scored worst on every task. Menus and cookie notices repeat across pages, which is why paragraph hashing
+      removes so much. The next slide shows the cost of filtering hard.
+  - layout: compare
+    title: Heavy filtering kept reasoning and gave up stored facts
+    recall: What did phi-3-mini's heavy filtering keep and give up?
+    emphasis: right
+    left:
+      title: Kept
+      bullets:
+      - 'phi-3-mini (3.8B, 3.3T tokens): MMLU 5-shot **68.8%**'
+      - Close to Mixtral 8x7B at **70.5%**
+    right:
+      title: Gave up
+      bullets:
+      - 'TriviaQA **64.0** against **82.2** for Mixtral'
+      - Both results come from Microsoft's internal evals, and the data was not released
+      tag: Self-reported
+    takeaway: A data mixture sets what the model is good at, so check what a filter drops before trusting it.
+    source: notes/06b-pretraining-data.md
+    notes: Phi-3 pushed filtering hardest, keeping heavily filtered web data plus synthetic text. phi-3-mini reaches
+      68.8 percent on MMLU, close to Mixtral 8x7B at 70.5, but scores 64.0 on TriviaQA against 82.2. Filtering kept
+      reasoning and gave up stored facts. The numbers are Microsoft's own, self-reported, and the data was not released.
+      The same trade shows up for toxicity filters and for the language and code mix.
   - layout: table
     title: Price a run before you plan one
     recall: What share of Llama 2's training data would five years of support tickets be?

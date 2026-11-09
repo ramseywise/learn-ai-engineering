@@ -1,0 +1,752 @@
+{
+ "schema": 1,
+ "key": "2404.07143",
+ "pdf": "ai-engineering/02-context-engineering/sources/munkhdalai-2024-leave-no-context-behind.pdf",
+ "bib": {
+  "title": "Leave No Context Behind: Efficient Infinite Context Transformers with Infini-attention",
+  "authors": [
+   "Tsendsuren Munkhdalai",
+   "Manaal Faruqui",
+   "Siddharth Gopal"
+  ],
+  "first_author": "Munkhdalai",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.07143",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 44824,
+  "chars_total": 44824,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a Transformer LLM process arbitrarily long inputs with bounded memory and compute by adding a compressive memory to attention?",
+ "hypothesis": "Reusing old KV states in a fixed-size associative compressive memory, mixed with local attention, lets models extrapolate to far longer contexts than seen in training.",
+ "contributions": [
+  "Infini-attention: long-term compressive memory plus local causal attention in one block",
+  "Minimal change to standard scaled dot-product attention; supports plug-and-play continual pre-training and long-context adaptation",
+  "Streaming processing of infinitely long inputs with bounded memory and compute"
+ ],
+ "method": {
+  "summary": "Each attention layer splits input into segments (N=2048); local causal dot-product attention per segment plus an associative-matrix compressive memory (linear attention, ELU+1, optional delta rule) holding all earlier KV; outputs mixed by a learned per-head sigmoid gate. Trained with BPTT and gradient checkpointing. Evaluated on LM from scratch, 1B passkey and 8B BookSum after continual pre-training.",
+  "task": "long-context language modeling, passkey retrieval, book summarization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PG19",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Rae et al., 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Arxiv-math",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Wu et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "C4 (length >4K tokens)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Raffel et al., 2020",
+    "preprocessing": "only documents longer than 4K tokens; mixed with PG19 and Arxiv-math for continual pre-training"
+   },
+   {
+    "name": "Passkey retrieval",
+    "role": "both",
+    "size": null,
+    "split": "fine-tune on 5K-length inputs; test 32K to 1M with passkey near start, middle or end",
+    "source": "Mohtashami & Jaggi 2024 task",
+    "preprocessing": "distraction text built by repeating a chunk"
+   },
+   {
+    "name": "BookSum",
+    "role": "both",
+    "size": null,
+    "split": "validation split plotted in Fig 4",
+    "source": "Kryscinski et al., 2021",
+    "preprocessing": "fine-tune input 32K, evaluate input up to 500K"
+   }
+  ],
+  "models": [
+   {
+    "name": "Infini-Transformer LM (Linear, Linear + Delta)",
+    "role": "proposed",
+    "params": "inferred: 1.6M memory params; total not stated",
+    "architecture": "Transformer with Infini-attention",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": null,
+    "heads": 8,
+    "context": "segment 2048; train input 32768 (also 100K)",
+    "other": {
+     "head_dim": 128,
+     "ffn_hidden": 4096,
+     "memory_size": "1.6M (114x compression)"
+    }
+   },
+   {
+    "name": "1B LLM with Infini-attention",
+    "role": "proposed",
+    "params": "1B",
+    "architecture": "MHA replaced by Infini-attention",
+    "init_from": "existing 1B LLM, base model not named",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "segment 2K; continual pre-train inputs 4K; passkey FT 5K; test up to 1M",
+    "other": {}
+   },
+   {
+    "name": "8B LLM with Infini-attention",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "MHA replaced by Infini-attention",
+    "init_from": "existing 8B LLM, base model not named",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "segment 2K; continual pre-train inputs 8K; BookSum FT 32K; eval 500K",
+    "other": {}
+   },
+   {
+    "name": "Transformer-XL",
+    "role": "baseline",
+    "params": "memory 50M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "XL cache 2048, segment 2048",
+    "other": {}
+   },
+   {
+    "name": "Memorizing Transformers",
+    "role": "baseline",
+    "params": "memory 183M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "65K memory at 9th layer",
+    "other": {}
+   },
+   {
+    "name": "RMT",
+    "role": "baseline",
+    "params": "memory 2.5M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "segment 2048",
+    "other": {
+     "best_config": "100 summary vectors trained on 8196-length sequences (runs with 50/100/150 vectors, lengths 4096/8196/32768)"
+    }
+   },
+   {
+    "name": "BART, PRIMERA (+Unlimiformer)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "source": "numbers from Bertsch et al. 2024"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token language modeling for LM and continual pre-training; task fine-tuning for passkey and BookSum (loss not stated)",
+   "optimizer": "Adafactor (LM experiments)",
+   "lr": "0.01 for LM (searched 0.003, 0.005, 0.01, 0.03); 0.0001 for LLM continual pre-training and task fine-tuning",
+   "lr_schedule": "linear warmup then cosine decay (LM)",
+   "warmup": "1000 steps (LM)",
+   "batch_size": "64 (appendix, LM); also 64 for 1B continual pre-training",
+   "steps": "1B: 30K continual pre-training steps then 400 passkey fine-tune steps; 8B: 30K continual pre-training steps; BookSum fine-tune steps not stated",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "LM 32768 (100K variant); 1B pretrain 4K, passkey FT 5K; 8B pretrain 8K, BookSum FT 32K",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient checkpointing after each segment (memory saving, not regularisation)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "bptt": "gradient w.r.t. compressive memory states through segments",
+    "unroll": "16 steps for 32768/2048",
+    "position_embeddings": "none on Q/K for memory read and update; applied after",
+    "gate": "one learned scalar beta per head; sigmoid(beta)",
+    "segment_length": "2K in all LLM experiments"
+   }
+  },
+  "inference": {
+   "decoding": "sampling (BookSum)",
+   "temperature": "0.5 (BookSum)",
+   "top_p": "0.95 (BookSum)",
+   "max_tokens": "1024 decoding steps for BookSum summaries",
+   "samples": null,
+   "prompting": "passkey: fixed template, see prompts",
+   "retrieval": "memory retrieval A_mem = sigma(Q) M / (sigma(Q) z), not external retrieval",
+   "parameters": {
+    "activation": "ELU+1",
+    "update_rules": "Linear and Linear + Delta"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "token-level perplexity",
+     "definition": "average token-level perplexity on PG19 and Arxiv-math",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "passkey token-level retrieval accuracy",
+     "definition": "accuracy of passkey tokens, passkey placed at start/middle/end of input",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Rouge-1/2/L and Overall",
+     "definition": "BookSum summary quality; Overall not defined in text",
+     "unit": "Rouge",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Transformer-XL",
+    "Memorizing Transformers",
+    "RMT",
+    "BART",
+    "BART + Unlimiformer",
+    "PRIMERA",
+    "PRIMERA + Unlimiformer"
+   ],
+   "protocol": "single reported values; no seeds, variance or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "passkey retrieval input",
+    "text": "There is an important info hidden inside a lot of irrelevant text. Find it and memorize them. I will quiz you about the important information there. The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again. (repeat x times) The pass key is 9054. Remember it. 9054 is the pass key. The grass is green. The sky is blue. The sun is yellow. Here we go. There and ack again. (repeat y times) What is the pass key? The pass key is",
+    "where": "Appendix B, p14 (typo 'ack' as printed)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "The model was trained for 30K steps with batch size of 64 before fine-tuning on the passkey retrieval task",
+    "where": "4.3"
+   },
+   {
+    "field": "models.context",
+    "quote": "fine-tune on only 5K length inputs to test on 1M length regime",
+    "where": "4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Infini-Transformer (Linear+Delta) after 400 fine-tune steps on 5K inputs retrieves the passkey at 1M length at 100/100/100 (start/middle/end).",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "100/100/100",
+   "unit": "%",
+   "baseline_value": "7/6/97 zero-shot",
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; 1M context",
+   "note": null,
+   "where": "Table 3, p7",
+   "table": "Table 3, row FT (400 steps) Infini-Transformer (Linear + Delta), column 1M"
+  },
+  {
+   "claim": "Zero-shot Linear model at 1M: 8/6/98 (start/middle/end); fails except at the end.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "8/6/98",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 1M",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear), column 1M"
+  },
+  {
+   "claim": "Zero-shot Linear at 32K: 14/13/98.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "14/13/98",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 32K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear), column 32K"
+  },
+  {
+   "claim": "Zero-shot Linear at 128K: 11/14/100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "11/14/100",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 128K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear), column 128K"
+  },
+  {
+   "claim": "Zero-shot Linear at 256K: 6/3/100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "6/3/100",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 256K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear), column 256K"
+  },
+  {
+   "claim": "Zero-shot Linear at 512K: 6/7/99.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "6/7/99",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 512K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear), column 512K"
+  },
+  {
+   "claim": "Zero-shot Linear+Delta at 32K: 13/11/99.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "13/11/99",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 32K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear + Delta), column 32K"
+  },
+  {
+   "claim": "Zero-shot Linear+Delta at 128K: 6/9/99.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "6/9/99",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 128K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear + Delta), column 128K"
+  },
+  {
+   "claim": "Zero-shot Linear+Delta at 256K: 7/5/99.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "7/5/99",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 256K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear + Delta), column 256K"
+  },
+  {
+   "claim": "Zero-shot Linear+Delta at 512K: 6/8/97.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "6/8/97",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 512K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear + Delta), column 512K"
+  },
+  {
+   "claim": "Zero-shot Linear+Delta at 1M: 7/6/97.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "7/6/97",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; zero-shot, 1M",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot Infini-Transformer (Linear + Delta), column 1M"
+  },
+  {
+   "claim": "Fine-tuned Linear at 512K: 97/99/100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "97/99/100",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; FT, 512K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FT (400 steps) Infini-Transformer (Linear), column 512K"
+  },
+  {
+   "claim": "Fine-tuned Linear at 1M: 96/94/100 (lowest fine-tuned cells; 32K-256K are 100/100/100).",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "96/94/100",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; FT, 1M",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FT (400 steps) Infini-Transformer (Linear), column 1M"
+  },
+  {
+   "claim": "Fine-tuned Linear+Delta at 128K and 256K: 100/100/99 (32K and 512K-1M: 100/100/100).",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey token accuracy start/middle/end",
+   "value": "100/100/99",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1B LLM with MHA replaced by Infini-attention, continually pre-trained on 4K inputs for 30K steps (batch 64), passkey fine-tuned on 5K inputs for 400 steps; token-level retrieval accuracy; cell format start/middle/end; FT, 128K and 256K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FT (400 steps) Infini-Transformer (Linear + Delta), column 128K and 256K"
+  },
+  {
+   "claim": "Perplexity on PG19: Infini-Transformer Linear 9.65 vs Memorizing Transformers 11.37 and Transformer-XL 11.88, with 114x memory compression.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity (PG19)",
+   "value": 9.65,
+   "unit": "token-level ppl",
+   "baseline_value": 11.37,
+   "n": null,
+   "setup": "12-layer, 8 heads x128, FFN 4096, segment 2048, train seq 32768, trained from scratch",
+   "note": null,
+   "where": "Table 2, p7",
+   "table": "Table 2, row Infini-Transformer (Linear), column PG19"
+  },
+  {
+   "claim": "Arxiv-math perplexity: Linear+Delta 2.23 vs Memorizing Transformers 2.26 and Transformer-XL 2.42.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity (Arxiv-math)",
+   "value": 2.23,
+   "unit": "token-level ppl",
+   "baseline_value": 2.26,
+   "n": null,
+   "setup": "same LM setup as above",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Infini-Transformer (Linear + Delta), column Arxiv-math"
+  },
+  {
+   "claim": "Memory size 1.6M parameters (114x compression) versus 183M for Memorizing Transformers (65K-vector memory at layer 9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory size",
+   "value": "1.6M",
+   "unit": "parameters",
+   "baseline_value": "183M",
+   "n": null,
+   "setup": "LM setup",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Infini-Transformer (Linear), column Memory size (comp.)"
+  },
+  {
+   "claim": "Training on 100K sequence length lowers Arxiv-math perplexity to 2.21 (Linear) and 2.20 (Linear+Delta).",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity (Arxiv-math)",
+   "value": "2.21 / 2.20",
+   "unit": "token-level ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM setup, train seq 100K",
+   "note": null,
+   "where": "4.2, p7",
+   "quote": "100K training further decreased the perplexity score to 2.21 and 2.20 for Linear and Linear + Delta models."
+  },
+  {
+   "claim": "BookSum overall Rouge 18.5 for Linear+Delta vs 17.2 for PRIMERA + Unlimiformer, a claimed new SOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rouge overall",
+   "value": 18.5,
+   "unit": "Rouge",
+   "baseline_value": 17.2,
+   "n": null,
+   "setup": "8B LLM, continual pre-training 8K input 30K steps, fine-tune 32K input, eval 500K input, temp 0.5, top_p 0.95, 1024 decode steps",
+   "note": "Baselines from Bertsch et al. 2024 (reported); Infini rows are measured.",
+   "where": "Table 4, p8",
+   "table": "Table 4, row Infini-Transformers (Linear + Delta), column Overall"
+  },
+  {
+   "claim": "Infini-attention memory footprint is dkey x (dvalue+1) x H x l, constant in sequence length (analytical, not measured).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "memory complexity",
+   "value": null,
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 comparison with Transformer-XL, Compressive Transformer, Memorizing Transformers, RMT, AutoCompressors",
+   "note": null,
+   "where": "Table 1, p5",
+   "quote": "Infini-Transformer has a constant memory complexity of dkey × dvalue + dkey for storing compressed context in Ms and zs for each head in single layer"
+  },
+  {
+   "claim": "Motivation figure: KV states are 3TB for a 500B model at batch 512 and context 2048 (cited from Pope et al. 2023).",
+   "kind": "reported",
+   "source": "Pope et al., 2023",
+   "metric": "KV cache memory",
+   "value": "3TB",
+   "unit": "TB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500B model, batch size 512, context length 2048",
+   "quote": "the attention Key-Value (KV) states have 3TB memory footprint for a 500B model with batch size 512 and context length 2048",
+   "note": null,
+   "where": "1 Introduction, p1"
+  }
+ ],
+ "limits": [
+  "Passkey is a synthetic needle task with one 4-digit key; says little about reasoning over long context.",
+  "Zero-shot passkey accuracy is near 0 except at the end position (97-100%), i.e. memory is not usable without fine-tuning.",
+  "Fine-tuned Linear model degrades at 1M (96/94/100) and 512K (97/99/100).",
+  "Compression is lossy by design; no analysis of what the fixed memory forgets as length grows.",
+  "Base 1B/8B LLMs unnamed; no compute, hardware, seeds, data sizes or code release; BookSum Overall metric undefined.",
+  "Baseline comparison on BookSum uses numbers copied from Bertsch et al. 2024, so setups may differ.",
+  "Memory-size comparison to Memorizing Transformers (114x) compares parameters, not quality at equal budget on all tasks.",
+  "Preprint, under review."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Infini-attention",
+   "definition": "recurrent attention mechanism that computes both local and global context states and combines them for its output",
+   "where": "3.1"
+  },
+  {
+   "term": "compressive memory",
+   "definition": "a fixed number of parameters that store and recall information with bounded storage and computation costs",
+   "where": "Introduction"
+  },
+  {
+   "term": "passkey retrieval",
+   "definition": "hides a random number into a long text and asks it back at the model output",
+   "where": "4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Transformer-XL",
+   "year": 2019,
+   "arxiv": "1901.02860",
+   "relation": "baseline",
+   "note": "segment recurrence with discarded old KV",
+   "quote": null
+  },
+  {
+   "work": "Memorizing Transformers",
+   "year": 2022,
+   "arxiv": "2203.08913",
+   "relation": "baseline",
+   "note": "LM setup follows it; kNN KV memory",
+   "quote": null
+  },
+  {
+   "work": "Recurrent Memory Transformer",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "soft-prompt memory",
+   "quote": null
+  },
+  {
+   "work": "AutoCompressors",
+   "year": 2023,
+   "arxiv": "2305.14788",
+   "relation": "related",
+   "note": "summary-vector compression",
+   "quote": null
+  },
+  {
+   "work": "Transformers are RNNs (Katharopoulos et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "linear attention update and retrieval, ELU+1",
+   "quote": null
+  },
+  {
+   "work": "Metalearned Neural Memory",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "author's earlier memory; delta rule",
+   "quote": null
+  },
+  {
+   "work": "Linear transformers are secretly fast weight programmers",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "associative matrix and delta rule",
+   "quote": null
+  },
+  {
+   "work": "Extending context window via positional interpolation",
+   "year": 2023,
+   "arxiv": "2306.15595",
+   "relation": "related",
+   "note": "8B LLaMA solves passkey to 32K fine-tuned at 32K",
+   "quote": null
+  },
+  {
+   "work": "Unlimiformer",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BookSum numbers taken from it",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "issue claimed addressed",
+   "quote": null
+  },
+  {
+   "work": "Efficient streaming LMs with attention sinks",
+   "year": 2023,
+   "arxiv": "2309.17453",
+   "relation": "related",
+   "note": "attention sink issue",
+   "quote": null
+  },
+  {
+   "work": "PG19 / Arxiv-math / BookSum / C4",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Infini-attention has an additional compressive memory with linear attention for processing infinitely long contexts.",
+   "page": 1,
+   "why": "Shows local attention, memory retrieve/update and concat in one block."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Infini-Transformer (top) has an entire context history whereas Transformer-XL (bottom) discards old contexts.",
+   "page": 3,
+   "why": "Contrasts effective context."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Two types of heads emerged: specialized (gate near 0 or 1) and mixer (near 0.5).",
+   "page": 6,
+   "why": "Gating behavior"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Segment-level memory models compared by footprint and context length",
+   "page": 5,
+   "why": "Memory size formulas"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Infini-Transformers obtain better Rouge overall scores with more book text provided as input.",
+   "page": 8,
+   "why": "Input length 16K to 500K vs Rouge"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7-10, p4-5",
+   "snippet": "A_mem = σ(Q)M_{s-1} / (σ(Q)z_{s-1}); M_s ← M_{s-1} + σ(K)^T V; z_s ← z_{s-1} + Σ_t σ(K_t); A = sigmoid(β) ⊙ A_mem + (1 − sigmoid(β)) ⊙ A_dot",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 text extraction is flattened; cell-to-column mapping inferred from five columns (32K,128K,256K,512K,1M) in header order and 5 cells per row.",
+  "Appendix B prompt contains 'ack' typo as printed.",
+  "No embedded instructions found."
+ ]
+}

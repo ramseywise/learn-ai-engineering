@@ -17,7 +17,7 @@ deck:
 
 parts:
   - title: The runtime and the checker
-    summary: Type stripping · JavaScript traps · Shapes · unknown · Narrowing · Tagged unions
+    summary: Type stripping · JavaScript traps · Shapes · unknown · Narrowing · Tagged unions · Predicates
     slides:
       - layout: statement
         title: What is left of your types when the code runs?
@@ -122,6 +122,25 @@ parts:
         source: notes/03-unions-and-narrowing.md
         notes: This is how you model API responses and LLM content blocks.
 
+      - layout: code
+        title: What does a type predicate promise?
+        kicker: Type predicates
+        recall: "What does `p is Admin` let `filter` return, and who checks the body?"
+        lang: ts
+        code: |-
+          function isAdmin(p: Person): p is Admin {
+            return p.type === 'admin';
+          }
+          const admins = people.filter(isAdmin);
+          // Admin[], not Person[]
+        bullets:
+          - "The predicate is a promise **you** make, and the checker trusts it unverified"
+          - "Since TS 5.5, simple arrows such as `(p) => p.type === 'admin'` are inferred as predicates"
+          - "A wrong body compiles and fails at runtime"
+        takeaway: "`p is Admin` makes `filter` return `Admin[]`, but the checker never verifies the body, so a wrong predicate fails at runtime."
+        source: notes/03-unions-and-narrowing.md
+        notes: Write the annotation by hand when practising, because inference hides the syntax. Narrowing unknown by hand gets painful quickly, and that is the job of a schema library in note 08.
+
   - title: Types from types
     summary: Generics · keyof · Utility types · Mapped types · Conditional types · When to stop
     slides:
@@ -206,7 +225,7 @@ parts:
         notes: Type-level code is real code. Use utility types freely, mapped types sometimes, and deep recursion only in libraries.
 
   - title: Async and the boundary
-    summary: The event loop · Promise.all · Async bugs · Tooling · Zod · LLM responses
+    summary: The event loop · Promise.all · Cancellation · Async bugs · Tooling · Zod · LLM responses · Structured output
     slides:
       - layout: statement
         title: What makes a network response hard to type?
@@ -249,6 +268,28 @@ parts:
         takeaway: A promise starts when created, so `Promise.all` runs calls in parallel. It fails fast, and `allSettled` doesn't.
         source: notes/06-async.md
         notes: "`await` pauses only the current function. An async function always returns a Promise. `race` does not cancel the loser."
+
+      - layout: compare
+        title: How do you cancel a request on demand?
+        kicker: AbortController
+        emphasis: right
+        left:
+          title: On a deadline
+          code: |-
+            await fetch(url, {
+              signal: AbortSignal.timeout(5_000),
+            });
+          tag: Cancels the request itself
+        right:
+          title: On demand
+          code: |-
+            const controller = new AbortController();
+            fetch(url, { signal: controller.signal });
+            stopButton.onclick = () => controller.abort();
+          tag: "A Stop button, or a user who navigates away"
+        takeaway: "Create an `AbortController` to cancel on demand, and pass its `signal` down through your own async functions."
+        source: notes/06-async.md
+        notes: "`fetch` rejects with an AbortError when aborted. Anthropic's SDK also accepts a signal, so a Stop button can cancel a streaming request."
 
       - layout: table
         title: What are the common async bugs?
@@ -327,6 +368,29 @@ parts:
         source: notes/09-typescript-for-ai-apps.md
         notes: Keep prompt-building and block parsing as pure functions, log usage on every response, and pin the model ID in one config value.
 
+      - layout: code
+        title: How do you get JSON that matches a schema from the model?
+        kicker: Structured output
+        recall: What must you still check after asking for structured output?
+        lang: ts
+        code: |-
+          const res = await client.beta.messages.parse({
+            model,
+            max_tokens: 16000,
+            messages,
+            output_config: { format: betaZodOutputFormat(Review) },
+          });
+          res.parsed_output;
+          // z.infer<typeof Review> | null
+        bullets:
+          - "The response is constrained to the zod schema"
+          - "Still check `parsed_output` for `null`"
+          - "Still check for `stop_reason: 'refusal'`"
+          - "`z.toJSONSchema(User)` is how SDKs turn one zod object into the schema the model sees"
+        takeaway: "Structured output constrains the reply to your schema. Still check `parsed_output` for `null` and for a refusal, because the model produced it."
+        source: notes/09-typescript-for-ai-apps.md
+        notes: "Tool inputs and structured output both come from the model, so parse them before running anything. One schema gives you the type, the validation and the schema the model sees."
+
   - title: Rules to keep
     agenda: false
     divider: false
@@ -351,4 +415,4 @@ parts:
           - "**The real API**: `node examples/claude.ts` with `ANTHROPIC_API_KEY` set"
         takeaway: Next is the AI engineering pillars, after finishing Python 03 and TypeScript 09, then the type challenges for practice.
         source: notes/09-typescript-for-ai-apps.md
-        notes: See programming/README.md for the order of the tracks.
+        notes: See the programming start-here readme for the order of the tracks.

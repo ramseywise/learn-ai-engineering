@@ -1,19 +1,802 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2308.03296",
  "pdf": "data-science/sources/grosse-2023-studying-large-language-model-generalization.pdf",
  "bib": {
   "title": "Studying Large Language Model Generalization with Influence Functions",
-  "first_author": "Roger Grosse",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Roger Grosse",
+   "Juhan Bae",
+   "Cem Anil",
+   "Nelson Elhage",
+   "Alex Tamkin",
+   "Amirhossein Tajdini",
+   "Benoit Steiner",
+   "Dustin Li",
+   "Esin Durmus",
+   "Ethan Perez",
+   "Evan Hubinger",
+   "Kamile Lukosiute",
+   "Karina Nguyen",
+   "Nicholas Joseph",
+   "Sam McCandlish",
+   "Jared Kaplan",
+   "Samuel R. Bowman"
+  ],
+  "first_author": "Grosse",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2308.03296",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 372131,
+  "chars_total": 372131,
+  "engine": "pymupdf",
+  "skipped": "Read main text, Appendices A-D and the Appendix E/F query lists in full; Appendix F Tables 2-22 (crowdworker descriptions) read for Tables 2-5 and skimmed after; long raw influential-sequence listings in Figs 38-41 skimmed; references skimmed."
  },
- "legacy_report": "SOURCE: \"Studying Large Language Model Generalization with Influence Functions\", Roger Grosse*, Juhan Bae*, Cem Anil* (equal core contributors), Nelson Elhage, Alex Tamkin, Amirhossein Tajdini, Benoit Steiner, Dustin Li, Esin Durmus, Ethan Perez, Evan Hubinger, Kamile Lukosiute, Karina Nguyen, Nicholas Joseph, Sam McCandlish, Jared Kaplan, Samuel R. Bowman. Anthropic. arXiv:2308.03296v1, 7 Aug 2023. Preprint.\n\nCOVERAGE: Extraction OK (119 pages, 370,990 chars). I read all of it except the bulk of the long listings.\n- Read in full: pp 1-61 (main text, Sec 1-6, Appendices A, B, C, D.1-D.4, Table 1) and the prose of D.5 (p61).\n- Skimmed or skipped: pp 62-81 (D.5 and D.4 figure listings, Figs 36-41: long raw influential sequences; I read only the figure captions and intro text). Pp 82-87 (Appendix E, query listings, Figs 42-47): read the index paragraph plus the first listings (math_clips, math_earning). pp 88-109 (Appendix F, Surge crowdworker Tables 2-22): read Tables 2-6 and skimmed the rest via captions. Listing 1 (the crowdworker instructions) did not extract. pp 110-119 references: only searched for the origins, did not read.\n- Figures with numeric data (Figs 6, 7, 9, 16, 17, 24-26, 30) are plots, and their values are not in the text. Only the quoted numbers below are available.\n\nCLAIMS (ranked)\n- claim: EK-FAC approximates the inverse-Hessian-vector product about as accurately as the standard iterative method (LiSSA), is much faster, and scales influence functions to 52B parameters.\n  number: \"at least an order of magnitude less time\"; models 810M to 52B\n  setup: Pearson correlation with the proximal Bregman response function (PBRF, the \"ground truth\" here). Small tasks: UCI Energy and Concrete, MNIST, FashionMNIST (2-hidden-layer MLPs), CIFAR10 (ResNet-20), plus the 810M LM on 5 queries. 500 training points, averaged over 10 seeds. EK-FAC fitting cost is included in wall-clock time.\n  quote: \"EK-FAC achieves similar accuracy to the traditional iterative approach, but in at least an order of magnitude less time.\" (Sec 6). Also \"EK-FAC is consistently competitive with LiSSA, despite being orders of magnitude faster when computing influences over several measurements (Figure 7).\" (Sec 5.1)\n  where: p1 abstract; p25; p50\n- claim: Plain gradient dot product (identity in place of the Gauss-Newton Hessian) correlates worse with the PBRF than EK-FAC and LiSSA, so curvature matters. Its top sequences are unrelated to the query.\n  number: 10 of top 50 vs 36 of top 50 (inflation query)\n  setup: 810M model, 100,000 sampled training sequences, not a full scan\n  quote: \"for the inflation query, only 10 of the top 50 gradient dot product's influential sequences (compared to 36 for EK-FAC) contained keywords consumer price index, measure, or inflation which appear in the query.\"\n  where: p60 (D.1); Fig 6 p24\n- claim: Influence is heavy-tailed and sparse, but no single sequence explains an output. The authors read this as outputs coming from many sequences, not memorization.\n  number: tail exponents alpha ~2.0-4.3; top 1% of sequences cover 12-52% of total positive influence; no influence above 1 nat\n  setup: tail (top 0.01% of 5M unfiltered samples) fit by MLE; 8 queries on 52B for the power law, 22B for the top-1% figure; KS test (Table 1) rejects the power law for only 2 of 8 queries (objective p=0.01 and water p=0.01; the others have p from 0.10 to 0.92)\n  quote: \"for the 22B model, the top 1 percent of the sequences cover between 12 to 52 percent of the total influence for the queries we tested.\" and \"influence values larger than 0.1 are rare, and none of the 8 queries visualized have any sequences with influence larger than 1.\" and \"the standard deviation of the power law fit to the queries paperclips_large (α=2.1), shutdown (α=2.28) and water (α=2.57) is infinite\"\n  where: p25-27; Table 1 p61. The caption of Fig 8 shows alpha values slightly different from the text (e.g. shutdown 2.21 vs 2.28 in the text).\n- claim: Larger models generalize more abstractly. Small-model top sequences share surface tokens with the query; 52B top sequences are thematically related (sci-fi about AI self-preservation, satire, code, math).\n  number: none (qualitative; 810M, 6.4B, 22B, 52B)\n  setup: queries shutdown, trade, inflation, neurosemantic_facutitious, math_clips, binary_search. Pretrained models (Kadavath et al. 2022 family), 512-token pretraining sequences, damping lambda = 0.1 x mean(eigenvalues of the layer).\n  quote: \"For an 810 million parameter model, all top 20 influential sequences share short token sequences with the query and are vaguely (if at all) semantically related. However, the top influential sequences for a 52 billion parameter model share little token overlap, but are related at a more abstract level.\"\n  where: p5; 5.3.1 p28-34\n- claim: Cross-lingual generalization grows with scale. English top-10 sequences have negligible influence on Korean/Turkish translations of the query at 810M, and increasing influence at larger sizes.\n  number: none (shading plot, Fig 16)\n  setup: top 10 English sequences for shutdown and water; queries translated by hand into Korean and Turkish\n  quote: \"For the smallest model, English training sequences have almost no influence on shutdown and water queries written in other languages. However, with increasing model scale, the cross-lingual influence of English sequences increases.\"\n  where: p35 (Fig 16)\n- claim: Influence is strongly sensitive to word order. A training sequence only influences a query if prompt-related phrases come before completion-related phrases. Flipping the order drops the influence by an order of magnitude or more.\n  number: english_to_mandarin flip: 0.116 vs 0.030 (a Mandarin-only sequence scores 0.020); \"at least an order of magnitude\"\n  setup: synthetic fictional facts (\"first President of the Republic of Astrobia was Zorald Pfaff\"; \"Gleem is composed of hydrogenium and oxium\") at 810M, 6.4B and 52B. Translation example on 52B. Influence functions only, not full training.\n  quote: \"when we flip the order of the English and Mandarin text in these sequences, the influence is reduced by at least an order of magnitude (and is possibly explainable as random noise for some)\" and \"The Mandarin-to-English sequence has an influence score of 0.030, which is similar to the score with a Mandarin-only sequence (0.020).\"\n  where: p41-46; Figs 24-27\n- claim: Influence is spread roughly evenly across layers on average, but patterns differ by query type. Simple facts and memorized quotes sit in upper layers. Math, code and translation sit in middle layers. Restricting influence to the middle layers gives the most abstract sequences. A last-layer-only approximation would miss much.\n  number: 50 queries x top 500 = 25,000 sequences; 9 layer blocks\n  setup: 52B (810M is similar but less consistent, and unclear for math/code, App D.2)\n  quote: \"We computed the average layerwise influences from the top 500 influential sequences for 50 queries (a total of 25,000 influential sequences); as shown in Figure 17, for the 52B model, the influences were distributed nearly uniformly among the lower, middle, and upper layers of the network.\"\n  where: p35-37; Figs 17-21\n- claim: Role-playing behaviour (anti-shutdown, paperclips, superintelligent) traces to imitation of related text. The sequences are sci-fi, AI-risk articles and even a human survival story, not near-copies. The evidence is weak against the planning hypothesis, not conclusive.\n  number: none\n  setup: an early version of the Anthropic Assistant's outputs; influence computed on the pretrained models, not the fine-tuned Assistant. Models are smaller than the one that produced the responses.\n  quote: \"Our results provide weak evidence against the hypothesis that role-playing behavior results from sophisticated agent representations and planning capabilities, but we are unable to rule out this hypothesis directly.\"\n  where: p47-50\n- claim: Famous quotes are memorized, and influence scans find them. For the six quote queries, the top sequences contain the exact passage. For ordinary Assistant outputs, no clear copying was found.\n  number: 6 queries\n  setup: unfiltered scan with query batching; TF-IDF-filtered data for the general case\n  quote: \"We observed that invariably, the top influential sequences returned by our scan contained the exact famous passages.\"\n  where: p41\n- claim: Scanning cost. About 5M unfiltered sequences are estimated enough to match the top-10 influence from TF-IDF filtering. The authors scanned at least 10M. Rank-32 query-gradient compression loses almost nothing.\n  number: ~5 million; >=10 million; rank 32, correlation 0.995 (shutdown); TF-IDF keeps the top 10,000 candidates (BM25, k1 = 1.5)\n  setup: 52B for the Fig 3 correlation\n  quote: \"storing rank-32 approximations results in a negligible error in the final influence estimates, as shown in Figure 3\" and \"for most queries, we estimated that scanning about 5 million sequences would be sufficient (Figure 8). For the sake of comprehensiveness, we scanned at least 10 million sequences\". The figure text gives \"shutdown (Correlation = 0.995)\".\n  where: p19, p28; Fig 3\n- claim: Block-diagonal approximation inside each layer cuts EK-FAC memory with a slight correlation drop. It was needed for the 52B model.\n  number: block count O = 2 for 52B (O=2 halves covariance memory)\n  setup: 810M tested on 5 queries (Fig 30); the percentages are in the plot only\n  quote: \"In this study, we use a block size of 2 (O=2) for the largest model investigated (the 52 billion parameter model).\"\n  where: App A, p52-53\n- claim: Crowdworkers (Surge AI) judged a majority of the top sequences relevant. Some were irrelevant, and the paper marks highly sparse ones as probably spurious.\n  number: 6 sequences x 7 queries per model size; sparsity flag when L2/L1 ratio of tokenwise influences > 2/3\n  quote: \"Overall, the crowdworkers found a majority of the most influential sequences to be relevant to their corresponding queries.\"\n  where: p50, App F p88-109\n\nLIMITS (as conceded)\n- Influence functions are a poor match to the true counterfactual in deep nets (Basu et al. 2021). They are reinterpreted as approximating the PBRF (Bae et al. 2022a), which is local around the trained weights. Quote: \"we therefore expect they would fail to capture important nonlinear training phenomena such as the formation of complex circuits\". The authors do not test how well the PBRF captures real training effects. The Gauss-Newton Hessian is linear in the parameter-output map, so it cannot model induction-head-style coordination.\n- Pretrained models only, not fine-tuning or RLHF. Models are at most 52B and smaller than the Assistant studied. Only MLP parameters are covered (attention, embeddings and layer norm are held fixed). Only a fraction of the corpus was scanned, so stronger sequences may be missed.\n- TF-IDF filtering biases results toward token overlap. Query batching is unbiased but needs millions of sequences.\n- Top-1% share is a crude measure, because it clips negative influence and so may overstate or understate concentration. Tokenwise signs are hard to interpret. A token's influence is not its counterfactual effect. The highlighted token is the one before the predicted token.\n- Ground truth: no leave-one-out retraining (too expensive). PBRF was optimized with Adam, itself noisy for big models.\n- The word-order result is shown through influence only. Nonlinear training may still generalize across orderings.\n- Computing training gradients for candidate sequences is still the main bottleneck. Nearest-neighbour search is hard because (G+lambda I)^-1 whitens the space.\n- Dated: this is 2023; later work on data attribution and on the reversal curse would postdate it.\n\nBUILDS ON\n- Koh and Liang (2017): imported classical influence functions into deep learning; iterative IHVP via LiSSA (Agarwal et al., 2017). Hampel (1974): the classical influence function from robust statistics. Quote: \"influence functions, a classical technique from statistics (Hampel, 1974) imported into deep learning by Koh and Liang (2017)\". Koh and Liang's cost: \"possibly thousands of steps\". Their own largest prior scale: \"300 million parameter vision transformers (Schioppa et al., 2022)\".\n- K-FAC: Martens and Grosse (2015). EK-FAC: George et al. (2018), which fits diagonal eigenvalues in the Kronecker eigenbasis. Weight-sharing extensions: Grosse and Martens (2016, CNN), Martens et al. (2018, RNN).\n- PBRF: Bae et al. (2022a), which gives the damped Gauss-Newton form. Damped GNH use: Teso et al. 2021. Gradient dot product baseline: Charpiat et al. 2019. Also Basu et al. 2021; Feldman and Zhang 2020 (single-layer influence is insufficient; self-influence as memorization); TracIn (Pruthi et al. 2020); Meng et al. 2022 (facts localized in MLPs). Power-law fitting test: Clauset et al. (2009). TF-IDF uses an Okapi BM25 variant (Ramos 2003).\n\nCODE (verbatim equations worth keeping)\n- Influence: \"I_f(z_m) ≈ -∇θ f(θs)^T (G + λI)^-1 ∇θ L(z_m, θs)\" (Eq 25, p16), with f(θ) = log p(z_c | z_p; θ) (Eq 24).\n- EK-FAC damped IHVP: \"(G + λI)^-1 v ≈ (QA ⊗ QS)(Λ + λI)^-1 (QA ⊗ QS)^T v\" (Eq 21, p14), where Λ_ii = E[((QA ⊗ QS) Dθ)_i^2] (Eq 20), fitted with exact token-summed pseudo-gradients. Pseudo-gradient labels are sampled from the model, and the loss must be the sum over tokens (so that F = G).\n- Layerwise decomposition: \"I_f(z_m) ≈ Σ_ℓ q_ℓ^T (Ĝ_ℓ + λI)^-1 r_ℓ\" (Eq 30), and tokenwise (Eq 31, p20).\n- BM25 variant: score(Q,D) = Σ_t (k1+1)·exists_in_doc(t,D)/(k1+exists_in_doc(t,D)) · IDF(t), k1 = 1.5 (Eq 28).\n- Spurious-sequence heuristic: tokenwise ||a||2/||a||1 > 2/3 (p28).\n\nFIGURES (via text captions only; I did not run the figures script)\n- Fig 1 (p7): shutdown query, top sequences at 810M vs 52B, tokenwise heatmap. The best single picture of \"abstract with scale\".\n- Fig 2 (p11): influence functions as approximations of the PBRF, which explains why they are local.\n- Fig 3 (p19): rank-32 compression, correlation 0.995.\n- Fig 4 (p20): layer x token influence grid.\n- Fig 6-7 (p24): correlation and wall-clock for gradient dot product, LiSSA and EK-FAC.\n- Fig 8-9 (p26-27): power-law tails; top-1% share.\n- Fig 16 (p35): cross-lingual influence vs scale.\n- Fig 17-19 (p36-37): layerwise distributions.\n- Fig 24-27 (p43-46): synthetic word-order ablations.\n\nPROBLEMS\n- Math symbols in the extraction are garbled (e.g. \"‹\", \"θP RD\"). I rebuilt the equations from context, so check them against the PDF before citing.\n- Listing 1 (crowdworker instructions) is missing from the extraction.\n- Text has no numeric values for Figs 6, 7, 9, 16 or 30, so I made no claims from them.\n- Fig 8's alpha values differ slightly from the text (shutdown 2.21 in the caption vs 2.28 in the text).\n- The page-count range for skimmed listings is given in COVERAGE above.\n- No embedded instructions found in the PDF text."
+ "type": "empirical",
+ "question": "Which training sequences most influence an LLM's outputs, and what does that reveal about how LLMs generalise, when influence functions are scaled to models up to 52B parameters?",
+ "hypothesis": "EK-FAC can approximate the inverse-Hessian-vector product accurately and cheaply enough to make influence functions usable on LLMs (stated as the approach; no hypothesis about the generalisation findings).",
+ "contributions": [
+  "Use EK-FAC to approximate the IHVP for transformer LLMs up to 52B parameters, competitive with LiSSA and much faster",
+  "TF-IDF filtering and query batching (rank-32 compressed preconditioned query gradients) to cut training-gradient cost",
+  "Layerwise and tokenwise attribution of influence",
+  "Empirical study: sparsity/power-law tails, abstraction with scale, layerwise localisation, memorisation, word-order sensitivity, cross-lingual generalisation, role-playing"
+ ],
+ "method": {
+  "summary": "Fits an EK-FAC approximation of the Gauss-Newton Hessian over the MLP layers of four pretrained decoder-only transformers (810M to 52B), then computes influence of pretraining sequences on the log-likelihood of a query completion, using TF-IDF-filtered candidates or unfiltered scans of 5-10M+ sequences with batched low-rank query gradients. Accuracy is validated against the proximal Bregman response function (PBRF) on small models and the 810M LM; findings are qualitative inspection of top sequences plus quantitative tail fits.",
+  "task": "training data attribution via influence functions on pretrained LLMs",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Pretraining distribution (512-token sequences)",
+    "role": "eval",
+    "size": "unfiltered scans of at least 10 million sequences (about 5 million for the power-law fits); TF-IDF candidate sets of 10,000 sequences per query; 100,000 sampled sequences for the EK-FAC vs gradient dot product comparison",
+    "split": null,
+    "source": "the models' pretraining corpus (not described in this paper)",
+    "preprocessing": "sequences are 512 tokens"
+   },
+   {
+    "name": "Influence queries (about 50)",
+    "role": "eval",
+    "size": "queries listed in Appendix E, Figs 42-47 (simple facts, math/programming/physics, memorised quotes, role-playing, translation, others)",
+    "split": null,
+    "source": "hand-written; math queries from GSM8k (Cobbe et al. 2021); many derived from an Anthropic conversational assistant",
+    "preprocessing": "coding queries use obfuscated variable names"
+   },
+   {
+    "name": "UCI Concrete and Energy; MNIST; FashionMNIST; CIFAR10",
+    "role": "eval",
+    "size": null,
+    "split": "train 70%, validation 20%, test 10%",
+    "source": "public benchmarks used for PBRF validation",
+    "preprocessing": "inputs normalised to zero mean, unit variance"
+   }
+  ],
+  "models": [
+   {
+    "name": "Anthropic pretrained LM (810M)",
+    "role": "evaluated",
+    "params": "810 million",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "source": "Kadavath et al. (2022)"
+    }
+   },
+   {
+    "name": "Anthropic pretrained LM (6.4B)",
+    "role": "evaluated",
+    "params": "6.4 billion",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Anthropic pretrained LM (22B)",
+    "role": "evaluated",
+    "params": "22 billion",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Anthropic pretrained LM (52B)",
+    "role": "evaluated",
+    "params": "52 billion",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "extra": "block-diagonal EK-FAC approximation with O=2 blocks per layer"
+    }
+   },
+   {
+    "name": "Two-hidden-layer MLPs and ResNet-20",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "MLP 128 hidden Tanh (regression), 256 hidden ReLU (MNIST/FMNIST); ResNet-20 for CIFAR10",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "SGD batch size 128, grid search over L2 and lr"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "PBRF validation: 10 measurements/seeds with different test examples, 500 random training points; pseudo-gradient labels sampled from the model's output distribution to fit EK-FAC",
+   "prompting": "no prompting; queries are (prompt, completion) pairs, influence measured on f(theta) = log p(completion | prompt; theta); dialogue queries use 'Human: ... Assistant:' format",
+   "retrieval": "TF-IDF (modified Okapi BM25, k1 = 1.5), top 10,000 sequences per query; or unfiltered scan with query batching",
+   "parameters": {
+    "damping": "layerwise lambda_l = 0.1 x mean(Lambda_l)",
+    "query_gradient_rank": "32",
+    "block_diagonal_blocks_52B": "O = 2",
+    "layers_covered": "MLP parameters of every layer; attention, embeddings, layer norm held fixed",
+    "layer_groups_for_plots": "9 blocks (lower/middle/upper thirds)",
+    "sparsity_filter": "drop tokenwise L2/L1 ratio above 2/3 as spurious",
+    "power_law_fit": "MLE on top 0.01 percent of 5 million samples (500 sequences)",
+    "LiSSA_recursion_depth": "number of data points, scaling tuned to avoid divergence",
+    "PBO_optimizer": "Adam to convergence, batch size 512"
+   },
+   "other": {
+    "fine_tuned_models": "not applied; influence computed on pretrained models only (Sec 5, footnote 1)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pearson correlation with PBRF",
+     "definition": "correlation of influence estimates with PBRF ground truth over 500 training points, averaged over 10 measurements",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Influence",
+     "definition": "change in log p(completion|prompt) from adding a copy of a training sequence; 1 = log-prob up by 1 nat",
+     "unit": "nats",
+     "higher_is_better": null
+    },
+    {
+     "name": "KS goodness-of-fit p-value",
+     "definition": "Kolmogorov-Smirnov test of fitted power law, plausible if above 0.1 (Clauset et al. 2009)",
+     "unit": "p-value",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Gradient dot product (Charpiat et al. 2019)",
+    "LiSSA (Agarwal et al. 2017)",
+    "Full-rank query gradients vs rank-32",
+    "Full EK-FAC vs block-diagonal EK-FAC"
+   ],
+   "protocol": "Validation vs PBRF on 5 datasets plus 810M LM; qualitative inspection of top sequences; synthetic training sequences scored by influence for word-order tests; Surge AI crowdworker summaries of 6 top sequences for 7 queries; no leave-one-out retraining (too costly)."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models",
+    "quote": "We consider four transformer language models from Kadavath et al. (2022), with approximately 810 million, 6.4 billion, 22 billion, and 52 billion parameters.",
+    "where": "Sec 5, p23"
+   },
+   {
+    "field": "inference.parameters.damping",
+    "quote": "We set the layerwise damping factor as λℓ “ 0.1 ˆ meanpΛℓq for EK-FAC.",
+    "where": "Sec 5, p23"
+   },
+   {
+    "field": "inference.parameters.block_diagonal_blocks_52B",
+    "quote": "we use a block size of 2 (O “ 2) for the largest model investigated (the 52 billion parameter model)",
+    "where": "App A, p53"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Flipping the order of English and Mandarin in influential training sequences reduces influence by at least an order of magnitude.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "english_to_mandarin query, 52B model, top influential English->Mandarin sequences re-ordered with identical content (Fig 26)",
+   "quote": "when we flip the order of the English and Mandarin text in these sequences, the influence is reduced by at least an order of magnitude (and is possibly explainable as random noise for some), as shown in Figure 26.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.4, p45"
+  },
+  {
+   "claim": "Worked English->Mandarin example: original order influence 0.116, flipped (Mandarin->English) 0.030, Mandarin-only 0.020.",
+   "kind": "measured",
+   "source": null,
+   "metric": "influence (nats of completion log-likelihood)",
+   "value": 0.116,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B model, english_to_mandarin query, one sequence modified from a top influential sequence (Fig 27); flipped 0.030; Mandarin-only 0.020",
+   "quote": "The Mandarin-to-English sequence has an influence score of 0.030, which is similar to the score with a Mandarin-only sequence (0.020).",
+   "table": null,
+   "note": "0.116 appears in the Fig 27 heading 'English -> Mandarin Ordered Sequence (Influence = 0.116)'; 0.030 is only 3.9x lower than 0.116 for this single example, so the order-of-magnitude claim is about the Fig 26 set, not this example",
+   "where": "Fig 27 caption, p46"
+  },
+  {
+   "claim": "Synthetic fictional-fact sequences (Astrobia, Gleem): sequences with prompt-related phrase before completion-related phrase have consistently high influence; flipped order consistently lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Queries 'The first President of the Republic of Astrobia was' -> 'Zorald Pfaff' and 'Gleem is composed of' -> 'hydrogenium and oxium'; 810M, 6.4B, 52B; synthetic sequences not in training set (Figs 24, 25)",
+   "quote": "Sequences where phrases related to the prompt and phrases related to the completion appear in that order have consistently high influence. Sequences where the order is flipped have consistently lower influence.",
+   "table": null,
+   "note": "Per-sequence influence values are bar plots (axis up to about 3.5 for Astrobia, 2.0 for Gleem) and are not in the text",
+   "where": "Sec 5.3.4, p45"
+  },
+  {
+   "claim": "With flipped order, removing the prompt-related phrase does not change influence, so influence comes from the string Zorald Pfaff alone and the relation has not transferred.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Astrobia query, synthetic sequence 'Zorald Pfaff was the first President of the Republic of Astrobia' (Fig 24)",
+   "quote": "we observe that the influence is unchanged when the prompt-related phrase first President of the Republic of Astrobia is removed, suggesting that the influence comes from the string Zorald Pfaff, and that the model has not successfully transferred knowledge of the relation itself.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.4, p45"
+  },
+  {
+   "claim": "Influence functions approximate sensitivity locally around the final weights and may miss nonlinear training phenomena; models might generalise across word orderings through nonlinear processes.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Caveat attached to the word-order result",
+   "quote": "Influence functions are approximating the sensitivity to the training set locally around the final weights (Bae et al., 2022a), and might not capture nonlinear training",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.4, pp46-47"
+  },
+  {
+   "claim": "The Gauss-Newton Hessian linearises the parameter-output map so cannot model nonlinear coordination across parameter matrices such as induction-head formation.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion of EK-FAC / PBRF formulation",
+   "quote": "The Gauss-Newton Hessian G linearizes the parameter-output relationship, so it is inherently incapable of modeling learning phenomena that require nonlinear coordination of multiple parameter matrices, such as the formation of",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, pp50-51"
+  },
+  {
+   "claim": "Authors expect influence functions to fail to capture complex-circuit formation and global representation rearrangement.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Upfront limitation",
+   "quote": "We therefore expect they would fail to capture important nonlinear training phenomena such as the formation of complex circuits (Elhage et al., 2021) or global rearrangements of a model's representation (Power et al., 2022).",
+   "table": null,
+   "note": "Source text uses a typographic apostrophe in model's",
+   "where": "Sec 1, p8"
+  },
+  {
+   "claim": "EK-FAC reaches similar accuracy to LiSSA in at least an order of magnitude less time, and beats the gradient dot product, as measured by correlation with the PBRF.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCI Concrete/Energy, MNIST, FashionMNIST, CIFAR10 (ResNet-20), and the 810M LM; 500 training points; 10 measurements averaged (Figs 6, 7)",
+   "quote": "EK-FAC achieves similar accuracy to the traditional iterative approach, but in at least an order of magnitude less time.",
+   "table": null,
+   "note": "Correlation values are bar plots (Fig 6) and not in the text",
+   "where": "Sec 6, p50"
+  },
+  {
+   "claim": "Influence tail follows a power law; the top 1 percent of sequences cover 12 to 52 percent of total positive influence on the 22B model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 queries, scan of 5 million unfiltered sequences, 22B model (Fig 9)",
+   "quote": "for the 22B model, the top 1 percent of the sequences cover between 12 to 52 percent of the total influence for the queries we tested.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.1, p27"
+  },
+  {
+   "claim": "Power-law exponent alpha fitted to the tail for shutdown is 2.28 (paperclips_large 2.1, water 2.57), so the standard deviation is infinite.",
+   "kind": "measured",
+   "source": null,
+   "metric": "power-law exponent alpha",
+   "value": 2.28,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tail (top 0.01 percent among 5 million samples) of influence scores, 52B model",
+   "quote": "the standard deviation of the power law fit to the queries paperclips_large (α “ 2.1), shutdown (α “ 2.28) and water (α “ 2.57) is infinite",
+   "table": null,
+   "note": "Fig 8 panel labels print alpha = 2.21 (shutdown), 1.99 (paperclips_large), 2.87 (water), which differ from the text values",
+   "where": "Sec 5.2.1, p26"
+  },
+  {
+   "claim": "Kolmogorov-Smirnov test rejects the power law for only 2 of 8 queries.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 p-values; threshold 0.1 from Clauset et al. (2009)",
+   "quote": "the KS test rejects the power law for only 2 out of 8 queries, indicating it is a reasonable fit for most queries.",
+   "table": null,
+   "note": null,
+   "where": "App D.3, p61"
+  },
+  {
+   "claim": "No query has any sequence with influence above 1; values above 0.1 are rare, so outputs result from many sequences collectively.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 queries in Fig 8, 52B model; influence of 1 means log-prob of completion rises by 1 nat",
+   "quote": "influence values larger than 0.1 are rare, and none of the 8 queries visualized have any sequences with influence larger than 1.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.1, p27"
+  },
+  {
+   "claim": "About 5 million unfiltered sequences must be scanned to match the top-10 influence of TF-IDF filtered sets for most queries; at least 10 million were scanned.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5000000,
+   "unit": "sequences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated from fitted power laws",
+   "quote": "for most queries, we estimated that scanning about 5 million sequences would be sufficient (Figure 8). For the sake of comprehensiveness, we scanned at least 10 million sequences for the rest of our experiments.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.2, p28"
+  },
+  {
+   "claim": "Rank-32 approximation of preconditioned query gradients gives negligible error in influence estimates.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 32,
+   "unit": "rank",
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B model, 8 queries, ranks 8 to 128 (Fig 3); correlation axis 0.875 to 1.0, shutdown correlation 0.995",
+   "quote": "storing rank-32 approximations results in a negligible error in the final influence estimates, as shown in Figure 3.",
+   "table": null,
+   "note": "Fig 3 panel label: shutdown (Correlation = 0.995) at rank 32",
+   "where": "Sec 3.2.2, p19"
+  },
+  {
+   "claim": "Cross-lingual influence of English sequences on Korean/Turkish translated queries grows with model size; at 810M it is negligible.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "shutdown and water queries, 4 model sizes (Fig 16)",
+   "quote": "For the smallest model, English training sequences have almost no influence on shutdown and water queries written in other languages. However, with increasing model scale, the cross-lingual influence of English sequences increases.",
+   "table": null,
+   "note": null,
+   "where": "Fig 16 caption, p35"
+  },
+  {
+   "claim": "Influence is spread roughly evenly across layers on average, but different query types concentrate in different layers: simple facts and memorised quotes in upper layers, math/code/translation in middle layers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top 500 sequences for 50 queries (25,000 sequences), 52B model, layers in 9 blocks (Figs 17, 19)",
+   "quote": "We computed the average layerwise influences from the top 500 influential sequences for 50 queries (a total of 25,000 influential sequences); as shown in Figure 17, for the 52B model, the influences were distributed nearly uniformly among the lower, middle, and upper layers of the network.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.2, p35"
+  },
+  {
+   "claim": "Restricting influence to middle layers yields the most abstract generalisation patterns; lower/upper-only influence shows token overlap.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "superintelligent and inflation queries, 52B model, top 10,000 sequences from the original scans (Figs 20, 21)",
+   "quote": "We found that limiting influence computation to the middle layers tends to yield the most abstract generalization patterns.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.2, p37"
+  },
+  {
+   "claim": "Final-layer-only influence is likely to miss important patterns; all layers contribute distinctively.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Contrasts with Koh and Liang (2017), Pruthi et al. (2020), Guo et al. (2021), Yeh et al. (2022)",
+   "quote": "Our findings suggest that all layers of an LLM contribute to generalization in distinctive ways, and therefore influence function approximations limited to the final layer are likely to miss important patterns of influence.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.2, p37"
+  },
+  {
+   "claim": "Influential sequences become more abstract and thematically related with model scale (810M, 6.4B, 22B, 52B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Queries trade, inflation, neurosemantic_facutitious, math_clips, binary_search, shutdown, paperclips, superintelligent",
+   "quote": "While the influential sequences for smaller models tend to have short overlapping sequences of tokens, the top sequences for larger models are related at a more abstract thematic level",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.1, p28"
+  },
+  {
+   "claim": "Famous-quote queries return the exact passage as top influential sequences, showing the scan can detect clear memorisation; no clear memorisation found for typical outputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "queries",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six famous-passage queries, unfiltered scan with query batching (Fig 22)",
+   "quote": "we picked six queries that contain famous passages or quotes (which the AI Assistant is able to complete) and ran an influence scan over the unfiltered training data (i.e., using query batching rather than TF-IDF). We observed that invariably, the top influential sequences returned by our scan contained the exact famous passages.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.3, p41"
+  },
+  {
+   "claim": "Role-playing (shutdown, paperclips, superintelligent) is supported as imitation of training text at a high level of abstraction; weak evidence against planning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "52B model top influential sequences",
+   "quote": "Our results provide weak evidence against the hypothesis that role-playing behavior results from sophisticated agent representations and planning capabilities, but we are unable to rule out this hypothesis directly.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.5, p50"
+  },
+  {
+   "claim": "Crowdworkers found a majority of the most influential sequences relevant to their queries.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Surge AI; 6 top sequences for each of 7 queries at each model size",
+   "quote": "Overall, the crowdworkers found a majority of the most influential sequences to be relevant to their corresponding queries.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4, p50"
+  },
+  {
+   "claim": "Influence calculation covers MLP parameters only; attention, embeddings and layer norm are held fixed.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All experiments, all layers' MLP blocks",
+   "quote": "we focus on computing influences only for the MLP parameters (Equation 23), treating the attention and other parameters (e.g., embeddings and layer normalization) as fixed.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, p16"
+  },
+  {
+   "claim": "Influence analysis is on pretrained models only, not fine-tuned ones; fine-tuning analysis left as future work.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All influence experiments",
+   "quote": "our influence analyses focus on pretrained LLMs, so our experiments should be interpreted as analyzing which training sequences contribute to a response being part of the model's initial repertoire for the fine-tuning stage",
+   "table": null,
+   "note": "Footnote 1 (p5): 'While the AI assistant was a fine-tuned model, our influence function computations focused on pretrained models.'",
+   "where": "Sec 5, p23"
+  }
+ ],
+ "limits": [
+  "Influence functions approximate the PBRF, local around final weights, not the leave-one-out counterfactual; authors expect them to miss nonlinear phenomena such as complex-circuit formation and global representation rearrangement (Sec 1) and say the Gauss-Newton Hessian cannot model induction-head formation (Sec 6).",
+  "The word-order insensitivity is shown for influence functions only; models might generalise across orderings through nonlinear processes not captured (Sec 5.3.4).",
+  "Pretrained models only; fine-tuning (and RLHF) not analysed. The assistant responses analysed came from a fine-tuned larger model than the four studied.",
+  "Models (up to 52B) are far smaller than state of the art; conclusions may not transfer to the full-size model.",
+  "Only MLP parameters are included; attention, embeddings, layer norm are fixed.",
+  "Only a fraction of the pretraining corpus is searched (5-10M sequences), so more influential sequences were likely missed; TF-IDF filtering biases results toward token overlap.",
+  "Whether the PBRF captures the training phenomena of interest is not addressed.",
+  "Tokenwise signs are hard to interpret; extremely sparse tokenwise influences may be algorithmic error or real; the top-1 percent coverage measure ignores negative influence and may understate concentration.",
+  "Findings are qualitative inspection of selected queries; no statistical test of the scale or layer-localisation claims; no code, compute or hardware stated.",
+  "Role-playing result is weak evidence only; influence spread over many examples could hide planning."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Influence function",
+   "definition": "first-order Taylor approximation of the response function at epsilon = 0: I(z_m) = -H^-1 grad L(z_m, theta*)",
+   "where": "Sec 2.1, p9"
+  },
+  {
+   "term": "Proximal Bregman response function (PBRF)",
+   "definition": "response function to the proximal Bregman objective, which minimises loss on z_m while staying close to theta_s in function and weight space",
+   "where": "Sec 2.1.1, p10"
+  },
+  {
+   "term": "EK-FAC",
+   "definition": "Eigenvalue-corrected K-FAC: Kronecker eigenbasis from A and S, with diagonal eigenvalues fitted individually",
+   "where": "Sec 2.2.3, p14"
+  },
+  {
+   "term": "Query batching",
+   "definition": "share training-gradient computation across many queries by storing low-rank preconditioned query gradients in memory",
+   "where": "Sec 3.2.2, p19"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Koh and Liang (2017), Understanding black-box predictions via influence functions",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "introduced influence functions to deep learning; LiSSA IHVP",
+   "quote": null
+  },
+  {
+   "work": "Bae et al. (2022a), If influence functions are the answer, then what is the question?",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PBRF reformulation and validation protocol",
+   "quote": null
+  },
+  {
+   "work": "George et al. (2018), EK-FAC",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Hessian approximation",
+   "quote": null
+  },
+  {
+   "work": "Martens and Grosse (2015), K-FAC",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Kronecker-factored curvature",
+   "quote": null
+  },
+  {
+   "work": "Agarwal et al. (2017), LiSSA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "iterative IHVP",
+   "quote": null
+  },
+  {
+   "work": "Charpiat et al. (2019), gradient dot product",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "identity-Hessian influence",
+   "quote": null
+  },
+  {
+   "work": "Schioppa et al. (2022), Scaling up influence functions",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "previous largest: 300M vision transformer",
+   "quote": null
+  },
+  {
+   "work": "Kadavath et al. (2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "source of the four LMs studied",
+   "quote": null
+  },
+  {
+   "work": "Basu et al. (2021), Influence functions in deep learning are fragile",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "influence estimates poorly match the counterfactual",
+   "quote": null
+  },
+  {
+   "work": "Elhage et al. (2021); Olsson et al. (2022)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "induction heads / circuits as nonlinear phenomena influence functions miss",
+   "quote": null
+  },
+  {
+   "work": "Meng et al. (2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "localises factual knowledge to MLP/middle layers; consistent with layerwise finding",
+   "quote": null
+  },
+  {
+   "work": "Feldman and Zhang (2020)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "memorisation via self-influence; single-layer influence insufficient",
+   "quote": null
+  },
+  {
+   "work": "Dhawan et al. (2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "nonlinear function-space-distance approximation, limited to ReLU MLPs",
+   "quote": null
+  },
+  {
+   "work": "Cobbe et al. (2021), GSM8k",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "math query source",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Influential sequences for the shutdown query on the 810M and 52B models.",
+   "page": 6,
+   "why": "shows token-overlap vs abstract thematic influence with scale"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Gradient dot product, LiSSA and EK-FAC correlation with the PBRF.",
+   "page": 24,
+   "why": "validation of EK-FAC"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "The tail end of influence scores follows a power law distribution.",
+   "page": 26,
+   "why": "sparsity result"
+  },
+  {
+   "figure": "Fig 17/19",
+   "caption": "Layerwise influence is even on average but query-type-specific.",
+   "page": 36,
+   "why": "localisation of generalisation"
+  },
+  {
+   "figure": "Fig 24",
+   "caption": "Influences of synthetic training sequences on the Astrobia query.",
+   "page": 43,
+   "why": "word-order experiment across 810M, 6.4B, 52B"
+  },
+  {
+   "figure": "Fig 26/27",
+   "caption": "Influence scores for English-Mandarin sequences with reversed order, 52B.",
+   "page": 45,
+   "why": "translation order sensitivity"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 25, p16",
+   "snippet": "I_f(z_m) ≈ -∇θ f(θs)^T (G + λI)^-1 ∇θ L(z_m, θs)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 28, p18",
+   "snippet": "BM25-style TF-IDF with k1 = 1.5, exists_in_doc(t, D) and IDF(t) = log((C - count(t) + 0.5)/(count(t) + 0.5) + 1)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations are garbled in the text cache (Unicode math); eq snippets are transcribed, not verbatim.",
+  "Per-sequence influence values for the Astrobia/Gleem synthetic sequences (Figs 24, 25) and correlations in Fig 6 are bar plots; not recoverable from text.",
+  "Layer count, hidden size, tokenizer, context length, pretraining data, hardware and compute for the four LMs are not stated in this paper.",
+  "Fig 8 alpha labels (2.21, 1.99, 2.87 for shutdown, paperclips_large, water) differ from text values (2.28, 2.1, 2.57).",
+  "No embedded instructions found in the PDF."
+ ]
 }

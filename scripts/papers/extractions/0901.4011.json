@@ -1,19 +1,539 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "0901.4011",
  "pdf": "data-analytics/sources/gelman-2009-weakly-informative-default-prior-distribution.pdf",
  "bib": {
   "title": "A weakly informative default prior distribution for logistic and other regression models",
-  "first_author": "Andrew Gelman",
-  "year": "2009",
-  "venue": "The Annals of Applied Statistics",
+  "authors": [
+   "Andrew Gelman",
+   "Aleks Jakulin",
+   "Maria Grazia Pittau",
+   "Yu-Sung Su"
+  ],
+  "first_author": "Gelman",
+  "year": 2008,
+  "venue": "The Annals of Applied Statistics 2(4), 1360-1383",
   "arxiv": "0901.4011",
-  "doi": "10.1214/08-aoas191"
+  "doi": "10.1214/08-AOAS191"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 67062,
+  "chars_total": 67062,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"A Weakly Informative Default Prior Distribution for Logistic and Other Regression Models\", Andrew Gelman, Aleks Jakulin, Maria Grazia Pittau, Yu-Sung Su. The Annals of Applied Statistics 2008, Vol. 2, No. 4, 1360-1383 (DOI 10.1214/08-AOAS191); arXiv:0901.4011v1 posted 26 Jan 2009. Received Jan 2008, revised June 2008.\n\nCOVERAGE: about 55,000 of 68,562 extracted chars, i.e. the whole body, pp. 1-23, plus the start of the reference list. I stopped partway through the references (p. 25, around the Lange et al. entry). All pages of the 24-page article were read. The Figure 6 and 7 curves are plots and did not extract. No appendices exist. Extraction is clean apart from ligature spacing.\n\nCLAIMS (ranked)\n- Recommended default: standardise inputs, then give each coefficient an independent Cauchy(0, 2.5) prior, with Cauchy(0, 10) on the intercept.\n  number: scale 2.5 on slopes, 10 on the constant\n  setup: classical (nonhierarchical) logistic regression. Binary inputs are centred to mean 0, so the two levels differ by 1. Other inputs are centred and scaled to sd 0.5.\n  quote: \"We recommend using, as a default prior model, independent Cauchy distributions on all logistic regression coefficients, each centered at 0 and with scale parameter 10 for the constant term and 2.5 for all other coefficients.\"\n  where: p. 22, Discussion\n- Standardisation rule: sd 0.5 puts continuous inputs on the same scale as symmetric binary inputs (±0.5).\n  number: sd 0.5 (equivalent to dividing by 2 sd)\n  setup: it is the inputs, not the predictors, that are standardised. The constant and interaction terms are not rescaled directly.\n  quote: \"Other inputs are shifted to have a mean of 0 and scaled to have a standard deviation of 0.5. This scaling puts continuous variables on the same scale as symmetric binary inputs (which, taking on the values ±0.5, have standard deviation 0.5).\"\n  where: p. 5, 2.1\n- Rationale for the scale: effects rarely exceed 5 on the logit scale. A shift of 5 moves a probability from 0.01 to 0.50, or from 0.50 to 0.99.\n  number: 5 (and 10 would be 0.01 to 0.99)\n  setup: standardised inputs, moving from -1 sd to +1 sd in an input.\n  quote: \"this implies that the absolute difference in logit probability should be less then 5, when moving from one standard deviation below the mean, to one standard deviation above the mean, in any input variable.\"\n  where: p. 6\n- Origin of 2.5: the likelihood of half a success plus half a failure is close to a t7 with scale 2.5. The Cauchy (t1) is a \"slightly more conservative\" longer-tailed version.\n  number: t with 7 df, scale 2.5, then Cauchy t1 with scale 2.5\n  setup: a single binomial trial, i.e. a constant-only logistic regression.\n  quote: \"The corresponding likelihood is eθ/2/(1 + eθ), which is close to a t density function with 7 degrees of freedom and scale 2.5 [Liu (2004)]. We shall choose a slightly more conservative choice, the Cauchy, or t1, distribution, again with a scale of 2.5.\"\n  where: p. 6\n- The prior always gives finite estimates under complete separation. The authors say separation is common even with a large n and few predictors. Flat-prior glm gives meaningless values, and the usual \"fix\" of dropping predictors removes the strongest ones (Zorn 2005).\n  number: none (qualitative). 1964 US presidential vote: all Black respondents voted Democrat.\n  setup: logistic regression of Republican vote on sex, race and income, fit separately for each election 1952-2000 (National Election Study). Cauchy, t7 and normal priors with scale 2.5 all stabilise 1964 and leave other years essentially unchanged.\n  quote: \"All three prior distributions do a reasonable job at stabilizing the estimates for 1964, while leaving the estimates for other years essentially unchanged.\"\n  where: p. 13, Fig. 2 caption\n- Bioassay shrinkage on an already-identified coefficient.\n  number: coefficient on standardised dose falls from 10.2 ± 6.4 (glm) to 5.4 ± 2.2 (bayesglm)\n  setup: Racine et al. (1986) data, 4 doses, 5 animals each (20 total), deaths 0/1/3/5. Dose rescaled to sd 0.5. Cauchy(0,10) on the intercept and Cauchy(0,2.5) on dose.\n  quote: \"lowering the estimated coefficient of standardized dose from 10 .2 ± 6.4 to 5 .4 ± 2.2.\"\n  where: p. 15\n- HIV imputation: the classical glm coefficient for nonhaartcombo.W1 is essentially infinite, and glm warns of nonidentifiability. The Bayes fit gives a finite value.\n  number: glm -20.99 (se 888.74) vs bayesglm -6.74 (se 1.22)\n  setup: chained-equation imputation of HIV viral load, longitudinal sample of HIV-positive homeless persons. This is the glm fit to the first-year observed cases, and the inputs were not rescaled. Same priors as above.\n  quote: \"nonhaartcombo.W1 -20.99 888.74\" and \"nonhaartcombo.W1 -6.74 1.22\"\n  where: p. 16, Fig. 4. Also p. 17: \"none of these presented any problem when we switched to our new bayesglm function.\"\n- Cross-validation on a corpus: the best Cauchy scale is 0.75, but the authors still recommend 2.5 as the conservative, weakly informative choice.\n  number: best Cauchy scale 0.75, recommended 2.5\n  setup: 45 UCI datasets (Fig. 5), fivefold CV, average log score and Brier score. Compared bayesglm over a grid of df and scale against R glm, brglm (Jeffreys prior, Kosmidis 2007) and BBR (Laplace/Gaussian, Genkin, Lewis and Madigan 2007). Predictors are binary after Fayyad-Irani discretisation. Missingness is its own indicator. Multiclass outcomes are collapsed to most-frequent class versus the rest.\n  quote: \"The Cauchy prior distribution with scale 0.75 performs best, on average.\" and \"we recommend as a default a larger scale of 2.5. Why? The argument is that, following the usual principles of noninformative or weakly informative prior distributions, we are including in our model less information than we actually have.\"\n  where: p. 20, 5.2-5.3\n- Plain glm (maximum likelihood) and Jeffreys/brglm do poorly in CV.\n  number: none (off the plot scale)\n  setup: same corpus of 45 UCI datasets.\n  quote: \"Classical logistic regression (\"glm\") ... did not do well: with no regularization, maximum likelihood occasionally gives extreme estimates, which then result in large penalties in the cross-validation.\" and \"Surprisingly, Jeffreys' prior, as implemented in brglm, also performed poorly in the cross-validation.\"\n  where: p. 20; Fig. 6 caption says glm and brglm are \"so bad that we could not capture them on our scale\"\n- A finite-df t (Cauchy) beats Gaussian (df = infinity) and Laplace on average.\n  number: Cauchy (t1) vs normal (df = infinity). No numeric margin is stated in the text.\n  setup: same corpus.\n  quote: \"we obtain better average performance by using a t with finite degrees of freedom (see Figure 6)\"; the authors' explanation is that the Cauchy \"allows for occasional large coefficients while still performing a reasonable amount of shrinkage for coefficients near zero\".\n  where: p. 6. The abstract says \"Cross-validation on a corpus of datasets shows the Cauchy class of prior distributions to outperform existing implementations of Gaussian and Laplace priors.\"\n- No single prior is best for every dataset. The optimum varies.\n  number: spam best at t4 with scale 0.8; krkp best at t2 with scale 2.8\n  setup: individual datasets from the corpus, log score.\n  quote: \"For the \"spam\" data, the t4 with scale 0.8 is optimal, whereas for the \"krkp\" data, the t2 with scale 2.8 performs best under cross-validation.\"\n  where: p. 22, Fig. 7\n- Interactions are automatically shrunk more. With ±1/2 inputs, a three-way interaction takes ±1/8, so the same prior gives it a smaller total contribution than a main effect.\n  number: 5/4 logit-scale bound for a three-way interaction (5 · (1/8 − (−1/8)))\n  setup: three symmetric binary inputs rescaled to ±1/2.\n  quote: \"Going from the low value to the high value in any given three-way interaction is, in the model, unlikely to change the logit probability by more than 5 · (1/8 − (−1/8)) = 5/4 on the logit scale.\"\n  where: p. 7\n- Computation: the t prior is written as a normal scale mixture (σj² ~ Inv-χ²(νj, sj²)). Fitting alternates one IRLS step, with J pseudo-data rows added for the prior, with one approximate EM step. Implemented as bayesglm in R's arm package.\n  number: defaults νj = 1, sj = 2.5, intercept sj = 10; for non-binary numeric predictors the scale is 2.5/(2·sd) on raw data\n  setup: the output is a posterior mode and standard errors from curvature, not a full posterior.\n  quote: \"with the default being Cauchy distributions with center 0 and scale set to 10 (for the regression intercept), 2.5 (for binary predictors), or 2 .5/(2 · sd), where sd is the standard deviation of the predictor in the data (for other numerical predictors).\"\n  where: p. 8\n- Extension to other models: for linear regression, rescale y to sd 0.5 (or multiply the prior scale by sd(y)). Collinearity, not separation, is the issue there. For Poisson and other log-link models, effects above 5 on the log scale are unlikely, so the same prior may be a reasonable default.\n  number: 5 on the log scale (suggested, not tested)\n  setup: described only; no results shown for these models.\n  quote: \"For Poisson regression and other models with the logarithmic link, we would not often expect effects larger than 5 on the logarithmic scale, and so the prior distributions given in this article might be a reasonable default choice.\"\n  where: p. 11-12\n\nLIMITS\n- The authors concede the prior depends on the data through the standardisation, so it changes as data arrive. They \"imagine it could cause difficulties when sample sizes are very small\". They declined a hierarchical fix because it would take too much effort.\n- Intended as a default and placeholder. \"No model can be universally applied\"; use informative priors where subject knowledge exists, or a noninformative prior where parameters could take any value.\n- The CV evaluates posterior-mode point estimates and predictions, not full Bayesian inference. The authors say they do not check posterior simulations.\n- The corpus is 45 UCI datasets with binary-discretised predictors. Datasets are not necessarily representative of social-science or other uses.\n- The always-gives-an-answer property could hide nonidentifiability. The authors' reply is to also fit by ML, and that separation is real information.\n- Poisson, negative binomial, multinomial and probit are only discussed, with no results. Multinomial and probit have no simple IRLS to adapt.\n- Dated: the software is R glm/bayesglm/arm, brglm and BBR, and the implementation is a 2008 approximate EM. Later Stan-era practice is not covered (my observation, not the paper's).\n- The \"best scale 0.75\" figure comes from reading the Fig. 6 plot. The text states it, but the underlying score values are not tabulated.\n\nBUILDS ON: Raftery (1996), scaled Gaussian priors and standardisation; Gelman (2008), \"Scaling regression inputs by dividing by two standard deviations\"; Firth (1993), Jeffreys prior bias reduction; Zorn (2005), handling separation; Albert and Anderson (1984), existence of the MLE; Agresti and Coull (1998), the +1/2 adjustment; Genkin, Lewis and Madigan (2007), BBR with Laplace priors; Liu (2004), t approximation to the logistic; Dempster, Laird and Rubin (1977), EM; Bedrick, Christensen and Johnson (1996) and Greenland (2001), informative priors; Stigler (1977); Kosmidis (2007), brglm; Gelman and Pardoe (2007), inputs versus predictors; Racine et al. (1986), bioassay data.\n\nCODE: no code listing. Key equations:\n- p. 9, eq. (2): IRLS pseudo-data z_i = X_i β̂ + ((1+e^{X_i β̂})² / e^{X_i β̂}) (y_i − e^{X_i β̂}/(1+e^{X_i β̂})), with variance (σ_i^z)² = (1/n_i)(1+e^{X_i β̂})² / e^{X_i β̂}.\n- p. 9, eq. (4): the prior is added as J pseudo-observations, z* = (z, µ), X* = (X; I_J), w* = (σ^z, σ)^−2.\n- p. 11, eq. (8) (M-step): σ̂_j² = ((β̂_j − µ_j)² + (V_β)_jj + ν_j s_j²) / (1 + ν_j).\n- p. 14, Fig. 3 R output:\n  # from bayesglm (Cauchy priors, scale 10 for const and 2.5 for other coef):\n  z.x 5.4 2.2\n\nFIGURES\n- Fig. 1, p. 7: Cauchy(2.5), t7(2.5) and the ½-success/½-failure likelihood overlaid. All favour |θ| < 5, and the Cauchy has the heavy tail. This is the quickest way to see where 2.5 comes from.\n- Fig. 2, p. 13: coefficient estimates by election year, 1952-2000, under glm, Cauchy, t7 and normal. It shows the 1964 separation blow-up and its fix.\n- Fig. 3, p. 14: bioassay data table, glm versus bayesglm output, and fitted curves.\n- Fig. 4, p. 16: HIV imputation coefficient tables, glm versus bayesglm.\n- Fig. 5, p. 18: table of the 45 UCI datasets (cases, predictors, Pr(y=1)).\n- Fig. 6, p. 21: mean log and Brier score against prior scale for each df, plus BBR and glm/brglm. It shows the 0.75 optimum.\n- Fig. 7, p. 22: per-dataset log score surfaces for spam and krkp, showing the optimum varies by dataset.\nI did not run the captions script. These descriptions come from the extracted captions.\n\nPROBLEMS: none blocking. The extraction has ligature and spacing noise (\"ﬁrst\", \"scali ng\"), and equations are garbled but readable. Nothing in the text looked like an instruction to me. The first extraction attempt printed fontTools warnings, which are harmless. The text copy is at /tmp/gelman.txt. The source PDF is /Users/ramsey-wise/workspace/learn-ai-engineering/data-analytics/sources/gelman-2009-weakly-informative-default-prior-distribution.pdf."
+ "type": "empirical",
+ "question": "What default prior on coefficients of classical logistic regression gives stable, regularized estimates (including under separation) while remaining weak enough for routine automatic use?",
+ "hypothesis": "Real logistic coefficients on standardized inputs are rarely larger than 5, so independent Student-t/Cauchy priors on them should beat maximum likelihood and competing priors predictively and stabilise separated fits.",
+ "contributions": [
+  "Prior: scale non-binary inputs to mean 0 and sd 0.5, then independent Student-t priors; default Cauchy centre 0 scale 2.5 (10 for the intercept)",
+  "bayesglm: approximate EM inside iteratively weighted least squares, implemented in R's arm package",
+  "Three applications: vote-preference regressions, bioassay, chained-imputation of HIV viral load",
+  "Five-fold cross-validation over 45 UCI datasets comparing priors, glm, Jeffreys (brglm) and BBR"
+ ],
+ "method": {
+  "summary": "Inputs are standardized (binary centred, others sd 0.5) and each coefficient gets an independent Cauchy(0, 2.5) prior (Cauchy(0,10) for the constant). The posterior mode is found by adding J pseudo-data points to the weighted least squares step of IRLS and updating prior scales by an approximate EM step (t as normal scale mixture). Priors are compared by five-fold cross-validated log and Brier score on 45 UCI datasets.",
+  "task": "regularised logistic regression / default prior choice",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "UCI Machine Learning Repository corpus (45 datasets, Fig 5)",
+    "role": "eval",
+    "size": "45 datasets, from 24 cases (lenses) to 8124 (mushroom)",
+    "split": "five-fold cross-validation per dataset",
+    "source": "UCI repository (Newman et al 1998; Asuncion and Newman 2007); datasets with continuous outcome or logical-theory form excluded",
+    "preprocessing": "Missingness is a separate indicator predictor per variable with missing values; continuous predictors discretised by Fayyad and Irani (1993); k-level predictor becomes k-1 binary predictors (most frequent level dropped); multinomial outcomes become most-frequent category vs the rest"
+   },
+   {
+    "name": "National Election Study presidential vote 1952-2000",
+    "role": "eval",
+    "size": null,
+    "split": "separate logistic regression per election year",
+    "source": "National Election Study",
+    "preprocessing": "binary inputs female and black centred; income (1-5 scale) centred and divided by two standard deviations"
+   },
+   {
+    "name": "Bioassay (Racine et al 1986)",
+    "role": "eval",
+    "size": "20 animals, 4 doses x 5 animals",
+    "split": null,
+    "source": "Racine, Grieve, Fluhler and Smith (1986)",
+    "preprocessing": "dose rescaled to mean 0 sd 0.5"
+   },
+   {
+    "name": "HIV viral load, longitudinal sample of HIV-positive homeless persons",
+    "role": "eval",
+    "size": null,
+    "split": "observed cases in year 1 for the reported fit",
+    "source": "authors' applied research (Peter Messeri); not public",
+    "preprocessing": "inputs not recentred or rescaled for the table, most are binary"
+   }
+  ],
+  "models": [
+   {
+    "name": "bayesglm (Cauchy/t prior, approximate EM-IRLS posterior mode)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "logistic regression with independent t priors",
+    "init_from": "beta = 0 or a guess (e.g. unit normal draws); each sigma_j initialised to s_j",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "default_prior": "Cauchy (nu=1), centre 0, scale 10 for intercept, 2.5 for binary predictors, 2.5/(2*sd) for other numeric predictors",
+     "t_family": "nu and scale s varied in the cross-validation; nu=1 Cauchy, nu=inf Gaussian"
+    }
+   },
+   {
+    "name": "glm (R)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "maximum likelihood logistic regression (flat prior)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "under no finite MLE defined as R default starting value and default iterations"
+    }
+   },
+   {
+    "name": "brglm (Kosmidis 2007)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Jeffreys prior bias reduction, logit and probit links",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BBR (Genkin, Lewis, Madigan 2007)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Bayesian binary regression with Laplace (l) or Gaussian (g) prior",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "scale_heuristic": "k / E[x.x], k = dimensions of x; averaged about 2.0 across the datasets"
+    }
+   }
+  ],
+  "training": {
+   "objective": "posterior mode of logistic likelihood with independent t priors (approximate EM: IRLS step then E and M steps)",
+   "optimizer": "iteratively weighted least squares with pseudo-data for the prior plus approximate EM update of prior scales (sigma_j^2 = ((beta_j-mu_j)^2 + V_jj + nu_j s_j^2)/(1+nu_j))",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "t prior on coefficients, mean 0",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "convergence": "'until approximate convergence'; no tolerance or iteration count given",
+    "covariance": "inverse second derivative of log-posterior at the estimate",
+    "prior_params_constant_term": "mu=0, s=10, nu=1",
+    "other_models": "linear regression: rescale outcome to mean 0 sd 0.5 (or multiply prior scale by sd of y), add a step for data variance"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "five random 5-fold partitions per dataset is not stated; one five-fold CV per dataset and prior setting is implied",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "cauchy_scale_default": 2.5,
+    "intercept_scale": 10,
+    "best_cv_scale": 0.75,
+    "input_scaling": "binary mean 0 diff 1; others mean 0 sd 0.5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "logarithmic score",
+     "definition": "-log p_y where p_y is the cross-validated predicted probability of the true outcome, averaged over datasets",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "Brier score",
+     "definition": "(1 - p_y)^2 / 2 as printed, averaged over datasets",
+     "unit": "score",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "glm (maximum likelihood)",
+    "brglm Jeffreys prior, logit and probit",
+    "BBR Laplace and Gaussian",
+    "bayesglm with Gaussian and t_nu priors at varied scales"
+   ],
+   "protocol": "Five-fold cross-validation; posterior mode fitted on training folds, predicted probabilities on test fold; mean log and Brier loss averaged over the 45 datasets. No significance tests or seeds reported."
+  },
+  "availability": {
+   "code": "bayesglm in the arm R package",
+   "weights": null,
+   "data": "UCI datasets public; HIV data not shared"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics",
+    "quote": "the Brier score is deﬁned as (1 −py)2/2 and the logarithmic score is",
+    "where": "Section 5.2 footnote 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Averaged over the 45 UCI datasets in 5-fold CV, a Cauchy prior with scale 0.75 gives the lowest mean log and Brier loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best Cauchy prior scale",
+   "value": "0.75",
+   "unit": "prior scale",
+   "baseline_value": null,
+   "n": 45,
+   "setup": "bayesglm, 5-fold CV, mean log and Brier score across 45 UCI datasets, inputs binary 0/1",
+   "quote": "with scale 0.75 performs best, on average.",
+   "table": null,
+   "note": "Authors still recommend 2.5 to be conservative.",
+   "where": "Section 5.2, Fig 6"
+  },
+  {
+   "claim": "Authors recommend scale 2.5 over the CV-optimal 0.75 because it includes less prior information than they believe they have.",
+   "kind": "claim",
+   "source": null,
+   "metric": "recommended scale",
+   "value": "2.5",
+   "unit": "prior scale",
+   "baseline_value": "0.75",
+   "n": null,
+   "setup": "Default recommendation for Cauchy prior on standardized inputs",
+   "quote": "we recommend as a default a larger scale of 2.5.",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  },
+  {
+   "claim": "Bioassay: the default prior shrinks the standardized-dose coefficient from MLE 10.2 (se 6.4) to 5.4 (se 2.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "coefficient of standardized dose",
+   "value": "5.4",
+   "unit": "logit",
+   "baseline_value": "10.2",
+   "n": 20,
+   "setup": "20 animals, 4 doses; Cauchy(0,10) constant, Cauchy(0,2.5) dose; dose rescaled to sd 0.5",
+   "quote": "to 5.4 ± 2.2. Such a large change might seem disturbing, but for the reasons",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2, Fig 3"
+  },
+  {
+   "claim": "HIV imputation model: glm gives nonhaartcombo.W1 coefficient -20.99 with sd 888.74 (separation); bayesglm gives -6.74 with sd 1.22.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coefficient nonhaartcombo.W1",
+   "value": "-6.74",
+   "unit": "logit",
+   "baseline_value": "-20.99",
+   "n": null,
+   "setup": "Logistic regression of haart attendance, observed cases year 1, Cauchy(0,10) constant and Cauchy(0,2.5) others, inputs not rescaled",
+   "quote": null,
+   "table": "Fig 4, row nonhaartcombo.W1, columns coef.est/coef.sd (glm 888.74; bayesglm 1.22)",
+   "note": null,
+   "where": "Section 4.3, Fig 4"
+  },
+  {
+   "claim": "The 1964 NES regression has complete separation (race coefficient -inf under ML); Cauchy, t7 and normal priors all stabilise it and leave other years essentially unchanged.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NES 1952-2000, predictors sex, race, income, prior centre 0 scale 10 constant and 2.5 others",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 4.1, Fig 2"
+  },
+  {
+   "claim": "Jeffreys prior (brglm) and classical glm performed poorly in cross-validation, off the scale of Fig 6.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 45,
+   "setup": "5-fold CV, log and Brier score",
+   "quote": "Surprisingly, Jeﬀreys’ prior, as implemented\nin brglm, also performed poorly in the cross-validation.",
+   "table": null,
+   "note": "Quote may fail on ligature; see claim text.",
+   "where": "Section 5.2"
+  },
+  {
+   "claim": "A t with 7 degrees of freedom and scale 2.5 is close to the likelihood for one-half success and one-half failure; the Cauchy (t1) with the same scale is the more conservative default.",
+   "kind": "reported",
+   "source": "Liu (2004)",
+   "metric": "degrees of freedom",
+   "value": "7",
+   "unit": "df",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Logistic regression with only a constant term",
+   "quote": "close to a t density function with 7 degrees of freedom and scale 2.5",
+   "table": null,
+   "note": null,
+   "where": "Section 2.2"
+  },
+  {
+   "claim": "With Cauchy scale 2.5 on standardized inputs, the logit change from -1 sd to +1 sd is expected to be under 5 (probability 0.01 to 0.99 range).",
+   "kind": "claim",
+   "source": null,
+   "metric": "logit change bound",
+   "value": "5",
+   "unit": "logit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Default prior with standardization",
+   "quote": "should be less then 5, when moving from",
+   "table": null,
+   "note": null,
+   "where": "Section 2.2"
+  },
+  {
+   "claim": "A three-way interaction of symmetric binary inputs is limited by the default prior to a logit change of 5/4, a quarter of a main effect.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "logit change",
+   "value": "5/4",
+   "unit": "logit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Three binary inputs coded +/-1/2, default scale 2.5",
+   "quote": "= 5/4 on the logit scale.",
+   "table": null,
+   "note": null,
+   "where": "Section 2.2"
+  },
+  {
+   "claim": "Per-dataset optimum differs: for spam t4 scale 0.8 is best, for krkp t2 scale 2.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimal t prior",
+   "value": "t4 scale 0.8",
+   "unit": null,
+   "baseline_value": null,
+   "n": 2,
+   "setup": "Mean log score, UCI spam and krkp",
+   "quote": "the t4 with scale 0.8 is optimal",
+   "table": null,
+   "note": null,
+   "where": "Fig 7"
+  },
+  {
+   "claim": "BBR scale heuristic averaged about 2.0 across datasets but did worse per-dataset than the corpus optimum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean BBR heuristic scale",
+   "value": "2.0",
+   "unit": "scale",
+   "baseline_value": null,
+   "n": 45,
+   "setup": "Binary 0/1 predictors, no extra scaling",
+   "quote": "The average value of the heuristic across the datasets was approximately 2.0,",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  }
+ ],
+ "limits": [
+  "Prior depends on the data through standardization, so it changes as data arrive; authors concede trouble with very small samples (Section 6).",
+  "Evaluates the posterior mode, not full posterior simulation (Section 5.1).",
+  "Always returning an estimate can mask nonidentifiability; authors reply that ML can also be fit.",
+  "CV optimum (Cauchy 0.75) differs from the recommended 2.5, and best prior varies by dataset.",
+  "Corpus is 45 UCI datasets with mostly binary predictors; no seeds, repeated CV, or significance tests; convergence criteria not stated.",
+  "Multinomial logit and probit not handled; fully Bayesian hierarchical version left as an extension.",
+  "Later work (Stan prior-choice guidance) may have superseded the 2.5 scale default; not in this paper."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "separation",
+   "definition": "arises when a linear combination of the predictors is perfectly predictive of the outcome",
+   "where": "Section 1.1"
+  },
+  {
+   "term": "inputs versus predictors",
+   "definition": "In a regression on age, sex and their interaction there are four predictors but two inputs; standardization applies to inputs",
+   "where": "Section 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Raftery (1996) approximate Bayes factors in GLMs",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "scaled Gaussian prior generalised to t with interpretable scale",
+   "quote": null
+  },
+  {
+   "work": "Firth (1993) Jeffreys prior bias reduction / brglm (Kosmidis 2007)",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared in CV, performed poorly",
+   "quote": null
+  },
+  {
+   "work": "Genkin, Lewis and Madigan (2007) BBR",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Laplace and Gaussian priors",
+   "quote": null
+  },
+  {
+   "work": "Agresti and Coull (1998)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "half success/half failure idea generalised",
+   "quote": null
+  },
+  {
+   "work": "Zorn (2005) separation in binary response",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "argues against removing separating predictors",
+   "quote": null
+  },
+  {
+   "work": "Liu (2004) robit regression",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "t7 scale 2.5 approximates half-success likelihood",
+   "quote": null
+  },
+  {
+   "work": "Gelman (2008) scaling regression inputs by two standard deviations",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "standardization",
+   "quote": null
+  },
+  {
+   "work": "UCI Machine Learning Repository",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "45 datasets",
+   "quote": null
+  },
+  {
+   "work": "Racine et al (1986) bioassay",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "small example",
+   "quote": null
+  },
+  {
+   "work": "Dempster, Laird and Rubin (1977) EM",
+   "year": 1977,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "approximate EM for t scale mixture",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Cauchy 2.5, t7 2.5 and half-success/half-failure likelihood densities",
+   "page": 7,
+   "why": "shows why Cauchy 2.5 is a longer-tailed version of the pseudo-count prior"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "NES vote coefficients by year, glm vs Cauchy, t7, normal priors",
+   "page": 13,
+   "why": "shows separation in 1964 fixed by the prior"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Bioassay data and glm vs bayesglm output",
+   "page": 14,
+   "why": "raw output showing shrinkage 10.2 to 5.4"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Mean log and Brier score in 5-fold CV across UCI corpus for priors",
+   "page": 21,
+   "why": "the evidence for Cauchy scale 0.75 and against glm and brglm"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Mean log score for spam and krkp across t priors",
+   "page": 22,
+   "why": "shows optimal prior differs by dataset"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3.1, eq 8",
+   "snippet": "sigma_j^2 = ((beta_j - mu_j)^2 + (V_beta)_jj + nu_j s_j^2) / (1 + nu_j)",
+   "verbatim": false
+  },
+  {
+   "where": "Section 3.1, eq 5",
+   "snippet": "beta_j ~ N(mu_j, sigma_j^2),  sigma_j^2 ~ Inv-chi^2(nu_j, s_j^2)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 4 table and Fig 6/7 plot values are not recoverable as text; Fig 6/7 numbers are not given in text.",
+  "Ligatures in PDF text (fi, ff) may break verbatim matching.",
+  "Year: journal 2008 (Annals vol 2 no 4), arXiv posted 2009; file name says 2009.",
+  "No embedded instructions found."
+ ]
 }

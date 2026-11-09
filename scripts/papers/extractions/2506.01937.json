@@ -1,0 +1,572 @@
+{
+ "schema": 1,
+ "key": "2506.01937",
+ "pdf": "generative-ai/05-RL/sources/malik-2025-rewardbench-2.pdf",
+ "bib": {
+  "title": "REWARDBENCH 2: ADVANCING REWARD MODEL EVALUATION",
+  "authors": [
+   "Saumya Malik",
+   "Valentina Pyatkin",
+   "Sander Land",
+   "Jacob Morrison",
+   "Noah A. Smith",
+   "Hannaneh Hajishirzi",
+   "Nathan Lambert"
+  ],
+  "first_author": "Malik",
+  "year": 2026,
+  "venue": "ICLR 2026",
+  "arxiv": "2506.01937",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 95438,
+  "chars_total": 95438,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only (pp 10-14)."
+ },
+ "type": "benchmark",
+ "question": "How can reward models be evaluated on a harder, contamination-free, multi-domain accuracy benchmark whose scores predict downstream use in best-of-N sampling and RLHF?",
+ "hypothesis": "An accuracy-based benchmark on unseen human prompts with best-of-4 format should correlate with downstream performance of reward models.",
+ "contributions": [
+  "A challenging multi-domain RM benchmark on mostly unseen prompts (leading RewardBench models score 20+ points lower)",
+  "Controlled reward-model training experiments (base model, epochs, data) with actionable insights",
+  "Study of benchmark correlation with best-of-N and PPO",
+  "Finding that the best RM for RLHF depends on matching the policy lineage and prompt distribution"
+ ],
+ "method": {
+  "summary": "Builds a 1,865-prompt best-of-4 benchmark over six domains (Factuality, Precise IF, Math, Safety, Focus, Ties) from unseen WildChat prompts plus manual ones, scores >100 reward models, trains 120 Bradley-Terry RMs in Open Instruct, and correlates benchmark scores with BoN (113 RMs) and PPO (17 RMs).",
+  "task": "reward model evaluation (best-of-4 classification), with downstream BoN and PPO validation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RewardBench 2",
+    "role": "eval",
+    "size": "1,865 prompts (Factuality 475, Precise IF 160, Math 183, Safety 450, Focus 495, Ties 102); each with 1 chosen + 3 rejected (Ties: variable)",
+    "split": "single eval set",
+    "source": "~70% unseen human prompts from WildChat (Zhao et al. 2024); Safety from CoCoNot; Ties manual. Code Apache 2.0, data ODC-By (to be released upon acceptance)",
+    "preprocessing": "Initial ~3,000 prompts, curated to 1,865 by manual verification; QuRater + topic classifier; Tulu 3 decontamination against twenty downstream evals, no overlap; factuality double-judged by GPT-4o and Claude Sonnet 3.7, ~30% discarded on disagreement"
+   },
+   {
+    "name": "Tulu 3 8B preference mix",
+    "role": "train",
+    "size": "270K pairwise GPT-4o-as-a-judge preferences",
+    "split": null,
+    "source": "Lambert et al. 2024a",
+    "preprocessing": "Flipped-preference variant used as noisy-label control"
+   },
+   {
+    "name": "Skywork preference mix",
+    "role": "train",
+    "size": "80K preferences",
+    "split": null,
+    "source": "Liu et al. 2024a",
+    "preprocessing": "Subsampling either mix degraded performance; both combined in full is best"
+   },
+   {
+    "name": "BoN downstream tasks",
+    "role": "eval",
+    "size": "16 candidates per prompt; subsample of prompts from large evals",
+    "split": null,
+    "source": "GSM8K, MATH, IFEval, AlpacaEval 2, BBH, PopQA, HumanEval+",
+    "preprocessing": null
+   },
+   {
+    "name": "Tulu 3 Evaluation Suite (PPO eval)",
+    "role": "eval",
+    "size": "nine tasks (HumanEval and DROP excluded)",
+    "split": null,
+    "source": "Lambert et al. 2024a",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Bradley-Terry RMs (120 trained)",
+    "role": "proposed",
+    "params": "~120 at 8B/7B, 5 at 70B",
+    "architecture": "scalar-output reward model",
+    "init_from": "Tulu 3 8B SFT/DPO/RL, Llama 3.1 8B Instruct, Qwen 2.5 7B Instruct, Llama 8B Base, Qwen 7B Base, Tulu 3 70B SFT, Llama 3.1 70B Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": ">100 existing RMs / LM judges (113 in BoN study)",
+    "role": "evaluated",
+    "params": "varied",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "generative judges": "two prompting modes, rankings and ratings (1-10), best reported"
+    }
+   },
+   {
+    "name": "Tulu 3 8B SFT",
+    "role": "base",
+    "params": "8B",
+    "architecture": "decoder-only",
+    "init_from": "Llama 3.1 8B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "BoN generator and initial PPO policy"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Bradley-Terry preference loss for RMs: log(1 + exp(r(x,rejected) - r(x,chosen))); PPO for policy experiments",
+   "optimizer": null,
+   "lr": "RM sweep 1e-6, 3e-6, 2e-5; PPO 3e-7",
+   "lr_schedule": "PPO: linear decay; RM: null",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "RMs 1, 2, 3 (3 dropped later; 1 and 2 explored)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "PPO KL penalty beta=0.05 (also 0.0325 as check)",
+   "hardware": "H100 GPUs; PPO 16 GPUs for 2 days each",
+   "compute": "~55,000 GPU hours total; 8B RM 64 GPU hours/epoch (~120 models); 70B RM 1,280 GPU hours (5 models); 17 PPO runs; eval ~30 GPU hours for 160 models",
+   "wall_clock": "PPO 2 days each",
+   "seeds": "null (seeds varied, number not stated)",
+   "other": {
+    "library": "Open Instruct (Apache 2.0)",
+    "PPO": "17 RMs, same tokenizer as Tulu 8B SFT, prompts from Tulu 3 8B preference mix, best intermediate checkpoint reported"
+   }
+  },
+  "inference": {
+   "decoding": "BoN: 16 candidates then argmax reward; Math gold answers: 5 completions per model at temperature 1.0 with majority vote",
+   "temperature": "1.0 (math data generation only)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "BoN N=16 per prompt from Tulu 3 8B SFT",
+   "prompting": "Generative judges: rankings (pick best of 4) or ratings (1-10, ties scored 0.5/0.33/0.25)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy (best-of-4)",
+     "definition": "1 chosen vs 3 rejected, correct if chosen scored highest; unweighted mean over six domains; random=25%",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Ties score",
+     "definition": "weighted score of accuracy (all valid correct answers above all incorrect) and whether margin correct-vs-incorrect exceeds margin among correct answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson correlation",
+     "definition": "RB2 score vs downstream BoN average / PPO",
+     "unit": "r",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RewardBench",
+    "RM-Bench",
+    "PPE",
+    "RMB",
+    "Tulu 3 8B DPO (60.3), Tulu 3 8B SFT (54.1) for PPO"
+   ],
+   "protocol": "Existing models scored as released; trained RMs best across hyperparameters and seeds; no significance testing for benchmark; self-preference analysis uses rank aggregation on 977 prompts and 8 completion models"
+  },
+  "availability": {
+   "code": "Apache 2.0, to be released upon acceptance",
+   "weights": "trained RMs released (bolded in Table 3)",
+   "data": "ODC-By, upon acceptance"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We also vary the learning rate across",
+    "where": "App. D"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Reward models score about 20 points lower on RewardBench 2 than on RewardBench",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score gap",
+   "value": "20",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Over 100 RMs, Figure 2",
+   "quote": "models score about 20 points on average lower on REWARDBENCH 2 compared to",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Top existing RM Skywork-Reward-V2-Llama-3.1-8B reaches 84.1 average",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "84.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3, best-of-4 accuracy avg of six domains",
+   "quote": null,
+   "table": "Table 3, row Skywork/Skywork-Reward-V2-Llama-3.1-8B, column Average",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Pearson correlation between RB2 average and BoN downstream average over 113 RMs",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": "0.87",
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoN N=16 from Tulu 3 8B SFT, seven downstream tasks, 113 RMs",
+   "quote": "has a high Pearson correlation of 0.87",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Best PPO model outperforms Tulu 3 8B DPO; PPO saturates for on-policy RMs scoring 49.8 to 68.5 on RB2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "60.3",
+   "unit": "avg score (Tulu 3 eval)",
+   "baseline_value": "54.1",
+   "n": null,
+   "setup": "Tulu 3 8B SFT policy (54.1), 17 RMs, KL beta 0.05",
+   "quote": "gets a score of 60.3",
+   "table": null,
+   "note": "Table 9 prints RB2 68.7 and 67.9 where Table 10 prints 68.5 and 68.0 for the same models",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Off-policy/out-of-distribution RMs with high RB2 scores give lower PPO results (e.g. Llama 8B Instruct RM, RB2 72.9, PPO 54.5)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "54.5",
+   "unit": "PPO avg",
+   "baseline_value": "59.8",
+   "n": null,
+   "setup": "Llama 8B Instruct RM, Skywork+Tulu pref, 3e-6 1 epoch",
+   "quote": null,
+   "table": "Table 9, row 13, column PPO",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Eight of the eighteen best RMs were trained for two epochs, so more than one epoch can help",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "8",
+   "unit": "models of 18",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5 best models",
+   "quote": "Eight among the eighteen best models on",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Llama 70B Instruct RM trained on both data mixes scores 76.1 average",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "76.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open Instruct, both preference mixes",
+   "quote": null,
+   "table": "Table 5, row Llama 70B Instruct, column Avg",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Qwen 7B Instruct RM on both mixes scores 73.3 avg and 87.6 on Ties",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "73.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5",
+   "quote": null,
+   "table": "Table 5, row Qwen 7B Instruct Both, column Avg",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Instruct-initialised RMs beat base-initialised: Llama 8B Instruct 72.8 vs Llama 8B Base 64.9",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "72.8",
+   "unit": "% avg",
+   "baseline_value": "64.9",
+   "n": null,
+   "setup": "Table 6, combined mix",
+   "quote": null,
+   "table": "Table 6, row Llama 8B Instruct, column Avg",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Leading RewardBench models fall below 40% on Precise IF and 70% on Math",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intro claim",
+   "quote": "are below 40% and 70% accuracy, respectively",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Random baseline is 25% with 4 completions versus 50% in pairwise benchmarks",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "25",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "best-of-4",
+   "quote": "meaning the random baseline is 25% accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "About 70% of the benchmark prompts are unseen human prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "70",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "quote": "(∼70% of the benchmark)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "RB2 correlates 0.97 with RewardBench and 0.96 with RM-Bench across the 17 RLHF reward models",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.97",
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "17 RMs, Table 4",
+   "quote": null,
+   "table": "Table 4, row REWARDBENCH 2, column RB",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Training with 3 epochs at lr 2e-5 degrades avg from 55.6 (1 epoch) to 49.8",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "49.8",
+   "unit": "% avg",
+   "baseline_value": "55.6",
+   "n": null,
+   "setup": "Tulu 8B SFT base, Tulu mix, lr 2e-5",
+   "quote": null,
+   "table": "Table 8, row Tulu, Tulu, 2e-5 epochs 3, column Avg",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Total compute about 55,000 GPU hours",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "55,000",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All experiments, H100",
+   "quote": "we used 55,000",
+   "table": null,
+   "note": null,
+   "where": "App P"
+  }
+ ],
+ "limits": [
+  "PPO results cover only RMs sharing Tulu 8B SFT tokenizer and a single policy lineage, so the on/off-policy finding is from 17 RMs",
+  "Authors concede accuracy benchmark scores are necessary but not sufficient for RLHF",
+  "Generative judges reported at best of two prompt modes, with safety API filters possibly interfering",
+  "Math grading used Llama 3.1 8B Instruct with imperfect judgments, manually verified",
+  "RMs shown to prefer outputs of their own base model family (Appendix F)",
+  "Reasoning/generative RMs left to future work",
+  "Data and code release deferred to acceptance"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Ties",
+   "definition": "subset testing robustness of RMs in domains with many possible similar answers",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RewardBench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Lambert et al. 2024b; predecessor benchmark",
+   "quote": null
+  },
+  {
+   "work": "Preference Proxy Evaluations (PPE)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Frick et al.; compared and correlated",
+   "quote": null
+  },
+  {
+   "work": "RM-Bench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Liu et al.",
+   "quote": null
+  },
+  {
+   "work": "Tulu 3",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Lambert et al. 2024a: preference mix, SFT model, eval suite, decontamination",
+   "quote": null
+  },
+  {
+   "work": "Ivison et al. 2024 (Unpacking DPO and PPO)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PPO hyperparameters; RMs saturate in PPO",
+   "quote": null
+  },
+  {
+   "work": "WildChat",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Zhao et al. prompt source",
+   "quote": null
+  },
+  {
+   "work": "CoCoNot",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Brahman et al., safety taxonomy",
+   "quote": null
+  },
+  {
+   "work": "Skywork preference mix",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Liu et al. 2024a",
+   "quote": null
+  },
+  {
+   "work": "Bradley-Terry model",
+   "year": 1952,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RM loss",
+   "quote": null
+  },
+  {
+   "work": "Razin et al. 2025",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RM score variance affects RLHF",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Downstream correlation of REWARDBENCH 2",
+   "page": 9,
+   "why": "Shows BoN correlates across all RMs while PPO saturates and off-policy RMs drop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Grid of correlations between domains of REWARDBENCH 2 and sampled downstream tasks on 113 RMs",
+   "page": 7,
+   "why": "Per-domain predictive value"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Top models on REWARDBENCH 2",
+   "page": 6,
+   "why": "Leaderboard"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2 / App B",
+   "snippet": "L(θ, D) = E[(x,y_chosen,y_rejected)~D] log(1 + exp(r_θ(x,y_rejected) − r_θ(x,y_chosen))); S(R) = argmax_{j∈[1,N]} r_j",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 9 and Table 10 print different RB2 scores for the same models (e.g. 68.7 vs 68.5, 67.9 vs 68.0, 72.9 vs 72.6)",
+  "Text says over 100 models, 113 in BoN, 160 in compute section",
+  "Figure 4 text says range 49.8 to 68.5; Fig 4 table prints 68.7",
+  "No embedded instructions found",
+  "Optimizer, batch size, warmup, seq len, precision not stated"
+ ]
+}

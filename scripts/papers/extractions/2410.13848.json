@@ -1,0 +1,557 @@
+{
+ "schema": 1,
+ "key": "2410.13848",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/wu-2024-janus.pdf",
+ "bib": {
+  "title": "Janus: Decoupling Visual Encoding for Unified Multimodal Understanding and Generation",
+  "authors": [
+   "Chengyue Wu",
+   "Xiaokang Chen",
+   "Zhiyu Wu",
+   "Yiyang Ma",
+   "Xingchao Liu",
+   "Zizheng Pan",
+   "Wen Liu",
+   "Zhenda Xie",
+   "Xingkai Yu",
+   "Chong Ruan",
+   "Ping Luo"
+  ],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2410.13848",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 67936,
+  "chars_total": 67936,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "Can one autoregressive transformer do both multimodal understanding and image generation without the conflict that arises when a single visual encoder serves both?",
+ "hypothesis": "Understanding needs high-level semantic features while generation needs fine-grained spatial detail, so a single shared visual encoder forces a trade-off that hurts understanding; decoupling the encoders removes it.",
+ "contributions": [
+  "Janus, an autoregressive framework with two independent visual encoding pathways feeding one unified transformer",
+  "Claims to be first to highlight the importance of decoupling visual encoding in unified understanding and generation",
+  "State-of-the-art among unified models of comparable size on understanding and generation benchmarks",
+  "Ablations showing decoupling matters and that unified training costs little versus task-specific training"
+ ],
+ "method": {
+  "summary": "Janus uses SigLIP-Large-Patch16-384 for understanding and the LlamaGen VQ tokenizer for generation, each with a two-layer MLP adaptor, feeding one DeepSeek-LLM 1.3B. It is trained in three stages (adaptors and image head; unified pretraining; supervised fine-tuning) with plain cross-entropy.",
+  "task": "unified multimodal understanding (image-to-text) and text-to-image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ShareGPT4V",
+    "role": "train",
+    "size": "1.25 million image-text pairs",
+    "split": "Stage I understanding",
+    "source": "[10]",
+    "preprocessing": "format <image><text>"
+   },
+   {
+    "name": "ImageNet-1k",
+    "role": "train",
+    "size": "approximately 1.2 million samples",
+    "split": "Stage I generation; Stage II only first 120K steps",
+    "source": "[18]",
+    "preprocessing": "text-to-image format with category names: <category_name><image>"
+   },
+   {
+    "name": "Stage II mixture (text, interleaved WikiHow/WIT, captions, table/chart, generation)",
+    "role": "pretrain",
+    "size": "generation data includes 2M in-house; other sizes not stated",
+    "split": "Data ratio 2:3:5 (understanding:text:generation)",
+    "source": "DeepSeek-LLM text corpus; WikiHow [39]; WIT [72]; DeepSeek-VL table/chart [55]; various caption sets",
+    "preprocessing": "captions as QA pairs; for [38,70] filtered by aesthetic score and image size leaving 20%; first sentence of caption used with 25% probability; gen format <caption><image>"
+   },
+   {
+    "name": "Stage III instruction tuning mixture",
+    "role": "train",
+    "size": "generation includes 4M in-house; other sizes not stated",
+    "split": "Data ratio 7:3:10",
+    "source": "text [43]; understanding [31,34,35,43,56,69]; generation [17,60,70] plus in-house",
+    "preprocessing": "format 'User:<Input Message> \\n Assistant: <Response>', loss on answers only"
+   },
+   {
+    "name": "MSCOCO-30K",
+    "role": "eval",
+    "size": "30K",
+    "split": null,
+    "source": "[11]",
+    "preprocessing": null
+   },
+   {
+    "name": "MJHQ-30K",
+    "role": "eval",
+    "size": "30K",
+    "split": null,
+    "source": "[44]",
+    "preprocessing": null
+   },
+   {
+    "name": "GenEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "[30]",
+    "preprocessing": null
+   },
+   {
+    "name": "VQAv2, GQA, POPE, MME, SEED, MMBench, MM-Vet, MMMU",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "[31,35,48,25,42,54,90,91]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Janus",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "decoder-only autoregressive transformer with SigLIP understanding encoder, VQ generation encoder, MLP adaptors, text head and randomly initialised image head",
+    "init_from": "DeepSeek-LLM (1.3B)",
+    "tokenizer": "LLM built-in tokenizer for text; VQ tokenizer from LlamaGen [73] for images",
+    "vocab": "image codebook 16,384",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 max supported sequence length",
+    "other": {
+     "understanding_encoder": "SigLIP-Large-Patch16-384",
+     "gen_downsample": "16x",
+     "adaptors": "two-layer MLPs",
+     "image_size": "384x384"
+    }
+   },
+   {
+    "name": "Semantic tokenizer (ablation only)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LlamaGen-style tokenizer with CNN encoder, VQ, extra 12-layer ViT semantic decoder (12 heads, hidden 768, causal mask) plus pixel decoder",
+    "init_from": "trained from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 (semantic decoder)",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Show-o, LWM, VILA-U, Chameleon, SDXL, DALL-E 2, LLaVA-v1.5 and others",
+    "role": "baseline",
+    "params": "see Tables 2-4",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy L = -sum log P(x_i|x_<i); loss on text tokens for understanding, on image tokens only for generation; no per-task loss weights",
+   "optimizer": "AdamW (beta1 = 0.9, beta2 = 0.95)",
+   "lr": "Stage 1: 1.0e-3; Stage 2: 1e-4; Stage 3: 2.0e-5",
+   "lr_schedule": "Stage 1 cosine; Stage 2 constant; Stage 3 constant",
+   "warmup": "300 / 5,000 / 0 steps (stages 1/2/3)",
+   "batch_size": "256 / 512 / 256 (stages 1/2/3)",
+   "steps": "10,000 / 180,000 / 24,000 (stages 1/2/3)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "4096 maximum supported; sequence packing used",
+   "precision": null,
+   "weight_decay": "0.0 / 0.0 / 0.1 (stages 1/2/3)",
+   "dropout": null,
+   "regularisation": "gradient clip 1.0 in all stages; text condition replaced by pad token with 10% probability for CFG",
+   "hardware": "16 nodes, each 8 Nvidia A100 (40GB) GPUs",
+   "compute": "inferred: 128 A100-40GB for 7 days",
+   "wall_clock": "7 days",
+   "seeds": null,
+   "other": {
+    "frozen": "Stage I: encoders and LLM frozen, train understanding adaptor, generation adaptor, image head; Stage II: LLM unfrozen; Stage III: all but generation encoder fine-tuned",
+    "framework": "HAI-LLM on PyTorch",
+    "stage2_imagenet": "ImageNet samples only in first 120K steps, other generation data in later 60K",
+    "semantic_tokenizer_training": "40 epochs ImageNet-1k then 1 epoch on 50 million images, constant lr 1e-4, batch 128, semantic loss weight 0.25 (BEiT-v2 cosine loss, SigLIP-Large-Patch16-384 teacher)",
+    "ablation_training_budget": "not stated; whether ablation runs use the full schedule is unclear"
+   }
+  },
+  "inference": {
+   "decoding": "text: standard sampling from predicted distribution; image: next-token prediction with classifier-free guidance",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "understanding data format as in Stage III chat template",
+   "retrieval": null,
+   "parameters": {
+    "cfg_formula": "l_g = l_u + s(l_c - l_u)",
+    "cfg_scale_s": "5 (default for evaluation)"
+   },
+   "other": {
+    "image_resolution": "384x384"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "POPE",
+     "definition": "object hallucination benchmark",
+     "unit": "accuracy %",
+     "higher_is_better": true
+    },
+    {
+     "name": "MME-P, MMBench, SEED, VQAv2, GQA, MMMU, MM-Vet",
+     "definition": "standard VLM benchmarks",
+     "unit": "as printed",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID on MSCOCO-30K / MJHQ-30K",
+     "definition": "Frechet Inception Distance of generated images versus 30K high-quality images",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "GenEval overall",
+     "definition": "instance-level compositional text-to-image benchmark (single obj, two obj, counting, colors, position, color attribute)",
+     "unit": "fraction (0-1), also quoted as %",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Show-o",
+    "LWM",
+    "VILA-U",
+    "Chameleon",
+    "Emu3",
+    "LLaVA-v1.5",
+    "Qwen-VL-Chat",
+    "SDXL",
+    "DALL-E 2",
+    "LlamaGen",
+    "PixArt-alpha"
+   ],
+   "protocol": "Single reported numbers, no seeds, variance or significance tests stated; baseline numbers appear taken from other papers."
+  },
+  "availability": {
+   "code": "https://github.com/deepseek-ai/Janus",
+   "weights": null,
+   "data": "in-house data (2M gen stage II, 4M gen stage III) not released as stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.cfg_scale_s",
+    "quote": "The default number of 𝑠is 5 for the following evaluation.",
+    "where": "Sec 3.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Janus 1.3B scores 87.0 on POPE, 69.4 MMBench and 63.7 SEED, above LLaVA-v1.5 7B and Qwen-VL-Chat 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "POPE",
+   "value": 87.0,
+   "unit": "accuracy %",
+   "baseline_value": "85.9 (LLaVA-v1.5 7B)",
+   "n": null,
+   "setup": "Janus 1.3B, final model after 3 stages, Table 2",
+   "quote": "Janus (1.3B) achieved scores of 69.4, 63.7, and 87.0, respectively, outperforming LLaVA-v1.5 (7B) [50] and Qwen-VL-Chat (7B) [3]",
+   "table": null,
+   "note": "Paper text lists MMBench, SEED, POPE; Qwen-VL-Chat has no POPE entry in Table 2.",
+   "where": "Sec 1; Table 2"
+  },
+  {
+   "claim": "Ablation: a single VQ tokenizer for both understanding and generation (Exp-A) drops POPE to 60.1 versus 87.0 for decoupled SigLIP + VQ (Exp-D).",
+   "kind": "measured",
+   "source": null,
+   "metric": "POPE",
+   "value": 60.1,
+   "unit": "accuracy %",
+   "baseline_value": 87.0,
+   "n": null,
+   "setup": "Table 5 ablation, 1.3B Janus architecture, Exp-A shared VQ tokenizer trained on Und.+Gen. versus Exp-D SigLIP+VQ Und.+Gen.; ablation training schedule not stated",
+   "quote": null,
+   "table": "Table 5, row A (VQ Tokenizer, Und. + Gen.), column POPE 60.1; row D 87.0",
+   "note": "Exp-A MMB 35.0, SEED 34.9, MMMU 24.7, COCO-FID 8.72; Exp-D MMB 69.4, SEED 63.7, MMMU 30.5, FID 8.53.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "A stronger semantic tokenizer (Exp-B) with a shared encoder gets POPE 82.4 and COCO-FID 7.11, still below decoupled on understanding but better on FID.",
+   "kind": "measured",
+   "source": null,
+   "metric": "POPE",
+   "value": 82.4,
+   "unit": "accuracy %",
+   "baseline_value": 87.0,
+   "n": null,
+   "setup": "Table 5 row B, SigLIP-distilled semantic tokenizer, Und.+Gen.",
+   "quote": null,
+   "table": "Table 5, row B (SE. Tokenizer, Und. + Gen.), column POPE 82.4",
+   "note": "COCO-FID 7.11 for B versus 8.53 for D; authors hypothesise more coherent semantic IDs and a much larger encoder.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Training the semantic-tokenizer model on understanding only (Exp-C) beats the shared Und.+Gen. version (Exp-B) on understanding, which the authors read as a trade-off in a single encoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "POPE",
+   "value": 83.9,
+   "unit": "accuracy %",
+   "baseline_value": 82.4,
+   "n": null,
+   "setup": "Table 5 row C vs row B",
+   "quote": null,
+   "table": "Table 5, row C (SE. Tokenizer, Und.), column POPE 83.9",
+   "note": "MMB 62.1 vs 52.7; SEED 60.8 vs 54.9.",
+   "where": "Table 5; Sec 4.5"
+  },
+  {
+   "claim": "Unified training of decoupled Janus is comparable to understanding-only or generation-only training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "POPE / COCO-FID",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5 rows D vs E (POPE 87.0 vs 85.9, MMB 69.4 vs 70.6) and D vs F (FID 8.53 vs 8.92)",
+   "quote": "Experimental results show that the performance of unified training is comparable to that of training solely for understanding or solely for visual generation.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "Janus gets 61% overall on GenEval, above Show-o (53%), SDXL (55%) and DALL-E 2 (52%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GenEval overall",
+   "value": 0.61,
+   "unit": "fraction",
+   "baseline_value": 0.53,
+   "n": null,
+   "setup": "Janus 1.3B, 384x384 output, CFG scale 5; baseline numbers as printed in Table 3",
+   "quote": "our Janus obtains 61% overall accuracy on GenEval, which outperforms the previous best unified model Show-o (53%) and some popular generation-only methods, e.g., SDXL (55%) and DALL-E 2 (52%)",
+   "table": null,
+   "note": "Position 0.46 and color attribute 0.42 are Janus's strongest gains over Show-o (0.11, 0.28); counting 0.30 is lower than Show-o 0.49.",
+   "where": "Sec 4.4; Table 3"
+  },
+  {
+   "claim": "Janus FID is 8.53 on COCO-30K and 10.10 on MJHQ-30K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 8.53,
+   "unit": "FID",
+   "baseline_value": 9.24,
+   "n": "30K images",
+   "setup": "Janus 1.3B, CFG 5; baseline Show-o 9.24 on COCO-30K, 15.18 on MJHQ-30K",
+   "quote": "Janus achieves FIDs of 8.53 and 10.10 on the COCO-30K and MJHQ-30K benchmarks, respectively",
+   "table": null,
+   "note": "VILA-U (384) has 7.69 on MJHQ-30K, better than Janus 10.10; PixArt-alpha 7.32 on COCO-30K also better.",
+   "where": "Sec 4.4; Table 4"
+  },
+  {
+   "claim": "Janus improves MME from 949 to 1338 (41%) and GQA from 48.7 to 59.1 (30%) over Show-o.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MME-P",
+   "value": 1338,
+   "unit": "score",
+   "baseline_value": 948.4,
+   "n": null,
+   "setup": "Table 2, Janus 1.3B vs Show-o 1.3B",
+   "quote": "we achieve performance improvements of 41% (949 →1338) and 30% (48.7 →59.1) on the MME and GQA datasets, respectively",
+   "table": null,
+   "note": "Table 2 prints Show-o MME-P as 948.4, text prints 949.",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Full training took 7 days on 16 nodes of 8 A100 40GB GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": 7,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole three-stage training of Janus 1.3B",
+   "quote": "The whole training process took 7 days on a cluster of 16 nodes, each equipped with 8 Nvidia A100 (40GB) GPUs.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Janus applies classifier-free guidance to logits with default scale 5; text condition was dropped with 10% probability in training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CFG scale",
+   "value": 5,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Image generation inference, l_g = l_u + s(l_c - l_u)",
+   "quote": "The default number of 𝑠is 5 for the following evaluation.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Despite English-only text-to-image training data, Janus generates from prompts in other languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative, Fig 8, Chinese/French/Japanese/emoji prompts",
+   "quote": "despite our training data consisting solely of English text-to-image data, Janus can still process text-to-image tasks in other languages",
+   "table": null,
+   "note": "Qualitative only.",
+   "where": "Appendix B"
+  }
+ ],
+ "limits": [
+  "Only 384x384 resolution; Fig 4 compares against SDXL at 1024 and LlamaGen at 512.",
+  "Ablation training budgets and sizes are not stated; each ablation is a single run with no variance.",
+  "Baseline numbers are taken from other papers; training and in-house data are not released.",
+  "Semantic tokenizer used only in ablation; Exp-B beats Janus on FID, which the authors attribute to semantic IDs and a larger encoder (hypothesis, untested).",
+  "Understanding benchmarks lag larger models on several columns (e.g. LLaVA-v1.5 7B has higher MME-P 1510.7, GQA 62.0, VQAv2 78.5).",
+  "Qualitative meme comparisons are cherry-picked examples, no systematic evaluation.",
+  "No limitations section; authors list possible extensions (stronger encoders, higher resolution, diffusion loss, more modalities) but do not test them."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Chameleon",
+   "year": 2024,
+   "arxiv": "2405.09818",
+   "relation": "contradicts",
+   "note": "Single VQ tokenizer for both tasks; Janus ablation Exp-A follows this and shows poor understanding",
+   "quote": "Following previous work [77], we select a VQ tokenizer [73] to encode images for both multimodal understanding and generation tasks, serving as the baseline (Exp-A)."
+  },
+  {
+   "work": "LlamaGen (Autoregressive Model Beats Diffusion)",
+   "year": 2024,
+   "arxiv": "2406.06525",
+   "relation": "uses-method",
+   "note": "VQ tokenizer and CFG recipe",
+   "quote": null
+  },
+  {
+   "work": "SigLIP",
+   "year": 2023,
+   "arxiv": "2303.15343",
+   "relation": "uses-method",
+   "note": "Understanding encoder SigLIP-Large-Patch16-384",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-LLM",
+   "year": 2024,
+   "arxiv": "2401.02954",
+   "relation": "uses-method",
+   "note": "1.3B base language model",
+   "quote": null
+  },
+  {
+   "work": "Show-o",
+   "year": 2024,
+   "arxiv": "2408.12528",
+   "relation": "baseline",
+   "note": "Previous best unified model",
+   "quote": null
+  },
+  {
+   "work": "VILA-U",
+   "year": 2024,
+   "arxiv": "2409.04429",
+   "relation": "baseline",
+   "note": "Semantic tokenizer is similar to this",
+   "quote": null
+  },
+  {
+   "work": "PixArt-alpha",
+   "year": 2023,
+   "arxiv": "2310.00426",
+   "relation": "uses-method",
+   "note": "ImageNet-first training curriculum",
+   "quote": null
+  },
+  {
+   "work": "ShareGPT4V",
+   "year": 2023,
+   "arxiv": "2311.12793",
+   "relation": "uses-data",
+   "note": "Stage I data",
+   "quote": null
+  },
+  {
+   "work": "GenEval",
+   "year": 2023,
+   "arxiv": "2310.11513",
+   "relation": "evaluates",
+   "note": "Compositional T2I benchmark",
+   "quote": null
+  },
+  {
+   "work": "LLaVA-v1.5",
+   "year": 2023,
+   "arxiv": "2310.03744",
+   "relation": "baseline",
+   "note": "7B understanding baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Architecture of our Janus. ... decouples visual encoding for visual understanding and visual generation.",
+   "page": 4,
+   "why": "Shows two encoders and adaptors into one transformer with separate text and image heads."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Our Janus adopts a three-stage training procedure.",
+   "page": 5,
+   "why": "Shows which modules are frozen/trained in each stage."
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Ablation studies. We verify the effectiveness of decoupling visual encoding and compare unified training with task-specific training.",
+   "page": 10,
+   "why": "Core evidence for decoupling."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Architecture and usage of the semantic tokenizer.",
+   "page": 14,
+   "why": "Explains the ablation baseline Exp-B."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.4",
+   "snippet": "l_g = l_u + s(l_c - l_u)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure text in cached extraction is scrambled for figures; table cells read column by column. No embedded instructions found."
+ ]
+}

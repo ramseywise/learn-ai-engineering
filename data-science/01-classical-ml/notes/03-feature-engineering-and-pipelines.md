@@ -8,7 +8,6 @@ sources:
   - https://arxiv.org/abs/1201.0490
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 6-7
   - McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 13
-  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016), ch. 4
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -313,29 +312,15 @@ A person who knows bikes are rented on commutes and weekends writes `X_hour_week
 
 ## Text as features
 
-Text becomes a feature matrix the same way a category does: a vectoriser learns a vocabulary from the training split and turns each document into counts (bag of words) or tf-idf weights. That makes it a fitted step, so it belongs in the pipeline. On the 25,000-review IMDb training set M&G get a 25,000 × 74,849 count matrix; logistic regression scores 0.88 mean 5-fold accuracy untuned and 0.89 with `C` tuned (test 0.88). Dropping words seen in fewer than five documents (`min_df=5`) cuts the vocabulary to 27,271 columns with no change in CV score; the built-in 318-word stopword list removes only 305 of them and lowers CV accuracy to 0.88. Bigrams are where the gain is:
+Text becomes a feature matrix the same way a category does: a vectoriser learns a vocabulary from the training split and turns each document into counts (bag of words) or tf-idf weights. That makes it a fitted step, so it belongs in the pipeline: `make_pipeline(TfidfVectorizer(min_df=5), LogisticRegression(max_iter=1000))`. Cross-validating on pre-vectorised data is safe only for a plain `CountVectorizer`, which learns nothing but the vocabulary. tf-idf learns document frequencies as well, so it leaks unless the vectoriser is inside the pipeline.
 
-```python
-pipe = make_pipeline(TfidfVectorizer(min_df=5), LogisticRegression(max_iter=1000))
-grid = {"logisticregression__C": [0.001, 0.01, 0.1, 1, 10, 100],
-        "tfidfvectorizer__ngram_range": [(1, 1), (1, 2), (1, 3)]}
-GridSearchCV(pipe, grid, cv=5).fit(texts_train, y_train)
-```
-
-The book's best setting is `ngram_range=(1, 3)` with `C=100` at 0.91 CV accuracy, up from 0.89, and its heat map shows bigrams carry most of the gain and trigrams little (*Introduction to ML with Python*, ch. 7, "Bag-of-words with more than one word"). All figures are one dataset, one classifier and two-decimal scores, so the 0.88 against 0.89 differences between `min_df`, stopwords and tf-idf are not distinguishable. The chapter also notes that cross-validating on pre-vectorised data is safe only because plain `CountVectorizer` learns no statistics beyond the vocabulary; tf-idf does, so use a pipeline. Lemmatisation, topic models and embeddings are covered in the [NLP pillar](../../03-nlp/README.md).
-
-The same point is the organising idea of Sarkar's text-classification blueprint: normalisation and feature extraction are one shared path that training documents and new documents both go through, so that the model sees consistent inputs. The book is explicit that a fitted extractor (its TF-IDF or word-vector builder) is built once on the training documents and then reused on the documents to predict, not rebuilt from them (*Text Analytics with Python*, ch. 4, Fig. 4-2). In scikit-learn that is `fit` on the training split and `transform` afterwards, which a pipeline enforces.
-
-![Blueprint for a text classifier: training and prediction rows share the same text-normalisation and feature-extraction boxes, with the trained classification model carried from the training row into the prediction row](../../sources/images/sarkar-text-analytics-fig4-2.png)
-*Image Source: Sarkar, *Text Analytics with Python* (Apress, 2016), Fig. 4-2*
-
-What the features were worth is in the book's 20 Newsgroups run: about 18,000 posts in 20 classes, a 33% test split with `random_state=42`, normalised text, default hyperparameters, one run, weighted-average scores. Accuracy was 0.67 for multinomial naive Bayes and 0.61 for a linear SVM (hinge-loss SGD) on counts, 0.72 and 0.77 on TF-IDF, and for the SVM only 0.55 on averaged word2vec vectors and 0.53 on TF-IDF-weighted averages (*Text Analytics with Python*, ch. 4). So TF-IDF beat raw counts for both classifiers and beat averaged embeddings by 22 points here, but there is no repeat or tuning, so read the ranking as one split, not a law. The text says a 30% test split where the code uses 33%.
+What the vectoriser settings are worth is measured in the NLP pillar: [Text representation](../../03-nlp/notes/01-text-representation.md) covers counts, tf-idf, n-grams and `min_df`, and [Text classification](../../03-nlp/notes/02-text-classification.md) runs the IMDb and 20 Newsgroups comparisons. Lemmatisation, topic models and embeddings are there too.
 
 ---
 
 ## Leakage and why pipelines exist
 
-The classic bug (M&G ch. 6):
+The classic bug (M&G ch. 6). The code uses `GridSearchCV` and 5-fold cross-validation, which [note 04](04-model-evaluation.md#cross-validation) defines properly. For now, read `cv=5` as "score each setting on five held-out slices of the training split":
 
 ```python
 from sklearn.model_selection import GridSearchCV
@@ -377,7 +362,7 @@ select, then CV: 0.89
 CV the pipeline: -0.03
 ```
 
-The correct answer is that there is no signal, and a score below zero says so. Selecting outside the loop reported a strong model on random numbers. The book's run of the same recipe (100 × 10,000 Gaussian noise, `SelectPercentile` at 5%, ridge, 5-fold) gets 0.91 outside the loop and −0.25 inside a `Pipeline` (*Introduction to ML with Python*, ch. 6, "Information leakage"). The book is candid that the scaler version of the bug is usually mild: on breast cancer, scaling outside the loop reports CV 0.98 against 0.97 test, and the pipeline gives the same 0.97 test score and the same best `C` and `gamma`. Leakage through selection or feature extraction, which learns from the target or from structure in the data, is the one that can be large.
+The correct answer is that there is no signal, and a score below zero says so. Selecting outside the loop reported a strong model on random numbers. The same trap in classical regression is covered in [data analytics 02/06](../../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md#choosing-variables-without-fooling-yourself). Repeated over ten noise datasets (seed 42 and nine more), selection outside the loop gives a mean R² of 0.90 and the pipeline gives −0.10 ([`practice/leaky_selection.py`](../practice/leaky_selection.py)), and the pipeline's score is below zero every time. The book's run of the same recipe (100 × 10,000 Gaussian noise, `SelectPercentile` at 5%, ridge, 5-fold) gets 0.91 outside the loop and −0.25 inside a `Pipeline` (*Introduction to ML with Python*, ch. 6, "Information leakage"). The book is candid that the scaler version of the bug is usually mild: on breast cancer, scaling outside the loop reports CV 0.98 against 0.97 test, and the pipeline gives the same 0.97 test score and the same best `C` and `gamma`. Leakage through selection or feature extraction, which learns from the target or from structure in the data, is the one that can be large.
 
 **Rule:** any step with a `fit` (scaling, imputation, encoding, selection, PCA, target encoding, vectorising text) must be refit inside each fold. A `Pipeline` does that for you. Resampling is the same kind of step: in [note 10](10-imbalance-errors-and-drift.md#the-leak-resampling-before-you-split), SMOTE before the split reports a ROC-AUC of 0.98 for a model that truly scores 0.70.
 

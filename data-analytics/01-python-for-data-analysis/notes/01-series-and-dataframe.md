@@ -18,7 +18,7 @@ Everything here was run on pandas 3.1.0 with Python 3.13. That matters more than
 
 ## The problem a DataFrame solves
 
-Start without pandas. The shop's first six orders fit naturally into a list of dictionaries, one dictionary per order. This is the Python you practised in `practice/1_Overview.ipynb`.
+Start without pandas. The shop's first six orders fit naturally into a list of dictionaries, one dictionary per order. This is the Python you practised in `practice/1_Overview.ipynb`, taught in [Python 01 · 05 collections](../../../programming/python/01-foundations/notes/05-collections.md) and [Python 03 · 02 comprehensions](../../../programming/python/03-language-for-engineers/notes/02-generators-and-iteration.md).
 
 ```python
 rows = [

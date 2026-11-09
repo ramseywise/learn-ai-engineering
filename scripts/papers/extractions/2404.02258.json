@@ -1,0 +1,512 @@
+{
+ "schema": 1,
+ "key": "2404.02258",
+ "pdf": "ai-engineering/07-inference-engineering/sources/raposo-2024-mixture-depths.pdf",
+ "bib": {
+  "title": "Mixture-of-Depths: Dynamically allocating compute in transformer-based language models",
+  "authors": [
+   "David Raposo",
+   "Sam Ritter",
+   "Blake Richards",
+   "Timothy Lillicrap",
+   "Peter Conway Humphreys",
+   "Adam Santoro"
+  ],
+  "first_author": "Raposo",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.02258",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 42058,
+  "chars_total": 42058,
+  "engine": "pymupdf",
+  "skipped": "none; the PDF has 14 pages and no appendix (references skimmed)"
+ },
+ "type": "empirical",
+ "question": "Can a transformer learn to dynamically allocate a fixed, smaller compute budget across tokens and layers without losing language-modeling quality?",
+ "hypothesis": "Certain tokens need less processing than others, and a learned router can identify them so that capacity can be cut without hurting performance.",
+ "contributions": [
+  "Top-k expert-choice routing between a block (self-attention + MLP) and a residual path, giving a static graph with known tensor sizes",
+  "isoFLOP analysis showing MoD variants that beat or match the optimal baseline with fewer FLOPs per forward pass",
+  "Two ways to sample autoregressively despite non-causal top-k: auxiliary BCE loss or auxiliary MLP predictor",
+  "Integration with MoE (MoDE), staged and integrated"
+ ],
+ "method": {
+  "summary": "Each routed block has a linear router that emits a scalar per token; the top-k tokens per sequence go through self-attention and MLP, the rest pass via the residual. Block output is scaled by the router weight so the router gets gradients. Trained from scratch at several isoFLOP budgets and compared to isoFLOP-optimal vanilla transformers.",
+  "task": "autoregressive language-model pretraining",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "not stated",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "held-out evaluation set",
+    "role": "eval",
+    "size": "256000 sequences (500M tokens)",
+    "split": "held-out",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "vanilla transformer (isoFLOP-optimal baseline)",
+    "role": "baseline",
+    "params": "220M for the 6e18 optimum (figure 3 model #1)",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {}
+   },
+   {
+    "name": "MoD transformer",
+    "role": "proposed",
+    "params": "60M to 3B swept in isoFLOP analysis; 220M variant (figure 3 model #3) matches baseline",
+    "architecture": "decoder-only transformer, routing every other block, 12.5% capacity (top-k 256 of 2048)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {
+     "capacities_tried": "12.5% to 95%",
+     "routing_frequency_tried": "every block or every other block"
+    }
+   }
+  ],
+  "training": {
+   "objective": "language modeling log probability (plus auxiliary BCE loss or separate predictor for sampling)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": "cosine schedule equal to 1x the training steps",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "TPU (topology unspecified)",
+   "compute": "isoFLOP budgets 6e18, 2e19, 1e20 FLOPs",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "layers_heads_embedding": "varied per model size in isoFLOP analysis; values not given"
+   }
+  },
+  "inference": {
+   "decoding": "autoregressive, routing decided by auxiliary predictor or router sigmoid >0.5 instead of top-k",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "capacity": "12.5% of sequence (k=256 of 2048), routed block every other layer",
+    "aux_loss_cost": "approximately 0.2-0.3% on the LM objective",
+    "predictor": "small MLP, same input as router with stop gradient"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "training loss / log probability",
+     "definition": "final LM objective at fixed isoFLOP budget",
+     "unit": "loss",
+     "higher_is_better": false
+    },
+    {
+     "name": "relative FLOPs per forward pass",
+     "definition": "normalized to isoFLOP-optimal baseline",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "step speed",
+     "definition": "steps per second on equivalent hardware",
+     "unit": "steps/s",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "isoFLOP-optimal vanilla transformer",
+    "stochastic routing (top-k on Gaussian random weights)"
+   ],
+   "protocol": "isoFLOP sweeps; speed in FLOPs per forward pass (stated as tightly correlated with wall-clock); autoregressive eval on 500M held-out tokens. No seeds or significance reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other",
+    "quote": "All models use the same basic hyperparameter configurations (e.g. cosine schedules equal to 1\u00d7 the training steps, 128 batch size, 2048 sequence length)",
+    "where": "3.6"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best MoD config routes every other block at 12.5% capacity (k=256 of 2048 tokens processed, 87.5% skip).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-k",
+   "value": 256,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6e18 FLOP sweep, 2048-token sequences, routing every other block",
+   "quote": "So, 256, or 12.5% of the sequence\u2019s tokens are processed by self-attention and the subsequent",
+   "table": null,
+   "note": null,
+   "where": "Fig 3 caption"
+  },
+  {
+   "claim": "A 220M MoD variant matches/slightly beats the 220M isoFLOP-optimal baseline and steps faster in training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step speedup",
+   "value": 60,
+   "unit": "% faster per training step",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6e18 FLOPs; equal wall-clock to train on equivalent hardware; metric is step speed, not sampling",
+   "quote": "upwards of 60% faster to step",
+   "table": null,
+   "note": "Fig 3 caption says 66% faster; abstract says upwards of 50% faster at post-training sampling",
+   "where": "4.1"
+  },
+  {
+   "claim": "Figure 3 caption gives the 220M MoD step speed-up as 66%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step speedup",
+   "value": 66,
+   "unit": "% faster per step (FLOPs per forward pass)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "model #3 vs isoFLOP optimal baseline, 6e18",
+   "quote": "steps 66% faster",
+   "table": null,
+   "note": null,
+   "where": "Fig 3 caption"
+  },
+  {
+   "claim": "Abstract claims MoD can be upwards of 50% faster to step during post-training sampling; the body supports this only via FLOPs per forward pass.",
+   "kind": "claim",
+   "source": null,
+   "metric": "sampling step speedup",
+   "value": 50,
+   "unit": "% faster at sampling",
+   "baseline_value": null,
+   "n": null,
+   "setup": "abstract; no sampling wall-clock measurement in body",
+   "quote": "can be upwards of 50% faster to step during post-training sampling",
+   "table": null,
+   "note": "Body reports FLOP savings (upwards of 50% fewer FLOPs per forward pass) and relative FLOPs in Fig 4/6, not measured sampling latency",
+   "where": "abstract"
+  },
+  {
+   "claim": "MoD trained isoFLOP improves final log probability objective by up to 1.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "final loss improvement",
+   "value": 1.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "isoFLOP and equal wall-clock vs vanilla",
+   "quote": "by as much as 1.5% on the final log probability training objective",
+   "table": null,
+   "note": null,
+   "where": "1 Introduction"
+  },
+  {
+   "claim": "MoD can reach loss parity with the isoFLOP optimal baseline using a fraction of per-forward-pass FLOPs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLOPs per forward pass reduction",
+   "value": 50,
+   "unit": "% fewer (upwards of)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "per forward pass, loss parity with isoFLOP-optimal vanilla",
+   "quote": "uses a fraction of the FLOPs (upwards of 50%) per forward pass",
+   "table": null,
+   "note": null,
+   "where": "1 Introduction"
+  },
+  {
+   "claim": "isoFLOP analysis ran at three budgets with model sizes 60M to 3B using the 12.5% capacity variant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "isoFLOP budgets",
+   "value": "6e18, 2e19, 1e20",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "12.5% capacity MoD; baseline compared at the same FLOPs",
+   "quote": "for 6e18, 2e19, and 1e20 total FLOPs",
+   "table": null,
+   "note": null,
+   "where": "Fig 4 caption"
+  },
+  {
+   "claim": "Auxiliary BCE loss for causal sampling costs about 0.2-0.3% on the LM objective.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LM objective cost",
+   "value": "0.2-0.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "auxiliary BCE loss on router logits with top-k targets",
+   "quote": "approximately 0.2 \u22120.3%",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "Auxiliary predictor for top-k reaches 99% accuracy quickly (text).",
+   "kind": "measured",
+   "source": null,
+   "metric": "predictor accuracy",
+   "value": 99,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "small auxiliary MLP, stop gradient, trained alongside",
+   "quote": "quickly achieves 99% accuracy",
+   "table": null,
+   "note": "Fig 6 caption says upwards of 97% accurate soon into training",
+   "where": "3.5"
+  },
+  {
+   "claim": "Fig 6 caption: predictor accuracy upwards of 97% soon into training; switching to predictor routing gives minimal degradation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "predictor accuracy",
+   "value": 97,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "autoregressive evaluation, 256000 held-out sequences (500M tokens)",
+   "quote": "upwards of 97% accurate soon into training",
+   "table": null,
+   "note": "Text of 3.5 says 99%",
+   "where": "Fig 6 caption"
+  },
+  {
+   "claim": "Optimal MoD uses as many FLOPs per forward pass as the isoFLOP-optimal baseline, and is bigger.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4, 12.5% capacity MoD",
+   "quote": "the optimal MoD transformer is that which uses as many FLOPs per forward pass as the isoFLOP optimal baseline",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "Stochastic routing performs drastically worse than baseline and learned MoD.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "top-k on Gaussian router weights",
+   "quote": "perform drastically worse",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "Routing every other block was crucial; capacity reduction helped down to 12.5% then degraded.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "capacities 12.5% to 95%",
+   "quote": "gradual improvements were observed when reducing the",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "Self-attention QK FLOPs at capacity T/2 are 25% of vanilla.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "QK FLOPs fraction",
+   "value": 25,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "capacity T/2",
+   "quote": "becomes 25% as FLOP-intensive as in a vanilla transformer",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  }
+ ],
+ "limits": [
+  "Dataset, tokenizer, optimizer, learning rate, layers/hidden sizes and training tokens are not stated, so the run cannot be reproduced.",
+  "Speed-ups are expressed as FLOPs per forward pass and training step speed; no wall-clock measurement of autoregressive sampling latency is reported despite the abstract's sampling claim.",
+  "Predictor accuracy is quoted as 99% in text and 97% in Fig 6 caption; no per-layer breakdown.",
+  "Memory/KV-cache savings are anticipated but 'not studied extensively'.",
+  "Only decoder-only models up to 3B parameters, no downstream task evaluation, no seeds or error bars.",
+  "Preliminary entropy correlation of routing is only suggestive."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "capacity",
+   "definition": "the total number of tokens that comprise the input to a given computation",
+   "where": "3.1"
+  },
+  {
+   "term": "expert-choice routing",
+   "definition": "each path chooses the top-k tokens based on the tokens' preferences",
+   "where": "3.3"
+  },
+  {
+   "term": "MoDE",
+   "definition": "Mixture-of-Depths-and-Experts, MoD combined with MoE, staged or integrated",
+   "where": "4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Switch Transformers / expert-choice MoE (Fedus et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "routing logic borrowed from MoE; MoD uses one skippable expert",
+   "quote": null
+  },
+  {
+   "work": "Shazeer et al. sparsely-gated MoE",
+   "year": 2017,
+   "arxiv": "1701.06538",
+   "relation": "related",
+   "note": "MoE layer",
+   "quote": null
+  },
+  {
+   "work": "CoLT5 (Ainslie et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "conditional routing in encoder-decoder, soft top-k, no causal decoding problem",
+   "quote": null
+  },
+  {
+   "work": "Early exit: Elbayad et al., Schuster et al. (CALM)",
+   "year": 2019,
+   "arxiv": "1910.10073",
+   "relation": "related",
+   "note": "tokens exit and skip remaining layers; MoD tokens can skip middle layers then attend",
+   "quote": null
+  },
+  {
+   "work": "Universal Transformers (Dehghani et al.)",
+   "year": 2018,
+   "arxiv": "1807.03819",
+   "relation": "related",
+   "note": "adaptive depth with shared weights",
+   "quote": null
+  },
+  {
+   "work": "Adaptive Computation Time (Graves)",
+   "year": 2016,
+   "arxiv": "1603.08983",
+   "relation": "related",
+   "note": "dynamic computation graphs",
+   "quote": null
+  },
+  {
+   "work": "Token merging (Bolya et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ViT inference-only token reduction",
+   "quote": null
+  },
+  {
+   "work": "Conditional adapters (Lei et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "skip frozen blocks in fine-tuning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Mixture-of-Depths Transformer: router chooses block or residual",
+   "page": 3,
+   "why": "shows routing per block and sparse paths"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "MoD hyperparameter tuning at 6e18 FLOPs",
+   "page": 8,
+   "why": "shows 220M MoD matches baseline, 66% faster step"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "isoFLOP analysis",
+   "page": 9,
+   "why": "shows down-and-right shift and relative FLOPs per forward pass"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Auto-regressive evaluation",
+   "page": 11,
+   "why": "top-k vs predictor routing degradation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, p6",
+   "snippet": "x_i^{l+1} = r_i^l f_i(X~^l) + x_i^l if r_i^l > P_beta(R^l); x_i^l if r_i^l < P_beta(R^l); beta = 1 - C/S",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions. Figure panel data (curves) not readable from text; step speed numbers come from captions/text only."
+ ]
+}

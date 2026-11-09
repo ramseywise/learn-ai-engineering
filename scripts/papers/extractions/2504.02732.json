@@ -1,0 +1,615 @@
+{
+ "schema": 1,
+ "key": "2504.02732",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/barbero-2025-why-do-llms-attend-first.pdf",
+ "bib": {
+  "title": "Why do LLMs attend to the first token?",
+  "authors": [
+   "Federico Barbero",
+   "Álvaro Arroyo",
+   "Xiangming Gu",
+   "Christos Perivolaropoulos",
+   "Michael Bronstein",
+   "Petar Veličković",
+   "Razvan Pascanu"
+  ],
+  "first_author": "Barbero",
+  "year": 2025,
+  "venue": "COLM 2025",
+  "arxiv": "2504.02732",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 60087,
+  "chars_total": 60087,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why do LLMs learn to put heavy attention on the first token (attention sinks) and how does the model use it?",
+ "hypothesis": "Sinks let deep, long-context Transformers avoid over-mixing, so sinks should be stronger in larger models and with longer training context, and should form at the first token whether or not it is bos.",
+ "contributions": [
+  "Argue sinks control over-mixing, linking rank collapse, representational collapse and over-squashing, with Gemma 7B measurements (Sec 3).",
+  "Show bigger models and longer training contexts have stronger sinks, in Llama 3.1 and own pre-training runs (Sec 4).",
+  "Show sinks form regardless of how bos is included in pre-training, but fixing bos changes how the sink is built (Sec 5)."
+ ],
+ "method": {
+  "summary": "Theory (multi-head over-squashing bound, rank vs representational collapse) plus measurements: perturbation tests and head inspection on Gemma 7B, sink-rate on Llama 3.1 8B/70B/405B, and ~120M-parameter models trained from scratch varying context length and packing/masking/bos strategy.",
+  "task": "Mechanistic analysis of attention sinks; next-token pretraining of small LMs for ablations",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Gu et al. probe_valid.jsonl (sink probe set)",
+    "role": "eval",
+    "size": "170 texts",
+    "split": "all 170; sink metric on first T=64 tokens",
+    "source": "github.com/sail-sg/Attention-Sink (Gu et al., 2025)",
+    "preprocessing": null
+   },
+   {
+    "name": "Pre-training corpus of Gu et al. 2025 setup",
+    "role": "pretrain",
+    "size": "30B tokens (packing runs); 5B tokens (context-length runs)",
+    "split": "100 validation sequences (512-2048 tokens) for loss and sink metric",
+    "source": "corpus name not stated in this paper; follows Gu et al. (2025)",
+    "preprocessing": "documents concatenated and chunked to fixed context; bos before and/or eos after each document"
+   },
+   {
+    "name": "ARC-e, ARC-c, PIQA, SIQA, HellaSwag, Winogrande, RULER (4096)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "existing benchmarks",
+    "preprocessing": null
+   },
+   {
+    "name": "Shakespeare paragraph; sum prompts",
+    "role": "eval",
+    "size": "1 paragraph; sums of 5 to 1000 terms",
+    "split": null,
+    "source": "hand-written (App C)",
+    "preprocessing": "perturbed word swap keeps token count constant"
+   }
+  ],
+  "models": [
+   {
+    "name": "Gemma 7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Fig 2 y-axis suggests ~28 layers": "read from Fig 2"
+    }
+   },
+   {
+    "name": "Llama 3.1 8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32",
+    "hidden": null,
+    "heads": "32 per layer, 1,024 total",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama 3.1 70B",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "80",
+    "hidden": null,
+    "heads": "64 per layer, 5,120 total",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama 3.1 405B",
+    "role": "evaluated",
+    "params": "405B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "126",
+    "hidden": null,
+    "heads": "128 per layer, 16,128 total",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-style LM",
+    "role": "proposed",
+    "params": "roughly 120M",
+    "architecture": "LLaMA2-style decoder-only",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128, 256, 512, 1024, 2048 (context ablation); 2048 (packing ablation)",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: next-token prediction (autoregressive loss reported)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "inferred: tokens per step held equal across context lengths; value not stated",
+   "steps": "about 20000 (read from Fig 5/7 x-axis)",
+   "epochs": null,
+   "tokens": "5B (context-length runs); 30B (packing runs)",
+   "seq_len": "128 to 2048",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single NVIDIA H100",
+   "compute": "up to 24 hours per 5B-token run",
+   "wall_clock": "up to 24 hours per 5B-token run",
+   "seeds": null,
+   "other": {
+    "setup": "same as Gu et al. (2025) codebase, MIT licence; other hyperparameters deferred to it"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per condition; no seeds or error bars reported",
+   "prompting": "Sum prompt example: 'Could you add these numbers 10+06+03+10+08'",
+   "retrieval": null,
+   "parameters": {
+    "sink metric epsilon": "0.3 default; 0.8 for Llama 3.1 table/figure",
+    "sink positions T": "64 tokens for Llama probe"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "sink rate / sink metric",
+     "definition": "1/(LH) sum_{h,l} 1[ (1/T) sum_j alpha^{(l,h)}_{1,j} > epsilon ], fraction of heads whose mean attention on first token exceeds epsilon (Gu et al. 2025)",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "validation loss",
+     "definition": "autoregressive loss on 100 validation sequences",
+     "unit": "nats (inferred)",
+     "higher_is_better": false
+    },
+    {
+     "name": "benchmark score",
+     "definition": "not defined",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "with vs without bos at inference",
+    "no-bos vs fixed-bos vs causal vs intra-doc pre-training"
+   ],
+   "protocol": "No repeats, seeds, or significance tests stated."
+  },
+  "availability": {
+   "code": "builds on https://github.com/sail-sg/Attention-Sink (MIT); this paper's own code not stated",
+   "weights": null,
+   "data": "probe set at Attention-Sink repo"
+  },
+  "prompts": [
+   {
+    "purpose": "Perturbation test, original vs perturbed (greatest -> best)",
+    "text": "William Shakespeare[a] (c. 23[b] April 1564, 23 April 1616)[c] was an English playwright, poet and actor. He is widely regarded as the greatest writer in the English language ...",
+    "where": "App C.1"
+   },
+   {
+    "purpose": "smoothing/sum prompt",
+    "text": "Could you add these numbers 10+06+03+10+08",
+    "where": "App C.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "a single training run on 5B tokens takes up to 24 hours depending on the experimental setup on a single NVIDIA H100",
+    "where": "App A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Share of Llama 3.1 heads whose mean attention on bos exceeds 0.8 rises with model size (8B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "sink rate (epsilon=0.8)",
+   "value": "45.97",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.1 8B (32 layers x 32 heads), sink metric with epsilon=0.8, 170 probe prompts from Gu et al., first T=64 tokens",
+   "note": null,
+   "where": "Sec 4.2, Table 1; App C.3",
+   "table": "Table 1, row LLaMA 3.1 8B, column Sink Metric (epsilon = 0.8)"
+  },
+  {
+   "claim": "Same metric at 70B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sink rate (epsilon=0.8)",
+   "value": "73.49",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.1 70B (80 layers x 64 heads), epsilon=0.8, 170 prompts, first 64 tokens",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row LLaMA 3.1 70B, column Sink Metric (epsilon = 0.8)"
+  },
+  {
+   "claim": "Same metric at 405B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sink rate (epsilon=0.8)",
+   "value": "78.29",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.1 405B (126 layers x 128 heads), epsilon=0.8, 170 prompts, first 64 tokens",
+   "note": "Intro says 'a staggering 80% of attention heads form strong sinks' (rounded from 78.29) and 'almost 80% of the attention is concentrated on the bos token' in a typical Llama 405B prompt; the two are different quantities.",
+   "where": "Table 1",
+   "table": "Table 1, row LLaMA 3.1 405B, column Sink Metric (epsilon = 0.8)"
+  },
+  {
+   "claim": "Removing bos from Gemma 7B at inference drops RULER (4096 context) to zero.",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark score",
+   "value": "82.57 to 0.00",
+   "unit": "score",
+   "baseline_value": "82.57",
+   "n": null,
+   "setup": "Gemma 7B, inference only, bos kept vs removed; metric scale and shot settings not stated",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Ruler (4096 context), columns w/ bos and w/o bos"
+  },
+  {
+   "claim": "Removing bos from Gemma 7B drops HellaSwag.",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark score",
+   "value": "80.61 to 27.35",
+   "unit": "score",
+   "baseline_value": "80.61",
+   "n": null,
+   "setup": "Gemma 7B, bos kept vs removed at inference; eval protocol not stated",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HellaSwag, columns w/ bos and w/o bos"
+  },
+  {
+   "claim": "Other Gemma 7B benchmarks without bos (ARC-e, ARC-c, PIQA, SIQA, Winogrande) all fall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark score",
+   "value": "28.49; 22.53; 52.77; 34.70; 49.41",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma 7B without bos; with bos 80.77, 53.50, 81.72, 48.26, 72.85",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows ARC-e 80.77/28.49, ARC-c 53.50/22.53, PIQA 81.72/52.77, SIQA 48.26/34.70, Winogrande 72.85/49.41"
+  },
+  {
+   "claim": "120M model trained with causal masking and bos only as document boundary (no fixed bos) forms a sink at the first token whether or not bos is given at inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sink metric",
+   "value": "65.10 vs 65.15",
+   "unit": "% sink metric",
+   "baseline_value": null,
+   "n": null,
+   "setup": "120M LLaMA2-style, 30B tokens, context 2048, causal masking, eos used, no fixed bos; 100 validation sequences; epsilon default 0.3 (not restated for this table)",
+   "note": "Valid loss 2.69 vs 2.70.",
+   "where": "Table 2",
+   "table": "Table 2, rows Causal / No bos / Yes eos, Inference bos*+text and text, column Sink Metric (%)"
+  },
+  {
+   "claim": "Model trained with fixed bos in first position loses the sink and breaks when bos is removed at inference (causal).",
+   "kind": "measured",
+   "source": null,
+   "metric": "sink metric, validation loss",
+   "value": "90.84 to 0.05 sink; loss 2.69 to 7.56",
+   "unit": "% sink / loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "120M, 30B tokens, context 2048, causal masking + fixed bos",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Causal+fixed bos, Inference bos+text vs text, columns Sink Metric (%), Valid loss"
+  },
+  {
+   "claim": "Same with intra-document masking + fixed bos.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90.56 to 0.00 sink; loss 2.67 to 7.78",
+   "unit": "% sink / loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "120M, 30B tokens, context 2048, intra-doc masking + fixed bos",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Intra-doc + fixed bos, columns Sink Metric (%), Valid loss"
+  },
+  {
+   "claim": "Intra-doc masking without fixed bos: sink still forms on first token without bos but weaker.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "83.33 with bos vs 50.24 without (trained with bos); 28.23 trained without bos",
+   "unit": "% sink metric",
+   "baseline_value": null,
+   "n": null,
+   "setup": "120M, intra-doc masking, 30B tokens",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Intra-doc (28.23, 83.33, 50.24)"
+  },
+  {
+   "claim": "Sink strength grows with pre-training context length; nearly absent at context 128.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sink metric",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "~120M LLaMA2-style models, contexts 128 to 2048, equal tokens per step, 5B tokens total, ~20000 steps; values read only from Fig 5 (no numbers in text)",
+   "note": "Appendix A.2 says 'training loss curves' for Fig 7, but panel (b) is loss and the caption calls them validation-style curves; main text calls them validation loss curves.",
+   "where": "Sec 4.1, Fig 5, App A.2",
+   "quote": "essentially no sink formation at a context length of 128 and much stronger formation for the longer contexts"
+  },
+  {
+   "claim": "Mean attention weight on first token rises under bos: in a typical prompt in Llama 405B almost 80% of attention goes to bos.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "almost 80",
+   "unit": "% of attention",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.1 405B, typical prompt; details only said to be in Section 4.2 which gives no separate figure",
+   "note": null,
+   "where": "Intro",
+   "quote": "almost 80% of the attention is concentrated on the ⟨bos⟩token"
+  },
+  {
+   "claim": "Theorem 3.2 bounds token-to-token sensitivity by C_max^L times a sum over causal paths of head-summed attention coefficients, so mass on a low-value sink limits the spread of perturbations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Proof assumes queries/keys independent of values and does not differentiate through softmax; submultiplicative induced norms",
+   "note": null,
+   "where": "Sec 3.1, App D"
+  },
+  {
+   "claim": "Rank collapse (distance to mean < Delta/2) implies representational collapse (< Delta); converse not true.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Proposition 3.1, proved in App D",
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Perturbing one token ('greatest' to 'best') spreads much more through Gemma 7B layers when bos is removed.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perturbation of representations",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Gemma 7B, one Shakespeare paragraph, token count held constant; qualitative heatmap, Fig 2",
+   "note": "No numeric summary; colour bar to ~1600",
+   "where": "Sec 3.2, Fig 2"
+  },
+  {
+   "claim": "A first-layer Gemma 7B head attends to bos by default and fires on apostrophe; the bos value norm is smallest, giving an approximate no-op.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Gemma 7B, one head, one 23-token example, Fig 4",
+   "note": null,
+   "where": "Sec 3.2"
+  }
+ ],
+ "limits": [
+  "Bounds assume queries and keys independent of values and skip the softmax derivative.",
+  "Gemma 7B benchmark drops (Table 3) conflate sinks with a missing, out-of-distribution bos; the paper's own Table 2 shows models without a fixed bos do not need bos.",
+  "Hardware/optimizer/lr/seeds of the 120M runs deferred to Gu et al.; no repeats or error bars.",
+  "Authors suspect longer training would sharpen sinks; 5B tokens only.",
+  "Footnote: mechanisms eventually disperse at longer context per Velickovic et al. 2024.",
+  "Evidence is correlational: shown consistent with over-mixing, not shown causal.",
+  "Appendix B text refers to Figure 4 where Figure 9 is meant."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "attention sink",
+   "definition": "tokens that, although likely to have limited semantic meaning, attract a large portion of the attention within an attention head",
+   "where": "Sec 2"
+  },
+  {
+   "term": "rank collapse",
+   "definition": "||V(L) - (1/n)11^T V(L)||_F < Delta",
+   "where": "Eq 1"
+  },
+  {
+   "term": "representational collapse",
+   "definition": "||v_n(L) - v_{n-1}(L)||_2 < Delta for repeated final tokens as prefix grows",
+   "where": "Eq 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "When attention sink emerges in language models",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sink metric, pretraining setup, probe data and codebase (Gu et al.)",
+   "quote": null
+  },
+  {
+   "work": "Efficient streaming language models with attention sinks",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "coined 'attention sink' (Xiao et al.)",
+   "quote": null
+  },
+  {
+   "work": "Transformers need glasses!",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "over-squashing bounds extended to multi-head (Barbero et al.)",
+   "quote": null
+  },
+  {
+   "work": "softmax is not enough (for sharp out-of-distribution)",
+   "year": 2024,
+   "arxiv": "2410.01104",
+   "relation": "related",
+   "note": "attention disperses with length",
+   "quote": null
+  },
+  {
+   "work": "Round and round we go! (RoPE)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "apostrophe head in Gemma 7B",
+   "quote": null
+  },
+  {
+   "work": "Active-dormant attention heads",
+   "year": 2024,
+   "arxiv": "2410.13835",
+   "relation": "related",
+   "note": "Bigram-Backcopy task",
+   "quote": null
+  },
+  {
+   "work": "Massive activations in LLMs",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Sun et al.",
+   "quote": null
+  },
+  {
+   "work": "On the role of attention masks and layernorm in transformers",
+   "year": 2024,
+   "arxiv": "2405.18781",
+   "relation": "uses-method",
+   "note": "rank collapse definition (Wu et al.)",
+   "quote": null
+  },
+  {
+   "work": "Llama 3 herd",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "evaluates",
+   "note": "Llama 3.1 family",
+   "quote": null
+  },
+  {
+   "work": "Gemma",
+   "year": 2024,
+   "arxiv": "2403.08295",
+   "relation": "evaluates",
+   "note": "Gemma 7B",
+   "quote": null
+  },
+  {
+   "work": "What does BERT look at?",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier no-op observation (Clark et al.)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Attention sinks slow mixing; perturbation in second token spreads less with a sink",
+   "page": 2,
+   "why": "shows over-mixing intuition"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Effect of token perturbations on Gemma 7B, with/without bos",
+   "page": 6,
+   "why": "direct measurement"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Sink metric vs training context length, after and during training",
+   "page": 8,
+   "why": "shows context-length effect"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Impact of data packing and attention masking on the formation of attention sink",
+   "page": 9,
+   "why": "bos is not special"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2",
+   "snippet": "sink rate = 1/(LH) sum_{h,l} 1[ (1/T) sum_j alpha^{(l,h)}_{1,j} > epsilon ], epsilon = 0.3",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Layout text had interleaved figure tokens; no embedded instructions found.",
+  "Appendix B refers to Figure 4 where Figure 9 is intended; Fig 7 captions swapped/mislabelled (a 'Context sink histogram' for a curve)."
+ ]
+}

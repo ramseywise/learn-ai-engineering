@@ -37,7 +37,7 @@ They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent 
 ## Start here
 
 1. Read the notes in order (table below). They are the course: every slide's claim, table, code and figure is in the note it comes from.
-2. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 5-part talk built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
+2. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 5-part talk (it skips most of 05b, 10b and 11a) built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
 3. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
 
 ## Lab
@@ -61,7 +61,7 @@ A second lab serves [note 08](notes/08-governance-and-production.md): one agent 
 README.md      this file: overview, start here, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes
 notes/         01–13 (with 05b, 10b, 11a, 11b, 13b), the course; figures and code inline
-slides/        deck.yaml + graph-engineering.pptx
+slides/        deck.yaml, graph-engineering.pptx and .pdf
 practice/      the LangGraph lab in TypeScript and Python, and the multi-tenant lab
 sources/       book chapter PDFs, paper PDFs, the LangGraph style deck
   images/      every figure the notes and deck use (<author>-<slug>-fig<N>)
@@ -101,6 +101,10 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 | Chapter | Why |
 |---|---|
+| [GA 04/01 ReAct from scratch to LangGraph](../../generative-ai/04-agentic-frameworks/notes/01-react-from-scratch-to-langgraph.md) and [GA 04/02 Agentic search, persistence and streaming](../../generative-ai/04-agentic-frameworks/notes/02-agentic-search-persistence-streaming.md) | LangGraph mechanics (nodes, edges, state, checkpoints) taught first there; notes 02-04 here assume them |
+| [GA 03/01 Agent fundamentals](../../generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md) and [GA 03/04 Multi-agent design patterns](../../generative-ai/03-agentic-foundations/notes/04-multi-agent-design-patterns.md) | Multi-agent vocabulary for notes 05-07 |
+| [GA 02/01 The RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | Vector RAG, which note 11 extends with graphs |
+| [DS 01 Classical ML](../../data-science/01-classical-ml/README.md) and [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Only for notes 13 and 13b (features, classifiers, embeddings) |
 | [DS 03/05 Semantic analysis and NER](../../data-science/03-nlp/notes/05-semantic-analysis-and-ner.md) | Optional background: NER without an LLM |
 | [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Building the gold set for extraction |
 | [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | Scoring KG-RAG |
@@ -153,11 +157,11 @@ Everything else: [references.md](references.md).
 - Memory-augmented RAG notes are merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md) (memory designs) and [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) (retrieval).
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
-- [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/): the chapter PDFs, `chNN-<topic>.pdf` and `appendix-{a,b,c}-<topic>.pdf`. Their content is folded into notes 09–13, which cite the chapter for each claim (ch1–3 and appendices A–B → 09, ch4–8 and appendix C → 10, ch13–15 → 11, ch9–12 → 13). Topics: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory, Neo4j and structured-sources appendices.
+- [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/): the chapter PDFs, `chNN-<topic>.pdf` and `appendix-{a,b,c}-<topic>.pdf`. Their content is folded into notes 09–13, which cite the chapter for each claim (ch1–3 and appendices A–B → 09, ch4–8 and appendix C → 10 and 10b, ch13–15 → 11, 11a and 11b, ch9–12 → 13). Topics: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory, Neo4j and structured-sources appendices.
 
 ### Other books folded in
-- Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), [sources/building-ai-agents-llms-rag-kgs/](sources/building-ai-agents-llms-rag-kgs/). Ch. 7 → notes 10 (KG lifecycle after the load), 11 (retrieval granularity, retrievers, prompt formats, HybridRAG) and 13 (LLM graph reasoning and its limits). Ch. 9 → notes 05, 06 and 07.
-- Albada, *Building Applications with AI Agents* (O'Reilly, 2025), [sources/building-applications-with-ai-agents/](sources/building-applications-with-ai-agents/). Ch. 8 → notes 05 and 07 (actor-critic, supervisor routing, A2A, ADAS, distributed transports).
+- Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), [sources/building-ai-agents-llms-rag-kgs/](sources/building-ai-agents-llms-rag-kgs/). Ch. 7 → notes 10 (KG lifecycle after the load), 11 (retrieval granularity, retrievers, prompt formats, HybridRAG) and 13 (LLM graph reasoning and its limits). Ch. 9 → notes 05, 05b, 06 and 07.
+- Albada, *Building Applications with AI Agents* (O'Reilly, 2025), [sources/building-applications-with-ai-agents/](sources/building-applications-with-ai-agents/). Ch. 8 → notes 05, 05b and 07 (actor-critic, supervisor routing, A2A, ADAS, distributed transports).
 - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), PDFs in [generative-ai/01-llm-fundamentals/sources/learning-langchain/](../../generative-ai/01-llm-fundamentals/sources/learning-langchain/). Ch. 5 → notes 02 (the agency ladder, LLM routers) and 03 (input and output schemas).
 
 Chapter-to-note maps and quality flags for all three are in [references.md](references.md).
@@ -166,14 +170,14 @@ Chapter-to-note maps and quality flags for all three are in [references.md](refe
 - [Interviewing](../../practice/interviewing/README.md): role map to these checklists, and the rounds.
 
 ### Notebooks and course code
-- DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → note 10, L3–L7 retrieval queries → note 11), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course.
+- DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → notes 10 and 10b, L3–L7 retrieval queries → notes 11 and 11a), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course.
   - **Credentials:** `notebooks/knowledge-graphs-for-rag/code/.env` is the only file left of the local copy of the course. It holds live credentials, is gitignored and has never been committed. Rotate the keys if the repo or that folder is ever shared, and delete the file once you no longer run the notebooks locally.
 - [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/notes/01-react-from-scratch-to-langgraph.md) — LangGraph agent graphs (nodes, edges, state, conditional routing): runnable companion code for notes 01–05 (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
 - [sources/langgraph_extended.pptx](sources/langgraph_extended.pptx) — *LangGraph: A Visual Guide* (26 slides): nodes, edges, state and reducers, memory, checkpointers and durable execution, interrupts and time travel, streaming, subgraphs, observability, and LangGraph vs Google ADK. Also the style reference for the course's `make slides` decks.
 
 ### Readings
 - [sources/](sources/) — the book PDFs (above), figures in `images/`, and the community-compiled *Graph Engineering: The Karpathy Loop, Improved 1000x by Itself* (2026) PDF.
-- Li, *AI Agents in Depth*, [ch. 10 Multi-Agent Collaboration](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md): when multi-agent actually beats single-agent, shared vs isolated context, failure modes. Synthesised into [05](notes/05-topology-patterns.md) (two design dimensions, the new-information test, the runtime as an OS, handoff packages, A2A; [labs table](notes/05b-running-multi-agent-systems.md#labs)) and [07](notes/07-failure-modes-at-scale.md) (Byzantine faults, semantic conflicts, cascading amplification, MAST). Ch. 3's RAPTOR vs GraphRAG comparison is in [11](notes/11-kg-rag-and-text-to-cypher.md).
+- Li, *AI Agents in Depth*, [ch. 10 Multi-Agent Collaboration](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md): when multi-agent actually beats single-agent, shared vs isolated context, failure modes. Synthesised into [05](notes/05-topology-patterns.md) and [05b](notes/05b-running-multi-agent-systems.md) (two design dimensions, the new-information test, the runtime as an OS, handoff packages, A2A; [labs table](notes/05b-running-multi-agent-systems.md#labs)) and [07](notes/07-failure-modes-at-scale.md) (Byzantine faults, semantic conflicts, cascading amplification, MAST). Ch. 3's RAPTOR vs GraphRAG comparison is in [11](notes/11-kg-rag-and-text-to-cypher.md).
 
 ### External references and source quality
 Every web source, paper and book the notes cite, mapped to notes, with the quality flags for vendor and secondary posts: [references.md](references.md).

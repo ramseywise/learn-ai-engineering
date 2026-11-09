@@ -453,7 +453,7 @@ dis.dis(Counter.add)
               RETURN_VALUE
 ```
 
-`self.total += n` is a load, an add and a separate store, so a thread switch can land between them. That's the race behind [a lost update](07-concurrency.md), now visible as instructions. Bytecode isn't a stable interface: the [`dis` docs](https://docs.python.org/3.14/library/dis.html) call it an implementation detail with no guarantees between versions, so read it to learn, and don't write tools that depend on specific opcodes.
+`self.total += n` is a load, an add and a separate store, so a thread switch can land between them. That's the race behind [a lost update](../../../computer-science/notes/05-processes-threads-and-io.md#threads-share-memory-so-updates-can-be-lost), now visible as instructions. Bytecode isn't a stable interface: the [`dis` docs](https://docs.python.org/3.14/library/dis.html) call it an implementation detail with no guarantees between versions, so read it to learn, and don't write tools that depend on specific opcodes.
 
 Since 3.11 the interpreter also rewrites its own instructions as it runs, replacing general ones with versions specialised for the types it sees. `adaptive=True` shows that:
 
@@ -615,6 +615,11 @@ This one short run shows the shape, not a benchmark: CPU-bound threads scale pas
 | What is adaptive specialisation? | Since 3.11 the interpreter replaces general instructions with type-specialised ones as it observes running code. |
 | Does Python 3.14 still have a GIL? | The default build does. The free-threaded build is officially supported but optional, and can re-enable the GIL. |
 | Does removing the GIL make code thread-safe? | No. Compound operations can still interleave; use locks. |
+
+## See also
+
+- [CS 02 · Data structures](../../../computer-science/notes/02-data-structures.md) and [CS 04 · Numbers and memory](../../../computer-science/notes/04-numbers-and-memory.md): the cost arguments behind object size and layout.
+- [CS 05 · Processes, threads and I/O](../../../computer-science/notes/05-processes-threads-and-io.md): the lost-update demonstration, run with and without the GIL.
 
 ## Next
 

@@ -1,19 +1,218 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2406.04271",
  "pdf": "generative-ai/03-agentic-foundations/sources/yang-2024-buffer-thoughts.pdf",
  "bib": {
   "title": "Buffer of Thoughts: Thought-Augmented Reasoning with Large Language Models",
-  "first_author": "Ling Yang",
-  "year": "2024",
-  "venue": null,
+  "authors": ["Ling Yang", "Zhaochen Yu", "Tianjun Zhang", "Shiyi Cao", "Minkai Xu", "Wentao Zhang", "Joseph E. Gonzalez", "Bin Cui"],
+  "first_author": "Yang",
+  "year": 2024,
+  "venue": "NeurIPS 2024 (38th Conference on Neural Information Processing Systems)",
   "arxiv": "2406.04271",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 61714,
+  "chars_total": 61714,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. Figure 3, 4, 6, 7, 8 chart values are garbled in the text layer and not recorded as results."
  },
- "legacy_report": "SOURCE: \"Buffer of Thoughts: Thought-Augmented Reasoning with Large Language Models\", Ling Yang, Zhaochen Yu (equal contribution), Tianjun Zhang, Shiyi Cao, Minkai Xu, Wentao Zhang, Joseph E. Gonzalez, Bin Cui (Peking Univ., UC Berkeley, Stanford). NeurIPS 2024 (38th Conf.), arXiv:2406.04271v2, 14 Oct 2024.\n\nCOVERAGE: All 61666 chars read (body, ablations, limitations, references skimmed, appendices A.1-A.3 read). No checklist or broader-impact section was present in the extraction. Figure values (Figs 3-10) come from garbled chart text and are partly reconstructed by me; treat those with caution.\n\nCLAIMS (ranked)\n- BoT beats all baselines on 10 tasks with GPT-4 as base model. Margins over Meta Prompting: Game of 24 +23 (82.4 vs 67.0 in Table 1), Geometric Shapes +20 pts, Checkmate-in-One +51 pts (the abstract's \"11% on Game of 24\" does not match the section 4.1 \"23%\").\n  number: Game of 24 82.4 vs ToT 74.0, GoT 73.2, PAL 64.0, GPT-4 3.0, GPT-4+CoT 11.0; Geometric Shapes 93.6 vs 78.2; Checkmate-in-One 86.4 vs 57.2 (Meta Prompting) and 49.2 (ToT).\n  setup: GPT-4 base. Table 1 compares Standard, CoT, Expert, PAL, ToT, GoT, Meta Prompting. Tasks: Game of 24, MGSM, BBH (Geometric Shapes, Multi-Step Arithmetic, Word Sorting), Checkmate-in-One, Penguins, Date Understanding, P3, Sonnet Writing.\n  quote: \"compared to recent Meta-prompting method [15], we see significant accuracy improvements: 23% on Game of 24, 20% on Geometric Shapes and 51% on Checkmate-in-One\"\n  where: sec 4.1, chars ~27000.\n- Cost is about 12% of multi-query methods on average. The paper says this holds \"across various tasks\".\n  number: 12%\n  setup: compared with ToT and meta-prompting; inference-time comparison in Fig 3 only covers Game of 24, MGSM and Checkmate-in-One. The cost metric is time, not tokens.\n  quote: \"Notably, our BoT requires only 12% of the cost of multi-query methods (e.g., tree of thoughts and meta-prompting) on average.\"\n  where: sec 4.1 Reasoning Efficiency.\n- Mechanism: the solution is one query after the problem distiller, because a retrieved template (for example Python code) is instantiated rather than a search being run.\n  number: none\n  quote: \"our BoT directly retrieves a thought-template in code format, thus a program is instantiated to traverse combinations of numbers and symbols, thereby eliminating the need to build the reasoning structure from scratch. This allows for solving the problem with just one query after invoking the problem-distiller\"\n  where: sec 4.1.\n- Robustness: higher \"success rate\", averaged over 10 repeated evaluations, about 10 points above the second-best.\n  number: 10% in average success rate\n  setup: 1000 randomly sampled examples across benchmarks, repeated 10 times (Fig 4: Game of 24, MGSM, Checkmate-in-One). Fig 4 average roughly 93-95 for BoT vs about 84.6 for ToT, but the extraction is garbled.\n  quote: \"our BoT consistently maintains a higher success rate across various tasks, surpassing the second-best by 10% in average success rate.\"\n  where: sec 4.1.\n- Small model plus BoT can reach or pass a larger model without BoT. Fig 6 as extracted (garbled): Llama3-8B Game of 24 about 2.4 vs BoT+8B about 56.7; Llama3-70B about 1.2 vs BoT+70B about 78.4 (my best reading). BoT+Llama3-8B is said to \"have the potential to surpass\" Llama3-70B.\n  setup: Game of 24, word list sorting, Checkmate-in-One; A100-40GB.\n  quote: \"Notably, BoT+Llama3-8B has the potential to surpass single Llama3-70B model.\"\n  where: sec 5.\n- Ablation, buffer-manager (self-improvement): accuracy rises across 4 rounds with the buffer-manager and stays flat without it. Latency falls.\n  number: with buffer-manager 56.8, 78.5, 87.4, 88.5; without 52.8, 53.6, 57.4, 54.1. Time per problem 297, 205, 128, 78.5 s vs about 308, 317, 304, 306 s without.\n  setup: BoT+GPT-4, 50 random questions per benchmark per round, 4 tasks (the caption also mentions Llama3-70B).\n  quote: \"we can observe that the accuracy of BoT steadily improves with each round. In contrast, the model without the buffer-manager fails to exhibit an upward trend.\"\n  where: sec 6, Figs 9-10.\n- Ablation, meta-buffer: removing it hurts most on complex tasks. The numbers below are my reading of Fig 8, whose extraction is interleaved, so I could not fully verify them.\n  number: GPT-4 Game of 24 82.4 -> about 75.2; Checkmate 86.4 -> about 56.7; Llama3-70B Checkmate 75.6 -> about 27.4 (my reading).\n  quote: \"when the meta-buffer is disabled, both Llama3-70B and GPT-4 models exhibit a noticeable decline in performance, particularly in benchmarks requiring complex reasoning, such as Game of 24 and Checkmate-in-One.\"\n  where: sec 6.\n- Ablation, problem-distiller: removing it hurts complex tasks more than simple ones.\n  number: none reliable (Fig 7).\n  quote: \"More complex problems, such as Game of 24 and Checkmate-in-One, show a more significant accuracy reduction, whereas relatively simpler problems like word list sorting and MGSM exhibit smaller decreases.\"\n  where: sec 6.\n- Design: a meta-buffer of thought-templates in 6 categories; retrieval uses embedding similarity between the template description and the distilled problem, with threshold delta 0.5-0.7. A template is added only if its max similarity to existing ones is below delta. If no template matches, one of 3 coarse general templates is used.\n  quote: \"We set a threshold δ (0.5∼0.7 is recommended) to determine whether the current task is new.\"\n  where: sec 3.2-3.3.\n- Time breakdown: distillation and retrieval are short; instantiated reasoning takes the longest (Fig 5, no numbers extracted).\n\nLIMITS\n- Authors concede: gains are limited on problems needing human-like creativity, since these don't rely on a specific template. A meta-buffer initialised by a weaker model yields poorer templates.\n  quote: \"our method's enhancements are limited when addressing problems requiring human-like creativity\" and \"if our BoT initializes the meta-buffer with a weaker model, the quality of the derived thought-templates may be suboptimal\".\n- Future work named: integrating external resources/agents (open-domain), and making template distillation optimizable.\n- My observations, not authors' concessions: the benchmarks are narrow and static (math/puzzle/BBH). There are no tool-using agent tasks. Efficiency is measured as wall-clock time. Buffer-manager rounds sample from the same benchmarks, so template reuse is favourable. The abstract (11%) and body (23%) disagree on the Game of 24 margin over the prior method. Base model is GPT-4 (2023); it predates reasoning models, so the CoT/ToT baseline gap may have dated. No error bars or seeds beyond the 10-run robustness test.\n\nBUILDS ON: CoT (Wei et al. 2022), Least-to-Most (Zhou et al. 2022), ToT (Yao et al. 2023/NeurIPS 2024), GoT (Besta et al. 2024), PAL (Gao et al. 2023), Expert Prompting (Xu et al. 2023), Meta-prompting (Suzgun & Kalai 2024), Analogical Prompting (Yasunaga et al. 2024), Thought Propagation (Yu et al. 2024), Thought-Retriever (Feng et al. 2024), Self-Discover (Zhou et al. 2024), Step-Back (Zheng et al. 2023), retrieval-augmented LMs (Borgeaud et al. 2022; Izacard et al. 2023; Mialon et al. 2023). Not mentioned: ReAct. The note filename hints at tool use and ReAct, so check fit; the paper's only link to agents is a future-work pointer to AutoAgents and AutoGen [54, 55].\n\nCODE (appendix, verbatim)\n- Template distillation prompt (sec 3.3): \"1. Core task summarization ... 2. Solution Steps Description ... 3. General Answer Template: Based on the above analysis, propose a template or approach that can be widely applied to this type of problem\".\n- Problem-distiller output fields (A.2): \"1. Key information\", \"2. Restrictions\", \"3. Distilled task\".\n- Retrieval (eq. 2): j = argmax_i Sim(f(x_d), {f(D_Ti)}) subject to Sim >= δ. Update rule (eq. 5): Max(Sim(f(D_Tnew), {f(D_Ti)})) < δ.\n- A.1.5 Game-of-24 template skeleton: `for sequence in permutations(input_elements): for operation_combination in generate_combinations(sequence, operations): ... if evaluate_sequence(sequence, operation_combination) == target_result:` (p.19). The Checkmate template uses python-chess `board.legal_moves` and `is_checkmate()` (p.20).\n- A.3 Meta Reasoner prompt offers 3 structures: prompt-based, procedure-based, programming-based.\n\nFIGURES\n- Fig 1 (p.2): single-query vs multi-query vs BoT, showing the distiller, meta-buffer and distillation/update loop; fastest overview.\n- Fig 2 (p.4): worked shirt-price quadratic example; BoT instantiates a quadratic template and gets x=20, while CoT and Plan-and-Solve give wrong answers (160, 35.6).\n- Fig 3 (inference time), Fig 4 (robustness), Fig 6 (model size), Figs 7-8 (ablations), Figs 9-10 (buffer-manager over rounds). Captions were read from the PDF text; I did not run the figures script.\n\nPROBLEMS: Chart numbers in Figs 3-10 are interleaved, so the series-to-label mapping is uncertain. Math in Fig 2 is garbled. No embedded instructions found. One typo-like inconsistency in Table 1: \"39. 6\" (Expert, Checkmate). The PDF was read from /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/03-agentic-foundations/sources/yang-2024-buffer-thoughts.pdf. A grep for \"buffer\" or \"yang\" in the target note 02-tool-use-and-react.md returned nothing, so it does not yet cite this paper."
+ "type": "empirical",
+ "question": "Can storing distilled high-level thought-templates from solved problems and retrieving them for new problems improve LLM reasoning accuracy, efficiency and robustness over single-query and multi-query prompting?",
+ "hypothesis": "High-level thought-templates shared across tasks let an LLM skip building a reasoning structure from scratch, improving accuracy and efficiency.",
+ "contributions": [
+  "A thought-augmented reasoning framework, Buffer of Thoughts (BoT), for accuracy, efficiency and robustness.",
+  "A meta-buffer that stores high-level thoughts distilled from different problems and instantiates them per task.",
+  "A buffer-manager that distils thought-templates from solutions and grows the meta-buffer as more tasks are solved.",
+  "Experiments on 10 reasoning-intensive tasks with SOTA gains over prior prompting methods at about 12% of multi-query cost."
+ ],
+ "method": {
+  "summary": "A prompting pipeline with no training. A problem-distiller LLM call extracts variables and constraints; the distilled text is embedded and matched by cosine-style similarity to descriptions of stored thought-templates in a meta-buffer; the retrieved template is instantiated by an LLM (often as code or a stepwise procedure); a buffer-manager distils a new template from the solution and adds it if it is not too similar to existing ones.",
+  "task": "Prompt-based reasoning over Game of 24, BBH tasks, Checkmate-in-One, Penguins, Date Understanding, P3, MGSM and sonnet writing",
+  "trains": false,
+  "datasets": [
+   {"name": "Game of 24 (from ToT)", "role": "eval", "size": null, "split": null, "source": "Tree of Thoughts", "preprocessing": null},
+   {"name": "BBH: Geometric Shapes, Multi-Step Arithmetic Two, Word Sorting", "role": "eval", "size": null, "split": null, "source": "BIG-Bench Hard", "preprocessing": null},
+   {"name": "BIG-Bench: Checkmate-in-One, Penguins, Date Understanding", "role": "eval", "size": null, "split": null, "source": "BIG-Bench", "preprocessing": null},
+   {"name": "Python Programming Puzzles (P3)", "role": "eval", "size": null, "split": null, "source": "Schuster et al. 2021; Haluptzok et al. 2023", "preprocessing": null},
+   {"name": "MGSM", "role": "eval", "size": null, "split": null, "source": "Shi et al. 2022, multilingual GSM8K subset in ten languages", "preprocessing": null},
+   {"name": "Shakespearean Sonnet Writing", "role": "eval", "size": null, "split": null, "source": "Meta-prompting (Suzgun and Kalai 2024)", "preprocessing": "Rhyme scheme ABAB CDCD EFEF GG, three given words verbatim"}
+  ],
+  "models": [
+   {"name": "GPT-4", "role": "base", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Base model for main experiment and ablations"}},
+   {"name": "Llama3-8B", "role": "base", "params": "8B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Used in analysis on NVIDIA A100-PCIE-40GB"}},
+   {"name": "Llama3-70B", "role": "base", "params": "70B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Used in analysis and ablations"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Main table: not stated. Robustness: 1000 random examples from various benchmarks, evaluation repeated 10 times, average accuracy reported as success rate.",
+   "prompting": "Problem-distiller meta prompt (A.2), instantiation prompt (A.3), template-distillation prompt (Sec 3.3) with optional in-task or cross-task exemplars. Six template categories: Text Comprehension, Creative Language Generation, Common Sense Reasoning, Mathematical Reasoning, Code Programming, Application Scheduling.",
+   "retrieval": "Embedding similarity between distilled problem and template descriptions; argmax with threshold delta (0.5 to 0.7 recommended); below threshold the task is new and one of three general coarse-grained templates is assigned. Embedding model: 'a normal text embedding model', not named. Meta-buffer starts empty in the analyses.",
+   "parameters": {
+    "delta": "0.5~0.7 recommended; value used not stated",
+    "update_rule": "Add new template only if Max(Sim(f(DT_new), {f(DT_i)})) < delta",
+    "general_templates_for_new_tasks": "3 (prompt-based, procedure-based, programming-based)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "accuracy", "definition": "Task accuracy per benchmark (Table 1); unit as printed", "unit": "%", "higher_is_better": true},
+    {"name": "success rate", "definition": "Average accuracy over 10 repeats on a 1000-example random subset", "unit": "%", "higher_is_better": true},
+    {"name": "inference time", "definition": "Logarithmic time in seconds (Fig 3); per-problem seconds in Fig 10", "unit": "s", "higher_is_better": false}
+   ],
+   "baselines": ["Standard GPT-4", "GPT-4 + zero-shot CoT", "Expert prompting", "PAL", "ToT", "GoT", "Meta Prompting"],
+   "protocol": "Accuracy compared across prompting methods with GPT-4; no seeds, variance or significance tests reported for Table 1."
+  },
+  "availability": {
+   "code": "https://github.com/YangLing0818/buffer-of-thought-llm",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {"purpose": "Template distillation", "text": "User: [Problem Description] + [Solution Steps or Code]\nTo extract and summarize the high-level paradigms and general approaches for solving such problems, please follow these steps in your response:\n1. Core task summarization ... 2. Solution Steps Description ... 3. General Answer Template ...", "where": "Sec 3.3 (abridged here)"},
+   {"purpose": "Problem distiller", "text": "As a highly professional and intelligent expert in information distillation, you excel at extracting essential information to solve problems from user input queries. ... 1. Key information ... 2. Restrictions ... 3. Distilled task", "where": "Appendix A.2 (abridged here)"},
+   {"purpose": "Instantiated reasoning (Meta Reasoner)", "text": "You are a Meta Reasoner who are extremely knowledgeable in all kinds of fields ... If the thought-template is provided, directly follow the thought-template to instantiate for the given problem.", "where": "Appendix A.3 (abridged here)"}
+  ],
+  "evidence": [
+   {"field": "inference.retrieval", "quote": "We set a threshold δ (0.5∼0.7 is recommended) to determine whether the current task is new.", "where": "Sec 3.2"}
+  ],
+  "other": {
+   "fig9_read_from_figure": "Read from Fig 9: BoT+GPT4 accuracy rounds 1-4 = 56.8, 78.5, 87.4, 88.5; without buffer-manager = 52.8, 53.6, 57.4, 54.1. 50 questions per benchmark per round.",
+   "fig10_read_from_figure": "Read from Fig 10: average inference time per problem (s), series order uncertain from garbled text: 297, 205, 128, 78.5 versus 308, 317, 304, 306.",
+   "fig5_setup": "Six benchmarks, 100 tasks each, meta-buffer built from scratch.",
+   "hardware": "NVIDIA A100-PCIE-40GB GPU for Llama3 analysis"
+  }
+ },
+ "results": [
+  {
+   "claim": "BoT with GPT-4 scores 82.4% on Game of 24, above ToT, GoT, PAL, Meta Prompting and CoT.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "82.4", "unit": "%", "baseline_value": "74.0 (ToT)", "n": null,
+   "setup": "GPT-4 base, Table 1, Game of 24 from ToT; baselines: GPT-4 3.0, CoT 11.0, Expert 3.0, PAL 64.0, ToT 74.0, GoT 73.2, Meta Prompting 67.0",
+   "quote": "compared to ToT, which has a good performance on this task, we also achieve an 8.4% accuracy improvement",
+   "table": "Table 1, row Game of 24, column BoT (Ours)",
+   "note": "Abstract says 11% over previous SOTA on Game of 24; Sec 4.1 says 23% over Meta Prompting (82.4 vs 67.0 = 15.4 points). Both gaps are inconsistent with Table 1 for Meta Prompting.",
+   "where": "Table 1, Sec 4.1"
+  },
+  {
+   "claim": "BoT requires about 12% of the cost of multi-query methods on average.",
+   "kind": "measured", "source": null, "metric": "relative cost", "value": "12", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "Inference-time comparison in Fig 3 covers Game of 24, MGSM and Checkmate-in-One only, GPT-4; cost measured as time, not tokens or dollars; compared with ToT and meta-prompting.",
+   "quote": "Notably, our BoT requires only 12% of the cost of multi-query methods (e.g., tree of thoughts and meta-prompting) on average.",
+   "table": null,
+   "note": "How 12% is averaged is not stated.",
+   "where": "Sec 4.1 Reasoning Efficiency"
+  },
+  {
+   "claim": "BoT reaches 86.4% on Checkmate-in-One versus 57.2% for Meta Prompting.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "86.4", "unit": "%", "baseline_value": "57.2 (Meta Prompting)", "n": null,
+   "setup": "GPT-4 base, Table 1; ToT 49.2, GoT 51.4, GPT-4 36.4",
+   "quote": "20% on Geometric Shapes and 51% on Checkmate-in-One",
+   "table": "Table 1, row Checkmate-in-One, column BoT (Ours)",
+   "note": "Gap is 29.2 points against Meta Prompting; 51% is the abstract's number and does not match Table 1 for that baseline (86.4-36.4=50.0 vs plain GPT-4).",
+   "where": "Table 1, Sec 4.1"
+  },
+  {
+   "claim": "BoT reaches 93.6% on Geometric Shapes versus 78.2% for Meta Prompting.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "93.6", "unit": "%", "baseline_value": "78.2 (Meta Prompting)", "n": null,
+   "setup": "GPT-4 base, Table 1",
+   "quote": "20% on Geometric Shapes",
+   "table": "Table 1, row Geometric Shapes, column BoT (Ours)",
+   "note": "Gap is 15.4 points; the text says 20%.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "BoT is best on all ten tasks in Table 1; margin is smallest on Sonnet Writing (80.0 vs 79.6) and Word Sorting (100.0 vs 99.6).",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "80.0", "unit": "%", "baseline_value": "79.6 (Meta Prompting)", "n": null,
+   "setup": "GPT-4 base, Sonnet Writing, Table 1; single run, no variance reported",
+   "quote": null,
+   "table": "Table 1, row Sonnet Writing, column BoT (Ours)",
+   "note": "Margins of 0.4 points on a creative task are within plausible noise; paper reports none.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Robustness: BoT beats the second-best method by 10% in average success rate.",
+   "kind": "measured", "source": null, "metric": "success rate", "value": "10", "unit": "%", "baseline_value": null, "n": 1000,
+   "setup": "1000 random examples from various benchmarks, repeated 10 times, averaged; Game of 24, MGSM, Checkmate-in-One (Fig 4).",
+   "quote": "surpassing the second-best by 10% in average success rate",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1 Reasoning Robustness"
+  },
+  {
+   "claim": "With the buffer-manager, BoT+GPT4 accuracy rises across four rounds while it stays flat without it.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "88.5", "unit": "%", "baseline_value": "54.1", "n": 50,
+   "setup": "Read from Fig 9: round 4, 50 randomly sampled questions per benchmark per round, GPT-4; without buffer-manager the final round is 54.1",
+   "quote": "the accuracy of BoT steadily improves with each round",
+   "table": null,
+   "note": "Values read from garbled chart text; series assignment is inferred.",
+   "where": "Sec 6, Fig 9"
+  },
+  {
+   "claim": "BoT+Llama3-8B has the potential to surpass Llama3-70B alone.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Game of 24, word list sorting, Checkmate-in-One; Llama3-8B and 70B on A100; Fig 6 values garbled",
+   "quote": "Notably, BoT+Llama3-8B has the potential to surpass single Llama3-70B model.",
+   "table": null,
+   "note": "Hedged wording ('potential'); per-task numbers cannot be read reliably.",
+   "where": "Sec 5, Fig 6"
+  },
+  {
+   "claim": "Disabling the problem-distiller or the meta-buffer lowers accuracy, most on Game of 24 and Checkmate-in-One.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Llama3-70B and GPT-4 base, four benchmarks (Game of 24, word list sorting, Checkmate-in-One, MGSM), Figs 7 and 8",
+   "quote": "More complex problems, such as Game of 24 and Checkmate-in-One, show a more significant accuracy reduction",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "Authors concede enhancements are limited for problems needing human-like creativity, which do not rely on a specific thought-template.",
+  "Authors concede a weaker model initialising the meta-buffer may derive suboptimal templates.",
+  "Table 1 is a single GPT-4 run with no variance, decoding settings, sample counts or test-set sizes given.",
+  "Cost claim rests on time over three tasks (Fig 3), not tokens or dollars; the 12% averaging is unspecified.",
+  "Embedding model, threshold delta actually used, and meta-buffer initial contents are not stated.",
+  "Template sharing across tasks was shown on benchmarks the buffer was built from; no held-out-task transfer test is reported beyond in-task and cross-task exemplars.",
+  "Headline gains in the abstract (11%, 20%, 51%) do not match Table 1 consistently."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "meta-buffer", "definition": "a lightweight library that contains a series of high-level thoughts (thought-template) for addressing various types of problems", "where": "Sec 3.2"},
+  {"term": "thought-template", "definition": "a kind of high-level guideline stored in the meta-buffer, obtained from problem-solving processes by the buffer-manager", "where": "Sec 3.2"},
+  {"term": "buffer-manager", "definition": "summarizes the high-level guidelines and thoughts gained from each problem-solving process and stores them as thought-templates", "where": "Sec 3.3"},
+  {"term": "problem-distiller", "definition": "extracts critical task-specific information along with relevant constraints before reasoning", "where": "Sec 3.1"},
+  {"term": "success rate", "definition": "average accuracy over 10 repeats of evaluation on a 1000-example random subset, used to assess reasoning robustness", "where": "Sec 4.1"}
+ ],
+ "lineage": [
+  {"work": "Tree of Thoughts (Yao et al. 2024)", "year": 2024, "arxiv": null, "relation": "baseline", "note": "Multi-query baseline and source of Game of 24", "quote": null},
+  {"work": "Graph of Thoughts (Besta et al. 2024)", "year": 2024, "arxiv": null, "relation": "baseline", "note": "Multi-query baseline", "quote": null},
+  {"work": "Meta-prompting (Suzgun and Kalai 2024)", "year": 2024, "arxiv": "2401.12954", "relation": "baseline", "note": "Strongest baseline; sonnet task source", "quote": null},
+  {"work": "Chain-of-Thought prompting (Wei et al. 2022)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "Single-query baseline", "quote": null},
+  {"work": "PAL (Gao et al. 2023)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Program-aided baseline", "quote": null},
+  {"work": "ExpertPrompting (Xu et al. 2023)", "year": 2023, "arxiv": "2305.14688", "relation": "baseline", "note": "Expert baseline", "quote": null},
+  {"work": "Analogical Prompting (Yasunaga et al.), Thought Propagation (Yu et al.), Thought-Retriever (Feng et al.)", "year": 2024, "arxiv": null, "relation": "extends", "note": "Analogical reasoning lines BoT generalises to high-level templates", "quote": null},
+  {"work": "Self-Discover (Zhou et al. 2024)", "year": 2024, "arxiv": "2402.03620", "relation": "related", "note": "Cited among prompting methods", "quote": null},
+  {"work": "BIG-Bench Hard (Suzgun et al. 2023); BIG-Bench; P3; MGSM", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "Evaluation sets", "quote": null},
+  {"work": "GPT-4; Llama3-8B and 70B", "year": 2023, "arxiv": "2303.08774", "relation": "evaluates", "note": "Base models", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Comparison between single-query, multi-query, and our BoT methods.", "page": 2, "why": "Shows BoT as distiller, meta-buffer, retrieval, instantiated reasoning and update loop against fixed-structure baselines."},
+  {"figure": "Fig 2", "caption": "Illustration of different reasoning process.", "page": 4, "why": "Worked example on one word problem contrasting CoT, Plan-and-Solve and BoT with a quadratic-equation template."},
+  {"figure": "Table 1", "caption": "Comparing BoT with previous methods across various tasks.", "page": 7, "why": "Core accuracy results for ten tasks and seven baselines."}
+ ],
+ "code": [
+  {"where": "Appendix A.1.5, Listing 1", "snippet": "for sequence in permutations(input_elements): for operation_combination in generate_combinations(sequence, operations): ... if evaluate_sequence(sequence, operation_combination) == target_result: return format_solution(...)", "verbatim": false}
+ ],
+ "problems": [
+  "Chart values in Figs 3, 4, 6, 7, 8, 10 are garbled in the text layer; series assignment is uncertain, so they are not recorded as results.",
+  "Abstract and Sec 4.1 headline gains (11%, 23%, 20%, 51%) do not match Table 1 differences against the named baselines.",
+  "No embedded instructions found in the PDF text."
+ ]
 }

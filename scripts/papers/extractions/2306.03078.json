@@ -1,0 +1,668 @@
+{
+ "schema": 1,
+ "key": "2306.03078",
+ "pdf": "ai-engineering/07-inference-engineering/sources/dettmers-2023-spqr.pdf",
+ "bib": {
+  "title": "SpQR: A Sparse-Quantized Representation for Near-Lossless LLM Weight Compression",
+  "authors": [
+   "Tim Dettmers",
+   "Ruslan Svirschevski",
+   "Vage Egiazarian",
+   "Denis Kuznedelev",
+   "Elias Frantar",
+   "Saleh Ashkboos",
+   "Alexander Borzunov",
+   "Torsten Hoefler",
+   "Dan Alistarh"
+  ],
+  "first_author": "Dettmers",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2306.03078",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 81546,
+  "chars_total": 81546,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; raw sensitivity heatmap figures (Fig 10, 11) are images with only axis ticks as text."
+ },
+ "type": "empirical",
+ "question": "Can LLM weights be quantized to 3-4 bits per parameter with under 1% relative perplexity loss, including for 7-13B models, while still giving faster-than-fp16 token generation?",
+ "hypothesis": "Quantization error is concentrated in structured and unstructured sensitive weights; storing those in 16-bit and the rest in small quantized groups with quantized statistics gives near-lossless compression.",
+ "contributions": [
+  "Analysis of weight quantization sensitivity showing row, column, attention-head, rotary and unstructured outlier patterns in LLaMA-65B",
+  "SpQR format: bilevel quantization with very small groups plus a CSR-like sparse set of 16-bit outliers",
+  "Extended GPTQ-style PTQ algorithm that isolates outliers during quantization",
+  "Efficient GPU decoding and a sparse-matrix algorithm for the outliers, faster than 16-bit inference"
+ ],
+ "method": {
+  "summary": "Post-training quantization extending GPTQ: per-weight sensitivity from the inverse Hessian selects ~1% outliers kept in 16-bit (CSR-like storage); other weights get 3-4 bit codes in groups of 8-32 whose scales and zero points are themselves quantized to 3 bits in groups of 16. Evaluated by perplexity and zero-shot accuracy on LLaMA, Falcon, OPT, plus A100 token-generation speed.",
+  "task": "post-training weight quantization of LLMs",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "RedPajama",
+    "role": "dev",
+    "size": null,
+    "split": "calibration data for LLaMA quantization",
+    "source": "public replica of LLaMA training data",
+    "preprocessing": null
+   },
+   {
+    "name": "RefinedWeb",
+    "role": "dev",
+    "size": null,
+    "split": "calibration data for Falcon quantization",
+    "source": "public replica of Falcon training data",
+    "preprocessing": null
+   },
+   {
+    "name": "C4",
+    "role": "both",
+    "size": "128 sequences of 2048 tokens (sensitivity analysis calibration)",
+    "split": "calibration for Sec 3.2 analysis; also perplexity eval",
+    "source": "Raffel et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiText2",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Merity et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Penn Treebank",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Marcus et al. 1994",
+    "preprocessing": null
+   },
+   {
+    "name": "WinoGrande, PiQA, HellaSwag, ARC-easy, ARC-challenge",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot via LM Evaluation Harness, recommended parameters",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SpQR-quantized LLaMA",
+    "role": "proposed",
+    "params": "7B, 13B, 30B, 65B",
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained LLaMA (Touvron et al. 2023)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "80 (LLaMA-65B, inferred from Layer 79 being last)",
+    "hidden": "8192 (LLaMA-65B, from matrix dims)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "mlp_dim": "22016 (read from Fig 6 axis)"
+    }
+   },
+   {
+    "name": "SpQR-quantized Falcon",
+    "role": "proposed",
+    "params": "7B, 40B",
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained Falcon",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SpQR-quantized OPT",
+    "role": "proposed",
+    "params": "6.7B, 13B, 30B, 66B",
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained OPT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "where": "Appendix F, Table 6"
+    }
+   },
+   {
+    "name": "RTN 4-bit",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPTQ 4-bit",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy autoregressive for generated samples (Appendix I)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "speed test: 100 tokens generated",
+   "samples": "single fixed seed for Section 5; 5 seeds (0-5) in Appendix H for LLaMA-65B at 3.625 bits",
+   "prompting": "zero-shot via LM Evaluation Harness; speed test setups: 100 tokens from scratch, and 100 tokens on a 1024-token prefix",
+   "retrieval": null,
+   "parameters": {
+    "bw": "bits per weight, 3 or 4 base",
+    "bs, bz": "3 bits each for quantized scale and zero",
+    "beta1": "8-32 weights (group size); 16 in the 30B near-lossless config; 8 in the size-controlled 3-bit setup",
+    "beta2": "16 in Sec 4.1 and Table 5 baseline; 64 in size-controlled setup in Sec 5",
+    "tau": "outlier threshold, tuned in [0.1, 1.0] by binary search, step 0.05; most configs 0.1-0.45; 0.1 for LLaMA-30B near-lossless",
+    "outlier_rate": "under 1% in all SpQR evals; optimal 0.2-0.5% in App E",
+    "lambda": "Hessian regularizer (value not stated)",
+    "outlier_storage": "16-bit value + 16-bit column index per outlier, plus 32-bit per-row count; 32.03 to 32.1 bits per outlier",
+    "other_flags": "act order permutation, fit quantizer without outliers, non-integer zero point, no sign requirement on min/max"
+   },
+   "other": {
+    "speed_hardware": "single A100, batch size 1",
+    "quantization_time": "around 4.5 hours for 65B on A100 and about 6 on A6000",
+    "cli_30B_config": "python main.py $MODEL custom --custom_data_path=$DATA --wbits 4 --groupsize 16 --perchannel --qq_scale_bits 3 --qq_zero_bits 3 --qq_groupsize 16 --outlier_threshold 0.1 --fit_quantizer_without_outliers --permutation_order act_order",
+    "quantization_calibration_size": "not stated for Section 5 (128 x 2048 tokens only for the Sec 3.2 analysis)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "on WikiText2, C4, Penn Treebank",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Zero-shot accuracy",
+     "definition": "WinoGrande, PiQA, HellaSwag, ARC-easy, ARC-challenge via LM Eval Harness; Avg score is the mean of five",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inference speed",
+     "definition": "end-to-end tokens/s (inference steps per second), dense plus sparse parts",
+     "unit": "tokens/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average bits per parameter",
+     "definition": "model size in bits (weights, 1st and 2nd order statistics, outliers, outlier index) / number of parameters",
+     "unit": "bits",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "RTN 4-bit",
+    "GPTQ 4-bit (act order also used in baselines)",
+    "fp16",
+    "PyTorch cuSPARSE sparse multiply (speed)"
+   ],
+   "protocol": "Near-lossless defined as 1% relative perplexity error vs uncompressed (MLCommons definition). Single seed in main tables; Appendix H runs 5 seeds."
+  },
+  "availability": {
+   "code": "github.com/Vahe1994/SpQR; to be integrated into bitsandbytes (footnote)",
+   "weights": null,
+   "data": "RedPajama, RefinedWeb public"
+  },
+  "prompts": [
+   {
+    "purpose": "Generation examples",
+    "text": "Every time data scientist Kim ran her new algorithm, it kept outputting the same unexpected result: a recipe for",
+    "where": "Appendix I, Fig 9 (four prompts, LLaMA-65B 16bit vs SpQR vs RTN 4-bit, greedy)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.beta2",
+    "quote": "a group size of 64 for the second quantization",
+    "where": "Section 5"
+   },
+   {
+    "field": "inference.parameters.beta1",
+    "quote": "a group size of 8 with 3-bit for the first quantization",
+    "where": "Section 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SpQR reaches within 1% of fp16 perplexity on LLaMA at 4.63 to 4.71 average bits.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 perplexity",
+   "value": "5.73 vs 5.68 (7B, 4.63 bits); 3.57 vs 3.53 (65B, 4.71 bits)",
+   "unit": "perplexity",
+   "baseline_value": "5.68 (7B), 3.53 (65B)",
+   "n": null,
+   "setup": "LLaMA 7B/13B/30B/65B, SpQR near-lossless configs, single seed, calibrated on RedPajama",
+   "quote": "SpQR with 4.6 to 4.71 bits per parameter approaches the non-quantized models with at most 1% margin of error for all models",
+   "table": null,
+   "note": null,
+   "where": "Section 5, Table 1"
+  },
+  {
+   "claim": "At about 3.9 bits SpQR still beats 4-bit GPTQ and RTN on LLaMA-7B Wiki2 but is not within 1% (5.87 vs fp16 5.68).",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 perplexity",
+   "value": "5.87",
+   "unit": "perplexity",
+   "baseline_value": "5.68 fp16; GPTQ 6.13; RTN 6.43",
+   "n": null,
+   "setup": "LLaMA-7B, SpQR 3.94 bits vs 4-bit baselines",
+   "quote": null,
+   "table": "Table 1, LLaMA 7B, row SpQR 3.94, column Wiki2 (5.87); GPTQ 6.13; RTN 6.43; fp16 5.68",
+   "note": "5.87 is about 3.3% above 5.68, so the sub-4-bit configs are not near-lossless.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Falcon-7B and 40B reach within 1% perplexity at under 4.5 bits.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 perplexity",
+   "value": "6.64 vs 6.59 (7B, 4.44 bits); 5.26 vs 5.23 (40B, 4.46 bits)",
+   "unit": "perplexity",
+   "baseline_value": "6.59, 5.23",
+   "n": null,
+   "setup": "Falcon 7B/40B, SpQR, RefinedWeb calibration",
+   "quote": "SpQR reaches performances within 1% of the perplexity with less than 4.5 bits per parameter.",
+   "table": null,
+   "note": null,
+   "where": "Table 2 caption"
+  },
+  {
+   "claim": "At 4 bits SpQR halves the error relative to 16-bit compared with GPTQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error relative to 16-bit",
+   "value": "half",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA and Falcon, 4-bit-sized comparison against GPTQ",
+   "quote": "For 4-bit, SpQR halves the error relative to the 16-bit baseline compared to GPTQ.",
+   "table": null,
+   "note": null,
+   "where": "Section 5",
+   "unit": null
+  },
+  {
+   "claim": "Optimized SpQR kernel generates faster than fp16 on a single A100, speedup roughly 20-30% in the text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens/s",
+   "value": "57 vs 47 (7B, from scratch)",
+   "unit": "tokens/s",
+   "baseline_value": "47",
+   "n": null,
+   "setup": "A100, batch size 1, LLaMA 7B, generate 100 tokens from scratch",
+   "quote": null,
+   "table": "Table 4, rows scratch, columns fp16 7B (47 ± 2.3) and SpQR (optimized) 7B (57 ± 2.4)",
+   "note": "Abstract says 15% speedup; Section 1 and 5 say 20-30%. From Table 4 ratios: scratch 7B 57/47 = 1.21, 13B 44/37 = 1.19, 30B 22/19 = 1.16; prefix 1024 7B 55/46, 13B 37/31, 30B 22/17 = 1.29. 65B fp16 is OOM on the A100 so no comparison.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Standard PyTorch sparse matmul is not faster than 16-bit; the custom kernel gives about 20-30% speedup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup vs fp16",
+   "value": "20-30%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100, batch 1, LLaMA 7B-30B",
+   "quote": "our specialized sparse matrix multiplication algorithm yields speedups of about 20-30%.",
+   "table": null,
+   "note": null,
+   "where": "Section 5, Inference Time"
+  },
+  {
+   "claim": "Abstract: 33B model on a single 24 GB consumer GPU at 15% speedup.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "No 24 GB GPU timing or 33B model appears in the experiments; speed measured on A100, LLaMA sizes 7/13/30/65B; Table 9 recommends 30B at b~4.5 for 24 GB RTX4090",
+   "quote": null,
+   "table": null,
+   "note": "Abstract text: 'run 33B parameter LLM on a single 24 GB consumer GPU without any performance degradation at 15% speedup'. Not backed by a measurement in the body.",
+   "where": "Abstract; Table 9"
+  },
+  {
+   "claim": "1% of weights can account for over 75% of the total quantization error in some layers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of error",
+   "value": "75%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-65B sensitivity analysis, 3-bit GPTQ, some cases",
+   "quote": "In some cases, 1% of the weights account for over 75% of the total quantization error.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "SpQR compresses to as little as 3.36 bits with a better size-quality tradeoff.",
+   "kind": "claim",
+   "source": null,
+   "metric": "bits per parameter",
+   "value": "3.36",
+   "unit": "bits",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion; no table row at 3.36 (Table 5 min effective is 3.051 without outliers, 3.45-3.52 in zero-shot tables)",
+   "quote": "We achieve even better quality-size-tradeoff when compressing to as little as 3.36 bits",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "Zero-shot average at 3.45 bits is below fp16 on LLaMA-7B (60.96 vs 61.492) while the 4.63-bit config matches (61.460).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg zero-shot score",
+   "value": "60.960",
+   "unit": "%",
+   "baseline_value": "61.492",
+   "n": null,
+   "setup": "LLaMA-7B, 5 tasks, LM Eval Harness",
+   "quote": null,
+   "table": "Table 7, LLaMA 7B, row SpQR 3.45, column Avg score (60.960); fp16 61.492; SpQR 4.63 61.460",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Small groups with 3-bit quantized statistics beat larger groups with 16-bit statistics at the same size (LLaMA-65B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 perplexity",
+   "value": "3.74 vs 3.84",
+   "unit": "perplexity",
+   "baseline_value": "3.53 fp16",
+   "n": null,
+   "setup": "LLaMA-65B, no outliers, ~3.6 avg bits",
+   "quote": null,
+   "table": "Table 3, rows 3-bit statistics (3.74, 3.63 bits) and 16-bit statistics (3.84, 3.67 bits)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Unstructured outliers reduce perplexity faster than row outliers or the Dettmers & Zettlemoyer column criterion.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity vs outlier rate",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-65B, 3-bit SpQR, Fig 4 (values read from plot only)",
+   "quote": "unstructured outliers reduce perplexity significantly faster than their row counterpart and the criterion of [DZ22]",
+   "table": null,
+   "note": null,
+   "where": "Section 5 Ablations, Fig 4"
+  },
+  {
+   "claim": "Optimal outlier fraction is 0.2-0.5%; higher-precision weights beat very small groups or large outlier fractions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimal outlier share",
+   "value": "0.2-0.5%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix E configuration sweep, WikiText2 vs average bits (Fig 8)",
+   "quote": "In our experiments optimal fraction of outliers is 0.2-0.5% depending on the model and groupsize.",
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Seed variation is much smaller than the gap between SpQR and baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText2 perplexity",
+   "value": "3.75 ± 0.003",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": "5 seeds",
+   "setup": "LLaMA-65B, bw=bz=bs=3, beta1=beta2=16, 3.625 bits",
+   "quote": "The resulting perplexity scores are 3.75 ± 0.003 (WikiText2)",
+   "table": null,
+   "note": null,
+   "where": "Appendix H"
+  },
+  {
+   "claim": "Average memory per outlier is about 32 bits and the size formula is b = bw + (bs+bz)/beta1 + 64/(beta1 beta2) + 32 ro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per outlier",
+   "value": "32.03 to 32.1",
+   "unit": "bits",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16-bit value + 16-bit index + per-row 32-bit counter",
+   "quote": "This results in an average storage cost of 32.03 to 32.1 bits per sensitive weight.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Quantization takes around 4.5 hours for LLaMA-65B on an A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "quantization time",
+   "value": "4.5 hours",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "65B, NVIDIA A100 (about 6 on an A6000)",
+   "quote": "Our implementation takes around 4.5 hours on the largest model size (65B)",
+   "table": null,
+   "note": null,
+   "where": "Section 5"
+  }
+ ],
+ "limits": [
+  "Only perplexity and zero-shot accuracy are measured; generation quality is not evaluated (authors concede, Sec 6); Appendix I has only 4 qualitative greedy samples.",
+  "Sparse outlier multiply is not fused with the quantized dense multiply (Sec 6).",
+  "Speed measured only on a single A100 at batch size 1; no 24 GB GPU or 33B model timing despite the abstract claim.",
+  "Main results use one fixed seed; Appendix H seed check is only LLaMA-65B at 3.625 bits.",
+  "Near-lossless (1%) holds only at about 4.6-4.75 bits; the 3.4-3.9 bit configs lose more (e.g. LLaMA-7B 5.87 vs 5.68).",
+  "Calibration set size for the main quantization runs is not stated; Hessian regularizer lambda value not stated.",
+  "Outliers cost ~32 bits each and are not grouped; quantized copies of outliers are retained (future work).",
+  "Document is arXiv v1 (June 2023); the PDF does not state a venue."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Near-lossless",
+   "definition": "1% error relative to the uncompressed baseline (MLCommons definition)",
+   "where": "Section 5"
+  },
+  {
+   "term": "Bilevel quantization",
+   "definition": "quantizing the groupwise scales and zero points themselves with the same min-max quantizer, grouped in beta2 = 16 values",
+   "where": "Section 4.1"
+  },
+  {
+   "term": "Sensitivity s_ij",
+   "definition": "minimum squared change in layer output when weight w_ij is quantized and all other weights adjust freely; s_ij = (w_ij - quant(w_ij))^2 / (2 (XX^T)^-1)",
+   "where": "Section 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GPTQ",
+   "year": 2022,
+   "arxiv": "2210.17323",
+   "relation": "extends",
+   "note": "SpQR extends GPTQ's layer-wise solver and is compared against it",
+   "quote": null
+  },
+  {
+   "work": "Optimal Brain Compression",
+   "year": 2022,
+   "arxiv": "2208.11580",
+   "relation": "uses-method",
+   "note": "generalized Optimal Brain Surgeon closed form for sensitivity",
+   "quote": null
+  },
+  {
+   "work": "LLM.int8()",
+   "year": 2022,
+   "arxiv": "2208.07339",
+   "relation": "extends",
+   "note": "outlier features isolated in higher precision; SpQR isolates outlier weights",
+   "quote": null
+  },
+  {
+   "work": "The case for 4-bit precision",
+   "year": 2022,
+   "arxiv": "2212.09720",
+   "relation": "baseline",
+   "note": "column-outlier criterion compared in Fig 4; 4-bit as optimal for RTN",
+   "quote": null
+  },
+  {
+   "work": "SparseGPT",
+   "year": 2023,
+   "arxiv": "2301.00774",
+   "relation": "related",
+   "note": "joint sparsification and quantization",
+   "quote": null
+  },
+  {
+   "work": "ZeroQuant",
+   "year": 2022,
+   "arxiv": "2206.01861",
+   "relation": "related",
+   "note": "RTN-based LLM quantization",
+   "quote": null
+  },
+  {
+   "work": "SmoothQuant",
+   "year": 2022,
+   "arxiv": "2211.10438",
+   "relation": "related",
+   "note": "activation outliers",
+   "quote": null
+  },
+  {
+   "work": "Yao et al. comprehensive PTQ study",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "they recommend against small groups; SpQR uses tiny groups with quantized statistics",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "evaluates",
+   "note": "7/13/30/65B",
+   "quote": null
+  },
+  {
+   "work": "Falcon",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "7B, 40B",
+   "quote": null
+  },
+  {
+   "work": "MLPerf inference benchmark",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "1% definition of near-lossless",
+   "quote": null
+  },
+  {
+   "work": "LM Evaluation Harness",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "zero-shot evals",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Compressed LLM performance for LLaMA models. (left) LM loss on WikiText2 vs model size. (right) Average performance on zero-shot tasks vs model size.",
+   "page": 2,
+   "why": "Shows SpQR dominates RTN and GPTQ at equal size."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Weight log-sensitivities from the last attention layer of LLaMA-65B.",
+   "page": 5,
+   "why": "Shows row, column, head, rotary patterns motivating the format."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "A high-level overview of the SpQR representation for a single weight tensor.",
+   "page": 7,
+   "why": "Stored data types and sizes at a glance."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Different outlier types, LLaMA-65B.",
+   "page": 9,
+   "why": "Unstructured vs row vs column outliers."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Inference speed comparison (tokens/s), OOM means the model did not fit in an A100 GPU.",
+   "page": 11,
+   "why": "Only speed evidence."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix B",
+   "snippet": "python main.py $MODEL custom --custom_data_path=$DATA --wbits 4 --groupsize 16 --perchannel --qq_scale_bits 3 --qq_zero_bits 3 --qq_groupsize 16 --outlier_threshold 0.1 --fit_quantizer_without_outliers --permutation_order act_order",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions. Text extraction of tables is one cell per line; Table 2 Falcon-7B SpQR 3.92 PTB cell prints '19.114' (likely a typo for 9.114/10.14; unreadable), Table 9 lists '14B' for RTX4070 (presumably 13B)."
+ ]
+}

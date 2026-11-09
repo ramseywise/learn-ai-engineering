@@ -29,6 +29,8 @@ cleaned: 2026-11-02
 
 In this course's case study, an off-the-shelf judge scored the answers users disliked higher on completeness than the ones they liked, and nothing in its output showed that. Asking a model to grade feels like measuring, but until a judge is compared with human labels nobody knows what its number means, and any change to its model, prompt or sampling makes it a new instrument. [Note 05](05-llm-as-judge.md) covers how to write a judge and which biases to test for. This chapter covers how to calibrate it on your own data, what to measure, how to correct a pass rate, and how to keep the judge calibrated.
 
+**Needs.** The first half (the procedure, TPR, TNR and κ, correcting the pass rate) stands alone after 05. The later sections lean on other notes: the case-study results in [13](13-case-study-support-agent.md), multiple comparisons and paired intervals in [09](09-reading-results.md), the regression gate in [10](10-evals-in-ci.md), and the multi-turn material in [06c](06c-agent-suites-and-environment-hygiene.md). Read those first if you jump to "A correction per vertical", "Not enough evidence" or the multi-turn section.
+
 ---
 
 ## Calibrate against human labels

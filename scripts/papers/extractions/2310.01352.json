@@ -1,19 +1,316 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.01352",
  "pdf": "generative-ai/02-rag-retrieval/sources/lin-2023-ra-dit.pdf",
  "bib": {
   "title": "RA-DIT: Retrieval-Augmented Dual Instruction Tuning",
-  "first_author": "Xi Victoria Lin",
-  "year": "2023",
-  "venue": null,
+  "authors": ["Xi Victoria Lin", "Xilun Chen", "Mingda Chen", "Weijia Shi", "Maria Lomeli", "Rich James", "Pedro Rodriguez", "Jacob Kahn", "Gergely Szilvasy", "Mike Lewis", "Luke Zettlemoyer", "Scott Yih"],
+  "first_author": "Lin",
+  "year": 2023,
+  "venue": "ICLR 2024 (arXiv v4, 6 May 2024)",
   "arxiv": "2310.01352",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 95734,
+  "chars_total": 95734,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only. Figures 1 and 2 are images; their data was not read (captions only)."
  },
- "legacy_report": "SOURCE: RA-DIT: Retrieval-Augmented Dual Instruction Tuning. Xi Victoria Lin, Xilun Chen, Mingda Chen, Weijia Shi, Maria Lomeli, Rich James, Pedro Rodriguez, Jacob Kahn, Gergely Szilvasy, Mike Lewis, Luke Zettlemoyer, Scott Yih (FAIR at Meta). ICLR 2024 (arXiv:2310.01352v4, May 2024; file is lin-2023-ra-dit.pdf).\n\nCOVERAGE: 95,915 of 95,915 chars read (all 25+ pages incl. appendices A-F). References skimmed only. Extraction is clean. Figures 1 and 2 are images, so I could not read their data. Their captions came from the text and I did not run figures.py.\n\nNOTE ON TARGET NOTE: Note 11 does not cite RA-DIT (its sources are Yan 2024, HyDE, DPO, REPLUG). The closest hooks are the REPLUG/LSR paragraph in item 5, the \"fine-tuning before you have data\" pitfall, and CRAG (which compares to Self-RAG). RA-DIT is a direct extension of REPLUG LSR, so it sharpens that paragraph.\n\nCLAIMS (ranked)\n- Fine-tuning both LM and retriever beats off-the-shelf REPLUG on knowledge-intensive tasks.\n  number: +8.9 (0-shot), +1.4 (5-shot) avg points\n  setup: LLaMA 65B, DRAGON+ retriever, 399M-chunk corpus, top-10 chunks ensembled, avg over MMLU/NQ/TQA/ELI5, test sets. 0-shot avg 43.1 -> 50.5; 5-shot 52.7 -> 55.2 (Table 2).\n  quote: \"RA-DIT significantly outperforms REPLUG (+8.9% in 0-shot and +1.4% in 5-shot on average over MMLU, NQ, TQA and ELI5)\"\n  where: p.6, section 4\n\n- Gain over untuned in-context RALM on single datasets.\n  number: NQ +22 (0-shot), +3.8 (5-shot); MMLU +8.2 / +0.7\n  setup: as above, RA-DIT 65B vs REPLUG. Table 2: NQ 28.8 -> 35.2 (0-shot) and 42.3 -> 43.9 (5-shot). Introduction's percentages do not match the Table 2 point differences (6.4 and 1.6). They are probably relative gains, so flag this.\n  quote: \"Natural Questions (Kwiatkowski et al., 2019) (+22% 0-shot; +3.8% 5-shot)\"\n  where: p.2, Introduction\n\n- Against ATLAS 11B, 64-shot fine-tuned, RA-DIT 65B wins on average.\n  number: +4.1 points (60.9 vs 56.8); wins on 6 of 8 datasets\n  setup: 8 KILT-style tasks. RA-DIT uses ONE multi-task model fine-tuned on 64 examples per task combined. ATLAS fine-tunes per task. ATLAS is 11B and RA-DIT is 65B, so the sizes are not matched.\n  quote: \"despite using a single model, RA-DIT outperforms ATLAS by an average of 4.1 points, achieving higher performance on 6 out of the 8 datasets.\"\n  where: p.6\n\n- Each half of the dual tuning helps and the combination helps most, but the gains are small on the dev sets.\n  number: Table 6, 5-shot dev avg: baseline 53.8, FTed retriever only 54.4, LM-ft only 53.9, both 54.6\n  setup: LLaMA 65B, 10 dev tasks, 5-shot. The paper's own wording is that RA-DIT \"outperforms the REPLUG baseline by 0.8 points on average\". LM-ft alone gains only 0.1 avg, though it helps more in 0-shot (Table 4).\n  quote: \"the most gain can be achieved when combining LM-ft and R-ft in our RA-DIT method, which outperforms the REPLUG baseline by 0.8 points on average.\"\n  where: p.8, section 5.2, Table 6\n\n- Retrieval-augmented instruction tuning (RA-IT) beats ordinary instruction tuning (IT) at 0-shot with retrieval, and the gap closes at 5-shot.\n  number: 51.0 vs 47.7 avg (top-10 chunks, 0-shot); 5-shot 55.8 vs 55.6\n  setup: LLaMA 65B + DRAGON+, 6 KILT dev tasks (Table 4). Without retrieval, the RA-IT 0-shot average is 29.0 and IT is 24.9. Plain instruction tuning gave marginal or negative effects at 5-shot, except on HotpotQA.\n  quote: \"In the 0-shot setting with top-10 retrieved chunks, the RA-IT 65B model outperforms the IT 65B model by a large margin (51.0% vs. 47.7%).\"\n  where: p.7, section 5.1, Table 4\n\n- Training the LM with retrieved chunks, including wrong ones, teaches it to ignore bad retrievals and lean on its own knowledge.\n  number: none (qualitative, via examples)\n  setup: k~=3 retrieved chunks per example, each as a separate training instance. SQuAD v2 in the mix teaches \"I don't know\" on irrelevant passages. Appendix F HotpotQA 0-shot examples show IT 65B misled by distractors and saying \"I don't know\" more often.\n  quote: \"By training the LLM to make correct predictions when a wrong retrieved chunk is given, we enable the LLM to ignore misleading retrieval content and lean into its parametric knowledge in such cases.\"\n  where: p.4, 2.3. Examples in App. F, pp.24-25\n\n- Retriever fine-tuning with LM supervision (LSR) gives small gains, and the data mix matters.\n  number: corpus-only +0.4; MTI-only +0.1; 95% corpus + 5% MTI +0.6 avg points over DRAGON+\n  setup: LLaMA 65B, 5-shot dev, Table 5 (avg of 6 KILT dev tasks: 57.4 base, 58.0 best). Retrieval-corpus data = 900k chunks, first 50 tokens as input, last 50 as target. MTI = 286k examples from 10 QA/dialog tasks. Retriever recipe: tau = 0.01, top-10 chunks scored by LLaMA 65B, lr 1e-5, one epoch, 16 A100s.\n  quote: \"fine-tuning with “95% corpus data + 5% MTI data” achieves the best accuracy across all models, outperforming the non-finetuned baseline by 0.6 points on average.\"\n  where: p.7-8, 5.1; App. B p.20\n\n- Update only the query encoder, not both encoders.\n  number: avg 57.8 (query only) vs 55.8 (both encoders), 5-shot dev, corpus data\n  setup: same Table 5. Doc embeddings stay fixed, so the index need not be re-embedded.\n  quote: \"freezing the document encoder produces significantly better performance.\"\n  where: p.8; Table 5; App. B (p.20, \"there is no need to update the chunk embeddings\")\n\n- Retrieval lifts small models more. A 7B model with more than one retrieved chunk surpasses vanilla 65B on several tasks.\n  number: none stated (figure only)\n  setup: RA-IT 7B/13B/65B + DRAGON+, dev tasks, Fig. 2. Larger models still lead on multi-hop tasks (HotpotQA, WoW).\n  quote: \"the 7B model leveraging > 1 retrieved chunks surpassed the performance of the vanilla 65B model on several tasks.\"\n  where: p.21, App. E.1\n\n- Retriever choice matters under a fixed LM.\n  number: 5-shot dev avg: Contriever 47.5, Contriever-msmarco 51.8, DRAGON+ 53.4, no retrieval 45.0\n  setup: LLaMA 65B, REPLUG setting, 399M corpus (Table 7)\n  quote: \"All retrieval-augmented models substantially improve over the LLAMA baseline, and DRAGON + significantly outperforms both Contriever and Contriever-MSMARCO.\"\n  where: p.8, 5.3\n\n- Corpus choice matters, and the model follows the index it is given.\n  number: 5-shot dev avg: Wiki 2021 54.7, Wiki 2021 + infobox 54.8, Wiki 2018 51.9, CC only 47.0\n  setup: LLaMA 65B + DRAGON+ (Table 14). The wide gaps are on zsRE and T-REx, where CC-only scored 30.3 and 46.2 against 65.3 and 73.1 for Wiki 2021. Wiki 2018 does better on NQ (42.6 vs 41.8).\n  quote: \"This indicates that our retrieval-augmented LM is faithful to the supplied retrieval corpus, and up-to-date information can be provided by updating the retrieval index at test time.\"\n  where: p.23, App. E.3\n\n- Parallel per-chunk encoding is about as good as concatenating chunks.\n  number: 50.1 (parallel) vs 50.9 (concat), 0-shot, top-3\n  setup: RA-IT 65B, 6 KILT dev tasks (Table 13). The model was trained with parallel prompts, which may favour that configuration.\n  quote: \"the two approaches perform closely on average with chunk concatenation demonstrating a small benefit.\"\n  where: p.23, App. E.2\n\n- Tuning for retrieval does not damage the LM's non-retrieval abilities.\n  number: commonsense 0-shot avg 72.1 -> 74.5; improved on 7 of 8 datasets (OBQA fell, 60.2 -> 58.8)\n  setup: LLaMA 65B vs RA-DIT 65B, no retrieval, Table 3\n  quote: \"RA-DIT demonstrates improvements over the base LLAMA models on 7 out of 8 evaluation datasets\"\n  where: p.6\n\n- Iterative dual tuning gave no further gain.\n  number: none\n  setup: one or two iterations in preliminary experiments, not reported in tables\n  quote: \"did not observe further gains.\"\n  where: p.8, 5.2\n\nLIMITS\n- Retriever gains are small (0.1 to 0.6 points on dev averages). Most of the benefit comes from LM-ft and from having retrieval at all.\n- Setup is heavy. LM-ft used 8, 16 and 64 A100s for 7B, 13B and 65B. R-ft used 16 A100s. All of this is LLaMA-1 era (2023), with 2048-token context.\n- Requires logit access: LSR scores need p_LM(y|c ◦ x) and the ensemble uses per-chunk output probabilities. Hosted chat APIs rarely give these (inference from the method; the paper does not discuss APIs).\n- LSR top-10 chunks and scores were computed once with LLaMA 65B and DRAGON+ and not refreshed during R-ft.\n- Retrieval queries come from hand-written templates (Tables 10 and 12). The authors defer \"automatically generating task-specific retrieval queries to future work.\"\n- Dev-set tuning: hyperparameters were selected on 6 KILT dev tasks. Only 4 of 10 eval tasks are genuinely few-shot, and \"for the remaining tasks, we report few-shot results assuming access to in-domain development data.\"\n- The ATLAS comparison is not matched. Model size, per-task vs single model, and the 64-shot recipe all differ. RA-DIT is footnoted as \"compares favorably\" to InstructRetro 48B, with different base LMs and data.\n- The authors report lower 0-shot LLaMA numbers on NQ and TQA than Touvron et al. because they use exact match (footnote 7).\n- HotpotQA multi-hop: the dense retriever \"struggles to return useful text chunks\", and larger LMs keep an advantage.\n- No latency, cost or single-run variance or significance tests are reported. All results are single-run (none stated).\n- Chunk concatenation fine-tuning and multi-step RA-DIT are left to future work.\n- Dated: LLaMA 65B, DRAGON+, 2021 Wikipedia. No comparison to modern long-context or reasoning models.\n\nBUILDS ON (as printed)\n- REPLUG, Shi et al., 2023b (parallel retrieval ensembling and LSR objective, which RA-DIT generalises to multi-task data).\n- DRAGON+, Lin et al., 2023 (initial retriever).\n- Atlas, Izacard et al., 2022b (corpus dump, baseline).\n- In-Context RALM, Ram et al., 2023.\n- REALM (Guu et al., 2020); RETRO (Borgeaud et al., 2022); RAG (Lewis et al., 2020).\n- Instruction tuning: Chung et al., 2022b; Iyer et al., 2022 (label-loss objective, document attention masking); Zhou et al., 2023 (LIMA, few fine-tuning steps).\n- Contrasted with Self-RAG (Asai et al., 2023), SAIL (Luo et al., 2023) and InstructRetro (Wang et al., 2023).\n\nCODE\nNo code in the paper. It points to scripts at https://github.com/facebookresearch/RA-DIT for indexing and prompt generation. Load-bearing formulas (p.3-5):\n- Mixture: pLM(y|x,C') = Σ_{c∈C'} pLM(y|c ◦ x) · pR(c|x), with pR a softmax of s(x,c) over the top-k.\n- LSR target: pLSR(c|x,y) = exp(pLM(y|c ◦ x)/τ) / Σ_{c'} exp(pLM(y|c' ◦ x)/τ).\n- Loss: L(DR) = E KL(pR(c|x) ‖ pLSR(c|x,y)).\n- Prompt format: \"Background: {retrieved passage}\\n\\nQ: {question}\\nA: {answer}\"\n\nFIGURES\n- Fig. 1 (p.2): RA-DIT separately fine-tunes the LLM (LM-ft: maximise answer likelihood given retrieval-augmented prompt) and the retriever (R-ft: minimise KL to the LLM's preference). It shows the two-stage design at a glance. I did not view the image.\n- Fig. 2 (p.22): RA-IT performance at 7B, 13B and 65B on dev tasks, with 0-shot dashed and 5-shot solid. It shows that retrieval helps small models more. I did not view the image, and the data are not in the extracted text.\n\nPROBLEMS\n- No embedded instructions found.\n- Tables are flattened text, but the rows read cleanly. The Table 2 relative percentages in the intro do not match its point differences (see the NQ claim).\n- Table 5's first rows are labelled \"DRAGON+\" and similar. Its \"⋄ Avg\" column is the average over 6 KILT dev tasks. Table 6 uses \"RIT\" where the text says RA-IT.\n- The Table 7 DRAGON+ row (53.4) does not equal Table 6's baseline (53.8) because of few-shot truncation differences (footnote 11). Compare only within a table."
+ "type": "empirical",
+ "question": "Can a lightweight two-step fine-tuning of an LLM (to use retrieved text) and of a retriever (to return what the LLM prefers) beat off-the-shelf retrieval-augmented LMs on knowledge-intensive tasks?",
+ "hypothesis": "Combining off-the-shelf LLMs and retrievers is sub-optimal; fine-tuning each half separately against the other will help, and doing both will help most.",
+ "contributions": [
+  "RA-DIT: retrieval-augmented instruction tuning of the LM (RA-IT) plus LM-supervised fine-tuning of the retriever's query encoder, as two separate steps",
+  "Generalises LSR to multi-task instruction data mixed with unsupervised text completion",
+  "State-of-the-art 0-shot and few-shot results on knowledge-intensive benchmarks with LLaMA 65B, competitive with Atlas 11B in 64-shot fine-tuning",
+  "Ablations of LM fine-tuning, retriever fine-tuning, model size, retriever choice, parallel vs concatenated chunks, and retrieval corpus"
+ ],
+ "method": {
+  "summary": "LLaMA (7B/13B/65B) is instruction-tuned on 20 datasets with a retrieved 'Background:' chunk prepended (top-3 chunks, one fine-tuning instance per chunk). Separately, the DRAGON+ query encoder is fine-tuned with a KL loss against LM-derived LSR scores over top-10 chunks, using 95% unsupervised corpus data and 5% multi-task instruction data. At inference the top-10 chunks are each prepended and the LM outputs are mixed by retriever score (REPLUG-style parallel augmentation).",
+  "task": "retrieval-augmented instruction tuning for knowledge-intensive tasks (open-domain QA, KILT tasks, MMLU)",
+  "trains": true,
+  "datasets": [
+   {"name": "LM fine-tuning mixture D_L (20 datasets: dialogue, open-domain QA, reading comprehension, summarization, chain-of-thought)", "role": "train", "size": "per-dataset sizes in Table 1, e.g. oasst1 31,598; CNN/DailyMail 287,113; SQuAD v2 130,319; capped at eta = 7500 examples per dataset", "split": "train", "source": "Hugging Face, except aqua_rat, ecqa, gsm8k, competition math, strategyqa taken from Iyer et al. (2022)", "preprocessing": "Serialised with templates in Table 10; field markers randomised; examples packed to 2048 tokens with document attention masking; mixture is 10% unsupervised text and 5% OASST-1, remaining datasets capped at 7500"},
+   {"name": "Retriever fine-tuning data D_R: multi-task instruction (MTI) data", "role": "train", "size": "286k training examples from 10 open-domain QA and dialogue tasks", "split": "train", "source": "QA datasets of Table 1 with standalone questions plus FreebaseQA and MS-MARCO (question-answer pairs only)", "preprocessing": "same templates as LM fine-tuning"},
+   {"name": "Retriever fine-tuning corpus data", "role": "train", "size": "900k text chunks sampled from the retrieval corpus", "split": null, "source": "retrieval corpus", "preprocessing": "first 50 tokens of each chunk are input x, last 50 tokens are output y"},
+   {"name": "Retrieval corpus", "role": "eval", "size": "399M chunks: 37M Wikipedia (Dec 20 2021 dump, sections split to under 200 words) + 362M CommonCrawl 2017-2020 (random article subset, chunks under 100 words)", "split": null, "source": "Wikipedia dump from Izacard et al. 2022b; CommonCrawl", "preprocessing": "GPU exact kNN index from the Atlas codebase"},
+   {"name": "Knowledge-intensive eval: MMLU, NQ, TriviaQA, ELI5, HotpotQA, FEVER, AIDA CoNLL-YAGO, Zero-Shot RE, T-REx, Wizard of Wikipedia", "role": "eval", "size": "test: full sets; dev: max 2500 random examples per official dev set", "split": "test for Table 2, dev for ablations; HoPo, FEV, AIDA, zsRE, T-REx, WoW dev sets used to pick fine-tuning hyperparameters", "source": "KILT subset plus MMLU, NQ, TQA", "preprocessing": "few-shot examples from official train splits; for FEV, NQ, TQA the 64-shot examples released by Izacard et al. 2022b (5-shot are subsets); top-1 chunk augments each in-context example"},
+   {"name": "Commonsense reasoning: BoolQ, PIQA, SIQA, HellaSwag, WinoGrande, ARC-E, ARC-C, OBQA", "role": "eval", "size": null, "split": "dev, no retrieval", "source": null, "preprocessing": null}
+  ],
+  "models": [
+   {"name": "RA-DIT 7B / 13B / 65B", "role": "proposed", "params": "7B, 13B, 65B", "architecture": "decoder-only LLaMA, retrieval-augmented fine-tuned", "init_from": "LLaMA (Touvron et al. 2023a)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2048 tokens", "other": {}},
+   {"name": "DRAGON+", "role": "retriever", "params": null, "architecture": "dual-encoder dense retriever, dot-product similarity; only the query encoder is fine-tuned", "init_from": "DRAGON+ (Lin et al. 2023)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LLaMA 65B + DRAGON+ (REPLUG)", "role": "baseline", "params": "65B", "architecture": "off-the-shelf in-context RALM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ATLAS", "role": "baseline", "params": "11B", "architecture": "encoder-decoder RALM, 64-shot fine-tuned per task", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "sizes taken from the Introduction: 'ATLAS 11B'"}}
+  ],
+  "training": {
+   "objective": "LM: next-token loss on output segment only, L(D_L) = -sum_i sum_j log p_LM(y_i | c_ij o x_i). Retriever: KL(p_R(c|x) || p_LSR(c|x,y)) with p_LSR proportional to exp(p_LM(y|c o x)/tau)",
+   "optimizer": null,
+   "lr": "LM: peak 1e-5, end 1e-7 (Table 8). Retriever: 1e-5",
+   "lr_schedule": "LM: cosine. 64-shot task fine-tuning: linear from 1e-5 to 1e-6",
+   "warmup": "LM: 200 steps. Retriever: 1237 steps (DRAGON default). 64-shot: 0",
+   "batch_size": "LM: 64 (7B), 128 (13B), 128 (65B). Retriever: 32 per GPU. 64-shot: 32 for RA-DIT 13B and 65B",
+   "steps": "LM: 500 scheduled steps; best checkpoint at 500 (7B), 400 (13B), 300 (65B) by early stopping. 64-shot: 100 steps, best at 50",
+   "epochs": "Retriever: 1 epoch over 95% corpus + 5% MTI data",
+   "tokens": null,
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping on average dev score of the 6 KILT dev tasks, evaluated every 100 steps (every 50 for 64-shot)",
+   "hardware": "LM: 8, 16, 64 A100 GPUs for 7B, 13B, 65B. Retriever: 16 A100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"k_tilde": "top-3 chunks used to build LM fine-tuning instances", "model_parallel": "1 (7B), 2 (13B), 8 (65B)", "tau": "0.01 (retriever LSR temperature)", "retriever_top_k": "top-10 chunks and LSR scores computed once with LLaMA 65B + DRAGON+ and not updated during R-ft", "retriever_validation": "MRR every 500 steps on a combined validation set of the 10-task MTI data", "retriever_mixture": "95% corpus data + 5% MTI data (5% or 10% MTI worked best in early tests)", "codebase": "dpr-scale for retriever fine-tuning"}
+  },
+  "inference": {
+   "decoding": "multi-choice: weighted mean probability per choice over chunks, take the highest. Generation: decode with each augmented prompt independently, sum weighted probability per unique answer, output the highest",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds or variance reported",
+   "prompting": "'Background: {retrieved passage}\\n\\n' prepended to the task template (Tables 10, 12); 0-shot and 5-shot in-context, 64-shot fine-tuned",
+   "retrieval": "top-10 chunks (k=10) from the 399M corpus, each prepended separately, outputs mixed by renormalised retriever score; queries from manual templates (Table 12); no retrieval for commonsense tasks",
+   "parameters": {"scoring_functions": "nll, nll char, nll token, nll compl (per task, Table 11)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "MMLU, FEVER, AIDA, zsRE, T-REx and commonsense tasks", "unit": "%", "higher_is_better": true},
+    {"name": "Exact match", "definition": "NQ, TQA, HotpotQA", "unit": "%", "higher_is_better": true},
+    {"name": "Rouge-L", "definition": "ELI5", "unit": "points", "higher_is_better": true},
+    {"name": "F1", "definition": "Wizard of Wikipedia", "unit": "points", "higher_is_better": true},
+    {"name": "Avg (diamond)", "definition": "Table 2: average of MMLU, NQ, TQA, ELI5 (four tasks). Table 5: footnote says 6 KILT dev tasks. Plain Avg in Table 2 is the average over the ten tasks; in Table 5 it matches the 9-task average", "unit": "points", "higher_is_better": true}
+   ],
+   "baselines": ["LLaMA (base)", "REPLUG (LLaMA + DRAGON+)", "ATLAS 11B (64-shot)", "IT 65B (conventional instruction tuning)", "Contriever, Contriever-msmarco"],
+   "protocol": "Test sets full; dev sets capped at 2500 examples. Single runs. 64-shot: RA-DIT uses one multi-task model fine-tuned on 64 examples per task combined, ATLAS fine-tunes per task. Hyperparameters selected on 6 KILT dev tasks, so only 4 of 10 eval tasks (those, plus MMLU, NQ, TQA, ELI5 not tuned on) are genuinely few-shot"
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/RA-DIT (scripts for indexing Common Crawl and generating fine-tuning and inference prompts)",
+   "weights": null,
+   "data": "fine-tuning datasets from Hugging Face; CommonCrawl subset not released as stated"
+  },
+  "prompts": [
+   {"purpose": "open-domain QA fine-tuning template", "text": "Background: {retrieved passage}\\n\\n<inst s> {question} <inst e> <answer s> {answer}", "where": "Table 10"},
+   {"purpose": "NQ/TQA/ELI5/HoPo/zsRE eval prompt", "text": "Background: {retrieved passage}\\n\\nQ: {question}\\nA: {answer}", "where": "Table 12"},
+   {"purpose": "FEVER eval prompt", "text": "Background: {retrieved passage}\\n\\nIs this statement true? {statement} {answer}", "where": "Table 12"}
+  ],
+  "evidence": [
+   {"field": "eval.metrics Avg", "quote": "Average of MMLU, NQ, TQA, and ELI5.", "where": "Table 2 footnote"},
+   {"field": "table 5 Avg", "quote": "Average over the 6 KILT development tasks.", "where": "Table 5 footnote"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "RA-DIT 65B beats REPLUG on the four-task test average (MMLU, NQ, TQA, ELI5) by 8.9% at 0-shot and 1.4% at 5-shot; Table 2 shows these are relative gains, since the four-task averages are 45.1 to 49.1 and 51.1 to 51.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative gain over REPLUG on four-task average",
+   "value": "8.9",
+   "unit": "% relative (0-shot)",
+   "baseline_value": "45.1",
+   "n": null,
+   "setup": "LLaMA 65B, DRAGON+, 399M-chunk corpus, top-10 chunks, test sets, 0-shot",
+   "quote": "RA-DIT significantly outperforms REPLUG (+8.9% in 0-shot and +1.4% in 5-shot on average over MMLU, NQ, TQA and",
+   "table": null,
+   "note": "Table 2 prints Avg diamond 45.1 (REPLUG) and 49.1 (RA-DIT) at 0-shot, 51.1 and 51.8 at 5-shot; the paper does not say the percentages are relative.",
+   "where": "Section 4, Table 2"
+  },
+  {
+   "claim": "Ten-task average (all Table 2 knowledge-intensive tasks) at 0-shot, REPLUG vs RA-DIT 65B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over ten tasks, 0-shot",
+   "value": "50.5",
+   "unit": "points",
+   "baseline_value": "43.1",
+   "n": null,
+   "setup": "LLaMA 65B + DRAGON+, test sets, top-10 chunks, 0-shot; the ten tasks are MMLU, NQ, TQA, ELI5, HoPo, FEV, AIDA, zsRE, T-REx, WoW",
+   "quote": null,
+   "table": "Table 2, rows LLAMA 65B REPLUG and RA-DIT 65B (0-shot), column Avg",
+   "note": "This is not the four-task average (that is Avg diamond: 45.1 to 49.1).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Ten-task average at 5-shot, REPLUG vs RA-DIT 65B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over ten tasks, 5-shot",
+   "value": "55.2",
+   "unit": "points",
+   "baseline_value": "52.7",
+   "n": null,
+   "setup": "LLaMA 65B + DRAGON+, test sets, top-10 chunks, 5-shot in-context",
+   "quote": null,
+   "table": "Table 2, rows LLAMA 65B REPLUG and RA-DIT 65B (5-shot in-context), column Avg",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Single multi-task RA-DIT 65B beats Atlas, which is fine-tuned per task, by 4.1 points on average in the 64-shot setting and wins 6 of 8 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average over 8 KILT-style tasks, 64-shot fine-tuned",
+   "value": "4.1",
+   "unit": "points",
+   "baseline_value": "56.8",
+   "n": 8,
+   "setup": "RA-DIT 65B continuously fine-tuned on 64 examples per task combined (one model); ATLAS 64-shot per task; test sets; model sizes 65B vs 11B",
+   "quote": "despite using a single model, RA-DIT outperforms ATLAS by an average of 4.1 points, achieving higher performance on 6 out of the 8 datasets.",
+   "table": null,
+   "note": "Introduction says '+7.2% on average', which equals 60.9/56.8 as a relative gain; the table gives 60.9 vs 56.8.",
+   "where": "Section 4, Table 2"
+  },
+  {
+   "claim": "Retrieval-augmented instruction tuning (RA-IT) beats conventional instruction tuning at 0-shot with top-10 chunks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 6 KILT dev tasks, 0-shot",
+   "value": "51.0",
+   "unit": "points",
+   "baseline_value": "47.7",
+   "n": null,
+   "setup": "LLaMA 65B + DRAGON+, dev sets (HoPo, FEV, AIDA, zsRE, T-REx, WoW), top-10 chunks, 0-shot",
+   "quote": "the RA-IT 65B model outperforms the IT 65B model by a large margin (51.0% vs. 47.7%)",
+   "table": null,
+   "note": "Table 4 prints 47.8 for IT 65B + DRAGON+ top-10 0-shot; text says 47.7. At 5-shot, Table 4 gives 55.8 vs 55.6.",
+   "where": "Section 5.1, Table 4"
+  },
+  {
+   "claim": "Dual-tuning ablation at 5-shot on dev sets: REPLUG baseline, LM-ft only, R-ft only, both.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 10 dev tasks, 5-shot",
+   "value": "54.6",
+   "unit": "points",
+   "baseline_value": "53.8",
+   "n": null,
+   "setup": "LLaMA 65B, DRAGON+, dev sets, 5-shot. Other rows: FTed retriever only 54.4, RIT only 53.9",
+   "quote": "outperforms the REPLUG baseline by 0.8 points on average",
+   "table": "Table 6, row RIT 65B + FTed DRAGON+, column Avg",
+   "note": null,
+   "where": "Section 5.2, Table 6"
+  },
+  {
+   "claim": "Fine-tuning only the query encoder beats fine-tuning both encoders (corpus data).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 9 dev tasks (MMLU, NQ, TQA, 6 KILT), 5-shot",
+   "value": "57.8",
+   "unit": "points",
+   "baseline_value": "55.8",
+   "n": null,
+   "setup": "LLaMA 65B + DRAGON+, 5-shot dev, corpus data only; 6-KILT-task average is 56.6 vs 54.0",
+   "quote": null,
+   "table": "Table 5, rows corpus data and corpus data (FT both encoders), column Avg",
+   "note": "Table 5 footnote labels the diamond column as the 6-KILT average, which is 56.6 and 54.0; the plain Avg column (57.8, 55.8) matches a 9-task average (DRAGON+ row: 57.4).",
+   "where": "Section 5.1, Table 5"
+  },
+  {
+   "claim": "Best retriever fine-tuning mixture (95% corpus + 5% MTI) improves over base DRAGON+ by 0.6 points on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg, 5-shot dev",
+   "value": "0.6",
+   "unit": "points",
+   "baseline_value": "57.4",
+   "n": null,
+   "setup": "LLaMA 65B, DRAGON+, 5-shot dev; corpus alone +0.4, MTI alone +0.1",
+   "quote": "outperforming the non-finetuned baseline by 0.6 points on average",
+   "table": null,
+   "note": null,
+   "where": "Section 5.1, Table 5"
+  },
+  {
+   "claim": "RA-DIT 65B improves 7 of 8 commonsense tasks over base LLaMA 65B without retrieval, preserving parametric knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg 0-shot over 8 commonsense dev sets",
+   "value": "74.5",
+   "unit": "points",
+   "baseline_value": "72.1",
+   "n": 8,
+   "setup": "LLaMA 65B vs RA-DIT 65B, dev sets, no retrieval",
+   "quote": null,
+   "table": "Table 3, rows LLAMA 65B and RA-DIT 65B, column Avg",
+   "note": null,
+   "where": "Section 4, Table 3"
+  },
+  {
+   "claim": "DRAGON+ beats Contriever and Contriever-msmarco as the retriever in the REPLUG setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg over 10 dev tasks, 5-shot",
+   "value": "53.4",
+   "unit": "points",
+   "baseline_value": "51.8",
+   "n": null,
+   "setup": "LLaMA 65B, 399M CC + Wiki corpus, 5-shot dev. Contriever 47.5, no retrieval 45.0",
+   "quote": null,
+   "table": "Table 7, row DRAGON+, column Avg (baseline: Contriever-msmarco 51.8)",
+   "note": null,
+   "where": "Section 5.3, Table 7"
+  },
+  {
+   "claim": "Parallel retrieval augmentation is within a small margin of chunk concatenation (top-3, 0-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg 6 KILT dev tasks, 0-shot",
+   "value": "50.1",
+   "unit": "points",
+   "baseline_value": "50.9",
+   "n": null,
+   "setup": "RA-IT 65B, base DRAGON+, top-3 chunks; parallel 50.1 vs concatenation 50.9",
+   "quote": null,
+   "table": "Table 13, rows RA-IT 65B (parallel) and (concat), column Avg",
+   "note": null,
+   "where": "Appendix E.2"
+  }
+ ],
+ "limits": [
+  "Hyperparameters and checkpoints are selected on the dev sets of 6 KILT tasks, so few-shot results on those tasks assume in-domain dev data; only 4 of 10 eval tasks are genuinely few-shot (Section 3.3).",
+  "Retriever fine-tuning gains are small (0.6 points on dev average at 5-shot); the authors do not report variance or seeds.",
+  "Retrieval queries come from manually written templates; automatic task-specific query generation is left to future work (footnote 5).",
+  "Iterating dual tuning for one or two rounds gave no further gains; multi-step RA-DIT left to future work.",
+  "RA-DIT 65B is compared with Atlas 11B; sizes are not matched, and the 64-shot protocols differ (one multi-task model vs per-task models).",
+  "Parallel augmentation is computationally costly for few-shot prompts; fine-tuning with chunk concatenation is not explored.",
+  "LLaMA-1 era models; requires LM token probabilities to compute LSR scores and to ensemble chunks.",
+  "The authors report lower 0-shot LLaMA 65B NQ/TQA than Touvron et al. because they use exact match instead of answer-string containment."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "RA-IT", "definition": "retrieval-augmented instruction tuning of the language model", "where": "Section 6"},
+  {"term": "LSR", "definition": "LM-Supervised Retrieval: the retriever is trained to match the distribution of chunk usefulness measured by the LM's likelihood of the correct answer", "where": "Section 2.4"},
+  {"term": "MTI data", "definition": "multi-task instruction data used for retriever fine-tuning, as opposed to corpus data", "where": "Section 2.4"}
+ ],
+ "lineage": [
+  {"work": "REPLUG: retrieval-augmented black-box language models (Shi et al.)", "year": 2023, "arxiv": "2301.12652", "relation": "extends", "note": "parallel chunk ensembling and LSR training; main baseline", "quote": null},
+  {"work": "DRAGON (Lin et al.)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "DRAGON+ initialises the retriever", "quote": null},
+  {"work": "LLaMA (Touvron et al.)", "year": 2023, "arxiv": "2302.13971", "relation": "uses-method", "note": "base LM", "quote": null},
+  {"work": "Atlas (Izacard et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "64-shot comparison; also supplies the Wikipedia dump and index code", "quote": null},
+  {"work": "OPT-IML (Iyer et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "label-loss objective, document attention masking, some CoT datasets", "quote": null},
+  {"work": "In-Context RALM (Ram et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "off-the-shelf fusion approach", "quote": null},
+  {"work": "SAIL (Luo et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "most related work: concatenates chunks, BM25 retriever, 7B", "quote": null},
+  {"work": "Self-RAG (Asai et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "adaptive retrieval with special tokens", "quote": null},
+  {"work": "InstructRetro (Wang et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "concurrent; footnote says RA-DIT 65B compares favourably at 0-shot on shared datasets", "quote": null},
+  {"work": "Large language models can be easily distracted by irrelevant context (Shi et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "motivates training with distracting chunks", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "The RA-DIT approach separately fine-tunes the LLM and the retriever.", "page": 2, "why": "shows the two independent fine-tuning steps and the retrieved background field"},
+  {"figure": "Figure 2", "caption": "RA-IT model performance (combined with DRAGON+) across sizes 7B, 13B and 65B on our development tasks.", "page": 22, "why": "shows 7B with more than one chunk can pass vanilla 65B on some tasks"}
+ ],
+ "code": [
+  {"where": "Eq. 2", "snippet": "p_LM(y|x, C') = sum_{c in C'} p_LM(y|c o x) * p_R(c|x)", "verbatim": false},
+  {"where": "Eq. 4-5", "snippet": "p_LSR(c|x,y) = exp(p_LM(y|c o x)/tau) / sum_{c' in C'} exp(p_LM(y|c' o x)/tau); L(D_R) = E KL(p_R(c|x) || p_LSR(c|x,y))", "verbatim": false}
+ ],
+ "problems": [
+  "Table 2 and Table 5 have two Avg columns whose labels are only a diamond footnote; Table 5 footnote (6 KILT tasks) does not match the plain Avg column used in the text (0.4 and 0.6 point gains).",
+  "Abstract and Section 4 give +8.9% and +1.4% without saying they are relative gains.",
+  "Figures 1 and 2 are images; their data was not read.",
+  "No embedded instructions found in the text."
+ ]
 }

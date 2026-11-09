@@ -1,0 +1,655 @@
+{
+ "schema": 1,
+ "key": "2411.02337",
+ "pdf": "generative-ai/05-RL/sources/qi-2024-webrl.pdf",
+ "bib": {
+  "title": "WebRL: Training LLM Web Agents via Self-Evolving Online Curriculum Reinforcement Learning",
+  "authors": [
+   "Zehan Qi",
+   "Xiao Liu",
+   "Iat Long Iong",
+   "Hanyu Lai",
+   "Xueqiao Sun",
+   "Wenyi Zhao",
+   "Yu Yang",
+   "Xinyue Yang",
+   "Jiadai Sun",
+   "Shuntian Yao",
+   "Tianjie Zhang",
+   "Wei Xu",
+   "Jie Tang",
+   "Yuxiao Dong"
+  ],
+  "first_author": "Qi",
+  "year": 2025,
+  "venue": "ICLR 2025",
+  "arxiv": "2411.02337",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 97882,
+  "chars_total": 97882,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "empirical",
+ "question": "How can open LLMs be trained into strong web agents with online RL when training tasks are scarce, rewards are sparse, and the policy drifts?",
+ "hypothesis": "A self-evolving curriculum, a learned outcome reward model and KL-constrained off-policy updates with a filtered replay buffer give consistent continual improvement over imitation learning and fixed-task RL (DigiRL, AWR).",
+ "contributions": [
+  "WebRL: self-evolving online curriculum RL framework with RL infrastructure in WebArena and a strong ORM",
+  "Addresses task scarcity, sparse feedback and distribution drift",
+  "SOTA on WebArena-Lite, beating AWR, DigiRL and proprietary APIs"
+ ],
+ "method": {
+  "summary": "SFT on WebArena-Lite, then 8 phases of online RL. Each phase: GPT-4o generates tasks from failed instructions, filtered by critic score and a feasibility prompt; the actor rolls out; an 8B ORM labels success (YES/NO); actor and critic are trained with a KL-constrained squared-error advantage loss on new rollouts plus perplexity-filtered successful replay data.",
+  "task": "web-agent RL on WebArena (OpenStreetMap, Reddit, GitLab, CMS, OSS)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebArena-Lite",
+    "role": "both",
+    "size": "1,186 training samples (instruction, trajectory, reward function); 165 test tasks",
+    "split": "165 test cases from the 812-task WebArena",
+    "source": "Liu et al. 2024b; human-verified subset of WebArena",
+    "preprocessing": "HTML simplified with element IDs for clickable elements"
+   },
+   {
+    "name": "ORM training set",
+    "role": "train",
+    "size": "12,200 samples",
+    "split": null,
+    "source": "WebArena-Lite train set rewritten (instructions rewritten, place/product names changed) plus rollouts of WebRL and baselines, labelled by reward function",
+    "preprocessing": null
+   },
+   {
+    "name": "Generated curriculum tasks",
+    "role": "train",
+    "size": "500 new instructions per phase after filtering",
+    "split": null,
+    "source": "GPT-4o from failed instructions (in-breadth evolving, Xu et al. 2023)",
+    "preprocessing": "critic scores between 0.05 and 0.75; GPT-4o feasibility filter (Fig 22)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama3.1-8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": "decoder-only",
+    "init_from": "SFT on WebArena-Lite",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "cutoff length 16384",
+    "other": {}
+   },
+   {
+    "name": "Llama3.1-70B",
+    "role": "base",
+    "params": "70B",
+    "architecture": "decoder-only",
+    "init_from": "SFT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GLM-4-9B",
+    "role": "base",
+    "params": "9B",
+    "architecture": "decoder-only",
+    "init_from": "SFT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Critic",
+    "role": "proposed",
+    "params": null,
+    "architecture": "SFT model plus randomly initialised value head, cross-entropy loss",
+    "init_from": "SFT model",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ORM",
+    "role": "reward",
+    "params": "8B",
+    "architecture": "LLM emitting YES/NO; compares P(YES) vs P(NO)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "input: instruction, action history, HTML of final state only",
+    "other": {
+     "base model": "not stated in text"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Actor: L=E[(beta*log(pi_theta/pi_ref) - A)^2] (off-policy, KL-constrained); critic: binary cross-entropy to final reward; advantage A = lambda*(r+gamma*V(s')-V(s)) + (1-lambda)*(gamma^(T-t)*r_T - V(s))",
+   "optimizer": null,
+   "lr": "actor 1e-6, critic 1e-6 (WebRL); SFT 1e-5; ORM 5e-6",
+   "lr_schedule": "WebRL constant; SFT cosine; ORM cosine",
+   "warmup": "SFT 0.1 ratio; ORM 0.1 ratio",
+   "batch_size": "128",
+   "steps": "8 phases x 500 instructions",
+   "epochs": "actor 1, critic 1 per phase; SFT 1; ORM 4",
+   "tokens": null,
+   "seq_len": "cutoff length 16384 (SFT, ORM)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL to previous-phase policy; replay history capped at 2x new interaction data",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "4 seeds shown in Fig 13",
+   "other": {
+    "discount": "0.9",
+    "lambda": "0.5",
+    "beta": "swept 0.01 to 10 in Fig 7; value used in main results not stated",
+    "rollout temperature": "1",
+    "Filtered BC": "lr 1e-6 constant, 70th percentile threshold",
+    "DigiRL replay buffer": "100000",
+    "max interaction steps T": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "1 (rollouts)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Simple prompt (Fig 21) for GPT-4-Turbo, GPT-4o and untuned Llama; trained agents see instruction, action history, simplified HTML",
+   "retrieval": null,
+   "parameters": {
+    "critic filter": "0.05-0.75",
+    "replay perplexity": "1/0.95 to 1/0.5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Success rate (SR)",
+     "definition": "Fraction of 165 WebArena-Lite tasks completed per the reward function, per site and averaged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ORM accuracy",
+     "definition": "Agreement with reward function labels (test set) or manual labels (100 rollouts)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4-Turbo-2024-0409",
+    "GPT-4o",
+    "AWM+GPT-4-0613",
+    "WebPilot+GPT-4o",
+    "AutoWebGLM",
+    "SFT",
+    "Filtered BC",
+    "AWR",
+    "DigiRL"
+   ],
+   "protocol": "Eval after phase 8; single reported number in Table 1; 4 seeds only in Fig 13; no significance test"
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/WebRL",
+   "weights": "stated public",
+   "data": "stated public"
+  },
+  "prompts": [
+   {
+    "purpose": "ORM",
+    "text": "You are an expert in evaluating the performance of a website navigation agent. The agent is designed to help a human user navigate the website to complete a task. Given the user's intent, the agent's action history, and the final state of the screen, your goal is to decide whether the agent's execution is successful or not. You must respond with YES or NO.",
+    "where": "Fig 17"
+   },
+   {
+    "purpose": "Instruction generation",
+    "text": "You are a smart task creator for a website intelligent assistant. ... #Given Task# {task examples} #Created Task#",
+    "where": "Fig 18 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.other.discount",
+    "quote": "In our experiment, we use the discount factor and set its value to 0.9.",
+    "where": "App A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "WebRL lifts Llama3.1-8B from 4.8% to 42.4% SR on WebArena-Lite",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "42.4",
+   "unit": "%",
+   "baseline_value": "4.8",
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1; Llama3.1-8B, 8 phases",
+   "note": null,
+   "where": "Abstract",
+   "quote": "improves the success rate of Llama-3.1-8B from 4.8% to 42.4%"
+  },
+  {
+   "claim": "WebRL lifts GLM-4-9B from 6.1% to 43.0%",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "43",
+   "unit": "%",
+   "baseline_value": "6.1",
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1",
+   "note": null,
+   "where": "Abstract",
+   "quote": "from 6.1% to 43% for GLM-4-9B"
+  },
+  {
+   "claim": "Llama3.1-70B with WebRL reaches 49.1% SR vs 23.0% for SFT",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "49.1",
+   "unit": "%",
+   "baseline_value": "23.0",
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1",
+   "note": null,
+   "where": "Sec 1; Table 1",
+   "quote": "we achieve a remarkable 49.1% SR"
+  },
+  {
+   "claim": "GPT-4-Turbo baseline SR",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "17.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1; simple prompt",
+   "note": null,
+   "where": "Abstract",
+   "quote": "GPT-4-Turbo (17.6%)"
+  },
+  {
+   "claim": "GPT-4o baseline SR",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "13.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1; simple prompt",
+   "note": null,
+   "where": "Abstract",
+   "quote": "GPT-4o (13.9%)"
+  },
+  {
+   "claim": "AutoWebGLM (6B, prior open-LLM SOTA) SR",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "18.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1",
+   "note": null,
+   "where": "Abstract",
+   "quote": "AutoWebGLM, 18.2%"
+  },
+  {
+   "claim": "DigiRL on Llama3.1-8B (strongest RL baseline) reaches 30.3% vs WebRL 42.4%",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "30.3",
+   "unit": "%",
+   "baseline_value": "42.4",
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1",
+   "note": null,
+   "where": null,
+   "table": "Table 1, row Llama3.1 + DigiRL, column Avg. SR"
+  },
+  {
+   "claim": "DigiRL on GLM-4-9B reaches 31.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "31.5",
+   "unit": "%",
+   "baseline_value": "43.0",
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1",
+   "note": null,
+   "where": null,
+   "table": "Table 1, row GLM-4 + DigiRL, column Avg. SR"
+  },
+  {
+   "claim": "AWR on Llama3.1-8B 28.5%; Filtered BC 23.0%; SFT 20.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "28.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1; AWR row (Filtered BC 23.0, SFT 20.6)",
+   "note": null,
+   "where": null,
+   "table": "Table 1, row Llama3.1 + AWR, column Avg. SR"
+  },
+  {
+   "claim": "Llama3.1-70B SFT baseline 23.0% and untuned Instruct 12.7%",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "23.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1",
+   "note": null,
+   "where": null,
+   "table": "Table 1, row Llama3.1 + SFT (BC) 70B, column Avg. SR"
+  },
+  {
+   "claim": "WebRL surpasses best proprietary API and prior open agent by over 160% relatively",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative gain",
+   "value": "160",
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena-Lite, 165 test tasks, success rate (SR) judged by task reward function, Table 1",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "by over 160% relatively"
+  },
+  {
+   "claim": "The ORM (8B) reaches 80.8% accuracy on the WebArena-Lite test set and 79.4% on 100 manually labelled rollouts, versus 71.9/71.2 for GPT-4 and ~70-73 for other baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "ORM accuracy",
+   "value": "80.8",
+   "unit": "%",
+   "baseline_value": "71.9 (GPT-4); 72.6 (Captioner+GPT-4); 71.2 (GPT-4V)",
+   "n": null,
+   "setup": "ORM 8B vs GPT-4-Turbo (same input), Captioner+GPT-4-Turbo, GPT-4V (Pan et al. 2024 prompts); test set labelled by reward function; rollouts 100 manually labelled",
+   "note": "Rollout row: ORM 79.4, GPT-4 71.2, Captioner+GPT-4 73.3, GPT-4V 70.5. Text says ORM 'approximately 80%'.",
+   "where": null,
+   "table": "Table 3, row Test Dataset (%), column Our ORM (8B)"
+  },
+  {
+   "claim": "Curriculum instruction filter: keep generated instructions whose critic score on initial state lies in [0.05, 0.75]",
+   "kind": "measured",
+   "source": null,
+   "metric": "critic score range",
+   "value": "0.05-0.75",
+   "unit": "critic score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Self-evolving curriculum, instruction filtering step",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "We select instructions with critic scores between 0.05 and 0.75"
+  },
+  {
+   "claim": "Replay-buffer filter: keep successful past actions with perplexity in [1/0.95, 1/0.5]",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity range",
+   "value": "1/0.95 to 1/0.5",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Perplexity computed by previous-phase actor",
+   "note": null,
+   "where": "Sec 2.2",
+   "quote": "Actions with a perplexity within the range of 1/0.95 to 1/0.5"
+  },
+  {
+   "claim": "Replay buffer perplexity ablation: best range [1/0.95,1/0.5] gives 31.5 vs 29.1 ([1,inf]), 27.9 ([1,1/0.95]), 23.0 ([1/0.5,inf])",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "31.5",
+   "unit": "%",
+   "baseline_value": "29.1",
+   "n": null,
+   "setup": "First learning phase only",
+   "note": "Table 2 columns: [1,inf] 29.1; [1,1/0.95] 27.9; [1/0.95,1/0.5] 31.5; [1/0.5,inf] 23.0",
+   "where": null,
+   "table": "Table 2, column [1/0.95, 1/0.5]"
+  },
+  {
+   "claim": "Ablation: all components needed; at 8 phases Figure 5 values (read from figure) 42.4 full, 34.5, 32.7, 24.8, 20.0 for variants",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "42.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3.1-8B ablation w/o KL, w/o CL, w/o replay buffer, w/o KL & replay buffer; read from Fig 5 labels",
+   "note": "Mapping of the 34.5/32.7/24.8/20.0 labels to variants is not given in text.",
+   "where": null,
+   "quote": "The results, shown in Figure 5, demonstrate that all the components used by WEBRL are essential."
+  },
+  {
+   "claim": "Task-generation prompt variants give 42.4 / 40.6 / 43.6 after eight phases",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": "40.6-43.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Three prompts (Fig 18-20)",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row Prompt 1/2/3"
+  },
+  {
+   "claim": "Training on all past trajectories incl. failures is slower and more volatile than successes only",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 16",
+   "note": null,
+   "where": "App C",
+   "quote": "including failed trajectories leads to slower and more volatile performance improvement"
+  },
+  {
+   "claim": "Value discount factor 0.9 and lambda 0.5 in GAE-style advantage",
+   "kind": "measured",
+   "source": null,
+   "metric": "lambda",
+   "value": "0.5",
+   "unit": "lambda",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Advantage eq. 8/15",
+   "note": null,
+   "where": "Sec 2.2",
+   "quote": "We set λ as 0.5 in our work."
+  },
+  {
+   "claim": "Four seeds show overall upward trend with some fluctuation",
+   "kind": "measured",
+   "source": null,
+   "metric": "seeds",
+   "value": "4",
+   "unit": "seeds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 13",
+   "note": null,
+   "where": "App C",
+   "quote": "We conduct four sets of experiments, each utilizing a distinct random seed."
+  }
+ ],
+ "limits": [
+  "Single-run Table 1 numbers on 165 tasks; seed variance only shown in Fig 13 and is larger with curriculum (task-generation randomness).",
+  "Needs GPT-4o for task generation and filtering, and an ORM trained on 12,200 reward-labelled samples from WebArena-Lite whose reward functions exist only for these tasks.",
+  "Map performance rises then declines over phases, a trade-off with OSS/CMS (App C).",
+  "Compute, hardware, beta for main runs and max steps not stated.",
+  "Evaluated on WebArena only; RL baselines other than DigiRL are offline on first-phase data.",
+  "Performance gap to WebPilot+GPT-4o (37.2%, full WebArena) not directly comparable (different test set)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Actor confidence filtering",
+   "definition": "Replay actions are kept only if previous-phase actor perplexity is in [1/0.95, 1/0.5], excluding over-familiar and too-hard data",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DigiRL",
+   "year": 2024,
+   "arxiv": "2406.11896",
+   "relation": "baseline",
+   "note": "Fixed-task online RL with AWR; main RL comparison",
+   "quote": null
+  },
+  {
+   "work": "Advantage-weighted regression",
+   "year": 2019,
+   "arxiv": "1910.00177",
+   "relation": "baseline",
+   "note": "AWR baseline",
+   "quote": null
+  },
+  {
+   "work": "Autonomous evaluation and refinement of digital agents (Pan et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Final-state-HTML ORM idea; Filtered BC; ORM baselines",
+   "quote": null
+  },
+  {
+   "work": "WizardLM",
+   "year": 2023,
+   "arxiv": "2304.12244",
+   "relation": "uses-method",
+   "note": "In-breadth evolving for instruction generation",
+   "quote": null
+  },
+  {
+   "work": "From r to Q*",
+   "year": 2024,
+   "arxiv": "2404.12358",
+   "relation": "uses-method",
+   "note": "Max-entropy RL interpretation of KL objective",
+   "quote": null
+  },
+  {
+   "work": "WebArena / WebArena-Lite (VisualAgentBench)",
+   "year": 2024,
+   "arxiv": "2408.06327",
+   "relation": "uses-data",
+   "note": "Environment and test set",
+   "quote": null
+  },
+  {
+   "work": "AutoWebGLM",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Prior open-LLM SOTA 18.2%",
+   "quote": null
+  },
+  {
+   "work": "Generalized Advantage Estimation",
+   "year": 2015,
+   "arxiv": "1506.02438",
+   "relation": "uses-method",
+   "note": "Advantage estimation",
+   "quote": null
+  },
+  {
+   "work": "DPO",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Needs paired data, hard in web tasks",
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "related",
+   "note": "On-policy, sample-inefficient",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of WebRL",
+   "page": 3,
+   "why": "Shows the loop of task generation, rollout, ORM, replay and update"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ablation on replay buffer, KL and curriculum",
+   "page": 9,
+   "why": "Phase-by-phase SR for each ablation"
+  },
+  {
+   "figure": "Algorithm 1",
+   "caption": "WebRL",
+   "page": 22,
+   "why": "Complete training loop"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 5",
+   "snippet": "L(pi_theta) = E_nu[(beta*log(pi_theta(a|s,I)/pi_ref(a|s,I)) - A*(s,a,I))^2]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No instructions embedded in the PDF text."
+ ]
+}

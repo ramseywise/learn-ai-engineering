@@ -1,19 +1,373 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.10634",
  "pdf": "generative-ai/07-agentic-applications/sources/xie-2023-openagents.pdf",
  "bib": {
   "title": "OpenAgents: An Open Platform for Language Agents in the Wild",
-  "first_author": "Tianbao Xie",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Tianbao Xie",
+   "Fan Zhou",
+   "Zhoujun Cheng",
+   "Peng Shi",
+   "Luoxuan Weng",
+   "Yitao Liu",
+   "Toh Jing Hua",
+   "Junning Zhao",
+   "Qian Liu",
+   "Che Liu",
+   "Leo Z. Liu",
+   "Yiheng Xu",
+   "Hongjin Su",
+   "Dongchan Shin",
+   "Caiming Xiong",
+   "Tao Yu"
+  ],
+  "first_author": "Xie",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2310.10634",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 94789,
+  "chars_total": 94789,
+  "engine": "pymupdf",
+  "skipped": "Figure screenshots are images and not extractable; text read in full including appendices A-D."
  },
- "legacy_report": "SOURCE: \"OpenAgents: An Open Platform for Language Agents in the Wild\", Tianbao Xie, Fan Zhou, Zhoujun Cheng, Peng Shi, Luoxuan Weng, Yitao Liu and others (XLang Lab, HKU, Sea AI Lab, Salesforce Research), with Caiming Xiong and Tao Yu. The PDF is arXiv:2310.10634v1 [cs.CL], 16 Oct 2023. The PDF names no venue. COLM 2024 is not stated anywhere in the text, so I can't confirm it.\n\nCOVERAGE: I read all 34 pages (pp.1-34), about 95,034 chars.\n- Pages 1-14 are the body and references.\n- Pages 15-19 are Appendix A, implementation details.\n- Pages 20-22 are Appendix B, use cases.\n- Pages 22-34 are Appendix C, prompts. I read the Data Agent prompt in full and only skimmed the Plugins and Web prompts.\n- I did not run the figure-caption script. Figures 3-8 below come from the extracted text.\n\nCLAIMS\n- **Claim: The paper reports no quantitative evaluation.**\n  - number: none\n  - setup: There are no result tables, no accuracy numbers, no user study and no latency measurements. \"Evaluation\" appears only as motivation and future work. This is a platform and system description.\n  - quote: \"OpenAgents is meant to be a realistic and holistic human-in-the-loop agent evaluation platform\"\n  - where: p.2\n- **Claim: The Data Agent writes and runs Python and SQL, with three data tools.**\n  - number: 2 languages, 3 tools\n  - setup: Tools are Kaggle Data Search, Data Profiling and an ECharts tool.\n  - quote: \"We support code generation and execution in two programming languages: Python and SQL. We also integrate several data tools for the agent to use: (1) Kaggle Data Search (datasets search on Kaggle via calling API); (2) Data Profiling (heuristic data profiling providing basic data information); (3) ECharts Tool (interactive ECharts plotting).\"\n  - where: p.6, section 4.1\n- **Claim: \"Profiles data\" is supported, but only as one named tool.**\n  - number: none\n  - setup: It is a heuristic tool giving \"basic data information\". The paper gives no detail on what it computes. It is not shown in the Appendix B use cases (Fig. 6a-f) and has no evaluation. The Data Agent is prompted to use tools proactively, so profiling is not an automatic step.\n  - quote: \"(2) Data Profiling (heuristic data profiling providing basic data information)\"\n  - where: p.6\n- **Claim: The Data Agent's UI is notebook-like.**\n  - number: none\n  - setup: It interleaves images, code, console output and interactive charts with markdown, \"echoing\" computational notebooks. This describes the web chat UI, not a Jupyter kernel.\n  - quote: \"we interleave images, code snippets, console outputs, and interactive visualizations with markdown text altogether, echoing the structure of computational notebooks frequently employed in data science tasks (McNutt et al., 2023).\"\n  - where: p.15, A.1.3\n- **Claim: The agent delegates code generation to the tools.**\n  - number: none\n  - setup: The agent passes natural-language queries and the Python, SQL and ECharts tools generate the code. The prompt forbids code as action input.\n  - quote: \"we have opted to embed language models in the tool, and let the tools generate code rather than the agent.\"\n  - where: p.6\n  - quote: \"NEVER EVER EVER generate code as action input when using tool. Just input natural language by using/paraphrasing human query.\"\n  - where: p.23\n- **Claim: Code runs in a Docker sandbox for Python and in SQLite for SQL.**\n  - number: none\n  - setup: The Python image is based on the Kaggle Dockerfile. SQL queries are extracted from the agent output and run on the SQLite engine, per footnote 11.\n  - quote: \"For the Python environment, we largely referred to the official Kaggle Dockerfile; the docker container provides a safe and isolated sandbox for code execution.\"\n  - where: p.18, A.2.4\n- **Claim: Uploaded files are linearized for the LLM, not passed whole.**\n  - number: none\n  - setup: A DataModel class (over ten classes) converts tables, databases and images into views for humans, the frontend and LLMs, for example the first few rows as a string. Uploaded files sit in a grounding source pool keyed by file name.\n  - quote: \"linearization of the first few rows as string\"\n  - where: p.15\n  - quote: \"We establish a suite of over ten fundamental classes to encapsulate data in various formulations\"\n  - where: p.15\n  - quote: \"use the file name as the key for these files\"\n  - where: p.18\n- **Claim: The Plugins Agent has over 200 plugins and auto-selects them by embedding similarity.**\n  - number: 200+\n  - setup: Plugins come from RapidAPI and the OpenAI plugins store, tested for LLM accessibility. Selection uses Instructor embeddings (Su et al., 2023). Plugin construction \"requires human intervention\".\n  - quote: \"This method has enabled us to introduce over 200 high-quality plugins. However, using LLMs for plugin construction has its challenges and requires human intervention.\"\n  - where: p.18\n  - quote: \"we employ a text embedding technique, specifically Instructor (Su et al., 2023), to identify which tools described match closely to the user's instructions\"\n  - where: p.18\n- **Claim: The Web Agent is a tool called by a chat agent, and it controls the user's own browser.**\n  - number: none\n  - setup: The chat agent decomposes tasks and calls the web agent. A Chrome extension acts through the Chrome Debugger API, so the user can watch and interrupt. Use cases include flight search, IMDb summarization, Maps, Twitter posting and Google Forms (Fig. 8).\n  - quote: \"the agent should be able to control the user's browser directly and can be interrupted or taken over easily by the user\"\n  - where: p.17\n- **Claim: The agent loop follows ReAct, with a capped number of tool calls.**\n  - number: at most 3 additional tool uses\n  - setup: The loop is observation, deliberation, action. The Data Agent prompt allows only one tool call per round.\n  - quote: \"limit the number of iterations to a maximum of three\"\n  - where: p.24\n  - quote: \"ONLY one tool should be used per round\"\n  - where: p.23\n- **Claim: Models are GPT-4 and Claude via API, with no model comparison.**\n  - number: none\n  - quote: \"such as GPT-4 (OpenAI, 2023b), and Claude (Anthropic, 2023)\"\n  - where: p.6\n- **Claim: Streaming is implemented with a pushdown automaton that assigns each token a role.**\n  - number: none\n  - setup: Role-tagging of tokens (text, tool call, thought) during streaming. Latency is described qualitatively, with no measurements.\n  - quote: \"long completions, waiting for the response can take many seconds\"\n  - where: p.16\n- **Claim: Robustness measures are listed, with no failure rates.**\n  - number: none\n  - setup: Key pool of API keys to ease rate limits, user stop and retry, a max wait per remote API call with categorized errors, and truncation of history from the oldest round.\n  - quote: \"we collect an LLM key pool (e.g., OpenAI API key) to be queried in turn, alleviating the rate limit burden of each single key\"\n  - where: p.17\n  - quote: \"truncated from the beginning by round iteratively until the max token limit is met\"\n  - where: p.17\n- **Claim: The paper names deployment failure modes without counting them.**\n  - number: none\n  - setup: Server crashes, users interrupting generation, CAPTCHAs and ads on web pages, and instruction accumulation of \"several hundred tokens\". System failures are hard to tell apart from LLM failures.\n  - quote: \"the accumulation of these instructions often results in several hundred tokens\"\n  - where: p.8\n  - quote: \"This complexity makes it challenging to discern whether certain failure cases stem from the limitations of the LLM-based application or from inadequacies in our logic code.\"\n  - where: p.8\n\nLIMITS\n- There is no benchmark, no user study and no numbers on latency, accuracy, failure rates or tool-selection quality.\n- The authors concede that plugin scaling needs human oversight and that \"Further exploration is needed for efficient scaling\". They also say weak LLMs break output formats.\n- They suggest training dedicated agent models instead of relying on prompting alone.\n- In-the-wild evaluation is listed as future work.\n- Everything dates from September-October 2023: GPT-4 and Claude (1/2), and the OpenAI \"Plugins\" and \"Code Interpreter\" products, which have since been renamed or retired.\n- The prompt asks the agent to refuse code such as os.getenv(), requests.get() and file deletion. This is a prompt-level defence, and the paper reports no test of it.\n\nBUILDS ON\n- ReAct (Yao et al., 2022b) for prompting.\n- OpenAI Advanced Data Analysis / Code Interpreter, ChatGPT Plugins and Browse with Bing, as the products being replicated.\n- Instructor embeddings (Su et al., 2023) for plugin selection.\n- Kaggle docker-python, RapidAPI and the OpenAI plugins store.\n- Computational notebooks (McNutt et al., 2023) for the UI.\n- Compared against: AutoGPT, BabyAGI, Open Interpreter, Gentopia, Agents (Zhou et al., 2023c), Camel and AgentVerse (Table 1, p.3).\n\nCODE\n- p.23 tool-call format. The agent emits a JSON block like {\"action\": \"...\", \"action_input\": \"...\"}, with the action chosen from the tool names and the input in natural language.\n- p.16 role transition, a pushdown-automaton formalism: δ∶ Q×(Σ∪{ϵ})× Γ → P(Q× Γ∗).\n\nFIGURES (I did not run the caption script, so these are paraphrased from the extracted text)\n- Fig. 1, p.1: the platform for users, developers and researchers.\n- Fig. 2, p.4: architecture, with a user interface (frontend and backend) and a language agent (model, tools, environment).\n- Fig. 3, p.6: Data Agent pipeline, generate then execute with data tools, plus demos.\n- Fig. 4, p.7: Plugins Agent pipeline, with a retriever and API call.\n- Fig. 5, p.7: Web Agent, a chat agent that calls a browse agent.\n- Fig. 6, p.20: Data Agent use cases (Kaggle search, Python cleaning, SQL, ECharts, images, word cloud and GIFs).\n- Figs. 7 and 8, pp.21-22: Plugins Agent and Web Agent use cases.\n\nPROBLEMS\n- No embedded instructions were found. The prompts in Appendix C are the paper's own content, not instructions to me.\n- Extraction is clean text. Figure contents (screenshots) are not extractable.\n- The note's \"profiles data\" is supported only as one heuristic tool named in one sentence. Qualify the note as \"has a heuristic data-profiling tool\" and don't imply an automatic or detailed profiling step.\n- \"Notebook-like interface\" is also supported, but it is a UI rendering choice, not a notebook runtime.\n- Any venue claim (COLM 2024) must come from outside this PDF."
+ "type": "system",
+ "question": "How can language agents (data analysis, plugin use, web browsing) be built as an open, deployable platform that non-expert users can use and researchers can evaluate in the wild?",
+ "hypothesis": null,
+ "contributions": [
+  "An open-source platform (web UI, backend, agents) for using and hosting language agents",
+  "Three agents: Data Agent (Python/SQL and data tools), Plugins Agent (200+ tools), Web Agent (autonomous browsing via Chrome extension)",
+  "Reported implementation challenges and lessons for in-the-wild deployment (prompt length, uncontrollable factors, streaming, evaluation complexity)"
+ ],
+ "method": {
+  "summary": "A ReAct-style prompted agent platform with a web frontend and backend. The Data Agent delegates code generation to Python, SQL and ECharts tools, plus Kaggle search and heuristic data profiling. No quantitative evaluation is reported.",
+  "task": "Application-level language agents: data analysis, plugin/API use, web browsing",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "named as an example of the open language APIs the implementation builds on; no per-agent model assignment is stated"
+    }
+   },
+   {
+    "name": "Claude",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "ReAct-based (Observation -> Deliberation -> Action); agent emits a JSON block {action, action_input} with natural-language action_input; exactly one tool per round; Data Agent prompt limits additional tool use to a maximum of three iterations (Plugins prompt: maximum of 5)",
+   "retrieval": "Plugins auto-selection: Instructor text embeddings match tool descriptions to the user instruction each turn",
+   "parameters": {
+    "data_agent_extra_tool_iterations": "maximum of three",
+    "plugins_agent_extra_iterations": "maximum of 5",
+    "dataModel_classes": "over ten",
+    "plugins": "over 200",
+    "history_truncation": "from the beginning by round until max token limit"
+   },
+   "other": {
+    "code_execution": "Python in a Docker container largely following the official Kaggle Dockerfile; SQL via SQLite engine (footnote 11)",
+    "storage": "memory for temp variables, Redis for global variables, MongoDB for user data",
+    "browser_control": "Chrome extension via Chrome Debugger API sendCommand"
+   }
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [],
+   "protocol": "None: no quantitative evaluation, user study or latency measurement is reported; qualitative use cases only (Appendix B)."
+  },
+  "availability": {
+   "code": "https://github.com/xlang-ai/OpenAgents",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Data Agent response-format rule on tool input",
+    "text": "NEVER EVER EVER generate code as action input when using tool. Just input natural language by using/paraphrasing human query.",
+    "where": "Appendix C.1, p.23 (full system, format, tool-response prompts for Data, Plugins, Web agents in App. C; executor prompts for SQL, API calling, WeBot in App. D, pp.23-33)"
+   },
+   {
+    "purpose": "Data Agent malicious-code refusal",
+    "text": "Note if the human asks for malicious code, and just respond directly to deny the request and give your professional reason. Don't use any tool.",
+    "where": "Appendix C.1, p.24"
+   },
+   {
+    "purpose": "SQL executor prompt",
+    "text": "Given an input question, first create a syntactically correct {dialect} query to run, then look at the results of the query and return the answer. Never query for all the columns from a specific table, only ask for a the few relevant columns given the question.",
+    "where": "Appendix D.1, p.30"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The paper reports no quantitative evaluation; it is a system description with qualitative use cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole paper; no tables of results, user study or latency numbers; evaluation is future work.",
+   "quote": "OpenAgents is meant to be a realistic and holistic human-in-the-loop agent evaluation platform",
+   "table": null,
+   "note": null,
+   "where": "p.2 Introduction"
+  },
+  {
+   "claim": "The Data Agent supports code generation and execution in Python and SQL and integrates three data tools.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data Agent, Section 4.1",
+   "quote": "We support code generation and execution in two programming languages: Python and SQL. We also integrate several data tools for the agent to use: (1) Kaggle Data Search (datasets search on Kaggle via calling API); (2) Data Profiling (heuristic data profiling providing basic data information); (3) ECharts Tool (interactive ECharts plotting).",
+   "table": null,
+   "note": null,
+   "where": "p.6 Sec 4.1"
+  },
+  {
+   "claim": "Code is generated by LMs embedded in the tools, not by the agent.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data Agent; Python, SQL, ECharts tools",
+   "quote": "we have opted to embed language models in the tool, and let the tools generate code rather than the agent.",
+   "table": null,
+   "note": null,
+   "where": "p.6 Sec 4.1"
+  },
+  {
+   "claim": "The agent is prompted to use data tools proactively.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data Agent",
+   "quote": "We prompt the agent to proactively use these data tools to respond to user requests.",
+   "table": null,
+   "note": null,
+   "where": "p.6 Sec 4.1"
+  },
+  {
+   "claim": "Data Agent UI interleaves images, code, console output and interactive charts with markdown, echoing computational notebooks.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web chat UI, Appendix A.1.3",
+   "quote": "echoing the structure of computational notebooks frequently employed in data science tasks (McNutt et al., 2023)",
+   "table": null,
+   "note": null,
+   "where": "p.15 A.1.3"
+  },
+  {
+   "claim": "Python runs in a Docker sandbox based on the Kaggle Dockerfile; SQL queries are extracted from agent output and run by an SQL engine (SQLite per footnote 11).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix A.2.4; the paper does not say SQL runs inside the Docker container",
+   "quote": "the docker container provides a safe and isolated sandbox for code execution.",
+   "table": null,
+   "note": null,
+   "where": "p.18 A.2.4"
+  },
+  {
+   "claim": "Uploaded files are linearized per file type via DataModel (first rows as a string) and keyed by file name in a grounding source pool.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix A.1.1, A.2.1",
+   "quote": "linearization of the first few rows as string",
+   "table": null,
+   "note": null,
+   "where": "p.15 and p.18"
+  },
+  {
+   "claim": "Over 200 plugins integrated; building them still needs human intervention.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Plugins Agent, plugins from RapidAPI and OpenAI plugins store",
+   "quote": "This method has enabled us to introduce over 200 high-quality plugins. However, using LLMs for plugin construction has its challenges and requires human intervention.",
+   "table": null,
+   "note": null,
+   "where": "p.18 A.2.3"
+  },
+  {
+   "claim": "Instruction accumulation in app prompts reaches several hundred tokens.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prompts in Appendix C",
+   "quote": "the accumulation of these instructions often results in several hundred tokens",
+   "table": null,
+   "note": null,
+   "where": "p.8 Sec 5"
+  },
+  {
+   "claim": "System failures are hard to separate from LLM failures when evaluating deployed agents.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 5",
+   "quote": "This complexity makes it challenging to discern whether certain failure cases stem from the limitations of the LLM-based application or from inadequacies in our logic code.",
+   "table": null,
+   "note": null,
+   "where": "p.8 Sec 5"
+  }
+ ],
+ "limits": [
+  "No benchmark, user study, accuracy, latency, failure-rate or tool-selection quality numbers.",
+  "Authors concede plugin scaling needs human oversight and 'Further exploration is needed for efficient scaling'; weak LLMs break output formats.",
+  "They suggest training dedicated agent models rather than only prompting.",
+  "In-the-wild evaluation is listed as future work.",
+  "Dated: GPT-4/Claude (2023), OpenAI Plugins and Code Interpreter products; Table 1 statistics collected by September 2023.",
+  "Prompt-level malicious-code refusal is described, with no test reported.",
+  "Data Profiling tool is described in one parenthetical; what it computes is not specified.",
+  "Model used per agent, temperature and decoding settings are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "DataModel",
+   "definition": "an encapsulating entity designed to intake specific forms of raw data, be it tabular structures, databases, or images, and transform it into formats for humans, frontends, computational systems and LLMs",
+   "where": "p.15 A.1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "uses-method",
+   "note": "prompting method adopted",
+   "quote": "we adopt our prompting method based on the approach introduced in ReAct (Yao et al., 2022b)"
+  },
+  {
+   "work": "OpenAI Advanced Data Analysis (Code Interpreter), ChatGPT Plugins, Browse with Bing",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closed products the platform opens up",
+   "quote": null
+  },
+  {
+   "work": "Instructor embeddings (Su et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "plugin auto-selection",
+   "quote": null
+  },
+  {
+   "work": "AutoGPT, BabyAGI, Open Interpreter, Gentopia, Agents (Zhou et al.), Camel, AgentVerse, BMTools, GAs",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared in Table 1 feature matrix only",
+   "quote": null
+  },
+  {
+   "work": "GPT-4; Claude",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "example backend LLM APIs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "System overview of OpenAgents' architecture comprising (1) User Interface ... and (2) Language Agent",
+   "page": 4,
+   "why": "shows split between UI and agent"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Pipeline (left) and demonstrations (mid and right) of Data Agent.",
+   "page": 6,
+   "why": "generate-execute pipeline with data tools"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison between OpenAgents and current existing works on building prototypes and benchmarks on agent concept.",
+   "page": 3,
+   "why": "feature matrix, not performance"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found; Appendix prompts are the paper's own content.",
+  "Figure contents are screenshots and not extractable; captions not fetched via figures.py.",
+  "Legacy schema-0 report said PDF is 34 pages; PDF names no venue so venue is 'preprint'."
+ ]
 }

@@ -1,0 +1,508 @@
+{
+ "schema": 1,
+ "key": "2305.10429",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xie-2023-doremi.pdf",
+ "bib": {
+  "title": "DoReMi: Optimizing Data Mixtures Speeds Up Language Model Pretraining",
+  "authors": [
+   "Sang Michael Xie",
+   "Hieu Pham",
+   "Xuanyi Dong",
+   "Nan Du",
+   "Hanxiao Liu",
+   "Yifeng Lu",
+   "Percy Liang",
+   "Quoc V. Le",
+   "Tengyu Ma",
+   "Adams Wei Yu"
+  ],
+  "first_author": "Xie",
+  "year": 2023,
+  "venue": "preprint (arXiv v4, 21 Nov 2023)",
+  "arxiv": "2305.10429",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 70073,
+  "chars_total": 70073,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can pretraining data domain weights be set automatically, without downstream tasks, so that a large model trains faster and better?",
+ "hypothesis": "Domain weights found by minimax (Group DRO) excess-loss optimisation on a small proxy model transfer to a 30x larger model and improve it on all domains and downstream tasks.",
+ "contributions": [
+  "DoReMi: train a small reference model, then a small Group DRO proxy model to output averaged domain weights, then train a large model on data resampled with them",
+  "Iterated DoReMi, rerunning with the previous round's weights as reference weights",
+  "Evidence that 280M-proxy weights improve 8B training on The Pile and match downstream-tuned weights on GLaM"
+ ],
+ "method": {
+  "summary": "DoReMi trains a reference model on reference domain weights, then a same-size proxy with Group DRO (exponentiated-gradient domain weight updates on per-domain token-level clipped excess loss vs the reference), and returns the average domain weights over the proxy trajectory. A main model is then trained from scratch on data resampled with those weights.",
+  "task": "Domain-mixture optimisation for decoder-only LM pretraining (next-token prediction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": "800GB text, 22 domains",
+    "split": "held-out validation data per domain for perplexity",
+    "source": "Gao et al., 2020",
+    "preprocessing": "Chunked into length-1024 examples with a 256k-vocab SentencePiece tokenizer, separated by domain for hierarchical sampling, examples packed across domains; baseline weights = example count x epochs from Gao et al. (2020), normalised"
+   },
+   {
+    "name": "GLaM dataset",
+    "role": "pretrain",
+    "size": "8 domains (token count not stated)",
+    "split": "held-out validation data per domain",
+    "source": "Du et al., 2021 (also used in PaLM)",
+    "preprocessing": "same chunking as The Pile; uniform weights for baseline and reference"
+   },
+   {
+    "name": "TriviaQA, NaturalQuestions, WebQuestions, SQuADv2, LAMBADA",
+    "role": "eval",
+    "size": null,
+    "split": "generative one-shot tasks from GPT-3 paper",
+    "source": "Joshi 2017; Kwiatkowski 2019; Berant 2013; Rajpurkar 2018; Paperno 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Reference / proxy models",
+    "role": "proposed",
+    "params": "70M, 150M, 280M, 510M, 760M, 1B (280M main setting)",
+    "architecture": "vanilla Transformer decoder-only",
+    "init_from": "scratch",
+    "tokenizer": "SentencePiece",
+    "vocab": "256k",
+    "layers": "3/6/12/12/12/16 for 70M/150M/280M/510M/760M/1B",
+    "hidden": "model dim 256/512/768/1024/1280/2048; hidden dim 1024/2048/3072/8192/8192/8192",
+    "heads": "4/8/12/16/20/32 (head dim 64)",
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "Main model",
+    "role": "proposed",
+    "params": "8B (also 280M-1B same-size ablations)",
+    "architecture": "vanilla Transformer decoder-only",
+    "init_from": "scratch",
+    "tokenizer": "SentencePiece",
+    "vocab": "256k",
+    "layers": "32",
+    "hidden": "model dim 4096; hidden dim 24576",
+    "heads": "32 (head dim 128)",
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "Baseline",
+    "role": "baseline",
+    "params": "same sizes as main",
+    "architecture": "same",
+    "init_from": "scratch",
+    "tokenizer": "SentencePiece",
+    "vocab": "256k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 tokens",
+    "other": {
+     "weights": "Pile default (heuristic) weights; uniform for GLaM"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Next-token LM loss for reference and main models; proxy minimises max over domain weights of per-domain excess loss (Eq 1) via Group DRO",
+   "optimizer": "Adafactor",
+   "lr": "1e-3 initial",
+   "lr_schedule": "exponential decay to minimum 1e-4 at end of training",
+   "warmup": "linear, 6% of total training steps",
+   "batch_size": "512",
+   "steps": "200k on The Pile; 300k on GLaM",
+   "epochs": null,
+   "tokens": "inferred: 200k x 512 x 1024 = about 105B tokens on The Pile (from steps, batch, seq len)",
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": "1e-2",
+   "dropout": null,
+   "regularisation": "gradient clipping to norm 1",
+   "hardware": "TPUv3 for models under 1B; TPUv4 for 1B and 8B",
+   "compute": "Optimising domain weights (two 280M runs) = 8% of FLOPs of the 8B run; absolute FLOPs not stated",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "eta": "1 (domain weight step size)",
+    "smoothing_c": "1e-3",
+    "convergence_rule": "iterated DoReMi stops when max change in any domain weight < 1e-3",
+    "per_step_minibatch": "sampled with uniform domain weights",
+    "excess_loss": "per-token loss gap clipped at 0, normalised by tokens per domain",
+    "note": "hyperparameters not extensively tuned"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "one-shot generative tasks from GPT-3 (Brown et al., 2020); prompt text not given",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Per-domain log-perplexity",
+     "definition": "held-out validation log-perplexity per domain; worst-case = max over domains; average = unweighted mean over domains",
+     "unit": "log-ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "One-shot exact match",
+     "definition": "standard exact-match accuracy on TriviaQA, NQ, WebQuestions, SQuADv2, LAMBADA; averaged over 5 tasks",
+     "unit": "% points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Speedup",
+     "definition": "steps for DoReMi to reach baseline's final average accuracy vs baseline steps",
+     "unit": "x",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Pile default domain weights",
+    "Uniform GLaM weights",
+    "GLaM downstream-tuned (oracle) weights",
+    "Hardest-only and Easiest-only DRO ablations"
+   ],
+   "protocol": "Controlled comparison with equal compute (tokens processed); single runs reported, no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/sangmichaelxie/doremi (public re-implementation, footnote 2)",
+   "weights": "optimised Pile domain weights released there",
+   "data": "The Pile and GLaM dataset (GLaM data availability not stated)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "initial learning rate of 1e-3, weight decay of 1e-2, and gradient clipping to norm 1",
+    "where": "Appendix C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DoReMi (280M->8B) raises average one-shot downstream accuracy over The Pile default weights by 6.5 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg one-shot exact match gain",
+   "value": "6.5",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8B decoder-only LM trained from scratch on The Pile (22 domains), 200k steps, batch 512, seq 1024; DoReMi weights from 280M reference+proxy; avg of 5 generative one-shot tasks (TriviaQA, NQ, WebQ, SQuADv2, LAMBADA), exact match",
+   "quote": "DoReMi improves the downstream accuracy by 6.5% points and achieves the baseline accuracy within 75k steps",
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "DoReMi (280M->8B) reaches the baseline's final accuracy in 75k steps versus 200k, a 2.6x speedup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps to baseline accuracy",
+   "value": "2.6",
+   "unit": "x fewer steps",
+   "baseline_value": "200k steps",
+   "n": null,
+   "setup": "8B decoder-only LM trained from scratch on The Pile (22 domains), 200k steps, batch 512, seq 1024; DoReMi weights from 280M reference+proxy; avg of 5 generative one-shot tasks (TriviaQA, NQ, WebQ, SQuADv2, LAMBADA), exact match",
+   "quote": "achieves the baseline accuracy within 75k steps",
+   "note": null,
+   "where": "Sec 3.2, Fig 3"
+  },
+  {
+   "claim": "Optimizing domain weights (two 280M models) costs 8% of the FLOPs of training the 8B main model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute overhead",
+   "value": "8",
+   "unit": "% of main-model FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "280M reference + 280M proxy vs 8B main run",
+   "quote": "This is 8% of the FLOPs required to train the main 8B model.",
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Average one-shot accuracy across the 5 tasks: baseline 20.03 vs DoReMi (280M->8B) 26.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg one-shot exact match",
+   "value": "26.56",
+   "unit": "% exact match",
+   "baseline_value": "20.03",
+   "n": null,
+   "setup": "8B on The Pile, per-task exact match",
+   "table": "Table 5, row Average, columns Baseline and DoReMi (280M->8B)",
+   "note": "Gain 6.53 matches the 6.5 headline",
+   "where": "Appendix B Table 5"
+  },
+  {
+   "claim": "TriviaQA exact match rises from 24.55 to 34.86 with DoReMi (280M->8B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TriviaQA EM",
+   "value": "34.86",
+   "unit": "% exact match",
+   "baseline_value": "24.55",
+   "n": null,
+   "setup": "8B on The Pile, one-shot",
+   "table": "Table 5, row TriviaQA, columns Baseline and DoReMi (280M->8B)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "DoReMi (280M->8B) lowers log-perplexity on all 22 Pile domains, worst-case 1.46 vs 1.71 and average 1.40 vs 1.64, even though some domains are downweighted.",
+   "kind": "measured",
+   "source": null,
+   "metric": "worst-case log-perplexity",
+   "value": "1.46",
+   "unit": "worst-case log-ppl",
+   "baseline_value": "1.71",
+   "n": null,
+   "setup": "8B on The Pile; held-out per-domain log-perplexity",
+   "table": "Table 3a, row DoReMi (280M->8B), columns Worst-case log-ppl, Avg log-ppl, # domains beating baseline",
+   "note": "Avg log-ppl 1.40 vs 1.64; 22/22 domains beat baseline",
+   "where": "Table 3a"
+  },
+  {
+   "claim": "Proxy size matters: 70M, 150M, 280M, 1B proxies all beat baseline at 8B, 280M best; 1B proxy is worse than 280M (avg log-ppl 1.54 vs 1.40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg log-perplexity",
+   "value": "1.54",
+   "unit": "avg log-ppl (1B proxy)",
+   "baseline_value": "1.64",
+   "n": null,
+   "setup": "8B main model, varied proxy size",
+   "table": "Table 3a, rows DoReMi (70M->8B) to (1B->8B), column Avg log-ppl",
+   "note": "Authors hypothesise Group DRO is worse at larger proxy scale",
+   "where": "Table 3a"
+  },
+  {
+   "claim": "With proxy and main model the same size, DoReMi improves average downstream accuracy about 2% and reaches baseline accuracy 4x faster on average across 280M, 510M, 760M, 1B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup to baseline accuracy",
+   "value": "4",
+   "unit": "x faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "The Pile, DoReMi (X->X)",
+   "quote": "DoReMi consistently improves downstream accuracy over the baseline by 2% and achieves the baseline accuracy 4x faster on average across scales",
+   "note": null,
+   "where": "Sec 4, Fig 5"
+  },
+  {
+   "claim": "DoReMi improves 18 of 22 individual domain perplexities on average across scales when proxy equals main size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "domains beating baseline",
+   "value": "18",
+   "unit": "of 22 domains",
+   "baseline_value": null,
+   "n": null,
+   "setup": "The Pile, 280M-1B same-size",
+   "quote": "improves 18 of 22 individual domain perplexities on average across scales",
+   "note": null,
+   "where": "Sec 4, Table 6"
+  },
+  {
+   "claim": "Ablating the excess loss to only hardest or only easiest domains gives no perplexity gain on any domain (280M: worst-case 2.66 and 4.27 vs baseline 2.39).",
+   "kind": "measured",
+   "source": null,
+   "metric": "worst-case log-perplexity",
+   "value": "4.27",
+   "unit": "worst-case log-ppl (Easiest)",
+   "baseline_value": "2.39",
+   "n": null,
+   "setup": "280M->280M on The Pile",
+   "table": "Table 7, rows Hardest and Easiest, column Worst-case log-ppl",
+   "note": "Hardest: 2.66",
+   "where": "Table 7"
+  },
+  {
+   "claim": "On the GLaM dataset iterated DoReMi converges in 3 rounds, and round-2 weights match downstream-tuned oracle weights in downstream accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rounds to converge",
+   "value": "3",
+   "unit": "rounds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8B on GLaM (8 domains), 300k steps, uniform reference weights",
+   "quote": "Empirically, this takes only 3 rounds on the GLaM dataset",
+   "note": null,
+   "where": "Sec 2, Sec 3.2, Table 2"
+  },
+  {
+   "claim": "The 1B proxy model underperforms even the 1B baseline in perplexity (avg 2.02 vs 1.87), yet its weights still let the 1B main model reach baseline accuracy over 2x faster.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg log-perplexity",
+   "value": "2.02",
+   "unit": "avg log-ppl",
+   "baseline_value": "1.87",
+   "n": null,
+   "setup": "1B proxy vs 1B baseline, The Pile",
+   "table": "Table 3b, rows Proxy (1B) and Baseline (1B), column Avg log-ppl",
+   "note": "Text: 'achieve the baseline performance over 2x faster'",
+   "where": "Table 3b"
+  },
+  {
+   "claim": "DoReMi with a 280M proxy puts 0.6057 of weight on Pile-CC versus 0.1121 baseline; a 1B proxy instead puts 0.3289 on OpenWebText2 and 0.1199 on Pile-CC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pile-CC weight",
+   "value": "0.6057",
+   "unit": "domain weight",
+   "baseline_value": "0.1121",
+   "n": null,
+   "setup": "The Pile domain weights",
+   "table": "Table 8, row Pile-CC, columns Baseline and DoReMi (280M)",
+   "note": "Different proxy sizes give different weights, suggesting multiple local minima",
+   "where": "Table 1, Table 8"
+  }
+ ],
+ "limits": [
+  "Domains defined by provenance only, coarse-grained; finer domains or example-level reweighting left to future work",
+  "Domain weights depend on proxy size (280M vs 1B give different weights) and reference model; multiple local minima",
+  "1B proxy trained worse than 1B baseline; authors hypothesise Group DRO loss reweighting vs main-model resampling mismatch",
+  "Gain smaller on GLaM (8 domains) than The Pile (22 domains)",
+  "DoReMi runs for the full step count; extrapolation from early steps untested; weights depend on compute budget",
+  "Why weights transfer across scales and how far is not explained",
+  "Single runs, no seeds or variance reported",
+  "Evaluation limited to perplexity and 5 generative one-shot QA tasks at up to 8B parameters, 1024-token context"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "domain weights",
+   "definition": "the sampling probabilities for each domain",
+   "where": "Sec 1"
+  },
+  {
+   "term": "excess loss",
+   "definition": "the loss gap between the model being evaluated and a pretrained reference model",
+   "where": "Sec 1"
+  },
+  {
+   "term": "iterated DoReMi",
+   "definition": "running DoReMi for multiple rounds, setting the reference domain weights for the next round to the previous round's averaged weights",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Distributionally robust language modeling (Oren et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "adapts DRO-LM to output domain weights rather than a robust model; uses a same-size reference rather than bigram",
+   "quote": null
+  },
+  {
+   "work": "Distributionally robust neural networks for group shifts (Sagawa et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Group DRO online optimizer",
+   "quote": null
+  },
+  {
+   "work": "Prioritized training on points that are learnable, worth learning, and not yet learnt (Mindermann et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "excess-loss selection online in a minibatch",
+   "quote": null
+  },
+  {
+   "work": "The Pile (Gao et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main dataset and baseline weights",
+   "quote": null
+  },
+  {
+   "work": "GLaM (Du et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset and downstream-tuned oracle weights",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "source of one-shot generative task protocol",
+   "quote": null
+  },
+  {
+   "work": "Data selection for language models via importance resampling (Xie et al.)",
+   "year": 2023,
+   "arxiv": "2302.03169",
+   "relation": "related",
+   "note": "example-level filtering toward Wikipedia/books-like text",
+   "quote": null
+  },
+  {
+   "work": "PaLM (Chowdhery et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "also tunes domain weights on downstream tasks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "DoReMi three steps: reference model, Group DRO proxy model, large model with tuned weights.",
+   "page": 2,
+   "why": "shows the pipeline"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Optimising weights with a 280M model takes 8% of the large model compute; +6.5 points and 2.6x faster on The Pile.",
+   "page": 3,
+   "why": "headline result"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "EMA of domain weights through a DoReMi run for 280M and 1B proxies; weights stabilise after 50k steps.",
+   "page": 22,
+   "why": "shows weights depend on compute budget"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p4",
+   "snippet": "alpha'_t <- alpha_{t-1} exp(eta * lambda_t); alpha_t <- (1-c) alpha'_t / sum_i alpha'_t[i] + c u; return (1/T) sum_t alpha_t",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure data (curves) not extracted from text; accuracy-vs-steps values only via prose",
+  "Section 3.2 text says 'Appendix 8' for Table 8"
+ ]
+}

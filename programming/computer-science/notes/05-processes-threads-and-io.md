@@ -781,6 +781,11 @@ So the rule is this. For waiting on network or disk, use threads or `asyncio`, s
 | What's Amdahl's law? | Serial fraction `s` caps speedup at `1/s`. |
 | Threads or processes for CPU work in Python? | Processes on the GIL build. Threads for I/O. |
 
+## See also
+
+- [Python 03 · 07 Concurrency](../../python/03-language-for-engineers/notes/07-concurrency.md): the `asyncio` and thread pool APIs.
+- [Python 03 · 09 Memory and the runtime](../../python/03-language-for-engineers/notes/09-memory-and-the-runtime.md): free-threading and `dis` on `+=`.
+
 ## Next
 
 [6 — Networks](06-networks.md): what's on the other end of those sockets, and where the time goes on a real request.

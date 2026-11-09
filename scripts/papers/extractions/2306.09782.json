@@ -1,0 +1,151 @@
+{
+ "schema": 1,
+ "key": "2306.09782",
+ "pdf": "generative-ai/05-RL/sources/lv-2023-full-parameter-fine-tuning-large.pdf",
+ "bib": {
+  "title": "Full Parameter Fine-tuning for Large Language Models with Limited Resources",
+  "authors": ["Kai Lv", "Yuqing Yang", "Tengxiao Liu", "Qinghui Gao", "Qipeng Guo", "Xipeng Qiu"],
+  "first_author": "Lv",
+  "year": 2023,
+  "venue": "preprint (arXiv:2306.09782v2, 6 Jun 2024; the PDF does not print a venue)",
+  "arxiv": "2306.09782",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 44411,
+  "chars_total": 44411,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can all parameters of a large language model be fine-tuned with very limited GPU memory?",
+ "hypothesis": "Plain SGD is an acceptable optimizer for fine-tuning LLMs because their loss surface is smooth, so optimizer states and stored gradient tensors can be removed.",
+ "contributions": [
+  "A theoretical analysis suggesting that SGD can successfully fine-tune the full parameters of LLMs.",
+  "LOMO (LOw-Memory Optimization), which fuses gradient computation and parameter update to save GPU memory without harming fine-tuning.",
+  "An evaluation of memory usage and throughput, supported by downstream results on SuperGLUE."
+ ],
+ "method": {
+  "summary": "LOMO uses plain SGD and updates each parameter as soon as its gradient is computed during backpropagation (via hooks), so at most one parameter's gradient is held and no optimizer state exists. Stability is handled with value clipping or an extra backward pass for the gradient norm, dynamic loss scaling, and full-precision arithmetic for some operations. Evaluated on LLaMA 7B to 65B for memory, throughput and SuperGLUE accuracy against zero-shot and LoRA.",
+  "task": "full-parameter fine-tuning of LLMs under a memory budget; SuperGLUE classification with 1,000 training examples",
+  "trains": true,
+  "datasets": [
+   {"name": "SuperGLUE subset (RTE, BoolQ, WSC, WIC, MultiRC, COPA)", "role": "both", "size": "1,000 training examples and 1,000 test examples per task", "split": "1000 sampled randomly from the training set; 1000 from the validation set used as test, following MeZO", "source": "Wang et al., 2019; the ethics statement says the datasets permit public and free usage", "preprocessing": "Prompts are the same as MeZO; at inference each label or candidate is inserted into the prompt and the label with the highest average log-likelihood is chosen"}
+  ],
+  "models": [
+   {"name": "LLaMA 7B/13B/30B/65B with LOMO", "role": "proposed", "params": "7B, 13B, 30B, 65B", "architecture": "decoder-only transformer (LLaMA)", "init_from": "pretrained LLaMA (Touvron et al., 2023)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LLaMA with LoRA", "role": "baseline", "params": "7B, 13B, 30B, 65B", "architecture": "LoRA on q and v projections", "init_from": "pretrained LLaMA", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LLaMA zero-shot", "role": "baseline", "params": "7B, 13B, 30B, 65B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "LOMO (fused SGD); AdamW for the LoRA baseline",
+   "lr": "LOMO {5e-2, 3e-2}; LoRA 5e-4; LoRA+LOMO: LoRA 5e-4, LOMO {5e-3, 1e-3, 5e-4}",
+   "lr_schedule": "Linear",
+   "warmup": "ratio: LOMO {0.05, 0.1, 0.2}; LoRA 0.05; LoRA+LOMO LOMO part 0.05, 0.1",
+   "batch_size": "16",
+   "steps": null,
+   "epochs": "10",
+   "tokens": null,
+   "seq_len": "512 and batch 8 for the memory profile (Table 1); 1024 and batch 1 for throughput (Table 2); training-run sequence length not stated",
+   "precision": "mixed precision (FP16) with dynamic loss scaling; gradient and parameter converted to full precision for normalisation and scaling",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "Max grad norm 1.0 (Table 4); value clipping suggested for learning rates below 1e-3",
+   "hardware": "server with 8 x RTX 3090 (24GB), PCIe interconnect; parameter partitioning with ZeRO-3",
+   "compute": "65B on 1000 samples of 512 tokens: about 3.6 hours on 8 x RTX 3090",
+   "wall_clock": "about 3.6 hours (65B, 1000 samples x 512 tokens)",
+   "seeds": "one random seed; the best result is reported",
+   "other": {
+    "LoRA config": "rq = rv = 2, alpha 16 (LoRA+LOMO: rq = rv in {1, 2, 4, 8}, alpha 16)",
+    "loss scaling": "scale factor doubled if no overflow in a specified number of backward passes, halved and step dropped otherwise (the number of passes is not stated)",
+    "backward passes": "two backward passes when gradient normalisation or loss-scale overflow detection is needed (one to check, one to update)"
+   }
+  },
+  "inference": {
+   "decoding": "no generation: score each candidate label by average log-likelihood in the prompt and pick the highest",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run with one random seed; best result reported",
+   "prompting": "same prompts as MeZO",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "share of the 1,000 validation examples where the highest-scoring label is correct", "unit": "%", "higher_is_better": true},
+    {"name": "Memory", "definition": "Table 1: memory (GB) by part; Table 2: peak memory allocated per GPU", "unit": "GB", "higher_is_better": false},
+    {"name": "Throughput (TGS)", "definition": "tokens processed per GPU per second", "unit": "tokens/GPU/s", "higher_is_better": true}
+   ],
+   "baselines": ["AdamW", "SGD", "Zero-shot", "LoRA"],
+   "protocol": "1,000 train and 1,000 test examples per task, one seed, best result reported; no significance test"
+  },
+  "availability": {"code": "https://github.com/OpenLMLab/LOMO", "weights": null, "data": "https://github.com/OpenLMLab/LOMO (footnote 1: Code and data are available)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.hardware", "quote": "The experiments are conduct on a server equipped with 8 RTX 3090 GPUs, interconnected via a PCIe motherboard.", "where": "Sec 4.2"},
+   {"field": "training.seeds", "quote": "report the highest results of experiments conducted with the same random seed", "where": "Appendix A"}
+  ]
+ },
+ "results": [
+  {"claim": "LOMO cuts LLaMA-7B training memory from 102.20GB with AdamW to 14.58GB, both with activation checkpointing.", "kind": "measured", "source": null, "metric": "total memory", "value": "14.58", "unit": "GB", "baseline_value": "102.20 (AdamW)", "n": null, "setup": "LLaMA-7B, sequence length 512, batch size 8, activation checkpointing on", "quote": "from 102.20GB to 14.58GB, when compared to the AdamW op-", "table": "Table 1, rows AdamW and LOMO, AC checked, column Total Memory", "note": "Without activation checkpointing the totals are 147.02 (AdamW), 96.81 (SGD), 59.40 (LOMO) GB. Abstract says 10.8% of the DeepSpeed solution.", "where": "Sec 4.1, Table 1"},
+  {"claim": "LOMO memory against SGD with activation checkpointing.", "kind": "measured", "source": null, "metric": "total memory", "value": "51.99", "unit": "GB", "baseline_value": "14.58 (LOMO)", "n": null, "setup": "LLaMA-7B, sequence length 512, batch size 8, activation checkpointing on", "quote": "from 51.99GB to 14.58GB, when compared to SGD", "table": null, "note": null, "where": "Sec 4.1"},
+  {"claim": "A 65B model is trained with LOMO on 8 RTX 3090 GPUs at very low throughput.", "kind": "measured", "source": null, "metric": "throughput", "value": "4.93", "unit": "TGS", "baseline_value": null, "n": null, "setup": "LLaMA-65B, 8 x RTX 3090, ZeRO-3 partitioning, sequence length 1024, batch size 1; peak 19.18 GB per GPU", "quote": "achieving a throughput of 4.93 TGS", "table": "Table 2, row 65B LOMO, column Throughput (TGS)", "note": null, "where": "Sec 4.2, Table 2"},
+  {"claim": "Training 65B on 1000 samples of 512 tokens takes about 3.6 hours.", "kind": "measured", "source": null, "metric": "wall clock", "value": "3.6", "unit": "hours", "baseline_value": null, "n": null, "setup": "LLaMA-65B, LOMO, 8 x RTX 3090", "quote": "requires approximately 3.6 hours", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "LOMO trains 7B on one RTX 3090 at about 11 times the throughput of AdamW or SGD on 8 GPUs.", "kind": "measured", "source": null, "metric": "throughput", "value": "769.92", "unit": "TGS", "baseline_value": "67.37 (AdamW, 8 GPUs)", "n": null, "setup": "LLaMA-7B, sequence length 1024, batch size 1; LOMO on 1 GPU, AdamW and SGD on 8 GPUs", "quote": null, "table": "Table 2, row 7B LOMO, column Throughput (TGS)", "note": "Text: surpassing AdamW and SGD by about 11 times. The gain is attributed to avoiding inter-GPU communication.", "where": "Sec 4.2, Table 2"},
+  {"claim": "At 13B, LOMO averages 84.2 on six SuperGLUE tasks against LoRA 81.4, a gain of 2.8 points.", "kind": "measured", "source": null, "metric": "average accuracy", "value": "84.2", "unit": "%", "baseline_value": "81.4 (LoRA)", "n": 1000, "setup": "LLaMA-13B, 1,000 training examples and 1,000 test examples per task, one seed, best result reported", "quote": "resulting in average gains of 2.8 points using LLaMA-", "table": "Table 3, row LOMO 13B, column Avg.", "note": null, "where": "Sec 4.3.1, Table 3"},
+  {"claim": "At 65B LOMO averages 89.9 against LoRA 89.0 and zero-shot 61.3.", "kind": "measured", "source": null, "metric": "average accuracy", "value": "89.9", "unit": "%", "baseline_value": "89.0 (LoRA)", "n": 1000, "setup": "LLaMA-65B, six SuperGLUE tasks, 1,000 training examples, one seed", "quote": null, "table": "Table 3, row LOMO 65B, column Avg.", "note": null, "where": "Table 3"},
+  {"claim": "At 7B LOMO averages 80.8 against LoRA 78.8.", "kind": "measured", "source": null, "metric": "average accuracy", "value": "80.8", "unit": "%", "baseline_value": "78.8 (LoRA)", "n": 1000, "setup": "LLaMA-7B, six SuperGLUE tasks, 1,000 training examples, one seed", "quote": null, "table": "Table 3, row LOMO 7B, column Avg.", "note": null, "where": "Table 3"},
+  {"claim": "At 30B LOMO averages 87.1 against LoRA 86.4.", "kind": "measured", "source": null, "metric": "average accuracy", "value": "87.1", "unit": "%", "baseline_value": "86.4 (LoRA)", "n": 1000, "setup": "LLaMA-30B, six SuperGLUE tasks, 1,000 training examples, one seed", "quote": null, "table": "Table 3, row LOMO 30B, column Avg.", "note": null, "where": "Table 3"},
+  {"claim": "LOMO beats zero-shot by more than 20 points on average at 13B.", "kind": "measured", "source": null, "metric": "average accuracy gain", "value": "20", "unit": "points", "baseline_value": "57.2 (zero-shot 13B)", "n": 1000, "setup": "LLaMA-13B, six SuperGLUE tasks", "quote": "average gains of more than 20 points using LLaMA-13B", "table": null, "note": "Table 3: 84.2 vs 57.2", "where": "Sec 4.3.1"},
+  {"claim": "LOMO is worse than LoRA on some individual cells, for example WSC at 7B and MultiRC at 7B and 65B.", "kind": "measured", "source": null, "metric": "accuracy", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Table 3; authors attribute it to a small training set and architecture differences", "quote": "In some cases, LOMO performs worse than LoRA.", "table": null, "note": null, "where": "Sec 4.3.1"},
+  {"claim": "Fine-tuning with LOMO plus LoRA modules is complementary and does not hurt LoRA accuracy.", "kind": "measured", "source": null, "metric": "accuracy", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "LLaMA-13B on BoolQ and MultiRC, 1,000 training examples, LoRA rank 1/2/4/8 (Fig 3)", "quote": "We find that LOMO consistently en-", "table": null, "note": "Per-bar values are only in the figure text and are not recorded here.", "where": "Sec 4.3.2, Fig 3"},
+  {"claim": "Under AdamW most training memory is optimizer states; under LOMO it is parameters.", "kind": "measured", "source": null, "metric": "memory share", "value": "73.7", "unit": "% (optimizer states under AdamW)", "baseline_value": null, "n": null, "setup": "LLaMA-7B, sequence length 512, batch size 8 (Fig 2, no activation checkpointing)", "quote": "(73.7%) being", "table": null, "note": "Fig 2: LOMO is 86.1% parameters, 1.6% gradients, 12.3% activations.", "where": "Sec 4.1, Fig 2"},
+  {"claim": "Activation checkpointing cuts LLaMA-7B activation memory from 45.61GB to 1.79GB.", "kind": "measured", "source": null, "metric": "activation memory", "value": "1.79", "unit": "GB", "baseline_value": "45.61", "n": null, "setup": "LLaMA-7B, sequence length 512, batch size 8", "quote": "from 45.61GB to 1.79GB.", "table": null, "note": null, "where": "Sec 4.1"},
+  {"claim": "SGD runs out of memory at 30B on 8 RTX 3090s while LOMO trains it on 4 GPUs.", "kind": "measured", "source": null, "metric": "GPUs needed", "value": "4", "unit": "GPUs", "baseline_value": null, "n": null, "setup": "LLaMA-30B, sequence length 1024, batch size 1", "quote": "performs well with only 4 GPUs", "table": "Table 2, row 30B LOMO, 4 x RTX 3090, 19.78 GB, 11.61 TGS", "note": null, "where": "Sec 4.2"}
+ ],
+ "limits": [
+  "Gradient normalisation needs an additional backward pass in the current implementation, which slows training.",
+  "Experiments cover only a subset of SuperGLUE; throughput was not evaluated on A100 or other advanced GPUs.",
+  "Downstream results use 1,000 training examples, one random seed, and the best result is reported; no variance or significance test.",
+  "Only SGD is used; the authors say there is no guarantee that SGD is as powerful as modern optimizers, and the smooth-loss argument holds only for tasks close to pre-training.",
+  "Exact immediate update is not possible with current PyTorch hooks; at most one parameter's gradient is held in memory.",
+  "Value clipping performs worse at high learning rates; grouped gradient-norm approximation is biased and is called controversial.",
+  "Authors attribute cases where LOMO loses to LoRA to the small training set and different architectures, without testing it.",
+  "Memory is now mostly parameters; the authors list quantisation as future work."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LOMO", "definition": "LOw-Memory Optimization: an optimizer that fuses the gradient computation and the parameter update in one step to reduce memory usage", "where": "Abstract"},
+  {"term": "TGS", "definition": "the number of tokens processed by each GPU per second", "where": "Table 2 caption"}
+ ],
+ "lineage": [
+  {"work": "LoRA (Hu et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "PEFT baseline and combined with LOMO", "quote": null},
+  {"work": "MeZO, Fine-tuning language models with just forward passes (Malladi et al.)", "year": 2023, "arxiv": "2305.17333", "relation": "uses-method", "note": "evaluation protocol, subsampling and prompts follow MeZO; also named as a memory-efficient alternative", "quote": "we follow MeZO (Malladi et al., 2023) to randomly sample"},
+  {"work": "LLaMA (Touvron et al.)", "year": 2023, "arxiv": "2302.13971", "relation": "evaluates", "note": "all models used", "quote": null},
+  {"work": "SuperGLUE (Wang et al.)", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "RTE, BoolQ, WSC, WIC, MultiRC, COPA", "quote": null},
+  {"work": "ZeRO (Rajbhandari et al.)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "ZeRO-3 for parameter partitioning in throughput tests", "quote": null},
+  {"work": "Training deep nets with sublinear memory cost (Chen et al.)", "year": 2016, "arxiv": "1604.06174", "relation": "uses-method", "note": "activation checkpointing", "quote": null},
+  {"work": "Mixed precision training (Micikevicius et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "loss scaling and full-precision arithmetic", "quote": null},
+  {"work": "GaLore (Zhao et al.)", "year": 2024, "arxiv": "2403.03507", "relation": "related", "note": "gradient low-rank projection; LOMO does not approximate gradients", "quote": null},
+  {"work": "AdamW (Loshchilov and Hutter)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "memory baseline", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Comparison of SGD and LOMO in backpropagation and parameter update stages.", "page": 2, "why": "Shows the fused update that removes stored gradients."},
+  {"figure": "Figure 2", "caption": "The memory usage ratio of each part when using different optimizers to train LLaMA-7B. The sequence length and batch size are set to 512 and 8, respectively.", "page": 6, "why": "Shows optimizer states at 73.7% under AdamW and parameters at 86.1% under LOMO."},
+  {"figure": "Table 1", "caption": "Memory usage (GB) when training LLaMA-7B under different settings. AC refers to Activation Checkpointing.", "page": 6, "why": "Gives the headline 102.20 vs 14.58 GB with the AC setting."},
+  {"figure": "Figure 3", "caption": "Results using LLaMA-13B on the BoolQ and MultiRC datasets (with 1,000 training examples).", "page": 9, "why": "LoRA vs LoRA+LOMO by rank."}
+ ],
+ "code": [
+  {"where": "Algorithm 1, Sec 3.2", "snippet": "for l = L, ..., 1 do (Backward): theta_l <- [theta_i for theta_i in layer l]; g_l <- d loss / d theta_l; theta_l <- theta_l - alpha * g_l; g_l <- None (Clear gradients)", "verbatim": false}
+ ],
+ "problems": [
+  "No venue is printed in the PDF (arXiv v2 dated 6 Jun 2024); the notes' 'ACL 2024' cannot be confirmed from this text.",
+  "Table 1 and Table 3 cells extract one per line; values were matched by position.",
+  "The number of backward passes between loss-scale doublings, training steps, max sequence length in the SuperGLUE runs, and per-run hardware for fine-tuning are not stated."
+ ]
+}

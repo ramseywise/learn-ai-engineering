@@ -1,0 +1,586 @@
+{
+ "schema": 1,
+ "key": "2307.06304",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dehghani-2023-patch-n-pack.pdf",
+ "bib": {
+  "title": "Patch n' Pack: NaViT, a Vision Transformer for any Aspect Ratio and Resolution",
+  "authors": [
+   "Mostafa Dehghani",
+   "Basil Mustafa",
+   "Josip Djolonga",
+   "Jonathan Heek",
+   "Matthias Minderer",
+   "Mathilde Caron",
+   "Andreas Steiner",
+   "Joan Puigcerver",
+   "Robert Geirhos",
+   "Ibrahim Alabdulmohsin",
+   "Avital Oliver",
+   "Piotr Padlewski",
+   "Alexey Gritsenko",
+   "Mario Lučić",
+   "Neil Houlsby"
+  ],
+  "first_author": "Dehghani",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2307.06304",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 79862,
+  "chars_total": 79862,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only for lineage"
+ },
+ "type": "empirical",
+ "question": "Can Vision Transformers be trained on images at native aspect ratio and mixed resolution by packing patches from several images into one sequence, and does this improve training efficiency and flexibility?",
+ "hypothesis": "Sequence packing, as used in NLP, lets ViTs process variable-resolution inputs with fixed batch shapes, giving more images per compute budget and better performance than fixed-resolution ViT.",
+ "contributions": [
+  "Randomly sampling resolutions at training time significantly reduces training cost.",
+  "NaViT performs well across a wide range of resolutions, giving a smooth cost-performance trade-off at inference, and adapts to new tasks at lower cost.",
+  "Fixed batch shapes from example packing enable aspect-ratio-preserving resolution sampling, variable token dropping rates and adaptive computation."
+ ],
+ "method": {
+  "summary": "NaViT packs patches from multiple images into one fixed-length sequence (Patch n' Pack), with per-example attention and pooling masks, factorized/fractional positional embeddings, continuous token dropping and mixed-resolution sampling. It is pre-trained on JFT-4B (classification) and WebLI (contrastive) and compared with compute-matched ViTs, then transferred to classification, segmentation, detection and video.",
+  "task": "image classification pretraining (JFT-4B) and contrastive image-text pretraining (WebLI), with downstream transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "JFT-4B",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Zhai et al., 2022",
+    "preprocessing": "NaViT: no inception crop, no square resize, aspect ratio preserved; side length r sampled uniformly between 64 and 256 and image resized to r^2 pixels (Appendix A.1)"
+   },
+   {
+    "name": "WebLI",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Chen et al., 2022c",
+    "preprocessing": "image side-lengths sampled ~U(64, Rmax), no other augmentation; text truncated to 24 tokens"
+   },
+   {
+    "name": "ImageNet-1k",
+    "role": "eval",
+    "size": null,
+    "split": "10-shot linear eval, finetuning, zero-shot",
+    "source": "Deng et al., 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-A, ObjectNet",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hendrycks et al., 2021; Barbu et al., 2019",
+    "preprocessing": "label-map from JFT-4B to ImageNet; ViT uses aspect-preserving central 75% crop for these"
+   },
+   {
+    "name": "ADE20k",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhou et al., 2017",
+    "preprocessing": "linear decoder protocol of Segmenter"
+   },
+   {
+    "name": "LVIS",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Gupta et al., 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Kinetics400",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kay et al., 2017",
+    "preprocessing": "paper notes its version contains less data than prior works"
+   },
+   {
+    "name": "FairFace, CelebA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kärkkäinen and Joo, 2019; Liu et al., 2015",
+    "preprocessing": "resized to area 224^2 preserving aspect ratio for NaViT"
+   },
+   {
+    "name": "model-vs-human",
+    "role": "eval",
+    "size": "17 datasets (cue-conflict excluded)",
+    "split": null,
+    "source": "Geirhos et al., 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "NaViT-B/32, B/16, L/16",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT with masked self-attention and masked attention pooling, factorized positional embeddings, query-key normalisation, no biases",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "packed sequence length 64 (B/32), 256 (B/16, L/16); 4.87-5.41 images per sequence",
+    "other": {
+     "downstream": "NaViT-L/14 for OWL-ViT detection"
+    }
+   },
+   {
+    "name": "ViT-B/32, B/16, L/16",
+    "role": "baseline",
+    "params": null,
+    "architecture": "vanilla ViT, 224x224 images, sequence length 49 (B/32) or 196",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "49 or 196 tokens",
+    "other": {
+     "note": "compute-matched, same small ViT improvements"
+    }
+   },
+   {
+    "name": "Text tower (contrastive)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same architectural modifications as image tower",
+    "init_from": null,
+    "tokenizer": "T5 sentencepiece",
+    "vocab": "32000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "text truncated to 24 tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "sigmoid cross-entropy classification on JFT-4B; contrastive image-text loss (chunked contrastive loss) on WebLI",
+   "optimizer": null,
+   "lr": "8e-4 max (classification); 3e-3 (contrastive)",
+   "lr_schedule": "reciprocal square-root with linear warmup and cooldown",
+   "warmup": null,
+   "batch_size": "approx 4.0e3 images (ViT); approx 2.2e4 (NaViT-B/32), 1.9e4 (NaViT-B/16, L/16) images per Table 2",
+   "steps": "ViT: 1.0 × 105 to 1.0 × 106 train steps (Table 2, four budgets); NaViT slightly fewer (e.g. 9.8 × 104 to 9.7 × 105 for B/32)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "ViT 49 / 196; NaViT 64 (B/32) / 256 (B/16, L/16)",
+   "precision": null,
+   "weight_decay": "0.03 body, 3.0 head (classification); 1e-6 on all kernels (contrastive)",
+   "dropout": null,
+   "regularisation": "token dropping (constant, Beta-sampled, resolution-dependent, scheduled)",
+   "hardware": "TPU (Cloud TPUv3 chip used for latency)",
+   "compute": "Table 2 lists TPU chip hours per run, 1.4e11 to 9.8e12 (as printed)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pretraining images": "ViT 4.0e8 to 4.0e9; NaViT 1.8e9 to 2.1e10 images (Table 2)",
+    "packing": "greedy first-fit, padding under 2% of tokens",
+    "Emax": "max examples per sequence, value not stated",
+    "framework": "JAX, FLAX, Scenic",
+    "ablation positional embeddings": "NaViT-B/16, 200k steps on JFT, R ~ U(160, 352)",
+    "token drop schedule": "rho(n) = rho_min + (rho_max - rho_min) * sigmoid((n - mu)/tau), rho_min = 0.2, rho_max = 0.8",
+    "beta drop variance": "0.3 * u_mu * (1 - u_mu)",
+    "resolution-dependent drop": "truncated normal std 0.02, mean linear in sequence length between d_min and d_max"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "cascade": "alpha-fraction hardest examples (smallest max probability) sent to second model with n2 tokens"
+   },
+   "other": {
+    "evaluation resolution": "effective resolution = same area as square image of that side; aspect ratio preserved"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ImageNet 10-shot linear accuracy",
+     "definition": "10 examples per class train a linear classifier on frozen representations",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-1 accuracy",
+     "definition": "ImageNet finetuned or label-mapped",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Zero-shot ImageNet accuracy and COCO retrieval",
+     "definition": "contrastive models",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Expected calibration error",
+     "definition": "top-1, l1, 30 buckets (Nixon et al. 2019)",
+     "unit": "ECE",
+     "higher_is_better": false
+    },
+    {
+     "name": "ADE20k mIoU",
+     "definition": "linear decoder, evaluated at native resolution",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "LVIS AP / AP rare",
+     "definition": "OWL-ViT protocol",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "compute-matched ViT-B/32, B/16, L/16",
+    "Pix2Struct learned 2D positional embeddings",
+    "ViT-B/16 fixed resolution 256 with interpolated embeddings",
+    "ViViT-L (Kinetics400)"
+   ],
+   "protocol": "compute-matched comparisons across model sizes; Wilcoxon signed-rank test for fairness annotators; no seeds or repeats stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "JFT-4B is not stated as released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "with a maximum value of 8e −4, and phases",
+    "where": "Appendix A.1 (text garbled: the warmup/cooldown phase lengths are lost)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "NaViT matches the best ViT's performance with 4x less compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute ratio at matched JFT pretraining performance",
+   "value": "4",
+   "unit": "x less compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JFT-4B pretraining, compute-matched NaViT vs ViT, B/32, B/16, L/16 (Figure 1)",
+   "quote": "we match the performance of the top-performing ViT with 4× less compute",
+   "table": null,
+   "note": "Also stated as the lightest NaViT being five times more cost-effective than its ViT counterpart.",
+   "where": "Section 1, Section 3.1"
+  },
+  {
+   "claim": "NaViT-L/16 processes about five times more images in the same training compute, the stated primary cause of the gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "images seen during pretraining",
+   "value": "five times",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2: NaViT-L/16 vs ViT-L/16 at same TPU hours",
+   "quote": "enable NaViT-L/16 to process five times more images during training",
+   "table": null,
+   "note": null,
+   "where": "Section 1"
+  },
+  {
+   "claim": "Packing overhead from extra attention shrinks as model dimension grows; padding tokens under 2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "padding fraction",
+   "value": "2",
+   "unit": "% of tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "greedy packing, 256 tokens per image assumed for Fig 4",
+   "quote": "we find typically less 2%",
+   "table": null,
+   "note": "Wording in the paper is 'typically less 2% of tokens are padding tokens'.",
+   "where": "Section 2.3"
+  },
+  {
+   "claim": "Object detection with NaViT-L/14 backbone beats ViT-L/14 on LVIS AP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LVIS AP",
+   "value": "28.3",
+   "unit": "%",
+   "baseline_value": "23.3",
+   "n": null,
+   "setup": "compute-matched backbones in OWL-ViT-L/14, shorter pretraining than original OWL-ViT",
+   "quote": null,
+   "table": "Table 1, row LVIS AP, columns ViT-L/14 (23.3%) and NaViT-L/14 (28.3%)",
+   "note": "LVIS AP rare 24.3% vs 17.2%; ImageNet zero-shot 72.9% vs 68.3%.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Expected calibration error stays stable as patches per image vary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": "0.045 to 0.047",
+   "unit": "ECE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K finetuned B model, 128 to 1024 patches, no recalibration",
+   "quote": "the calibration error remains very stable in the interval (0.045, 0.047)",
+   "table": null,
+   "note": "Table 4 also lists 0.048 at sequence length 384, outside the quoted interval.",
+   "where": "Section 3.5, Table 4"
+  },
+  {
+   "claim": "Fairness-signal annotators on NaViT features beat ViT, significant under Wilcoxon signed-rank.",
+   "kind": "measured",
+   "source": null,
+   "metric": "p-value",
+   "value": "3 × 10−4",
+   "unit": "p",
+   "baseline_value": null,
+   "n": null,
+   "setup": "linear probes on frozen NaViT-L/16 vs ViT-L/16, FairFace and CelebA, images resized to area 224^2",
+   "quote": "the improvement in NaViT is significant with p = 3 × 10−4",
+   "table": null,
+   "note": "Native vs square aspect ratio in NaViT: p = 0.02.",
+   "where": "Section 3.5"
+  },
+  {
+   "claim": "NaViT-L reaches competitive Kinetics400 performance with ViViT-L in about 6x fewer epochs without multi-crop evaluation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "epochs ratio",
+   "value": "6",
+   "unit": "x fewer epochs",
+   "baseline_value": "80.4%",
+   "n": null,
+   "setup": "Kinetics400 finetuning from JFT NaViT; the dataset used has less data than prior works",
+   "quote": "NaViT-L achieves competitive performance with ViViT-L (80.4%) in approximately 6x less epochs",
+   "table": null,
+   "note": "NaViT's own accuracy is not stated in text.",
+   "where": "Section 3.6"
+  },
+  {
+   "claim": "Decreasing the token dropping rate over training improves accuracy at fixed cost; increasing it harms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Top-1 accuracy",
+   "value": "76.5",
+   "unit": "%",
+   "baseline_value": "75.8",
+   "n": null,
+   "setup": "NaViT-B/16 JFT pretraining, schedules Fixed / Increasing / Decreasing fast / Decreasing slow (Fig 8)",
+   "quote": null,
+   "table": "Figure 8 data labels: 75.8%, 72.2%, 76.3%, 76.5% (assignment of labels to bars read from figure order Fixed, Increasing, Decreasing fast, Decreasing slow)",
+   "note": "Value mapping is read from the figure; verify against the plot.",
+   "where": "Figure 8, Appendix A.5"
+  },
+  {
+   "claim": "Resizing to 256 tokens retains quality within 0.3% on ImageNet; 128 tokens costs about 1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet accuracy drop",
+   "value": "0.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NaViT-L/16 ImageNet inference, aspect-preserving resize to fixed token budget",
+   "quote": "retains most of the quality (within 0.3%)",
+   "table": null,
+   "note": null,
+   "where": "Appendix C"
+  },
+  {
+   "claim": "Sampling side length from a truncated normal biased to low resolution gives best zero-shot ImageNet accuracy at fixed compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet zero-shot accuracy",
+   "value": "64.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "contrastive NaViT, side length rescaled to [64, 384] vs area sampling vs native res (Fig 7)",
+   "quote": null,
+   "table": "Figure 7 data labels include 64.3%",
+   "note": "Which bar carries 64.3% is inferred from the text's statement that low-biased side-length sampling is best.",
+   "where": "Section 3.2, Figure 7"
+  }
+ ],
+ "limits": [
+  "No code or weights release is mentioned; Emax, optimizer, warmup length, precision, seeds and parameter counts are not stated.",
+  "Pretraining sets JFT-4B and WebLI are proprietary; the Appendix A.1 learning-rate sentence is garbled in the PDF text.",
+  "Native-resolution training is not used by default; resolution is sampled to control throughput and packing.",
+  "Kinetics400 version used has less data than prior work, so the video comparison is weak.",
+  "OOD gains depend on preprocessing: central-crop ViT baseline favours ObjectNet, so differences vary by crop strategy.",
+  "Model-vs-human: ViT is mostly better than NaViT at higher fine-tune resolutions.",
+  "Authors caution that fairness-attribute classifiers can misidentify people and should be used only for auditing or dataset diversity measurement.",
+  "NaViT does not build hierarchical multi-scale representations; combining the two is left as future work.",
+  "Single runs; no variance or seeds reported except the Wilcoxon tests on fairness probes."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Patch n' Pack",
+   "definition": "Multiple patches from different images are packed in a single sequence, which enables variable resolution while preserving the aspect ratio.",
+   "where": "Section 1"
+  },
+  {
+   "term": "NaViT",
+   "definition": "Native Resolution ViT, a ViT trained with sequence packing on images at their native resolution and aspect ratio.",
+   "where": "Abstract, Section 2"
+  },
+  {
+   "term": "Effective resolution",
+   "definition": "Images with the same area as a square image with a given resolution.",
+   "where": "Section 3.2"
+  },
+  {
+   "term": "Continuous token dropping",
+   "definition": "The token dropping rate can be varied per-image rather than being the same proportion for all examples.",
+   "where": "Section 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "An Image is Worth 16x16 Words (Vision Transformer)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "NaViT is built upon the original ViT",
+   "quote": "NaViT is built upon the original ViT"
+  },
+  {
+   "work": "FlexiViT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multiple patch sizes, smooth sequence-length variation",
+   "quote": null
+  },
+  {
+   "work": "Pix2Struct",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "aspect-preserving patching and learned 2D positional embeddings, used as a baseline",
+   "quote": null
+  },
+  {
+   "work": "Krell et al., Efficient sequence packing without cross-contamination",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NLP example packing",
+   "quote": null
+  },
+  {
+   "work": "Multigrid training (Wu et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "most closely related mixed-resolution schedule",
+   "quote": null
+  },
+  {
+   "work": "Scaling vision transformers to 22 billion parameters (Dehghani et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "query-key normalisation, no biases, JFT classification setup, OOD crop protocol",
+   "quote": null
+  },
+  {
+   "work": "Scaling vision transformers (Zhai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "JFT-4B, attention pooling",
+   "quote": null
+  },
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "contrastive image-text loss",
+   "quote": null
+  },
+  {
+   "work": "Mustafa et al. chunked contrastive loss",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "avoids gathering all points for softmax",
+   "quote": null
+  },
+  {
+   "work": "OWL-ViT (Minderer et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "detection transfer protocol",
+   "quote": null
+  },
+  {
+   "work": "ViViT (Arnab et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "video classification comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Example packing enables variable resolution images with preserved aspect ratio, reducing training time, improving performance and increasing flexibility.",
+   "page": 2,
+   "why": "Shows masked attention restricted to same-example tokens, masked pooling and pad handling in one picture."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "NaViT offers notable computational efficiency during pre-training (left) which carries over to downstream fine-tuning (middle). A single NaViT can be applied successfully to multiple resolutions (right).",
+   "page": 2,
+   "why": "Headline compute-versus-accuracy curves."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Overhead from extra attention due to packing, assuming 256 tokens per image; it diminishes with model scale.",
+   "page": 4,
+   "why": "Answers the quadratic attention concern."
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A.5, Eq. 1",
+   "snippet": "rho(n; rho_min, rho_max, mu, tau) = rho_min + (rho_max - rho_min) * sigmoid((n - mu) / tau)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix A.1 learning-rate sentence is garbled ('maximum value of 8e −4, and phases'); warmup and cooldown lengths lost.",
+  "Table 2 and figure data labels are flattened in the text, so column alignment is inferred.",
+  "Figure 7 and 8 bar-to-value mapping is read from labels and not verifiable from text."
+ ]
+}

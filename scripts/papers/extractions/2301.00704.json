@@ -1,0 +1,592 @@
+{
+ "schema": 1,
+ "key": "2301.00704",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chang-2023-muse.pdf",
+ "bib": {
+  "title": "Muse: Text-To-Image Generation via Masked Generative Transformers",
+  "authors": [
+   "Huiwen Chang",
+   "Han Zhang",
+   "Jarred Barber",
+   "AJ Maschinot",
+   "José Lezama",
+   "Lu Jiang",
+   "Ming-Hsuan Yang",
+   "Kevin Murphy",
+   "William T. Freeman",
+   "Michael Rubinstein",
+   "Yuanzhen Li",
+   "Dilip Krishnan"
+  ],
+  "first_author": "Chang",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.00704",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 64946,
+  "chars_total": 64946,
+  "engine": "pymupdf",
+  "skipped": "Reference list (lines 852-1034) skimmed only, not read entry by entry"
+ },
+ "type": "empirical",
+ "question": "Can a masked-token transformer with parallel decoding, conditioned on a frozen LLM, match diffusion and autoregressive text-to-image quality at far lower inference cost?",
+ "hypothesis": "Conditioning on a pre-trained LLM embedding and predicting masked discrete image tokens in parallel gives high quality with fewer sampling steps; LLM embeddings are roughly linearly mappable to vision representations.",
+ "contributions": [
+  "State-of-the-art text-to-image model with excellent FID and CLIP scores",
+  "Significantly faster than comparable models due to quantized image tokens and parallel decoding",
+  "Out-of-the-box zero-shot editing: inpainting, outpainting, mask-free editing"
+ ],
+ "method": {
+  "summary": "Frozen T5-XXL encoder embeds text; a VQGAN tokenizes images to discrete tokens; a base masked transformer predicts masked 16x16 tokens (256x256 image) with cross-entropy, and a super-res transformer maps them to 64x64 tokens (512x512). Inference uses iterative parallel decoding with cosine schedule and classifier-free guidance.",
+  "task": "text-to-image generation (masked image token modelling)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Imagen dataset",
+    "role": "train",
+    "size": "460M text-image pairs",
+    "split": null,
+    "source": "Saharia et al., 2022 (provided by Imagen authors)",
+    "preprocessing": null
+   },
+   {
+    "name": "CC3M",
+    "role": "both",
+    "size": null,
+    "split": "models trained on CC3M for Table 1",
+    "source": "Sharma et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "MS-COCO",
+    "role": "eval",
+    "size": "FID-30K",
+    "split": "zero-shot validation",
+    "source": "Lin et al., 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "PartiPrompts",
+    "role": "eval",
+    "size": "1650 prompts",
+    "split": null,
+    "source": "Yu et al., 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Muse base (largest)",
+    "role": "proposed",
+    "params": "3B (range 632M-3B)",
+    "architecture": "masked transformer with self-attn, cross-attn to text, MLP",
+    "init_from": null,
+    "tokenizer": "VQGAN f=16, codebook 8192",
+    "vocab": "8192 image tokens",
+    "layers": 48,
+    "hidden": 2048,
+    "heads": null,
+    "context": "256 image tokens (16x16) + T5 text tokens",
+    "other": {
+     "mlp_dim": 8192
+    }
+   },
+   {
+    "name": "Muse super-res",
+    "role": "proposed",
+    "params": "268M (in the 632M+268M CC3M config)",
+    "architecture": "32 multi-axis transformer layers plus 16-layer low-res encoder",
+    "init_from": "trained after base model",
+    "tokenizer": "VQGAN f=8, 4096 tokens (64x64)",
+    "vocab": "8192",
+    "layers": 32,
+    "hidden": 1024,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {
+     "mlp_dim": 4096,
+     "lowres_encoder_layers": 16
+    }
+   },
+   {
+    "name": "T5-XXL encoder",
+    "role": "base",
+    "params": "4.6B",
+    "architecture": "frozen text encoder, 4096-d embeddings linearly projected",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": 4096,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Parti-3B, Imagen, LDM/Stable Diffusion v1.4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy on masked image tokens; variable masking rate (arccos, mean 0.64); text dropped on 10% of samples for CFG",
+   "optimizer": "Adafactor (base, super-res); Adam (VQGAN)",
+   "lr": "1e-4",
+   "lr_schedule": "cosine decay",
+   "warmup": "5000 steps (base, super-res); 10000 (VQGAN)",
+   "batch_size": "512 (base, super-res); 256 (VQGAN)",
+   "steps": "1.5M (Table 4 base); 1M (text, Table 6 super-res, Table 5 VQGAN)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "256 image tokens base; 4096 super-res",
+   "precision": null,
+   "weight_decay": "0.045 (base, super-res); 1e-4 (VQGAN)",
+   "dropout": null,
+   "regularisation": "no online EMA; offline EMA over checkpoints every 5000 steps, decay 0.7",
+   "hardware": "512-core TPU-v4",
+   "compute": null,
+   "wall_clock": "about 1 week",
+   "seeds": null,
+   "other": {
+    "adafactor_betas": "b1=0.9, b2=0.96",
+    "vqgan_betas": "b1=0.9, b2=0.99",
+    "vqgan_perceptual_loss_weight": 0.05,
+    "vqgan_adversarial_loss_weight": 0.1,
+    "decoder_finetune": "VQGAN decoder widened (4 residual blocks per resolution, base channels 256) and fine-tuned with encoder, codebook and transformers frozen",
+    "text_encoder": "frozen"
+   }
+  },
+  "inference": {
+   "decoding": "iterative parallel masked decoding, cosine schedule, highest-confidence tokens unmasked per step",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "16 images per prompt, best by CLIP score chosen (Fig 6 and human eval); FID sampling parameter sets not fully stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "base_steps": 24,
+    "superres_steps": 8,
+    "cfg_formula": "l_g=(1+t)l_c - t l_u",
+    "guidance": "t linearly increased during sampling; value for reported FID not stated",
+    "sampling_temperature": "swept, value not stated",
+    "edit_resample_fraction": "8% per iteration",
+    "edit_iterations": 100,
+    "edit_guidance": 4,
+    "edit_top_k": 3
+   },
+   "other": {
+    "negative_prompt": "replace unconditional logit with negative-prompt logit"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance, quality and diversity",
+     "unit": "FID-30K on COCO",
+     "higher_is_better": false
+    },
+    {
+     "name": "CLIP score",
+     "definition": "image/text alignment",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human alignment preference",
+     "definition": "'Which image matches with the caption better?' 5 raters, >=3 consensus",
+     "unit": "% of prompts",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inference time",
+     "definition": "per-batch time on TPUv4 (A100 for SD/LDM)",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "VQGAN",
+    "ImageBART",
+    "LDM",
+    "RQ-Transformer",
+    "Draft-and-revise",
+    "DALL-E",
+    "DALL-E 2",
+    "GLIDE",
+    "Imagen",
+    "Parti-3B/20B",
+    "Make-A-Scene",
+    "Stable Diffusion v1.4"
+   ],
+   "protocol": "CC3M FID with models trained on CC3M; COCO zero-shot; no seeds or error bars; human eval on PartiPrompts vs SD v1.4 only"
+  },
+  "availability": {
+   "code": "not released",
+   "weights": "not released",
+   "data": "Imagen internal dataset, not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "Training steps 1.5M",
+    "where": "Table 4"
+   },
+   {
+    "field": "results Table 3",
+    "quote": "Per-batch inference time for several models.",
+    "where": "Table 3 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Muse-3B reaches zero-shot COCO FID-30K 7.88 at 256x256, slightly better than Parti-3B (8.10).",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot FID-30K",
+   "value": "7.88",
+   "unit": null,
+   "baseline_value": "8.10",
+   "n": null,
+   "setup": "Zero-shot MS-COCO, 256x256, Muse-3B trained on the Imagen dataset (460M pairs); Parti-3B number from Table 2",
+   "note": null,
+   "where": "Sec 3.2, Table 2",
+   "quote": "Our 3B model achieves an FID score of 7.88 which is slightly better than the score of 8.1 achieved by the Parti-3B model"
+  },
+  {
+   "claim": "Muse-3B takes 0.5 s at 256x256 versus 6.4 s for Parti-3B (Table 3 is labelled per-batch time; batch size not given).",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference time",
+   "value": "0.5",
+   "unit": "s",
+   "baseline_value": "6.4",
+   "n": null,
+   "setup": "Table 3 'Per-batch inference time'; Muse, Imagen, Parti benchmarked internally on TPUv4; batch size and what a batch contains not stated",
+   "note": "Caption says per-batch; Fig 1 caption says 'Each image was generated in 1.3s on a TPUv4 chip' for 512x512 (Table 3 also lists 1.3s). Whether 0.5s is per image or per batch is not defined.",
+   "where": "Table 3, Sec 3.2.2",
+   "table": "Table 3, row Muse-3B 256x256, column Time (0.5s); row Parti-3B 256x256 (6.4s)"
+  },
+  {
+   "claim": "Muse decodes 256 tokens in 24 steps in the base model and 4096 tokens in 8 steps in the super-res model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoding steps",
+   "value": "24 (base), 8 (super-res)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iterative parallel decoding with cosine schedule choosing a fixed fraction of the highest-confidence masked tokens per step",
+   "note": null,
+   "where": "Sec 2.8",
+   "quote": "we are able to perform inference of 256 tokens using only 24 decoding steps in our base model and 4096 tokens using 8 decoding steps in our super-resolution model"
+  },
+  {
+   "claim": "Muse estimated more than 10x faster than Imagen-3B or Parti-3B and 3x faster than Stable Diffusion v1.4.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Comparisons on similar hardware (TPU-v4), same image size; SD benchmark from Lambda Labs on A100 GPUs, so hardware is not matched for SD",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "we estimate that Muse is more than 10x faster at inference time than either Imagen-3B or Parti-3B models"
+  },
+  {
+   "claim": "Muse (632M base + 268M super-res) gets CC3M FID 6.06, SOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID on CC3M",
+   "value": "6.06",
+   "unit": null,
+   "baseline_value": "9.65",
+   "n": null,
+   "setup": "Trained and evaluated on CC3M; baseline best prior Draft-and-revise 9.65",
+   "note": null,
+   "where": "Sec 1, Table 1",
+   "quote": "Our 632M(base)+268M(super-res) parameter model achieves a state of the art FID score of 6.06"
+  },
+  {
+   "claim": "Muse-3B CLIP score 0.32 on COCO versus 0.27 reported in Imagen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CLIP score",
+   "value": "0.32",
+   "unit": null,
+   "baseline_value": "0.27",
+   "n": null,
+   "setup": "Zero-shot COCO 256x256; text elsewhere cites 0.29 for Imagen at much higher FID (about 20)",
+   "note": "Text in Sec 3.2 says Imagen's CLIP is 0.29 (at FID about 20) and about 0.27 at FID 7.27; Table 2 caption says 0.27.",
+   "where": "Table 2 caption, Sec 3.2",
+   "quote": "Muse achieves a CLIP score of 0.32, higher than the score of 0.27 reported in Imagen."
+  },
+  {
+   "claim": "Human raters judged Muse-3B better aligned than Stable Diffusion v1.4 on 70.6% of PartiPrompts (SD 25.4%, no consensus 4%), about 2.7x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "alignment preference",
+   "value": "70.6",
+   "unit": "%",
+   "baseline_value": "25.4",
+   "n": null,
+   "setup": "PartiPrompts, 1650 prompts; 5 raters per pair; at least 3-rater consensus required; 16 images generated per prompt, highest-CLIP one used (paper does not say outright it applied to both models); SD via CompVis notebook",
+   "note": null,
+   "where": "Sec 3.2.1",
+   "quote": "Muse was chosen as better aligned than Stable Diffusion for 70.6% of the prompts, Stable Diffusion was chosen as better aligned than Muse for 25.4%"
+  },
+  {
+   "claim": "Best-of-16 by CLIP score was used for the human evaluation and the qualitative figures, so these results are reranked samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6 and PartiPrompts human eval",
+   "note": null,
+   "where": "Sec 3.2.1",
+   "quote": "For each prompt, 16 image instances were generated, and the one with the highest CLIP score (Radford et al., 2021) was used."
+  },
+  {
+   "claim": "Base model expected masking rate is 0.64 under the truncated arccos distribution.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expected masking rate",
+   "value": "0.64",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training masking rate r sampled from p(r)=2/pi (1-r^2)^(-1/2)",
+   "note": null,
+   "where": "Sec 2.6",
+   "quote": "This has an expected masking rate of 0.64, with a strong bias towards higher masking rates."
+  },
+  {
+   "claim": "Classifier-free guidance uses logits l_g=(1+t)l_c - t l_u with text dropped on 10% of training samples; guidance scale t is increased linearly during sampling to reduce diversity loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "text-dropout rate",
+   "value": "10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Applied per masked token at inference",
+   "note": null,
+   "where": "Sec 2.7",
+   "quote": "At training time, we remove text conditioning on 10% of samples chosen randomly"
+  },
+  {
+   "claim": "Zero-shot mask-free editing resamples 8% of tokens per iteration for 100 iterations with guidance scale 4 and top-k 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit iterations",
+   "value": "100",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Low-res base model, then super-res on final output",
+   "note": null,
+   "where": "Sec 3.3.2",
+   "quote": "we resample 8% of the tokens per iteration for 100 iterations, with a guidance scale of 4"
+  },
+  {
+   "claim": "Muse is weak at long phrase rendering, high cardinality and multiple cardinalities.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6 bottom right, qualitative",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "prompts indicating high object cardinality tend to result in generated images which do not correctly reflect that desired cardinality (e.g., rendering only 7 wine bottles when the prompt specified 10)"
+  },
+  {
+   "claim": "Larger VQGAN codebooks gave no improvement; codebook size 8192.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base tokenizer CNN with 19 ResNet blocks",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "Larger codebook sizes did not result in performance improvements."
+  },
+  {
+   "claim": "A language model learned from scratch did much worse than frozen T5-XXL, especially on long prompts and rare words.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Initial experiments, no numbers",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "found that performance was signiﬁcantly worse than using a pre-trained LLM, especially on long prompts and rare words"
+  },
+  {
+   "claim": "Base model training length is printed as 1M steps in the text and 1.5M steps in Table 4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training steps",
+   "value": "1M",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "3B base model",
+   "note": "Table 4 prints Training steps 1.5M; Table 6 (super-res) prints 1M.",
+   "where": "Sec 3 vs Table 4",
+   "quote": "Training is performed for 1M steps, with a batch size of 512 on 512-core TPU-v4 chips"
+  }
+ ],
+ "limits": [
+  "Fails at long multi-word phrase rendering, high cardinality, multiple cardinalities (Sec 3.1).",
+  "No realism human evaluation, argued to be only valid between models of similar alignment (Sec 3.2.2).",
+  "Speed comparison mixes hardware: Muse/Imagen/Parti on TPUv4, SD/LDM on A100 from a third-party benchmark; batch size not given.",
+  "Faster diffusion methods (progressive distillation, better ODE solvers) not compared (Sec 2.8).",
+  "Code and demo not released for misuse/bias reasons; dataset biases acknowledged.",
+  "Human eval compares only against SD v1.4 with best-of-16 CLIP reranking.",
+  "Training steps inconsistent: text 1M vs Table 4 1.5M."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Parallel decoding",
+   "definition": "predict multiple output tokens in a single forward pass, relying on a Markovian property that many tokens are conditionally independent given other tokens",
+   "where": "Sec 2.8"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MaskGIT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "masked image modelling, cosine schedule, variable masking",
+   "quote": null
+  },
+  {
+   "work": "Imagen",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "frozen LLM conditioning, Imagen dataset",
+   "quote": null
+  },
+  {
+   "work": "Parti",
+   "year": 2022,
+   "arxiv": "2206.10789",
+   "relation": "baseline",
+   "note": "autoregressive baseline, PartiPrompts",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen T5-XXL encoder",
+   "quote": null
+  },
+  {
+   "work": "Taming transformers (VQGAN)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image tokenizer",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free guidance (Ho & Salimans)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "with linearly increasing scale",
+   "quote": null
+  },
+  {
+   "work": "Stable Diffusion / LDM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "speed and human eval baseline",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "related",
+   "note": "masked prediction analogy",
+   "quote": null
+  },
+  {
+   "work": "Sharma et al. CC3M",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Table 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Muse Framework: training pipeline with T5-XXL encoder, base model and super-res model",
+   "page": 4,
+   "why": "shows the three-stage pipeline"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Inference samples: evolution of masked tokens over steps for base and super-res",
+   "page": 7,
+   "why": "shows parallel decoding progress"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Per-batch inference time for several models",
+   "page": 11,
+   "why": "speed claim"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 2.7",
+   "snippet": "l_g = (1 + t) l_c - t l_u",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Training steps differ between text (1M) and Table 4 (1.5M).",
+  "Table text extraction flattened; FID table column alignment for Parti-20B row (3.22 supervised) inferred from layout.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,0 +1,765 @@
+{
+ "schema": 1,
+ "key": "2401.13178",
+ "pdf": "generative-ai/08-eval/sources/ma-2024-agentboard.pdf",
+ "bib": {
+  "title": "AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents",
+  "authors": [
+   "Chang Ma",
+   "Junlei Zhang",
+   "Zhihao Zhu",
+   "Cheng Yang",
+   "Yujiu Yang",
+   "Yaohui Jin",
+   "Zhenzhong Lan",
+   "Lingpeng Kong",
+   "Junxian He"
+  ],
+  "first_author": "Ma",
+  "year": 2024,
+  "venue": "NeurIPS 2024 Track on Datasets and Benchmarks",
+  "arxiv": "2401.13178",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 133467,
+  "chars_total": 133467,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can LLM agents be evaluated across diverse multi-turn, partially-observable tasks with a metric finer than final success rate and with analyses that explain where agents fail?",
+ "hypothesis": "Success rate alone hides incremental progress and cannot separate weak models; a subgoal-based progress rate plus sub-skill, grounding, difficulty and long-range analyses gives a more discriminative and interpretable evaluation.",
+ "contributions": [
+  "A benchmark of 9 tasks and 1013 environments across embodied, game, web and tool scenarios, made multi-round and mostly partially observable",
+  "A fine-grained progress rate metric from human-annotated subgoals or state-matching, validated against human raters",
+  "An open-source analytical evaluation toolkit with a Wandb panel (grounding accuracy, easy/hard split, long-range, sub-skill, trajectory)",
+  "Evaluation of proprietary, open-weight and agent-tuned LLMs"
+ ],
+ "method": {
+  "summary": "Nine text environments (AlfWorld, ScienceWorld, BabyAI, Jericho, PDDL, WebShop, WebArena, Tool-Query, Tool-Operation) are unified under a POMDP-style reflex agent with act-only prompting, one-shot example and a sliding-window memory. Each environment has a progress rate (subgoal fraction or state-match score, max over steps); 20 LLMs are run with greedy decoding and reported with progress rate and success rate plus several analyses.",
+  "task": "multi-turn LLM agent evaluation in text environments",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "AlfWorld (ALF)",
+    "role": "eval",
+    "size": "134 environments, 6 turns, 13 actions",
+    "split": "all",
+    "source": "Shridhar et al. 2021",
+    "preprocessing": "N-1 subgoals annotated with regular expressions plus env success flag"
+   },
+   {
+    "name": "ScienceWorld (SW)",
+    "role": "eval",
+    "size": "90 environments, 15 turns, 21 actions",
+    "split": "all",
+    "source": "Wang et al. 2022",
+    "preprocessing": "subgoals re-annotated as necessary observations; tools and rooms fixed in task text; 36 examples (40%) adapted to a single subgoal set"
+   },
+   {
+    "name": "BabyAI (BA)",
+    "role": "eval",
+    "size": "112 environments, 10 turns, 8 actions",
+    "split": "all",
+    "source": "Chevalier-Boisvert et al. 2019",
+    "preprocessing": "text actions and textual observations; high-level actions added; denser subgoal progress; 4 examples (3%) adapted"
+   },
+   {
+    "name": "Jericho (JC)",
+    "role": "eval",
+    "size": "20 environments, 20 turns, 150 actions",
+    "split": "all",
+    "source": "Hausknecht et al. 2020",
+    "preprocessing": "goals rewritten so games finish within 15 subgoals (originals need 50-300 steps)"
+   },
+   {
+    "name": "PDDL (PL)",
+    "role": "eval",
+    "size": "60 environments, 20 turns, 8 actions",
+    "split": "all",
+    "source": "Vallati et al. 2015; PDDLGym (Silver and Chitnis 2020)",
+    "preprocessing": "4 domains (Gripper, Barman, Blocksworld, Tyreworld), 10-20 problems each curated by authors; parser rules give text observations"
+   },
+   {
+    "name": "WebShop (WS)",
+    "role": "eval",
+    "size": "251 environments, 3 turns, 2 actions",
+    "split": "all",
+    "source": "Yao et al. 2022 (1.18 million products)",
+    "preprocessing": "improved error feedback; progress rate = mean of scores on search, product and confirmation pages"
+   },
+   {
+    "name": "WebArena (WA)",
+    "role": "eval",
+    "size": "245 environments, 25 turns, 12 actions",
+    "split": "filtered from original: Site Navigation and Contact & Config sub-tasks",
+    "source": "Zhou et al. 2023",
+    "preprocessing": "stepwise progress rate from URL match (domain, LCS on query, F1 on params) plus content match"
+   },
+   {
+    "name": "Tool-Query (TQ)",
+    "role": "eval",
+    "size": "60 environments, 5 turns, 15 actions",
+    "split": "all",
+    "source": "authors; Open-Meteo, TMDB, Citation Network Dataset",
+    "preprocessing": "questions chosen so SOTA LLMs cannot answer directly; subgoals = outputs of annotated golden actions"
+   },
+   {
+    "name": "Tool-Operation (TO)",
+    "role": "eval",
+    "size": "40 environments, 6 turns, 16 actions",
+    "split": "all",
+    "source": "authors; Todoist API, Google Sheets API",
+    "preprocessing": "Todo uses subgoals; Sheet uses fraction of cells matching golden spreadsheet"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "api": "Azure gpt-4 (version 2023-05-15)"
+    }
+   },
+   {
+    "name": "GPT-3.5-Turbo / GPT-3.5-Turbo-16k / Text-Davinci-003",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k for GPT-3.5-Turbo (stated in Appendix F)",
+    "other": {
+     "api": "Azure"
+    }
+   },
+   {
+    "name": "Claude2, Claude3-Haiku, Gemini1.5-Flash",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "api": "Anthropic claude-2 (2023-06-01), claude-3 haiku (2024-03-07), Google gemini-1.5-flash"
+    }
+   },
+   {
+    "name": "Llama3-8b / Llama3-70b (Instruct)",
+    "role": "evaluated",
+    "params": "8B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama2-13b / Llama2-70b (chat)",
+    "role": "evaluated",
+    "params": "13B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 12 lists Llama2-13b as meta-llama/CodeLlama13b-chat-hf (likely typo)"
+    }
+   },
+   {
+    "name": "CodeLlama-13b / CodeLlama-34b (Instruct)",
+    "role": "evaluated",
+    "params": "13B, 34B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7b",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k (Appendix F)",
+    "other": {
+     "checkpoint": "mistralai/Mistral-7B-v0.1 per Table 12"
+    }
+   },
+   {
+    "name": "Vicuna-13b-16k, DeepSeek-67b, Lemur-70b",
+    "role": "evaluated",
+    "params": "13B, 67B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AgentLM-70b, xLAM-70b",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": "AgentLM-70b is trained on Llama2-70b",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "agent-instruction-tuned models; xLAM checkpoint not listed in Table 12"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy decoding",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per model in main Table 3; Appendix D gives confidence intervals for GPT-4, GPT-3.5, Mistral-7b, Llama-13b only, number of runs not stated",
+   "prompting": "act-only reflex agent, unified template of system prompt, instruction, one-shot in-context example, goal, trajectory; sliding window keeps most recent history within model context",
+   "retrieval": null,
+   "parameters": {
+    "max_turns_per_task": "6/15/10/20/20/3/25/5/6 for ALF/SW/BA/JC/PL/WS/WA/TQ/TO (Table 14)",
+    "success_rate": "progress rate == 1 within T interactions",
+    "serving": "open-weight models via vLLM; proprietary via Azure/Anthropic/Google APIs",
+    "long_range_analysis_horizon": "30 steps (Fig 4)"
+   },
+   "other": {
+    "memory_ablation": "Sliding Window vs Cutoff vs Summary on GPT-3.5-Turbo (4k) and Mistral-7b (32k), Table 10",
+    "act_vs_react": "Table 9, GPT-3.5-Turbo",
+    "runtime": "Table 18: GPT-4 1.5s/round 5.5h; GPT-3.5-Turbo 1s/round 3h; DeepSeek-67b 8xV100 5s/round 18.5h; Llama2-70b 8xV100 8s/round 28h, 4xA100 4s/round 13.5h"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Progress rate",
+     "definition": "r_t = max over i<=t of matching score f(s_i,g) (continuous tasks) or of mean over K subgoals of regex-matched f(s_i,g_k) in {0,1}; 0 at start, 1 when task done",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Success rate",
+     "definition": "proportion of tasks completed within T interactions (progress rate == 1)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Grounding accuracy",
+     "definition": "percentage of valid actions generated",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Sub-skill score",
+     "definition": "per-task difficulty ratings (1-3, spatial navigation 0-1) from Table 11 used to weight a score per skill: memory, planning, world modeling, self-reflection, grounding, spatial navigation; exact aggregation formula not given",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "20 evaluated LLMs compared among themselves; ReAct and Cutoff/Summary memory as framework ablations"
+   ],
+   "protocol": "Human validation: 60 trajectories per task for 8 tasks from GPT-4, GPT-3.5-Turbo and DeepSeek-67b; four authors each rate progress on a five-level scale 0% to 100% in 25% steps, mean taken, Pearson correlation and Fleiss kappa reported. Hard/easy split by subgoal count cutoff (Table 14). Annotation checked in three verification rounds."
+  },
+  "availability": {
+   "code": "https://github.com/hkust-nlp/AgentBoard",
+   "weights": null,
+   "data": "https://github.com/hkust-nlp/AgentBoard"
+  },
+  "prompts": [
+   {
+    "purpose": "AlfWorld system prompt",
+    "text": "You are a helpful assistant. Generate your next step of action after Action. Action must not be empty. e.g. Action: put down cup.",
+    "where": "Appendix N, Figure 11"
+   },
+   {
+    "purpose": "Unified prompt template",
+    "text": "{System Prompt} {Instruction} Here are examples: {Examples} {Goal} {Trajectory}",
+    "where": "Appendix N, Figure 10"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "We use greedy decoding strategy and set temperature to zero for better replicacy",
+    "where": "Appendix I.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-4 has the best average progress rate and success rate among 20 evaluated models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average progress rate",
+   "value": "70.0",
+   "unit": "%",
+   "baseline_value": "48.9 (Claude2, second)",
+   "n": null,
+   "setup": "AgentBoard 9 tasks, 1013 environments, one-shot act-only agent, greedy decoding",
+   "quote": "GPT-4 significantly surpasses other LLMs, achieving an average progress rate of 70.0%, followed by Claude and Gemini.",
+   "table": "Table 3, row GPT-4, column Avg. (70.0/47.9)",
+   "note": "Success rate average 47.9; text says Claude and Gemini follow, but Table 3 puts Claude2 then Gemini1.5-Flash on progress rate and Gemini then Claude3-Haiku next",
+   "where": "Section 4.2, Table 3"
+  },
+  {
+   "claim": "Progress rate separates models whose success rates are both near zero.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progress rate vs success rate, Llama2-13b vs Mistral-7b",
+   "value": "18.9 vs 24.6",
+   "unit": "% progress rate",
+   "baseline_value": "success 2.1 vs 3.9",
+   "n": null,
+   "setup": "Table 3 averages over 9 tasks",
+   "quote": "but their progress rates differ significantly: 18.9% for Llama2-13b and 24.6% for Mistral-7b.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Automatic progress rate correlates with human judgment of progress above 0.95 on all validated tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson correlation",
+   "value": "0.95",
+   "unit": "rho",
+   "baseline_value": null,
+   "n": "60 trajectories per task, 8 tasks, 4 raters",
+   "setup": "Trajectories from GPT-4, GPT-3.5-Turbo, DeepSeek-67b; raters pick from 0/25/50/75/100%",
+   "quote": "Results show that progress rate highly correlates with human assessment on the progress where the Pearson correlation exceeds 0.95 on all tasks, and substantial agreement is reached among the annotators.",
+   "table": null,
+   "note": "Fig 3 panel labels show rho 0.95-0.99 and kappa 0.73-0.91; the text says all 8 tasks but the paper has 9 environments (Tool counted once in Fig 3 as Tool)",
+   "where": "Section 3.2, Fig 3"
+  },
+  {
+   "claim": "Hard examples cause a large drop for GPT-4: success falls from 85.0 to 24.9 in embodied AI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate easy vs hard, Embodied AI",
+   "value": "24.9",
+   "unit": "%",
+   "baseline_value": "85.0",
+   "n": null,
+   "setup": "Easy/hard split by subgoal count (Table 14 cutoffs); GPT-4",
+   "quote": "Unsurprisingly, all models show a significant performance drop on hard examples",
+   "table": "Table 5, row GPT-4 Success, columns Embodied AI Easy/Hard (85.0, 24.9)",
+   "note": null,
+   "where": "Section 4.3, Table 5"
+  },
+  {
+   "claim": "Code-trained models do better as agents: CodeLlama-34b beats Llama2-70b by 6.2 progress points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progress rate difference",
+   "value": "6.2",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-weight chat models, average over 9 tasks",
+   "quote": "CodeLlama-34b outperforms Llama2-70b by 6.2% in terms of progress rate",
+   "table": null,
+   "note": "Table 3 averages 30.0 vs 23.8 (difference 6.2)",
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Agent instruction tuning helps: AgentLM-70b improves over its Llama2-70b base by 9.5 progress points and 10.2 success points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progress rate gain",
+   "value": "9.5",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AgentLM-70b trained on AlfWorld and WebShop trajectories, evaluated on all 9 tasks",
+   "quote": "AgentLM-70b, trained on Llama2-70b, improves by 9.5% in terms of progress rate and 10.2% in terms",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "xLAM-70b is among the strongest open-weight models with 20.4% average success rate, above GPT-3.5-Turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average success rate",
+   "value": "20.4",
+   "unit": "%",
+   "baseline_value": "19.7 (GPT-3.5-Turbo)",
+   "n": null,
+   "setup": "Table 3 average over 9 tasks",
+   "quote": "xLAM-70b is one of the strongest open-weight models with a success rate of 20.4% surpassing GPT-3.5-Turbo.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Proprietary models show higher grounding accuracy than open-weight ones; GPT-4 averages 85.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average grounding accuracy",
+   "value": "85.6",
+   "unit": "%",
+   "baseline_value": "58.9 (Text-Davinci-003)",
+   "n": null,
+   "setup": "Share of valid actions across 9 tasks",
+   "quote": "Open-weight models generally have lower grounding accuracy than proprietary ones.",
+   "table": "Table 4, row GPT-4, column Avg.",
+   "note": null,
+   "where": "Section 4.3, Table 4"
+  },
+  {
+   "claim": "Instruction tuning alone raises grounding but not overall agent performance: Vicuna-13b-16k has 68.7% grounding yet weak main results.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average grounding accuracy",
+   "value": "68.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-13b-16k vs DeepSeek-67b and Claude2",
+   "quote": "Vicuna-13b-16k, despite lower main results, achieves a grounding score of 68.7%, comparable to DeepSeek-67b and Claude2.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Open-weight models mostly stop progressing after about 6 steps while GPT-4 and Claude2 keep improving on AlfWorld and PDDL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step at which progress stalls",
+   "value": "6",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Progress rate vs step up to 30 steps, Fig 4",
+   "quote": "peak early and generally stop progressing after about 6 steps",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Fig 4"
+  },
+  {
+   "claim": "ReAct gives inconsistent gains over Act with GPT-3.5-Turbo, so the benchmark uses Act.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progress/success rate, Act vs ReAct",
+   "value": "37.2/7.5 vs 54.8/10.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5-Turbo; Tool-Operation shown; AlfWorld 35.6/17.2 vs 37.9/8.2, PDDL 25.0/5.0 vs 17.1/3.3, Tool-Query 69.4/45.0 vs 70.0/50.0",
+   "quote": "our experiments on GPT-3.5-Turbo show inconsistent improvement of ReAct over performance of Act",
+   "table": "Table 9, row Tool-Operation (37.2/ 7.5 vs 54.8/10.0)",
+   "note": "Authors' explanation (thoughts pressure context in up to 30 interactions) is a hypothesis, not tested",
+   "where": "Appendix F"
+  },
+  {
+   "claim": "Sliding-window memory beats cutoff and summary for a 4k-context model but makes almost no difference for a 32k-context model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average progress/success rate",
+   "value": "41.4/19.7 vs 32.8/13.7 vs 33.5/14.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5-Turbo (4k) with sliding vs cutoff vs summary; Mistral-7b (32k) 24.6/3.9 vs 24.0/3.8 vs 23.9/4.0",
+   "quote": "First, the memory component design barely affects models with long context length (Mistral), while greatly affects GPT-3.5-Turbo.",
+   "table": "Table 10, rows GPT-3.5 + sliding / cutoff / summary, column Avg.",
+   "note": null,
+   "where": "Appendix F, Table 10"
+  },
+  {
+   "claim": "Run-to-run variance is large for proprietary models on some tasks; GPT-4 ALF progress rate is 69.1 +/- 11.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progress rate confidence interval",
+   "value": "69.1±11.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix D, GPT-4 on AlfWorld; Mistral-7b intervals are far smaller",
+   "quote": "Open-source models demonstrate smaller deviations as we have chosen to use smaller temperatures to ensure the reproducibility of the experiments.",
+   "table": "Table 6, row GPT-4, column ALF (69.1±11.6)",
+   "note": "Table 6 GPT-4 ALF 69.1 differs from Table 3 65.5; Table 6 Avg 70.3 vs Table 3 70.0; number of runs and CI method not stated",
+   "where": "Appendix D"
+  },
+  {
+   "claim": "Most models fail to explore the minimum number of locations needed in partially observable tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "locations explored",
+   "value": "6",
+   "unit": "locations (Jericho Zork3, GPT-4)",
+   "baseline_value": "11 (minimum needed)",
+   "n": null,
+   "setup": "Table 8 compares explored rooms/containers/places with the minimum required",
+   "quote": "Most models are unable to explore the minimum number of locations necessary to complete the goal.",
+   "table": "Table 8, row Jericho - Zork3, columns Minimum and GPT-4 (11 vs 6)",
+   "note": null,
+   "where": "Appendix E, Table 8"
+  },
+  {
+   "claim": "Annotation errors were found in 25% of sampled Jericho environments in the second verification round.",
+   "kind": "measured",
+   "source": null,
+   "metric": "environments with annotation errors",
+   "value": "25",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Second data-check round, sample of 5-10 items per task",
+   "quote": "Jericho",
+   "table": "Table 13, row Jericho (25%)",
+   "note": "Other tasks: AlfWorld 10.0%, BabyAI 4.2%, PDDL 5%, rest 0%",
+   "where": "Appendix J, Table 13"
+  }
+ ],
+ "limits": [
+  "Progress rate depends on human-annotated subgoals; LLM annotation is not usable because current models underperform on the tasks (Section 7, Appendix B).",
+  "Evaluation is only in simulated, text-only environments; real-world variability of labels and security risks are not covered.",
+  "Subgoal sequence is forced to be unique, requiring manual task edits (36 ScienceWorld examples, 40%; 4 BabyAI, 3%; under 5% of all problems claimed).",
+  "Single simple agent framework (act-only, one-shot, sliding window); more capable agent scaffolds are not benchmarked.",
+  "Number of runs and CI method are not stated; intervals reported only for four models, and Table 6 values differ from Table 3.",
+  "Gemini1.5-Flash scores may be depressed by security content screening.",
+  "Sub-skill scoring aggregation formula is not given in the text; only the Table 11 difficulty ratings are.",
+  "Models are dated 2023 to mid-2024 (GPT-4 Azure 2023-05-15, Claude2, Llama3, Gemini1.5-Flash) and the leaderboard has since dated.",
+  "Human validation covered 8 of 9 tasks and used paper authors as raters."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Progress rate",
+   "definition": "A per-step score in [0,1] giving the highest matching score between visited states and the goal (or the mean over subgoals), reaching 1 on completion.",
+   "where": "Section 2.2, Eq. 2"
+  },
+  {
+   "term": "Grounding accuracy",
+   "definition": "the percentage of valid actions",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "Reflex agent",
+   "definition": "An agent that picks the next action from the goal and its memory of past observations and actions, with act-only prompting.",
+   "where": "Section 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AgentBench",
+   "year": 2023,
+   "arxiv": "2308.03688",
+   "relation": "baseline",
+   "note": "Closest agent benchmark; AgentBoard argues it is single-round heavy and stops at context overflow",
+   "quote": "AgentBench entails both single and multi-round tasks, with mainly the former differentiating open-sourced models."
+  },
+  {
+   "work": "MINT",
+   "year": 2023,
+   "arxiv": "2309.10691",
+   "relation": "baseline",
+   "note": "Multi-turn tool benchmark built on fully-observable tasks",
+   "quote": null
+  },
+  {
+   "work": "GAIA",
+   "year": 2023,
+   "arxiv": "2311.12983",
+   "relation": "baseline",
+   "note": "QA-only agent benchmark",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "uses-method",
+   "note": "Act-only prompting adopted; ReAct tested as ablation",
+   "quote": null
+  },
+  {
+   "work": "AlfWorld",
+   "year": 2021,
+   "arxiv": "2010.03768",
+   "relation": "uses-data",
+   "note": "Embodied environment",
+   "quote": null
+  },
+  {
+   "work": "ScienceWorld",
+   "year": 2022,
+   "arxiv": "2203.07540",
+   "relation": "uses-data",
+   "note": "Re-annotated subgoals",
+   "quote": null
+  },
+  {
+   "work": "BabyAI",
+   "year": 2019,
+   "arxiv": "1810.08272",
+   "relation": "uses-data",
+   "note": "Converted to text",
+   "quote": null
+  },
+  {
+   "work": "Jericho",
+   "year": 2020,
+   "arxiv": "1909.05398",
+   "relation": "uses-data",
+   "note": "Goals rewritten to 15 subgoals",
+   "quote": null
+  },
+  {
+   "work": "PDDLGym",
+   "year": 2020,
+   "arxiv": "2002.06432",
+   "relation": "uses-data",
+   "note": "Text observation parser added",
+   "quote": null
+  },
+  {
+   "work": "WebShop",
+   "year": 2022,
+   "arxiv": "2207.01206",
+   "relation": "uses-data",
+   "note": "Product scoring extended to stage scores",
+   "quote": null
+  },
+  {
+   "work": "WebArena",
+   "year": 2023,
+   "arxiv": "2307.13854",
+   "relation": "uses-data",
+   "note": "245 filtered instances with stepwise progress",
+   "quote": null
+  },
+  {
+   "work": "Observational scaling laws (Ruan et al.)",
+   "year": 2024,
+   "arxiv": "2405.10938",
+   "relation": "related",
+   "note": "Cited for AgentBoard correlating with reasoning and coding scores while AgentBench correlates with MMLU",
+   "quote": null
+  },
+  {
+   "work": "Faith and Fate (Dziri et al.)",
+   "year": 2023,
+   "arxiv": "2305.18654",
+   "relation": "related",
+   "note": "Compositionality limits cited for hard-case drop",
+   "quote": null
+  },
+  {
+   "work": "AgentLM / AgentTuning, xLAM, Lemur",
+   "year": 2023,
+   "arxiv": "2310.06830",
+   "relation": "evaluates",
+   "note": "Agent-tuned open-weight models evaluated (Lemur arXiv id shown)",
+   "quote": null
+  },
+  {
+   "work": "vLLM (Kwon et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Serving for open-weight models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The illustrative overview of AGENTBOARD.",
+   "page": 2,
+   "why": "Shows the 9 tasks in 4 categories and the analytical panel outputs in one view"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "(Left) A structural overview of the reflex agent ... (Right) An example of a prompt for our reflex agent.",
+   "page": 4,
+   "why": "Shows the agent loop and prompt layout"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Human verification of AGENTBOARD progress rate. The Pearson correlation coefficients compare human evaluations with the progress rates on 60 different trajectories per task.",
+   "page": 6,
+   "why": "Justifies the progress rate metric"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Long-range interaction analysis ... progress rate w.r.t. step of AlfWorld, PDDL, WebArena and Tool-Query.",
+   "page": 9,
+   "why": "Shows where models plateau across steps"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "The Sub-skill scores of different LLMs.",
+   "page": 9,
+   "why": "Radar view of six sub-skills for proprietary and open models"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 2, Section 2.2",
+   "snippet": "r_t = max_{0<=i<=t} f(s_i, g) if f is continuous (r^match); r_t = max_{0<=i<=t} (1/K) sum_{k=1..K} f(s_i, g_k) otherwise (r^subgoal)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 3, Appendix L.6",
+   "snippet": "f = |G ∩ P| / |G|",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction scrambles table layouts; per-cell reading of Table 3 relies on row order in the cached text.",
+  "No embedded instructions found in the PDF text.",
+  "The paper reports no training; training block left null. Table 12 Llama2-13b checkpoint name reads CodeLlama13b-chat-hf, probably a typo.",
+  "Per-task prompts for ScienceWorld, BabyAI, Jericho, PDDL, WebShop, WebArena, Academia, Todo are in Appendix N Figures 12-19 and not copied into the extraction."
+ ]
+}

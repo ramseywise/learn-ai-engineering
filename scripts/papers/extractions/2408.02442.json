@@ -1,0 +1,723 @@
+{
+ "schema": 1,
+ "key": "2408.02442",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/tam-2024-let-me-speak-freely.pdf",
+ "bib": {
+  "title": "Let Me Speak Freely? A Study on the Impact of Format Restrictions on Performance of Large Language Models",
+  "authors": [
+   "Zhi Rui Tam",
+   "Cheng-Kuang Wu",
+   "Yi-Lin Tsai",
+   "Chieh-Yen Lin",
+   "Hung-yi Lee",
+   "Yun-Nung Chen"
+  ],
+  "first_author": "Tam",
+  "year": 2024,
+  "venue": "preprint (arXiv v3, 14 Oct 2024)",
+  "arxiv": "2408.02442",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 56590,
+  "chars_total": 56590,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Do format-restricting instructions and constrained decoding (JSON, XML, YAML) degrade the quality of LLM answers on reasoning and classification tasks?",
+ "hypothesis": "Format restrictions degrade reasoning, and stricter constraints degrade it more; a second hypothesis (parsing errors explain the gap) was tested and rejected.",
+ "contributions": [
+  "Observe declines in reasoning under format restrictions, stricter constraints generally worse",
+  "Offer insights into why performance degrades and propose simple mitigations",
+  "Explore JSON, XML and YAML, and three strategies: constrained decoding, format-restricting instructions, NL-to-Format"
+ ],
+ "method": {
+  "summary": "Zero-shot comparison of four levels of format restriction (JSON-mode constrained decoding, format-restricting instructions in JSON/XML/YAML, NL-to-Format two-step, free natural language) on 3 reasoning and 4 classification tasks across 5 (plus 2 additional) LLMs. Each cell is averaged over 9 prompt variants; answers are extracted by an LLM parser.",
+  "task": "Reasoning (GSM8K, Last Letter, Shuffled Objects) and classification (DDXPlus, MultiFin, Sports Understanding, NI Task 280) under output-format restriction",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Last Letter Concatenation",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Wei et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Shuffled Objects (BigBench)",
+    "role": "eval",
+    "size": null,
+    "split": "entire validation set",
+    "source": "BigBench",
+    "preprocessing": null
+   },
+   {
+    "name": "DDXPlus",
+    "role": "eval",
+    "size": null,
+    "split": "subset provided by StreamBench",
+    "source": "Tchango et al., 2022; 49 diseases",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiFin",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Jorgensen et al., 2023; 5 categories (task prompts list 6)",
+    "preprocessing": null
+   },
+   {
+    "name": "Sports Understanding (BigBench)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BigBench",
+    "preprocessing": null
+   },
+   {
+    "name": "NI Task 280",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Mishra et al., 2022 (stereotype classification)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo-0125",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "claude-3-haiku-20240307",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gemini-1.5-flash",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-3-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "serving": "Text-Generation-Server (TGI) for JSON mode"
+    }
+   },
+   {
+    "name": "Gemma-2-9B-Instruct",
+    "role": "evaluated",
+    "params": "9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "serving": "Text-Generation-Server (TGI) for JSON mode"
+    }
+   },
+   {
+    "name": "gpt-4o-mini-2024-07-18",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Structured Output API (JSON-schema), Sec 5.4, and App D"
+    }
+   },
+   {
+    "name": "Mistral-7b-v0.3",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "App D"
+    }
+   },
+   {
+    "name": "claude-3-haiku-20240307 (answer parser)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "chosen as parser for highest agreement with gpt-4-turbo"
+    }
+   },
+   {
+    "name": "gpt-4-turbo (reference parser)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "9 prompt combinations per model/task/format (3 task descriptions x 3 format descriptions); mean and std reported; seeds/runs not stated",
+   "prompting": "Zero-shot; fixed template 'Follow the instruction to complete the task: {task_description} Instruct: {format_description} {few shots} {question}'; reasoning tasks include 'Think step-by-step' and reasoning field before answer field; schema has 2 fields (reasoning, answer)",
+   "retrieval": null,
+   "parameters": {
+    "conditions": "JSON-mode (constrained decoding via provider flag or TGI), FRI (JSON/XML/YAML), NL-to-Format (two-step), NL (free text); Sec 5.1 variant removes schema and only names format; Sec 5.3 variant re-prompts Claude-3-Haiku to reformat parse-failed outputs",
+    "json_schema_model": "gpt-4o-mini Structured Output API"
+   },
+   "other": {
+    "few_shot": "template has a few-shot slot but main experiments are called zero-shot"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "classification tasks (Sports, DDXPlus, Task 280, MultiFin) and Shuffled Objects",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact Match (EM)",
+     "definition": "final answer must exactly string-match the gold answer (GSM8K, Last Letter), after LLM answer extraction",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Parsing error rate",
+     "definition": "share of responses where the answer could not be parsed",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Cohen kappa",
+     "definition": "agreement of candidate parser LLMs with gpt-4-turbo parsed answers",
+     "unit": "kappa",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Natural-language free-form response (NL)",
+    "NL-to-Format",
+    "FRI (JSON/XML/YAML)",
+    "JSON-mode"
+   ],
+   "protocol": "LLM-as-parser: claude-3-haiku extracts the final answer (validated against 300 human-parsed samples with gpt-4-turbo: 97.7%); 9 prompt variants per cell, mean (std) reported; no significance test; dataset sizes not stated."
+  },
+  "availability": {
+   "code": "https://github.com/appier-research/structure-gen",
+   "weights": null,
+   "data": "results online at same repo"
+  },
+  "prompts": [
+   {
+    "purpose": "Main template",
+    "text": "Follow the instruction to complete the task:\n{task_description}\nInstruct: {format_description}\n{few shots}\n{question}",
+    "where": "Appendix G.1"
+   },
+   {
+    "purpose": "Task description variation 1, GSM8K",
+    "text": "You are a math tutor who helps students of all levels understand and solve mathematical problems. Read the last question carefully and think step by step before answering, the final answer must be only a number.",
+    "where": "Fig 9"
+   },
+   {
+    "purpose": "CoT format variation 2, JSON",
+    "text": "Provide your output in the following valid JSON format:\n```json\n{\n\"step_by_step_reasoning\": ...,\n\"answer\": ...\n}\n```",
+    "where": "Fig 20"
+   },
+   {
+    "purpose": "CoT format variation 2, natural language",
+    "text": "Provide your output in the following text format:\nStep by step reasoning: ...\nAnswer: The final answer is ...",
+    "where": "Fig 20"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "we evaluate our approach by nine prompt combinations: three task descriptions and three JSON, XML, and YAML schemas",
+    "where": "Sec 3.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-3.5-turbo JSON-mode responses put the answer key before the reason key in every case on Last Letter, turning zero-shot CoT into direct answering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of GPT 3.5 Turbo JSON-mode responses with answer before reason",
+   "value": "100",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Last Letter Concatenation, gpt-3.5-turbo-0125, JSON-mode",
+   "quote": "we found that 100% of GPT 3.5 Turbo JSON-mode responses placed the \"answer\" key before the \"rea-son\" key",
+   "table": null,
+   "note": "Quote is hyphenated by line wrap in the PDF text.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "GPT-3.5-Turbo Last Letter exact match falls from text to JSON.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "25.2",
+   "unit": "%",
+   "baseline_value": "56.7",
+   "n": null,
+   "setup": "Last Letter, gpt-3.5-turbo, zero-shot, mean over 9 prompts, text vs JSON",
+   "quote": null,
+   "table": "Table 9, row GPT-3.5 Turbo JSON, column Last Letter (text 56.7)",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Claude 3 Haiku GSM8K collapses under JSON with schema (many parsing errors).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "23.4",
+   "unit": "%",
+   "baseline_value": "86.5",
+   "n": null,
+   "setup": "GSM8K, claude-3-haiku, mean over 9 prompts, JSON vs text",
+   "quote": null,
+   "table": "Table 9, row Claude 3 Haiku JSON, column GSM8K (text 86.5)",
+   "note": "Table 3 gives 60.07% JSON parsing error for Claude-3-Haiku on GSM8K.",
+   "where": "Table 9 / Table 3"
+  },
+  {
+   "claim": "LLaMA 3 8B GSM8K drops from text to JSON.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "48.9",
+   "unit": "%",
+   "baseline_value": "74.7",
+   "n": null,
+   "setup": "GSM8K, LLaMA-3-8B-Instruct, mean over 9 prompts",
+   "quote": null,
+   "table": "Table 9, row LLaMA 3 8B JSON, column GSM8K (text 74.7)",
+   "note": "Table 1 prints the same JSON+schema as 48.90 and text as 75.13 (Table 9 says 74.7).",
+   "where": "Table 9 / Table 1"
+  },
+  {
+   "claim": "Removing the schema from the prompt (just naming the format) raises Claude 3 Haiku JSON GSM8K from 23.44 to 86.99.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "86.99",
+   "unit": "%",
+   "baseline_value": "23.44",
+   "n": null,
+   "setup": "GSM8K, claude-3-haiku, JSON without vs with schema constraint, 9 prompts",
+   "quote": null,
+   "table": "Table 1, row claude-3-haiku, column JSON (no schema 86.99; + schema constraint 23.44)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Adding a schema constraint also raises prompt sensitivity: std for gpt-3.5-turbo JSON goes from 1.1 to 12.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "std over 9 prompts",
+   "value": "12.0",
+   "unit": "points",
+   "baseline_value": "1.1",
+   "n": "9 prompts",
+   "setup": "GSM8K, gpt-3.5-turbo, JSON",
+   "quote": null,
+   "table": "Table 1, row gpt-3.5-turbo, JSON (74.70 (1.1) vs + schema 49.25 (12.0))",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Gemini 1.5 Flash is nearly unaffected by schema on GSM8K JSON.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "89.21",
+   "unit": "%",
+   "baseline_value": "89.66",
+   "n": null,
+   "setup": "GSM8K gemini-1.5-flash JSON with schema vs without",
+   "quote": null,
+   "table": "Table 1, row gemini-1.5-flash, column JSON",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Parsing errors do not explain the gap: LLaMA 3 8B JSON Last Letter parse error is tiny yet the performance gap is large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parsing error rate",
+   "value": "0.148",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 3 8B, Last Letter, JSON",
+   "quote": "the parsing error rate for the Last Letter task in JSON format is only 0.148%, yet there ex-ists a substantial 38.15% performance gap as seen in Table 1",
+   "table": null,
+   "note": "38.15 does not occur in Table 1; Table 9 shows 70.1 text vs 28.0 JSON (42.1 gap). Table 3 prints 0.15.",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Using Claude-3-Haiku to reformat outputs with parsing errors recovers large gains for Claude 3 Haiku and LLaMA 3 8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM gain from LLM re-parse, e.g. Claude/LLaMA JSON",
+   "value": "44.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and Last Letter, JSON/YAML/XML, Claude-3-haiku and Llama-3-8B, second reformatting prompt",
+   "quote": null,
+   "table": "Figure 5 labels (read from figure, GSM8K panel: +44.8, +0.0, +1.1, +14.5, +24.7, +4.2; LastLetter: +2.8, 0.0, 0.0, +0.1, +13.4, +4.8)",
+   "note": "Assignment of each delta to a model/format read from figure only; 44.8 appears in extracted figure text.",
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Structured Outputs (JSON-schema, gpt-4o-mini) narrows but does not close the gap to natural language on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "91.71",
+   "unit": "%",
+   "baseline_value": "94.57",
+   "n": null,
+   "setup": "GSM8K, gpt-4o-mini-2024-07-18, JSON-Schema vs NL",
+   "quote": null,
+   "table": "Table 2, row GSM8K, columns NL 94.57 / FRI 87.17 / JSON-Mode 86.95 / JSON-Schema 91.71",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "JSON-schema was slightly better than NL on Last Letter for gpt-4o-mini.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "86.07",
+   "unit": "%",
+   "baseline_value": "83.11",
+   "n": null,
+   "setup": "Last Letter, gpt-4o-mini-2024-07-18",
+   "quote": null,
+   "table": "Table 2, row Last Letter, columns NL 83.11 / JSON-Schema 86.07",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Gemini 1.5 Flash gets a large DDXPlus boost from JSON (constraining answer space), versus text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "60.3",
+   "unit": "%",
+   "baseline_value": "41.6",
+   "n": null,
+   "setup": "DDXPlus, gemini-1.5-flash, JSON vs text, mean over 9 prompts",
+   "quote": null,
+   "table": "Table 10, row Gemini-1.5-Flash JSON, column DDXPlus (text 41.6)",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "A regex parser on 'The final answer is (\\d+)' greatly under-counts GSM8K accuracy versus an LLM parser.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM regex vs LLM",
+   "value": "25.8",
+   "unit": "%",
+   "baseline_value": "69.3",
+   "n": null,
+   "setup": "GSM8K, Gemini-1.5-Flash, regex match vs Claude-3-Haiku parser",
+   "quote": null,
+   "table": "Table 8, row Gemini-1.5-Flash (regex 25.8, LLM 69.3)",
+   "note": "Text says Gemini difference is 43.5 points; 69.3-25.8=43.5. Table 8 caption says Claude-3-Haiku parser, text says LLM parser generally.",
+   "where": "Appendix E, Table 8"
+  },
+  {
+   "claim": "GPT-4-turbo as answer parser matches human parsing on 300 sampled responses.",
+   "kind": "measured",
+   "source": null,
+   "metric": "alignment with human-parsed answers",
+   "value": "97.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "100 each from Last Letter, Shuffle Obj, GSM8K",
+   "quote": "These findings demonstrate an average align-ment of 97.7% between GPT-4-turbo and human-parsed answers",
+   "table": null,
+   "note": "Quote hyphenated by line wrap.",
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Claude-3-Haiku has highest Cohen's kappa agreement with gpt-4-turbo among low-cost parser candidates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Cohen kappa",
+   "value": "0.86",
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": 1200,
+   "setup": "1,200 NL responses (200 from each of six datasets), reference gpt-4-turbo",
+   "quote": null,
+   "table": "Figure 7 and Appendix B text: claude-3-haiku highest agreement at 0.86",
+   "note": "Appendix text says 'select 200 samples from six datasets ... total 1,200'.",
+   "where": "Appendix B, Fig 7"
+  },
+  {
+   "claim": "Cost per 1000 entries: GPT-3.5-Turbo text format is the most expensive format.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total cost",
+   "value": "0.35",
+   "unit": "USD per 1000 entries",
+   "baseline_value": "0.23",
+   "n": null,
+   "setup": "averaged over 6 datasets, gpt-3.5-turbo, text vs json",
+   "quote": null,
+   "table": "Table 5, row GPT-3.5-Turbo, column text (json 0.23)",
+   "note": "Table 6 caption says values are processing times in seconds while the text calls them cost; Table 5 says USD.",
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Authors: no LLaMA 70B or GPT-4o (cost); only small/cheap models",
+  "Authors: evaluation datasets limited in scope",
+  "Output schemas are minimal (reasoning + answer fields); complex schemas not tested",
+  "Temperature, max tokens, per-dataset sizes and seeds not reported",
+  "Results for JSON-mode on reasoning are confounded by key order (answer before reason), not constraint per se",
+  "Evaluation uses an LLM parser, whose own errors are only validated on 300 samples",
+  "Models are mid-2024 versions; OpenAI Structured Outputs only tested on gpt-4o-mini and narrowed the gap"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Constrained decoding (JSON-mode)",
+   "definition": "limits the output of LLMs by enforcing predefined token space during the generation process",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Format-Restricting Instructions (FRI)",
+   "definition": "direct the LLM to generate responses in standardized formats such as JSON, XML, and YAML, adhering to specified schemas",
+   "where": "Sec 2"
+  },
+  {
+   "term": "NL-to-Format",
+   "definition": "first instructs the LLM to answer the question in natural language, and then instructs it to convert its response into the target format schema",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting elicits reasoning in LLMs (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Last Letter task",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "'Think step by step' prompt",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "DDXPlus (Tchango et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "StreamBench (Wu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "DDXPlus subset",
+   "quote": null
+  },
+  {
+   "work": "IFEval (Zhou et al.)",
+   "year": 2023,
+   "arxiv": "2311.07911",
+   "relation": "related",
+   "note": "format-following benchmark, does not test downstream quality",
+   "quote": null
+  },
+  {
+   "work": "INFOBENCH (Qin et al.)",
+   "year": 2024,
+   "arxiv": "2401.03601",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "FOFO (Xia et al.)",
+   "year": 2024,
+   "arxiv": "2402.18667",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Efficient guided generation (Willard and Louf)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "constrained decoding assumed similar to JSON mode",
+   "quote": null
+  },
+  {
+   "work": "Automata-based constraints for LM decoding (Koo et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Quantifying LM sensitivity to prompt formatting (Sclar et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates 9-prompt protocol and Task 280",
+   "quote": null
+  },
+  {
+   "work": "CoT reasoning without prompting (Wang and Zhou)",
+   "year": 2024,
+   "arxiv": "2402.10200",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "GPT-3.5-turbo prompted with GSM8K math questions in standard natural language answered correctly, but failed when format restrictions were applied.",
+   "page": 1,
+   "why": "Shows the failure with a concrete JSON vs text example."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Reasoning tasks: more relaxed prompts typically yield better results; JSON-mode is worst in most cases.",
+   "page": 3,
+   "why": "Ranks four restriction levels across models."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "High parsing errors can be patched by calling a second prompt to fix syntax errors.",
+   "page": 5,
+   "why": "Shows gain from corrective reformatting step."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparing results without and with schema constraint",
+   "page": 4,
+   "why": "Schema in prompt hurts mean and raises variance."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction of tables is column-flattened; table values were matched by reading order.",
+  "No embedded instructions found.",
+  "Page numbers approximate."
+ ]
+}

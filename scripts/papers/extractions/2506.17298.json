@@ -1,0 +1,520 @@
+{
+ "schema": 1,
+ "key": "2506.17298",
+ "pdf": "ai-engineering/07-inference-engineering/sources/labs-2025-mercury.pdf",
+ "bib": {
+  "title": "Mercury: Ultra-Fast Language Models Based on Diffusion",
+  "authors": [
+   "Inception Labs",
+   "Samar Khanna",
+   "Siddhant Kharbanda",
+   "Shufan Li",
+   "Harshit Varma",
+   "Eric Wang",
+   "Sawyer Birnbaum",
+   "Ziyang Luo",
+   "Yanis Miraoui",
+   "Akash Palrecha",
+   "Stefano Ermon",
+   "Aditya Grover",
+   "Volodymyr Kuleshov"
+  ],
+  "first_author": "Khanna",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2506.17298",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 49762,
+  "chars_total": 49762,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a diffusion-based LLM be scaled to commercial size and give much higher token throughput than autoregressive models at comparable code quality?",
+ "hypothesis": "Parallel coarse-to-fine token generation uses GPUs better than autoregressive decoding, giving a better speed-quality frontier.",
+ "contributions": [
+  "Describes the Mercury family of diffusion LLMs (dLLMs).",
+  "Up to 10x faster than frontier speed-optimized LLMs, over 1000 tokens/sec on H100s.",
+  "Coding models comparable in quality to high-speed commercial offerings on coding benchmarks."
+ ],
+ "method": {
+  "summary": "Transformer-based diffusion LLMs (Mercury Coder Mini and Small) trained with a denoising diffusion loss, generating multiple tokens in parallel in a coarse-to-fine way, served on a proprietary dynamically batched inference engine with custom kernels. Evaluated by Artificial Analysis for speed and on code benchmarks and Copilot Arena.",
+  "task": "code generation / fill-in-the-middle with diffusion language models",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Proprietary pretraining mix (web crawls plus curated real and synthetic data)",
+    "role": "pretrain",
+    "size": "order of trillions of tokens",
+    "split": null,
+    "source": "proprietary",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Austin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "EvalPlus",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Liu et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "LiveCodeBench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Jain et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiPL-E",
+    "role": "eval",
+    "size": null,
+    "split": "C++, Java, JS, PHP, Bash, TS",
+    "source": "Cassano et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "FIM (single-line, random-span-light)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bavarian et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Copilot Arena",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chi et al. 2025",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Mercury Coder Mini",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer, diffusion LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32,768 tokens (up to 128k with extension)",
+    "other": {}
+   },
+   {
+    "name": "Mercury Coder Small",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer, diffusion LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32,768 tokens (up to 128k with extension)",
+    "other": {}
+   },
+   {
+    "name": "Autoregressive baselines (Llama 3.1 8B, Qwen 2.5 Coder, Mistral Small 3, DeepSeek Coder V2 Lite, Nova Micro, Codestral 2501, GPT 4o Mini, Claude 3.5 Haiku, Gemini 2.0 Flash Lite, DeepSeek V3, Claude 3.5 Sonnet, GPT 4o)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "autoregressive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L(x) = -E_t[gamma(t) E_{z_t~q} log p_theta(x|z_t)], denoising diffusion loss with noise-level weight gamma(t)>=0",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "order of trillions of tokens",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "large-scale cluster of NVIDIA H100s",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "fine_tuning": "RLHF or DPO possible by swapping the autoregressive loss for the diffusion loss; not reported as done"
+   }
+  },
+  "inference": {
+   "decoding": "iterative parallel denoising from noise, coarse-to-fine; number of diffusion steps not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot, few-shot and chain-of-thought supported; prompts used in evals not given",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "engine": "proprietary inference engine, dynamically batched sampling and paging, custom kernels; OpenAI-compatible API",
+    "hardware": "NVIDIA H100 for speed",
+    "test_date": "API endpoint hosted in February 2025"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1",
+     "definition": "share of problems solved on first sample by test pass rate",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "throughput",
+     "definition": "output tokens divided by processing time from first token to last, median over cloud providers (Artificial Analysis)",
+     "unit": "tokens/sec",
+     "higher_is_better": true
+    },
+    {
+     "name": "Elo / latency",
+     "definition": "Copilot Arena user preference Elo and mean latency",
+     "unit": "Elo; seconds",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "open-weights speed-optimized",
+    "open-weights frontier (DeepSeek V3)",
+    "closed speed-optimized",
+    "closed frontier (GPT 4o, Claude 3.5 Sonnet)"
+   ],
+   "protocol": "Speed from third-party Artificial Analysis proprietary prompts (~1,000 in/1,000 out tokens); HumanEval and LiveCodeBench numbers marked * are as reported by Artificial Analysis; no seeds or significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": "not released; public API at platform.inceptionlabs.ai and playground chat.inceptionlabs.ai",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "‘*’ indicates metrics as reported by Artificial Analysis.",
+    "where": "Table 1 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Mercury Coder Mini reaches 1109 output tokens/sec.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": "1109",
+   "unit": "tokens/sec",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Artificial Analysis independent API evaluation, ~1,000 input and ~1,000 output token coding prompts, median across cloud providers, H100 for Mercury",
+   "note": null,
+   "where": "Abstract",
+   "quote": "Mercury Coder Mini and Mercury Coder Small achieve state-of-the-art throughputs of 1109 tokens/sec and 737 to-"
+  },
+  {
+   "claim": "Mercury Coder Small reaches 737 output tokens/sec.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": "737",
+   "unit": "tokens/sec",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Artificial Analysis independent API evaluation, ~1,000 input and ~1,000 output token coding prompts, median across cloud providers, H100 for Mercury",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Mercury Coder Small, column Speed"
+  },
+  {
+   "claim": "Mercury Coder is up to 10x faster than speed-optimized frontier models at comparable quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "10",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Artificial Analysis independent API evaluation, ~1,000 input and ~1,000 output token coding prompts, median across cloud providers, H100 for Mercury; AR comparison models e.g. GPT 4o Mini 59, Claude 3.5 Haiku 61 tokens/sec",
+   "note": null,
+   "where": "Abstract",
+   "quote": "outperform speed-optimized frontier models by up to 10× on average while maintaining"
+  },
+  {
+   "claim": "Mercury Coder Mini mean latency on Copilot Arena is 25 ms, about 4x faster than GPT-4o Mini.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "25",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Copilot Arena user code-completion preferences",
+   "note": "Table 4 prints 0.25 seconds for Mini and 0.84 for GPT-4o Mini (3.4x).",
+   "where": "Sec 3.2.2",
+   "quote": "average latency of just 25 ms,"
+  },
+  {
+   "claim": "Mercury Coder Mini Elo on Copilot Arena is 993, rank 2 (tied), versus GPT-4o 980 and GPT-4o Mini 939.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Elo",
+   "value": "993",
+   "unit": "Elo",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Copilot Arena human preference on code completions",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Mercury Coder Mini, column Elo Score"
+  },
+  {
+   "claim": "Mercury Coder Mini HumanEval 88.0, MBPP 77.1, EvalPlus 78.6, MultiPL-E 74.1, LCB 17.0, BCB 42.0 (pass@1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "77.1",
+   "unit": "% pass@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1; HumanEval and LCB as reported by Artificial Analysis",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Mercury Coder Mini, column MBPP"
+  },
+  {
+   "claim": "Mercury Coder Small HumanEval 90.0, MBPP 76.6, EvalPlus 80.4, MultiPL-E 76.2, LCB 25.0, BCB 45.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "76.6",
+   "unit": "% pass@1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Mercury Coder Small, column MBPP"
+  },
+  {
+   "claim": "Mercury Coder Small averages 84.8 on fill-in-the-middle, above Codestral 2501 at 82.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FIM",
+   "value": "84.8",
+   "unit": "% FIM average",
+   "baseline_value": "82.5",
+   "n": null,
+   "setup": "FIM single-line and random-span-light",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Mercury Coder Small, column Average"
+  },
+  {
+   "claim": "Mercury Coder Mini FIM average 82.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FIM",
+   "value": "82.2",
+   "unit": "% FIM average",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FIM single-line and random-span-light",
+   "note": "Text says both Mercury models surpass all evaluated models including Codestral 2501 (82.5), but Mini at 82.2 is below 82.5 in Table 3.",
+   "where": "Table 3",
+   "table": "Table 3, row Mercury Coder Mini, column Average"
+  },
+  {
+   "claim": "Mercury Coder Small averages 76.2 on MultiPL-E over six languages; Mini 74.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.2",
+   "unit": "% avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MultiPL-E C++, Java, JS, PHP, Bash, TS",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Mercury Coder Small, column Avg"
+  },
+  {
+   "claim": "Mini outperforms open-weight models while more than 8x faster.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "8",
+   "unit": "x faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 open-weight baselines",
+   "note": "Quote anchor only; the 8x figure in text is 'more than 8× faster'.",
+   "where": "Sec 3.2.2",
+   "quote": "more than 8× faster"
+  },
+  {
+   "claim": "Models are trained on the order of trillions of tokens.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mercury training data: web crawls plus curated real and synthetic proprietary data",
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Context length is 32,768 tokens out of the box, up to 128k with extension.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "32,768",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mercury models",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "support a context length of up to 32,768 tokens"
+  }
+ ],
+ "limits": [
+  "Proprietary: parameters, architecture sizes, data, optimizer, steps, diffusion step count and inference engine are not disclosed.",
+  "Speed measured by a third party on proprietary prompts; quality benchmarks lack seeds or variance.",
+  "Only coding models; Mini is below several baselines on LiveCodeBench (17.0 vs Claude 3.5 Haiku 31.0).",
+  "Scaling claim rests on only two sizes (Small better than Mini)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dLLM",
+   "definition": "diffusion large language model, generating tokens in parallel in a coarse-to-fine way",
+   "where": "Sec 1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Discrete diffusion language modeling by estimating the ratios of the data distribution (Lou, Meng, Ermon)",
+   "year": 2023,
+   "arxiv": "2310.16834",
+   "relation": "extends",
+   "note": "Mercury methods extend [28] with data and compute changes to scale",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Transformer denoiser",
+   "quote": null
+  },
+  {
+   "work": "Copilot Arena",
+   "year": 2025,
+   "arxiv": "2502.09328",
+   "relation": "uses-data",
+   "note": "human evaluation platform",
+   "quote": null
+  },
+  {
+   "work": "LiveCodeBench",
+   "year": 2024,
+   "arxiv": "2403.07974",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Efficient training of language models to fill in the middle",
+   "year": 2022,
+   "arxiv": "2207.14255",
+   "relation": "uses-data",
+   "note": "FIM benchmark",
+   "quote": null
+  },
+  {
+   "work": "Llama 3, Qwen2.5-Coder, DeepSeek V3, Codestral, GPT-4o, Claude 3.5, Gemini 2.0 Flash, Nova",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "autoregressive comparisons",
+   "quote": null
+  },
+  {
+   "work": "Simple and effective masked diffusion language models (Sahoo et al.)",
+   "year": 2024,
+   "arxiv": "2406.07524",
+   "relation": "related",
+   "note": "small-scale diffusion LM",
+   "quote": null
+  },
+  {
+   "work": "DPO (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alignment option",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Quality vs. Speed Trade-offs for Mercury Coder models.",
+   "page": 2,
+   "why": "Shows Mercury in the top-right quadrant of coding index vs output speed."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Performance (pass@1) comparison across coding benchmarks, with speed",
+   "page": 6,
+   "why": "Quality and tokens/sec side by side"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text has no repro-relevant hyperparameters (closed model). Table 3 text claims both Mercury models beat Codestral 2501, but Mini (82.2) is below Codestral (82.5)."
+ ]
+}

@@ -295,7 +295,7 @@ full-jitter delays, attempts 0-5: [0.01, 0.17, 0.31, 0.2, 0.79, 1.44]
 
 ## Deadlines must travel
 
-A timeout set independently at each hop doesn't protect anything. The first hop may have given up, and the rest still do the work. The SRE book's phrase is that [you don't get credit for late assignments](https://sre.google/sre-book/addressing-cascading-failures/) with RPCs. The fix is to pass the remaining time along. A 30 second deadline with 7 seconds spent gives the next call 23 seconds, minus a few hundred milliseconds for network and post-processing. [Some gRPC implementations do this](https://grpc.io/docs/guides/deadlines/), on by default in Java and Go and opt-in in C++ (chapter 1 ran the idea), and in HTTP you need to carry it in a header of your own.
+A timeout set independently at each hop doesn't protect anything. The first hop may have given up, and the rest still do the work. The SRE book's phrase is that [you don't get credit for late assignments](https://sre.google/sre-book/addressing-cascading-failures/) with RPCs. The fix is to pass the remaining time along. A 30 second deadline with 7 seconds spent gives the next call 23 seconds, minus a few hundred milliseconds for network and post-processing. [Some gRPC implementations do this](https://grpc.io/docs/guides/deadlines/), on by default in Java and Go and opt-in in C++ ([chapter 1](01-api-design.md#grpc-a-typed-contract-between-services) ran the idea, with a server that refuses a call it can't finish), and in HTTP you need to carry it in a header of your own.
 
 ```python
 # A request with a 1,000 ms budget crosses four services, each spending 400 ms.

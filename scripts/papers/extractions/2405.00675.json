@@ -1,0 +1,243 @@
+{
+ "schema": 1,
+ "key": "2405.00675",
+ "pdf": "generative-ai/05-RL/sources/wu-2024-self-play-preference-optimization-language.pdf",
+ "bib": {
+  "title": "Self-Play Preference Optimization for Language Model Alignment",
+  "authors": ["Yue Wu", "Zhiqing Sun", "Huizhuo Yuan", "Kaixuan Ji", "Yiming Yang", "Quanquan Gu"],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2405.00675",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 82334,
+  "chars_total": 82334,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can language-model alignment against a general (possibly intransitive) preference model be done by approximating the Nash equilibrium of a two-player constant-sum game with a simple, scalable self-play loss?",
+ "hypothesis": "A square-loss regression of the policy log-ratio onto the (centred) win probability against the current policy, iterated, approximates the exponential-weights Nash update and beats pairwise-loss iterative DPO/IPO without external GPT-4 supervision.",
+ "contributions": [
+  "SPPO algorithm derived from the exponential weight update, provably converging to an approximate Nash equilibrium (duality gap O(1/sqrt(T)))",
+  "A non-pairwise square-loss objective (4.6) linked to policy gradient and token-level optimal value function",
+  "Empirical gains on Mistral-7B-Instruct-v0.2 and Llama-3-8B-Instruct with only 60k UltraFeedback prompts and a 0.4B PairRM preference model, no GPT-4 responses or preferences"
+ ],
+ "method": {
+  "summary": "Each round, sample K=5 responses per prompt from the current policy, score all pairs with PairRM to estimate each response's win probability against the policy's own samples, and fit log(pi/pi_t) to eta*(P_hat - 1/2) with a square loss. Three rounds, each on a different third (about 20k prompts) of UltraFeedback prompts, starting from Mistral-7B-Instruct-v0.2 or Llama-3-8B-Instruct.",
+  "task": "preference optimisation / LLM alignment with a general preference model",
+  "trains": true,
+  "datasets": [
+   {"name": "UltraFeedback (prompts only)", "role": "train", "size": "around 60k prompts", "split": "split into three portions, one portion per iteration (about 20k prompts each); same split as Snorkel-Mistral-PairRM-DPO", "source": "Cui et al. 2023", "preprocessing": "Mistral-7B standard chat template for generation; no responses or preferences from the dataset used"},
+   {"name": "hold-out subset of UltraFeedback", "role": "dev", "size": null, "split": "hold-out subset (size not stated)", "source": "UltraFeedback", "preprocessing": null},
+   {"name": "AlpacaEval 2.0", "role": "eval", "size": "805 prompts", "split": null, "source": "Li et al. 2023b; AlpacaFarm prompts; reference GPT-4-Turbo, annotator GPT-4-Turbo", "preprocessing": null},
+   {"name": "Arena-Hard-Auto-v0.1", "role": "eval", "size": "500 challenging user queries", "split": null, "source": "Li et al. 2024", "preprocessing": null},
+   {"name": "MT-Bench", "role": "eval", "size": "80 multi-turn questions", "split": null, "source": "Zheng et al. 2023", "preprocessing": null},
+   {"name": "Open LLM Leaderboard (Arc, HellaSwag, Winogrande, MMLU, TruthfulQA, GSM8k)", "role": "eval", "size": "six datasets", "split": null, "source": "Beeching et al. 2023", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Mistral-7B-Instruct-v0.2", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": "Mistral-7B-v0.2 instruction fine-tuned", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Llama-3-8B-Instruct", "role": "base", "params": "8B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "PairRM", "role": "judge", "params": "0.4B", "architecture": "DeBERTa-V3 based pairwise preference model", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"output": "relative reward s(y,y';x); P(y>y'|x)=exp(s)/(1+exp(s)); not guaranteed transitive"}},
+   {"name": "Mistral-7B-SPPO / Llama-3-8B-SPPO (Iter1-3)", "role": "proposed", "params": "7B / 8B", "architecture": "decoder-only transformer", "init_from": "previous iteration checkpoint (first epoch of each iteration)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Snorkel-Mistral-PairRM-DPO", "role": "baseline", "params": "7B", "architecture": "decoder-only transformer", "init_from": "Mistral-7B-Instruct-v0.2, three rounds of iterative DPO; public checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Self-Rewarding 70B", "role": "baseline", "params": "70B", "architecture": "Llama 2 70B", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "AlpacaEval 2.0 numbers taken from Yuan et al. 2024"}}
+  ],
+  "training": {
+   "objective": "Square loss (4.7): E[(log(pi_theta(y|x)/pi_t(y|x)) - eta*(P_hat(y > pi_t|x) - 1/2))^2]; log-partition approximated by constant eta/2",
+   "optimizer": null,
+   "lr": "5.0e-7",
+   "lr_schedule": "linear",
+   "warmup": "warmup ratio=0.1",
+   "batch_size": "64 (global training batch size)",
+   "steps": null,
+   "epochs": "number of total training epochs=18 (as printed); the model from the first epoch on the 20k prompts of each iteration is carried to the next",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 x Nvidia A100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"eta": "1e3 for both base models", "iterations": "3", "checkpoint_selection": "hyperparameters selected by average win rate judged by PairRM-0.4B on a hold-out subset of UltraFeedback", "dpo_ipo_baselines": "own iterative DPO/IPO with same settings and model selection scheme; hyperparameters maximise average PairRM win rate each iteration (values not given)"}
+  },
+  "inference": {
+   "decoding": "sampling from the current policy during data generation",
+   "temperature": "1.0 (generation)",
+   "top_p": "1.0 (generation)",
+   "max_tokens": null,
+   "samples": "K = 5 responses per prompt per iteration (different random seeds); win rate over all 5 samples; winner/loser pair for DPO/IPO baselines = highest/lowest PairRM score; best-of-16 re-ranking by PairRM at test time",
+   "prompting": "standard Mistral-7B chat template for generation",
+   "retrieval": null,
+   "parameters": {"K": "5 (ablation K=2,3,5)", "eta": "1e3", "log_partition_constant": "eta/2 (Appendix A: between eta/2 for fully disordered preference and about eta for fully ordered)"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "AlpacaEval 2.0 win rate (raw)", "definition": "win rate over GPT-4-Turbo reference responses, judged by GPT-4-Turbo, on 805 prompts", "unit": "%", "higher_is_better": true},
+    {"name": "AlpacaEval 2.0 LC win rate", "definition": "length-controlled win rate (Dubois et al. 2024a)", "unit": "%", "higher_is_better": true},
+    {"name": "Avg. Len", "definition": "average output length of the model on AlpacaEval 2.0 (column Avg. Len; Fig 4 table labels it chars)", "unit": "chars", "higher_is_better": null},
+    {"name": "MT-Bench", "definition": "GPT-4 direct score of answers, 1st turn / 2nd turn / average", "unit": "score", "higher_is_better": true},
+    {"name": "Arena-Hard-Auto-v0.1", "definition": "same evaluation method as AlpacaEval 2.0 on 500 queries", "unit": "score", "higher_is_better": true},
+    {"name": "Open LLM Leaderboard average", "definition": "mean over Arc, TruthfulQA, WinoGrande, GSM8k, HellaSwag, MMLU", "unit": "score", "higher_is_better": true},
+    {"name": "Pairwise win rate by PairRM", "definition": "PairRM-judged pairwise win rates among models (Fig 3)", "unit": "probability", "higher_is_better": true}
+   ],
+   "baselines": ["Mistral-7B-Instruct-v0.2", "Snorkel (Mistral-PairRM-DPO)", "own iterative DPO", "own iterative IPO", "Self-Rewarding LM 70B", "Llama-3-8B-Instruct"],
+   "protocol": "Single run per model as reported; no seeds, variance or significance tests stated. GPT-4 based judges for AlpacaEval 2.0/MT-Bench/Arena-Hard."
+  },
+  "availability": {"code": "https://github.com/uclaml/SPPO", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.epochs", "quote": "number of total training epochs=18", "where": "5.1 Hyperparameter Tuning"},
+   {"field": "training.other.eta", "quote": "is set to 1e3", "where": "5.1 Hyperparameter Tuning"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Mistral-7B-SPPO Iter3 reaches 28.53% LC win rate vs GPT-4-Turbo on AlpacaEval 2.0, from 17.11% for the base model.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate", "value": 28.53, "unit": "%", "baseline_value": 17.11, "n": 805,
+   "setup": "Mistral-7B-Instruct-v0.2 base, 3 SPPO iterations, UltraFeedback 60k prompts, PairRM-0.4B, K=5",
+   "quote": "that achieves the state-of-the-art length-controlled win-rate of 28.53%", "table": null,
+   "note": "Text in 5.2 also says 28.52% in one place; Table 1 prints 28.53", "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "Llama-3-8B-SPPO Iter3 reaches 38.77% LC win rate (39.85% raw), from 22.92% LC for Llama-3-8B-Instruct.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate", "value": 38.77, "unit": "%", "baseline_value": 22.92, "n": 805,
+   "setup": "Llama-3-8B-Instruct base, 3 iterations, same prompts/PairRM",
+   "quote": "we are able to achieve a length-controlled win rate of 38.77%", "table": null, "note": "Total gain 15.85%", "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "Mistral SPPO LC win rate per iteration: 24.79, 26.89, 28.53 (raw 23.51, 27.62, 31.02).",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate (Iter1)", "value": 24.79, "unit": "%", "baseline_value": 17.11, "n": 805,
+   "setup": "Mistral-7B-SPPO Iter1 / Iter2 / Iter3; LC 24.79, 26.89, 28.53; raw 23.51, 27.62, 31.02",
+   "quote": null, "table": "Table 1, rows Mistral-7B-SPPO Iter1, Iter2, Iter3, columns LC Win Rate and Win Rate",
+   "note": "base model raw win rate 14.72", "where": "Table 1"
+  },
+  {
+   "claim": "Iterative DPO on Mistral gets LC 23.81, 24.23, 22.30 and raw 20.44, 24.46, 23.39 over iterations 1-3, peaking at Iter2 then falling.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate (DPO Iter3)", "value": 22.3, "unit": "%", "baseline_value": 28.53, "n": 805,
+   "setup": "own iterative DPO, same setup as SPPO; baseline_value is SPPO Iter3",
+   "quote": null, "table": "Table 1, rows Mistral-7B-DPO Iter1-3, columns LC Win Rate and Win Rate", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Iterative IPO on Mistral gets LC 23.78, 21.08, 20.06 and raw 20.77, 23.38, 22.47 over iterations 1-3, falling after Iter1.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate (IPO Iter3)", "value": 20.06, "unit": "%", "baseline_value": 28.53, "n": 805,
+   "setup": "own iterative IPO; baseline_value is SPPO Iter3",
+   "quote": null, "table": "Table 1, rows Mistral-7B-IPO Iter1-3, columns LC Win Rate and Win Rate",
+   "note": "Text in 5.2 cites IPO rate of 25.45% and length 2654, which do not appear in Table 1 rows (which show 23.78/21.08/20.06 and 1693/2660/2760)", "where": "Table 1; 5.2"
+  },
+  {
+   "claim": "Snorkel (public iterative DPO checkpoint) gets 26.39 LC / 30.22 raw, length 2736.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate", "value": 26.39, "unit": "%", "baseline_value": 28.53, "n": 805,
+   "setup": "Snorkel-Mistral-PairRM-DPO checkpoint evaluated by authors",
+   "quote": "outperforming the DPO’s best rate of 26.39% (by Snorkel)", "table": null, "note": null, "where": "5.2; Table 1"
+  },
+  {
+   "claim": "SPPO lengthens outputs less than DPO/IPO: Mistral average length goes 1676 (base) to 1855, 2019, 2163 over SPPO iterations, versus DPO 1723, 2028, 2189 and IPO 1693, 2660, 2760.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 Avg. Len (SPPO Iter3)", "value": 2163, "unit": "chars", "baseline_value": 1676, "n": 805,
+   "setup": "Mistral-7B; Snorkel 2736; Llama-3-8B base 1899 then 1962, 2021, 2066",
+   "quote": "SPPO shows a more moderate length increase, moving from 1676 in the base model", "table": null,
+   "note": "Text says DPO and IPO reach 2736 and 2654; Table 1 shows IPO Iter3 2760", "where": "5.2; Table 1"
+  },
+  {
+   "claim": "Open LLM Leaderboard average for Mistral SPPO is 66.67, 66.75, 66.40 over Iter1-3 (base 65.74); Llama-3 SPPO 69.35, 69.91, 70.29 (base 68.37).",
+   "kind": "measured", "source": null, "metric": "Open LLM Leaderboard average (Mistral SPPO Iter2)", "value": 66.75, "unit": "score", "baseline_value": 65.74, "n": 6,
+   "setup": "six datasets; Mistral peaks at Iter2 then declines; Llama-3-8B-SPPO improves monotonically",
+   "quote": null, "table": "Table 3, rows Mistral-7B-SPPO Iter1-3 and Llama-3-8B-SPPO Iter1-3, column Average", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Mistral DPO averages 65.62, 65.38, 64.52 and IPO 66.52, 64.66, 64.72 on the Open LLM Leaderboard; Snorkel 66.31.",
+   "kind": "measured", "source": null, "metric": "Open LLM Leaderboard average (DPO Iter3)", "value": 64.52, "unit": "score", "baseline_value": 65.74, "n": 6,
+   "setup": "Mistral-7B iterative DPO and IPO, Iter1-3",
+   "quote": "performance declines after the first or second iterations", "table": "Table 3, rows Mistral-7B-DPO and Mistral-7B-IPO, column Average", "note": null, "where": "Table 3; 5.2"
+  },
+  {
+   "claim": "MT-Bench average for Mistral SPPO is 7.21, 7.49, 7.59 over Iter1-3 (base 7.51, Snorkel 7.58, DPO 7.02, 7.06, 7.09); SPPO first drops below the base.",
+   "kind": "measured", "source": null, "metric": "MT-Bench average (SPPO Iter3)", "value": 7.59, "unit": "score", "baseline_value": 7.51, "n": 80,
+   "setup": "GPT-4 judge, 80 multi-turn questions",
+   "quote": "achieving an average score of 7.59 in MT-Bench", "table": null, "note": "Authors: 'we are not certain why the MT-Bench performance drops at the first two iterations'", "where": "Fig 2 left; 5.2"
+  },
+  {
+   "claim": "Arena-Hard-Auto-v0.1 for Mistral: base 12.6, Snorkel 20.7, SPPO Iter1/2/3 = 18.7, 20.4, 23.3.",
+   "kind": "measured", "source": null, "metric": "Arena-Hard-Auto-v0.1", "value": 23.3, "unit": "score", "baseline_value": 12.6, "n": 500,
+   "setup": "Mistral-7B-SPPO Iter3",
+   "quote": "achieving an average score of 23.3", "table": null, "note": null, "where": "Fig 2 right; 5.2"
+  },
+  {
+   "claim": "Best-of-16 reranking with PairRM adds 5.34, 3.57 and 3.6 points LC to base, Snorkel and SPPO Iter3; Iter3 best-of-16 reaches 32.13 LC / 34.94 raw, so no over-optimisation against PairRM is seen.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate (SPPO Iter3 best-of-16)", "value": 32.13, "unit": "%", "baseline_value": 28.53, "n": 805,
+   "setup": "test-time reranking of 16 samples by PairRM-0.4B",
+   "quote": "by 5.34%, 3.57%, and 3.6%, respectively", "table": "Table 1, row Mistral-7B-SPPO Iter3 (best-of-16)", "note": null, "where": "Table 1; 5.2"
+  },
+  {
+   "claim": "Win probability estimator: each response is compared with the K=5 samples of the current policy and PairRM probabilities are averaged; K=2 (winner and loser only) is a robust but slightly weaker setting: LC 23.85, 26.91, 28.26 vs K=5 24.79, 26.89, 28.53.",
+   "kind": "measured", "source": null, "metric": "AlpacaEval 2.0 LC win rate (K=2 Iter3)", "value": 28.26, "unit": "%", "baseline_value": 28.53, "n": 805,
+   "setup": "Mistral-7B SPPO ablation of mini-batch size; K=2 raw 23.53, 27.24, 28.22 and lengths 1948, 1999, 1961",
+   "quote": null, "table": "Figure 4 table, rows K = 2 and K = 5, columns LC. and Raw", "note": null, "where": "5.3, Fig 4"
+  },
+  {
+   "claim": "Under PairRM as judge, IPO Iter3 beats SPPO Iter3 although SPPO wins GPT-4-judged benchmarks; authors attribute this to IPO exploiting PairRM length bias.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Fig 3 pairwise PairRM win rates among Mistral models",
+   "quote": "IPO exceeds SPPO in performance during the final iteration", "table": null, "note": "Explanation is the authors' belief, not tested", "where": "5.2, Fig 3"
+  }
+ ],
+ "limits": [
+  "Authors: approximating the optimal policy update via regression assumes an expressive model class and data that cover the input space.",
+  "Authors: approximating the log-partition factor with a constant helps only when it is close to the soft value function; eta/2 chosen, coefficient could be tuned.",
+  "Authors: experiments use one dataset (UltraFeedback) and a few benchmarks due to limited compute.",
+  "Authors concede Open LLM Leaderboard scores for Mistral decline after Iter2 for DPO, IPO and SPPO (alignment tax).",
+  "Authors do not know why MT-Bench drops in the first two Mistral iterations.",
+  "Preference oracle is a single small model (PairRM) that may favour longer outputs; evaluation judged mostly by GPT-4-family judges; no human evaluation.",
+  "Single runs, no seeds, variance or significance tests; optimizer, precision, max tokens and hold-out size not stated; epochs=18 conflicts with carrying the first-epoch checkpoint.",
+  "Theorem 4.1 assumes realizability and applies to the mixture policy; the experiments use the last iterate and only 3 rounds."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "von Neumann winner", "definition": "the (symmetric) Nash equilibrium of the two-player constant-sum game max_pi min_pi' P(pi > pi')", "where": "3.2"},
+  {"term": "SPPO loss", "definition": "square loss between log(pi_theta/pi_t) and eta times (P(y > pi_t|x) minus 1/2)", "where": "4.1, eq 4.6-4.7"}
+ ],
+ "lineage": [
+  {"work": "Freund and Schapire 1999, Adaptive game playing using multiplicative weights", "year": 1999, "arxiv": null, "relation": "uses-method", "note": "exponential weight update (4.1) and Theorem 1 used for convergence proof", "quote": null},
+  {"work": "Swamy et al. 2024, A minimaximalist approach to RLHF (SPO)", "year": 2024, "arxiv": "2401.04056", "relation": "related", "note": "independent self-play framework for same game; uses PPO/SAC", "quote": null},
+  {"work": "Munos et al. 2023, Nash learning from human feedback", "year": 2023, "arxiv": "2312.00886", "relation": "extends", "note": "two-player game formulation with general preference", "quote": null},
+  {"work": "Rafailov et al. 2024, DPO", "year": 2023, "arxiv": null, "relation": "baseline", "note": "iterative DPO baseline", "quote": null},
+  {"work": "Azar et al. 2023, IPO", "year": 2023, "arxiv": "2310.12036", "relation": "baseline", "note": "iterative IPO baseline", "quote": null},
+  {"work": "Ethayarajh et al. 2024, KTO", "year": 2024, "arxiv": "2402.01306", "relation": "related", "note": "loss compared in 4.5", "quote": null},
+  {"work": "Rosset et al. 2024, Direct Nash Optimization", "year": 2024, "arxiv": "2404.03715", "relation": "related", "note": "concurrent; practical version is iterative DPO with GPT-4 gold samples and judge", "quote": null},
+  {"work": "Gao et al. 2024, REBEL", "year": 2024, "arxiv": "2404.16767", "relation": "related", "note": "concurrent; regresses win-rate difference, cancelling log Z", "quote": null},
+  {"work": "Calandriello et al. 2024, IPO-MD", "year": 2024, "arxiv": "2403.08635", "relation": "related", "note": "iterated IPO equals Nash equilibrium", "quote": null},
+  {"work": "Pal et al. 2024, Smaug / DPO-Positive", "year": 2024, "arxiv": "2402.13228", "relation": "related", "note": "DPO lowers loser likelihood but barely moves winner", "quote": null},
+  {"work": "Yuan et al. 2024, Self-Rewarding Language Models", "year": 2024, "arxiv": "2401.10020", "relation": "baseline", "note": "AlpacaEval numbers quoted from that paper", "quote": null},
+  {"work": "Snorkel-Mistral-PairRM-DPO", "year": 2024, "arxiv": null, "relation": "baseline", "note": "experimental setup, data split and checkpoint followed", "quote": null},
+  {"work": "PairRM (Jiang et al. 2023b, LLM-Blender)", "year": 2023, "arxiv": "2306.02561", "relation": "uses-method", "note": "0.4B preference model", "quote": null},
+  {"work": "UltraFeedback", "year": 2023, "arxiv": "2310.01377", "relation": "uses-data", "note": "prompts only", "quote": null},
+  {"work": "Mistral 7B", "year": 2023, "arxiv": "2310.06825", "relation": "evaluates", "note": "base model", "quote": null},
+  {"work": "AlpacaEval 2.0 LC", "year": 2024, "arxiv": "2404.04475", "relation": "uses-data", "note": "length-controlled win rate", "quote": null},
+  {"work": "Arena-Hard", "year": 2024, "arxiv": "2406.11939", "relation": "uses-data", "note": "benchmark", "quote": null},
+  {"work": "MT-Bench (Zheng et al.)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "benchmark", "quote": null},
+  {"work": "Chen et al. 2024, SPIN", "year": 2024, "arxiv": "2401.01335", "relation": "related", "note": "self-play fine-tuning from same group", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Win Rate against GPT-4-Turbo with (a) and without (b) Length Controlling (LC) on AlpacaEval 2.0.", "page": 17, "why": "Shows per-iteration trajectories of SPPO vs DPO vs IPO."},
+  {"figure": "Fig 3", "caption": "Pairwise win rates among base model, DPO, IPO and SPPO models using PairRM-0.4B as a judge.", "page": 20, "why": "Matrix of PairRM win rates showing iteration ordering and IPO beating SPPO at Iter3."},
+  {"figure": "Table 1", "caption": "AlpacaEval 2.0 evaluation of various models in terms of both normal and length-controlled (LC) win rates in percentage (%).", "page": 16, "why": "Core results including average length."}
+ ],
+ "code": [
+  {"where": "eq 4.7 / Algorithm 1 line 6", "snippet": "theta_{t+1} <- argmin_theta E_{(x,y,P_hat(y>pi_t|x))~D_t} [ ( log(pi_theta(y|x)/pi_t(y|x)) - eta*(P_hat(y>pi_t|x) - 1/2) )^2 ]", "verbatim": false},
+  {"where": "eq 4.12", "snippet": "l_SPPO(yw,yl,x) = (a - 1/2)^2 + (b + 1/2)^2, with a = beta*log(pi_theta(yw|x)/pi_ref(yw|x)), b likewise for yl, beta = 1/eta", "verbatim": false}
+ ],
+ "problems": [
+  "Text says 28.52% in 5.2 but 28.53% in the abstract and Table 1.",
+  "5.2 text cites IPO 25.45% and length 2654 which do not match Table 1 IPO rows.",
+  "Hyperparameter paragraph says 18 total training epochs, yet also says first-epoch checkpoint is used per iteration; unclear.",
+  "Figure 3 matrix numbers extracted without row labels, not recorded."
+ ]
+}

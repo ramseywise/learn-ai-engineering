@@ -281,7 +281,7 @@ The same token handles stampedes across a fleet. By default the cache hands out 
 
 A queue decouples the producer from the consumer's speed and availability. A web request can enqueue the email and return, and a [bounded queue with backpressure](../../computer-science/notes/05-processes-threads-and-io.md#backpressure-bounding-whats-in-flight) absorbs spikes. [Little's law](../../computer-science/notes/05-processes-threads-and-io.md#queues-littles-law) tells you how deep it will get.
 
-Delivery has an inescapable gap. A consumer does the work and then acknowledges, and it can die between the two. Whatever order you pick, one failure is possible, and the [Kafka design docs](https://kafka.apache.org/42/design/design/) state it clearly in terms of the consumer's saved position:
+Delivery has an inescapable gap. [DE 04's Kafka chapter](../../../data-engineering/04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md) covers the same trade from the stream side; this one stays with queues. A consumer does the work and then acknowledges, and it can die between the two. Whatever order you pick, one failure is possible, and the [Kafka design docs](https://kafka.apache.org/42/design/design/) state it clearly in terms of the consumer's saved position:
 
 | Order | If the consumer dies in between | Guarantee |
 |---|---|---|

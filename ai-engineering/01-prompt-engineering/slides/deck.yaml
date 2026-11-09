@@ -72,7 +72,7 @@ parts:
             - It answers **173**
             - "One-pass test: could an expert finish in one read, with no notes?"
           tag: Task first shapes the reading
-        takeaway: When a task changes how content must be read, put the instruction first and restructure rather than insisting.
+        takeaway: Moving the instruction before the paragraph took the count from 348 to 173; if an expert could not finish in one read, restructure.
         source: notes/01-how-models-read-prompts.md
         notes: >-
           The counterweight comes shortly: for long documents we put bulk reference material first and restate the question at
@@ -84,7 +84,7 @@ parts:
         title: Four more properties of this strange reader
         recall: Besides left-to-right attention, what four properties of LLMs explain most prompting rules?
         cards:
-          - {title: Tokens not characters, body: "About 4 characters per token. Letter counts and string reversal are hard; random IDs cost extra."}
+          - {title: Tokens, body: "About 4 characters per token. Letter counts and string reversal are hard; random IDs cost extra."}
           - {title: Autoregressive, body: "Fixed compute per token and no takebacks. More thinking means emitting more tokens."}
           - {title: Truth bias, body: "Hallucination is the same behaviour as fluency. A false premise gets run with, not questioned."}
           - {title: Chat is a transcript, accent: "D4621A", body: "RLHF and ChatML turn a completion model into an assistant. Roles are structure, not a security boundary."}
@@ -124,7 +124,7 @@ parts:
           - {title: Carry all relevant information, text: "And only that. Everything included must matter, as with Chekhov's gun.", accent: "D4621A"}
           - {title: Lead to a solution, text: "Point at an answer, not at more elaboration of the problem."}
           - {title: Have a natural stopping point, text: "End of turn, a closing tag, or a stop sequence."}
-        takeaway: Chat fine-tuning gives you criteria one, three and four almost free, but carrying the right information never comes free.
+        takeaway: A prompt must resemble training data, carry all relevant information, lead to a solution and have a stopping point; only carrying the right information never comes free.
         source: notes/02-prompt-anatomy.md
         notes: >-
           Criterion two is where most real prompts fail, and it is the whole subject of the next pillar on context engineering.
@@ -163,7 +163,7 @@ parts:
           - ["Tone swapped, neutral to bombastic to emoji-casual", Little change in completion]
           - ["Same rules, flattened from ordered procedure to unordered list", "**Success fell more than 30%**; identity check skipped"]
           - ["Tool descriptions removed, signatures kept", Tool-call errors up 45%]
-        takeaway: Write agent prompts as numbered procedures with exception branches, and ablate one component at a time before rewriting.
+        takeaway: Flattening procedure to an unordered list cut success by over 30% while tone barely mattered, so write numbered procedures and ablate one component at a time.
         source: notes/02b-document-types-formatting-and-templates.md
         notes: >-
           This is our exact assistant, so read the middle row carefully. The same rules as an unordered list skipped verify
@@ -193,7 +193,7 @@ parts:
 
       - layout: compare
         title: Examples teach format and label space, not the facts
-        recall: According to Min et al., what do few-shot examples actually teach, and what are their three drawbacks?
+        recall: According to Min et al., what do few-shot examples actually teach?
         emphasis: none
         left:
           title: What matters (Min et al., 2022)
@@ -225,7 +225,7 @@ parts:
           - "PaLM 540B on GSM8K: **17.9% → 56.9%**."
           - "**Zero-shot CoT:** \"Let's think step by step\"."
           - "Put reasoning in a parseable `<thinking>` block so the app can strip it."
-        takeaway: Chain-of-thought spends output tokens on reasoning, and a parseable block lets the app show only the answer.
+        takeaway: Chain-of-thought lifted PaLM 540B on GSM8K from 17.9% to 56.9%; a parseable block lets the app show only the answer.
         source: notes/03b-chain-of-thought-and-reasoning.md
         notes: >-
           This takes us straight back to the masks: writing a thought out is the only way past one forward pass. Wei and colleagues
@@ -233,16 +233,16 @@ parts:
           vary by task category. Self-consistency extends the idea: sample several paths at a temperature above zero and take the
           majority answer, at N times the cost, and only where there is something to vote on.
 
-      - layout: image
+      - layout: table
         title: For dead ends, search; a chain cannot back up
         recall: How do Tree of Thoughts and CoT compare on Game of 24, and what does ToT need that CoT does not?
-        image: ../sources/images/yao-tree-of-thoughts-game-of-24-results.png
-        caption: Game of 24 success by method (Yao et al., Tree of Thoughts)
-        bullets:
-          - "Game of 24: CoT **4%**, Tree of Thoughts **74%**."
-          - "Generate, evaluate, backtrack."
-          - "It needs a controller loop in code and many calls."
-        takeaway: Tree of Thoughts recovers from dead ends through generate, evaluate and backtrack, at the cost of a code controller.
+        header: [Method, Game of 24 success, How it works]
+        widths: [3, 2.4, 5.6]
+        highlight: [1]
+        rows:
+          - [Chain-of-thought, "4%", "One chain, with no way to back up from a bad step"]
+          - [Tree of Thoughts, "**74%**", "Generate, evaluate, backtrack; needs a controller loop in code and many calls"]
+        takeaway: Tree of Thoughts recovers from dead ends through generate, evaluate and backtrack (4% to 74% on Game of 24), at the cost of a code controller.
         source: notes/03b-chain-of-thought-and-reasoning.md
         notes: >-
           When early steps can lock you into failure, a single chain dies at the first bad step. Rearranging a multi-leg itinerary has
@@ -269,7 +269,7 @@ parts:
           - "ALFWorld: **71%** vs **45%** act-only."
           - "Fine-tuning on ~3k traces beat CoT on HotpotQA."
           - "The ancestor of native tool calling."
-        takeaway: ReAct alternates reasoning with actions so answers rest on retrieved facts, and a single bad search can derail it.
+        takeaway: ReAct alternates reasoning with actions so answers rest on retrieved facts (71% vs 45% on ALFWorld), and a single bad search can derail it.
         source: notes/03-core-techniques.md
         notes: >-
           Thoughts and actions interleave, and the observation is real text from outside. Prompted alone, ReAct lost to CoT on HotpotQA,
@@ -289,7 +289,7 @@ parts:
           - "HumanEval pass@1: **91%** vs GPT-4's **80%** at the time."
           - "**It works only when you get a do-over,** ideally with an objective evaluator."
           - "Useless for irreversible actions; a weak evaluator reinforces confident mistakes."
-        takeaway: Reflexion retries with written feedback, so it needs reversible actions and an evaluator stronger than the actor.
+        takeaway: Reflexion retries with written feedback (91% vs 80% on HumanEval), so it needs reversible actions and an evaluator stronger than the actor.
         source: notes/03-core-techniques.md
         notes: >-
           Code has an objective check, the test suite, which is why Reflexion shines there. A refund has already left the account by the
@@ -354,15 +354,18 @@ parts:
           reason. Many reasoning models fix or reject these parameters. Logprobs can read confidence, with a trap: a prefix shared by two
           answers can mislead you. Fine-tuning is the last resort after all of this.
 
-      - layout: image
+      - layout: flow
         title: The model proposes a call, and your code decides whether it runs
         recall: Who executes a tool call, and what does the tool-calling loop look like?
-        image: ../sources/images/dair-function-calling-flow.jpg
-        caption: "Tool definitions and messages in, a call out, results back (DAIR.AI)"
+        steps:
+          - {label: Tool definitions, sub: "rendered into the prompt"}
+          - {label: Model, sub: "proposes a call"}
+          - {label: Your code, sub: "decides and runs it", accent: "D4621A"}
+          - {label: Result, sub: "appended as a message"}
+        loop: repeat until the reply has no tool calls
         bullets:
           - "The model never touches the world. It **proposes**."
           - "Schemas are rendered into the system prompt as text."
-          - "Repeat until the reply has no tool calls."
         takeaway: The model only proposes tool calls; your application executes them and appends the result as a message.
         source: notes/05-tools-and-function-calling.md
         notes: >-
@@ -403,15 +406,24 @@ parts:
           Let the model request any call and put the gate in your code. A check in a prompt is a suggestion. And results coming back from tools are
           untrusted input, which sets up part four. Debugging tool calls is its own craft, covered in the note. Meanwhile, the prompt is getting long and has several jobs.
 
-      - layout: image
+      - layout: compare
         title: One prompt has too many jobs, so split it
         recall: What is the tradeoff between generality and strength, and why does splitting a prompt into steps help?
-        image: ../sources/images/berryman-prompt-engineering-for-llms-fig9-1.png
-        caption: Generality vs. strength (Berryman & Ziegler, 2024, Fig. 9-1)
-        bullets:
-          - "Each step gets one job, a short context, and a checkable output."
-          - "**Patterns:** chaining, routing, parallelisation, orchestrator-workers, evaluator-optimiser."
-          - "A DAG is the default topology."
+        emphasis: right
+        left:
+          title: One general prompt
+          bullets:
+            - "It will attempt anything"
+            - "It executes multi-step work poorly"
+            - "No way to correct a failed step"
+          tag: Generality bought with strength
+        right:
+          title: A chain of small prompts
+          bullets:
+            - "Each step gets one job, a short context, and a checkable output"
+            - "**Patterns:** chaining, routing, parallelisation, orchestrator-workers, evaluator-optimiser"
+            - "A DAG is the default topology"
+          tag: Strength bought back by splitting
         takeaway: A chain gives each step one job and a checkable output, so a failure has an address and a retry point.
         source: notes/06-chaining-and-workflows.md
         notes: >-
@@ -446,24 +458,16 @@ parts:
           The first question for every task is whether it needs an LLM at all. Then whether its steps can be known up front. Refunds follow a policy, so they
           are a workflow with a few model calls in it. The free-form "help me rebook my trip" request is closer to an agent, and most real systems combine the two.
 
-      - layout: compare
+      - layout: table
         title: A reasoning model asks you to unlearn some of this
         recall: What prompting habits should you drop with reasoning models, and how do you control their cost?
-        emphasis: right
-        left:
-          title: Drop these habits
-          bullets:
-            - Prescribing the reasoning steps
-            - Adding "Let's think step by step"
-            - Padding with examples by default
-            - Trusting reasoning because it was long
-        right:
-          title: Do this instead
-          bullets:
-            - "State goal, constraints and output format"
-            - "Tune **effort or budget**, not wording"
-            - Examples only for style it gets wrong
-            - Ask it to verify its work before finishing
+        header: [Drop this habit, Do this instead]
+        widths: [5, 5]
+        rows:
+          - [Prescribing the reasoning steps, "State goal, constraints and output format"]
+          - ["Adding \"Let's think step by step\"", "Tune **effort or budget**, not wording"]
+          - [Padding with examples by default, Examples only for style it gets wrong]
+          - [Trusting reasoning because it was long, Ask it to verify its work before finishing]
         takeaway: "With reasoning models, state the goal and tune effort upward only while eval scores keep improving."
         source: notes/07-prompting-reasoning-models.md
         notes: >-
@@ -501,14 +505,14 @@ parts:
         statement: "Without an eval, every prompt change is an opinion. Copilot's eval framework is older than its prompts or its UI."
         attribution: Berryman & Ziegler, on GitHub Copilot
         takeaway: Build the eval before tuning, because without one every prompt change is an opinion.
-        source: notes/09-evaluating-prompts.md
+        source: notes/08-evaluating-prompts.md
         notes: >-
           Start small. Level one is five to twenty examples with outputs committed and reviewed with git diff. Level two is hundreds of examples scored automatically. Match the
           test to the decision: a model swap needs a broad regression suite, a wording change needs small unit tests on one call, and a change of architecture needs an end-to-end regression.
 
       - layout: image
         title: Offline, climb a tech tree of scoring
-        recall: What are the main paths for offline prompt evaluation, and how do you source samples?
+        recall: What is the offline path from cheap checks to judges?
         image: ../sources/images/berryman-prompt-engineering-for-llms-fig10-1.png
         caption: Offline eval tech tree (Berryman & Ziegler, 2024, Fig. 10-1)
         bullets:
@@ -516,14 +520,14 @@ parts:
           - "**Score** from exact match up to a judge."
           - "**Online:** keep acceptance or impact as a standing guardrail."
         takeaway: Start offline with cheap exact checks, escalate to judges only where needed, and watch acceptance online as a guardrail.
-        source: notes/09-evaluating-prompts.md
+        source: notes/08-evaluating-prompts.md
         notes: >-
           For Copilot, acceptance correlated with self-reported productivity gains more strongly than fancier impact measures. Always log latency and token counts too. Now the thing
           most of you will do: use a model to grade a model.
 
       - layout: code
         title: A model can grade a model, if you specify the question
-        recall: What makes a good LLM judge rubric, and why does the rubric go before the content?
+        recall: What makes a good LLM judge rubric?
         lang: text
         code: |-
           You are grading a support reply.
@@ -541,13 +545,14 @@ parts:
           - "**Multi-aspect:** score each dimension apart."
           - "**Calibrated:** check against several humans."
         takeaway: Ask judges a specific, ordinal, multi-aspect question, and calibrate their scores against several human annotators.
-        source: notes/09-evaluating-prompts.md
+        source: notes/08-evaluating-prompts.md
         notes: >-
           This rubric is our own illustration of the note's SOMA advice. A judge asked whether the answer is right has a problem as hard as the original. Asked whether it verified identity before the refund, it has a checkable job.
           The rubric goes before the content, for the same left-to-right reason as our 173-word paragraph, and scores are relative rather than absolute.
 
       - layout: table
         title: "Case study: wording moved F1 by 26 points, one change at a time"
+        lead: Each row adds one more change to the prompt above it.
         recall: What does the prompt modification case study show about F1, template adherence and methodology?
         header: [Modification (cumulative), F1, Template adherence]
         widths: [6.4, 1.6, 2.6]
@@ -559,14 +564,14 @@ parts:
           - ["+ **strict output template**", "86.3 ↓", "**98%**"]
           - ["+ a name + positive feedback", "**91.7**", 81%]
         takeaway: Prompt wording can move F1 by 26 points and trade against format adherence, so change one thing and re-score.
-        source: notes/09-evaluating-prompts.md
+        source: notes/08-evaluating-prompts.md
         notes: >-
           These rows are a selection from the note's cumulative table. Look at the strict template: format adherence jumps to 98 percent, and F1 falls. No single best prompt exists for both
           measures. Do not copy a name and positive feedback as a recipe. Copy the method of one change at a time, because these effects move with the model.
 
       - layout: flow
         title: With an eval, prompts can improve in a loop
-        recall: What does the prompt optimization loop look like, and what automated tools can propose changes?
+        recall: What is the rule for keeping a new prompt version?
         steps:
           - {label: Template v1}
           - {label: Run on eval set}
@@ -578,7 +583,7 @@ parts:
           - "**Fix the cheapest layer first:** clarity, context, ordering, examples, CoT, split, bigger model, fine-tune."
           - "**APE, OPRO, meta-prompting, DSPy** let a model search; each needs that same metric."
         takeaway: Version the template with its model and score, and keep a new version only when it beats the old on the eval.
-        source: notes/08-prompt-optimization.md
+        source: notes/09-prompt-optimization.md
         notes: >-
           APE has an LLM propose instructions and scores each on the target model. It found "Let's work this out in a step by step way to be sure we have the right answer." OPRO uses the LLM as the
           optimizer, shown past prompts and scores, and it found "Take a deep breath". DSPy compiles signatures and modules against a metric. A meta-prompt from a strong model is a first draft, not a result.
@@ -598,7 +603,7 @@ parts:
 
       - layout: image
         title: The instruction hierarchy helps, and it is only one layer
-        recall: How should a model rank instructions from different sources, and which defenses are strongest?
+        recall: How should you layer defenses against prompt injection?
         image: ../sources/images/huyen-ai-engineering-fig5-16.png
         caption: "Instruction hierarchy: system > user > model outputs > tool outputs (Huyen, Fig. 5-16)"
         bullets:
@@ -612,31 +617,28 @@ parts:
           removes the refund tool from the step that reads the email. Human approval is the gate from part three, and the strongest pattern is a quarantined model that reads untrusted content and cannot call tools.
           Red-team before shipping. The note also treats bias from the prompt itself and factuality.
 
-      - layout: image
+      - layout: cards
         title: The same craft builds synthetic data, code and more
         recall: How do you get diversity in synthetic data generation, and what are its pitfalls?
-        image: ../sources/images/dai-promptagator-pipeline.png
-        caption: "Promptagator: 8 labelled examples plus a corpus train a niche retriever (Dai et al.)"
-        bullets:
-          - "**Inject randomness in the prompt.** Temperature alone is not enough."
-          - "**TinyStories:** seed noun, verb, adjective; a seeded label is free."
-          - "**phi-1:** textbook-style Python, and a **1.3B** model rivalled models **10×** its size."
-          - "**Pitfall:** data from model A favours model A in evals."
+        cards:
+          - {title: Synthetic data, body: "**Inject randomness in the prompt.** Temperature alone is not enough. TinyStories seeds a noun, verb and adjective."}
+          - {title: Textbook-style code, body: "phi-1: textbook-style Python, and a **1.3B** model rivalled models **10×** its size."}
+          - {title: The pitfall, accent: "D4621A", body: "Data from model A favours model A in evals."}
         takeaway: Synthetic data needs variation seeded into the prompt, and skewed seeds or same-model evals give skewed results.
         source: notes/11-applications.md
         notes: >-
           Everything so far transfers. Our assistant's test set could be generated this way. The applications note also covers code prompts, images and multimodal prompts, and treating generated artifacts as stateful
           objects of discourse. Skewed seeds give skewed data. And the prompt library collects small prompts by task, which is the place to start copying from.
 
-      - layout: bullets
+      - layout: steps
         title: "Monday: take one prompt through this checklist"
         recall: What should you do first to a production prompt you inherit?
-        bullets:
-          - "**Add an eval** of 5–20 examples, committed, reviewed with `git diff`."
-          - "**Rewrite as a procedure:** numbered stages with exception branches."
-          - "**Move side-effect checks** out of the prompt, into code."
-          - "**Keep untrusted text out of `system`,** and delimit it."
-          - "**Copy a shape** from `notes/prompt-library.md`, not the wording."
+        steps:
+          - {title: Add an eval, text: "5–20 examples, committed, reviewed with `git diff`.", accent: "D4621A"}
+          - {title: Rewrite as a procedure, text: "Numbered stages with exception branches."}
+          - {title: Move side-effect checks, text: "Out of the prompt, into code."}
+          - {title: Keep untrusted text out of `system`, text: "And delimit it."}
+          - {title: Copy a shape, text: "From `notes/prompt-library.md`, not the wording."}
         takeaway: Start any inherited prompt with a small committed eval, then fix structure, side-effect gates and untrusted text.
         source: notes/prompt-library.md
         notes: >-
@@ -658,22 +660,19 @@ parts:
           - {title: Reasoning models, body: "State the goal, not the steps. Tune effort, not wording."}
           - {title: Shipping, accent: "D4621A", body: "Eval before tuning; one change at a time. Assume leaks and injection."}
         takeaway: Shape the document first, then keep guarantees in code and prove every change with an eval.
-        source: notes/08-prompt-optimization.md
+        source: notes/09-prompt-optimization.md
         notes: >-
-          If you keep one sentence from today, it is this: when a prompt fails, change the document, its order, its contents and its shape, before you change the wording. The manual optimization checklist in note eight is the long form of these cards.
+          If you keep one sentence from today, it is this: when a prompt fails, change the document, its order, its contents and its shape, before you change the wording. The manual optimization checklist in note nine is the long form of these cards.
 
       - layout: bullets
         title: Where to go next
-        recall: Which pillars and readings come after prompt engineering?
+        recall: What does prompting leave to the next pillar?
+        lead: A prompt is a document the model continues. Change the document before the wording.
         bullets:
           - "**02 Context engineering:** what goes into the window alongside the prompt."
           - "**Eval pillar (generative-ai):** defining correct, datasets, graders and calibrated judges."
           - "**Run the code:** the eval harness in `practice/prompt-eval-harness`."
           - "**Read:** Berryman & Ziegler; Huyen, AI Engineering, ch. 5."
-        aside:
-          title: The one idea to keep
-          accent: "1E3A5F"
-          body: A prompt is a document the model continues. Change the document before the wording.
         takeaway: Prompting sets what the model is asked; the next pillar decides what else sits in the window with it.
         source: notes/02-prompt-anatomy.md
         notes: >-

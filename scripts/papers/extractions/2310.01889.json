@@ -1,0 +1,115 @@
+{
+ "schema": 1,
+ "key": "2310.01889",
+ "pdf": "ai-engineering/07-inference-engineering/sources/liu-2023-ring-attention-blockwise-transformers-near.pdf",
+ "bib": {"title": "Ring Attention with Blockwise Transformers for Near-Infinite Context", "authors": ["Hao Liu", "Matei Zaharia", "Pieter Abbeel"], "first_author": "Liu", "year": 2023, "venue": "preprint", "arxiv": "2310.01889", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 53494, "chars_total": 53494, "engine": "pymupdf", "skipped": "Figures 1, 3 and 5 and the MFU bars of Table 4 are images; their values are not in the text."},
+ "type": "system",
+ "question": "How can Transformer context length scale with device count without approximating attention or adding communication overhead, given that per-layer outputs no longer fit on one device?",
+ "hypothesis": "If blockwise attention is permutation-invariant over key-value blocks, rotating KV blocks around a ring of hosts can fully overlap communication with blockwise compute, so context grows linearly with devices at no overhead provided block size c >= FLOPS/bandwidth.",
+ "contributions": ["a memory efficient transformers architecture that allows the context length to scale linearly with the number of devices while maintaining performance, eliminating the memory bottleneck imposed by individual devices", "demonstrating the effectiveness of our approach through extensive experiments"],
+ "method": {
+  "summary": "Ring Attention extends Blockwise Parallel Transformers: the sequence is split into one block per host; each host keeps its query block and computes blockwise attention and FFN, while key-value blocks are passed around a ring (send to next host, receive from previous) overlapped with compute via jax.lax.ppermute. Exact attention, same architecture.",
+  "task": "long-context Transformer training (max context length, MFU), in-context RL on ExoRL, and LLaMA-13B finetuning evaluated on line retrieval",
+  "trains": true,
+  "datasets": [
+   {"name": "ShareGPT conversations", "role": "train", "size": "125K conversations after cleaning", "split": null, "source": "ShareGPT.com public APIs, user-shared ChatGPT conversations", "preprocessing": "convert HTML back to markdown and filter out some inappropriate or low-quality samples"},
+   {"name": "ExoRL", "role": "both", "size": null, "split": "Trajectories of length 1000 x 4 (return-state-action-reward); N Trajs 32 or 128", "source": "Yarats et al. 2022, collected with unsupervised RL", "preprocessing": null},
+   {"name": "Line retrieval test", "role": "eval", "size": null, "split": null, "source": "Li et al. 2023 (LongChat blog)", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaMA-architecture models 3B, 7B, 13B, 30B (65B in Table 4)", "role": "proposed", "params": "3B, 7B, 13B, 30B, 65B", "architecture": "LLaMA decoder-only Transformer with Ring Attention", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "Appendix D lists LLaMA-7B 4096, 13B 5140, 33B 7168, 65B 8192, GPT3-175B 12288", "heads": null, "context": "up to 16384K tokens (3B, TPUv4-1024) in the max-context test", "other": {}},
+   {"name": "Ring Attention-13B-512K", "role": "proposed", "params": "13B", "architecture": "LLaMA-13B finetuned", "init_from": "LLaMA-13B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "512K tokens", "other": {}},
+   {"name": "AT + Ring Attention", "role": "proposed", "params": "350M", "architecture": "Agentic Transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "128 trajectories x 1000 x 4", "other": {"note": "text says 'modest 350M size model'"}},
+   {"name": "vanilla, memory efficient attention, BPT (memory efficient attention + FFN)", "role": "baseline", "params": null, "architecture": "same LLaMA configs", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT3.5-turbo-16K, Vicuna-16B-16K, Claude-2-100K", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "16K, 16K, 100K", "other": {}}
+  ],
+  "training": {
+   "objective": null, "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null,
+   "batch_size": "MFU runs: 2M tokens on 8/32x A100, 4M tokens on TPUv4 (TPUv4-256 in Sec 5.2, TPU in B.2); max-context runs keep total batch tokens n*l the same as the FSDP baseline",
+   "steps": null, "epochs": null, "tokens": null,
+   "seq_len": "up to 512K for the finetune",
+   "precision": "Sec 4: full precision instead of mixed precision. B.1: TPU matmul in bfloat16 with float32 weight accumulation; GPU all float32.",
+   "weight_decay": null, "dropout": null,
+   "regularisation": "full gradient checkpointing on attention and FFN (nothing_saveable policy)",
+   "hardware": "single DGX A100 8 GPUs, 32x A100 80GB, TPUv3-512, TPUv4-1024 (and TPUv4-256 for MFU), TPUv5e-256; finetune on 32x A100 80GB",
+   "compute": null, "wall_clock": null, "seeds": null,
+   "other": {"parallelism": "FSDP with Jax SPMD; no tensor parallelism in the max-context test", "finetune_method": "following Vicuna and Koala methodologies; hyperparameters not given"}
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": null, "prompting": null, "retrieval": null,
+   "parameters": {"block_size_rule": "c >= F/B (FLOPS over unidirectional bandwidth)", "min_seq_len": "s = 6c per host", "per_host_memory": "6bch bytes"},
+   "other": {"inference_claim": "Appendix C: serving LLaMA 7B on 32x TPUv5e, batch 1, conventional head-sharded serving reaches 256K context from KV cache size; Ring Attention could give 32x; needs B/F >= 2; with 186 GB/s and 196 TFLOPs at assumed 40% MFU, B/F = 2.4. Analytical, not measured."}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "max context length", "definition": "largest context supported in end-to-end training under FSDP with same token batch", "unit": "tokens (x1e3)", "higher_is_better": true},
+    {"name": "MFU", "definition": "model flops utilization", "unit": "%", "higher_is_better": true},
+    {"name": "ExoRL cumulative return", "definition": "cumulative return per ExoRL", "unit": "return", "higher_is_better": true},
+    {"name": "line retrieval accuracy", "definition": "model must retrieve a number from a long document", "unit": "accuracy vs context length", "higher_is_better": true}
+   ],
+   "baselines": ["vanilla transformer", "memory efficient attention", "memory efficient attention and feedforward (BPT)", "BC-10%, DT, AT+ME, AT+BPT", "GPT3.5-turbo-16K, Vicuna-16B-16K, Claude-2-100K"],
+   "protocol": "No seeds, runs or error bars reported. BC, DT, AT numbers copied from ExoRL and AT papers; AT+Ring Attention run by authors."
+  },
+  "availability": {"code": "https://github.com/lhao499/llm_large_context", "weights": null, "data": "ShareGPT (public APIs); ExoRL public"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.precision", "quote": "We note that all of our results are obtained using full precision instead of mixed precision.", "where": "Sec 4"}
+  ]
+ },
+ "results": [
+  {"claim": "On 32 A100 GPUs Ring Attention trains a 7B model at over 1M tokens, 32x the previous best.", "kind": "measured", "source": null, "metric": "max context", "value": "4096", "unit": "x1e3 tokens", "baseline_value": "128", "n": null, "setup": "FSDP, 32x A100 InfiniBand, 7B, BPT baseline, same token batch", "quote": "with 32 A100 GPUs, we achieve over 1 million tokens in context size for 7B model, a 32 times improvement over previous best", "table": "Table 3, row 32x A100 InfiniBand 7B, column Ring Attention", "note": "Table 3 lists 4096 (x1e3), about 4M, while the text says over 1 million.", "where": "Sec 5.1, Table 3"},
+  {"claim": "On TPUv4-1024, 3B model reaches 16384K tokens, 512x over BPT.", "kind": "measured", "source": null, "metric": "max context", "value": "16384", "unit": "x1e3 tokens", "baseline_value": "32", "n": null, "setup": "FSDP, TPUv4-1024, 3B", "quote": "TPUv4-1024 3B 8 16 32 16384 512x", "table": "Table 3, row TPUv4-1024 3B, column Ring Attention", "note": "Quote is a flattened table row; the Table 3 cell values 16384 and 512x occur in the text.", "where": "Table 3"},
+  {"claim": "Context length scales linearly with device count: 8x on 8 A100, 256x on TPUv3-512 (7B).", "kind": "measured", "source": null, "metric": "improvement over SOTA", "value": "256x", "unit": "x", "baseline_value": null, "n": null, "setup": "TPUv3-512, 7B, 2048K vs 8K for BPT", "quote": "as demonstrated by the 8x improvement over previous best on 8 A100 and the 256x improvement on TPUv3-512", "table": null, "note": null, "where": "Sec 5.1"},
+  {"claim": "Text claims over 30M tokens on TPUv4-512 (256x).", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Sec 5.1 text", "quote": "allows training sequences of over 30 million tokens", "table": null, "note": "Text says TPUv4-512, Table 3 says TPUv4-1024; no Table 3 cell is above 16384K, so the 30M figure is not supported by the table.", "where": "Sec 5.1"},
+  {"claim": "Ring Attention trains over 500x longer sequence than prior memory-efficient SOTA (intro), over 100M tokens.", "kind": "claim", "source": null, "metric": null, "value": "500", "unit": "x", "baseline_value": null, "n": null, "setup": "intro and conclusion", "quote": "train more than 500 times longer sequence than prior memory efficient state-of-the-arts", "table": null, "note": "Table 3 max is 512x; the 100M figure is not shown in any table.", "where": "Sec 1"},
+  {"claim": "Per-host memory is 6bch bytes, independent of sequence length s.", "kind": "measured", "source": null, "metric": "activation memory", "value": "6bch", "unit": "bytes per layer", "baseline_value": "2bsh (BPT)", "n": null, "setup": "bfloat16, Table 1; six blocks: query, current K and V, receive K and V, output", "quote": "a total of six blocks are required, which translates to 6bch bytes of memory", "table": null, "note": "Analytical.", "where": "Sec 3, Table 1"},
+  {"claim": "Communication is hidden when block size c >= F/B; minimal block size is about 1K on TPUs and NVLink GPUs, 24.5K on InfiniBand A100.", "kind": "worked-example", "source": null, "metric": "min block size", "value": "24.5", "unit": "x1e3 tokens (A100 InfiniBand)", "baseline_value": null, "n": null, "setup": "A100 312 TFLOPS, 12.5 GB/s InfiniBand; min sequence length 149.5K = 6c", "quote": "the block size needs to be larger than the ratio of FLOPs over bandwidth", "table": "Table 2, row A100 InfiniBand, column Minimal Blocksize", "note": "Table 2 also: A100 NVLink 1.0 / 6.2, TPU v3 1.1 / 6.6, TPU v4 1.0 / 6.2, TPU v5e 1.1 / 6.3 (blocksize / seq len, x1e3).", "where": "Sec 3, Table 2"},
+  {"claim": "In ExoRL, AT with Ring Attention (128 trajectories) averages 113.66 vs 111.13 for AT+BPT (32 trajectories); 128-trajectory ME/BPT runs go out of memory.", "kind": "measured", "source": null, "metric": "total average cumulative return", "value": "113.66", "unit": "return", "baseline_value": "111.13", "n": 6, "setup": "ExoRL, six tasks, 350M model; N Trajs 128 for Ring Attention", "quote": "achieving a total average return of 113.66 compared to the AT with BPT model’s total average return of 111.13", "table": null, "note": "Single run per task, no variance. BC-10% 36.11, DT 45.51.", "where": "Sec 5.3, Table 5"},
+  {"claim": "Ring Attention keeps MFU comparable to BPT while training 7B-65B at far longer context (e.g. 65B: 8K to 1024K, 13B on 32 A100: 64K to 2048K).", "kind": "measured", "source": null, "metric": "context size", "value": "2048", "unit": "x1e3 tokens", "baseline_value": "64", "n": null, "setup": "Table 4, 13B, 32x A100; MFU bars are in a figure and are not in the text", "quote": "Ring Attention enables training large models (7B-65B) on large input context sizes (over 4M) with negligible overheads.", "table": "Table 4, row Ring Attention context size, 13B on 32x A100", "note": "Caption says over 4M but largest Table 4 value is 2048K. MFU numbers are not given in text; Sec 5.2 concedes MFU is expected to be lower with longer context.", "where": "Sec 5.2, Table 4"},
+  {"claim": "Finetuned LLaMA-13B at 512K context keeps high line-retrieval accuracy at long context while GPT3.5-turbo-16K, Vicuna-16B-16K and Claude-2-100K cannot handle extended lengths.", "kind": "measured", "source": null, "metric": "line retrieval accuracy", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "32x A100, ShareGPT 125K conversations, 512K context; values are in Fig 3 only", "quote": "our model, Ring Attention-13B-512K, stands out as it maintains high accuracy levels even with long contexts", "table": null, "note": "No numeric accuracies in text.", "where": "Sec 5.4, Fig 3"},
+  {"claim": "Scaling to long context costs far less than quadratic FLOPs per dataset; 170B model at 10M vs 4K costs 162.6x FLOPs.", "kind": "worked-example", "source": null, "metric": "per-dataset FLOPs ratio", "value": "162.6", "unit": "x", "baseline_value": null, "n": null, "setup": "ratio (6h + s2)/(6h + s1), per-sequence FLOPs (24bsh^2 + 4bs^2h)n", "quote": "scaling up the 170B model from 4K to 10M incurs 162.6x higher per dataset FLOPs, despite the context size being 3072 times longer", "table": null, "note": "Text says 170B, Fig 5 lists GPT3-175B; 13B hidden printed as 5140 (LLaMA uses 5120).", "where": "Appendix D"},
+  {"claim": "With 512 A100 the context could reach about 16 million tokens, extrapolating 256K on 8 A100.", "kind": "worked-example", "source": null, "metric": "extrapolated context", "value": "16 million", "unit": "tokens", "baseline_value": null, "n": null, "setup": "extrapolation, not measured", "quote": "the potential context size can be expanded to 16 million", "table": null, "note": null, "where": "Appendix A"},
+  {"claim": "100M tokens at batch 1 needs over 1000GB for hidden size 1024, versus under 100GB HBM per device.", "kind": "worked-example", "source": null, "metric": "memory", "value": "1000", "unit": "GB", "baseline_value": null, "n": null, "setup": "batch 1, hidden size 1024, must store each layer output", "quote": "processing 100 million tokens with a batch size of 1 requires over 1000GB of memory even for a modest model with a hidden size of 1024", "table": null, "note": null, "where": "Sec 2"}
+ ],
+ "limits": [
+  "Authors finetune only to 512K tokens because of cloud budget; the million-token training is measured as max fit, not trained to convergence.",
+  "No quality results beyond one line-retrieval plot (no numbers) and a six-task RL benchmark with single runs; no perplexity or downstream long-context benchmark.",
+  "Authors concede MFU is expected to be lower than BPT at longer context since self-attention has lower MFU than feedforward; Table 4 gives context sizes only in text (MFU bars in a figure).",
+  "Overlap requires block size c >= FLOPS/bandwidth; InfiniBand GPUs need min seq len about 149.5K per host.",
+  "Inference claim (32x context on 32x TPUv5e) is analytical, no measurement, assumes 40 percent MFU.",
+  "Max-context test uses FSDP with no tensor parallelism and a mix of precision settings across hardware (float32 on GPU, bfloat16 matmul on TPU).",
+  "Hyperparameters of finetuning (lr, steps, batch) are not given.",
+  "Inconsistencies: text says TPUv4-512 and over 30M tokens but Table 3 shows TPUv4-1024 and max 16384K; Table 4 caption says over 4M but max entry is 2048K."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Ring Attention", "definition": "blockwise attention and feedforward distributed over a ring of hosts, with key-value block transfer overlapped with blockwise computation", "where": "Sec 1"}
+ ],
+ "lineage": [
+  {"work": "Blockwise Parallel Transformer for Large Context Models", "year": 2023, "arxiv": null, "relation": "extends", "note": "Liu and Abbeel; Ring Attention distributes BPT across hosts", "quote": "Our work utilizes blockwise parallel transformers [23]"},
+  {"work": "Self-attention does not need O(n^2) memory", "year": 2021, "arxiv": "2112.05682", "relation": "baseline", "note": "Rabe and Staats, memory efficient attention", "quote": null},
+  {"work": "FlashAttention", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "Dao et al., efficient CUDA implementation of blockwise attention", "quote": null},
+  {"work": "Online normalizer calculation for softmax", "year": 2018, "arxiv": "1805.02867", "relation": "uses-method", "note": "Milakov and Gimelshein, softmax without materializing full matrix", "quote": null},
+  {"work": "Sequence parallelism: Long sequence training from system perspective", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Li et al.; ring topology for attention but non-overlapped communication", "quote": "incurs non-overlapped communication overheads similar to sequence parallelism"},
+  {"work": "DeepSpeed Ulysses", "year": 2023, "arxiv": "2309.14509", "relation": "related", "note": "Jacobs et al.; limited by number of heads, gathers the full sequence", "quote": null},
+  {"work": "Reducing activation recomputation in large transformer models", "year": 2022, "arxiv": "2205.05198", "relation": "related", "note": "Korthikanti et al., sequence parallelism", "quote": null},
+  {"work": "LLaMA", "year": 2023, "arxiv": "2302.13971", "relation": "evaluates", "note": "model architecture and sizes", "quote": null},
+  {"work": "Emergent agentic transformer from chain of hindsight experience", "year": 2023, "arxiv": null, "relation": "extends", "note": "AT model used in RL experiment", "quote": null},
+  {"work": "Exploratory data for offline RL (ExoRL)", "year": 2022, "arxiv": "2201.13425", "relation": "uses-data", "note": "benchmark and BC/DT numbers", "quote": null},
+  {"work": "How long can open-source LLMs truly promise on context length? (LongChat)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "line retrieval test", "quote": null},
+  {"work": "Vicuna and Koala", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "ShareGPT finetuning methodology", "quote": null},
+  {"work": "Megatron-LM, GPipe, PipeDream, ZeRO/FSDP", "year": null, "arxiv": null, "relation": "related", "note": "tensor, pipeline and sharded data parallelism", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Maximum context length under end-to-end large-scale training on TPUv4-1024. Baselines are vanilla transformers, memory efficient transformers, and memory efficient attention and feedforward (BPT).", "page": 2, "why": "shows the context jump over baselines at a glance"},
+  {"figure": "Fig 2", "caption": "In a ring of hosts, each host holds one query block, and key-value blocks traverse the ring; communication is overlapped with blockwise attention and feedforward.", "page": 4, "why": "explains the ring rotation and the outer/inner loop split"},
+  {"figure": "Fig 3", "caption": "Comparison of different models on the long-range line retrieval task.", "page": 9, "why": "only quality evidence for the finetuned 512K model"},
+  {"figure": "Fig 5", "caption": "The per dataset training FLOPs cost ratio relative to a 4k context size, considering different model dimensions.", "page": 16, "why": "shows cost growth is far below quadratic for big models"}
+ ],
+ "code": [
+  {"where": "Fig 4, p15", "snippet": "k, v = map(lambda x: lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]), (k, v))", "verbatim": true}
+ ],
+ "problems": ["Text extraction of tables is column-flattened; Table 3 and 5 read from the order of cells. Table 4 MFU values are in a figure-like bar and absent from the text. No embedded instructions found."]
+}

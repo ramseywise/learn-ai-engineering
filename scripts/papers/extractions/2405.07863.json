@@ -1,0 +1,574 @@
+{
+ "schema": 1,
+ "key": "2405.07863",
+ "pdf": "generative-ai/05-RL/sources/dong-2024-rlhf-workflow.pdf",
+ "bib": {
+  "title": "RLHF Workflow: From Reward Modeling to Online RLHF",
+  "authors": [
+   "Hanze Dong",
+   "Wei Xiong",
+   "Bo Pang",
+   "Haoxiang Wang",
+   "Han Zhao",
+   "Yingbo Zhou",
+   "Nan Jiang",
+   "Doyen Sahoo",
+   "Caiming Xiong",
+   "Tong Zhang"
+  ],
+  "first_author": "Dong",
+  "year": 2024,
+  "venue": "Transactions on Machine Learning Research (09/2024)",
+  "arxiv": "2405.07863",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 97029,
+  "chars_total": 97029,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "empirical",
+ "question": "How can online iterative RLHF be reproduced with fully open-source data, using a proxy preference/reward model in place of human feedback?",
+ "hypothesis": "Online iterative direct preference learning with a proxy preference model outperforms offline DPO, because fresh on-policy data mitigates out-of-distribution shift.",
+ "contributions": [
+  "Open recipe for reward/preference model training from a mixture of open preference datasets",
+  "Online iterative DPO workflow with best-of-n vs worst-of-n exploration",
+  "State-of-the-art-for-size LLaMA-3-8B results on AlpacaEval-2, MT-Bench, Arena-Hard",
+  "Release of models, curated datasets and code guidebooks"
+ ],
+ "method": {
+  "summary": "Train BT reward model and pairwise preference model from Llama-3-8B-Instruct on a mixture of open preference datasets; SFT LLaMA-3-8B; then run 3 iterations of DPO on data labelled by the BT reward model, where each iteration samples 16 responses per prompt and keeps best and worst as a pair.",
+  "task": "preference optimisation / online iterative RLHF",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Preference mix2 (HH-RLHF, SHP, HelpSteer, PKU-SafeRLHF-30K, UltraFeedback, UltraInteract, CodeUltraFeedback, Argilla-Math, OpenOrca, Capybara)",
+    "role": "train",
+    "size": "see Table 5; e.g. UltraFeedback 340025 pairs, HH-RLHF 115396 pairs",
+    "split": "one epoch",
+    "source": "open-source datasets; HF release",
+    "preprocessing": "noisy samples, empty rounds, wrong labels and small-margin score pairs removed (roughly 10% deleted); SHP only score ratio >2, max 5 pairs per prompt"
+   },
+   {
+    "name": "Preference mix1 (HH-RLHF + SHP + UltraFeedback + Summarization)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "open-source",
+    "preprocessing": null
+   },
+   {
+    "name": "SFT data (ShareGPT, Evol-Instruct, SlimOrca, MathInstruct, Magicoder-Evol-Instruct, GPT4-LLM, OrcaMath, GPTeacher, UltraInteract)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "open-source",
+    "preprocessing": null
+   },
+   {
+    "name": "RLHF prompt set (UltraFeedback, HelpSteer, OpenOrca, UltraInteract, Capybara, DIBT-10K)",
+    "role": "train",
+    "size": "60K prompts used, 20K per iteration",
+    "split": "3 iterations x 20K",
+    "source": "open-source",
+    "preprocessing": null
+   },
+   {
+    "name": "Nectar (offline DPO baseline)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "open-source",
+    "preprocessing": null
+   },
+   {
+    "name": "RewardBench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lambert et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaEval-2 / MT-Bench / Chat-Arena-Hard",
+    "role": "eval",
+    "size": "805 / 160 / 500 prompts",
+    "split": null,
+    "source": "public benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-3-8B SFT -> iterative DPO policy",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": "meta-llama/Meta-Llama-3-8B, SFT in house",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BT reward model / pairwise preference model",
+    "role": "reward",
+    "params": "8B",
+    "architecture": "Llama-3-8B-Instruct with linear scalar head (BT); next-token A/B prediction (preference)",
+    "init_from": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Instruct checkpoint used because only it was available early"
+    }
+   },
+   {
+    "name": "UltraRM-13B",
+    "role": "baseline",
+    "params": "13B",
+    "architecture": null,
+    "init_from": "LLaMA-2-13B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "BT reward: -E log sigma(r(x,aw)-r(x,al)); preference model: next-token A/B classification; SFT; DPO with eta=0.1 on best/worst-of-8 pairs",
+   "optimizer": "inferred: adamw_torch (Table 7, optim adamw torch)",
+   "lr": "SFT 2e-5; BT RM 2e-6; preference model 5e-6; iterative DPO peak 5e-7; offline DPO 5e-7",
+   "lr_schedule": "cosine",
+   "warmup": "ratio 0.03",
+   "batch_size": "SFT 32; BT RM 512; preference model 128; DPO 128 (global)",
+   "steps": null,
+   "epochs": "SFT 1; RM 1; preference model 1; DPO 2 epochs per iteration on all historical data; offline DPO 1",
+   "tokens": null,
+   "seq_len": "SFT block 8192 (packed); preference model block 3072",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "DPO KL coefficient eta=0.1 (beta 0.1 in Table 7)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "iterations": "3, 20K prompts each, 16 responses per prompt",
+    "init_per_iteration": "checkpoint from previous iteration as init, SFT model as reference (not restart from pi0)",
+    "length_penalty": "r~ = r^ - lambda|a|, |a| characters, lambda=0.001 for the concise model",
+    "table7": "per-device batch 2, grad accumulation 8, 2 epochs, beta 0.1",
+    "DPO library": "TRL"
+   }
+  },
+  "inference": {
+   "decoding": "vLLM sampling, no top-k/top-p",
+   "temperature": "1.0 for n/2 responses and 0.7 for the other n/2",
+   "top_p": null,
+   "max_tokens": "2048 generation length",
+   "samples": "n=8 per prompt in Algorithm 2 (n/2 at each temperature); text also says 16 responses per prompt per iteration; best and worst by BT reward form a pair; pairs with identical responses dropped",
+   "prompting": "preference model input: [CONTEXT] {x} [RESPONSE A] {a1} [RESPONSE B] {a2}, label A or B, order randomised; P(a1>a2)=pA/(pA+pB)",
+   "retrieval": null,
+   "parameters": {
+    "rejection_sampling_n": "8",
+    "best_vs_worst": "pi1=best-of-8, pi2=worst-of-8 of pi_MLE_t",
+    "length_penalty_lambda": "0.001"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "LC AlpacaEval-2",
+     "definition": "length-controlled win rate vs GPT-4-Preview (11/06), GPT-4 judge",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench",
+     "definition": "GPT-4 score 1-10 averaged over two turns",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Chat-Arena-Hard",
+     "definition": "win rate on 500 prompts",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "RewardBench accuracy",
+     "definition": "Chat, Chat Hard, Safety, Reasoning subsets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Academic",
+     "definition": "GSM-8K 8-shot, MMLU 5-shot, ARC 25-shot, others 0-shot, accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Ours SFT",
+    "Ours vanilla offline DPO (Nectar)",
+    "LLaMA-3-8B-it",
+    "Starling-7B-beta",
+    "Zephyr-7B-beta",
+    "Tulu-2-DPO-70B",
+    "GPT-4 etc.",
+    "UltraRM-13B as reward"
+   ],
+   "protocol": "Single runs, no seeds or significance tests reported; GPT-4 judges."
+  },
+  "availability": {
+   "code": "public GitHub code guidebooks (URL not printed in the extracted text)",
+   "weights": "released (HF)",
+   "data": "released curated datasets and filtering script on HF; Nov 2024 SFT dataset ver2"
+  },
+  "prompts": [
+   {
+    "purpose": "preference model input format",
+    "text": "instruction = [CONTEXT] {x} [RESPONSE A] {a1} [RESPONSE B] {a2}, and label = A.",
+    "where": "Section 2.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "we sample n/2 responses using πt with temperature 1.0 and n/2 responses using πt with temperature 0.7",
+    "where": "Algorithm 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Iterative DPO reaches 31.3 LC AlpacaEval-2 vs 22.5 for the vanilla offline DPO baseline, 10.2 for SFT, and 22.9 for LLaMA-3-8B-it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC AlpacaEval-2",
+   "value": "31.3",
+   "unit": "LC win rate %",
+   "baseline_value": "22.5",
+   "n": null,
+   "setup": "LLaMA-3-8B SFT, 3 iterations of online iterative DPO, 60K prompts, BT reward ranking best/worst-of-8; offline DPO on Nectar, 1 epoch",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Ours (Iterative RLHF), column LC AlpacaEval-2"
+  },
+  {
+   "claim": "Iterative DPO scores 8.46 MT-Bench vs 8.17 vanilla DPO and 7.69 SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": "8.46",
+   "unit": "score (1-10)",
+   "baseline_value": "8.17",
+   "n": null,
+   "setup": "LLaMA-3-8B SFT, 3 iterations of online iterative DPO, 60K prompts, BT reward ranking best/worst-of-8",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Ours (Iterative RLHF), column MT-Bench"
+  },
+  {
+   "claim": "Iterative DPO scores 29.1 on Chat-Arena-Hard vs 22.4 vanilla DPO and 5.6 SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Chat-Arena-Hard",
+   "value": "29.1",
+   "unit": "win rate %",
+   "baseline_value": "22.4",
+   "n": null,
+   "setup": "LLaMA-3-8B SFT, 3 iterations of online iterative DPO, 60K prompts, BT reward ranking best/worst-of-8",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Ours (Iterative RLHF), column Chat-Arena-Hard"
+  },
+  {
+   "claim": "The 8B iterative-DPO model beats Tulu-2-DPO-70B (21.2) and GPT-3.5-turbo-1106 (19.3) on LC AlpacaEval-2 but trails LLaMA-3-70B-it (34.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC AlpacaEval-2",
+   "value": "31.3",
+   "unit": "LC win rate %",
+   "baseline_value": "21.2",
+   "n": null,
+   "setup": "LLaMA-3-8B SFT, 3 iterations of online iterative DPO, 60K prompts, BT reward ranking best/worst-of-8",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Tulu-2-DPO-70B, GPT-3.5-turbo-1106, LLaMA-3-70B-it"
+  },
+  {
+   "claim": "Length-penalised ('concise') variant with lambda=0.001 raises LC AlpacaEval-2 to 38.1 and cuts mean Arena-Hard response length from 656 to 382, but lowers Chat-Arena-Hard from 29.1 to 22.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC AlpacaEval-2",
+   "value": "38.1",
+   "unit": "LC win rate %",
+   "baseline_value": "31.3",
+   "n": null,
+   "setup": "Table 4 ablation; reward r~ = r^ - lambda|a| with |a| in characters, used to filter preference data; lambda=0.001",
+   "note": "Table 4 prints TruthfulQA 62.2 for 'Ours' but Table 3 prints 60.4 for the same model.",
+   "where": "Table 4",
+   "table": "Table 4, row Ours-concise, column LC Alp."
+  },
+  {
+   "claim": "Training with UltraRM-13B as the reward gives 20.7 LC AlpacaEval-2 (vs 31.3 with the authors' BT reward), longer responses (745 vs 656) and lower GSM-8K (78.9 vs 80.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LC AlpacaEval-2",
+   "value": "20.7",
+   "unit": "LC win rate %",
+   "baseline_value": "31.3",
+   "n": null,
+   "setup": "Table 4 ablation, same online iterative DPO recipe, reward model swapped",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row UltraRM-13B, column LC Alp."
+  },
+  {
+   "claim": "Academic benchmarks: iterative DPO has GSM-8K 80.7 vs SFT 74.2 and vanilla DPO 79.8; MMLU 65.3 vs 64.7 SFT; TruthfulQA 60.4 vs 53.4 SFT; HumanEval 64.6 vs 65.2 SFT; MBPP 60.8 vs 62.3 SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM-8K",
+   "value": "80.7",
+   "unit": "acc %",
+   "baseline_value": "74.2",
+   "n": null,
+   "setup": "LLaMA-3-8B SFT, 3 iterations of online iterative DPO, 60K prompts, BT reward ranking best/worst-of-8; GSM-8K 8-shot",
+   "note": "No significant alignment-tax regression claimed; HumanEval and MBPP are slightly below SFT.",
+   "where": "Table 3",
+   "table": "Table 3, row Ours (Iterative RLHF), column GSM-8K"
+  },
+  {
+   "claim": "Our BT reward model (LLaMA-3-8B-it, mix2) gets RewardBench Chat 99.4, Chat Hard 65.1, Safety 87.8, Reasoning 86.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench Reasoning",
+   "value": "86.4",
+   "unit": "acc % (Reasoning)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RewardBench; BT reward, init from Llama-3-8B-Instruct, mix2 data",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row LLaMA-3-8B-it BT mix2, column Reasoning"
+  },
+  {
+   "claim": "The pairwise preference model (mix2) gets Chat 98.3, Chat Hard 65.8, Safety 89.7, Reasoning 94.7, i.e. better than BT on reasoning (code/math).",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench Reasoning",
+   "value": "94.7",
+   "unit": "acc % (Reasoning)",
+   "baseline_value": "86.4",
+   "n": null,
+   "setup": "RewardBench; preference model, same base and data",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row LLaMA-3-8B-it Preference mix2, column Reasoning"
+  },
+  {
+   "claim": "Prompting Llama-3-8B-it as a judge is worse than trained models: Chat 93.6, Chat Hard 44.3, Safety 71.3, Reasoning 73.5. Reference UltraRM-13B (LLaMA-2-13B, mix1 BT) gets 96.4/55.5/55.0/62.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench Reasoning",
+   "value": "73.5",
+   "unit": "acc % (Reasoning)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RewardBench",
+   "note": "The text calls the LLaMA-2-13B BT mix1 row the Ultra-RM-13B reference.",
+   "where": "Table 1",
+   "table": "Table 1, row Prompting, column Reasoning"
+  },
+  {
+   "claim": "Reward-length mean Pearson coefficient is 0.19 for UltraRM-13B and 0.06 for the authors' BT reward.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reward-length correlation",
+   "value": "0.06",
+   "unit": "Pearson r",
+   "baseline_value": "0.19",
+   "n": null,
+   "setup": "2K prompts, SFT model samples; Fig 3",
+   "note": "Text says 8 responses per prompt, Fig 3 caption says 16.",
+   "where": "Section 2.2",
+   "quote": "the mean coefficient of the UltraRM-13B (left) is 0.19, while it is 0.06 for our BT reward (right)"
+  },
+  {
+   "claim": "Authors say a higher score is possible but would cost academic performance: 44.84 LC AlpacaEval-2 and 35.7 Chat-Arena-Hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "44.84",
+   "unit": "LC win rate %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Remark 1; not the released model",
+   "note": null,
+   "where": "Remark 1",
+   "quote": "e.g., 44.84 in LC AlpacaEval-2 and 35.7 in Chat-Arena-hard"
+  },
+  {
+   "claim": "With the alpaca_eval_gpt4_turbo_fn config the model gets 37.2 LC win rate (45.4 win rate); GPT-based evaluation depends on the judge config.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "37.2",
+   "unit": "LC win rate %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlpacaEval-2 with alternative annotator config",
+   "note": null,
+   "where": "Remark 1",
+   "quote": "Our model obtains 37.2 LC win-rate (45.4 win-rate)"
+  },
+  {
+   "claim": "Online data theory: with batch size m = O~(d_e/eps^2), T = O~(d_e) iterations suffice for eps-optimal KL-regularised value (informal Theorem 2 of Xiong et al. 2023).",
+   "kind": "reported",
+   "source": "Xiong et al. 2023",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "linear reward case, d_e=d",
+   "note": "Cited theory, not tested here.",
+   "where": "Section 3.2"
+  }
+ ],
+ "limits": [
+  "Feedback is a proxy BT reward model, not humans; iterative RLHF heavily relies on preference-signal quality (Table 4).",
+  "Length bias amplified under iteration; length penalty is only a preliminary data-filtering fix and hurts Chat-Arena-Hard.",
+  "Preference model not used in the online loop; BT vs preference comparison left to future work; PPO not studied.",
+  "Benchmark results may be hacked/overfit; GPT-judge results depend on config (Remark 1).",
+  "Hardware, compute, seeds, SFT step counts and variance are not reported; single runs.",
+  "Reward model uses Llama-3-8B-Instruct while policy starts from base SFT.",
+  "Exploration by best/worst-of-8 is heuristic; theory is for linear rewards."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "DPO (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": "2305.18290",
+   "relation": "uses-method",
+   "note": "oracle optimiser",
+   "quote": null
+  },
+  {
+   "work": "Xiong et al. 2023 (iterative preference learning theory)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "theoretical basis for online iterative RLHF with enhancer",
+   "quote": null
+  },
+  {
+   "work": "Zephyr (Tunstall et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "offline vanilla DPO recipe",
+   "quote": null
+  },
+  {
+   "work": "LLaMA-2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hybrid/iterative RLHF",
+   "quote": null
+  },
+  {
+   "work": "Claude HH-RLHF (Bai et al.)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "related",
+   "note": "online iterative RLHF with PPO; HH-RLHF data",
+   "quote": null
+  },
+  {
+   "work": "RAFT (Dong et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "rejection sampling fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "RewardBench (Lambert et al.)",
+   "year": 2024,
+   "arxiv": "2403.13787",
+   "relation": "uses-data",
+   "note": "RM evaluation",
+   "quote": null
+  },
+  {
+   "work": "UltraFeedback (Cui et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "preference and prompt data",
+   "quote": null
+  },
+  {
+   "work": "Pair-RM (Jiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "small preference model for iterative DPO",
+   "quote": null
+  },
+  {
+   "work": "Slic / Liu et al. statistical rejection sampling",
+   "year": 2023,
+   "arxiv": "2309.06657",
+   "relation": "uses-method",
+   "note": "LLM next-token preference modelling",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Illustration of our implementation of iterative direct preference learning.",
+   "page": 11,
+   "why": "Shows the best/worst-of-n loop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Heatmap of Pearson correlation between reward and response length.",
+   "page": 8,
+   "why": "Shows length bias of reward models"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Model performance with respect to RLHF iterations.",
+   "page": 25,
+   "why": "Per-iteration gains (values only in plot)"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table values come as flattened text; row/column mapping inferred from order.",
+  "Table 4 TruthfulQA for 'Ours' (62.2) differs from Table 3 (60.4).",
+  "Text says 8 responses per prompt for length-bias analysis, caption says 16; sampling text says n=8 in Algorithm 2 but 16 responses per prompt in the data section.",
+  "Per-iteration scores are only in Fig 8 and not readable as numbers."
+ ]
+}

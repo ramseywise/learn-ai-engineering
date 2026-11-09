@@ -1,19 +1,648 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2410.05080",
  "pdf": "generative-ai/08-eval/sources/chen-2024-scienceagentbench.pdf",
  "bib": {
   "title": "ScienceAgentBench: Toward Rigorous Assessment of Language Agents for Data-Driven Scientific Discovery",
-  "first_author": "Ziru Chen",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Ziru Chen",
+   "Shijie Chen",
+   "Yuting Ning",
+   "Qianheng Zhang",
+   "Boshi Wang",
+   "Botao Yu",
+   "Yifei Li",
+   "Zeyi Liao",
+   "Chen Wei",
+   "Zitong Lu",
+   "Vishal Dey",
+   "Mingyi Xue",
+   "Frazier N. Baker",
+   "Benjamin Burns",
+   "Daniel Adu-Ampratwum",
+   "Xuhui Huang",
+   "Xia Ning",
+   "Song Gao",
+   "Yu Su",
+   "Huan Sun"
+  ],
+  "first_author": "Chen",
+  "year": 2025,
+  "venue": "ICLR 2025",
   "arxiv": "2410.05080",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 188491,
+  "chars_total": 188491,
+  "engine": "pymupdf",
+  "skipped": "Reference list and the long code listings in App F/H and licence tables in App J were skimmed, not read line by line."
  },
- "legacy_report": "SOURCE: \"ScienceAgentBench: Toward Rigorous Assessment of Language Agents for Data-Driven Scientific Discovery\", Ziru Chen, Shijie Chen, Yuting Ning, ... Yu Su, Huan Sun. Venue as printed: \"Published as a conference paper at ICLR 2025\" (arXiv:2410.05080v3, 31 Mar 2025). First-author affiliation as printed: \"1Department of Computer Science and Engineering, OSU\" (Ziru Chen and Shijie Chen, equal contribution, both affiliation 1).\n\nCOVERAGE: 60 of 60 pages, all 190,357 chars. Read in full: main text p1-10, ethics p11, appendices A-J p22-60. References p11-21 skimmed. Nothing skipped.\n\nCLAIMS\n\n- claim: Best non-o1 agent (Claude-3.5-Sonnet + self-debug) solves about a third of tasks; expert knowledge adds 1.9 points.\n  number: 32.4% SR without, 34.3% with\n  setup: 102 tasks from 44 publications, 4 disciplines; best of 3 runs per task; temperature 0.2, top-p 0.95, 0-shot\n  quote: \"Given three attempts for each task, the best-performing agent can only solve 32.4% of the tasks independently and 34.3% with expert-provided knowledge.\" (p1)\n\n- claim: Those headline numbers are best-of-three; the mean over three runs is much lower.\n  number: 22.9 (2.0) without, 27.8 (2.0) with; o1-preview self-debug 42.2 best-of-3 against 27.1 (1.2) mean\n  setup: same agent, Tables E.1/E.2, mean (std) over 3 runs\n  quote: \"Claude-3.5-Sonnet 22.9 (2.0) 84.2 (0.3) 84.0 (1.2) 0.066 (0.005)\" (p28); \"Claude-3.5-Sonnet 27.8 (2.0) 85.5 (0.5) 81.1 (0.9) 0.072 (0.005)\" (p29); \"OpenAI o1-preview 27.1 (1.2) 84.9 (0.4) 84.6 (0.5) 0.701 (0.008)\" (p28)\n\n- claim: Three runs per task; best run chosen by a lexicographic order.\n  number: 3 runs\n  quote: \"we repeat each task with three independent runs in all experiments. Then we select the best run according to the metrics in the following order: maximum SR, maximum VER, maximum CBS, and minimum Cost.\" (p7)\n\n- claim: Four program metrics. VER = runs without error and saves the correctly named output. SR = per-task executable success criterion, zero if execution fails; both binary. CBS = CodeBERTScore F1 against the gold program, overwritten to 1.0 when SR=1. Cost = average USD per task.\n  number: none\n  quote: \"If SR = 1 for a program, we change its CBS to 1.0 as well to reflect task success.\" (p5)\n  Criteria examples (Table 1, p5): \"The trained model gets ≥ 0.77 ROC-AUC score on the test set\"; top-5 drugs match gold; `math.isclose` to gold; \"The resulting figure gets ≥ 60 score by the GPT-4o Judge.\" The 0.77 threshold came from five runs of the gold program (p27).\n\n- claim: Figure outputs are graded by a model judge, averaged over 3 samples.\n  quote: \"We use Yang et al. (2024b)'s prompt to request GPT-4o to compare the program-produced figure with the ground-truth and respond with a score on its quality. For evaluation stability, we sample 3 responses and use the average score to compute success rates.\" (p5)\n\n- claim: Rubrics (five stages: data loading, processing, modeling/visualization, output formatting, output saving) were drafted by GPT-4o, refined by experts, and applied by humans only: two raters per program, 102 programs, blind to execution results and outcomes. Loading and processing separate successes from failures; formatting and saving do not.\n  number: 25% of failed programs below 50 on data loading\n  quote: \"25% of the failed programs have their rating below 50 in the first stage.\" (p10)\n\n- claim: Simpler scaffold beat the heavier one at far lower cost.\n  number: +10.8 points SR, 17x cheaper\n  setup: Claude-3.5-Sonnet, no knowledge, self-debug vs OpenHands CodeAct v1.9\n  quote: \"10.8% more tasks ( 21.6 → 32.4 SR) than using OpenHands while costing 17 times less API fees ($0.958 → $0.057)\" (p8)\n\n- claim: o1-preview reaches 42.2% SR at over 10x cost.\n  number: $0.636 per task against $0.057\n  quote: \"OpenAI o1-preview‡ 42.2 88.4 92.2 0.636 41.2 88.9 91.2 0.713\" (p8)\n\n- claim: Two dataset modifications target contamination and shortcuts.\n  quote: \"(1) For each dataset, we randomly remove five data points from its test set... (2) For tasks involving model development, we re-split the dataset, keep the test set labels only for evaluation, and replace them with dummy values, such as -1 for classification tasks.\" (p4)\n  Motive: agents \"may directly read and report the ground-truth labels in the test set without writing the training code\" (p4).\n\n- claim: Expert knowledge raises SR/CBS for most agents but lowers VER for most (Claude self-debug VER 92.2 to 86.3, Table 3 p8), since named tools trigger wrong or hallucinated API calls.\n\n- claim: Error analysis: 29/50 (OpenHands) and 30/50 (self-debug) sampled failures were executable but semantically wrong, including simulating fake data (p29).\n\nLIMITS\n- Mitigations were not tested quantitatively. Evidence is one case study (Listing F.4, p36-38: a memorised DeepPurpose loader failed on the modified data). No count of programs caught, no ablation. Step 1 skipped for some datasets.\n- Reported Cost is that of the selected run, not the sum of three attempts. Open-weight pricing unexplained.\n- No judge-human agreement measured here; relies on prior work. Authors concede CBS and the GPT-4o judge \"are not perfect yet\" (p23). No inter-rater agreement for rubric ratings; rubrics follow the gold program, so valid alternatives can be under-rated (p10).\n- Rubric scoring not automated; an LLM judge is future work.\n- Python only; gold programs run under 10 minutes; four disciplines; code generation only (p23).\n- Outcome-only: trajectories read qualitatively, not scored.\n- Dated: 2024 models; o1 not run with OpenHands.\n\nBUILDS ON: Zhou et al. (2023) CodeBERTScore; Yang et al. (2024b) MatPlotAgent judge prompt; Wu et al. (2024) Plot2Code; Chen et al. (2024a) self-debug; Wang et al. (2024c) OpenHands; Kapoor et al. (2024) cost-aware evaluation.\n\nCODE: none worth keeping. Rubric JSON at p48-53 (stage -> items with `points`, `total_points`).\n\nFIGURES: Figure 4, p10, \"Rubric-based human ratings for 102 programs generated by Claude-3.5-Sonnet with self-debug and expert-provided knowledge.\" Shows partial-credit distributions per stage for passed vs failed tasks, locating failures in loading/processing.\n\nPROBLEMS\n- Extraction clean. Table 3 columns are flattened but readable.\n- Internal inconsistency: p7 prose gives Claude direct prompting as 16.7/20.6 SR; Table 3 prints 17.7/21.6. The \"1.94x\" follows the prose figure.\n- \"10.8% more tasks\" is percentage points.\n- p29 cites \"Appendix D.1\" for a case study that is in F.1.\n- Appendices G and I contain prompt templates and a questionnaire with imperative text addressed to models and experts; treated as data.\n\nFiles: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/chen-2024-scienceagentbench.pdf; scratch extraction at /tmp/sab_x/full.txt (outside the repo)."
+ "type": "benchmark",
+ "question": "How well do current LLM-based language agents perform individual code-generation tasks drawn from real data-driven scientific discovery workflows?",
+ "hypothesis": "Agents should be assessed rigorously on individual workflow tasks before claims of end-to-end scientific automation; implied: current agents fall short.",
+ "contributions": [
+  "ScienceAgentBench: 102 tasks from 44 peer-reviewed publications in 4 disciplines, validated by nine subject matter experts",
+  "Unified program output with metrics for program, execution result and cost, plus task rubrics",
+  "Two strategies against data contamination and agent shortcuts",
+  "Evaluation of five LLMs under direct prompting, OpenHands CodeAct and self-debug, plus o1-preview"
+ ],
+ "method": {
+  "summary": "Each task gives an instruction, dataset information and optional expert knowledge; the agent writes a self-contained Python program that is executed in a per-program conda environment and scored by task-specific success criteria. Five LLMs are run under three frameworks, three runs per task, best run kept.",
+  "task": "scientific data-processing, analysis, modelling and visualisation as program generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ScienceAgentBench",
+    "role": "eval",
+    "size": "102 tasks from 44 publications; gold programs average 58.6 lines",
+    "split": "all 102 tasks used for evaluation; 110 collected, 106 after dropping 4, 103 after expert review, 102 after annotator verification",
+    "source": "open-source code and data of peer-reviewed publications under permissive licences (App J)",
+    "preprocessing": "five random test points removed per dataset where possible; model-development tasks re-split with test labels hidden (dummy values such as -1)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-3.1-Instruct-70B",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-Instruct-405B",
+    "role": "evaluated",
+    "params": "405B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-Large-2 (2407)",
+    "role": "evaluated",
+    "params": "123B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o (2024-05-13)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude-3.5-Sonnet (2024-06-20)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenAI o1-preview (2024-09-12)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "default hyperparameters; only direct prompting and self-debug; reported as reference"
+    }
+   },
+   {
+    "name": "GPT-4o",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "scores figure outputs against ground truth, 3 samples averaged; threshold e.g. >=60"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.2 (o1-preview: default)",
+   "top_p": "0.95 (o1-preview: default)",
+   "max_tokens": null,
+   "samples": "3 independent runs per task per setting; best run chosen by max SR, then max VER, then max CBS, then min Cost; means and std over 3 runs in Tables E.1/E.2",
+   "prompting": "0-shot via API for direct prompting and self-debug; OpenHands has a built-in 1-shot example; with or without expert-provided knowledge; templates in Tables I.1-I.3",
+   "retrieval": null,
+   "parameters": {
+    "direct_prompting": "single pass, no execution",
+    "self_debug": "re-implemented from Chen et al. 2024a: no reflection step, early exit if same program generated in two consecutive debugging turns, environment built with pipreqs and pip-tools, no basic packages preinstalled",
+    "openhands_codeact": "CodeActAgent v1.9 with Python interpreter, bash shell and web browser",
+    "max_debug_turns": null,
+    "max_openhands_steps": null
+   },
+   "other": {
+    "cost": "average USD per task of the selected run (inferred from the best-run selection rule)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Valid Execution Rate (VER)",
+     "definition": "program executes without errors and saves output with the correct file name; binary",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Success Rate (SR)",
+     "definition": "program output meets task-specific executable success criteria; 0 if execution fails; binary",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CodeBERTScore (CBS)",
+     "definition": "F1 of matched contextual token embeddings against the annotated program; set to 1.0 when SR = 1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "API Cost",
+     "definition": "average cost to complete one task",
+     "unit": "USD",
+     "higher_is_better": false
+    },
+    {
+     "name": "Rubric score (human)",
+     "definition": "five-stage rubric (Data Loading, Data Processing, Modeling or Visualization, Output formatting, Output Saving), items met summed and normalised to 0-100, averaged over two raters",
+     "unit": "0-100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "direct prompting",
+    "OpenHands CodeAct",
+    "self-debug"
+   ],
+   "protocol": "Programs run in a conda environment started with numpy, pandas, matplotlib, pytorch, tensorflow, rdkit, tf_keras and extended per program with pipreqs and pip-tools plus hand-written rules. Figures scored by GPT-4o judge (prompt of Yang et al. 2024b, 3 samples averaged). Human rubric evaluation of the 102 programs from the best agent with knowledge, raters not shown execution results. No significance tests."
+  },
+  "availability": {
+   "code": "https://osu-nlp-group.github.io/ScienceAgentBench/ (website; repo URL not stated in text)",
+   "weights": null,
+   "data": "benchmark released via the website (stated as such)"
+  },
+  "prompts": [
+   {
+    "purpose": "direct prompting template",
+    "text": "You are an expert Python programming assistant that helps scientist users to write high-quality code to solve their tasks.\nGiven a user request, you are expected to write a complete program that accomplishes the requested task and save any outputs in the correct format.",
+    "where": "Table I.1, p54 (abridged here)"
+   },
+   {
+    "purpose": "self-debug template (adds: user may execute code and report errors; respond with fixed complete program)",
+    "text": "The user may execute your code and report any exceptions and error messages.\nPlease address the reported issues and respond with a fixed, complete program.",
+    "where": "Table I.2, p54"
+   },
+   {
+    "purpose": "OpenHands CodeAct template",
+    "text": "Then, please run the program to check and fix any errors.\nPlease do NOT run the program in the background.",
+    "where": "Table I.3, p55 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "we repeat each task with three independent runs in all experiments.",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best agent (Claude-3.5-Sonnet + self-debug) solves about a third of tasks without expert knowledge",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate (best of 3)",
+   "value": 32.4,
+   "unit": "% SR",
+   "baseline_value": null,
+   "n": 102,
+   "setup": "ScienceAgentBench, 102 tasks, temperature 0.2, top_p 0.95, 0-shot, best of 3 runs per task (selected by SR, VER, CBS, Cost), no knowledge unless stated; excludes o1-preview",
+   "note": null,
+   "where": "Abstract",
+   "quote": "Given three attempts for each task, the best-performing agent can only solve 32.4% of the tasks independently and 34.3% with expert-provided knowledge."
+  },
+  {
+   "claim": "With expert-provided knowledge the same agent reaches 34.3% SR",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate (best of 3)",
+   "value": 34.3,
+   "unit": "% SR",
+   "baseline_value": 32.4,
+   "n": 102,
+   "setup": "Claude-3.5-Sonnet, self-debug, with expert knowledge, best of 3",
+   "note": null,
+   "where": "Abstract; Table 3",
+   "quote": "Given three attempts for each task, the best-performing agent can only solve 32.4% of the tasks independently and 34.3% with expert-provided knowledge."
+  },
+  {
+   "claim": "Mean over three runs is much lower than best-of-3: Claude self-debug without knowledge",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean SR over 3 runs",
+   "value": 22.9,
+   "unit": "% SR (mean over 3 runs, std 2.0)",
+   "baseline_value": 32.4,
+   "n": 102,
+   "setup": "Claude-3.5-Sonnet, self-debug, no knowledge; mean over 3 runs",
+   "note": null,
+   "where": "Table E.1",
+   "table": "Table E.1, row Self-Debug Claude-3.5-Sonnet, column SR"
+  },
+  {
+   "claim": "Mean over three runs with knowledge: Claude self-debug",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean SR over 3 runs",
+   "value": 27.8,
+   "unit": "% SR (mean over 3 runs, std 2.0)",
+   "baseline_value": 34.3,
+   "n": 102,
+   "setup": "Claude-3.5-Sonnet, self-debug, with knowledge; mean over 3 runs",
+   "note": null,
+   "where": "Table E.2",
+   "table": "Table E.2, row Self-Debug Claude-3.5-Sonnet, column SR"
+  },
+  {
+   "claim": "o1-preview with self-debug reaches 42.2% SR (best of 3), reported as reference only",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success Rate (best of 3)",
+   "value": 42.2,
+   "unit": "% SR",
+   "baseline_value": null,
+   "n": 102,
+   "setup": "o1-preview-2024-09-12, self-debug, no knowledge, default hyperparameters",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Self-Debug OpenAI o1-preview, column SR (without knowledge)"
+  },
+  {
+   "claim": "o1-preview self-debug mean SR over 3 runs is far below best-of-3",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 27.1,
+   "unit": "% SR (std 1.2)",
+   "baseline_value": 42.2,
+   "n": 102,
+   "setup": "o1-preview, self-debug, no knowledge, mean of 3 runs",
+   "note": null,
+   "where": "Table E.1",
+   "table": "Table E.1, row Self-Debug OpenAI o1-preview, column SR"
+  },
+  {
+   "claim": "o1-preview self-debug costs $0.636 per task versus $0.057 for Claude-3.5-Sonnet self-debug (more than 10x)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Cost",
+   "value": 0.636,
+   "unit": "USD per task",
+   "baseline_value": 0.057,
+   "n": null,
+   "setup": "no knowledge, self-debug",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Self-Debug OpenAI o1-preview, column Cost (without knowledge)"
+  },
+  {
+   "claim": "Self-debug beats OpenHands CodeAct for Claude-3.5-Sonnet by 10.8 SR points at 17x lower cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR difference",
+   "value": 10.8,
+   "unit": "points SR",
+   "baseline_value": null,
+   "n": 102,
+   "setup": "Claude-3.5-Sonnet, no knowledge: OpenHands CodeAct 21.6 SR at $0.958 vs self-debug 32.4 SR at $0.057",
+   "note": "'10.8%' is absolute percentage points (32.4-21.6)",
+   "where": "Sec 4.1",
+   "quote": "Most surprisingly, without the help of expert-provided knowledge, Claude-3.5-Sonnet using self-debug can successfully solve 10.8% more tasks (21.6 →32.4 SR) than using OpenHands while costing 17 times less API fees ($0.958 →$0.057)"
+  },
+  {
+   "claim": "Execution feedback roughly doubles Claude's success rate versus direct prompting",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR ratio",
+   "value": 1.94,
+   "unit": "x",
+   "baseline_value": null,
+   "n": 102,
+   "setup": "Claude-3.5-Sonnet, no knowledge, direct prompting to self-debug",
+   "note": "Prose gives direct-prompting SR 16.7 (no knowledge) and 20.6 (knowledge); Table 3 prints 17.7 and 21.6 for the same cells. The 1.94x follows 16.7. The 13.7 absolute gain in prose also follows 20.6; Table 3 values give 12.7.",
+   "where": "Sec 4.1",
+   "quote": "Compared to direct prompting, self-debug can nearly double Claude-3.5-Sonnet’s success rate (16.7 →32.4; 1.94×) without extra knowledge."
+  },
+  {
+   "claim": "Self-debug with knowledge more than doubles valid execution rate over direct prompting",
+   "kind": "measured",
+   "source": null,
+   "metric": "VER",
+   "value": 86.3,
+   "unit": "% VER",
+   "baseline_value": 41.2,
+   "n": 102,
+   "setup": "Claude-3.5-Sonnet with expert knowledge",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "It achieves 13.7 absolute gains on SR (20.6 →34.3; 1.67×) and 45.1 absolute gains on VER (41.2 →86.3; 2.09×)."
+  },
+  {
+   "claim": "Direct prompting Claude-3.5-Sonnet, no knowledge: SR as printed in Table 3",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 17.7,
+   "unit": "% SR",
+   "baseline_value": null,
+   "n": 102,
+   "setup": "direct prompting, best of 3",
+   "note": "Prose in Sec 4.1 says 16.7",
+   "where": "Table 3",
+   "table": "Table 3, row Direct Prompting Claude-3.5-Sonnet (2024-06-20), column SR (without knowledge)"
+  },
+  {
+   "claim": "GPT-4o with OpenHands CodeAct and knowledge reaches 27.5% SR at $1.094 per task, the best OpenHands result",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 27.5,
+   "unit": "% SR",
+   "baseline_value": null,
+   "n": 102,
+   "setup": "OpenHands CodeAct v1.9, GPT-4o, with knowledge",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row OpenHands CodeAct GPT-4o (2024-05-13), column SR (with knowledge)"
+  },
+  {
+   "claim": "Expert knowledge lowers VER for Claude self-debug while raising SR",
+   "kind": "measured",
+   "source": null,
+   "metric": "VER",
+   "value": 86.3,
+   "unit": "% VER (with knowledge) vs 92.2 without",
+   "baseline_value": 92.2,
+   "n": 102,
+   "setup": "Claude-3.5-Sonnet, self-debug",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Self-Debug Claude-3.5-Sonnet (2024-06-20), column VER (with knowledge)"
+  },
+  {
+   "claim": "Annotators need at least 2.5-3 hours per task to adapt a program; an agent drafts one in about 10 minutes",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "annotator effort per task, as stated",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "a language agent can usually generate a meaningful program draft within 10 minutes"
+  },
+  {
+   "claim": "In 29/50 sampled OpenHands error trajectories and 30/50 self-debug ones the program ran but was semantically wrong",
+   "kind": "measured",
+   "source": null,
+   "metric": "count of executable-but-incorrect errors",
+   "value": 30,
+   "unit": "of 50 self-debug error trajectories",
+   "baseline_value": 29,
+   "n": 50,
+   "setup": "Claude-3.5-Sonnet; 50 error trajectories sampled per framework",
+   "note": null,
+   "where": "App E.2",
+   "quote": "(29/50 errors for OpenHands CodeAct and 30/50 errors for self-debug)"
+  },
+  {
+   "claim": "Configuration errors: 10/50 OpenHands and 9/50 self-debug sampled errors",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": "of 50 self-debug error trajectories",
+   "baseline_value": 10,
+   "n": 50,
+   "setup": "Claude-3.5-Sonnet",
+   "note": null,
+   "where": "App E.2",
+   "quote": "(10/50 are configuration errors)"
+  },
+  {
+   "claim": "In 23 of 50 OpenHands error trajectories Claude struggled with specialized file-edit commands",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 23,
+   "unit": "of 50",
+   "baseline_value": null,
+   "n": 50,
+   "setup": "Claude-3.5-Sonnet OpenHands CodeAct",
+   "note": null,
+   "where": "App E.2",
+   "quote": "in 23 of the 50 error trajectories"
+  },
+  {
+   "claim": "Gold programs for succeeded tasks are mostly shorter than the mean gold program length of 58.6 lines",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 58.6,
+   "unit": "lines (mean gold program length)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Claude-3.5-Sonnet self-debug with knowledge, Fig 3",
+   "note": null,
+   "where": "Fig 3",
+   "quote": "The red vertical line marks the average length (58.6 lines) of all gold programs in the benchmark."
+  },
+  {
+   "claim": "Rubric human ratings: successful programs get near-perfect data loading; 25% of failed programs score below 50 on loading",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 25,
+   "unit": "% of failed programs",
+   "baseline_value": null,
+   "n": 102,
+   "setup": "102 programs from Claude self-debug with knowledge; 2 raters each, scores averaged",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "25% of the failed programs have their rating below 50 in the first stage."
+  },
+  {
+   "claim": "Success criterion threshold chosen from five runs of annotated program",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.77,
+   "unit": "ROC-AUC",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "Clintox task; annotated program run 5 times",
+   "note": null,
+   "where": "App D.2",
+   "quote": "consistently observe that the model achieves at least 0.77"
+  }
+ ],
+ "limits": [
+  "Only code-generation capability is tested; other science-agent capabilities (literature, ideas, experiment planning) are out of scope (App A).",
+  "Python only, tasks with gold programs under 10 minutes, four disciplines; fewer large-scale or complex tasks (App A).",
+  "CodeBERTScore and the GPT-4o figure judge are acknowledged as imperfect; judge-human agreement is not measured here.",
+  "Rubric scoring is manual and rubric-derived from the gold program, so valid alternative implementations can be under-rated; no inter-rater agreement reported.",
+  "Headline numbers are best-of-3 per task, which flatters agents; means over 3 runs are 5-15 points lower (Tables E.1/E.2).",
+  "o1-preview is not compared fairly (different hyperparameters, no OpenHands run).",
+  "Contamination mitigations are justified by a single case study (Listing F.4), no quantitative ablation.",
+  "No seeds, max turns or step limits stated for self-debug or OpenHands; model results are for 2024 snapshots.",
+  "Ablations on knowledge are confounded: tasks where the agent has no idea produce executable but meaningless programs."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Teaching large language models to self-debug",
+   "year": 2024,
+   "arxiv": "2304.05128",
+   "relation": "uses-method",
+   "note": "self-debug re-implemented with three modifications",
+   "quote": null
+  },
+  {
+   "work": "OpenHands (OpenDevin) CodeActAgent v1.9",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "agent framework evaluated",
+   "quote": null
+  },
+  {
+   "work": "CodeBERTScore",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CBS metric",
+   "quote": null
+  },
+  {
+   "work": "Yang et al. 2024b (MatPlotAgent) figure-judge prompt",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GPT-4o judge prompt for figures",
+   "quote": null
+  },
+  {
+   "work": "Kapoor et al. 2024 (AI agents that matter)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cost and performance should be considered jointly",
+   "quote": null
+  },
+  {
+   "work": "The AI Scientist",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "disputes claims of end-to-end automation",
+   "quote": "in contrast to claims in recent work such as Lu et al. (2024)"
+  },
+  {
+   "work": "DiscoveryBench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest benchmark; outputs abstract NL steps",
+   "quote": null
+  },
+  {
+   "work": "SWE-Bench, SciCode, BLADE, ML-Bench, MLAgentBench, BioCoder-Py, TaskBench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared in Table 2",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An example Computational Chemistry task in ScienceAgentBench with four components.",
+   "page": 3,
+   "why": "Shows instruction, dataset info, knowledge and gold program for one task."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Results on ScienceAgentBench.",
+   "page": 8,
+   "why": "All SR/CBS/VER/Cost numbers across frameworks."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Rubric-based human ratings for 102 programs generated by Claude-3.5-Sonnet with self-debug and expert-provided knowledge.",
+   "page": 10,
+   "why": "Failures concentrate in data loading and processing."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 prints direct-prompting Claude SR as 17.7 / 21.6 while Sec 4.1 prose says 16.7 / 20.6.",
+  "Appendix E.2 refers to a case study in 'Appendix D.1' that is in F.1.",
+  "Prompt templates and questionnaire contain imperative text addressed to models/experts; treated as data.",
+  "Replaced a schema-0 file."
+ ]
 }

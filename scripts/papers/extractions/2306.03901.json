@@ -1,19 +1,351 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2306.03901",
  "pdf": "generative-ai/03-agentic-foundations/sources/hu-2023-chatdb.pdf",
  "bib": {
   "title": "ChatDB: Augmenting LLMs with Databases as Their Symbolic Memory",
-  "first_author": "Chenxu Hu",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Chenxu Hu",
+   "Jie Fu",
+   "Chenzhuang Du",
+   "Simian Luo",
+   "Junbo Zhao",
+   "Hang Zhao"
+  ],
+  "first_author": "Hu",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2306.03901",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 50191,
+  "chars_total": 50191,
+  "engine": "pymupdf",
+  "skipped": "References skimmed for lineage only"
  },
- "legacy_report": "SOURCE: \"ChatDB: Augmenting LLMs with Databases as Their Symbolic Memory\", Chenxu Hu, Jie Fu, Chenzhuang Du, Simian Luo, Junbo Zhao, Hang Zhao. arXiv:2306.03901v2 [cs.AI], 7 Jun 2023. It is a preprint, with no venue printed.\n\nCOVERAGE: about 47,500 of 51,702 chars read, which is the whole body (abstract, sections 1-5, Table 1, Table 2, Figures 1-5, Algorithm 1). The unread tail is the reference list (skimmed to the \"Izacard\" entry; the rest was not read). The paper has no appendices and no limitations section. The note `03-memory-as-an-operating-system.md` has no existing mention of ChatDB (grep found none), so this would be a new citation.\n\nCLAIMS (ranked)\n- ChatDB (GPT-3.5 Turbo plus MySQL) scored 82% against 22% for the same model with the records in its prompt.\n  number: 41/50 vs 11/50; easy 13/15 vs 10/15; hard 28/35 vs 1/35\n  setup: Synthetic \"Fruit Shop Dataset\" with 70 chronological records of about 3.3k tokens. There are 50 questions: 15 easy and 35 hard. Both systems use temperature 0, and each question is answered independently. The baseline is ChatGPT (GPT-3.5 Turbo) with a 4096-token maximum, and the records go in the prompt. There is a single run, with no variance reported and no vector-RAG baseline.\n  quote: \"ChatGPT 10/15 1/35 11/50 22% ... ChatDB (ours) 13/15 28/35 41/50 82%\"\n  where: Table 2, p.10 (about char 41,500)\n- The memory design is an LLM controller that reads and writes an SQL database. The paper's \"chain-of-memory\" turns a request into a sequence of SQL steps, and later steps are rewritten using earlier results.\n  number: none\n  setup: Three stages: input processing, chain-of-memory, response summary (Algorithm 1). If memory is not needed, the LLM replies directly.\n  quote: \"The chain-of-memory approach transforms user input into a series of intermediate memory operation steps that lead to final results.\"\n  where: Sec 1, p.2; Sec 3.2-3.3; Algorithm 1, p.5\n- Vector-based memory is argued to fail on multi-hop reasoning because it is unstructured and relies on similarity. This is asserted, not measured.\n  number: none\n  quote: \"(a) They do not store historical information in a structured form; (b) Their manipulation of the information stored in memory is not symbolic, as they all rely on some vector similarity calculations, which can be inaccurate, thus leading to the accumulation of errors.\"\n  where: Sec 1, p.2\n- Table 1 compares three memory types. The paper's rows are listed here, though these are the authors' qualitative judgements, not measurements.\n  number: none\n  setup: ChatDB is symbolic, with insert/delete/update/select, structured storage, high interpretability and state tracking. Auto-GPT is prompt-based, with insert/select only, no state tracking, and \"Normal\" interpretability. RMT is matrix-based, with read/write, \"Low\" interpretability, and state tracking.\n  quote: \"The prompt-based memory primarily supports insertion and selection operations but lacks complete support for updates and deletions.\"\n  where: Sec 3.4, p.5\n- Prompt-based memory knows history but not current state, whereas the database keeps current state and allows rollback.\n  number: none\n  quote: \"the prompt-based memory approach simply stores the historical context and only knows what has happened in the past without a clear understanding of the current state.\" and \"ChatDB's memory allows for easy rollback to any desired timestamp\"\n  where: Sec 3.4 item 6, p.6\n- The baseline failed through arithmetic errors and missed or wrongly included records. Its answers were also cut off at the token limit. ChatDB handed the arithmetic to SQL.\n  number: 278 kg total weight over 28 sales (average 9.93), against ChatGPT's 127 kg over 18 sales\n  setup: Fig 5 examples (total revenue, best day, average weight per sale). The three examples need one, two and three chain-of-memory steps. Returns are handled by DELETE and UPDATE (Fig 3c).\n  quote: \"ChatGPT often exhibits errors in calculating the total price of each sale transaction\" and \"ChatDB delegates many calculational tasks to the external database by executing SQL statements, ensuring the accuracy of each step and preventing error accumulation.\"\n  where: Sec 4.2, pp.8-10\n- The authors claim performance does not depend on record count. This is theory only and untested.\n  number: none\n  quote: \"Therefore, in theory, ChatDB can handle an infinite number of historical records without sacrificing performance.\"\n  where: Sec 4.1.3, p.8\n\nLIMITS\n- The only evidence is one synthetic dataset of 50 questions, with a single run and no confidence intervals.\n- The baseline is full-context GPT-3.5 doing arithmetic over a 3.3k-token prompt. It is not RAG, MemGPT or any other memory system. The authors deliberately kept the data under the context limit and argue it extends to larger data: \"if ChatDB outperforms ChatGPT when the dataset is small, it indicates that ChatDB is also superior to memory-augmented ChatGPT when the dataset is large\". This is an untested inference.\n- The paper concedes that the schema must be created, \"manually or using LLMs\", and says nothing about schema quality.\n- It reports no SQL error rate, even though it claims \"each step of the database operation in ChatDB is symbolic and free from errors\". Only the execution is symbolic. The LLM-generated SQL can still be wrong, and 7 of 35 hard questions and 2 of 15 easy ones were missed.\n- It does not analyse the failures. There is no cost or latency, no multi-session or unstructured-fact memory, and no comparison against the Python or program-of-thought route.\n- Dated: GPT-3.5 Turbo with a 4k window, and Auto-GPT and Generative Agents as the prompt-memory exemplars.\n\nBUILDS ON\n- Chain-of-thought (Wei et al., 2022), described as \"Chain-of-memory (CoM) can be seen as a way to augment chain-of-thought\".\n- Retrieval-augmented in-context learning (Khattab et al., 2022).\n- Generative Agents (Park et al., 2023) and Auto-GPT, as the prompt-memory exemplars.\n- Recurrent Memory Transformer (Bulatov et al., 2022) and Neural Turing Machines (Graves et al., 2014), as the matrix-memory exemplars.\n- Toolformer (Schick et al., 2023), for the tool-use framing.\n- Program of thoughts (Chen et al., 2022) and BINDER (Cheng et al., 2022).\n- SQL-PaLM (Sun et al., 2023).\n- Schuurmans (2023), cited for the claim that LLMs with memory are computationally universal.\n\nCODE\nAlgorithm 1, p.5, in the paper's pseudocode:\n  \"if need manipulate memory to respond to userInput then memOps = LLMgetSteps(userInput) ... for each memOp in memOps: if need update memOp based on sqlResults then newMemOp = LLMupdateOperation(memOp, sqlResults) ... sqlResult = executeOperation(newMemOp, dataBase) ... reply = LLMsummary(userInput, newMemOps, sqlResults)\"\nFig 3(c), p.7: a return handled as SELECT sale_id, then SELECT sale_items, then UPDATE fruits stock, then DELETE from sale_items and sales. Its \"replace <sale_id> with the results from the previous queries\" steps show dependent multi-step writes.\n\nFIGURES\n- Fig 1, p.1: the controller LLM with symbolic (database) and non-symbolic memory, plus read and write operations.\n- Fig 2, p.4: the three-stage flow, with an example of returning goods through SELECT, SELECT and DELETE.\n- Fig 3, p.7: SQL for purchase, sale, return and price change.\n- Fig 5, p.9: side-by-side failures of ChatGPT against ChatDB.\n- Table 2, p.10: the headline result.\n\nPROBLEMS: Figure text is garbled in the extraction, and the Fig 2 content is repeated. Titles are split (\"CHATDB: A UGMENTING\"). No embedded instructions were found. I did not run the figures script. I did not read the note's content beyond the grep."
+ "type": "system",
+ "question": "Can a database manipulated by an LLM through SQL serve as symbolic memory that supports multi-hop reasoning and avoids error accumulation better than prompt-held history?",
+ "hypothesis": "Symbolic memory (SQL database) with chain-of-memory improves multi-hop reasoning and precise calculation over conventional neural/prompt memory.",
+ "contributions": [
+  "Propose augmenting LLMs with databases as external symbolic memory, enabling symbolic operations via SQL.",
+  "Chain-of-memory approach converts user input into multi-step intermediate memory operations.",
+  "Experiments show symbolic memory improves multi-hop reasoning and prevents error accumulation, significantly outperforming ChatGPT on a synthetic dataset."
+ ],
+ "method": {
+  "summary": "An LLM controller (GPT-3.5 Turbo) turns each record or question into a chain of SQL statements run on MySQL; later steps may be rewritten from earlier SQL results (chain-of-memory), then the LLM summarises a reply. Compared with GPT-3.5 Turbo given all 70 records in its prompt on a 50-question synthetic fruit-shop set.",
+  "task": "Record keeping and question answering over a synthetic fruit shop history (multi-hop reasoning, arithmetic)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Fruit Shop Dataset (synthetic)",
+    "role": "eval",
+    "size": "70 records, approximately 3.3k tokens; 50 questions (15 easy, 35 hard) with annotated standard answers",
+    "split": "no split; all 50 questions used",
+    "source": "Synthesised by the authors; records cover purchasing, selling, changing prices, goods returns, all valid (no negative inventory), in chronological order",
+    "preprocessing": "ChatDB: records processed one by one into the database; database schema generated manually or with LLMs. Baseline: records placed in the prompt"
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT (GPT-3.5 Turbo) as ChatDB controller",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": "0",
+     "memory": "MySQL database"
+    }
+   },
+   {
+    "name": "ChatGPT (GPT-3.5 Turbo) baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "maximum token length of 4096",
+    "other": {
+     "temperature": "0"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0 (both ChatDB and baseline)",
+   "top_p": null,
+   "max_tokens": "4096 (baseline maximum token length)",
+   "samples": "each question independently answered by each model; number of runs and seeds not stated",
+   "prompting": "ChatDB: in-context exemplars of several chain-of-memory step sequences plus chain-of-thought prompting (exemplars not printed). Baseline: single prompt with records and question (Fig 4).",
+   "retrieval": "None for baseline (full records in prompt); ChatDB reads via SQL SELECT",
+   "parameters": {
+    "chain_of_memory": "LLM decides per step whether to update the next SQL operation based on earlier SQL results (Algorithm 1)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "Fraction of the 50 questions answered correctly against annotated standard answers, reported for easy (15), hard (35) and all (50); who or what judged correctness is not stated",
+     "unit": "correct/total and %",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ChatGPT (GPT-3.5 Turbo) with all records in prompt"
+   ],
+   "protocol": "Single evaluation, no seeds, no significance test, no stated grader."
+  },
+  "availability": {
+   "code": "Project website https://chatdatabase.github.io/ (code availability not stated in text)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Baseline ChatGPT question answering on Fruit Shop Dataset",
+    "text": "Suppose you are a fruit shop manager and good at analyzing history records.\nThe fruit shop newly opened on January 1, 2023. Given the history records for the fruit shop in January 2023, which include customer names, transaction dates, fruit prices, quantities purchased, and whether the items were returned, you need to answer some questions.\nBy default, exclude the sales transactions that have been returned when performing calculations.\nHere are the historical records of the fruit shop, which are arranged in chronological order based on the occurrence time, surrounded by triple backticks:\n```\n{records}\n```\nBased on the history records, answer the question about the fruit shop:\n{question}",
+    "where": "Figure 4, p.8"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval.baselines",
+    "quote": "we simply treat them as part of the prompt",
+    "where": "4.1.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ChatDB answered 41 of 50 questions correctly (82%) against 11 of 50 (22%) for ChatGPT with the records in its prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy, all questions",
+   "value": 82,
+   "unit": "%",
+   "baseline_value": 22,
+   "n": 50,
+   "setup": "Fruit Shop Dataset, 70 records ~3.3k tokens, 50 questions, GPT-3.5 Turbo temperature 0 both systems, MySQL, single evaluation",
+   "quote": null,
+   "table": "Table 2, row ChatDB (ours), columns All 41/50 and Accuracy 82%; row ChatGPT 11/50, 22%",
+   "note": null,
+   "where": "Table 2, p.10"
+  },
+  {
+   "claim": "On the 35 hard (multi-hop) questions ChatDB got 28 right against 1 for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct on hard questions",
+   "value": 28,
+   "unit": "of 35",
+   "baseline_value": 1,
+   "n": 35,
+   "setup": "Same as Table 2",
+   "quote": null,
+   "table": "Table 2, row ChatDB (ours), column Hard 28/35; row ChatGPT 1/35",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On the 15 easy questions ChatDB got 13 right against 10 for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct on easy questions",
+   "value": 13,
+   "unit": "of 15",
+   "baseline_value": 10,
+   "n": 15,
+   "setup": "Same as Table 2",
+   "quote": null,
+   "table": "Table 2, row ChatDB (ours), column Easy 13/15; row ChatGPT 10/15",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "The dataset was deliberately kept within ChatGPT's token limit so the baseline needs no memory; authors infer ChatDB would beat memory-augmented ChatGPT at larger scale (argued, not measured).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 4.1.2",
+   "quote": "if ChatDB outperforms ChatGPT when the dataset is small, it indicates that ChatDB is also superior to memory-augmented ChatGPT when the dataset is large.",
+   "table": null,
+   "note": "No retrieval-based baseline was run.",
+   "where": "4.1.2, p.8"
+  },
+  {
+   "claim": "Authors assert ChatDB's performance is unaffected by dataset length and in theory handles unlimited records (no experiment).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 4.1.3",
+   "quote": "in theory, ChatDB can handle an infinite number of historical records without sacrificing performance.",
+   "table": null,
+   "note": "Not tested.",
+   "where": "4.1.3"
+  },
+  {
+   "claim": "Qualitative: ChatGPT errs in per-sale arithmetic, misses valid transactions, hits the max token length; ChatDB delegates arithmetic to SQL.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 3,
+   "setup": "Figure 5, three hand-picked example questions requiring one, two, three chain-of-memory steps",
+   "quote": "While ChatGPT fails to answer any of the questions correctly, ChatDB successfully answers all of them.",
+   "table": null,
+   "note": null,
+   "where": "Fig 5, p.9"
+  }
+ ],
+ "limits": [
+  "Single synthetic dataset built by the authors, 50 questions, one evaluation with no seeds, variance or significance test.",
+  "Only baseline is ChatGPT with full records in the prompt; no vector-retrieval memory, MemGPT or other memory baselines run.",
+  "Claim that vector-similarity memory is error-prone and that ChatDB scales to long histories is argued, not measured.",
+  "Who graded answers is not stated; ChatDB's exemplar prompts and database schema are not printed.",
+  "Paper has no limitations section."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "chain-of-memory (CoM)",
+   "definition": "transforms user input into a series of intermediate memory operation steps that lead to final results",
+   "where": "1 Introduction"
+  },
+  {
+   "term": "symbolic memory",
+   "definition": "memory stored in a database and manipulated by executing SQL statements generated by an LLM",
+   "where": "1 Introduction"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "CoM seen as augmenting CoT with symbolic memory",
+   "quote": null
+  },
+  {
+   "work": "Demonstrate-search-predict (Khattab et al.)",
+   "year": 2022,
+   "arxiv": "2212.14024",
+   "relation": "related",
+   "note": "Prompt-based retrieval memory contrasted",
+   "quote": null
+  },
+  {
+   "work": "Recurrent Memory Transformer (Bulatov et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Matrix-based memory contrasted in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Generative Agents (Park et al.)",
+   "year": 2023,
+   "arxiv": "2304.03442",
+   "relation": "related",
+   "note": "Prompt-based memory",
+   "quote": null
+  },
+  {
+   "work": "Auto-GPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prompt-based memory in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Toolformer (Schick et al.)",
+   "year": 2023,
+   "arxiv": "2302.04761",
+   "relation": "related",
+   "note": "Tool-use view of ChatDB",
+   "quote": null
+  },
+  {
+   "work": "SQL-PaLM (Sun et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Text-to-SQL, differs in treating DB as memory",
+   "quote": null
+  },
+  {
+   "work": "GPT-3.5 Turbo (ChatGPT)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Controller and baseline",
+   "quote": null
+  },
+  {
+   "work": "Memory augmented LLMs are computationally universal (Schuurmans)",
+   "year": 2023,
+   "arxiv": "2301.04589",
+   "relation": "related",
+   "note": "Motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "ChatDB framework ... example of returning goods purchased on 2023-01-02 by a customer with phone number 823451.",
+   "page": 4,
+   "why": "Shows the chain of SQL steps with results feeding later steps"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The experimental results of answering questions in the Fruit Shop Dataset.",
+   "page": 10,
+   "why": "The only quantitative result"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Examples of ChatDB and ChatGPT answering questions.",
+   "page": 9,
+   "why": "Shows ChatGPT arithmetic failure modes"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p.5",
+   "snippet": "memOps = LLMgetSteps(userInput) ... newMemOp = LLMupdateOperation(memOp, sqlResults); sqlResult = executeOperation(newMemOp, dataBase); reply = LLMsummary(userInput, newMemOps, sqlResults)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Fig 2 and Fig 3/5 SQL tables is partly scrambled; no embedded instructions found.",
+  "Paper states no number of runs, seeds, grader, or exemplar prompts."
+ ]
 }

@@ -1,19 +1,689 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2501.07542",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/li-2025-imagine-while-reasoning-space.pdf",
  "bib": {
   "title": "Imagine while Reasoning in Space: Multimodal Visualization-of-Thought",
-  "first_author": "Chengzu Li",
-  "year": "2025",
-  "venue": "ICML 2025",
+  "authors": [
+   "Chengzu Li",
+   "Wenshan Wu",
+   "Huanyu Zhang",
+   "Yan Xia",
+   "Shaoguang Mao",
+   "Li Dong",
+   "Ivan Vulić",
+   "Furu Wei"
+  ],
+  "first_author": "Li",
+  "year": 2025,
+  "venue": "preprint",
   "arxiv": "2501.07542",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 81838,
+  "chars_total": 81838,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Imagine while Reasoning in Space: Multimodal Visualization-of-Thought\" (MVoT). Chengzu Li, Wenshan Wu, Huanyu Zhang, Yan Xia, Shaoguang Mao, Li Dong, Ivan Vulic, Furu Wei (Microsoft Research / Cambridge / CAS). arXiv:2501.07542v1, 13 Jan 2025. Preprint (the PDF shows no venue).\n\nCOVERAGE: All 27 of 27 pages, 81,991 of 81,991 chars. This covers the main text, limitation, references (skimmed), appendices A-D, tables 1-16 and the figure text. Figures were not rendered, and I did not run the captions script. Figure content comes from the extracted text only.\n\nCLAIMS (ranked)\n- claim: MVoT (the model writes an image after each verbal reasoning step, then conditions on it) is the paper's method. It reaches 92.95%, 95.14% and 85.60% on Maze, MiniBehavior and FrozenLake. It is the only fine-tuned variant that beats Direct on all three tasks.\n  number: 0.9295 / 0.9514 / 0.8560\n  setup: Anole-7B (built on Chameleon-7B), LoRA, 40 epochs, trained on the authors' own grid datasets. Metric is multiple-choice accuracy on held-out test sets of 1255, 1604 and 1664 items.\n  quote: \"MV oT demonstrates comparable performance on MAZE (92.95%) and MINI BEHAVIOR (95.14%), while achieving a higher accuracy of 85.60% on FROZEN LAKE compared to both Direct and CoT.\"\n  where: p.6; Table 2, p.7\n- claim: Text CoT does better than MVoT on the two easy tasks but collapses on FrozenLake, which has more entities and more visual detail.\n  number: CoT 0.9792 / 0.9812 / 0.6148 versus Direct 0.7788 on FrozenLake\n  setup: CoT is fine-tuned to write textual coordinates AND the environment layout. Same Anole-7B setup.\n  quote: \"CoT achieves over 95% accuracy on the MAZE and MINI BEHAVIOR by explicitly describing the environment layout and agent location with textual coordinates. However, it performs worse than the Direct baseline on FROZEN LAKE.\"\n  where: p.6; Table 2\n- claim: Most CoT errors on FrozenLake come from wrong textual coordinates for the holes. CoT accuracy falls as the grid grows, while MVoT stays flat.\n  number: 90.80%; CoT 0.9401 at 3x3 down to 0.3911 at 6x6; MVoT 0.8623 / 0.8397 / 0.8377 / 0.8876 across sizes 3-6\n  setup: FrozenLake, grid sizes 3-6. Hole counts rise from about 4.7 to 9.6 as the grid grows (Table 7).\n  quote: \"Error analysis reveals that 90.80% of CoT's mistakes on FROZEN LAKE stem from inaccurate coordinate descriptions of holes in the environment.\"\n  where: p.6; Tables 7 and 15, pp.17 and 24\n- claim: CoT needs the textual layout caption. If it only tracks the agent coordinates, it falls below Direct on all three tasks.\n  number: CoT without layout 0.7023 / 0.6000 / 0.5974, against Direct 0.7171 / 0.7250 / 0.7788\n  setup: Anole-7B, same tasks.\n  quote: \"- w/o layout ✓ ✗ ✗ Text 0.7023 ↓ 0.6000 ↓ 0.5974 ↓\"\n  where: Table 2, p.7\n- claim: Token discrepancy loss L_D improves visualization quality and final accuracy. L_D is the sum over image tokens of the embedding-space distance (MSE between visual codebook embeddings) from the label token, weighted by the predicted probability. Total loss is L = L_C + L_D.\n  number: Maze accuracy 0.9295 with L_D versus 0.7468 without. MiniBehavior accuracy 0.9514 versus 0.7228. FrozenLake accuracy 0.8560 versus 0.7260. Maze V-Acc 0.9339 versus 0.6391. Maze V-Red 0.1010 versus 0.4931.\n  setup: MVoT recursive generation, Anole-7B. The visualization metrics were measured only for Maze and MiniBehavior because FrozenLake is hard to score automatically.\n  quote: \"We also witness a performance drop on FROZEN LAKE without token discrepancy loss from 0.8560 to 0.7260.\"\n  where: p.9; Table 3, p.9; Table 16\n- claim: Training on interleaved image-text data helps even when the loss ignores the image tokens. It still hurts on FrozenLake.\n  number: Interleaved 0.8678 / 0.8406 / 0.6460, which is over 10 points above Direct on Maze and MiniBehavior and below Direct on FrozenLake.\n  setup: Interleaved computes the loss on text tokens only. MVoT computes it on all tokens.\n  quote: \"the inclusion of interleaved visualizations during training, despite not contributing directly to the loss, improves performance on MAZE and MINI BEHAVIOR by over 10%.\"\n  where: p.7\n- claim: MVoT can act as a plug-in for GPT-4o. The visual thoughts come from the fine-tuned MVoT model and are handed to GPT-4o after it writes its verbal step.\n  number: GPT-4o zero-shot Direct 0.7100 / 0.4576 / 0.4976; zero-shot CoT 0.7386 / 0.4676 / 0.4664; with visual thought 0.8556 / 0.6440 / 0.8021\n  setup: GPT-4o 2024-07-01 on Azure, temperature 0. Visual thoughts are generated by Anole-7B MVoT.\n  quote: \"We witness an improvement in performance by over 15% accuracy across all the tasks as shown in Table 2.\"\n  where: p.8; Table 2\n- claim: MVoT and CoT fail on different items. Taking the better of the two on each item gives an upper bound near 100% on Maze and MiniBehavior and 92% on FrozenLake.\n  number: 0.9984 / 1.0000 / 0.9246\n  setup: Per-item oracle union of the two fine-tuned models' predictions. It is not an achievable system.\n  quote: \"the upper-bound performance reaches nearly 100% accuracy on Maze and MINI BEHAVIOR, and 92% accuracy on FROZEN LAKE.\"\n  where: p.9; Table 4\n- claim: The text-token embeddings and the image-codebook embeddings in autoregressive MLLMs are poorly aligned. This is the stated reason for L_D.\n  number: about 1 of the top-10 and about 20% of the top-50 similar tokens overlap\n  setup: Chameleon, LVM and LlamaGen embeddings, compared by cosine-similarity top-k overlap (Figure 6).\n  quote: \"on average, only one token overlaps among the top 10 similar tokens, and approximately 20% of tokens overlap among the top 50 similar tokens.\"\n  where: p.10\n- claim: With L_D, about 95% of consecutive visualizations are correct during recursive generation.\n  number: \"95%\" (Maze V-Ratio 0.9449, MiniBehavior 0.9618)\n  setup: Maze and MiniBehavior only.\n  quote: \"MV oT withLD achieves an average of 95% correct and consecutive visualizations during reasoning.\"\n  where: p.9\n- claim: Headline abstract claim: MVoT beats CoT \"by over 20%\" in the hard setting. This refers to FrozenLake (0.8560 vs 0.6148, about 24 points).\n  number: over 20%\n  setup: FrozenLake only. CoT is ahead on the other two tasks.\n  quote: \"outperforming traditional CoT by over 20% in challenging scenarios.\"\n  where: p.3\n\nTraining and data details\n- Training data is interleaved text and image targets. During training the next image is conditioned on the golden previous image (\"image editing\"). At inference it is conditioned on the model's own generated images (recursive).\n- Input augmentation: tokenize and detokenize the input image a random 0-10 times to reduce error from image reconstruction (p.18).\n- Datasets (Table 1): Maze has 5007 train and 1255 test, grid 3-6, 9.11 actions on average. MiniBehavior has 6400 train and 1604 test, grid 5-8 in Table 1 but 7-10 in the appendix (Table 6), 7 action types. FrozenLake has 6846 train and 1664 test, grid 3-6, 3 answer choices.\n- Hyperparameters (Table 8): LR 2e-4, 40 epochs, seed 42. 8 GPUs for Direct and CoT, 32 GPUs for Interleaved and MVoT, all on MI300X.\n\nLIMITS\n- Authors concede (Limitation section): \"the generated visualizations often attempt to reconstruct task-irrelevant details, such as the background patterns in FROZEN LAKE, while overlooking the intended alterations\". Their suggested fix is guidance techniques from diffusion (Sadat et al. 2024).\n- Authors concede: \"explicitly generating visualizations introduces computational overhead during inference\". They suggest compact image representations with fewer tokens. The paper reports no latency or token cost.\n- Image detail blurs as patterns get more complex. Tokenize/detokenize reconstruction itself loses fine detail.\n- Only three synthetic grid worlds, one 7B backbone, a single seed (42), and no confidence intervals. The datasets are the authors' own, and the MiniBehavior grid-size range is stated inconsistently (Table 1 vs Table 6/Appendix B).\n- The FrozenLake visualization metrics were not computed. The robustness claim for FrozenLake therefore rests on task accuracy alone.\n- The baselines are weak or biased in places. CoT is given hand-built textual layout captions. GPT-4o is zero-shot and not fine-tuned, so GPT-4o versus Anole is not like-for-like. The GPT-4o+MVoT result is a plug-in with the fine-tuned Anole as the visual generator.\n- CoT beats MVoT on Maze (0.9792 vs 0.9295) and MiniBehavior (0.9812 vs 0.9514). Only FrozenLake favours MVoT, and \"robust\" is the authors' framing.\n- The \"Direct\" baseline overfits (about 70%).\n- Dated: the models are Chameleon/Anole, early-fusion discrete-token autoregressive models. The paper names Gemini 2, Transfusion and LatentLM as native generators. It says MVoT could extend to other architectures, but this was not tested.\n\nBUILDS ON\n- Visualization-of-Thought (VoT), Wu et al. 2024 (the same lead author), which used textual \"visualizations\". Chain-of-Thought, Wei et al. 2022.\n- Chameleon (Chameleon Team 2024) and Anole (Chern et al. 2024) as the backbone. Image tokenizer from Esser, Rombach and Ommer 2021 (Taming Transformers).\n- ReAct (Yao et al. 2023), MM-ReAct (Yang et al. 2023) and Visual Sketchpad (Hu et al. 2024), which are the tool-based visual-thought baselines it argues against.\n- Tasks and datasets: maze-dataset (Ivanitskiy et al. 2023), Mini-BEHAVIOR (Jin et al. 2023), FrozenLake via Gym (Brockman 2016) and VSP (Wu et al. 2024, WZS+24).\n- Motivation: SAT (Ray et al. 2024), TopViewRS (Li et al. 2024), dual-coding theory (Paivio 1991), working memory (Baddeley 1992).\n- LoRA (Hu et al. 2021). L_D relates to JetFormer (Tschannen et al. 2024), which noted similar embedding-alignment limits.\n\nCODE: No code is given in the paper. The core formulas are:\n- Eq. 4: L_D = sum over i=1..n of S_{t_vis_i} · P(t_i), where S is the MSE distance row in the visual embedding space.\n- Eq. 5: L = L_C + L_D.\n- Eq. 1-2: v_i ~ P(v_i | z_1, v_1, ..., v_{i-1}, z_i); z_{i+1} ~ P(z_{i+1} | x, z_1, v_1, ..., z_i, v_i).\n- The GPT-4o+MVoT prompt template is in Table 14, p.23. The model simulates one action per turn as \"Reasoning i / Action i\", waits for the \"Observation i: <VISUALIZATION>\", and ends with \"The answer is X\".\n\nFIGURES (captions only, not viewed)\n- Fig 1 (p.1): Direct vs CoT vs MVoT interleaved text and image reasoning. This is the quickest overview.\n- Fig 2 (p.3): worked MVoT traces for Maze, MiniBehavior and FrozenLake.\n- Fig 3 (p.4): training diagram of token discrepancy loss L_D.\n- Fig 4 (p.8): FrozenLake visualizations with vs without L_D, and reconstruction blur.\n- Fig 5 (p.9): V-Acc and V-Red over training steps on Maze, with and without L_D.\n- Fig 6 (p.10): top-k embedding overlap for Chameleon, LVM and LlamaGen.\n- Figs 7-8 (pp.25-26): Maze and MiniBehavior visualization failures with and without L_D.\n- Fig 9 (p.26): image reconstruction after 10 tokenize/detokenize rounds.\n- Fig 10 (p.27): a case where CoT gives wrong hole coordinates and MVoT gets the right answer.\n\nPROBLEMS: Extraction was clean, apart from \"MV oT\" spacing and some figure text mixed into the body. No embedded instructions were found in the PDF. In Table 2 the \"Interleaved\" row shows \"Image ✓\", and the GPT-4o \"With Visual Thought\" row carries a footnote. Table 5 is labelled Dev, while Table 1 calls the same split Test (same sizes). The Table 15 MiniBehavior CoT overall is 0.9813, against 0.9812 in Table 2 (a rounding difference)."
+ "type": "empirical",
+ "question": "Can a multimodal LLM improve spatial reasoning by generating image visualizations of its intermediate reasoning states, instead of reasoning in text only?",
+ "hypothesis": "Interleaving generated visual thoughts with verbal thoughts helps spatial reasoning where text-only CoT fails, as in human dual-coding cognition.",
+ "contributions": [
+  "Propose Multimodal Visualization-of-Thought (MVoT), a multimodal native reasoning paradigm unifying text and vision in the reasoning traces",
+  "Implement MVoT in Chameleon-7B (Anole-7B) and introduce token discrepancy loss in autoregressive MLLMs",
+  "Comprehensive experiments and ablations across three spatial reasoning tasks with newly collected datasets"
+ ],
+ "method": {
+  "summary": "Anole-7B is LoRA fine-tuned to emit, after each verbal reasoning step, an image of the new environment state, conditioning later steps on it. Loss is cross-entropy over text and image tokens plus a token discrepancy loss L_D that penalises probability on image tokens far from the label in visual-embedding space. Compared against Direct, text CoT, Interleaved and GPT-4o on three grid tasks.",
+  "task": "dynamic spatial reasoning (Maze destination, MiniBehavior InstallingAPrinter outcome, FrozenLake outcome) as multiple-choice QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MAZE (maze-dataset)",
+    "role": "both",
+    "size": "train 5007, test 1255",
+    "split": "train/dev; grid sizes 3-6; dev called test in Table 1",
+    "source": "generated with maze-dataset library [ISS+23], iterative DFS",
+    "preprocessing": "repeated paths removed; three random distractor destinations added"
+   },
+   {
+    "name": "MINIBEHAVIOR (InstallingAPrinter)",
+    "role": "both",
+    "size": "train 6400, test 1604",
+    "split": "train/dev; grid sizes in Table 1 5-8, Table 6 says 7-10",
+    "source": "RL agents (stable-baselines3) on Mini-Behavior environments",
+    "preprocessing": "successful sequences retained; layouts modified with 40% printer/table coordinate change each, 20% removal"
+   },
+   {
+    "name": "FROZENLAKE",
+    "role": "both",
+    "size": "train 6846, test 1664",
+    "split": "train/dev; grid sizes 3-6",
+    "source": "Gym environments and scripts from VSP [WZS+24], Q-table agents",
+    "preprocessing": "failed sequences: hole falls saved as-is 50% or with appended random actions 50%"
+   }
+  ],
+  "models": [
+   {
+    "name": "Anole-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "autoregressive unified decoder transformer (Chameleon), discrete image tokens",
+    "init_from": "Chameleon-7B tuned for interleaved generation",
+    "tokenizer": "Chameleon image tokenizer (VQ, [ERO21]) plus text tokenizer, both frozen",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MVoT / Direct / CoT / Interleaved variants of Anole-7B",
+    "role": "proposed",
+    "params": "7B (LoRA subset)",
+    "architecture": "same",
+    "init_from": "Anole-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o (2024-07-01, Azure)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L = L_C + L_D; L_C cross-entropy on text and image tokens, L_D = sum_i S_{t_i} . P(t_i) with S the MSE distances between visual codebook embeddings; loss only on predicted outputs",
+   "optimizer": null,
+   "lr": "0.0002",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "train batch size 4, grad accumulation 4 (Direct, CoT) or 2 (Interleaved, MVoT)",
+   "steps": null,
+   "epochs": "40",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "input augmentation: tokenize-detokenize the input image a random 0-10 times during MVoT training",
+   "hardware": "AMD MI300X GPUs: 8 (Direct, CoT), 32 (Interleaved, MVoT)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "random seed 42, single run",
+   "other": {
+    "LoRA": "LoRA used on part of parameters; rank, alpha, target modules not stated",
+    "val_batch_size": "16 (Direct, CoT), 8 (Interleaved, MVoT)",
+    "frozen": "image and text tokenizers frozen"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0 (GPT-4o); not stated for Anole",
+   "top_p": "1 (GPT-4o)",
+   "max_tokens": "800 (GPT-4o)",
+   "samples": "single run per item; no seeds or intervals reported",
+   "prompting": "fine-tuned models use task instruction plus image; GPT-4o zero-shot Direct, zero-shot CoT ('Let's think step by step'), and ReAct-style with MVoT visual thoughts supplied by fine-tuned Anole one action at a time",
+   "retrieval": null,
+   "parameters": {
+    "gpt4o_frequency_penalty": "0",
+    "gpt4o_presence_penalty": "0",
+    "gpt4o_stop": "None"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "answer extracted by pattern matching 'the answer is', compared with ground-truth choice",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "V-Acc.",
+     "definition": "accuracy of visualizing the intended modification in the grid for the next action",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "V-Red.",
+     "definition": "presence of unintended patterns outside the targeted modification region",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "V-Steps",
+     "definition": "average length of the first k consecutive correct visualizations in an action sequence",
+     "unit": "steps",
+     "higher_is_better": true
+    },
+    {
+     "name": "V-Ratio",
+     "definition": "average proportion of first k consecutive correct visualizations across the sequence",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Direct",
+    "CoT (with and without env layout)",
+    "Interleaved",
+    "GPT-4o zero-shot Direct and CoT"
+   ],
+   "protocol": "single run, test split; visualization metrics only for Maze and MiniBehavior agent position; Fig 5 uses 800 random examples; no significance tests"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-4o zero-shot CoT on Maze",
+    "text": "Task: Maze Navigation Simulation\nDetermine the final destination (A, B, C or D) from the starting point (red point) following the action sequence. The definitions of the actions are as below.\n* Go up/left/down/right: move one grid space in the absolute up/left/down/right direction.\nFull Action Sequence: Go down. Go left. Go left. Go up. Go up.\nInitial maze: <image>\nLet’s think step by step. Conclude your final answer between <ANSWER>and </ANSWER >.",
+    "where": "Appendix C.2, Table 13"
+   },
+   {
+    "purpose": "GPT-4o with MVoT plug-in, system part (MiniBehavior)",
+    "text": "To predict the consequence of a sequence of actions, you need to simulate the action sequence with ‘one action‘ at a time. Each time after simulating one action, ‘your turn is finished‘ and you should wait for the environment to provide the corresponding image observation.",
+    "where": "Appendix C.2, Table 14 (rest of template in paper)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "on MI300X for 40 epochs",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MVoT (Anole-7B, fine-tuned, text+image output) reaches 0.9295 on Maze",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9295,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; MVoT row (no Coord, no Layout, Image yes)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B MVoT, column MAZE"
+  },
+  {
+   "claim": "MVoT reaches 0.9514 on MiniBehavior",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9514,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; MVoT row",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B MVoT, column MINIBEHAVIOR"
+  },
+  {
+   "claim": "MVoT reaches 0.8560 on FrozenLake, above Direct and CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.856,
+   "unit": "accuracy",
+   "baseline_value": 0.7788,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; MVoT row",
+   "note": null,
+   "where": "Sec 4.2, Table 2",
+   "quote": "while achieving a higher accuracy of 85.60% on FROZENLAKE compared to both Direct and CoT"
+  },
+  {
+   "claim": "Text CoT with textual coordinates and environment layout (Anole-7B fine-tuned) gets 0.9792 on Maze",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9792,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; CoT row (Coord yes, Layout yes, Image no)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B CoT, column MAZE"
+  },
+  {
+   "claim": "Text CoT with layout gets 0.9812 on MiniBehavior",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9812,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; CoT row",
+   "note": "Table 15 prints the same cell as 0.9813",
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B CoT, column MINIBEHAVIOR"
+  },
+  {
+   "claim": "Text CoT with layout gets 0.6148 on FrozenLake, worse than Direct",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.6148,
+   "unit": "accuracy",
+   "baseline_value": 0.7788,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; CoT row",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B CoT, column FROZENLAKE"
+  },
+  {
+   "claim": "CoT without environment layout (Anole-7B, coordinates only) is below Direct on all three tasks: Maze 0.7023, MiniBehavior 0.6000, FrozenLake 0.5974",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.7023,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; '- w/o layout' row (Maze value shown; MiniBehavior 0.6000, FrozenLake 0.5974)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B - w/o layout, column MAZE"
+  },
+  {
+   "claim": "Direct (Anole-7B fine-tuned, outputs choice index only) gets 0.7171 on Maze",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.7171,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; Direct row (no Coord, Layout, Image; text output)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B Direct, column MAZE"
+  },
+  {
+   "claim": "Direct gets 0.7250 on MiniBehavior",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.725,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; Direct row",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B Direct, column MINIBEHAVIOR"
+  },
+  {
+   "claim": "Direct gets 0.7788 on FrozenLake",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.7788,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; Direct row",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B Direct, column FROZENLAKE"
+  },
+  {
+   "claim": "Interleaved (images in input, loss on text tokens only) gets 0.8678 / 0.8406 / 0.6460 on Maze / MiniBehavior / FrozenLake; below Direct on FrozenLake",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.646,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B, LoRA instruction-tuned 40 epochs on the authors' own training split; test set Maze 1255 / MiniBehavior 1604 / FrozenLake 1664; multiple-choice accuracy by matching 'the answer is'; Interleaved row, FrozenLake shown",
+   "note": "Maze printed 0.8678 in Table 2 and 0.8677 in Table 15",
+   "where": "Table 2",
+   "table": "Table 2, row Anole 7B Interleaved, column FROZENLAKE"
+  },
+  {
+   "claim": "GPT-4o zero-shot Direct gets 0.7100 / 0.4576 / 0.4976 on Maze / MiniBehavior / FrozenLake",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.71,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o 2024-07-01 via Azure, zero-shot, temperature 0, max tokens 800; Maze value shown",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4o Zero-Shot Direct, column MAZE"
+  },
+  {
+   "claim": "GPT-4o zero-shot CoT gets 0.7386 / 0.4676 / 0.4664",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.7386,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o zero-shot 'Let's think step by step'; Maze value shown",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4o Zero-Shot CoT, column MAZE"
+  },
+  {
+   "claim": "GPT-4o given visual thoughts from the fine-tuned Anole MVoT model reaches 0.8556 / 0.6440 / 0.8021, over 15% gain on all tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.8556,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o with MVoT plug-in (ReAct-style); Maze value shown",
+   "note": null,
+   "where": "Sec 4.2, Table 2",
+   "quote": "We witness an improvement in performance by over 15% accuracy across all the tasks as shown in Table 2.",
+   "table": "Table 2, row GPT-4o With Visual Thought, column MAZE"
+  },
+  {
+   "claim": "90.80% of CoT's FrozenLake errors come from inaccurate hole coordinates",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of CoT errors",
+   "value": 90.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B CoT on FrozenLake error analysis",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Error analysis reveals that 90.80% of CoT’s mistakes on FROZENLAKE stem from inaccurate coordinate descriptions of holes in the environment."
+  },
+  {
+   "claim": "CoT accuracy on FrozenLake falls from 0.9401 (3x3) to 0.3911 (6x6) while MVoT stays above 83%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.3911,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anole-7B CoT with layout, FrozenLake 6x6",
+   "note": null,
+   "where": "Sec 4.2, Table 15",
+   "quote": "dropping from 0.9401 on a 3 × 3 grid to 0.3911 on a 6 × 6 grid"
+  },
+  {
+   "claim": "Token discrepancy loss: Maze accuracy 0.9295 with L_D vs 0.7468 without",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9295,
+   "unit": "accuracy",
+   "baseline_value": 0.7468,
+   "n": null,
+   "setup": "MVoT Anole-7B, with vs without L_D, Maze; baseline is without",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MAZE MVoT with LD, column Accuracy"
+  },
+  {
+   "claim": "Token discrepancy loss: MiniBehavior accuracy 0.9514 with L_D vs 0.7228 without",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9514,
+   "unit": "accuracy",
+   "baseline_value": 0.7228,
+   "n": null,
+   "setup": "MVoT Anole-7B, MiniBehavior",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MINIBEHAVIOR MVoT with LD, column Accuracy"
+  },
+  {
+   "claim": "Token discrepancy loss: FrozenLake accuracy drops from 0.8560 to 0.7260 without L_D",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.726,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MVoT Anole-7B, FrozenLake without L_D",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "We also witness a performance drop on FROZENLAKE without token discrepancy loss from 0.8560 to 0.7260."
+  },
+  {
+   "claim": "Visualization accuracy on Maze 0.9339 with L_D vs 0.6391 without; redundancy 0.1010 vs 0.4931",
+   "kind": "measured",
+   "source": null,
+   "metric": "V-Acc.",
+   "value": 0.9339,
+   "unit": "accuracy",
+   "baseline_value": 0.6391,
+   "n": null,
+   "setup": "MVoT recursive generation, Maze",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MAZE MVoT with LD, column V-Acc."
+  },
+  {
+   "claim": "Oracle union of CoT and MVoT predictions reaches 0.9984 / 1.0000 / 0.9246",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9246,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Correct if either CoT or MVoT correct; FrozenLake value shown",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Upperbound, column FROZENLAKE"
+  },
+  {
+   "claim": "Top-10 similar tokens in text-token embeddings vs visual embeddings overlap on average by about one token; about 20% overlap at top-50",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": 1,
+   "unit": "tokens overlapping of 10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chameleon, LVM, LlamaGen embedding comparison by cosine similarity",
+   "note": null,
+   "where": "Sec 5.2, Fig 6",
+   "quote": "only one token overlaps among the top 10 similar tokens"
+  }
+ ],
+ "limits": [
+  "Generated visualizations often reconstruct task-irrelevant details (FrozenLake background) and overlook the intended change (authors).",
+  "Explicit image generation adds inference compute overhead (authors).",
+  "Three synthetic grid tasks only; one 7B backbone; single seed; no confidence intervals.",
+  "CoT with layout beats MVoT on Maze and MiniBehavior; MVoT wins only on FrozenLake.",
+  "Visualization metrics not reported for FrozenLake because automatic evaluation is hard.",
+  "Anole LoRA rank, optimizer, LR schedule, precision not stated; no code release stated.",
+  "GPT-4o with MVoT is a ReAct-style pipeline with Anole supplying images, not a single model.",
+  "Training uses golden previous images; inference recursive on generated images (exposure gap)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Token discrepancy loss",
+   "definition": "Loss that minimizes the discrepancy between predictions and labels in visual embedding space, weighting predicted token probabilities by embedding distance to the ground-truth token",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Interleaved",
+   "definition": "training on interleaved text-image data with loss only on text tokens",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chameleon",
+   "year": 2024,
+   "arxiv": "2405.09818",
+   "relation": "extends",
+   "note": "architecture MVoT follows",
+   "quote": null
+  },
+  {
+   "work": "Anole",
+   "year": 2024,
+   "arxiv": "2407.06135",
+   "relation": "uses-method",
+   "note": "backbone model",
+   "quote": null
+  },
+  {
+   "work": "Visualization-of-Thought (Mind's eye of LLMs)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "text-proxy visualizations replaced by images",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pipeline style for GPT-4o + MVoT",
+   "quote": null
+  },
+  {
+   "work": "VSP (Wu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "FrozenLake task and scripts",
+   "quote": null
+  },
+  {
+   "work": "maze-dataset",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Maze generation",
+   "quote": null
+  },
+  {
+   "work": "Mini-Behavior",
+   "year": 2023,
+   "arxiv": "2310.01824",
+   "relation": "uses-data",
+   "note": "InstallingAPrinter",
+   "quote": null
+  },
+  {
+   "work": "GPT-4o",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "zero-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "Visual Sketchpad",
+   "year": 2024,
+   "arxiv": "2406.09403",
+   "relation": "related",
+   "note": "tool-based visual CoT",
+   "quote": null
+  },
+  {
+   "work": "JetFormer",
+   "year": 2024,
+   "arxiv": "2411.19722",
+   "relation": "related",
+   "note": "embedding alignment limits",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "MVoT enables MLLMs to generate interleaved reasoning traces across different modalities.",
+   "page": 1,
+   "why": "Contrasts Direct, CoT and MVoT"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Illustration of MVoT training with token discrepancy loss L_D.",
+   "page": 4,
+   "why": "Shows how L_D uses codebook distances"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Experimental results from different system variants across all tasks.",
+   "page": 7,
+   "why": "Main results"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Qualitative analysis of FrozenLake visualization with and without L_D, and reconstruction.",
+   "page": 8,
+   "why": "Shows error types"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Average percentage of top-k overlapping tokens.",
+   "page": 10,
+   "why": "Evidence of embedding misalignment"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3-5",
+   "snippet": "LD = sum_{i=1}^{n} S_{t_vis_i} · P(t_i);  L = LC + LD",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 gives MiniBehavior grid sizes 5-8 but Appendix B/Table 6 gives 7-10.",
+  "Test set in Table 1 is called Dev in Tables 5-6.",
+  "MiniBehavior CoT 0.9812 in Table 2 vs 0.9813 in Table 15; Maze Interleaved 0.8678 vs 0.8677.",
+  "Legacy file said ICML 2025; the PDF itself shows only arXiv preprint.",
+  "No embedded instructions found."
+ ]
 }

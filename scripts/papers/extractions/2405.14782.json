@@ -1,19 +1,600 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2405.14782",
  "pdf": "generative-ai/08-eval/sources/biderman-2024-lessons-trenches-reproducible-evaluation-language.pdf",
  "bib": {
   "title": "Lessons from the Trenches on Reproducible Evaluation of Language Models",
-  "first_author": "Stella Biderman",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Stella Biderman",
+   "Hailey Schoelkopf",
+   "Lintang Sutawika",
+   "Baber Abbasi",
+   "Jessica Zosa Forde",
+   "Leo Gao",
+   "Jonathan Tow",
+   "Alham Fikri Aji",
+   "Pawan Sasanka Ammanamanchi",
+   "Sidney Black",
+   "Jordan Clive",
+   "Anthony DiPofi",
+   "Julen Etxaniz",
+   "Benjamin Fattori",
+   "Charles Foster",
+   "Jeffrey Hsu",
+   "Mimansa Jaiswal",
+   "Wilson Y. Lee",
+   "Haonan Li",
+   "Charles Lovering",
+   "Niklas Muennighoff",
+   "Ellie Pavlick",
+   "Jason Phang",
+   "Aviya Skowron",
+   "Samson Tan",
+   "Xiangru Tang",
+   "Kevin A. Wang",
+   "Genta Indra Winata",
+   "François Yvon",
+   "Andy Zou"
+  ],
+  "first_author": "Biderman",
+  "year": 2024,
+  "venue": "preprint (arXiv v3, 31 May 2026)",
   "arxiv": "2405.14782",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 122075,
+  "chars_total": 122075,
+  "engine": "pymupdf",
+  "skipped": "Reference list (offsets ~43398-121425) skimmed only for lineage, not read line by line."
  },
- "legacy_report": "SOURCE: \"Lessons from the Trenches on Reproducible Evaluation of Language Models\", Stella Biderman, Hailey Schoelkopf, Lintang Sutawika (lead authors, all EleutherAI as printed) plus 27 others. No venue is printed; the only marking is the arXiv stamp \"arXiv:2405.14782v3 [cs.CL] 31 May 2026\", so treat it as a preprint (v3). A NeurIPS-style author checklist is attached, but no venue is named.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/biderman-2024-lessons-trenches-reproducible-evaluation-language.pdf\n\nCOVERAGE: 31 of 31 pages, 123,581 chars. Pages 1-11 (main text) and 21-31 (checklist, Appendices A-G) were read in full. Pages 11-21 (references) were skimmed only by keyword scan for odd text.\n\nCLAIMS (ranked)\n\n1. Prompt format alone moves accuracy by more than 20 points and changes model rankings.\n   - setup: 0-shot, loglikelihood multiple choice, lm-eval v0.4.2, 5 open models, ARC-Challenge (Cloze vs MMLU-style) and MMLU (Hybrid vs MMLU-style). The ± values are 95% bootstrap CIs. Single run per cell.\n   - quote (p5, Table 1; column order ARC Cloze, ARC MMLU-style, MMLU Hybrid, MMLU MMLU-style): \"GPT-NeoX-20B38.0±2.78%26.6±2.53%27.6±0.74%24.5±0.71% / Llama-2-7B43.5±2.84%42.8±2.83%39.8±0.79%41.3±0.80% / Falcon-7B40.2±2.81%25.9±2.51%29.1±0.75%25.4±0.72% / Mistral-7B50.1±2.86%72.4±2.56%48.3±0.80%58.6±0.77% / Mixtral-8x7B56.7±2.84%81.3±2.23%59.7±0.77%67.1±0.72%\"\n   - quote (p5): \"performance varies dramatically with the prompt(in some cases, >20% ), andwhich prompt style works best varies by model.\"\n   - Direction flips by model: Mistral and Mixtral gain about 22-25 points on ARC with MMLU-style, while NeoX and Falcon lose about 11-14.\n\n2. The most extreme case is ARC-Easy with GPT-NeoX-20B.\n   - quote (p9): \"using the “cloze” evaluation setup, GPT-NeoX achieves an accuracy of72.4±1.80% but using the MMLU-style setup it scores26.5±1.78%.\"\n   - Cause, from inspecting completions: the model fails to follow the output format, not the task. Supported by observation only; no numbers given.\n\n3. Single-run point estimates mislead.\n   - setup: not the authors' experiment. GPQA, OpenAI and Anthropic models, data from Lukošiūtė (2024). No numeric values are printed in the text.\n   - quote (p9): \"Presenting single-run point estimates of performance (top) instead of a 95% confidence interval across 10 runs of the benchmark (bottom) paints a very different pictures\".\n   - Also p9: HumanEval \"contains only 164 examples\", so small gains \"might be washed out simply via sampling again at the same temperature.\"\n\n4. Aggregation choice matters.\n   - MMLU micro-average vs macro-average over \"57 subjects\" (p6): \"affects results by several percentage points\". No exact figure.\n   - Dataset quirks (p6): ARC has one 5-choice question; HumanEval has 3 documents lacking example tests.\n\n5. Implementations disagree (second-hand, no numbers).\n   - Fourrier et al. (2023b): HELM, lm-eval and the original MMLU code give \"widely different scores and even change the ranking order\" (p5).\n   - Lyu et al. (2024): loglikelihood MCQ and generative MCQ scoring \"do not even agree\" (p8).\n\n6. Leaderboard gaming (p9, anecdotal).\n   - Open LLM Leaderboard entrants fine-tuned to the harness format, \"targeting separator tokens used in particular versions of lm-eval\".\n\n7. Answer extraction (p28, no experiment).\n   - Regex extraction biases toward models that match the original format.\n   - quote: \"it is difficult to separate models’ compliance with the evaluationformatfrom their answercorrectness.\"\n\n8. \"The Key Problem\" framing (p2).\n   - The best automated tools for judging semantic equivalence \"are the very models we are seeking to evaluate\".\n   - Three responses: closed-domain conversion (MCQ, string match, verifier), model-based grading, human labour.\n\nRECOMMENDED PRACTICES (exact headings)\n\n- Section 3.2 (p7):\n  - \"Provide Evaluation Code\"\n  - \"Provide Prompts and Detail Methodology Thoroughly\", including \"the amount of prompt engineering performed and on which models and evaluation sets\", loglikelihood and perplexity hyperparameters, generation hyperparameters, and answer-extraction heuristics\n  - \"Create Reporting Standards\"\n- Section 4.2 (p10):\n  - \"Perform Statistical Analyses, and Report on Sources of Variance and Error\"\n  - \"Evaluate Models in Realistic Settings\"\n  - \"Do Exploratory Analysis to Build Better Understanding of Results\"\n- Appendix D checklist (pp30-31):\n  - \"Always share your exact prompts.\" With it: \"Prompts should not be optimized for performance on a given model, and the amount of prompt engineering done should be disclosed.\"\n  - \"Avoid copying results from other implementations.\"\n  - \"Always provide model outputs.\" Reasons given: lets others recompute scores and run significance tests, and reproduces API results after deprecation.\n  - \"Perform qualitative analyses.\" Review a small batch before running at scale.\n  - \"Perform statistical significance testing.\" Includes more than one seed, or \"averaging over multiple selections of few-shot examples\".\n\nWHAT lm-eval DOES\n\n- Standard errors: \"We report bootstrapped standard error metrics by default\" (p10). The authors distinguish this question-sampling variance from run-to-run variance; both are held to matter, as is prompt variance.\n- Prompts: a one-line YAML change; the task config plus library version is the reporting unit; PromptSource multiprompt evaluation is supported.\n- Outputs: `--limit` for dry runs and `--log_samples` for per-sample scores and saved outputs (p8).\n- Extraction: per-task `Filter` chains (p28).\n- MCQ scoring: `acc` (raw loglikelihood), `acc_norm` (byte-length normalised), `acc_mutual_info` (p25).\n- Perplexity: bits per byte, word-level and byte-level; non-overlapping windows (pp26-27).\n- Few-shot: drawn from the fewshot split, then train, then validation, then test (p29); the MMLU config uses `sampler: first_n`.\n- Defaults priority (p7): model trainers' consensus, then the official implementation, then evaluators' consensus, then the maintainers' preference.\n- Tokenisation: trailing prompt whitespace is moved into the target string (p25).\n\nLIMITS\n\n- Only one original experiment: 5 models, 2-3 tasks, 0-shot, one run each, on 8x A40 in under a day.\n- No experiment on few-shot selection, answer extraction, normalisation method, sampling temperature, or run-to-run variance; all of these are asserted via citations.\n- Scope is MCQ-centric by the authors' own admission (p3). LLM judges get one paragraph; agents are not covered.\n- Appendix F (Limitations) is truncated in the PDF itself: \"There are additionally more case studies and concrete instances of our discussed\". It concedes that measurement validity is not treated in depth.\n- All models tested are 2022-23 open-weight models.\n\nBUILDS ON: Gao et al. (2023) lm-eval; Brown et al. (2020) loglikelihood MCQ and cloze prompts; Gao (2021) normalisation; Press et al. (2020) strided perplexity; Dehghani et al. (2021) Benchmark Lottery; Marie et al. (2021); Card et al. (2020); Lukošiūtė (2024); Fourrier et al. (2023b); Alzahrani et al. (2024); Sclar et al. (2023); Bach et al. (2022) PromptSource.\n\nCODE: YAML configs on pp29-30. The extraction is letter-spaced, so this is reconstructed rather than verbatim. Cloze: `doc_to_text: \"Question: {{question}}\\nAnswer:\"` with `doc_to_choice: \"{{choices.text}}\"`. MMLU-style: `doc_to_choice: [\"A\",\"B\",\"C\",\"D\"]`. Hybrid: same prompt with `doc_to_choice: choices`.\n\nFIGURES: one candidate, Figure 2 (p9), GPQA single run vs 95% CI over ten runs. It shows the ranking dissolving once intervals are drawn, which suits 09-reading-results. The data is third-party (Lukošiūtė).\n\nPROBLEMS\n\n- No embedded instructions found.\n- The arXiv stamp reads \"31 May 2026\" for v3, a later revision than the 2024 original; contents may differ from v1 (for example the mentions of Dunlap 2024 and Vibe-Eval).\n- The text calls the table \"Table 3.1\"; its caption says \"Table 1\".\n- Table cells are fused without spaces; the column order was taken from the header.\n- The printed flag \"--log samples\" lost its underscore in extraction.\n- Typo in the source: \"on the rd\".\n- Figure 2 values are image-only and were not extracted."
+ "type": "empirical",
+ "question": "What practical challenges make language model evaluation hard to reproduce and compare, and which practices (as built into lm-eval) mitigate them?",
+ "hypothesis": "Minor implementation details such as prompt format, scoring and averaging choices strongly change scores and rankings, so undisclosed setups make results irreproducible.",
+ "contributions": [
+  "Collect and present common challenges in LM evaluation with concrete instances",
+  "Give recommendations for best practices",
+  "Document how the practices are operationalized in lm-eval"
+ ],
+ "method": {
+  "summary": "Experience report from the lm-eval developers plus one small case study: 5 pretrained LMs are scored 0-shot on ARC-Challenge (cloze vs MMLU-style prompt) and MMLU (Hybrid vs MMLU-style prompt) with lm-eval v0.4.2. The rest is prose recommendations, formal definitions of loglikelihood, perplexity and generative scoring (App B), and a checklist (App D).",
+  "task": "multiple-choice QA evaluation sensitivity to prompt format",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ARC-Challenge",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "allenai/ai2_arc",
+    "preprocessing": "cloze: 'Question: {question}\\nAnswer:' scored over answer texts; MMLU-style: question plus lettered choices, scored over letters"
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "57 subjects",
+    "split": "test (few-shot from dev, first_n sampler)",
+    "source": "cais/mmlu",
+    "preprocessing": "MMLU-style scores letters A-D; Hybrid uses the same prompt but scores the answer strings"
+   },
+   {
+    "name": "ARC-Easy",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "allenai/ai2_arc",
+    "preprocessing": "cloze vs MMLU-style; only GPT-NeoX-20B numbers quoted in text"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-NeoX-20B",
+    "role": "evaluated",
+    "params": "20B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Falcon-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x7B",
+    "role": "evaluated",
+    "params": "8x7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "loglikelihood ranking over answer choices, no sampling",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single pass per model and setting; 95% bootstrap CI over questions",
+   "prompting": "0-shot as stated in Table 1 caption; two prompt styles per benchmark",
+   "retrieval": null,
+   "parameters": {
+    "metric": "acc (unnormalized loglikelihood); acc_norm is byte-length normalised",
+    "library": "lm-eval v0.4.2 (PyPI lm_eval)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "acc",
+     "definition": "fraction of items where the choice with highest (unnormalized) conditional loglikelihood is correct; MMLU is micro-averaged over documents",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "cloze vs MMLU-style vs Hybrid prompt styles"
+   ],
+   "protocol": "Bootstrapped standard errors reported as +/- (checklist says 95% CIs); single run; no significance tests between styles."
+  },
+  "availability": {
+   "code": "https://github.com/EleutherAI/lm-evaluation-harness/tree/v0.4.2/lm_eval; YAML configs for the case study printed in Appendix C.1",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "ARC cloze prompt (Brown et al. 2020 style)",
+    "text": "Question: {{ question }}\\nAnswer:",
+    "where": "App C.1"
+   },
+   {
+    "purpose": "MMLU-style prompt",
+    "text": "{{ question.strip () }}\\nA. {{ choices [0]}}\\nB. {{ choices [1]}}\\nC. {{ choices [2]}}\\nD. {{ choices [3]}}\\nAnswer:",
+    "where": "App C.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "hardware",
+    "quote": "All experiments are run on 8x NVIDIA A40 48Gb GPUs. Total usage time did not exceed 1 day.",
+    "where": "App E"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Prompt style changes 0-shot accuracy by more than 20 points in some cases, and the best style varies by model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": "> 20",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "0-shot, ARC-Challenge (cloze vs MMLU-style) and MMLU (Hybrid vs MMLU-style), five pretrained LMs, lm-eval v0.4.2",
+   "where": "Sec 3.1, Table 1",
+   "note": null,
+   "quote": "performance varies dramatically with the prompt (in some cases, > 20%), and which prompt style works best varies by model"
+  },
+  {
+   "claim": "Mixtral-8x7B ARC-Challenge accuracy: cloze 56.7 vs MMLU-style 81.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": "81.3",
+   "unit": "%",
+   "baseline_value": 56.7,
+   "n": null,
+   "setup": "0-shot, lm-eval v0.4.2; 95% bootstrap CI 2.23 on MMLU-style",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row Mixtral-8x7B, columns ARC (Challenge) Cloze / MMLU-style"
+  },
+  {
+   "claim": "Mistral-7B ARC-Challenge: cloze 50.1 vs MMLU-style 72.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": "72.4",
+   "unit": "%",
+   "baseline_value": 50.1,
+   "n": null,
+   "setup": "0-shot, lm-eval v0.4.2",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row Mistral-7B, columns ARC (Challenge) Cloze / MMLU-style"
+  },
+  {
+   "claim": "GPT-NeoX-20B and Falcon-7B fall to about chance on ARC-Challenge under MMLU-style (26.6, 25.9) but score 38.0 and 40.2 with cloze.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": "26.6",
+   "unit": "%",
+   "baseline_value": 38.0,
+   "n": null,
+   "setup": "0-shot, lm-eval v0.4.2",
+   "where": "Table 1",
+   "note": "Falcon-7B MMLU-style 25.9 vs cloze 40.2",
+   "table": "Table 1, rows GPT-NeoX-20B and Falcon-7B, column ARC (Challenge) MMLU-style"
+  },
+  {
+   "claim": "On MMLU, Mixtral-8x7B scores 67.1 with the original MMLU-style prompt vs 59.7 with the Hybrid prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": "67.1",
+   "unit": "%",
+   "baseline_value": 59.7,
+   "n": null,
+   "setup": "0-shot, lm-eval v0.4.2",
+   "where": "Table 1",
+   "note": "Llama-2-7B: Hybrid 39.8, MMLU-style 41.3; GPT-NeoX-20B: Hybrid 27.6, MMLU-style 24.5, so the better style differs by model",
+   "table": "Table 1, row Mixtral-8x7B, columns MMLU Hybrid / MMLU-style"
+  },
+  {
+   "claim": "GPT-NeoX-20B on ARC-Easy: 72.4 cloze vs 26.5 MMLU-style.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": "26.5",
+   "unit": "%",
+   "baseline_value": 72.4,
+   "n": null,
+   "setup": "0-shot ARC-Easy, GPT-NeoX-20B, lm-eval v0.4.2",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "using the “cloze” evaluation setup, GPT-NeoX achieves an accuracy of 72.4 ± 1.80% but using the MMLU-style setup it scores 26.5 ± 1.78%"
+  },
+  {
+   "claim": "Model-failure to follow the MMLU-style output format, not lack of knowledge, explains chance scores for GPT-NeoX-20B.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Exploratory analysis of completions, GPT-NeoX-20B",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "this at-random performance is a result of failing to follow the task and output format for this prompting style, even when it can score well using an alternative format"
+  },
+  {
+   "claim": "Three MMLU implementations (HELM, lm-eval, original code) give widely different scores and change model rankings.",
+   "kind": "reported",
+   "source": "Fourrier et al. 2023b",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open LLM Leaderboard blog analysis",
+   "where": "Sec 3.1",
+   "note": null,
+   "quote": "comparing three independent implementations of MMLU (HELM, lm-eval, and the original MMLU code), they find that these implementations produce widely different scores and even change the ranking order of models"
+  },
+  {
+   "claim": "Single-run point estimates on GPQA give a different picture than a 95% CI over 10 runs.",
+   "kind": "reported",
+   "source": "Lukosiute 2024 (blog), Fig 2",
+   "metric": "runs for CI",
+   "value": "10",
+   "unit": "runs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPQA, OpenAI and Anthropic models, 10 runs",
+   "where": "Sec 4.1, Fig 2",
+   "note": null,
+   "quote": "Presenting single-run point estimates of performance (top) instead of a 95% confidence interval across 10 runs of the benchmark (bottom) paints a very different pictures"
+  },
+  {
+   "claim": "MMLU micro vs macro averaging across 57 subjects changes results by several percentage points.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU; no numbers or model given",
+   "where": "Sec 3.1",
+   "note": null,
+   "quote": "the choice of which affects results by several percentage points"
+  },
+  {
+   "claim": "lm-eval reports bootstrapped standard errors by default; these measure question-sampling variation, not run-to-run stochasticity.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "lm-eval library",
+   "where": "Sec 4.3",
+   "note": null,
+   "quote": "We report bootstrapped standard error metrics by default"
+  },
+  {
+   "claim": "Open LLM Leaderboard users fine-tuned to match the eval format (e.g. separator tokens), an instance of the Benchmark Lottery.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open LLM Leaderboard, lm-eval versions",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "practitioners have been observed fine-tuning their models specifically to match the evaluation format used by the leaderboard"
+  },
+  {
+   "claim": "Fixed-length non-overlapping windows for perplexity skew results toward longer-context models (Early Token Curse).",
+   "kind": "reported",
+   "source": "Press et al. 2020",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "perplexity on sequences longer than context",
+   "where": "Sec 3.1, App B.3",
+   "note": null,
+   "quote": "systematically skews results in favor of models trained and thus evaluated with longer context lengths"
+  },
+  {
+   "claim": "Multiple-choice loglikelihood benchmarks do not agree with generative-scored multiple-choice benchmarks.",
+   "kind": "reported",
+   "source": "Lyu et al. 2024",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "as cited",
+   "where": "Sec 4.1",
+   "note": null,
+   "quote": "multiple-choice loglikelihood-based benchmarks do not even agree with generative-scored multiple-choice benchmarks"
+  },
+  {
+   "claim": "Frames the Key Problem: the best tools for judging semantic equivalence are the models being evaluated; responses are closed-domain conversion, model-based grading, or human labor.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "conceptual",
+   "where": "Sec 2.1",
+   "note": null,
+   "quote": "our best automated tools for determining whether two sentences are semantically equivalent are the very models we are seeking to evaluate"
+  }
+ ],
+ "limits": [
+  "Scope is MCQA only; the authors say they focus on it because it is the approach they know best and urge experts in other approaches to document theirs.",
+  "Limitations appendix (F) is truncated mid-sentence and says measurement validity is not discussed in detail.",
+  "Case study uses five base models, one lm-eval version and two prompt styles per benchmark; no per-run variance and no significance test between styles.",
+  "Model-based grading (LLM-as-judge) is only mentioned as flawed, with citations; no judge experiments are run.",
+  "Authors infer that Mistral and Llama reports used MMLU-style prompts for ARC; this is a belief, not confirmed.",
+  "Conventions date quickly (Sec 2.3), so recommendations may age."
+ ],
+ "practices": [
+  "Release exact evaluation code (Sec 3.2).",
+  "Report full prompts and detail methodology, including prompt-engineering effort, loglikelihood and generation hyperparameters and answer extraction heuristics (Sec 3.2, App D).",
+  "Do not copy results from other papers unless the same code was used (App D).",
+  "Provide model outputs so scores can be recomputed (App D).",
+  "Report variance and statistical significance rather than point estimates (Sec 4.2, App D).",
+  "Evaluate in realistic settings and do qualitative error analysis before scaling (Sec 4.2, App D).",
+  "Prefer procedures agreed by LLM trainers, then official implementations, then evaluator consensus (Sec 3.3 priority list).",
+  "Log per-sample outputs and dry-run with --limit and --log_samples (Sec 3.3)."
+ ],
+ "terms": [
+  {
+   "term": "Key Problem",
+   "definition": "there can be many semantically equivalent but syntactically different ways of expressing the same idea, and the best tools to detect equivalence are the models being evaluated",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Benchmark Lottery",
+   "definition": "popular benchmarks can have a distorting effect on the field, redefining success in ways that reinforce their particular idiosyncrasies and even flaws",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Hybrid prompt",
+   "definition": "an MMLU-style prompt but using the answer strings instead of answer letters as the set of continuations scored",
+   "where": "App C.1"
+  },
+  {
+   "term": "Early Token Curse",
+   "definition": "tokens with more preceding context are easier to predict, skewing non-overlapping-window perplexity",
+   "where": "App B.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language Model Evaluation Harness (lm-eval)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Authors' own library; the paper's practices are implemented in it",
+   "quote": null
+  },
+  {
+   "work": "Brown et al., Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "Origin of cloze loglikelihood MCQA setup",
+   "quote": null
+  },
+  {
+   "work": "Fourrier et al., What's going on with the Open LLM Leaderboard",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MMLU implementation discrepancies",
+   "quote": null
+  },
+  {
+   "work": "Alzahrani et al., When benchmarks are targets",
+   "year": 2024,
+   "arxiv": "2402.01781",
+   "relation": "related",
+   "note": "Prompt sensitivity changes rankings",
+   "quote": null
+  },
+  {
+   "work": "Gu et al., OLMES",
+   "year": 2024,
+   "arxiv": "2406.08446",
+   "relation": "related",
+   "note": "Consistent with their analysis",
+   "quote": null
+  },
+  {
+   "work": "Press et al., Shortformer (early token curse)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Sliding-window perplexity",
+   "quote": null
+  },
+  {
+   "work": "Dehghani et al., The benchmark lottery",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Concept applied to Open LLM Leaderboard",
+   "quote": null
+  },
+  {
+   "work": "Zheng et al., Judging LLM-as-a-judge with MT-Bench and Chatbot Arena",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "related",
+   "note": "Model-based grading proxy for human preference; cited as flawed",
+   "quote": null
+  },
+  {
+   "work": "Lyu et al., Beyond probabilities",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Loglikelihood vs generative MCQA disagree",
+   "quote": null
+  },
+  {
+   "work": "Lukosiute, GPQA variance blog",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Fig 2 source",
+   "quote": null
+  },
+  {
+   "work": "Hendrycks et al., MMLU",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Case-study benchmark",
+   "quote": null
+  },
+  {
+   "work": "Clark et al., ARC",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Case-study benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of 0-shot model performance (acc) for several pretrained LMs on ARC (Challenge subset) and MMLU across two commonly used prompt styles.",
+   "page": 5,
+   "why": "Shows the prompt-sensitivity numbers in one glance."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "GPQA performance of various models in a single run (top) and a confidence interval computed after doing ten runs (bottom).",
+   "page": 9,
+   "why": "Single-run vs CI changes conclusions."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Timeline of benchmark release dates against BERT, GPT-2, GPT-3, ChatGPT.",
+   "page": 4,
+   "why": "Benchmarks predate how they are now used."
+  }
+ ],
+ "code": [
+  {
+   "where": "App C.1",
+   "snippet": "doc_to_text: \"Question: {{ question }}\\nAnswer:\"",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction splits YAML and table cells across lines; Table 1 column assignment inferred from the header order (ARC Cloze, ARC MMLU-style, MMLU Hybrid, MMLU MMLU-style).",
+  "Appendix F Limitations ends mid-sentence in the source.",
+  "Table caption text in Sec 3.1 calls it 'Table 3.1'.",
+  "No embedded instructions found."
+ ]
 }

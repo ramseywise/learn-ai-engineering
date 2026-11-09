@@ -1,0 +1,263 @@
+{
+ "schema": 1,
+ "key": "2305.17333",
+ "pdf": "generative-ai/05-RL/sources/malladi-2023-fine-tuning-language-models-just.pdf",
+ "bib": {
+  "title": "Fine-Tuning Language Models with Just Forward Passes",
+  "authors": ["Sadhika Malladi", "Tianyu Gao", "Eshaan Nichani", "Alex Damian", "Jason D. Lee", "Danqi Chen", "Sanjeev Arora"],
+  "first_author": "Malladi",
+  "year": 2023,
+  "venue": "37th Conference on Neural Information Processing Systems (NeurIPS 2023)",
+  "arxiv": "2305.17333",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 113954,
+  "chars_total": 113954,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; proofs in Appendix G read but not re-derived."
+ },
+ "type": "empirical",
+ "question": "Can a zeroth-order optimizer that needs only forward passes and inference-level memory fine-tune billion-parameter language models competitively with backpropagation?",
+ "hypothesis": "With a task prompt and adequate pre-training, the loss landscape has low local effective rank, so ZO-SGD converges at a rate that depends on that rank rather than on the number of parameters, and so is not catastrophically slow.",
+ "contributions": [
+  "In MeZO, we adapt the ZO-SGD algorithm [88] and a number of variants to operate in-place on arbitrarily large models with almost no memory overhead (see Algorithm 1 and Section 2).",
+  "Comprehensive experiments across masked and autoregressive LMs, 350M to 66B, on classification, multiple-choice and generation tasks; MeZO consistently outperforms zero-shot, ICL and linear probing.",
+  "Compatibility of MeZO with full-parameter tuning and PEFT (LoRA, prefix-tuning).",
+  "MeZO can optimize non-differentiable objectives such as accuracy or F1 at inference-level memory.",
+  "Theory: per-step rate (Theorem 1) and global convergence (Lemma 3) depend on local effective rank, not parameter count."
+ ],
+ "method": {
+  "summary": "MeZO is ZO-SGD with the SPSA two-point gradient estimator implemented in place: the Gaussian perturbation z is regenerated from a saved random seed instead of stored, so memory equals inference. It is applied to RoBERTa-large (k-shot) and OPT 13B/30B/66B (1000 training examples) with prompts, and compared to zero-shot, ICL, linear probing and Adam fine-tuning.",
+  "task": "Fine-tuning pre-trained LMs for classification, multiple-choice and QA generation without backpropagation",
+  "trains": true,
+  "datasets": [
+   {"name": "SST-2, SST-5, TREC, MNLI, SNLI, RTE (RoBERTa-large)", "role": "both", "size": "k=16 or k=512 examples per class for both training and validation; test set limited to 1,000 examples", "split": "k-shot train/val; 1,000 test", "source": "SST-2/SST-5 Socher 2013, TREC Voorhees 2000, MNLI Williams 2018, SNLI Bowman 2015, RTE (Dagan 2005 and successors); licence not stated", "preprocessing": "Prompt templates adapted from Gao et al. 2021 (Table 13)"},
+   {"name": "SuperGLUE (BoolQ, CB, COPA, MultiRC, ReCoRD, RTE, WiC, WSC) + SST-2 + SQuAD + DROP (OPT)", "role": "both", "size": "1,000 train, 500 validation, 1,000 test, randomly sampled per dataset", "split": "random sample", "source": "SuperGLUE Wang 2019; SQuAD Rajpurkar 2016; DROP Dua 2019; licence not stated", "preprocessing": "Prompts from GPT-3 and PromptSource with minor changes (Table 14); SST-2 used for development"}
+  ],
+  "models": [
+   {"name": "RoBERTa-large", "role": "base", "params": "350M", "architecture": "masked LM encoder", "init_from": "pre-trained RoBERTa-large", "tokenizer": null, "vocab": null, "layers": "24", "hidden": null, "heads": null, "context": null, "other": {"layers_note": "inferred: 24 layers from 'RoBERTa-large has 24 + 2 = 26 parameter groups' (layers plus embedding and head)"}},
+   {"name": "OPT-13B / OPT-30B / OPT-66B", "role": "base", "params": "13B, 30B, 66B (1.3B, 2.7B, 6.7B also used for memory profiling)", "architecture": "decoder-only transformer", "init_from": "pre-trained OPT", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "MeZO (full, LoRA r=8 alpha=16, prefix m=5)", "role": "proposed", "params": "full-parameter; LoRA about 19M and prefix about 6M trainable on 66B", "architecture": "ZO-SGD with in-place SPSA", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"prefix_init": "prefix initialised from keys and values of randomly sampled vocabulary tokens passed through the LLM; crucial for MeZO stability"}}
+  ],
+  "training": {
+   "objective": "Classification: cross entropy on label-word logits (prompt-based, Gao 2021). Multiple choice and QA: teacher forcing on the correct candidate, loss only on candidate tokens. Non-differentiable variants: accuracy (RoBERTa) or F1 (SQuAD).",
+   "optimizer": "MeZO = ZO-SGD with SPSA, n=1, Gaussian z; FT baseline uses Adam (SGD also reported); MeZO-Adam variant in Appendix",
+   "lr": "MeZO RoBERTa {1e-5,1e-6,1e-7} (ablation grid) ; Table 15: MeZO lr {1e-7,1e-6,1e-5}, prefix {1e-2,5e-3,1e-3}, LoRA {1e-5,5e-5,1e-4}; OPT MeZO {1e-6,1e-7}, prefix {1e-2,1e-3}, LoRA {1e-4,5e-5} (SQuAD/DROP have a third value); FT Adam OPT {1e-5,5e-5,8e-5}",
+   "lr_schedule": "MeZO: constant; FT with backprop: linear",
+   "warmup": "none for MeZO (warmup gave identical results in ablation)",
+   "batch_size": "MeZO RoBERTa 64; MeZO OPT 16; FT Adam OPT 8; FT RoBERTa {2,4,8} (k=16), {8,16,32} (k=512)",
+   "steps": "MeZO: 100K steps (RoBERTa), 20K steps (OPT); FT: 1K steps (RoBERTa), 5 epochs = 625 steps (OPT)",
+   "epochs": "FT OPT 5 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0 for MeZO and FT in general; 0.1 for MeZO (LoRA) on RoBERTa; all 0 for OPT",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Nvidia A100 80GB (up to 16x A100 for full FT of 66B); NVLink and InfiniBand",
+   "compute": "30B MultiRC: MeZO takes 32x more steps than FT, FT takes 8x more GPUs and 7.74x more time per step; MeZO needs half the GPU-hours",
+   "wall_clock": "Table 23 per-step: MeZO bsz16 0.815s/1.400s/2.702s/5.896s/12.438s for 1.3B/2.7B/13B/30B/66B; FT bsz8 0.784s/1.326s/13.638s/45.608s/84.098s",
+   "seeds": "Ablations (Appendix A): k=16 averaged over 5 seeds. Number of seeds for the main tables is not stated.",
+   "other": {
+    "epsilon": "RoBERTa MeZO 1e-3, prefix 1e-1, LoRA 1e-3; OPT MeZO 1e-3, prefix 1e-1, LoRA 1e-2",
+    "checkpointing": "RoBERTa: validate every 1/10 of steps, keep best; OPT: every 1/5 of steps, keep best; 30B and 66B use last checkpoint only",
+    "ablation_budget": "Algorithm ablations fixed at 10,000 forward passes on RoBERTa-large SST-2, SNLI, TREC, k=16; grid batch {16,64} x lr {1e-5,1e-6,1e-7} x eps {1e-3,1e-5} x wd {0,0.1}",
+    "storage": "Checkpoint reconstructible from seed plus 20,000 steps x 2 bytes (<0.1MB for 66B)",
+    "linear_probing": "classification: scipy linear classifier; multiple-choice and generation: head-tuning of LM head only, batch 8, lr {1e-4, 5e-4}, 5 epochs"
+   }
+  },
+  "inference": {
+   "decoding": "Greedy decoding for generation (SQuAD, DROP); classification and multiple-choice predict the candidate with highest average per-token log-likelihood",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per cell in OPT tables; RoBERTa tables report mean (std) over seeds, count not stated",
+   "prompting": "Prompt-based fine-tuning is required; ICL baseline uses 32 examples in context",
+   "retrieval": null,
+   "parameters": {"n_SPSA": "1", "perturbation_scale_epsilon": "see training.other.epsilon"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "classification and multiple-choice accuracy on held-out test set", "unit": "%", "higher_is_better": true},
+    {"name": "F1", "definition": "QA token F1 for SQuAD and DROP", "unit": "%", "higher_is_better": true},
+    {"name": "Peak GPU memory", "definition": "nvidia-smi peak, per-device batch size 1, no gradient checkpointing; run counts as successful if no OOM for at least 100 steps", "unit": "GB", "higher_is_better": false},
+    {"name": "Wall-clock per step", "definition": "averaged over 100 steps on MultiRC", "unit": "s", "higher_is_better": false}
+   ],
+   "baselines": ["Zero-shot", "ICL (32 examples)", "Linear probing", "FT with Adam (full, LoRA, prefix)", "FT with SGD", "BBTv2", "MeZO-Adam", "one-point estimator (Zhang 2022)"],
+   "protocol": "RoBERTa-large k=16 and k=512, accuracy mean (std); OPT 1,000/500/1,000 split; best MeZO variant reported in Tables 2 and Fig 1"
+  },
+  "availability": {"code": "https://github.com/princeton-nlp/MeZO", "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "RoBERTa SST-2 template", "text": "<S1> It was [MASK] .", "where": "Table 13"},
+   {"purpose": "OPT SQuAD", "text": "Title: <title>\nContext: <context>\nQuestion: <question>\nAnswer:", "where": "Table 14"},
+   {"purpose": "OPT RTE", "text": "<premise>\nDoes this mean that \"<hypothesis>\" is true? Yes or No?", "where": "Table 14"},
+   {"purpose": "OPT DROP", "text": "Passage: <context>\nQuestion: <question>\nAnswer:", "where": "Table 14"}
+  ],
+  "evidence": [
+   {"field": "training.steps", "quote": "We run MeZO for 20K steps and fine-tuning for 5 epochs, or 625 steps", "where": "Sec 3.2"},
+   {"field": "training.lr_schedule", "quote": "constant learning rate for all MeZO experiments", "where": "App E.3"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "On OPT-13B, MeZO (best of full/LoRA/prefix) matches or beats Adam fine-tuning within 1% on 7 of 11 tasks.",
+   "kind": "measured", "source": null, "metric": "tasks within 1% or better", "value": "7 of 11", "unit": "tasks", "baseline_value": null, "n": 11,
+   "setup": "OPT-13B, 1000 train examples, prompts, MeZO 20K steps vs FT Adam 5 epochs; best of three MeZO variants chosen per task (Fig 1)",
+   "quote": "comparable (within 1%) or better performance than FT on 7 out of 11 tasks",
+   "table": null, "note": "Selection of best variant per task uses the test numbers in Table 1; plain MeZO alone is worse on some tasks (e.g. BoolQ 67.6 vs 73.8 LoRA).", "where": "Table 1 caption, Sec 3.2"
+  },
+  {
+   "claim": "MeZO uses the same memory as zero-shot and up to 12x less than standard fine-tuning.",
+   "kind": "measured", "source": null, "metric": "memory ratio FT / MeZO", "value": "12", "unit": "x", "baseline_value": null, "n": null,
+   "setup": "OPT family on MultiRC (400 tokens average), A100 80GB, batch size 1 per device, no gradient checkpointing",
+   "quote": "offering memory savings of up to 12 times compared to standard FT",
+   "table": null, "note": "Table 22: 13B MeZO 26GB vs full FT 316GB on 4xA100.", "where": "Sec 3.4, Table 22"
+  },
+  {
+   "claim": "On one A100 80GB, backprop with Adam fits only a 2.7B model whereas MeZO trains 30B.",
+   "kind": "measured", "source": null, "metric": "largest tunable OPT", "value": "2.7B vs 30B", "unit": "params", "baseline_value": null, "n": null,
+   "setup": "1xA100 80GB, MultiRC, no memory-saving tricks (Fig 4)",
+   "quote": "backpropagation with Adam is feasible only for a 2.7B LM",
+   "table": null, "note": "Table 22 shows 30B MeZO at 58GB.", "where": "Intro, Fig 4"
+  },
+  {
+   "claim": "MeZO needs 32x more steps than FT on OPT-30B yet only half the GPU-hours.",
+   "kind": "measured", "source": null, "metric": "step ratio MeZO / FT", "value": "32", "unit": "x", "baseline_value": null, "n": null,
+   "setup": "OPT-30B, MultiRC; FT uses 8x GPUs and 7.74x more time per step; implementation-dependent",
+   "quote": "MeZO takes 32× more",
+   "table": null, "note": "Main text steps: 20K MeZO vs 625 FT = 32x. RoBERTa: 100K vs 1K steps.", "where": "App F.6"
+  },
+  {
+   "claim": "MeZO has 7.74x faster per-step wall-clock than full FT on a 30B model.",
+   "kind": "measured", "source": null, "metric": "per-step speedup", "value": "7.74", "unit": "x", "baseline_value": null, "n": null,
+   "setup": "OPT-30B, MultiRC, 80GB A100 with NVLink/InfiniBand; MeZO 1 GPU 5.896s vs FT 8 GPUs 45.608s",
+   "quote": "training with MeZO brings 7.74× speedup per step",
+   "table": null, "note": null, "where": "App F.6, Table 23"
+  },
+  {
+   "claim": "On CB (OPT-13B) plain MeZO is far behind FT.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "67.9", "unit": "%", "baseline_value": "83.9", "n": 1000,
+   "setup": "OPT-13B, 1000 train examples, full-parameter MeZO vs FT Adam",
+   "quote": null, "table": "Table 1, row MeZO vs row FT (12x memory), column CB (67.9 vs 83.9)",
+   "note": "MeZO (prefix) reaches 69.6 on CB, still 14.3 below FT.", "where": "Table 1"
+  },
+  {
+   "claim": "On MultiRC (OPT-13B) plain MeZO is 11 points behind FT.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "60.1", "unit": "%", "baseline_value": "71.1", "n": 1000,
+   "setup": "OPT-13B, 1000 train examples, full-parameter MeZO vs FT Adam",
+   "quote": null, "table": "Table 1, row MeZO vs row FT (12x memory), column MultiRC (60.1 vs 71.1)",
+   "note": "MeZO (prefix) 63.7, MeZO (LoRA) 61.5.", "where": "Table 1"
+  },
+  {
+   "claim": "RoBERTa-large with k=512, MeZO is within 5% of fine-tuning on all six tasks and beats linear probing.",
+   "kind": "measured", "source": null, "metric": "gap to FT", "value": "5", "unit": "%", "baseline_value": null, "n": 6,
+   "setup": "RoBERTa-large 350M, k=512 per class, prompts, MeZO 100K steps vs FT 1K steps",
+   "quote": "the gap between MeZO and FT further reduced to within 5% across all tasks",
+   "table": null, "note": "Table 18 k=512: MNLI MeZO 78.3 vs FT 84.4 (6.1 points) and SNLI 83.0 vs 88.7 (5.7 points), so 'within 5%' is not an absolute-point gap for every task; the best MeZO variant (prefix) gives 79.8 and 84.8.", "where": "Sec 3.1, Table 18"
+  },
+  {
+   "claim": "Without a prompt MeZO fails: SST-2 drops to near chance.",
+   "kind": "measured", "source": null, "metric": "SST-2 accuracy", "value": "51.9", "unit": "%", "baseline_value": "89.6", "n": 5,
+   "setup": "RoBERTa-large k=16, 10,000 forward-pass budget, 5 seeds; no-prompt grid extended with lr 1e-4",
+   "quote": null, "table": "Table 5, row No Prompt vs row Prompt, column SST-2 (51.9 vs 89.6)",
+   "note": "SNLI 34.8 vs 65.1, TREC 19.5 vs 66.7.", "where": "App A.1, Table 5"
+  },
+  {
+   "claim": "Optimizing accuracy directly with MeZO works but is worse than cross entropy: TREC 68.6 vs 94.3.",
+   "kind": "measured", "source": null, "metric": "TREC accuracy", "value": "68.6", "unit": "%", "baseline_value": "94.3", "n": null,
+   "setup": "RoBERTa-large k=512, full-parameter MeZO optimizing accuracy vs MeZO cross entropy; zero-shot 32.0",
+   "quote": null, "table": "Table 3, row Accuracy/F1 (MeZO) vs Cross entropy (MeZO), column TREC",
+   "note": "SQuAD (OPT-13B, MeZO prefix, F1 objective, 1,000 examples): 78.5 vs 84.7 with cross entropy.", "where": "Sec 3.3, Table 3"
+  },
+  {
+   "claim": "Checkpoint storage for MeZO is a seed plus one scalar per step, under 0.1MB for 66B.",
+   "kind": "measured", "source": null, "metric": "checkpoint size", "value": "<0.1", "unit": "MB", "baseline_value": "38MB LoRA, 12MB prefix", "n": null,
+   "setup": "66B, 20,000 steps x 2 bytes plus seed",
+   "quote": "which is less than 0.1MB",
+   "table": null, "note": null, "where": "Sec 2.1"
+  },
+  {
+   "claim": "Forward-mode autodiff (JVP) needs 830.66 MB excess memory vs 327.50 MB for inference and 24,156.23 MB for backprop.",
+   "kind": "measured", "source": null, "metric": "excess memory", "value": "830.66", "unit": "MB", "baseline_value": "24156.23", "n": null,
+   "setup": "RoBERTa-large, JAX, batch size 16, MultiRC, model weights not counted",
+   "quote": null, "table": "Table 12, row Excess Memory (MB), columns Inference (327.50), Backpropagation (24156.23), Forward Auto-Differentiation (830.66)",
+   "note": null, "where": "App D, Table 12"
+  },
+  {
+   "claim": "The two-point SPSA estimator is much more efficient than a one-point estimator at equal forward passes.",
+   "kind": "measured", "source": null, "metric": "TREC accuracy", "value": "92.7", "unit": "%", "baseline_value": "73.0", "n": null,
+   "setup": "RoBERTa-large k=512; SPSA 20K steps vs one-point 40K steps (same forward-pass count)",
+   "quote": null, "table": "Table 11, row SPSA 20K vs row One-point estimate 40K, column TREC (92.7 vs 73.0)",
+   "note": null, "where": "App B.5, Table 11"
+  },
+  {
+   "claim": "MeZO beats gradient-free BBTv2 by up to 11 points absolute on RoBERTa-large.",
+   "kind": "measured", "source": null, "metric": "SNLI accuracy", "value": "11", "unit": "% absolute", "baseline_value": null, "n": null,
+   "setup": "RoBERTa-large k=16; BBTv2 numbers taken from Sun et al.",
+   "quote": "by up to 11% absolute",
+   "table": null, "note": "Table 21 SNLI: MeZO prefix 71.6 vs BBTv2 57.3 (14.3), MeZO 68.5 (11.2).", "where": "Sec 3.1, Table 21"
+  },
+  {
+   "claim": "MeZO optimizes 66B models and beats zero-shot and ICL on most tasks, but 66B SQuAD with full MeZO failed without further tuning.",
+   "kind": "measured", "source": null, "metric": "SST-2 accuracy", "value": "93.6", "unit": "%", "baseline_value": "89.3", "n": 1000,
+   "setup": "OPT-66B, 1000 examples, best of MeZO and MeZO (prefix) vs ICL",
+   "quote": null, "table": "Table 2, row 66B MeZO/MeZO (prefix), column SST-2 (93.6 vs ICL 89.3)",
+   "note": "Table 20 marks 66B MeZO SQuAD with * : 'MeZO requires further tuning to successfully optimize.' 66B RTE MeZO 66.4 vs zero-shot 67.2.", "where": "Table 2, Table 20"
+  },
+  {
+   "claim": "Convergence rate of ZO-SGD scales with local effective rank r, not parameter count d (Theorem 1, Lemma 3), versus a factor d from classical analysis (Lemma 2).",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Assumes local r-effective Hessian rank and PL inequality; gamma = Theta(r/n)",
+   "quote": null, "table": null, "note": "Theory rests on an assumption not verified for LLMs (authors say the Hessian rank is too costly to measure).", "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "MeZO takes many more steps (20K vs 625 for OPT; 100K vs 1K for RoBERTa) to reach comparable accuracy; the wall-clock win is implementation-dependent.",
+  "Only works with a task prompt; without one SST-2 falls to 51.9 (Table 5).",
+  "Gap to FT remains large on some tasks (CB, MultiRC, WIC) and 66B full MeZO on SQuAD did not train without further tuning.",
+  "Local effective rank assumption is not measured on LLMs; theory is for the idealised sphere/Gaussian z.",
+  "Non-differentiable objective results are preliminary, and cross entropy still wins (Table 3).",
+  "Not combined with FlashAttention, gradient checkpointing or quantization; memory comparisons exclude these.",
+  "Memory comparison uses batch size 1 per device and no gradient checkpointing, which favours MeZO.",
+  "Number of seeds for the main tables is not stated; OPT tables are single numbers with no variance.",
+  "Best variant of MeZO is selected per task on Fig 1 and Table 2, but 'best' is not described as validation-selected."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "SPSA", "definition": "Simultaneous Perturbation Stochastic Approximation: gradient estimate (L(theta+eps z; B) - L(theta-eps z; B)) / (2 eps) * z with z ~ N(0, I)", "where": "Definition 1"},
+  {"term": "MeZO", "definition": "memory-efficient zeroth-order optimizer: ZO-SGD that regenerates z from a saved seed to operate in place with inference-level memory", "where": "Sec 2.1, Algorithm 1"},
+  {"term": "Local r-effective rank", "definition": "tr(H)/||H||_op of a Hessian upper bound H in a neighbourhood of the iterate is at most r", "where": "Assumption 1"}
+ ],
+ "lineage": [
+  {"work": "Multivariate stochastic approximation using a simultaneous perturbation gradient approximation (Spall)", "year": 1992, "arxiv": null, "relation": "extends", "note": "SPSA estimator and ZO-SGD adapted to run in place", "quote": null},
+  {"work": "A kernel-based view of language model fine-tuning (Malladi et al.)", "year": 2022, "arxiv": "2210.05643", "relation": "extends", "note": "prompt makes fine-tuning close to pre-training objective; motivates theory", "quote": null},
+  {"work": "Making pre-trained language models better few-shot learners (LM-BFF, Gao et al.)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "prompt-based fine-tuning and RoBERTa prompts, k-shot splits", "quote": null},
+  {"work": "OPT: Open pre-trained transformer language models (Zhang et al.)", "year": 2022, "arxiv": "2205.01068", "relation": "evaluates", "note": "13B, 30B, 66B models", "quote": null},
+  {"work": "RoBERTa (Liu et al.)", "year": 2019, "arxiv": "1907.11692", "relation": "evaluates", "note": "RoBERTa-large 350M", "quote": null},
+  {"work": "BBTv2 (Sun et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "gradient-free baseline; numbers copied from that paper", "quote": null},
+  {"work": "LoRA (Hu et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "r=8, alpha=16", "quote": null},
+  {"work": "Prefix-tuning (Li and Liang)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "m=5 prefix tokens, real-activation init", "quote": null},
+  {"work": "A new one-point residual-feedback oracle (Zhang et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "one-point estimator ablation", "quote": null},
+  {"work": "Training deep nets with sublinear memory cost (Chen et al.)", "year": 2016, "arxiv": "1604.06174", "relation": "related", "note": "gradient checkpointing compared in time-memory analysis", "quote": null},
+  {"work": "Language models are few-shot learners (Brown et al.)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "ICL baseline and prompts", "quote": null},
+  {"work": "SuperGLUE, SQuAD, DROP, SST, SNLI, MNLI, TREC", "year": null, "arxiv": null, "relation": "uses-data", "note": "evaluation datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "OPT-13B results with zero-shot, in-context learning (ICL), MeZO (we report the best among MeZO/MeZO (LoRA)/MeZO (prefix)), and fine-tuning with Adam (FT).", "page": 2, "why": "Shows the headline 7-of-11 result and the gap on CB/WIC/MultiRC at a glance"},
+  {"figure": "Fig 3", "caption": "GPU memory consumption with different OPT models and tuning methods on MultiRC (400 tokens per example on average).", "page": 7, "why": "Memory ratios 7x to 12x by model size"},
+  {"figure": "Fig 4", "caption": "Largest OPT models that one can tune with specific hardwares and algorithms.", "page": 7, "why": "Maps hardware to largest tunable model: 1xA100 gives FT 2.7B, MeZO 30B"},
+  {"figure": "Fig 5", "caption": "MeZO does not optimize significantly faster when tuning fewer parameters, agreeing with our theory in Section 4.", "page": 29, "why": "Empirical support for dimension-free convergence"}
+ ],
+ "code": [
+  {"where": "Algorithm 1 (p3)", "snippet": "projected_grad = (l_plus - l_minus) / (2*eps); theta_i <- theta_i - eta_t * projected_grad * z, with z regenerated from seed s", "verbatim": false}
+ ],
+ "problems": [
+  "Text extraction of tables is column-by-column; table cells were matched by order against captions. Table 1 FT row order inferred as SST-2 92.0, RTE 70.8, CB 83.9, BoolQ 77.1, WSC 63.5, WIC 70.1, MultiRC 71.1, COPA 79.0, ReCoRD 74.1, SQuAD 84.9, DROP 31.3.",
+  "Fig 1 is rendered from a chart; Fig 3/4 axis text garbled in extraction (numbers taken from Table 22).",
+  "No embedded instructions found."
+ ]
+}

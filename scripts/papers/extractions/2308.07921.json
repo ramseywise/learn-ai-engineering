@@ -1,19 +1,211 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2308.07921",
  "pdf": "ai-engineering/03-harness-engineering/sources/zhou-2023-solving-challenging-math-word-problems.pdf",
  "bib": {
   "title": "Solving Challenging Math Word Problems Using GPT-4 Code Interpreter with Code-based Self-Verification",
-  "first_author": "Aojun Zhou",
-  "year": "2023",
-  "venue": null,
+  "authors": ["Aojun Zhou", "Ke Wang", "Zimu Lu", "Weikang Shi", "Sichun Luo", "Zipeng Qin", "Shaoqing Lu", "Anya Jia", "Linqi Song", "Mingjie Zhan", "Hongsheng Li"],
+  "first_author": "Zhou",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2308.07921",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 65593,
+  "chars_total": 65593,
+  "engine": "pymupdf",
+  "skipped": "Figures 7 and 8 (MMLU per-subject charts) are image-only; only labels extracted. Reference list skimmed."
  },
- "legacy_report": "SOURCE: \"Solving Challenging Math Word Problems Using GPT-4 Code Interpreter with Code-based Self-Verification\", Zhou, Wang, Lu, Shi, Luo, Qin, Lu, Jia, Song, Zhan, Li (CUHK MMLab et al.). arXiv:2308.07921v1 [cs.CL], 15 Aug 2023. Preprint (no venue printed).\nCOVERAGE: 65,615 of 65,615 chars, all 23 pages (body, appendix A.1.1, A.1.2, A.2, example tables). Figures 7/8 (MMLU per-subject charts) are image-only; only their text labels came through. Extraction was clean. No embedded instructions.\n\nCLAIMS (ranked)\n- claim: Prompting GPT4-Code to verify its answer with code (CSV) lifts MATH accuracy 69.69% to 73.54% on its own; adding verification-guided weighted voting at k=16 reaches 84.32%.\n  number: 73.54%, 84.32% (+3.85, +14.63)\n  setup: GPT-4 Code Interpreter, zero-shot, full MATH test set (n not stated), 7 subjects; voting k=16 sampled paths, weights wT=1, wU=0.5, wF=0.2.\n  quote: \"GPT4-Code + CSV ✓ ✗ 56.6 53.9 54.0 85.6 77.3 86.5 86.9 73.54\" and \"GPT4-Code + CSV + Voting ✓ ✓ (k=16) 74.4 67.8 64.9 94.1 89.0 91.6 95.6 84.32\"\n  where: Table 1, p.8\n- claim: Verifying in natural language does NOT help, while verifying with code does. Same model, same set.\n  number: NL verification 69.29 vs. baseline 69.69 (-0.40); code 73.54 (+3.85)\n  setup: GPT4-Code on MATH. NL verification fell on 4 of 7 subtopics; code verification rose on all 7.\n  quote: \"Interpreter Nature Language 52.6 48.7 50.8 79.9 72.5 83.1 82.6 69.29+2.5 -2.8 -2.6 +2.7 +1.9 -3.2 -1.0 -0.40\" and \"code-based verification enhances accuracy across all 7 subtopics when compared to the Basic Prompt.\"\n  where: Table 4 and Sec 4.4, p.10\n- claim: Code-based verification is high precision. Verified-True answers are right about 96% of the time. Recall is lower, so many correct answers are not marked True.\n  number: avg precision 95.88%, recall 79.11%, accuracy 73.54%\n  setup: GPT4-Code+CSV on MATH, over five sampled paths (Fig 6a).\n  quote: \"we observed numerical enhancements of 22.3% and 5.6% in the average Precision and Recall, respectively. In particular, the average Precision registered at 95.88%.\" Fig 6 labels: \"Avg. 95.88 Avg. 79.11 Avg. 73.54\"\n  where: Sec 4.4 p.10; Fig 6 p.11. Appendix: \"verification-guided voting is bounded to be effective when the precision of verification is high.\"\n- claim: Weights must rank True above False. If the order is inverted, voting is worse than plain majority voting.\n  number: (wT,wU,wF)=(0.5,0.5,1) worse than naive; wT>wU>=wF always beat naive\n  setup: MATH, 2 to 16 sampled paths; weight sets 1/0.5/0.2, 1/1/1, 1/0/0, 0.5/0.5/1.\n  quote: \"When the hyper-parameter setting satisfied wT > wU ≥ wF, the performance of the verification-guided weighted majority voting consistently surpassed that of the naive majority voting methods across all sampled paths.\"\n  where: Sec 4.4, p.10; Fig 6b\n- claim: More code use tracks higher accuracy, and the effect grows with problem difficulty. Pilot used code-constrained prompts.\n  number: Prompt 2 (code once) beats Prompt 1 (no code) by 6.9 points; Fig 2a shows 60.80, 67.58, 69.94, 74.48 for prompts 1, 2, Basic, CSV\n  setup: GPT4-Code on MATH; Code Usage Frequency measured as code executions per problem. Reading of Fig 2a values to prompts is by order, not labelled in the text.\n  quote: \"Prompt 2 yields an accuracy gain of 6.9 percent over Prompt 1.\" and \"The performance gain when using more code is more obvious in the higher difficulty levels, while in lower levels, the performance gain is not very prominent\"\n  where: Sec 3.1 p.5; Fig 2 p.5; Sec 4.3 p.9. Correlational (prompts changed, not code use in isolation).\n- claim: Self-debugging from execution feedback is part of the base model's strength. Verification adds a check on reasoning and the final answer, which self-debugging does not cover.\n  number: none\n  quote: \"the self-debugging mechanism only verifies each step of the generated code while lacks the verification of the reasoning steps and the final answer\"\n  where: Intro p.2. Loop formalised as C -> V in {True, False, Uncertain}; False triggers a new solution and re-verification; Uncertain is accepted as final (Sec 3.2 p.6).\n- claim: Baseline: GPT4-Code (69.69%) far exceeds GPT-4 without code (42.20%), GPT-4 CoT (50.36%) and PHP (53.90%) on MATH.\n  number: 69.69 vs 42.20 / 50.36 / 53.90\n  setup: MATH, table 1; baselines are as the authors report them.\n  quote: \"GPT-4 (PHP) ✗ ✗ 26.3 29.8 41.9 55.7 56.3 73.8 74.3 53.90\"\n  where: Table 1, p.8\n- claim: Other benchmarks improve less, because the base is already strong.\n  number: GSM8K 92.9 to 97.0 (5 paths); MMLU-Math 87.5 to 89.2; MMLU-STEM 86.8 to 87.0\n  setup: GPT4-Code zero-shot, CSV + voting. GSM8K comparison rows: GPT-4 PHP 96.5 (40 paths), GPT-4 model selection 96.8 (15 paths).\n  quote: \"GPT4-Code + CSV + Voting 5 97.0\"; \"GPT4-Code Math 87.5 zero-shot\"; \"GPT4-Code + CSV + Voting Math 89.2 zero-shot\"; \"GPT4-Code + CSV + Voting STEM 87.0 zero-shot\"\n  where: Tables 2-3, p.9\n- claim: Gains by subject are uneven. Geometry gains only 0.6 points from CSV.\n  number: +0.6 (Geometry), +7.6/+8.4 (Number Theory; Table 1 prints +7.6, Table 4 prints +8.4 for the same 77.2 to 85.6)\n  setup: MATH subtopics. Authors guess the cause is that geometry needs multimodality.\n  quote: \"the Geometry problem only has an increased accuracy of 0.6%\"\n  where: Sec 4.1 p.8. Internal inconsistency flagged in PROBLEMS.\n- claim: sympy dominates the code the model writes.\n  number: sympy 0.4168 per problem, math 0.1590\n  quote: \"the sympy package is utilized most frequently\"\n  where: Table 6, p.15\n\nLIMITS\n- Authors concede: \"our analysis and improvements are currently focused on GPT4-Code, which is somewhat restrictive.\" Other LLMs not tested. Open-source fine-tuning is untested future work.\n- Closed model with a built-in code sandbox; results depend on that product version (August 2023, since superseded). The authors say the high result \"is based on the strong abilities of the base model.\"\n- Verification is the model grading its own answer. The paper does not separate \"verification catches errors\" from \"extra code or longer reasoning helps\".\n- The paper reports no variance, seeds, confidence intervals or number of samples. Test-set size is not stated.\n- Voting weights were chosen by the authors with ablation on the same benchmark; no held-out tuning is described.\n- The Uncertain state is accepted as final, and the paper does not report how often it occurs.\n- Math answers have a checkable computation; the paper does not show transfer to tasks without a computable check.\n- Appendix example Table 12 shows a verification that wrongly passed or failed (True succeeds while Uncertain and False fail on a correct answer), so verification can mislead.\n\nBUILDS ON: Wei et al. 2022 (CoT); Kojima et al. 2022 (zero-shot CoT); Wang et al. 2023 (self-consistency, majority voting); Gao et al. 2023 (PAL); Chen et al. 2022 (PoT); Cobbe et al. 2021 (trained verifiers, GSM8K); Lightman et al. 2023 (Let's verify step by step); Weng et al. 2023 (LLM self-verification); Madaan et al. 2023 (Self-Refine); Zheng et al. 2023 (PHP, the previous SOTA at 53.9%); Zhao et al. 2023 (model selection).\n\nCODE: The CSV prompt, verbatim: \"To solve the problem using code interpreter step by step, and please verify your answer using code interpreter.\" (Fig 3 caption, p.6). Voting rule, Eq 1-2: Score(a) = sum over verification states v of w_v * #{i | a_i = a and v_i = v}; Output = argmax_a Score(a). Worked example, Fig 4: answer \"2\" has 3 True, 1 Uncertain, 0 False, so 1x3+0.5x1+0.2x0 = 3.5; answer \"5\" has 1 True, 1 Uncertain, 4 False, so 2.3. Plain majority picks 5 (6 votes vs 4); weighted voting picks 2.\nVerification snippet from Fig 3b: `verification = 1e8 / (smallest_integer ** 4) < 1` returned False for 100, and the model moved to 101 (the underscore is likely an extraction artifact).\n\nFIGURES: Fig 1 (p.3): the same GCD/LCM problem under no-code, code-once and basic prompts. Fig 2 (p.5): accuracy by prompt and level against code usage. Fig 3 (p.6): worked CSV catch, 100 fails the check, 101 passes; the clearest illustration of the loop. Fig 4 (p.8): weighted-voting pipeline with the 3.5 vs 2.3 example. Fig 5 (p.9): accuracy against code usage frequency. Fig 6 (p.11): precision/recall and weight ablation. Figs 7-8: MMLU per-subject charts.\n\nPROBLEMS: Table 1 shows Number Theory +7.6 while Table 4 shows +8.4 for the same 77.2 to 85.6 (the difference is 8.4, so Table 1 is the printed error). Table 4's NL row run together in extraction (\"69.29+2.5\"). Fig 2a values (60.80, 67.58, 69.94, 74.48) are mapped to prompts by order only. Table 1 lists GPT-4 at 42.20 with no per-subject values. No instructions embedded in the PDF."
+ "type": "empirical",
+ "question": "Can GPT-4 Code Interpreter be prompted to verify and correct its own math answers with code, and can the verification state improve majority voting?",
+ "hypothesis": "More frequent code use, including code that checks the answer, raises accuracy; verified-True answers are more reliable and deserve more voting weight.",
+ "contributions": [
+  "First systematic analysis of the role of code generation, execution and self-debugging in GPT4-Code's math solving.",
+  "Explicit code-based self-verification (CSV) prompt and verification-guided weighted majority voting.",
+  "Two new instruction-following datasets, MATH-code and MMLU-Math-code (stated as released or to be released)."
+ ],
+ "method": {
+  "summary": "Zero-shot prompts constrain how GPT-4 Code Interpreter uses code (none, once, unrestricted) to measure Code Usage Frequency against accuracy. The CSV prompt asks the model to verify its answer with code and revise if the check is False; k sampled solutions are then voted with weights by verification state (True, Uncertain, False).",
+  "task": "math word problem solving (MATH, GSM8K, MMLU-Math, MMLU-STEM)",
+  "trains": false,
+  "datasets": [
+   {"name": "MATH", "role": "eval", "size": null, "split": "inferred: test set, seven subjects, five difficulty levels; size not stated", "source": "Hendrycks et al. 2021", "preprocessing": null},
+   {"name": "GSM8K", "role": "eval", "size": null, "split": null, "source": "Cobbe et al. 2021", "preprocessing": null},
+   {"name": "MMLU-Math and MMLU-STEM", "role": "eval", "size": null, "split": null, "source": "Hendrycks et al. 2020", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "GPT-4 Code Interpreter (GPT4-Code)", "role": "base", "params": null, "architecture": "GPT-4 with incremental code generation and execution", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"access": "ChatGPT plugin interface (openai.com/blog/chatgpt-plugins#code-interpreter)"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "inferred: sampling of k independent paths for voting; decoding settings not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "k=16 sampled paths for MATH voting; 5 for GSM8K; single run otherwise; seeds and repeat runs not stated; MMLU voting k not stated",
+   "prompting": "zero-shot, no few-shot examples; code-use constraint prompts and the CSV prompt",
+   "retrieval": null,
+   "parameters": {
+    "voting_weights": "wT=1, wU=0.5, wF=0.2 (wT > wU > wF); main setting",
+    "voting_score": "Score(a) = sum over paths with answer a of w_v, v in {True, Uncertain, False}; output argmax_a Score(a)",
+    "k_MATH": "16",
+    "k_GSM8K": "5",
+    "ablation_weights": "1/0/0, 0.5/0.5/1, 1/0.5/0.2, 1/1/1 (naive majority voting)"
+   },
+   "other": {
+    "code_usage_frequency": "number of code executions per solution, measured for each prompt",
+    "false_state_note": "once an answer is confirmed False, no further verification may be run, giving a False state"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "share of problems with a correct final answer", "unit": "%", "higher_is_better": true},
+    {"name": "Code Usage Frequency", "definition": "number of code executions per solution under a prompt", "unit": "count", "higher_is_better": null},
+    {"name": "Precision of verification", "definition": "TP/(TP+FP); share of verified-True answers that were correct", "unit": "%", "higher_is_better": true},
+    {"name": "Recall of verification", "definition": "TP/(TP+FN); share of correct answers verified True", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["GPT-4 (CoT)", "GPT-4 (PHP)", "GPT-3.5", "GPT4-Code basic prompt", "GPT-4 (Model selection)", "naive majority voting", "natural-language self-verification"],
+   "protocol": "Single run per configuration as far as stated; no significance tests or confidence intervals; precision and recall computed from five sampled paths."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "MATH-code and MMLU-Math-code experimental data said to be public ('making ... publicly available'; later 'will make it publicly available in the near future'); no URL"
+  },
+  "prompts": [
+   {"purpose": "Prompt 1, no code", "text": "You are not allowed to use any code. The problem is: {Question}.", "where": "Fig 1"},
+   {"purpose": "Prompt 2, code once", "text": "You can use code only 1 time. The problem is: {Question}.", "where": "Fig 1"},
+   {"purpose": "Basic prompt", "text": "Solve the problem and put your answer in \\boxed{}. The problem is: {Question}.", "where": "Fig 1"},
+   {"purpose": "CSV prompt", "text": "To solve the problem using code interpreter step by step, and please verify your answer using code interpreter.", "where": "Fig 3 caption"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters.voting_weights", "quote": "wT= 1", "where": "Fig 4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "CSV alone lifts GPT4-Code on MATH from 69.69% to 73.54%.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": 73.54, "unit": "%", "baseline_value": 69.69, "n": null,
+   "setup": "MATH, GPT4-Code, zero-shot, single path, overall across 7 subjects",
+   "quote": "raising the result to 73.54% after adding explicit code-based self-verification",
+   "table": null, "note": null, "where": "Sec 4.1, Table 1"
+  },
+  {
+   "claim": "CSV plus verification-guided weighted voting with 16 paths reaches 84.32% on MATH.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": 84.32, "unit": "%", "baseline_value": 69.69, "n": 16,
+   "setup": "MATH, GPT4-Code, k=16 sampled paths, wT=1, wU=0.5, wF=0.2",
+   "quote": "84.32% after adding both explicit code-based self-verification and verification-guided weighted majority voting (the number of sampled paths is 16)",
+   "table": null, "note": "Abstract writes 53.9% to 84.3%, comparing with the previous state of the art, not with GPT4-Code.", "where": "Sec 4.1, Table 1"
+  },
+  {
+   "claim": "Basic GPT4-Code scores 69.69% on MATH, against 42.20% for GPT-4 and 53.90% for GPT-4 PHP.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": 69.69, "unit": "%", "baseline_value": 53.90, "n": null,
+   "setup": "MATH, zero-shot; GPT-4 (PHP) figure is from Zheng et al. 2023",
+   "quote": "GPT4-Code reaches 69.69% on MATH",
+   "table": null, "note": "Intro rounds to 69.7% and says 27.5% over GPT-4 (42.2%).", "where": "Sec 4.1, Table 1"
+  },
+  {
+   "claim": "Natural-language self-verification does not help: 69.29% versus 69.69% without verification, and 4 of 7 subjects decline.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": 69.29, "unit": "%", "baseline_value": 69.69, "n": null,
+   "setup": "MATH, GPT4-Code, NL verification prompt instead of code",
+   "quote": "relying solely on natural language verification",
+   "table": "Table 4, row Nature Language, column Overall", "note": "Table 4 lists Number Theory change as +8.4 for code-based while Table 1 lists +7.6; 85.6-77.2 = 8.4.", "where": "Sec 4.4, Table 4"
+  },
+  {
+   "claim": "Verification precision averages 95.88%, recall 79.11%, accuracy 73.54%.",
+   "kind": "measured", "source": null, "metric": "precision", "value": 95.88, "unit": "%", "baseline_value": 73.54, "n": 5,
+   "setup": "MATH, five sampled paths, True state counted as positive",
+   "quote": "the average Precision registered at 95.88%",
+   "table": null, "note": "Recall average 79.11 read from Fig 6(a).", "where": "Sec 4.4, Fig 6"
+  },
+  {
+   "claim": "Allowing code once raises accuracy 6.9 points over no code.",
+   "kind": "measured", "source": null, "metric": "accuracy gain", "value": 6.9, "unit": "points", "baseline_value": null, "n": null,
+   "setup": "MATH, GPT4-Code, Prompt 2 vs Prompt 1",
+   "quote": "Prompt 2 yields an accuracy gain of 6.9 percent over Prompt",
+   "table": null, "note": "Fig 2(a) labels read 60.80, 67.58, 69.94, 74.48; 67.58-60.80 = 6.78.", "where": "Sec 3.1"
+  },
+  {
+   "claim": "On GSM8K, CSV plus voting with 5 paths reaches 97.0%, against 92.9% for GPT4-Code and 96.5% for PHP with 40 paths.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": 97.0, "unit": "%", "baseline_value": 92.9, "n": 5,
+   "setup": "GSM8K, GPT4-Code, 5 sampled paths",
+   "quote": "GPT4-Code + CSV + Voting",
+   "table": "Table 2, row GPT4-Code + CSV + Voting, column Accuracy(%)", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "On MMLU-Math, CSV plus voting gives 89.2% against 87.5% for GPT4-Code, both zero-shot.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": 89.2, "unit": "%", "baseline_value": 87.5, "n": null,
+   "setup": "MMLU-Math, zero-shot, GPT4-Code; k not stated",
+   "quote": "GPT4-Code + CSV + Voting",
+   "table": "Table 3, row GPT4-Code + CSV + Voting, dataset Math", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "On MMLU-STEM, CSV plus voting gives 87.0% against 86.8% for GPT4-Code.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": 87.0, "unit": "%", "baseline_value": 86.8, "n": null,
+   "setup": "MMLU-STEM, zero-shot, k not stated",
+   "quote": "GPT4-Code + CSV + Voting",
+   "table": "Table 3, row GPT4-Code + CSV + Voting, dataset STEM", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Geometry gains only 0.6 points from CSV, which the authors tie to multimodality.",
+   "kind": "measured", "source": null, "metric": "accuracy gain", "value": 0.6, "unit": "points", "baseline_value": 54.0, "n": null,
+   "setup": "MATH Geometry, GPT4-Code + CSV",
+   "quote": "the Geometry problem only has an increased accuracy of 0.6%",
+   "table": null, "note": null, "where": "Sec 4.1"
+  },
+  {
+   "claim": "Weights satisfying wT > wU >= wF beat naive voting at every path count; weights 0.5/0.5/1 do worse than naive voting.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "MATH, k=2..16 paths, Fig 6(b); numbers only in figure",
+   "quote": "the performance of the verification-guided weighted majority voting consistently surpassed that of the naive majority voting methods across all sampled paths",
+   "table": null, "note": null, "where": "Sec 4.4"
+  }
+ ],
+ "limits": [
+  "Only GPT-4 Code Interpreter is studied; authors concede this and plan other LLMs.",
+  "Closed model accessed through ChatGPT; version, date, temperature and sampling settings not reported, so exact rerun is not possible.",
+  "MATH test size, number of runs and variance are not given; no significance tests.",
+  "Verification can be Uncertain or skipped after False; recall is only 79.11%, so many correct answers are not verified True.",
+  "Code Usage Frequency correlation with accuracy is observational across prompts; CSV also changes the prompt wording.",
+  "Weights were chosen and ablated on the same MATH set; voting weight ablation values are only in Fig 6(b).",
+  "Evaluated 2023 model; the 69.69% baseline is now dated.",
+  "Data release is promised but no URL given."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Code Usage Frequency", "definition": "the number of code executions for different prompts", "where": "Sec 3.1"},
+  {"term": "Explicit code-based self-verification (CSV)", "definition": "prompting GPT4-Code to explicitly validate its answer through code generation, with verification state True, False or Uncertain", "where": "Sec 3.2"},
+  {"term": "Verification-guided weighted majority voting", "definition": "voting in which each sampled solution is weighted by its verification state", "where": "Sec 3.2, Eq 1-2"}
+ ],
+ "lineage": [
+  {"work": "Chain-of-Thought prompting (Wei et al. 2022)", "year": 2022, "arxiv": null, "relation": "related", "note": "no-code Prompt 1 resembles CoT", "quote": null},
+  {"work": "Self-consistency (Wang et al. 2023)", "year": 2023, "arxiv": null, "relation": "extends", "note": "weighted voting reduces to naive voting when all weights are 1", "quote": null},
+  {"work": "PAL (Gao et al. 2023)", "year": 2023, "arxiv": null, "relation": "related", "note": "Prompt 2 mirrors PAL", "quote": null},
+  {"work": "Program of Thoughts (Chen et al. 2022)", "year": 2022, "arxiv": null, "relation": "related", "note": "code as reasoning", "quote": null},
+  {"work": "Training verifiers to solve math word problems (Cobbe et al. 2021)", "year": 2021, "arxiv": "2110.14168", "relation": "related", "note": "external trained verifier; GSM8K data", "quote": null},
+  {"work": "Let's verify step by step (Lightman et al. 2023)", "year": 2023, "arxiv": "2305.20050", "relation": "related", "note": "external step verifier", "quote": null},
+  {"work": "Large language models are better reasoners with self-verification (Weng et al. 2023)", "year": 2023, "arxiv": null, "relation": "related", "note": "NL self-verification", "quote": null},
+  {"work": "Self-Refine (Madaan et al. 2023)", "year": 2023, "arxiv": "2303.17651", "relation": "related", "note": "iterative self-feedback in natural language", "quote": null},
+  {"work": "Progressive-hint prompting (Zheng et al. 2023)", "year": 2023, "arxiv": "2304.09797", "relation": "baseline", "note": "GPT-4 PHP, previous SOTA 53.90 on MATH", "quote": null},
+  {"work": "Automatic model selection (Zhao et al. 2023)", "year": 2023, "arxiv": "2305.14333", "relation": "baseline", "note": "GSM8K model selection", "quote": null},
+  {"work": "MATH (Hendrycks et al. 2021)", "year": 2021, "arxiv": "2103.03874", "relation": "uses-data", "note": "main benchmark", "quote": null},
+  {"work": "MMLU (Hendrycks et al. 2020)", "year": 2020, "arxiv": "2009.03300", "relation": "uses-data", "note": "Math and STEM", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Example from the 277th number theory problem in the MATH dataset: (a) Prompt 1 ... (b) Prompt 2 ... (c) Basic prompt", "page": 3, "why": "Shows the same problem failing without code and with one code block but succeeding with iterative code."},
+  {"figure": "Fig 3", "caption": "Question from the 712th intermediate algebra problem in the MATH dataset. (a) Without self-verification ... (b) With self-verification", "page": 6, "why": "Shortest example of code verification catching an off-by-one error."},
+  {"figure": "Fig 4", "caption": "Illustration of the Naive majority voting and our Verification-guided weighted majority voting", "page": 8, "why": "Worked vote: naive picks 5 (6 vs 4), weighted picks 2 (3.5 vs 2.3)."},
+  {"figure": "Fig 6", "caption": "(a) precision, recall, accuracy on different reasoning paths. (b) accuracy vs number of sampled paths for different weights", "page": 11, "why": "Weight ablation curves."}
+ ],
+ "code": [
+  {"where": "Eq 1-2", "snippet": "Score(a) = sum_v w_v * #{i | a_i = a and v_i = v}, v in {True, Uncertain, False}; Output = argmax_a Score(a)", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 1 and Table 4 disagree on the Number Theory change for code-based verification (+7.6 vs +8.4).",
+  "Figures 2, 5, 6, 7, 8 are charts; only axis labels extracted, so values read from them are not in results."
+ ]
 }

@@ -1,19 +1,521 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2311.16452",
  "pdf": "ai-engineering/01-prompt-engineering/sources/nori-2023-can-generalist-foundation-models-outcompete.pdf",
  "bib": {
   "title": "Can Generalist Foundation Models Outcompete Special-Purpose Tuning? Case Study in Medicine",
-  "first_author": "Harsha Nori",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Harsha Nori",
+   "Yin Tat Lee",
+   "Sheng Zhang",
+   "Dean Carignan",
+   "Richard Edgar",
+   "Nicolo Fusi",
+   "Nicholas King",
+   "Jonathan Larson",
+   "Yuanzhi Li",
+   "Weishung Liu",
+   "Renqian Luo",
+   "Scott Mayer McKinney",
+   "Robert Osazuwa Ness",
+   "Hoifung Poon",
+   "Tao Qin",
+   "Naoto Usuyama",
+   "Chris White",
+   "Eric Horvitz"
+  ],
+  "first_author": "Nori",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2311.16452",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 57529,
+  "chars_total": 57529,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. No appendices exist (21 pages, main text plus references)."
  },
- "legacy_report": "SOURCE: \"Can Generalist Foundation Models Outcompete Special-Purpose Tuning? Case Study in Medicine\" (Medprompt). Nori, Lee, Zhang, et al. (Microsoft; Horvitz). arXiv:2311.16452v1, preprint, Nov 2023.\n\nCOVERAGE: All 21 pages, 57,530 chars, read in full (text, Tables 1-2, ablation, references skimmed). Figures 1, 4, 5, 6, 7 come through only as extracted labels, not images. I did not run the figure-caption script, so the figure-derived numbers rest on text extraction. No scan or garbling problems.\n\nCLAIMS (ranked)\n1. Medprompt (kNN few-shot + self-generated CoT + choice-shuffle ensemble) takes GPT-4 to 90.2% on MedQA, versus 81.7% for the simple-prompt baseline.\n   number: 90.2% vs 81.7% (+~9 points); 27% error-rate reduction vs best specialist models\n   setup: GPT-4 (Mar 2023 era), MedQA US 4-option (1273 questions), k=5 kNN exemplars, 5-call ensemble.\n   quote: \"On the MedQA dataset (USMLE exam), Medprompt produces a 9 absolute point gain in accuracy, surpassing 90% for the first time on this benchmark.\"\n   where: p.3 (Intro); Fig 1a p.2\n2. Ablation of component contributions on MedQA, layered cumulatively. CoT adds the most, then random few-shot and the ensemble.\n   number: zero-shot 81.7 -> random 5-shot +2.2 -> self-generated CoT +3.4 -> kNN dynamic 5-shot +0.8 -> 5x choice-shuffle ensemble +2.1 -> 90.2\n   setup: MedQA, GPT-4, k=5, 5 calls. Order is subjective, chosen by technique complexity. The authors say the techniques are not statistically independent, so the numbers are approximate. Shapley values were not computed.\n   quote: \"The introduction of chain-of-thought steps, as described in Section 4, contributed the most to performance (+3 .4%), followed by few-shot prompting and choice shuffle ensembling (+2.2% each).\"\n   where: p.14 (Sec 5.2); Fig 6 p.14\n   NOTE (internal inconsistency): Fig 4 (p.10) gives running accuracies 81.7, 83.9, 87.3, 88.4, 90.2. That makes kNN +1.1 and ensemble +1.8. Fig 6 labels kNN +0.8 and ensemble +2.1. The body text says \"+2.2% each\" for few-shot and ensemble. Do not quote a single ensemble figure without flagging this. Fig 4 numbers: \"81.7 83.9 87.3 88.4 90.2MedQA Accuracy\".\n3. GPT-4's self-generated CoT beats expert-crafted CoT.\n   number: 86.9 vs 83.8 (+3.1)\n   setup: MedQA, fixed 5-shot, no ensemble; expert CoT is the Med-PaLM 2 prompt.\n   quote: \"GPT-4's self-generated CoT outperforms the expert-crafted one by 3.1 absolute points.\"\n   where: p.15 (Table 2)\n4. Ensemble size and shot count: going bigger gives only a marginal gain.\n   number: k=20 exemplars and 11 ensemble calls give 90.6% (+0.4) on MedQA\n   setup: same as above. The default of 5 and 5 is described as a cost/accuracy balance.\n   quote: \"by increasing to 20 few-shot exemplars and 11 ensemble items, we achieve a further +0.4% performance on MedQA, setting a new state-of-the-art performance threshold of 90.6%.\"\n   where: p.11 (Sec 4.4); p.14\n5. State of the art on all nine MultiMedQA multiple-choice sets, with one strategy for all.\n   number: MedQA 90.2 (vs Med-PaLM 2 86.5), PubMedQA 82.0 (81.8), MedMCQA dev 79.1 (72.3), MMLU Clinical 95.8 (88.7), Genetics 98.0 (92.0), Anatomy 89.6 (84.4), Prof. Medicine 95.2 (95.2), College Biology 97.9 (95.8), College Medicine 89.0 (83.2). GPT-4 5-shot MedQA is 81.4.\n   setup: Table 1. Med-PaLM numbers are \"choose best\" per dataset and fine-tuned. The 90.2 footnote says 90.6 is the k=20, 11x setting. Professional Medicine ties rather than wins.\n   quote: \"By contrast, every GPT-4 reported number uses a single, consistent strategy across all datasets.\"\n   where: p.12\n6. Cost: Medprompt uses far fewer calls than Med-PaLM 2.\n   number: 5 calls vs up to 44\n   quote: \"Med-PaLM 2's Ensemble Refinement method used as many as 44 separate inferences for a single question.\"\n   where: p.5; abstract says \"an order of magnitude fewer calls\"\n7. No sign of overfitting to the benchmarks through prompt iteration.\n   number: 20% eyes-off holdout; 90.6% eyes-on vs 91.3% eyes-off average; eyes-off better in 6/9 datasets\n   quote: \"GPT-4 with Medprompt achieved an average performance of 90.6% on the eyes-on data, and an average performance of 91.3% on the eyes-off data\"\n   where: p.13 (Fig 5); method p.6\n8. Gain transfers out of domain.\n   number: +7.3% average over zero-shot on the non-medical sets, vs +7.1% on MultiMedQA\n   setup: six MMLU sets (electrical engineering, machine learning, philosophy, professional accounting, professional law, professional psychology) plus two NCLEX nursing sets. Fig 7 compares zero-shot, random 5-shot and Medprompt.\n   quote: \"Medprompt provides an average improvement of +7 .3% over baseline zero-shot prompting.\"\n   where: p.16\n9. Mechanism, no number. Choice shuffling counters position bias and adds diversity beyond temperature sampling. The final answer is the mode over shuffled-order samples. Self-generated CoT is filtered by keeping only examples whose generated answer matches the label.\n   quote: \"If this answer does not match the ground truth label, we discard the sample entirely, under the assumption that we cannot trust the reasoning.\"\n   where: p.9\n\nMethod details useful for the note: kNN over text-embedding-ada-002 embeddings, cosine distance, k=5 nearest training questions. Self-consistency is run at temperature > 0. Answer choices are shuffled before each sample. Majority vote over 5 samples. The CoT prompt template is \"## Question: {{question}} {{answer_choices}} ## Answer ... Therefore, the answer is [..]\" (Fig 3, p.8).\n\nLIMITS\n- Results are on multiple-choice exams only. The authors say they did not test the open-text adaptations (embedding-closest answer, or Ensemble Refinement-style concatenation).\n- Possible memorization or benchmark contamination. The MELD black-box test found nothing, but \"blackbox testing approaches like MELD are unable to guarantee that data has not been seen before\".\n- Benchmark performance does not show real-world clinical efficacy.\n- Better prompting may make remaining hallucinations harder to detect.\n- Bias and equity were not assessed.\n- The ablation depends on ordering, and the Fig 4 / Fig 6 / text numbers conflict (see claim 2).\n- The self-generated CoT filter only catches wrong final answers, not wrong reasoning that reaches the right answer.\n- The comparison to Med-PaLM 2 uses \"choose best\" numbers.\n- Needs a labeled training set for kNN exemplars and CoT generation.\n- Dated: single model (GPT-4, 2023), and no non-GPT-4 models tested. Gains over modern reasoning models are not shown.\n\nBUILDS ON\n- Few-shot ICL: Brown et al. 2020.\n- Chain of thought: Wei et al. 2023 (arXiv 2022).\n- Self-consistency: Wang et al. 2023.\n- Dynamic exemplar selection: Liu et al. 2021 (\"What makes good in-context examples for GPT-3\").\n- Med-PaLM and Med-PaLM 2: Singhal et al. 2022 and 2023 (expert CoT, Ensemble Refinement).\n- Prior GPT-4 medical study (fixed 5-shot baseline): Nori et al. 2023.\n- LLMs-as-prompt-writers: Yang et al. 2023 (OPRO), Fernando et al. 2023 (Promptbreeder).\n- Position bias: Zheng et al. 2023, Pezeshkpour & Hruschka 2023.\n- Ensemble diversity: Caruana et al. 2004.\n\nCODE: Algorithm 1 (p.11) in prose.\nPreprocessing: for each training q, embed it, generate a CoT and an answer, and store only the correct ones.\nInference:\n- Embed Q.\n- Take the 5 nearest by cosine distance.\n- Repeat 5 times: shuffle Q's choices, generate CoT and answer with the 5-shot context.\n- Output mode of the answers.\n\nFIGURES\n- Fig 4 (p.10): stacked component contributions on MedQA. Best single picture of the additive pipeline, but its numbers conflict with Fig 6.\n- Fig 6 (p.14): ablation bars with +2.2, +3.4, +0.8, +2.1.\n- Fig 2 (p.8): expert CoT next to GPT-4 CoT for the same question.\n- Fig 1a (p.2): MedQA timeline across models.\n- Fig 7 (p.16): out-of-domain results.\n- Fig 5 (p.13): eyes-on vs eyes-off split.\n\nPROBLEMS: None embedded; no instructions found in the PDF. Figures are extracted as labels only. Fig 1a labels are garbled, and \"GPT-4 base (86.1)\" is unclear in context, so do not cite it. Table 1 gives GPT-4 5-shot MedQA as 81.4, while the Fig 1 simple prompt gives 81.7. These are different baselines, so do not mix them.\n\nAbsolute path of source: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/sources/nori-2023-can-generalist-foundation-models-outcompete.pdf. Extracted text is in /tmp/nori.txt."
+ "type": "empirical",
+ "question": "Can a generalist model such as GPT-4, steered only by systematic prompt engineering, match or beat specialist fine-tuned models on medical challenge benchmarks?",
+ "hypothesis": "Prompting innovation can unlock deeper specialist capabilities in GPT-4 without domain fine-tuning or expert-curated content.",
+ "contributions": [
+  "Medprompt: dynamic kNN few-shot, GPT-4 self-generated CoT, choice-shuffle ensemble",
+  "State of the art on all nine MultiMedQA multiple-choice datasets, over 90% on MedQA",
+  "Eyes-off holdout methodology for prompt engineering",
+  "Ablation of component contributions",
+  "Generalisation to six non-medical MMLU subjects and two NCLEX datasets"
+ ],
+ "method": {
+  "summary": "Medprompt preprocesses a training set by embedding each question and having GPT-4 write a CoT and answer, keeping only items whose answer matches the label. At test time it retrieves 5 nearest neighbours as few-shot CoT exemplars, runs 5 calls each with shuffled answer choices, and takes the majority vote. Nothing is trained.",
+  "task": "multiple-choice medical question answering (prompting)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MedQA US (4-option)",
+    "role": "eval",
+    "size": "1273 questions",
+    "split": "20% randomly held out as eyes-off; remainder is eyes-on for development",
+    "source": "MedQA [14]; USMLE-style",
+    "preprocessing": null
+   },
+   {
+    "name": "MedMCQA dev",
+    "role": "eval",
+    "size": "4183 questions",
+    "split": "20% randomly held out as eyes-off; remainder is eyes-on for development",
+    "source": "MedMCQA [25]",
+    "preprocessing": null
+   },
+   {
+    "name": "PubMedQA reasoning-required",
+    "role": "eval",
+    "size": "500 questions",
+    "split": "20% randomly held out as eyes-off; remainder is eyes-on for development",
+    "source": "PubMedQA [15]",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU medical subset (clinical knowledge, medical genetics, anatomy, professional medicine, college biology, college medicine)",
+    "role": "eval",
+    "size": null,
+    "split": "20% randomly held out as eyes-off; remainder is eyes-on for development",
+    "source": "MMLU [11]",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU out-of-domain (electrical engineering, machine learning, philosophy, professional accounting, professional law, professional psychology) and two NCLEX sets",
+    "role": "eval",
+    "size": null,
+    "split": "20% randomly held out as eyes-off; remainder is eyes-on for development",
+    "source": "MMLU [11]; NCLEX sets from RegisteredNursing.org and Nurselabs",
+    "preprocessing": null
+   },
+   {
+    "name": "Training split of each dataset (retrieval pool for few-shot exemplars)",
+    "role": "dev",
+    "size": null,
+    "split": "20% randomly held out as eyes-off; remainder is eyes-on for development",
+    "source": "same datasets",
+    "preprocessing": "GPT-4 CoT generated per question, kept only if the answer matches the label"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated (GPT-4 public from March 2023)"
+    }
+   },
+   {
+    "name": "text-embedding-ada-002",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Med-PaLM 2",
+    "role": "baseline",
+    "params": null,
+    "architecture": "fine-tuned PaLM 2",
+    "init_from": "PaLM 2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "numbers": "sourced from [30]"
+    }
+   },
+   {
+    "name": "Flan-PaLM 540B",
+    "role": "baseline",
+    "params": "540B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "self-consistency style sampling at temperature > 0 for ensemble members; majority vote of final answers",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 parallel calls per question (choice order shuffled each call); ablation up to 11; GPT-4 CoT generation for training items shuffles choices some number of times (count not stated)",
+   "prompting": "5 kNN-selected few-shot exemplars with GPT-4-generated CoT, then test question with choices; CoT trigger in Fig 2 'Let's solve this step-by-step, referring to authoritative sources as needed.'",
+   "retrieval": "kNN over text-embedding-ada-002 embeddings, cosine distance, k=5 (k up to 20 in ablation), from training questions whose GPT-4 answer matched the label",
+   "parameters": {
+    "k_exemplars": 5,
+    "ensemble_calls": 5,
+    "best_ablation_k": 20,
+    "best_ablation_ensemble": 11
+   },
+   "other": {
+    "temperature_value": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4 simple prompt (zero-shot, one token, from [23])",
+    "GPT-4 5-shot",
+    "Med-PaLM 2 (choose best)",
+    "Flan-PaLM 540B",
+    "Med-PaLM",
+    "BioMedLM, DRAGON, BioLinkBERT, PubMedBERT",
+    "GPT-3.5"
+   ],
+   "protocol": "20% eyes-off holdout per dataset, unseen until the final test; single reported number per cell, no seeds, intervals or significance tests stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "self-generated CoT template",
+    "text": "## Question: {{question}}\n{{answer_choices}}\n## Answer\nmodel generated chain of thought explanation\nTherefore, the answer is [final model answer (e.g. A,B,C,D)]",
+    "where": "Fig 3, p8"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "configured to use 5 kNN selected few shot exemplars",
+    "where": "Sec 4.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Medprompt takes GPT-4 to 90.2% on MedQA, the first score above 90%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MedQA accuracy",
+   "value": "90.2",
+   "unit": "%",
+   "baseline_value": "81.7 (simple prompt)",
+   "n": null,
+   "setup": "GPT-4 (Medprompt: 5 kNN few-shot exemplars with self-generated CoT, 5-call choice-shuffle ensemble), MedQA US 4-option, 1273 questions",
+   "quote": "Medprompt produces a 9 absolute point gain in accuracy,",
+   "table": "",
+   "note": "Fig 1a shows 90.2 vs 81.7 simple prompt; Table 1 shows GPT-4 5-shot as 81.4.",
+   "where": "Intro p3; Fig 1a"
+  },
+  {
+   "claim": "Medprompt cuts MedQA error rate by 27% versus the best specialist-model methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error-rate reduction",
+   "value": "27",
+   "unit": "%",
+   "baseline_value": "86.5 (Med-PaLM 2)",
+   "n": null,
+   "setup": "vs Med-PaLM 2 (86.5) on MedQA",
+   "quote": "Steering GPT-4 with Medprompt achieves a 27% reduction in error rate",
+   "table": "",
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Standard Medprompt (k=5, 5x ensemble) scores 90.2 on MedQA; k=20 and 11x ensemble gives 90.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MedQA accuracy",
+   "value": "90.6",
+   "unit": "%",
+   "baseline_value": "90.2",
+   "n": null,
+   "setup": "GPT-4, k=20 few-shot, 11 ensemble calls",
+   "quote": "we achieve a further +0.4% performance on MedQA",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.4; Table 1 footnote"
+  },
+  {
+   "claim": "GPT-4 with Medprompt beats Med-PaLM 2 (best) on all nine MultiMedQA multiple-choice sets, e.g. MedMCQA dev 79.1 vs 72.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MedMCQA dev accuracy",
+   "value": "79.1",
+   "unit": "%",
+   "baseline_value": "72.3 (Med-PaLM 2)",
+   "n": null,
+   "setup": "GPT-4 Medprompt, MedMCQA dev, 4183 questions",
+   "quote": null,
+   "table": "Table 1, row MedMCQA Dev, column GPT-4 (Medprompt)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ablation: self-generated CoT adds the most on MedQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MedQA accuracy gain",
+   "value": "+3.4",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Incremental ablation on MedQA, GPT-4",
+   "quote": "contributed the most to performance (+3.4%)",
+   "table": "",
+   "note": null,
+   "where": "Sec 5.2, Fig 6"
+  },
+  {
+   "claim": "Ablation: random 5-shot adds 2.2, kNN dynamic 5-shot adds 0.8, 5x choice-shuffle ensemble adds 2.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MedQA accuracy gain (kNN few-shot)",
+   "value": "+0.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Incremental ablation on MedQA; order of addition is subjective",
+   "quote": "(+0.8%) kNN Dynamic 5-Shot",
+   "table": null,
+   "note": "Text says few-shot and ensembling are '+2.2% each' while Fig 6 labels give +0.8 (kNN) and +2.1 (ensemble). Fig 4 values 81.7, 83.9, 87.3, 88.4, 90.2 imply +1.1 for kNN and +1.8 for ensemble. The paper does not reconcile these.",
+   "where": "Sec 5.2, Fig 4 and Fig 6"
+  },
+  {
+   "claim": "GPT-4 self-generated CoT beats the Med-PaLM 2 expert-crafted CoT by 3.1 points with fixed 5-shot and no ensemble.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MedQA accuracy",
+   "value": "86.9",
+   "unit": "%",
+   "baseline_value": "83.8 (expert-crafted CoT)",
+   "n": null,
+   "setup": "GPT-4, fixed 5-shot, no ensemble, MedQA",
+   "quote": null,
+   "table": "Table 2, row GPT-4's self-generated CoT prompt, column MedQA US",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Eyes-off 20% holdout: Medprompt averages 91.3 on eyes-off vs 90.6 on eyes-on, so no sign of overfitting from prompt engineering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy",
+   "value": "91.3",
+   "unit": "%",
+   "baseline_value": "90.6 (eyes-on)",
+   "n": null,
+   "setup": "9 MultiMedQA datasets, 20% randomly held out per dataset",
+   "quote": "average performance of 91.3% on the eyes-off data",
+   "table": "",
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Eyes-off accuracy was higher on 6 of 9 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets better on eyes-off",
+   "value": "6/9",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Medprompt, Fig 5",
+   "quote": "was better in 6/9",
+   "table": "",
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Medprompt gives +7.3% average gain over zero-shot on six out-of-domain MMLU sets plus two NCLEX sets, similar to +7.1% on MultiMedQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average gain over zero-shot",
+   "value": "+7.3",
+   "unit": "%",
+   "baseline_value": "+7.1 on MultiMedQA",
+   "n": null,
+   "setup": "6 MMLU subjects (EE, ML, philosophy, accounting, law, psychology) and 2 NCLEX sets",
+   "quote": "Medprompt provides an average improvement of +7.3% over",
+   "table": "",
+   "note": null,
+   "where": "Sec 5.3, Fig 7"
+  },
+  {
+   "claim": "Medprompt needs about 5 calls per question versus up to 44 for Med-PaLM 2 Ensemble Refinement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "calls per question",
+   "value": "5",
+   "unit": "calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Medprompt k=5 ensemble; Med-PaLM 2 reported",
+   "quote": "5 parallel API calls as part of the choice-shuffle ensemble",
+   "table": "",
+   "note": null,
+   "where": "Sec 4.4 and Sec 2.2"
+  }
+ ],
+ "limits": [
+  "Benchmark contamination or memorisation cannot be ruled out; the earlier MELD black-box test found no evidence but gives no guarantee.",
+  "Multiple-choice exam performance does not show real-world clinical efficacy.",
+  "Adaptation to non-multiple-choice tasks is proposed but not tested.",
+  "Better prompting may make remaining hallucinations harder to detect; bias and equity not assessed.",
+  "Ablation order is subjective and components are not independent; Shapley values left to future work.",
+  "Temperature, GPT-4 version, and exact prompts beyond the CoT template are not given; no seeds or confidence intervals.",
+  "Fig 4 and Fig 6 give different per-component increments.",
+  "Dated: GPT-4 as of 2023; later reasoning models are not covered."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Medprompt",
+   "definition": "composition of dynamic few-shot selection, self-generated chain of thought and choice-shuffle ensembling",
+   "where": "Sec 4"
+  },
+  {
+   "term": "eyes-off",
+   "definition": "randomly carved out 20% of each benchmark dataset completely held out until the final testing phase",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Capabilities of GPT-4 on medical challenge problems",
+   "year": 2023,
+   "arxiv": "2303.13375",
+   "relation": "extends",
+   "note": "prior simple-prompt study by co-authors; supplies baselines",
+   "quote": null
+  },
+  {
+   "work": "Towards expert-level medical question answering with large language models (Med-PaLM 2)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main specialist comparison; expert-crafted CoT",
+   "quote": null
+  },
+  {
+   "work": "Large language models encode clinical knowledge (Med-PaLM)",
+   "year": 2022,
+   "arxiv": "2212.13138",
+   "relation": "baseline",
+   "note": "MultiMedQA suite and baselines",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting elicits reasoning in large language models",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ensemble majority vote",
+   "quote": null
+  },
+  {
+   "work": "What makes good in-context examples for GPT-3?",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "similarity-based exemplar selection",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "in-context learning",
+   "quote": null
+  },
+  {
+   "work": "Large language models as optimizers; Promptbreeder",
+   "year": 2023,
+   "arxiv": "2309.03409",
+   "relation": "related",
+   "note": "concurrent findings that models write better prompts than experts",
+   "quote": null
+  },
+  {
+   "work": "MultiMedQA, MedQA, MedMCQA, PubMedQA, MMLU",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Visual illustration of Medprompt components and additive contributions to performance on the MedQA benchmark.",
+   "page": 10,
+   "why": "shows the stack from 81.7 to 90.2"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Identification of the relative contributions of different components of Medprompt via an ablation study.",
+   "page": 14,
+   "why": "per-component gains"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of expert-crafted and GPT-4-generated chain-of-thought prompts.",
+   "page": 8,
+   "why": "shows the self-generated CoT"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p11",
+   "snippet": "13: Select the 5 most similar examples from the preprocessed training data using KNN, cosine distance\n15: for 5 times do 16: Shuffle the answer choices of the test question. 17: Generate a chain-of-thought and an answer with the LLM and context C.\n19: A_final = mode({A_q^k})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure values read from extracted labels only; figure captions script not run.",
+  "Fig 4 and Fig 6 increments disagree."
+ ]
 }

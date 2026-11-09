@@ -1,19 +1,458 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.11207",
  "pdf": "data-science/sources/huang-2023-can-large-language-models-explain.pdf",
  "bib": {
   "title": "Can Large Language Models Explain Themselves? A Study of LLM-Generated Self-Explanations",
-  "first_author": "Shiyuan Huang",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Shiyuan Huang",
+   "Siddarth Mamidanna",
+   "Shreedhar Jangam",
+   "Yilun Zhou",
+   "Leilani H. Gilpin"
+  ],
+  "first_author": "Huang",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2310.11207",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 68045,
+  "chars_total": 68045,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
  },
- "legacy_report": "SOURCE: \"Can Large Language Models Explain Themselves? A Study of LLM-Generated Self-Explanations\", Shiyuan Huang, Siddarth Mamidanna, Shreedhar Jangam, Yilun Zhou, Leilani H. Gilpin (UC Santa Cruz, MIT CSAIL). arXiv:2310.11207v1 [cs.CL], 17 Oct 2023. Printed as a preprint; no venue is stated in the text.\n\nCOVERAGE: All 68145 chars of 13 pages were read. Pages 1-8 hold the body, the rest is references (skimmed). There is no appendix or limitations section; the caveats sit in IV-E and Section V. Fig. 3 came through as numbers only, and I did not render any figures.\n\nCLAIMS (ranked)\n- claim: ChatGPT's own word-importance explanations score about the same on faithfulness as occlusion and LIME, with no clear winner across metrics.\n  number: E-P Comp 0.19 vs 0.15 (occlusion) and 0.17 (LIME); P-E Comp 0.27 vs 0.20 and 0.27.\n  setup: ChatGPT (the OpenAI API, exact version not given in the text); Stanford Sentiment Treebank (SST), random 100 test sentences, binarised at 0.5; greedy decoding (temperature 0); sentiment prompt; metrics from Zhou and Shah 2022.\n  quote: \"First, we note the lack of a clear winner across the different metrics.\" Table VII rows: \"SELF EXP 0.19 0.25 0.16 0.55 -0.03\" (E-P), \"SELF EXP 0.27 0.22 0.07 0.56 -0.01\" (P-E), column order Comp, Suff, DFMIT, DFFrac, RankDel.\n  where: Sec IV-C, Table VII, p.5\n- claim: The self-explanations disagree strongly with occlusion and LIME even though they score the same on faithfulness. For classifiers, Krishna et al. found the opposite pattern.\n  number: E-P rank correlation 0.07-0.13, P-E 0.06-0.21; E-P top-k feature agreement 0.23-0.33.\n  setup: same as above; pairwise agreement among Occl, LIME and SelfExp, Fig. 3.\n  quote: \"we find that explanations that perform similarly on faithfulness metrics also have high disagreement (for the ChatGPT model).\"\n  where: Sec IV-D, Fig. 3, p.6\n- claim: The self-explanation is nearly free, while LIME is costly.\n  number: LIME defaults to 5,000 API calls per explanation. The authors scaled this to 10x the token count, averaging 183 perturbations and about 20 minutes per explanation.\n  setup: LIME on ChatGPT via the API.\n  quote: \"the default number of perturbations by the Python lime package1 is 5,000, meaning that we need to query the OpenAI API 5,000 times in order to generate the explanation for a single sentence.\" and \"with an average of 183 perturbations per explanation, but this still is quite expensive, taking approximately 20 minutes per explanation.\"\n  where: Sec IV-C, p.5\n- claim: Asking for an explanation lowers accuracy, and the order of explanation and prediction matters.\n  number: prediction only 92%; E-P 85%; P-E 88%; E-P top-k 80%; P-E top-k 83%.\n  setup: SST, 100 sentences, ChatGPT, same prompts as above.\n  quote: \"the classification accuracy of E-P is lower than that of P-E, at 85% vs 88%.\" and \"both models have worse performance compared to the model that does not need to generate any explanation, which has an accuracy of 92%\"\n  where: Sec IV-B, Table VI, p.5\n- claim: Self-attributions are coarse. They sit on a few rounded levels.\n  number: 18.2 words per sentence on average, but only 2.72 unique explanation levels per sentence for E-P and 5.69 for P-E.\n  setup: zero-shot Python-tuple prompts.\n  quote: \"on average each sentence has 18.2 words, but there are only 2.72 levels of unique explanations per sentence for the E-P model and 5.69 for the P-E model.\"\n  where: Sec IV-E1, p.7\n- claim: Occlusion is mostly zero because the model's prediction does not change when one word is removed. This weakens the evaluation metrics, especially DFMIT and RankDel.\n  number: occlusion saliency is exactly 0 for 82.6% of words (E-P) and 54.5% (P-E). For comparison, a fine-tuned RoBERTa gets about 25% DFMIT and about 0.5% RankDel, as reported in Zhou and Shah.\n  setup: the model's prediction is the confidence number it writes out, because ChatGPT gives no logits.\n  quote: \"the saliency value being exactly 0 for 82.6% of words for the E-P model and 54.5% for the P-E model.\"\n  where: Sec IV-E2, p.8\n- claim: Few-shot exemplars fix the rounding but not the number of levels, and the model copies the exemplar values for repeated words.\n  number: none\n  setup: few-shot prompt in Table X; the word \"the\" was given 0.163 in the exemplar.\n  quote: \"when the word “the” has saliency value of 0.163 in the exemplar, the model is likely to assign the same value of 0.163 to other instances of “the” in the query sentence.\"\n  where: Sec IV-E1, Table X, p.7\n- claim: Top-k highlighted words, the form most often seen in real chats, are not clearly better or worse than the other explanations.\n  number: E-P Comp@k 0.10 (TopK) vs 0.16 (occlusion), 0.17 (LIME), 0.11 (SelfExp); DFMIT@k 0.34 vs 0.29, 0.40, 0.32.\n  setup: E-P top-k run with 80% accuracy; P-E top-k run with 83%.\n  quote: \"the top-k explanation is not distinctively better\"\n  where: Sec IV-C, Table VIII, p.6\n- claim: Occlusion wins DFMIT largely by construction, so metric results partly reflect how the metric is defined.\n  number: none\n  setup: DFMIT, from the \"solvability\" argument of Zhou and Shah.\n  quote: \"its most important word being the most likely to flip the model prediction when removed – an observation of solvability made by Zhou and Shah [51].\"\n  where: Sec IV-C, p.5\n\nLIMITS\n- The test set is only 100 SST sentences, with no confidence intervals or repeated runs, so differences of a few hundredths in Table VII are within noise.\n- The task is sentiment only, and the explanation type is feature attribution only. Only ChatGPT was tested. GPT-4, Bard and Claude are left to future work.\n- The model's \"prediction\" is the confidence number it writes, because there are no logits. That number is rounded and insensitive, which blunts every metric.\n- The top-k prompts change the system prompt, so they are not explanations of the same model. The authors treat them as an external explainer.\n- Words are removed by deletion only; mask infilling is not tried.\n- There was no retraining-based ground-truth evaluation and no human study.\n- The authors say the metrics may lack the power to separate good explanations from bad. They also say a better explanation may exist that all current ones miss.\n- They did not test whether the explanations can be manipulated or can hide fairness problems.\n- It is a 2023 ChatGPT, so the results may have dated.\n\nBUILDS ON\n- Occlusion: Zeiler and Fergus 2014, and Li et al. [25].\n- LIME: Ribeiro et al. 2016 [34].\n- SHAP: Lundberg and Lee [28].\n- Faithfulness metrics: DeYoung et al. 2020 (ERASER, comprehensiveness and sufficiency), Chrysostomou and Aletras 2021, Alvarez-Melis and Jaakkola 2018, Zhou and Shah 2022.\n- Disagreement metrics: Krishna et al. [23].\n- E-P vs P-E ordering: Camburu et al. 2018 (e-SNLI).\n- Chain-of-thought: Wei et al. [45].\n- Self-generated counterfactual explanations: Chen et al. 2023.\n\nCODE: Prompt text only. Table I gives the E-P system prompt. Table II gives the P-E prompt. Tables IV and V give the top-k versions. The output format is \"[(<word or punctuation>, <float importance>), ...]\" followed by \"(<int classification>, <float confidence>)\". The occlusion formula is a(w) = f(x) − f(x−w) (Eq. 2).\n\nFIGURES\n- Fig. 1, p.1: overview. A review is sent to ChatGPT, which returns a self-explanation. This is compared against occlusion and LIME using faithfulness and agreement metrics.\n- Fig. 2, p.5: example highlighted-word visualisations for E-P and P-E, comparing occlusion, LIME and SelfExp on two sentences.\n- Fig. 3, p.6: agreement heatmaps, numbers only in the text. They show low pairwise agreement.\n\nPROBLEMS: No instructions were embedded in the PDF. The text extraction of Fig. 3 and the tables is fragmented, but the numbers are readable. The text does not name the venue, so only the arXiv preprint is certain. Relevance to the note: it sharpens the note's arXiv:2310.11207 citation, and its main point is that self-explanation and post-hoc methods disagree."
+ "type": "empirical",
+ "question": "How faithful are the feature-attribution self-explanations ChatGPT generates for sentiment predictions, compared with occlusion and LIME?",
+ "hypothesis": null,
+ "contributions": [
+  "First rigorous assessment of an LLM's ability to self-generate feature attribution explanations (full per-word and top-k), generated explain-then-predict and predict-and-explain",
+  "Comparison with occlusion and LIME on five faithfulness metrics and Krishna et al. agreement metrics",
+  "Finding that model predictions and attribution values are heavily rounded and insensitive to word removal, limiting evaluation power"
+ ],
+ "method": {
+  "summary": "ChatGPT is prompted zero-shot to output a sentiment label, a confidence and a per-word importance list (or top-3 words), either before (E-P) or after (P-E) the prediction. Occlusion and LIME are computed on the same prompted model using the confidence number as the prediction, and all are scored with faithfulness and agreement metrics.",
+  "task": "sentiment classification with feature-attribution explanation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Stanford Sentiment Treebank (SST)",
+    "role": "eval",
+    "size": "100 sentences",
+    "split": "random subset of the test set; labels binarised at 0.5",
+    "source": "Socher et al. SST [40]",
+    "preprocessing": "words removed by deletion for partial inputs"
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "proprietary instruction-tuned autoregressive LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one generation per input; no repeated runs or seeds reported; random tie-breaking among equal saliency values during evaluation",
+   "prompting": "zero-shot system prompts (Tables I, II, IV, V) asking for Python list of (word, importance in [-1,1]) tuples plus (class, confidence); top-k variants ask for top 3 words; few-shot tried but not used",
+   "retrieval": null,
+   "parameters": {
+    "top_k": "min(1, floor(L/5)) as printed, L = words in sentence (Table IV/V prompts show top 3); likely a typo for max",
+    "LIME perturbations": "10 x number of tokens, average 183 per explanation (lime default 5,000)",
+    "LIME cost": "about 20 minutes per explanation",
+    "experiment time": "about half an hour per full set of experiments on one instance"
+   },
+   "other": {
+    "prediction": "decimal confidence in the model's text output used as f(x); logits not available"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Comp (comprehensiveness)",
+     "definition": "drop in prediction when the top-ranked words are removed, per Zhou and Shah",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Suff (sufficiency)",
+     "definition": "drop in prediction when only the top-ranked words are kept",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "DFMIT",
+     "definition": "decision flip rate on removing most important token",
+     "unit": "rate",
+     "higher_is_better": true
+    },
+    {
+     "name": "DFFrac",
+     "definition": "minimum fraction of tokens to remove to flip decision",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "RankDel",
+     "definition": "rank correlation with model prediction after word deletion",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Comp@k, Suff@k, DFMIT@k",
+     "definition": "top-k versions with k words removed or kept together",
+     "unit": "score",
+     "higher_is_better": null
+    },
+    {
+     "name": "Accuracy",
+     "definition": "classification accuracy against binarised SST labels",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Agreement metrics",
+     "definition": "pairwise rank agreement, rank correlation, rank agreement, sign agreement, signed rank agreement, feature agreement, IoU, from Krishna et al.",
+     "unit": "0-1",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "occlusion",
+    "LIME",
+    "prediction-only prompt (accuracy)"
+   ],
+   "protocol": "Each of E-P and P-E treated as a separate model; occlusion and LIME computed under the same system prompt; single pass over 100 sentences; no significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "SST is public"
+  },
+  "prompts": [
+   {
+    "purpose": "E-P system prompt (Table I)",
+    "text": "You are a creative and intelligent movie review analyst, whose purpose is to aid in sentiment analysis of movie reviews. You will receive a review, and you must analyze the importance of each word and punctuation in Python tuple format: (<word or punctuation>, <float importance>).",
+    "where": "Table I, p3 (truncated here; full text in the paper)"
+   },
+   {
+    "purpose": "Prediction-only system prompt",
+    "text": "You are a creative and intelligent movie review analyst, whose purpose is to aid in sentiment analysis of movie reviews. A review will be provided to you, and you must classify the review as either 1 (positive) or 0 (negative), as well as your confidence in the score you chose.",
+    "where": "Sec IV-B (truncated here)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.top_k",
+    "quote": "The number k is chosen dynamically according to",
+    "where": "Sec III-B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Self-explanations are on par with occlusion and LIME on comprehensiveness for E-P",
+   "kind": "measured",
+   "source": null,
+   "metric": "Comp",
+   "value": 0.19,
+   "unit": null,
+   "baseline_value": "0.15 occlusion, 0.17 LIME",
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, E-P",
+   "quote": null,
+   "table": "Table VII, row E-P SELFEXP, column Comp",
+   "note": null,
+   "where": "Table VII"
+  },
+  {
+   "claim": "No clear winner across faithfulness metrics",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot",
+   "quote": "First, we note the lack of a clear winner across the different metrics.",
+   "table": null,
+   "note": null,
+   "where": "Sec IV-C"
+  },
+  {
+   "claim": "Prediction-only accuracy exceeds E-P and P-E accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 92,
+   "unit": "%",
+   "baseline_value": "85 E-P, 88 P-E",
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, prediction-only prompt",
+   "quote": "which has an accuracy of 92%",
+   "table": null,
+   "note": null,
+   "where": "Sec IV-B"
+  },
+  {
+   "claim": "E-P accuracy is below P-E accuracy, unlike CoT gains",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85,
+   "unit": "%",
+   "baseline_value": 88,
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot",
+   "quote": "at 85% vs 88%",
+   "table": null,
+   "note": null,
+   "where": "Sec IV-B, Table VI"
+  },
+  {
+   "claim": "Top-k prompts lower accuracy further",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80,
+   "unit": "%",
+   "baseline_value": "83 P-E top-k",
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, E-P top-k",
+   "quote": null,
+   "table": "Table VI, row E-P top-k",
+   "note": null,
+   "where": "Table VI"
+  },
+  {
+   "claim": "P-E SELFEXP matches LIME on Comp",
+   "kind": "measured",
+   "source": null,
+   "metric": "Comp",
+   "value": 0.27,
+   "unit": null,
+   "baseline_value": "0.20 occlusion, 0.27 LIME",
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, P-E",
+   "quote": null,
+   "table": "Table VII, row P-E SELFEXP, column Comp",
+   "note": null,
+   "where": "Table VII"
+  },
+  {
+   "claim": "Occlusion best on DFMIT in E-P",
+   "kind": "measured",
+   "source": null,
+   "metric": "DFMIT",
+   "value": 0.18,
+   "unit": null,
+   "baseline_value": "0.13 LIME, 0.16 SELFEXP",
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, E-P",
+   "quote": null,
+   "table": "Table VII, row E-P Occlusion, column DFMIT",
+   "note": null,
+   "where": "Table VII"
+  },
+  {
+   "claim": "LIME needs about 183 perturbations per explanation, about 20 minutes each",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 183,
+   "unit": "API queries",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "adaptive LIME on ChatGPT API",
+   "quote": "with an average of 183",
+   "table": null,
+   "note": null,
+   "where": "Sec IV-C"
+  },
+  {
+   "claim": "Top-k explanation not distinctively better: E-P Comp@k",
+   "kind": "measured",
+   "source": null,
+   "metric": "Comp@k",
+   "value": 0.1,
+   "unit": null,
+   "baseline_value": "0.16 occlusion, 0.17 LIME, 0.11 SELFEXP",
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, E-P",
+   "quote": null,
+   "table": "Table VIII, row E-P TOPK, column Comp@k",
+   "note": null,
+   "where": "Table VIII"
+  },
+  {
+   "claim": "Pairwise rank agreement among E-P explanations is about 0.53 to 0.55 while other agreement metrics are 0.07 to 0.31",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise rank agreement",
+   "value": 0.54,
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, E-P Occl vs LIME",
+   "quote": null,
+   "table": "Fig 3, E-P Pairwise Rank Agreement, Occl-LIME",
+   "note": "Fig 3 values read from extracted numbers; rank correlation only 0.07 to 0.13",
+   "where": "Fig 3"
+  },
+  {
+   "claim": "Unique explanation levels per sentence are few relative to words",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.72,
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, E-P; 18.2 words per sentence on average",
+   "quote": "there are only",
+   "table": null,
+   "note": "text says 2.72 levels E-P and 5.69 P-E; quote fragment is partial",
+   "where": "Sec IV-E1"
+  },
+  {
+   "claim": "Occlusion saliency is exactly zero for most words in E-P",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 82.6,
+   "unit": "%",
+   "baseline_value": "54.5% P-E",
+   "n": 100,
+   "setup": "ChatGPT (OpenAI API, version not stated), SST random 100 test sentences, binarised at 0.5, greedy decoding temperature 0, zero-shot, E-P",
+   "quote": "82.6% of words for",
+   "table": null,
+   "note": null,
+   "where": "Sec IV-E2"
+  }
+ ],
+ "limits": [
+  "Single model (ChatGPT, version unstated), single task (SST sentiment), single explanation type, 100 sentences, no repeated runs or significance tests",
+  "Prediction is the stated confidence number, not token probabilities, and is rounded and insensitive to word removal, so metrics may lack discriminative power",
+  "Top-k explanations come from a differently-prompted model, not the E-P/P-E models",
+  "No human study of understandability; no retraining-based faithfulness evaluation; few-shot prompting abandoned due to memorisation",
+  "Top-k formula printed as min(1, floor(L/5)), inconsistent with top 3 in prompts"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "self-explanation",
+   "definition": "explanations an instruction-tuned LLM produces along with its response",
+   "where": "Abstract"
+  },
+  {
+   "term": "E-P / P-E",
+   "definition": "explain-then-predict versus predict-and-explain",
+   "where": "Sec I"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Camburu et al., e-SNLI style predict/explain orderings",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "E-P and P-E setups",
+   "quote": null
+  },
+  {
+   "work": "Zhou and Shah, The solvability of interpretability evaluation metrics",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "faithfulness metric definitions and implementation",
+   "quote": null
+  },
+  {
+   "work": "Krishna et al., The Disagreement Problem in Explainable ML",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "agreement metrics",
+   "quote": null
+  },
+  {
+   "work": "Ribeiro et al., LIME",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "traditional explainer",
+   "quote": null
+  },
+  {
+   "work": "Li et al., occlusion saliency",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "traditional explainer",
+   "quote": null
+  },
+  {
+   "work": "Socher et al., SST",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset",
+   "quote": null
+  },
+  {
+   "work": "DeYoung et al., ERASER",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "comprehensiveness and sufficiency",
+   "quote": null
+  },
+  {
+   "work": "Wei et al., chain-of-thought",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "E-P lower accuracy contrasts with CoT benefit",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of our investigation.",
+   "page": 1,
+   "why": "shows LLM self-explanation versus occlusion/LIME and metrics"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The agreement metric values among different explanations.",
+   "page": 6,
+   "why": "heatmaps showing low agreement"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Fig 3 and tables came through as bare numbers; figures not rendered",
+  "Lineage years and authors for cited works taken from reference numbers, not fully read",
+  "Prior schema-0 file replaced"
+ ]
 }

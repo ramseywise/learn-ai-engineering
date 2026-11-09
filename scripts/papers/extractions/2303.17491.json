@@ -1,0 +1,595 @@
+{
+ "schema": 1,
+ "key": "2303.17491",
+ "pdf": "generative-ai/03-agentic-foundations/sources/kim-2023-language-models-can-solve-computer.pdf",
+ "bib": {
+  "title": "Language Models can Solve Computer Tasks",
+  "authors": [
+   "Geunwoo Kim",
+   "Pierre Baldi",
+   "Stephen McAleer"
+  ],
+  "first_author": "Kim",
+  "year": 2023,
+  "venue": "37th Conference on Neural Information Processing Systems (NeurIPS 2023)",
+  "arxiv": "2303.17491",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 95911,
+  "chars_total": 95911,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for lineage; Table 18 per-task rows read partially (rows for key tasks checked, remainder scanned not verified cell by cell)."
+ },
+ "type": "empirical",
+ "question": "Can a pre-trained LLM execute computer tasks from natural language with only a prompting scheme and a few demonstrations, without expert datasets or task-specific rewards?",
+ "hypothesis": "Having the LLM criticise its own output and then improve it (RCI) will ground actions and improve reasoning, beating SL/RL baselines on MiniWoB++ with far less data.",
+ "contributions": [
+  "RCI (Recursive Criticism and Improvement) prompting: critique then improve, explicit or implicit",
+  "Three-step grounding (task, state, agent) for computer-control agents",
+  "State-of-the-art on MiniWoB++ among LLM methods with few demonstrations and no reward function",
+  "RCI improves reasoning on eight benchmarks and combines synergistically with CoT"
+ ],
+ "method": {
+  "summary": "A prompting-only agent. The LLM first writes a plan (task grounding, with one explicit RCI pass), then for each step samples a task-grounded action, refines it against the HTML state (state grounding, one implicit RCI) and then until it matches the admissible regexes (agent grounding, implicit RCI loop up to 3). Evaluated on 55 MiniWoB++ tasks and 8 reasoning datasets.",
+  "task": "computer-task automation (MiniWoB++) and arithmetic/commonsense reasoning prompting",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MiniWoB++",
+    "role": "eval",
+    "size": "55 tasks",
+    "split": "all selected tasks; success rate per task",
+    "source": "Liu et al. 2018 / Shi et al. 2017 simulators; task subset follows WebN-T5-3B",
+    "preprocessing": "social-media tasks limited to 3-6 media components; email-inbox-*-nl tasks limited to 3-6 emails; book-flight, choose-date(-easy/-medium), click-pie excluded for HTML length"
+   },
+   {
+    "name": "GSM8K, MultiArith, AddSub, AQuA, SVAMP, SingleEq, CommonsenseQA, StrategyQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kojima et al. 2022 selection",
+    "preprocessing": "same answer extraction as Kojima et al.; AQuA, CommonsenseQA, StrategyQA only zero-shot"
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo (InstructGPT-3 + RLHF)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096 tokens (Table 3)",
+    "other": {
+     "access": "OpenAI API, Jan-Mar 2023"
+    }
+   },
+   {
+    "name": "gpt-4",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8,192 tokens (Table 3)",
+    "other": {}
+   },
+   {
+    "name": "GPT-3 (davinci)",
+    "role": "evaluated",
+    "params": "175 B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2,049 tokens",
+    "other": {
+     "use": "ablation only"
+    }
+   },
+   {
+    "name": "InstructGPT-3 (text-davinci-002)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,097 tokens",
+    "other": {
+     "use": "ablation only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "256",
+   "samples": null,
+   "prompting": "Few-shot (2-3 demos per task for MiniWoB++, less than two on average per Appendix B.1); zero-shot plus RCI for reasoning; action space given as five regexes",
+   "retrieval": null,
+   "parameters": {
+    "explicit_rci_loops_task_grounding": "1 (single pass suffices for most tasks)",
+    "implicit_rci_state_grounding": "1",
+    "implicit_rci_agent_grounding_max_loops": "3",
+    "reasoning_rci_max_loops": "2, stopped when output equals ground-truth label (label feedback)"
+   },
+   "other": {
+    "episodes_per_task": null,
+    "seeds": null,
+    "gpt4_scope": "gpt-4 used only for some tasks in Fig 10 / Table 18"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "success rate",
+     "definition": "proportion of episodes with positive reward; unexecutable action after implicit RCI is immediate failure",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy",
+     "definition": "answer accuracy on reasoning datasets",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CC-Net (SL, RL, SL+RL, no dictionary)",
+    "WebN-T5-3B",
+    "aggregated SL/RL/SL+RL SotA",
+    "zero-shot, zero-shot CoT, few-shot CoT"
+   ],
+   "protocol": "Baseline numbers copied from prior papers; number of episodes per task, seeds and variance not stated. Reasoning RCI uses label feedback to stop."
+  },
+  "availability": {
+   "code": "https://github.com/posgnu/rci-agent",
+   "weights": "n/a (API models)",
+   "data": "MiniWoB++ public"
+  },
+  "prompts": [
+   {
+    "purpose": "Critique step (reasoning)",
+    "text": "Review your previous answer and find problems with your answer.",
+    "where": "Fig 2 / 2.1"
+   },
+   {
+    "purpose": "Improve step (reasoning)",
+    "text": "Based on the problems you found, improve your answer.",
+    "where": "Fig 2 / 2.1"
+   },
+   {
+    "purpose": "Plan critique (computer tasks)",
+    "text": "Find problems with this plan.",
+    "where": "Fig 3"
+   },
+   {
+    "purpose": "Task grounding action prompt",
+    "text": "Based on the current plan and task, the next proper instruction should be `",
+    "where": "Table 7"
+   },
+   {
+    "purpose": "State grounding",
+    "text": "Considering the output on the webpage, the specific instruction should be `",
+    "where": "Table 8"
+   },
+   {
+    "purpose": "Agent grounding",
+    "text": "This action does not match the regular expressions. The updated instruction that matches one of the regular expressions is `",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "Agent specification regexes",
+    "text": "<type regex> = \"^type\\s.{1,}$\"; <press regex> = \"^press\\s(enter|arrowleft|arrowright|arrowup|arrowdown|backspace)$\"; <clickoption regex> = \"^clickoption\\s.{1,}$\"; <movemouse regex> = \"^movemouse\\s.{1,}$\"; <clickxpath regex> = \"^clickxpath\\s.{1,}$\"",
+    "where": "Listing 1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "a maximum token length of 256 and a temperature value of 0, indicating greedy decoding, are used",
+    "where": "C.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RCI agent beats CC-Net without dictionary-based typing, the comparable baseline, by 6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average success rate gap vs CC-Net (no dictionary)",
+   "value": 6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MiniWoB++, 55 tasks, RCI agent on gpt-3.5-turbo and gpt-4 (greedy, temp 0, max 256 tokens), 2-3 demos per task in prompt, HTML state only, fully generative typing; CC-Net (no dictionary actions) number taken from CC-Net's ablation",
+   "where": "3.2.2, Fig 4a",
+   "note": null,
+   "quote": "we outperform it by 6%"
+  },
+  {
+   "claim": "RCI agent scores 41% higher than WebN-T5-3B, a fine-tuned LLM trained on 12K expert demonstrations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expert demonstrations used by WebN-T5-3B",
+   "value": 12000,
+   "unit": "demonstrations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MiniWoB++, 55 tasks, RCI agent on gpt-3.5-turbo and gpt-4 (greedy, temp 0, max 256 tokens), 2-3 demos per task in prompt, HTML state only, fully generative typing",
+   "where": "3.2.2",
+   "note": "The 41% figure is split across a line break in the PDF text ('we observe a 41% higher score than the WebN-T5-3B'), so it is not quoted; the check quotes the 12K figure.",
+   "quote": "12K expert demonstration data"
+  },
+  {
+   "claim": "Agent exceeds the aggregated supervised-learning SotA by 37 percentage points and RL SotA by 27 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap vs SL SotA",
+   "value": 37,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MiniWoB++, 55 tasks, RCI agent on gpt-3.5-turbo and gpt-4 (greedy, temp 0, max 256 tokens), 2-3 demos per task in prompt, HTML state only, fully generative typing; SotA = best per-task score per category, aggregated",
+   "where": "3.2.2, Fig 4a",
+   "note": "RL gap is 27 points; SL+RL SotA is exceeded by less than 1 point.",
+   "quote": "by 37 percentage points in"
+  },
+  {
+   "claim": "Agent exceeds RL SotA by 27 percentage points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap vs RL SotA",
+   "value": 27,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MiniWoB++, 55 tasks, RCI agent on gpt-3.5-turbo and gpt-4 (greedy, temp 0, max 256 tokens), 2-3 demos per task in prompt, HTML state only, fully generative typing",
+   "where": "3.2.2",
+   "note": null,
+   "quote": "by 27 percentage points in reinforcement learning"
+  },
+  {
+   "claim": "Agent slightly beats the combined SL+RL SotA, by less than 1 percentage point.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap vs SL+RL SotA (upper bound)",
+   "value": 1,
+   "unit": "percentage points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MiniWoB++, 55 tasks, RCI agent on gpt-3.5-turbo and gpt-4 (greedy, temp 0, max 256 tokens), 2-3 demos per task in prompt, HTML state only, fully generative typing",
+   "where": "3.2.2",
+   "note": null,
+   "quote": "slight edge over SotA (less than 1 percentage point)"
+  },
+  {
+   "claim": "The agent needs 120x fewer samples than WebN-T5-3B and 11,000x fewer than CC-Net.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sample reduction vs WebN-T5-3B",
+   "value": 120,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MiniWoB++, 55 tasks, RCI agent on gpt-3.5-turbo and gpt-4 (greedy, temp 0, max 256 tokens), 2-3 demos per task in prompt, HTML state only, fully generative typing; CC-Net 2.4 million demos (6,300 hours, 77 participants, 104 tasks, about 23,076 per task)",
+   "where": "3.2.3, Fig 4b",
+   "note": null,
+   "quote": "requiring 120x fewer samples than WebN-T5-3B and 11,000x fewer"
+  },
+  {
+   "claim": "The agent uses two to three demonstrations per task, in the prompt, with no parameter updates.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MiniWoB++, 55 tasks, RCI agent on gpt-3.5-turbo and gpt-4 (greedy, temp 0, max 256 tokens), 2-3 demos per task in prompt, HTML state only, fully generative typing",
+   "where": "3.2.3",
+   "note": null,
+   "quote": "integrating two to three demonstrations into the prompt"
+  },
+  {
+   "claim": "RCI lifts GSM8K zero-shot accuracy from 77.95 to 85.43 with gpt-3.5-turbo (label feedback, max 2 RCI loops).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.43,
+   "unit": "%",
+   "baseline_value": 77.95,
+   "n": null,
+   "setup": "GSM8K, gpt-3.5-turbo, RCI loop stops when output matches ground truth, max 2 loops",
+   "where": "3.1",
+   "note": null,
+   "quote": "Zero-Shot + RCI",
+   "table": "Table 1, row Zero-Shot + RCI, column GSM8K"
+  },
+  {
+   "claim": "RCI lifts StrategyQA from 48.81 to 61.81 and CommonSenseQA from 64.56 to 68.11 (label feedback).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.81,
+   "unit": "%",
+   "baseline_value": 48.81,
+   "n": null,
+   "setup": "gpt-3.5-turbo, label feedback, max 2 loops",
+   "where": "3.1",
+   "note": "Table 17 prints the zero-shot StrategyQA baseline as 48.42; Table 1 prints 48.81 (and Table 17 prints 48.81 for RCI without feedback).",
+   "table": "Table 1, row Zero-Shot + RCI, column StrategyQA"
+  },
+  {
+   "claim": "RCI improves all eight reasoning benchmarks, including SingleEq (86.61 to 94.49) which needs no multi-step reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 94.49,
+   "unit": "%",
+   "baseline_value": 86.61,
+   "n": null,
+   "setup": "gpt-3.5-turbo, label feedback",
+   "where": "3.1",
+   "note": null,
+   "table": "Table 1, row Zero-Shot + RCI, column SingleEq"
+  },
+  {
+   "claim": "RCI combined with CoT beats either alone on most arithmetic tasks, e.g. Few-Shot CoT + RCI on SVAMP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 87.4,
+   "unit": "%",
+   "baseline_value": 83.46,
+   "n": null,
+   "setup": "gpt-3.5-turbo, label feedback; Few-Shot CoT alone 83.46",
+   "where": "3.1",
+   "note": null,
+   "table": "Table 2, row Few-Shot CoT + RCI, column SVAMP"
+  },
+  {
+   "claim": "Without external (label) feedback RCI is prone to false-negative critiques and falls to or below zero-shot, e.g. GSM8K 72.83 vs 77.95; CommonSenseQA 46.06 vs 64.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.83,
+   "unit": "%",
+   "baseline_value": 77.95,
+   "n": null,
+   "setup": "gpt-3.5-turbo, no ground-truth stopping signal",
+   "where": "Appendix G",
+   "note": null,
+   "table": "Table 17, row Zero-Shot + RCI, column GSM8K"
+  },
+  {
+   "claim": "Each of task, state and agent grounding contributes about equally; removing agent grounding cuts success by 60% on simpler tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "drop without agent grounding (simpler tasks)",
+   "value": 60,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9 ablation tasks (3 easy, 3 medium, 3 hard), gpt-3.5-turbo",
+   "where": "3.2.4, Fig 5",
+   "note": null,
+   "quote": "the success rate decreases by 60% in contrast to the baseline without the agent grounding"
+  },
+  {
+   "claim": "Instruction fine-tuning matters: GPT-3 and InstructGPT-3 struggle versus gpt-3.5-turbo on MiniWoB++ (read from Fig 6, no numbers in text).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation tasks, davinci / text-davinci-002 / gpt-3.5-turbo",
+   "where": "3.2.5, Fig 6",
+   "note": null,
+   "quote": "LLMs struggle to effectively complete tasks without instruction fine-tuning"
+  },
+  {
+   "claim": "Per-task: terminal goes from 0.00 (all baselines) to 1.00 (ours, gpt-3.5-turbo and gpt-4); tic-tac-toe 0.56 vs SL+RL SotA 0.83; guess-number 0.20 vs 1.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate",
+   "value": 1.0,
+   "unit": "fraction",
+   "baseline_value": 0.0,
+   "n": null,
+   "setup": "MiniWoB++, success rate",
+   "where": "App. G",
+   "note": null,
+   "table": "Table 18, row terminal, column Ours"
+  },
+  {
+   "claim": "Authors state RCI is more expensive than single-sample approaches and that LLMs here lag task-specific SL+RL on some tasks.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "general",
+   "where": "5",
+   "note": null,
+   "quote": "RCI is more expensive to run compared to approaches that just sample once"
+  }
+ ],
+ "limits": [
+  "Only gpt-3.5-turbo and gpt-4 evaluated for the main result; generalisation of RCI to other models untested (Sec 4).",
+  "Reasoning gains rely on label feedback to stop the loop; without it RCI is at or below zero-shot (Table 17).",
+  "Action space limited to click and type; no drag or copy-paste; short-horizon decisions; fails on long-horizon (guess-number), multi-step reasoning (tic-tac-toe) and visual tasks (count-shape).",
+  "HTML context length excluded several tasks (book-flight, choose-date, click-pie).",
+  "RCI costs more than single sampling.",
+  "No seeds, episode counts or variance reported; baseline numbers copied from prior papers, CC-Net RL estimated from figures.",
+  "Authors note a direct CC-Net comparison is not possible because it uses dictionary-based typing.",
+  "Models are Jan-Mar 2023 API versions, now dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RCI",
+   "definition": "Recursive Criticism and Improvement: prompt the LLM to find problems with its output, then improve the output based on them",
+   "where": "2.1"
+  },
+  {
+   "term": "explicit RCI",
+   "definition": "Includes the critique in the prompt to generate improved output",
+   "where": "2.1"
+  },
+  {
+   "term": "implicit RCI",
+   "definition": "updates the previous output directly without sampling a critique explicitly",
+   "where": "2.1"
+  },
+  {
+   "term": "task/state/agent grounding",
+   "definition": "Actions are task-appropriate, feasible in the current state, and admissible for the agent",
+   "where": "1, 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Few-Shot-CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Zero-Shot-CoT and dataset selection",
+   "quote": null
+  },
+  {
+   "work": "CC-Net (Humphreys et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SL+RL SotA on MiniWoB++",
+   "quote": null
+  },
+  {
+   "work": "WebN-T5-3B (Gur et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fine-tuned LLM, 12K demos",
+   "quote": null
+  },
+  {
+   "work": "MiniWoB++ (Liu et al.) / MiniWoB (Shi et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "interleaves reasoning and action",
+   "quote": null
+  },
+  {
+   "work": "Reflexion (Shinn et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs task-specific success feedback",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine (Madaan et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest iterative refinement work",
+   "quote": null
+  },
+  {
+   "work": "Saunders et al. self-critiquing; Ganguli et al. moral self-correction; Constitutional AI (Bai et al.)",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "extends",
+   "note": "self-critique ability",
+   "quote": null
+  },
+  {
+   "work": "SayCan (Ahn et al.); Inner Monologue (Huang et al.)",
+   "year": 2022,
+   "arxiv": "2204.01691",
+   "relation": "related",
+   "note": "action grounding with extra trained components",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustrative examples of explicit RCI prompting and baseline prompting approaches on the GSM8K dataset.",
+   "page": 3,
+   "why": "Shows the critique/improve loop fixing the omitted-mother error"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "An illustrative execution trace of the agent for terminal tasks with RCI prompting.",
+   "page": 4,
+   "why": "Shows plan, task, state and agent grounding in one trace"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "(a) Average performance comparison with baselines. (b) Relationship between performance and amount of expert training data.",
+   "page": 7,
+   "why": "Headline comparison and sample-efficiency"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ablation analysis on the different types of grounding across tasks with varying degrees of difficulty.",
+   "page": 9,
+   "why": "Each grounding contributes"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 1",
+   "snippet": "<type regex> = \"^type\\s.{1,}$\"",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 4a values appear as an unlabelled number list in the text extraction, so no headline average was recorded.",
+  "Table 18 text-extracted as one cell per line; only spot-checked rows used.",
+  "Text near Table 18 caption says 'shown in Figure 3' for violet-averaged tasks; likely means Fig 4a."
+ ]
+}

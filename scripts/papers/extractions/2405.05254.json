@@ -1,19 +1,639 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2405.05254",
  "pdf": "ai-engineering/07-inference-engineering/sources/sun-2024-you-only-cache-once.pdf",
  "bib": {
   "title": "You Only Cache Once: Decoder-Decoder Architectures for Language Models",
-  "first_author": "Yutao Sun",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Yutao Sun",
+   "Li Dong",
+   "Yi Zhu",
+   "Shaohan Huang",
+   "Wenhui Wang",
+   "Shuming Ma",
+   "Quanlu Zhang",
+   "Jianyong Wang",
+   "Furu Wei"
+  ],
+  "first_author": "Sun",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2405.05254",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 54590,
+  "chars_total": 54590,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"You Only Cache Once: Decoder-Decoder Architectures for Language Models\" (YOCO), Yutao Sun, Li Dong, Yi Zhu, Shaohan Huang, Wenhui Wang, Shuming Ma, Quanlu Zhang, Jianyong Wang, Furu Wei (Microsoft Research, Tsinghua). arXiv:2405.05254v2, 9 May 2024 (arXiv preprint; no venue printed).\nCOVERAGE: about 54,651 of 54,651 chars read, in 3 passes. Body, appendices A-F and the start of the pseudocode were read. References were only skimmed. Figures 7-10 values come from the extracted axis labels and callouts, not from images.\n\nCLAIMS (ranked)\n- claim: The KV cache stores one global layer instead of one per layer, so it is about L times smaller. For a 65B model that is about 80x per token.\n  number: ~80x (65B); 24x/32x/40x/64x/80x at 1.2B/6.4B/13B/30B/65B (labels as extracted, in the order of Figure 8's x-axis)\n  setup: Figure 8, KV cache KB/token against model size. The Transformer baseline uses GQA. H100-80GB.\n  quote: \"In particular, the memory of KV caches can be reduced by about 80× for 65B models.\"\n  where: p2 (Intro); Fig 8, p10\n- claim: With a 65B model, YOCO can serve 128K tokens in 1GB of GPU memory. A GQA Transformer manages 1.6K tokens in the same 1GB.\n  number: 128K vs 1.6K tokens per 1GB\n  setup: 65B model size, Transformer with GQA, per the Figure 8 per-token KV cost\n  quote: \"For example, YOCO can serve 128K tokens with 1GB GPU memory, while Transformer with GQA [ALTdJ+23] can only support 1.6K tokens at 65B model size.\"\n  where: p10\n- claim: The intro states the baseline problem: a 65B model's 512K-token KV cache does not fit on one H100.\n  number: ~86GB for 512K tokens\n  setup: 65B model, GQA, 8-bit KV quantization, H100-80GB\n  quote: \"For the example of a 65B-size language model (augmented with grouped-query attention [ ALTdJ+23] and 8-bit KV quantization), 512K tokens occupy about 86GB GPU memory, which is even larger than the capacity of one H100-80GB GPU.\"\n  where: p2\n- claim: Whole-model inference memory for the 3B model is 9.38x lower at 1M tokens. YOCO uses 12.4GB. At 32K the reduction is about 2x.\n  number: 9.38x at 1M; 12.4GB; 1.95x at 32K; 2.32x at 64K; 3.01x at 128K; 4.16x at 256K; 6.39x at 512K\n  setup: YOCO-3B (gRet, 26 layers, 24 query heads, 8 KV heads, GQA) against a same-size Transformer with GQA, Flash-Decoding and kernel fusion. H100-80GB. Total memory = weights + activations + KV cache. The last 1,024 tokens are generated.\n  quote: \"For example of 1M length, the overall inference memory usage is only 12.4GB, while Transformers occupy 9.4× GPU memory.\"\n  where: p10, Fig 7\n  (the 4.16x/6.39x/9.38x labels sit on the 256K/512K/1M ticks and 1.95x/2.32x/3.01x on 32K/64K/128K, an inference from the figure layout)\n- claim: Prefill latency at 512K context drops from 180s to under 6s. Speedup is 71.82x at 1M, 30.3x at 512K, 15.55x at 256K, 8.36x at 128K, 5.05x at 64K, 2.87x at 32K.\n  number: 180s -> <6s at 512K; 71.8x at 1M; 2.87x at 32K\n  setup: same as above, 3B model, H100-80GB. The Transformer is optimized (Flash-Decoding, kernel fusion). Gated retention uses chunk size 256 with a Triton kernel. Transformer prefill is about 300s at 1M.\n  quote: \"Figure 9 shows that YOCO reduces the Transformer prefilling time from 180 seconds to less than 6 seconds for 512K context.\"\n  where: p10-11, Fig 9\n  also: \"The prefill stage is speeded up by 71.8× for the 1M context and 2.87× for the 32K input.\" (p2)\n- claim: Mechanism for the prefill gain. The cross-decoder only reads the KV cache, so prefill can exit after the self-decoder. That is at least half the layers, and the self-decoder's attention is cheap. Attention prefill goes from O(L·N²·D) to O(L·N·D).\n  number: \"at least half\" of the layers; complexity classes only\n  setup: Tables 1-2. The self-decoder is the first L/2 layers.\n  quote: \"First, only half the layers are needed for forward computation, i.e., at least half prefilling latency reduction.\"\n  where: p5\n- claim: Throughput at 512K context is 9.6x higher, 43.1 against 4.5 token/s. The factor is 2.57-2.77x at 32K-128K and 4.37x at 256K (as extracted; the figure label order is ambiguous).\n  number: 4.5 vs 43.1 token/s; 9.6x\n  setup: counts prefill and generation. The gain comes from faster prefill and from a larger batch, which the freed memory allows.\n  quote: \"For the example of 512K queries, Transformer's throughput is 4.5 token/s while YOCO reaches 43.1 token/s, i.e, achieving 9.6× speedup.\"\n  where: p11, Fig 10\n- claim: Quality is on par with Transformers. Trained at 3B, YOCO-3B averages 0.634 at 1T tokens and 0.636 at 1.6T tokens. OpenLLaMA-3B-v2 gets 0.619 and StableLM-base-alpha-3B-v2 gets 0.612 at 1T tokens.\n  number: Eval Harness average 0.634 (1T), 0.636 (1.6T), 0.645 (YOCO-3B-1M)\n  setup: 3B model, 2.8B non-embedding params, 26 layers, hidden 3072, trained on 1.6T tokens at 4096 context. Zero-shot, LM Eval Harness. The StableLM-3B-4E1T average is not reported (\"—\") because its table is incomplete.\n  quote: \"YOCO-3B 0.379 0.731 0.645 0.689 0.298 0.763 0.639 0.924 0.634\"\n  where: p7, Table 3\n- claim: Validation loss for YOCO scales like a Llama-style Transformer from 160M to 13B. YOCO-gRet beats both the Transformer and YOCO-SWA.\n  number: none (curve only; sizes 160M-13B, 10B training tokens)\n  setup: 2k sequence length, 0.25M-token batch, 40k steps. SWA window 1,024. Loss figure in Fig 4.\n  quote: \"YOCO obtains comparable performance from 160M to 13B compared to the Llama-optimized transformer architecture.\"\n  where: p8\n- claim: YOCO was extended to 1M context and gets near-perfect single-needle retrieval. In the multi-needle test at 128K, YOCO-3B-1M scores 0.98, 0.98, 0.84 and 0.56 for N=1, 2, 4 and 8.\n  number: N=1/2/4/8 = 0.98/0.98/0.84/0.56\n  setup: YOCO-3B-1M, 128K test length. Comparison models are LWM-1M-text 7B (1.00/0.90/0.76/0.62), MiniCPM-128K 2.4B (1.00/1.00/0.54/0.56), ChatGLM3-128K 6B (0.94/0.72/0.52/0.44) and YaRN-Mistral-128K 7B (0.02/0.12/0.08/0.20). Extension schedule is 64K/256K/1M with 6B/4B/1.5B tokens. No long-instruction tuning data.\n  quote: \"YOCO-3B-1M 3B 0.98 0.98 0.84 0.56\"\n  where: p8, Table 4; Table 7 p18\n\nLIMITS\n- The profiled models are 3B, except Figure 8, which gives per-token KV cost across sizes. The 80x claim for 65B is a per-token ratio, not a measured end-to-end run at 65B.\n- The paper sets the 1.2B to 65B ratios (24x to 80x) next to L. The authors say the \"reduction ratio becomes larger as the number of layers increases\".\n- The \"once\" is global KV only. Footnote 2 concedes the self-decoder still holds a constant-size cache: \"Strictly, self-decoder also needs to store a certain number of caches.\"\n- The baseline is a Transformer with GQA, Flash-Decoding and kernel fusion. Measurements are on H100-80GB only, with 1,024 generated tokens. There is no comparison against other KV-reduction methods (quantization, eviction, MLA) and no combined results.\n- The scaling-curve comparison uses small token budgets (10B tokens). The 3B comparison uses 1T and 1.6T tokens against models from other labs.\n- Quality evidence is limited to Eval Harness zero-shot, needle retrieval and NLL curves. There are no long-context downstream benchmarks and no instruction tuning.\n- It needs a new architecture trained from scratch, so it cannot be applied to existing checkpoints.\n- Future-work items (YOCO + BitNet + Groq, multimodal, cache compression/indexing) are proposals, not results.\n\nBUILDS ON: Transformer (Vaswani et al. 2017, [VSP+17]); grouped-query attention (Ainslie et al. 2023); Flash-Decoding (Dao, Haziza, Massa, Sizov 2023); retention/RetNet (Sun, Dong, Huang et al. 2023, [SDH+23]); sliding-window attention (Child et al. 2019); GateLoop (Katsch 2023) for the data-controlled decay; StableLM-3B-4E1T training recipe; Llama (Touvron et al. 2023); Kaplan et al. 2020 scaling laws; Jamba (Lieber et al. 2024) for the hybrid finding; needle-in-a-haystack (Kamradt 2023) following the Gemini 1.5 and LWM settings; Fu et al. 2024 for long-context data up-sampling.\n\nCODE: Appendix F pseudocode (gated retention in parallel, recurrent and chunkwise forms). Appendix F begins on p18 with \"def ParallelRetention(q, k, v, gt)\", which uses logsigmoid and a causal mask. The core recurrence is Eq. 5, \"Sn = γnSn−1 + K⊺nVn; gRet(Xn) = QnSn\". Eq. 2-3 show cross-decoder KV sharing: \"K̂ = LN(X^{L/2})WK, V̂ = LN(X^{L/2})WV\".\n\nFIGURES\n- Fig 1 (p1): bar charts of GPU memory, throughput and prefill latency at 512K, YOCO against Transformer. Labels are 6.4X, 30.3X and 9.6X (the 6.4X and 30.3X values match the 512K points in Figs 7 and 9; it is a quick summary of the headline results).\n- Fig 2 and Fig 3 (p3-4): architecture, and the early-exit prefill flow. The best visual for the idea of \"cache once\".\n- Fig 7 (p10): memory against length, with a 1M breakdown into weights, KV cache and other.\n- Fig 8 (p10): KV KB/token against model size, 24x to 80x.\n- Fig 9 (p11): prefill time against length, with speedup labels.\n- Fig 10 (p11): throughput against length.\n\nPROBLEMS: Tables and figure labels were extracted as scattered numbers, so the Fig 7-10 mappings of ratios to lengths are inferred from axis order. Figure 1's 6.4X is consistent with the 512K point of Fig 7. The text itself says nothing of the 64K to 128K throughput labels. No embedded instructions found."
+ "type": "system",
+ "question": "Can a decoder-decoder architecture that caches global key-value pairs once cut KV memory and prefill time at long context while matching a Transformer's quality?",
+ "hypothesis": "Reusing one global KV cache from a self-decoder in all cross-decoder layers keeps global attention and allows prefill to exit early, with competitive language modeling.",
+ "contributions": [
+  "Decoder-decoder architecture YOCO (self-decoder plus cross-decoder) that caches KV once",
+  "Gated retention as the efficient self-attention module",
+  "Scaling in tokens (1.6T), size (160M-13B) and context (1M)",
+  "Profiling showing orders-of-magnitude gains in memory, prefill latency and throughput",
+  "Chunk parallelism for long-sequence training"
+ ],
+ "method": {
+  "summary": "YOCO stacks L/2 self-decoder layers (gated retention or sliding-window attention, constant cache) under L/2 cross-decoder layers that all cross-attend to one global KV cache projected from the self-decoder output. Prefill can exit before the cross-decoder. A 3B model is trained to 1.6T tokens, extended to 1M context, and profiled against a GQA Transformer.",
+  "task": "autoregressive language model pretraining and long-context inference profiling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "curated training corpus similar to StableLM-3B-4E1T",
+    "role": "pretrain",
+    "size": "1.6T tokens (3B model); 10B tokens per scaling-curve model",
+    "split": null,
+    "source": "stated only as 'similar to [TBMR]'",
+    "preprocessing": "tiktoken-cl100k_base tokenizer; long documents up-sampled by sequence length for length extension"
+   },
+   {
+    "name": "LM Eval Harness tasks (ARC-C, ARC-E, BoolQ, HellaSwag, OBQA, PIQA, Winogrande, SciQ)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Gao et al. 2023",
+    "preprocessing": "zero-shot"
+   },
+   {
+    "name": "Needle In A Haystack and multi-needle",
+    "role": "eval",
+    "size": "128K to 1M context",
+    "split": null,
+    "source": "Kamradt 2023; follows Gemini 1.5 and LWM",
+    "preprocessing": "needle is a city with a magic number"
+   },
+   {
+    "name": "Book and repository-level code validation data",
+    "role": "eval",
+    "size": "examples longer than 1M tokens filtered",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ZeroSCROLLS (Qasper, GovReport, QMSum, NarrativeQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Shaham et al. 2023",
+    "preprocessing": "160M models trained 2B more tokens at 16,384 length"
+   }
+  ],
+  "models": [
+   {
+    "name": "YOCO-3B (gRet)",
+    "role": "proposed",
+    "params": "3B (2.83B non-embedding; 2.8B in Sec 4.1)",
+    "architecture": "decoder-decoder, pre-RMSNorm, SwiGLU, GQA",
+    "init_from": null,
+    "tokenizer": "tiktoken-cl100k_base",
+    "vocab": "100,288",
+    "layers": "26",
+    "hidden": "3072",
+    "heads": "24 query, 8 KV",
+    "context": "4096 training; 1M after extension",
+    "other": {
+     "ffn_size": "8192",
+     "head_dim": "128"
+    }
+   },
+   {
+    "name": "YOCO scaling series (gRet, SWA)",
+    "role": "proposed",
+    "params": "160M, 400M, 830M, 1.4B, 2.7B, 6.8B, 13B",
+    "architecture": "as above; SWA window 1,024; gRet head dim 256",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12/24/24/24/32/32/40",
+    "hidden": "768/1024/1536/2048/2560/4096/5120",
+    "heads": "12/16/12/16/20/32/40",
+    "context": "2048 training",
+    "other": {
+     "ffn": "3d for YOCO, 8/3 d for Transformer"
+    }
+   },
+   {
+    "name": "Llama-style Transformer (scaling and profiling baseline)",
+    "role": "baseline",
+    "params": "same sizes",
+    "architecture": "RMSNorm, SwiGLU, no bias; GQA, Flash-Decoding, kernel fusion in profiling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenLLaMA-3B-v2, StableLM-base-alpha-3B-v2, StableLM-3B-4E1T",
+    "role": "baseline",
+    "params": "3.2B / 2.7B-class",
+    "architecture": "Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "StableLM-3B-4E1T numbers taken from its technical report"
+    }
+   },
+   {
+    "name": "YaRN-Mistral-128K, LWM-1M-text, MiniCPM-128K, ChatGLM3-128K",
+    "role": "baseline",
+    "params": "7B, 7B, 2.4B, 6B",
+    "architecture": "Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128K or 1M",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token prediction",
+   "optimizer": "AdamW, betas (0.9, 0.95) for 3B; (0.9, 0.98) for scaling curves",
+   "lr": "3.2e-4 max for 3B; 1.5e-4 (160M-1.4B) and 7.5e-5 (2.7B-13B) for scaling curves; 8e-5, 4e-5, 2e-5 for length stages",
+   "lr_schedule": "linear decay to 1.28e-5 over a 5T-token schedule (3B); linear decay (scaling curves)",
+   "warmup": "1000 steps (3B); 375 steps (scaling curves)",
+   "batch_size": "4M tokens (3B); 0.25M tokens (scaling curves); same as before for length extension",
+   "steps": "400k (3B, 1.6T tokens); 40k (scaling curves)",
+   "epochs": null,
+   "tokens": "1.6T (3B); 10B per scaling-curve model; 6B + 4B + 1.5B for length extension",
+   "seq_len": "4096 (3B); 2048 (scaling); 65,536 / 262,144 / 1,048,576 (extension)",
+   "precision": null,
+   "weight_decay": "0.1 (3B); 0.05 (scaling curves)",
+   "dropout": "0.0",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rope_theta": "640K, 5M, 80M for the three length stages",
+    "gated_retention_chunk_size_prefill": "256",
+    "kernel": "Triton gated retention kernel based on FLA",
+    "long_context_training": "chunk parallelism (Appendix A), internal CUBE system"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "profiling: last 1,024 tokens generated",
+   "samples": "needle test: 10 runs at the same depth and length, averaged; profiling runs not stated",
+   "prompting": "zero-shot for Eval Harness; no long-instruction tuning data",
+   "retrieval": null,
+   "parameters": {
+    "profiling_lengths": "32K to 1M",
+    "hardware": "H100-80GB GPU cards (count not stated for 3B profiling)",
+    "prefill_mode": "chunk-recurrent for gRet; generation uses recurrent form"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Eval Harness average accuracy",
+     "definition": "mean zero-shot accuracy over 8 tasks",
+     "unit": "accuracy 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "needle retrieval accuracy",
+     "definition": "fraction of needles retrieved, mean of 10 runs",
+     "unit": "accuracy 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "validation loss / perplexity",
+     "definition": "LM loss on held-out validation set",
+     "unit": "nats / ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "GPU memory",
+     "definition": "weights + activations + KV cache",
+     "unit": "GB",
+     "higher_is_better": false
+    },
+    {
+     "name": "prefilling latency",
+     "definition": "encoding time of the prompt before first token",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "throughput",
+     "definition": "tokens per second including prefill and generation",
+     "unit": "token/s",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-style Transformer with GQA, Flash-Decoding, kernel fusion",
+    "OpenLLaMA-3B-v2",
+    "StableLM-base-alpha-3B-v2",
+    "StableLM-3B-4E1T",
+    "LWM-1M-text",
+    "MiniCPM-128K",
+    "ChatGLM3-128K",
+    "YaRN-Mistral-128K",
+    "H3, RetNet, Mamba, gRetNet, Sparse Transformer (Appendix G)"
+   ],
+   "protocol": "single training run per configuration; no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "https://aka.ms/YOCO",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.hardware",
+    "quote": "The experiments are conducted with H100-80GB GPU cards.",
+    "where": "Sec 4.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Whole-model inference memory at 1M context is 12.4GB for YOCO, with the Transformer using 9.4x more.",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory ratio Transformer/YOCO at 1M",
+   "value": 9.38,
+   "unit": "x lower memory",
+   "baseline_value": null,
+   "n": null,
+   "setup": "YOCO-gRet 3B (26 layers, 24 query heads, 8 KV heads, GQA) vs same-size Transformer with GQA, Flash-Decoding and kernel fusion; H100-80GB; last 1,024 tokens generated; Section 4.4",
+   "where": "Sec 4.4, Fig 7a",
+   "note": "Fig 7a label 9.38x; text says 9.4x",
+   "quote": "For example of 1M length, the overall inference memory usage is only 12.4GB, while Transformers occupy 9.4× GPU memory."
+  },
+  {
+   "claim": "At 32K context YOCO needs about 2x less memory than the Transformer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.95,
+   "unit": "x lower memory",
+   "baseline_value": null,
+   "n": null,
+   "setup": "YOCO-gRet 3B (26 layers, 24 query heads, 8 KV heads, GQA) vs same-size Transformer with GQA, Flash-Decoding and kernel fusion; H100-80GB; last 1,024 tokens generated; Section 4.4",
+   "where": "Sec 4.4, Fig 7a (label 1.95x)",
+   "note": null,
+   "quote": "Even with a 32K sequence length, YOCO requires about 2× less memory than Transformer."
+  },
+  {
+   "claim": "Prefill for a 512K context drops from 180 seconds to under 6 seconds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prefill latency",
+   "value": 6,
+   "unit": "s (upper bound, YOCO)",
+   "baseline_value": 180,
+   "n": null,
+   "setup": "YOCO-gRet 3B (26 layers, 24 query heads, 8 KV heads, GQA) vs same-size Transformer with GQA, Flash-Decoding and kernel fusion; H100-80GB; last 1,024 tokens generated; Section 4.4; 512K prefill",
+   "where": "Sec 4.4, Fig 9",
+   "note": null,
+   "quote": "Figure 9 shows that YOCO reduces the Transformer prefilling time from 180 seconds to less than 6 seconds for 512K context."
+  },
+  {
+   "claim": "Prefill is 71.8x faster at 1M and 2.87x faster at 32K.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 71.82,
+   "unit": "x faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "YOCO-gRet 3B (26 layers, 24 query heads, 8 KV heads, GQA) vs same-size Transformer with GQA, Flash-Decoding and kernel fusion; H100-80GB; last 1,024 tokens generated; Section 4.4",
+   "where": "Sec 1, Fig 9",
+   "note": "Fig 9 labels 71.82x at 1M, 2.87x at 32K",
+   "quote": "The prefill stage is speeded up by 71.8× for the 1M context and 2.87× for the 32K input."
+  },
+  {
+   "claim": "Prefill ratio at 512K is 30.3x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 30.3,
+   "unit": "x faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "YOCO-gRet 3B (26 layers, 24 query heads, 8 KV heads, GQA) vs same-size Transformer with GQA, Flash-Decoding and kernel fusion; H100-80GB; last 1,024 tokens generated; Section 4.4",
+   "where": "Fig 9 / Fig 1",
+   "note": null,
+   "quote": "30.3x",
+   "table": "Fig 9 label, 512K (30.3x)"
+  },
+  {
+   "claim": "Throughput at 512K context is 43.1 token/s for YOCO against 4.5 for the Transformer, 9.6x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 43.1,
+   "unit": "token/s",
+   "baseline_value": 4.5,
+   "n": null,
+   "setup": "YOCO-gRet 3B (26 layers, 24 query heads, 8 KV heads, GQA) vs same-size Transformer with GQA, Flash-Decoding and kernel fusion; H100-80GB; last 1,024 tokens generated; Section 4.4; throughput covers prefill plus generation; larger batch allowed by lower memory",
+   "where": "Sec 4.4, Fig 10",
+   "note": null,
+   "quote": "For the example of 512K queries, Transformer’s throughput is 4.5 token/s while YOCO reaches 43.1 token/s, i.e, achieving 9.6× speedup."
+  },
+  {
+   "claim": "KV cache per token is reduced about 80x at 65B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 80,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KV cache KB/token vs model size 1.2B-65B; Transformer baseline uses GQA; Fig 8 labels 24x/32x/40x/64x/80x; the 65B figure is read from per-token cost, not a measured run",
+   "where": "Sec 1, Fig 8",
+   "note": null,
+   "quote": "In particular, the memory of KV caches can be reduced by about 80× for 65B models."
+  },
+  {
+   "claim": "At 65B YOCO can serve 128K tokens in 1GB of GPU memory, against 1.6K tokens for a GQA Transformer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 128,
+   "unit": "K tokens per GB",
+   "baseline_value": "1.6K",
+   "n": null,
+   "setup": "65B model size, per-token KV cost of Fig 8, Transformer with GQA",
+   "where": "Sec 4.4",
+   "note": null,
+   "quote": "For example, YOCO can serve 128K tokens with 1GB GPU memory, while Transformer with GQA [ALTdJ+23] can only support 1.6K tokens at 65B model size."
+  },
+  {
+   "claim": "Baseline problem: a 65B model's 512K-token KV cache is about 86GB.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 86,
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "65B, grouped-query attention, 8-bit KV quantization; H100-80GB capacity",
+   "where": "Sec 1",
+   "note": null,
+   "quote": "512K tokens occupy about 86GB GPU memory, which is even larger than the capacity of one H100-80GB GPU."
+  },
+  {
+   "claim": "Baseline problem: 7B model prefill takes about 110 s for 450K tokens and 380 s for 1M on four H100s.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 110,
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B, Flash-Decoding and kernel fusion, four H100 GPUs",
+   "where": "Sec 1",
+   "note": "Sec 4.4 says Transformer needs about 180 s at 512K and 300 s at 1M (3B config); different models",
+   "quote": "using four H100 GPUs, the 7B language model (augmented with Flash-Decoding [DHMS23] and kernel fusion) requires about 110 seconds to prefill 450K tokens, and 380 seconds for 1M length."
+  },
+  {
+   "claim": "YOCO-3B at 1.6T tokens reaches an Eval Harness zero-shot average of 0.636.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.636,
+   "unit": "avg accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3B, 1.6T tokens, zero-shot LM Eval Harness over 8 tasks; StableLM-3B-4E1T has no printed average",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row YOCO-3B (1.6T), column Avg"
+  },
+  {
+   "claim": "YOCO-3B at 1T tokens reaches an average of 0.634 vs OpenLLaMA-3B-v2 0.619 and StableLM-base-alpha-3B-v2 0.612.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.634,
+   "unit": "avg accuracy",
+   "baseline_value": 0.619,
+   "n": null,
+   "setup": "3B, 1T tokens, zero-shot LM Eval Harness",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row YOCO-3B (1T), column Avg"
+  },
+  {
+   "claim": "YOCO-3B-1M after context extension averages 0.645 on Eval Harness.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.645,
+   "unit": "avg accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "YOCO-3B extended to 1M context",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row YOCO-3B-1M, column Avg"
+  },
+  {
+   "claim": "YOCO-3B-1M multi-needle accuracy at 128K length: N=1 0.98, N=2 0.98, N=4 0.84, N=8 0.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.56,
+   "unit": "accuracy at N=8",
+   "baseline_value": null,
+   "n": null,
+   "setup": "128K length; 10 runs at the same depth and length averaged; compared to LWM-1M-text 7B (0.62 at N=8), MiniCPM-128K (0.56), ChatGLM3-128K (0.44), YaRN-Mistral-128K (0.20)",
+   "where": "Table 4",
+   "note": "Other columns 0.98, 0.98, 0.84",
+   "table": "Table 4, row YOCO-3B-1M, column N = 8"
+  },
+  {
+   "claim": "YOCO-3B-1M passes single-needle retrieval across 1M context with near perfect accuracy.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "YOCO-3B-1M, needle city with magic number, 10 runs per depth/length, no long-instruction data",
+   "where": "Sec 4.3, Fig 5",
+   "note": null
+  },
+  {
+   "claim": "Scaling curves 160M to 13B: YOCO-gRet validation loss beats Transformer and YOCO-SWA.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-style Transformer vs YOCO-gRet and YOCO-SWA (window 1,024), 10B tokens each, 2k seq length, validation loss (Fig 4, values not printed in text)",
+   "where": "Sec 4.2, Fig 4",
+   "note": null
+  },
+  {
+   "claim": "160M-model validation perplexity: YOCO-gRet 3.530, YOCO-SWA 3.553, Transformer 3.564, Mamba 3.645.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.53,
+   "unit": "validation perplexity",
+   "baseline_value": 3.564,
+   "n": null,
+   "setup": "160M, 12 layers, hidden 768; Appendix G.1",
+   "where": "Table 8",
+   "note": null,
+   "table": "Table 8, row YOCOgRet, column Valid. Set"
+  }
+ ],
+ "limits": [
+  "Trained from scratch only; converting an existing Transformer is not shown.",
+  "The 65B KV saving is the per-token ratio from Fig 8, not a measured 65B run.",
+  "Profiling uses a 3B model; GPU count and batch size for profiling are not stated and Transformer memory at 1M (about 9.4x of 12.4GB) exceeds one 80GB card.",
+  "No seeds, no variance, no compute or hardware for training stated.",
+  "Self-decoder still keeps a constant-size cache (footnote 2).",
+  "Quality at scale compared on Eval Harness averages and validation loss only; multi-needle at N=8 is 0.56, below LWM-1M-text (0.62).",
+  "Figure values (scaling-loss curves, throughput bars) are only in figures."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "YOCO",
+   "definition": "decoder-decoder architecture that only caches key-value pairs once",
+   "where": "Abstract"
+  },
+  {
+   "term": "gated retention",
+   "definition": "retention augmented with a data-dependent gating mechanism",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Retentive Network",
+   "year": 2023,
+   "arxiv": "2307.08621",
+   "relation": "extends",
+   "note": "gated retention builds on retention",
+   "quote": null
+  },
+  {
+   "work": "Grouped-query attention",
+   "year": 2023,
+   "arxiv": "2305.13245",
+   "relation": "uses-method",
+   "note": "used in both models and baseline",
+   "quote": null
+  },
+  {
+   "work": "Flash-Decoding",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Transformer baseline inference",
+   "quote": null
+  },
+  {
+   "work": "StableLM-3B-4E1T",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "training recipe followed and results compared",
+   "quote": null
+  },
+  {
+   "work": "Efficiently scaling Transformer inference",
+   "year": 2022,
+   "arxiv": "2211.05102",
+   "relation": "related",
+   "note": "cited for memory-bound inference",
+   "quote": null
+  },
+  {
+   "work": "Mamba",
+   "year": 2023,
+   "arxiv": "2312.00752",
+   "relation": "baseline",
+   "note": "Appendix G",
+   "quote": null
+  },
+  {
+   "work": "World model on million-length video and language (LWM)",
+   "year": 2024,
+   "arxiv": "2402.08268",
+   "relation": "baseline",
+   "note": "multi-needle baseline and needle setup",
+   "quote": null
+  },
+  {
+   "work": "Needle in a Haystack",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Kamradt 2023",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of the decoder-decoder architecture.",
+   "page": 3,
+   "why": "Shows self-decoder feeding one KV cache to all cross-decoder layers."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "YOCO Inference: prefill exits early, skipping the cross-decoder.",
+   "page": 4,
+   "why": "Why prefill is at least 2x faster."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "GPU memory consumption during inference.",
+   "page": 10,
+   "why": "Memory vs length and KV-cache breakdown."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Prefilling latency for different length.",
+   "page": 11,
+   "why": "Linear vs quadratic prefill."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2 and Eq 3",
+   "snippet": "K̂ = LN(X^{L/2}) W_K,  V̂ = LN(X^{L/2}) W_V",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Figure-only values (Fig 4, 5, 6, 10 bars) were not read from images.",
+  "Venue not printed; arXiv v2 only.",
+  "Memory ratio labels printed as 9.38x in the figure and 9.4x in text."
+ ]
 }

@@ -1,4 +1,4 @@
-# Lecture deck for ai-engineering/05-graph-engineering, notes 01-13.
+# Lecture deck for ai-engineering/05-graph-engineering, all 18 notes (01-13b, including 05b, 10b and 11a).
 # Build: make slides PILLAR=05-graph-engineering STRICT=1 PREVIEW=1
 # Running examples: one review graph (thread review-42) for parts 1-3, the SEC filings graph
 # from the Neo4j course for part 4, and a swarm writing to a shared graph for part 5.
@@ -65,7 +65,7 @@ parts:
           - [Overloaded verifier, A dedicated reviewer removes criteria confusion]
         bold_first: true
         takeaway: Escalating to a graph is a cost you justify with a specific signal, and not a maturity level you graduate to.
-        recall: Which five signals can justify adding a node to a loop?
+        recall: Is moving from a loop to a graph a maturity level you graduate to?
         source: notes/01-graph-vs-loop.md
         notes: >-
           Run our review loop against this list. Does it need parallel work? Different models? If nothing applies, stop.
@@ -107,15 +107,14 @@ parts:
         bullets:
           - "260 configurations, six benchmarks, compute matched"
           - "Finance Agent: centralized team **+80.8%**; PlanCraft: every variant lost **39–70%**"
-          - "Mean change **−0.3%**, 95% CI −58.7% to +77.2%"
-          - "Above about **45%** single-agent score, more agents had negative returns"
         takeaway: Across 260 controlled configurations the mean multi-agent gain was −0.3%, so the task shape decides.
-        recall: In Kim et al., what separated the benchmark that gained from the one that lost?
+        recall: "What was the mean multi-agent gain across Kim et al.'s 260 controlled configurations, and what decides it?"
         source: notes/06-when-not-to-build-a-graph.md
         notes: >-
           Kim and colleagues matched compute and ran 260 configurations. Finance Agent splits into parallel subtasks, and a centralized
           team scored 80.8 percent higher. In PlanCraft each step constrains the next, and every variant lost. The mean is close to zero
-          with an enormous interval. So check how your task decomposes, and whether a single agent already does well.
+          with an enormous interval: the 95 percent CI runs from −58.7% to +77.2%. Above about 45 percent single-agent score, more agents had negative returns.
+          So check how your task decomposes, and whether a single agent already does well.
       - layout: cards
         kicker: The bill
         title: Fan-out costs tokens whether it helps or not
@@ -212,7 +211,7 @@ parts:
           - "**The router** is plain code naming the next node"
           - "**Conditional edges** give branches, gates, cycles and early exit"
         takeaway: A graph program is nodes that return changed keys, plus routers that are ordinary code choosing the next node.
-        recall: What does a router return, and what do nodes return?
+        recall: What is a graph program made of?
         source: notes/02-graph-primitives.md
         notes: >-
           Nothing here is an LLM until you put one in a node. The router is a plain function. That matters, since routing you can read is
@@ -220,11 +219,11 @@ parts:
       - layout: flow
         kicker: The first shape
         title: The highest-yield first graph is generate, then verify
+        lead: Two nodes and a bounded back-edge are the smallest graph that can recover.
         steps:
           - {label: Generate, sub: produces a draft}
           - {label: Verify, sub: "tests, schema, rubric"}
           - {label: Done, sub: passes or attempts exhausted}
-        loop: back-edge with the critique, bounded by an attempt counter
         bullets:
           - The verifier sees the task and the output, **never the generator's reasoning**
           - The back-edge carries the critique into the next attempt
@@ -293,8 +292,8 @@ parts:
           - Each `Send` carries its own private input
           - Results merge through the reducer
           - "**Cap N**: unbounded fan-out is a cost bug"
-        takeaway: To tell a real edge from an incidental one, ask whether the next step reads the previous output. If not, fan out.
-        recall: What is the true-dependency test for deciding whether steps can run in parallel?
+        takeaway: Send fans out one reviewer per file at runtime, a reducer merges the results, and a cap on N bounds the cost.
+        recall: How does a graph run one reviewer per changed file when the count is unknown?
         source: notes/03-state-and-reducers.md
         notes: >-
           We do not know how many files changed until the run begins, so static edges cannot express this. Send decides at runtime. Files do
@@ -355,8 +354,8 @@ parts:
           - ["Crossing a trust boundary: external API, other tenant", Someone else bears the cost]
           - [Low-confidence router decisions, "Cheap for a human, expensive to mis-route"]
           - ["After the plan, before the build (n8n)", The plan is the cheapest thing to correct]
-        takeaway: A gate on every node trains people to approve without reading, so gate only where consequence concentrates.
-        recall: Which four places in a graph deserve a human approval gate?
+        takeaway: Gate only where consequence concentrates, since a gate on every node trains people to approve unread.
+        recall: Why not put a human approval gate on every node?
         source: notes/04-durable-execution-and-interrupts.md
         notes: >-
           The first graph is now complete: generate, verify, one reviewer per file, a gate before publish. It has one gate, because of what too
@@ -393,7 +392,7 @@ parts:
           - [Handoff, status key read by an edge, "Agents shouldn't know each other", Status values drift]
         bold_first: true
         takeaway: Five shapes cover most graphs, and each has a named failure, so choosing a shape also chooses what to watch.
-        recall: Name the five recurring topologies and how the supervisor pattern fails.
+        recall: Why does choosing a topology also choose what to watch?
         source: notes/05-topology-patterns.md
         notes: >-
           Our review graph already combines two of these, generate-then-verify and fan-out. Read the last column most carefully. You can also
@@ -407,7 +406,6 @@ parts:
           - "**Shared:** one trajectory, like threads; nothing lost, everything accumulates"
           - "**Isolated:** own window, like processes; only what is passed"
           - Isolation keeps a verifier independent
-          - Pass file paths, **not file contents**
         takeaway: Isolate contexts if the cumulative trajectory would pass about half the window; share if no information can be lost.
         recall: What rule of thumb chooses between shared and isolated context?
         source: notes/05-topology-patterns.md
@@ -432,11 +430,85 @@ parts:
             - A reviewer earns its node when it can **run something**
           tag: Tests, browser, search
         takeaway: A reviewer that only rereads text is the same model a second time; it earns a node when it can run something.
-        recall: What did screenshot feedback do in WebGen-Agent, and why did debate not do the same?
+        recall: "When does a second agent, such as a reviewer, earn its node?"
         source: notes/05-topology-patterns.md
         notes: >-
           This is the data-processing argument: recombining the same information cannot add any. It has a boundary. With 70 percent of the context
           masked, a sequential pipeline beat the single agent, which is a context problem and not new information. So give our reviewer the test runner.
+      - layout: table
+        kicker: Running a team
+        title: A multi-agent runtime is an operating system
+        lead: Li maps the runtime onto an OS. The one place the analogy breaks is that agents pass meaning, not bytes.
+        header: [OS, Agent runtime]
+        widths: [3, 7]
+        highlight: [5]
+        rows:
+          - [Program, "Static prefix: system prompt + tool definitions"]
+          - [Process memory, The trajectory]
+          - [CPU / kernel, The LLM / the agent runtime]
+          - [System call, Tool call]
+          - ["`fork` / `kill` / `ps`", "`spawn_subagent` / `cancel_subagent` / `list_agents`"]
+          - [Exit code, The structured summary a sub-agent returns]
+        takeaway: Treat the runtime like an OS, but because agents pass meaning and a message can be misread, every interface needs a contract the receiver can check.
+        recall: Where does the operating-system analogy for a multi-agent runtime break?
+        source: notes/05b-running-multi-agent-systems.md
+        notes: >-
+          A topology on a whiteboard becomes processes, a file system, a control plane and messages. The Actor model
+          from 1973 is the precedent: isolated actors that share nothing and communicate only by message. The
+          difference is that a message can be misread, so the sender and the receiver need an agreed shape.
+          The shared file system has four areas: a private scratchpad, a shared workspace with an optimistic lock or
+          one worktree per agent, mounted external storage, and a built-in read-only area for skills.
+      - layout: code
+        kicker: Worked example
+        title: Pass file paths, not file contents
+        lang: json
+        code: |-
+          {"sender": "manager", "target": "worker-3",
+           "type": "task_assigned",
+           "payload": {"task_id": "t-17",
+             "goal": "translate chapter 4",
+             "inputs": ["/workspace/ch04.md",
+                        "/workspace/glossary.md"],
+             "output_path": "/workspace/ch04.translated.md"}}
+        bullets:
+          - The manager holds a **file index**; the chapters never enter its context
+          - "`task_id` makes a redelivered message safe to handle twice"
+          - "`type` is one of `task_assigned`, `status_update`, `result`, `terminate`"
+        takeaway: A message carries paths and a task ID, not contents, so a manager can coordinate many workers without holding every file.
+        recall: Why should a manager pass file paths between agents instead of file contents?
+        source: notes/05b-running-multi-agent-systems.md
+        notes: >-
+          The example values are made up for illustration, as the note says. In Li's book-translation lab the
+          manager keeps only a file index, and the chapters never enter its context. The task_id is what makes a
+          redelivered message safe to handle twice.
+      - layout: cards
+        kicker: The control plane
+        title: Status, termination and scheduling are separate jobs
+        cards:
+          - title: Status
+            bullets:
+              - Don't poll each agent
+              - An append-only **JSONL trajectory** works like a write-ahead log
+              - A stuck mtime flags a stuck agent
+          - title: Termination
+            accent: "D4621A"
+            bullets:
+              - Graceful stops at a safe point; forced does not
+              - Two workers succeed at once? A lock or idempotent writes settle it
+              - Cancel in cascade, like Go's `context`
+          - title: Scheduling
+            bullets:
+              - Token and step budgets
+              - A strong planner, cheaper workers
+              - Concurrency caps and preemption
+        takeaway: Have agents write their own status to an append-only log, and settle termination races with a lock or idempotent writes.
+        recall: How does a manager track and stop many parallel agents?
+        source: notes/05b-running-multi-agent-systems.md
+        notes: >-
+          The log gives resume, audit and handoff for free, which is how Claude Code's resume works. Graceful
+          termination is the SIGTERM case: stop at a safe point, clean up, acknowledge. An agent meant to outlive its
+          parent starts from a detached context. The rest of the note works through peer, manager and decentralised
+          systems, the ADAS topology search, and transport once agents leave the process.
       - layout: table
         kicker: What breaks first
         title: Mechanical failures come from the wiring
@@ -451,7 +523,7 @@ parts:
           - [File-space collision, Diffs match no single worker, One worktree per worker]
         bold_first: true
         takeaway: Wiring failures such as cycles, deadlocks and races have mechanical detectors and fixes, if you let the framework report them.
-        recall: How do you detect and fix a deadlock in a graph?
+        recall: "How do you handle cycles, deadlocks and races in a graph?"
         source: notes/07-failure-modes-at-scale.md
         notes: >-
           These are the friendly failures, since something visibly goes wrong. Our review graph could hit several. A reviewer that errors without
@@ -493,20 +565,20 @@ parts:
         title: Swarms fail in ways single agents don't
         cards:
           - title: Correlated errors
-            body: Shared model, prompt and index, so N agreeing workers are not N independent ones
+            body: "One model, prompt and index, so N agreeing workers are not N checks"
           - title: Byzantine faults
-            body: Agents fail by being confidently wrong; timeouts can't catch that
+            body: Confidently wrong; timeouts can't catch it
           - title: Semantic conflicts
-            body: Both writes succeed and the result is still wrong; reducers don't help
+            body: Both writes succeed, the result is still wrong
           - title: Cascading amplification
-            body: "Merged unchecked, errors grew **17.2×**; an orchestrator held them to **4.4×** (Kim et al.)"
+            body: "Unchecked, errors grew **17.2×**; an orchestrator held them to **4.4×**"
           - title: MAST
-            body: "**14** failure modes in three groups, κ = **0.88**"
+            body: "**14** failure modes, three groups, κ = **0.88**"
           - title: Structure beats wording
             accent: D4621A
-            body: Better prompts and roles improved ChatDev by only **+15.6%**
+            body: Better prompts and roles gave ChatDev only **+15.6%**
         takeaway: Most multi-agent failures are structural, so fix topology and verification before you reword prompts.
-        recall: Why don't timeouts and retries catch most agent failures?
+        recall: What do most multi-agent failures turn out to be, and what do you fix before rewording prompts?
         source: notes/07-failure-modes-at-scale.md
         notes: >-
           In the book's translation lab the glossary agent mistranslated reasoning. The translator applied it faithfully, and the proofreader,
@@ -530,7 +602,7 @@ parts:
             - Separated cadences, where fast loops escalate
             - "**Frozen nodes:** anchors the graph can't edit"
           tag: Held-out tests, banked revenue
-        takeaway: Without an anchor the graph can't edit, it stays perfectly self-consistent while drifting far from reality.
+        takeaway: An anchor is a reference the graph can't edit, such as held-out tests; without one, coupled loops stay self-consistent while drifting from reality.
         recall: What is an anchor, and what happens to a graph that has none?
         source: notes/07-failure-modes-at-scale.md
         notes: >-
@@ -556,7 +628,7 @@ parts:
               - The actual runtime graph, not the declared one
               - "Model calls through a named alias, so rollback is a config change"
         takeaway: Carry graph, run and node IDs on every call, and budget per node, per run and per tenant.
-        recall: At which three levels do you budget a graph, and which ID makes the first possible?
+        recall: How do you attribute and budget cost in a graph?
         source: notes/08-governance-and-production.md
         notes: >-
           This answers the opening question. With node_id on every call you learn why a run was expensive, and not just that it was. The tenant
@@ -574,9 +646,10 @@ parts:
           - [Builder, Executes tool calls, "**100** per session"]
           - [Responder, Renders the user-facing reply, "-"]
           - [Parameter Updater, Surgical edits to node parameters, "-"]
+          - [Workflow artifact, What the agent edits, "**30K** tokens"]
         bold_first: true
         takeaway: "n8n's reported design: per-node bounds, one gate after planning, and a 30K cap on the artifact under construction."
-        recall: Where does n8n's builder place its single approval gate, and why there?
+        recall: "What is n8n's reported design for bounding a workflow builder?"
         source: notes/08-governance-and-production.md
         notes: >-
           Everything we covered appears here. Specialisation is prompt-only, on the same model. Compaction triggers at 150K in a 200K window, and the workflow itself is capped
@@ -604,6 +677,7 @@ parts:
       - layout: table
         kicker: A warning about the word
         title: Two things are called "graph"
+        lead: "An agent graph is execution topology; a knowledge graph is a data structure."
         header: ["", "Agent graph", "Knowledge graph"]
         rows:
           - [Nodes are, Units of computation, Entities]
@@ -611,7 +685,7 @@ parts:
           - [The graph is, Execution topology, Data structure for retrieval]
           - [Runtime concern, "Routing, state, cost", "Traversal, entity resolution"]
         bold_first: true
-        takeaway: An agent graph is execution topology and a knowledge graph is a data structure; they share only a name until agents share memory.
+        takeaway: In an agent graph nodes are computation and edges are transitions; in a knowledge graph nodes are entities and edges are typed relationships.
         recall: What are nodes and edges in an agent graph, and in a knowledge graph?
         source: notes/01-graph-vs-loop.md
         notes: >-
@@ -698,7 +772,7 @@ parts:
           - Weight **false merges** above missed merges
           - A high compression ratio rewards over-merging
         takeaway: Storing mentions and resolution evidence separately keeps merges reversible, and a false merge corrupts every path through it.
-        recall: Why is a high compression ratio a misleading resolution metric?
+        recall: Why store mentions and resolution evidence separately?
         source: notes/10-building-kgs-with-llms.md
         notes: >-
           This schema has three layers. Mentions record what the text said, evidence records why two mentions might be the same, and canonicals are the current
@@ -734,7 +808,7 @@ parts:
             accent: 0EA5C9
             body: Map-reduce over raw chunks, no graph, did about as well. LLM judge, global questions only
         takeaway: Going global helps whole-corpus questions; the graph mostly makes it cheaper. That falls short of showing that graphs beat vectors.
-        recall: What did the GraphRAG paper's evaluation measure, and who judged it?
+        recall: What did the GraphRAG evaluation actually show?
         source: notes/11-kg-rag-and-text-to-cypher.md
         notes: >-
           Edge and colleagues at Microsoft Research pre-summarise communities in an entity graph. The judge was an LLM, with no ground truth accuracy. You may also meet a 53.4 versus 42.9 figure
@@ -757,6 +831,56 @@ parts:
         notes: >-
           The order is about risk. A canned traversal can't invent a relationship. Text-to-Cypher can, so it comes last and with a validator. In the course, widening each vector hit with its NEXT neighbours
           also surfaced NetApp's ONTAP software, which the plain retriever's answer left out. That is hybrid at its smallest.
+      - layout: code
+        kicker: Before any model
+        title: Many graph questions need no model at all
+        lang: cypher
+        code: |-
+          // "Near": point.distance is in metres
+          MATCH (sc:Address)
+          WHERE sc.city = 'Santa Clara'
+          MATCH (com:Company)-[:LOCATED_AT]->(addr:Address)
+          WHERE point.distance(addr.location,
+                               sc.location) < 10000
+          RETURN com.companyName;
+        bullets:
+          - "**Full-text** index for fuzzy names; it tolerates the typo \"Palo Aalto\""
+          - "**Point distance** for \"near\", where 10 km is `10000`"
+          - These canned queries are the best few-shot examples for text-to-Cypher
+        takeaway: Use a full-text index for names and point distance for places, and keep the model for the long tail.
+        recall: When does a graph question need no model, and which indexes answer it?
+        source: notes/11a-structured-lookups-and-text-to-cypher.md
+        notes: >-
+          "Which investment firms are near Palo Alto?" is a canned query with a point and a 10 km radius, and it
+          answers the same way every time. Plausible filter mistakes are not only an LLM problem: the notebook
+          filters on city equals California, which returns nothing because California is a state.
+      - layout: compare
+        kicker: Reliable text-to-Cypher
+        title: Give the model a conceptual schema and permission to fail
+        emphasis: right
+        left:
+          title: Technical schema
+          accent: "94A3B8"
+          bullets:
+            - Raw `apoc.meta.schema` output
+            - Helper nodes, embeddings, timestamps
+            - Relationships nobody queries
+          tag: Too many plausible wrong choices
+        right:
+          title: Conceptual schema
+          bullets:
+            - Only what a domain expert would recognise
+            - "Annotated: colours stored as `BLK` are noted"
+            - "Output includes `success: false` when it can't answer"
+          tag: Reads like the domain
+        takeaway: "Show the model an annotated, filtered schema, and let it return `success: false` instead of inventing a plausible query."
+        recall: What schema should a text-to-Cypher prompt show, and how should it handle a question it can't answer?
+        source: notes/11a-structured-lookups-and-text-to-cypher.md
+        notes: >-
+          Without a note on value encoding, "black vehicles" becomes color equals "black", returns nothing, and the
+          user concludes no black car was involved. Where two relationships overlap, the model has no basis to choose
+          and guesses. The skip list and the descriptions live in a YAML file, versioned with the prompts. The
+          permission to fail is the success false field, and the user's empty selection is one case where it applies.
       - layout: image
         kicker: Monday morning
         title: The QA agent is generate-then-verify again
@@ -768,7 +892,7 @@ parts:
           - The database is the verifier; retry on error is bounded
           - "Missing: an **`EXPLAIN` validator** before execution"
         takeaway: Text-to-Cypher is a bounded generate-then-verify loop, and listing relationships first reduces invented relationship types.
-        recall: What verifies the generated Cypher in the QA agent, and what's still missing?
+        recall: How is text-to-Cypher made reliable in the QA agent?
         source: notes/11b-text-to-cypher-qa-agent.md
         notes: >-
           And here the two graphs touch for the first time: a knowledge graph queried by an execution graph. The back-edge carries the database error to the next attempt. The typed state doubles as an audit trail, and a free
@@ -794,6 +918,7 @@ parts:
       - layout: flow
         kicker: The progression
         title: Each step moves something out of the agent
+        lead: Each stage hands one job to something sturdier than the agent.
         steps:
           - {label: Loop, sub: iteration and evaluation}
           - {label: Swarm, sub: "parallel search, with redundancy"}
@@ -801,13 +926,12 @@ parts:
         bullets:
           - "Loop: Karpathy's autoresearch keeps a change only if the metric improves"
           - "The swarm costs real money: Anthropic reports about **15×** chat tokens"
-          - Topology makes spend **tractable**, not cheap
         takeaway: Loops externalise evaluation, swarms externalise search, and a shared graph externalises facts and provenance.
         recall: What does each of loop, swarm and graph move out of the agent?
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
           The same move, three times. Autoresearch moves judgement into a fixed metric. A swarm moves search into parallel workers, and it creates redundancy. A graph moves shared facts into something
-          that outlives them. Shared-graph workers can also spread a correlated error further, which is why the write path comes next.
+          that outlives them. Shared-graph workers can also spread a correlated error further, which is why the write path comes next. Topology makes spend tractable, not cheap.
       - layout: code
         kicker: Worked example
         title: All the safety lives in the write path
@@ -851,7 +975,7 @@ parts:
             accent: D4621A
             body: "Agent A claims X, citing S. Contradictions live side by side"
         takeaway: A shared graph stores claims with provenance and keeps contradictions, because no agent's write counts as truth.
-        recall: What three properties must a shared agent graph never give up?
+        recall: "How should a shared agent graph treat each agent's writes?"
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
           The anti-pattern is the chat transcript becoming the database. If a run's only durable record is its conversation log, you can't query it, can't roll it back, and the next agent can't read it without reading everything.
@@ -863,10 +987,10 @@ parts:
         caption: Negro et al., Knowledge Graphs and LLMs in Action, Fig. 11.5 (2025)
         bullets:
           - "Degree only: F1 **0.43**; Node2Vec: **0.64**"
-          - "Degree and neighbours per faction: **0.93**, stable"
+          - "Degree and neighbours per faction: **0.93**, stable (14-member test set)"
           - Predicted links are **claims**, out of default traversals
         takeaway: Features are the graph ML bottleneck, and a false predicted link does what a false merge does to every later traversal.
-        recall: Why should predicted edges stay out of default traversals?
+        recall: "What is the graph ML bottleneck, and what does a false predicted link do?"
         source: notes/13-graph-ml-and-gnns.md
         notes: >-
           Connected nodes tend to be alike, so encoding that by hand beat an untuned embedding on the book's small example, where the test set is 14 members, so read the numbers small. Compute it from training labels only, or the test nodes leak answers. The figure shows message passing, where
@@ -874,13 +998,13 @@ parts:
       - layout: table
         kicker: Learning on the graph
         title: Don't know the pattern? Let an encoder learn it
+        lead: GAT has the most parameters and never beat GraphSAGE on either run.
         header: ["Encoder", "Illicit nodes (Elliptic)", "Link prediction"]
         widths: [2, 4, 4]
         rows:
           - ["GCN", "Missed 32%", "Best recall, 78.6%"]
           - ["GraphSAGE", "Caught 82.7%, best weighted F1", "Fewest false links, 5.4%"]
-          - ["GAT", "Most parameters, never beat SAGE", "Most parameters, never beat SAGE"]
-        takeaway: Every method is an encoder plus a decoder, and on the book's two runs the heaviest model, GAT, never beat GraphSAGE.
+        takeaway: Matrix factorisation, Node2Vec and GNNs are all an encoder that turns structure into a vector plus a decoder that turns it into a prediction.
         recall: What do matrix factorisation, Node2Vec and a GNN have in common?
         source: notes/13b-representation-learning-and-gnns.md
         notes: >-
@@ -927,12 +1051,12 @@ parts:
         bullets:
           - "**The lab:** `practice/langgraph-graph`, in Python or TypeScript"
           - "**Your own domain:** build a small graph, then a shared-memory swarm"
-          - "**The notes:** every slide here has its code and figures in notes 01–13"
+          - "**The notes:** every slide here has its code and figures in the notes (01–13b)"
           - "**Knowledge Graphs for RAG:** the hosted DeepLearning.AI and Neo4j course"
           - "**Eval pillar (generative-ai):** measure whether the whole system is correct"
         aside:
           title: Try this first
-          body: Take a loop you already run, and split its verifier by criterion. Measure before you draw a single node.
+          body: Split one loop's verifier by criterion, and measure.
         takeaway: The cheapest graph experiment is splitting one verifier by criterion and measuring before drawing any node.
         recall: What is the first experiment to run on an existing loop?
         source: notes/06-when-not-to-build-a-graph.md

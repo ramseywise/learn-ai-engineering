@@ -301,6 +301,8 @@ All three metrics order these four models the same way, and they needn't. A mode
 
 NDCG comes from [Järvelin and Kekäläinen](https://doi.org/10.1145/582415.582418) (ACM TOIS 2002; [preprint](https://trepo.tuni.fi/handle/10024/65718)), who wanted graded relevance and a discount for documents a user is less likely to reach. Our code has only binary hits and divides by $\log_2(\text{rank}+1)$, so here only the discount separates it from recall.
 
+How to pick between these metrics, and why the choice of metric is a choice of what you ask the model for, is in [DS 01/11](../../01-classical-ml/notes/11-choosing-a-metric.md#the-map), which runs MRR and NDCG against two rankers built to disagree.
+
 ## Offline evaluation: counterfactual estimates
 
 All the offline numbers so far share a deeper flaw. Interaction logs record what people did with what the old system showed them. Gomez-Uribe and Hunt describe this for Netflix ([*ACM TMIS*, 2015](https://doi.org/10.1145/2843948)): offline experiments assume members would have behaved the same way under the new algorithm, so an algorithm that recommends very different things gets little credit, because the log never showed those things.

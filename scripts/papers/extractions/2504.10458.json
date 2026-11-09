@@ -1,19 +1,356 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2504.10458",
  "pdf": "generative-ai/07-agentic-applications/sources/luo-2025-gui-r1.pdf",
  "bib": {
-  "title": "GUI-R1 : A Generalist R1-Style Vision-Language Action Model For GUI Agents",
-  "first_author": "Run Luo",
-  "year": "2025",
-  "venue": null,
+  "title": "GUI-R1: A Generalist R1-Style Vision-Language Action Model For GUI Agents",
+  "authors": ["Run Luo", "Lu Wang", "Wanwei He", "Longze Chen", "Jiaming Li", "Min Yang", "Xiaobo Xia"],
+  "first_author": "Luo",
+  "year": 2025,
+  "venue": "preprint (Technical report, arXiv v4, 1 Oct 2025)",
   "arxiv": "2504.10458",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 40025,
+  "chars_total": 40025,
+  "engine": "pymupdf",
+  "skipped": "Figures 1, 3, 4, 5 extract as axis labels only; no values read from them. No appendix exists."
  },
- "legacy_report": "SOURCE: GUI-R1: A Generalist R1-Style Vision-Language Action Model For GUI Agents. Run Luo, Lu Wang, Wanwei He, Longze Chen, Jiaming Li, Min Yang, Xiaobo Xia (SIAT-CAS, UCAS, NUS). Preprint, arXiv:2504.10458v4 [cs.CV], 1 Oct 2025, marked \"Technical report\". No peer-reviewed venue is stated.\n\nCOVERAGE: 40,740 of 40,740 chars read, which is the whole extraction. The extraction did not report page boundaries, so I cite printed page numbers (pp. 1-9, then references from p. 10). Pages 1-9 hold the body, tables and ablations. References were read through [29] and the extraction ends mid-reference, so the last few are truncated. There is no appendix with results. Figures 1, 3, 4 and 5 came through as axis labels only, so no values can be read from them.\n\nCLAIMS\n1. GUI-R1 is the first rule-based RFT (GRPO) framework aimed at high-level GUI action prediction. It uses one unified action space across Windows, Linux, macOS, Android and Web.\n   - number: none\n   - setup: base model Qwen2.5-VL 3B and 7B, trained on GUI-R1-3K.\n   - quote: \"we propose GUI-R1, the first reinforcement learning framework designed to enhance the GUI capabilities of LVLMs in high-level real-world task scenarios, through unified action space rule modeling\"\n   - where: p.1 abstract\n\n2. The headline data-efficiency claim is that 3K RL examples beat OS-Atlas, which was SFT'd on millions of examples. The paper is inconsistent on the ratio.\n   - number: 0.02% (3K vs 13M) in the abstract and intro; 0.2% (3K vs 14M) in Sec 4.2; ~14M collected in Sec 3.3. Treat the ratio as unreliable; 3K vs roughly 13-14M is the safe form.\n   - setup: eight benchmarks; zero-shot with a unified prompt across all compared methods.\n   - quote: \"GUI-R1 achieves superior performance using only 0.02% of the data (3K vs. 13M) compared to previous state-of-the-art methods like OS-Atlas across eight benchmarks spanning three different platforms (mobile, desktop, and web)\". Sec 4.2 says: \"using only 0.2% of the data (3K vs. 14M)\".\n   - where: p.1 abstract; p.6\n\n3. At 3B, RFT beats SFT on the same 3K data for grounding (SFT'd on the identical GUI-R1-3K, marked *).\n   - number: ScreenSpot 80.08 vs 63.55; ScreenSpot-Pro 25.23 vs 13.80; +26.3% and +82.8% relative.\n   - setup: Qwen2.5-VL-3B; the SFT baseline is trained for one epoch on GUI-R1-3K.\n   - quote: \"at the 3B scale, GUI-R1 achieves substantial gains over SFT models on ScreenSpot (80.08 vs. 63.55) and ScreenSpot-Pro (25.23 vs. 13.80), representing improvements of 26.3% and 82.8%, respectively.\"\n   - where: p.6\n   - Caveat: the 63.55 and 80.08 averages are not in Table 1, which lists only per-column values. I could not check them.\n\n4. On low-level tasks, GUI-R1 beats the base model and SFT'd variants at 3B. The 7B gain is small.\n   - number: 3B overall 80.88 vs base 55.65. 7B overall 83.30 vs base 79.05, 7B-SFT 80.09, OS-Atlas-7B 70.07, UI-R1-3B 70.85, GPT-4o 54.46.\n   - setup: Table 2, four benchmarks (GUI-Act-Web, OmniAct-Web, OmniAct-Desktop, AndroidControl-Low), Type/GR/SR averaged.\n   - quote: \"with the average success rate increasing from 55.65 to 80.88 at the 3B scale.\" Also \"our model achieves a 10-point improvement at the 3B scale\" over UI-R1.\n   - where: p.6-7, Table 2\n\n5. On high-level tasks, GUI-R1 is state of the art among the compared models. The 3B gain over UI-R1 is modest; the 7B model improves over its base mainly on grounding (GR) and Type.\n   - number: Table 3 overall: GUI-R1-3B 49.75, GUI-R1-7B 56.13, UI-R1-3B 46.35, Qwen2.5-VL-7B base 50.53, 7B-SFT 50.97, OS-Atlas-7B 44.88, GPT-4o 28.69. Text: +21.06 absolute over GPT-4o at 3B; average +3.4 over UI-R1 at 3B; \"27.2% lead\" in SR on GUI-Odyssey.\n   - setup: AndroidControl-High and GUI-Odyssey (cross-app, 203 apps).\n   - quote: \"compared to the closed-source model GPT-4o, our 3B-scale method achieves an absolute improvement of 21.06\". Also \"our model achieves an average improvement of 3.4 points at the 3B scale, with a particularly notable 27.2% lead in the step success rate on GUI-Odyssey.\"\n   - where: p.7-8, Table 3\n   - Caveat: GUI-R1-3B's GUI-Odyssey SR is 41.33 against UI-R1-3B's 32.49 in Table 3. GUI-R1-7B is only +5.6 overall over the untrained 7B base.\n\n6. Grounding at 7B (Table 1, ScreenSpot-Pro columns): GUI-R1-7B beats OS-Atlas-7B on most ScreenSpot-Pro categories.\n   - number: Dev text 49.4 vs 33.1; Scientific text 55.6 vs 37.5; Office text 58.7 vs 33.9; OS text 42.1 vs 27.1. On ScreenSpot Desktop icon, 73.6 vs 62.8. On ScreenSpot Web text, 91.3 vs 90.8.\n   - quote: \"GUI-R1-7B 49.4 4.8 38.9 8.4 23.9 6.3 55.6 11.8 58.7 26.4 42.1 16.9 91.3 75.7 91.8 73.6\"\n   - where: p.7, Table 1\n   - Caveat: GUI-R1-7B does not win every column. In CAD text, OS-Atlas-7B scores 12.2 against GUI-R1-7B's 23.9, so GUI-R1 is ahead there. GUI-R1-3B scores 26.4 in CAD text. OS-Atlas-7B beats GUI-R1-7B on Web icon 74.2 vs 75.7? That is GUI-R1 ahead, so none are clear losses in this row; the bolding in the extraction is garbled, so check the original table.\n\n7. Data filtering with Qwen2.5-VL-7B produced GUI-R1-3K.\n   - number: ~14M collected (about 30K of it high-level, from OS-Atlas); 140K low-level and 1.5K high-level after filtering; 1.5K low-level sampled; 3K total.\n   - setup: 10 rollouts per example from Qwen2.5-VL-7B, dropping examples with estimated accuracy 0 or 1.\n   - quote: \"We remove the problems with an estimated accuracy of 0 or 1 to ensure a stable training process, resulting in 140K low-level data and 1.5K high-level data.\"\n   - where: p.5\n   - Sources: FineWeb, UIBert, AMEX, RICOSCA, SeeClick and OS-Atlas pretraining data.\n\n8. Ablation on data quality and resolution: filtered data converges faster and to a higher ceiling, and doubling the image resolution helps further.\n   - number: resolution 1,048,576 to 2,097,152 pixels. The reward curves are only in Figure 4, with no numeric values.\n   - setup: three conditions, high-quality/high-res, high-quality/low-res, low-quality/low-res; training reward vs steps.\n   - quote: \"we increase the image resolution to twice its original size (from 1,048,576 pixels to 2,097,152 pixels)\"\n   - where: p.8, Fig 4\n\n9. Ablation on reward coefficients (Table 4): a smaller format weight and larger accuracy weight performs best.\n   - number: alpha=0.2, beta=0.8 gives overall 49.75; 0.5/0.5 gives 47.72; 0.8/0.2 gives 46.48.\n   - setup: GUI-R1-3B on AndroidControl-High and GUI-Odyssey.\n   - quote: \"0.2 0.8 58.04 56.24 46.55 54.84 41.52 41.33 49.75 / 0.5 0.5 ... 47.72 / 0.8 0.2 ... 46.48\"\n   - where: p.9, Table 4\n   - Caveat: the 0.8/0.2 row has the same per-column values as UI-R1-3B in Table 3 (overall 46.35 there, 46.48 here). Suspicious duplication.\n   - Caveat: there is NO ablation that removes individual reward terms (R_act, R_point, R_text). Only the format vs accuracy weights were varied.\n\n10. Reward design is fully rule-based and verifiable.\n    - number: R_o = alpha*R_f + beta*R_acc, with R_acc = R_act + R_point + R_text. R_act is exact match. R_point is 1 if the click is inside the ground-truth bbox. R_text is 1 if semantic F1 > 0.5.\n    - setup: GRPO advantage is the group-normalized reward, with a KL constraint.\n    - quote: \"Rtext = 1 if F1(otext, gttext) > 0.5, 0 otherwise.\" and \"Ro = αRf + βRacc\"\n    - where: p.4\n\n11. Training dynamics: format reward converges early. Accuracy reward drives the later learning signal. Response length first falls, then rises. No \"aha moment\".\n    - number: none\n    - quote: \"the mean response length first decreases and then gradually increases, but the “aha moment” does not occur.\"\n    - where: p.9, Fig 5\n\n12. Training setup.\n    - number: SFT one epoch (LLaMA Factory); RFT nine epochs (EasyR1); 8×A100-80G.\n    - quote: \"employ the LLaMA Factory [25] framework for one epoch of training to avoid overfitting. For RFT, we use the EasyR1 [26] framework for training over nine epochs.\"\n    - where: p.6\n\nLIMITS\n- The authors speculate that the lack of an \"aha moment\" is due to single-image, non-interactive training. They say multi-image tasks in interactive environments could be future work. Future work also covers multi-agent collaboration and error correction.\n- All evaluation is offline, step-wise, on static benchmarks. There is no live-environment success rate such as OSWorld or AndroidWorld.\n- No UI-TARS numbers are reported. UI-TARS is only cited as related work. The comparisons are OS-Atlas, UI-R1, SeeClick, UGround, CogAgent, ShowUI, Aria-GUI, Claude, GPT-4o and the SFT baselines.\n- The SFT baseline is one epoch on only 3K examples. It is a same-data comparison, not a tuned SFT recipe, and it does not show that SFT on large data would lose.\n- The training data is drawn from the same families as the test benchmarks (OS-Atlas, AMEX and others), so out-of-distribution generalization is claimed but not isolated.\n- The 7B gains over the untrained Qwen2.5-VL-7B base are small on several metrics. Base 7B GR on AndroidControl-Low is 87.08, higher than GUI-R1-7B's 84.02.\n- Internal inconsistencies: 0.02% vs 0.2% and 13M vs 14M; the Table 4 vs Table 3 duplicate row; and the text says \"GUI-Act-Web [29]\" where the citation is [30].\n- The paper concedes SFT's weakness only as a claim (\"small-scale SFT data even leads to performance degradation on some metrics such as GR on AndroidControl-Low\").\n\nBUILDS ON\n- DeepSeek-R1 and GRPO (Guo et al. 2025; DeepSeekMath, Shao et al. 2024), for the RFT paradigm.\n- UI-R1 (Lu et al. 2025), concurrent RFT on low-level grounding.\n- OS-Atlas (Wu et al. 2024), SeeClick (Cheng et al. 2024), UGround (Gou et al. 2024) and UI-TARS (Qin et al. 2025).\n- Visual-RFT, Vision-R1, R1-V, VLM-R1 and MM-Eureka for vision RL rewards.\n- Qwen2.5-VL (Bai et al. 2025), EasyR1 (Zheng et al. 2025) and LLaMA Factory (Zheng et al. 2024).\n- Benchmarks: AndroidControl (Li et al. 2024), GUI-Odyssey (Lu et al. 2024), ScreenSpot, ScreenSpot-Pro, GUI-Act-Web, OmniAct.\n\nCODE: no code in the paper. Repository: https://github.com/ritzz-ai/GUI-R1.git (p.1). Output format and action enum, verbatim from the prompt on p.4:\n`<think>...</think> <answer>[‘action’: enum[complete,close/delete,press home,click,press back,type,select,scroll,enter], ‘point’: [x, y], ‘input text’: ‘no input text [default]’]</answer>`\n\nFIGURES\n- Fig 1 (p.2): radar charts of GUI-R1 vs Qwen2.5-VL base, SFT and UI-R1 across the eight benchmarks, in three panels (grounding, low-level, high-level). It gives a quick visual of the gap, but the values are not recoverable from text.\n- Fig 2 (p.3): framework overview. The policy produces think/answer outputs, the three rule rewards (text, point, action) are computed, and policy-gradient updates are made with a reference model. This is the clearest summary of the method.\n- Fig 3 (p.5): GUI-R1-3K image-category and action-type distribution and difficulty.\n- Fig 4 (p.8): reward vs training steps for data quality and resolution.\n- Fig 5 (p.9): format reward, accuracy reward, PG loss and response length over about 90 steps.\n\nPROBLEMS\n- The figure and table text is partly garbled. Bolding is lost, and some cells run together, such as \"33.84.8\".\n- No embedded instructions were found in the PDF.\n- The 63.55 and 80.08 SFT and RFT averages could not be verified from the tables.\n- The reference list is truncated in the extraction after [29]."
+ "type": "empirical",
+ "question": "Can rule-based reinforcement fine-tuning (GRPO) with a unified action-space reward, on a small curated dataset, make a vision-language model a better GUI agent for high-level tasks than SFT on large data?",
+ "hypothesis": "RFT with verifiable rewards generalises better and is more data-efficient than SFT for GUI action prediction, including unseen interfaces.",
+ "contributions": [
+  "GUI-R1, the first framework using rule-based reinforcement fine-tuning to enhance reasoning of LVLMs in high-level GUI action prediction.",
+  "A rule-based unified action space reward function that validates responses across platforms and task granularities.",
+  "GUI-R1-3K, a high-quality fine-tuning dataset built with that reward function.",
+  "Evaluation on eight benchmarks over three platforms and three task granularities."
+ ],
+ "method": {
+  "summary": "Qwen2.5-VL 3B/7B is fine-tuned with GRPO (EasyR1) on GUI-R1-3K, a 3K-example set filtered by the base model's own rollout accuracy. The policy emits <think> reasoning and an <answer> action; reward is a weighted sum of a format reward and an accuracy reward (action type, click-in-bbox, text F1>0.5) over a unified action space.",
+  "task": "GUI action prediction from screenshot, high-level instruction and action history (grounding, low-level and high-level tasks)",
+  "trains": true,
+  "datasets": [
+   {"name": "Raw GUI pool (FineWeb, UIBert, AMEX, RICOSCA, parts of SeeClick and OS-Atlas pretraining data)", "role": "train", "size": "~14M examples of grounding and low-level data, plus ~30K high-level examples from OS-Atlas instruction data", "split": null, "source": "open-source datasets", "preprocessing": "Qwen2.5VL-7B generates 10 responses per example; examples with estimated accuracy 0 or 1 removed, leaving 140K low-level and 1.5K high-level"},
+   {"name": "GUI-R1-3K", "role": "train", "size": "3K examples (1.5K high-level plus 1.5K randomly sampled low-level)", "split": null, "source": "built by the authors from the pool above", "preprocessing": "difficulty filtering by rollout accuracy"},
+   {"name": "ScreenSpot", "role": "eval", "size": null, "split": "test split", "source": "SeeClick (Cheng et al. 2024)", "preprocessing": null},
+   {"name": "ScreenSpot-Pro", "role": "eval", "size": "23 applications, five industries, three operating systems", "split": "test split", "source": "Li et al. 2025", "preprocessing": null},
+   {"name": "GUI-Act-Web", "role": "eval", "size": null, "split": "test split", "source": "GUICourse", "preprocessing": null},
+   {"name": "OmniAct-Web / OmniAct-Desktop", "role": "eval", "size": null, "split": "test split", "source": "Kapoor et al. 2024", "preprocessing": null},
+   {"name": "AndroidControl-Low / AndroidControl-High", "role": "eval", "size": null, "split": "test split", "source": "Li et al. 2024", "preprocessing": null},
+   {"name": "GUI-Odyssey", "role": "eval", "size": "six applications and 203 apps", "split": "test split", "source": "Lu et al. 2024", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "GUI-R1-3B", "role": "proposed", "params": "3B", "architecture": "Qwen2.5-VL vision-language model", "init_from": "Qwen2.5-VL-3B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GUI-R1-7B", "role": "proposed", "params": "7B", "architecture": "Qwen2.5-VL vision-language model", "init_from": "Qwen2.5-VL-7B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "QwenVL2.5-3B*/7B* (SFT on GUI-R1-3K)", "role": "baseline", "params": "3B / 7B", "architecture": "Qwen2.5-VL", "init_from": "Qwen2.5-VL", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"sft": "LLaMA Factory, one epoch"}},
+   {"name": "Qwen2.5-VL-7B (data filter)", "role": "teacher", "params": "7B", "architecture": "Qwen2.5-VL", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "10 rollouts per example to estimate difficulty"}},
+   {"name": "OS-Atlas-4B/7B, UI-R1-3B, SeeClick, ShowUI-2B, CogAgent-18B, Aria-GUI, UGround-7B, Claude, GPT-4o, QwenVL-7B", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "GRPO: A_i = (r_i - mean({r})) / std({r}) over N sampled responses, updated under KL constraint; response reward R_o = alpha*R_f + beta*R_acc, R_acc = R_act + R_point + R_text",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "RFT: nine epochs (EasyR1); SFT baseline: one epoch (LLaMA Factory)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL divergence constraint (coefficient not stated)",
+   "hardware": "8x NVIDIA A100-80G GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "alpha_beta_default": "inferred: alpha 0.2, beta 0.8 (best row of Table 4, which equals the reported GUI-R1-3B row of Table 3)",
+    "rollouts_per_prompt_in_training": null,
+    "image_resolution": "1,048,576 pixels default; 2,097,152 pixels in the doubled-resolution ablation (read from the text of 4.3)",
+    "training_curves_x_axis": "Figure 5 x-axis runs to about 90 steps (read from Fig 5 axis labels)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single zero-shot pass per item; no repeats or seeds stated",
+   "prompting": "One unified, simple zero-shot prompt for all compared methods; the action-space prompt lists actions [complete, close/delete, press home, click, press back, type, select, scroll, enter]; grounding prompt allows only [click]",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Type", "definition": "exact match between predicted and ground-truth action type", "unit": "%", "higher_is_better": true},
+    {"name": "GR (Grounding)", "definition": "accuracy of predicted click point (inside ground-truth bbox)", "unit": "%", "higher_is_better": true},
+    {"name": "SR", "definition": "step success rate: step correct only if predicted action and its arguments (point for click, input text) are correct", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["OS-Atlas-4B/7B", "UI-R1-3B", "SeeClick", "ShowUI-2B", "CogAgent-18B", "Aria-GUI", "UGround-7B", "Claude", "GPT-4o", "QwenVL-7B", "QwenVL2.5-3B/7B zero-shot", "QwenVL2.5-3B*/7B* SFT on GUI-R1-3K"],
+   "protocol": "Test splits only; metrics follow OS-Atlas; single run, no significance tests or seeds reported."
+  },
+  "availability": {
+   "code": "https://github.com/ritzz-ai/GUI-R1.git",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {"purpose": "Task training and inference", "text": "You are GUI-R1, a reasoning GUI Agent Assistant. In this UI screenshot < image >, I want you to continue executing the command task, with the action history being history. Please provide the action to perform (enumerate from [complete, close/delete, press home, click, press back, type, select, scroll, enter]), the point where the cursor is moved to (integer) if a click is performed, and any input text required to complete the action. Output the thinking process in <think> </think> tags, and the final answer in <answer> </answer> tags as follows: <think> ... </think> <answer>[‘action’: enum[complete, close/delete, press home, click, press back, type, select, scroll, enter], ‘point’: [x, y], ‘input text’: ‘no input text [default]’]</answer>.", "where": "Section 3.2, p.4"},
+   {"purpose": "Grounding training and inference", "text": "Same as the task prompt but the action enumeration is [click] only.", "where": "Section 3.2, p.4"}
+  ],
+  "evidence": [
+   {"field": "training.epochs", "quote": "For RFT, we use the EasyR1 [26] framework for training over nine epochs.", "where": "4.1"},
+   {"field": "training.hardware", "quote": "All experiments are conducted using 8×NVIDIA A100-80G GPUs.", "where": "4.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "GUI-R1-3B beats the SFT-on-same-data 3B model on ScreenSpot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ScreenSpot accuracy",
+   "value": 80.08,
+   "unit": "%",
+   "baseline_value": 63.55,
+   "n": null,
+   "setup": "Qwen2.5-VL-3B; RFT on GUI-R1-3K vs SFT on same 3K; zero-shot prompt; ScreenSpot test",
+   "quote": "ScreenSpot (80.08 vs. 63.55)",
+   "table": null,
+   "note": "These aggregate numbers are not printed in Table 1, which lists per-category text/icon cells only.",
+   "where": "4.2 Grounding capability"
+  },
+  {
+   "claim": "GUI-R1-3B beats the SFT-on-same-data 3B model on ScreenSpot-Pro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ScreenSpot-Pro accuracy",
+   "value": 25.23,
+   "unit": "%",
+   "baseline_value": 13.80,
+   "n": null,
+   "setup": "Qwen2.5-VL-3B; RFT vs SFT on GUI-R1-3K; ScreenSpot-Pro test",
+   "quote": "ScreenSpot-Pro (25.23 vs. 13.80)",
+   "table": null,
+   "note": "Not printed in Table 1; the text reports it as an 82.8% relative improvement.",
+   "where": "4.2 Grounding capability"
+  },
+  {
+   "claim": "Average low-level success rate rises from the zero-shot 3B base to GUI-R1-3B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table 2 Overall",
+   "value": 80.88,
+   "unit": "%",
+   "baseline_value": 55.65,
+   "n": null,
+   "setup": "Qwen2.5-VL-3B zero-shot vs GUI-R1-3B; GUI-Act-Web, OmniAct-Web, OmniAct-Desktop, AndroidControl-Low",
+   "quote": "with the average success rate increasing from 55.65 to 80.88 at the 3B scale",
+   "table": null,
+   "note": null,
+   "where": "4.2 Low-level; Table 2"
+  },
+  {
+   "claim": "GUI-R1-7B has the highest overall low-level score in Table 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table 2 Overall",
+   "value": 83.30,
+   "unit": "%",
+   "baseline_value": 79.05,
+   "n": null,
+   "setup": "Qwen2.5-VL-7B; baseline is zero-shot QwenVL2.5-7B (SFT-on-3K 7B scores 80.09, OS-Atlas-7B 70.07)",
+   "quote": null,
+   "table": "Table 2, row GUI-R1-7B, column Overall (83.30); row QwenVL2.5-7B (79.05)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "GUI-R1-3B improves overall high-level score over GPT-4o by an absolute 21.06.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table 3 Overall",
+   "value": 21.06,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AndroidControl-High and GUI-Odyssey; GPT-4o overall 28.69, GUI-R1-3B overall 49.75",
+   "quote": "our 3B-scale method achieves an absolute improvement of 21.06",
+   "table": null,
+   "note": null,
+   "where": "4.2 High-level; Table 3"
+  },
+  {
+   "claim": "GUI-R1-7B reaches 56.13 overall on high-level tasks, above zero-shot Qwen2.5-VL-7B and SFT-3K 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table 3 Overall",
+   "value": 56.13,
+   "unit": "%",
+   "baseline_value": 50.53,
+   "n": null,
+   "setup": "AndroidControl-High and GUI-Odyssey; baseline zero-shot QwenVL2.5-7B; SFT 7B* scores 50.97",
+   "quote": null,
+   "table": "Table 3, row GUI-R1-7B, column Overall (56.13); row QwenVL2.5-7B (50.53)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GUI-R1-3B improves on UI-R1-3B (RFT on low-level grounding) by 3.4 points on average on high-level tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table 3 Overall",
+   "value": 3.4,
+   "unit": "points",
+   "baseline_value": 46.35,
+   "n": null,
+   "setup": "3B scale, AndroidControl-High and GUI-Odyssey; GUI-R1-3B 49.75 vs UI-R1-3B 46.35",
+   "quote": "our model achieves an average improvement of 3.4 points at the 3B scale",
+   "table": null,
+   "note": null,
+   "where": "4.2 High-level"
+  },
+  {
+   "claim": "GUI-R1-3B has a 27.2% lead over UI-R1 in step success rate on GUI-Odyssey.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GUI-Odyssey SR relative gain",
+   "value": 27.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3B; SR 41.33 vs 32.49",
+   "quote": "27.2% lead in the step success rate on GUI-Odyssey",
+   "table": null,
+   "note": "Text calls it 27.2%; (41.33-32.49)/32.49 is about 27.2% relative. Written as 'points' elsewhere would be wrong.",
+   "where": "4.2 High-level"
+  },
+  {
+   "claim": "Low-level scores for GUI-R1-3B exceed UI-R1 by about 10 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table 2 Overall",
+   "value": 80.88,
+   "unit": "%",
+   "baseline_value": 70.85,
+   "n": null,
+   "setup": "3B; UI-R1-3B is concurrent RFT work",
+   "quote": "our model achieves a 10-point improvement at the 3B scale",
+   "table": null,
+   "note": "Text rounds 80.88 - 70.85 = 10.03.",
+   "where": "4.2 Low-level"
+  },
+  {
+   "claim": "Data efficiency: GUI-R1 uses 3K examples versus the OS-Atlas corpus.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training data fraction",
+   "value": 0.02,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "abstract: 3K vs 13M",
+   "quote": "using only 0.02% of the data (3K vs. 13M)",
+   "table": null,
+   "note": "Inconsistent: Section 4.2 says 0.2% (3K vs. 14M) and Section 3.3 says ~14M collected examples. 3K/13M is about 0.023%; 3K/14M about 0.021%, so 0.02% is arithmetically right and 0.2% is not.",
+   "where": "Abstract; Intro; 4.2"
+  },
+  {
+   "claim": "Lower format-reward weight improves high-level performance monotonically.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table 4 Overall",
+   "value": 49.75,
+   "unit": "%",
+   "baseline_value": 46.48,
+   "n": null,
+   "setup": "alpha/beta = 0.2/0.8 vs 0.8/0.2 (0.5/0.5 gives 47.72); AndroidControl-High and GUI-Odyssey; 3B inferred",
+   "quote": null,
+   "table": "Table 4, rows alpha 0.2 beta 0.8 (49.75) and alpha 0.8 beta 0.2 (46.48), column Overall",
+   "note": "The 0.8/0.2 row repeats the UI-R1-3B numbers of Table 3 (57.85, 55.70, 45.44, 52.16, 34.46, 32.49) but its overall is 46.48 versus 46.35 in Table 3.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Filtered data converges faster and to a higher reward than unfiltered; doubled image resolution speeds convergence and lifts the ceiling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4, reward vs training steps; resolution 1,048,576 to 2,097,152 pixels; only qualitative in text",
+   "quote": null,
+   "table": null,
+   "note": "No numeric values; curves only.",
+   "where": "4.3, Fig 4"
+  },
+  {
+   "claim": "No 'aha moment' appears: mean response length first falls then slowly rises.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5d; the authors attribute it to single-image, non-interactive training",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "4.4"
+  }
+ ],
+ "limits": [
+  "Evaluation is offline, step-wise on static screenshots (Type/GR/SR); no live interactive environment or end-to-end task completion.",
+  "Authors concede the 'aha moment' did not occur, perhaps because training is single-image and non-interactive; multi-image interactive training is future work.",
+  "Optimizer, learning rate, batch size, rollouts per prompt, KL coefficient, steps and seeds are not stated; no variance or significance reported.",
+  "SFT baseline is trained on only the 3K set, one epoch, so it is not a tuned SFT comparison; RFT gets nine epochs.",
+  "Data-efficiency comparison with OS-Atlas mixes a 3K RFT set on a strong Qwen2.5-VL base against 13-14M examples SFT; fraction is printed as 0.02% and 0.2% in different places.",
+  "Data filtering uses Qwen2.5VL-7B itself, so the training set is tailored to that base.",
+  "Future work: multi-agent collaboration and error-correction policies."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "unified action space", "definition": "extracts action space categories across different platforms and integrates them into a unified action space, so all high-level instructions decompose into atomic actions", "where": "3.2"},
+  {"term": "Type / Grounding / SR", "definition": "action type exact-match; GUI grounding accuracy of click point; step success rate requiring correct action and arguments", "where": "4.1"}
+ ],
+ "lineage": [
+  {"work": "DeepSeek-R1", "year": 2025, "arxiv": "2501.12948", "relation": "uses-method", "note": "GRPO and rule-based RFT recipe", "quote": null},
+  {"work": "Qwen2.5-VL technical report", "year": 2025, "arxiv": "2502.13923", "relation": "uses-method", "note": "base model", "quote": null},
+  {"work": "EasyR1", "year": 2025, "arxiv": null, "relation": "uses-method", "note": "RFT training framework", "quote": null},
+  {"work": "LLaMA Factory", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "SFT framework", "quote": null},
+  {"work": "OS-Atlas", "year": 2024, "arxiv": "2410.23218", "relation": "baseline", "note": "previous SOTA SFT; also source of data and metrics", "quote": null},
+  {"work": "UI-R1", "year": 2025, "arxiv": "2503.21620", "relation": "baseline", "note": "concurrent RFT on low-level grounding", "quote": null},
+  {"work": "UI-TARS", "year": 2025, "arxiv": "2501.12326", "relation": "related", "note": "SFT GUI agent", "quote": null},
+  {"work": "SeeClick", "year": 2024, "arxiv": "2401.10935", "relation": "uses-data", "note": "ScreenSpot benchmark and pretraining data", "quote": null},
+  {"work": "ScreenSpot-Pro", "year": 2025, "arxiv": null, "relation": "uses-data", "note": "eval benchmark", "quote": null},
+  {"work": "AndroidControl (Li et al. 2024)", "year": 2024, "arxiv": "2406.03679", "relation": "uses-data", "note": "eval benchmark", "quote": null},
+  {"work": "GUI Odyssey", "year": 2024, "arxiv": "2406.08451", "relation": "uses-data", "note": "eval benchmark", "quote": null},
+  {"work": "OmniAct", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "eval benchmark", "quote": null},
+  {"work": "AMEX", "year": 2024, "arxiv": "2407.17490", "relation": "uses-data", "note": "training pool", "quote": null},
+  {"work": "Visual-RFT, Vision-R1, R1-V, VLM-R1, MM-Eureka", "year": 2025, "arxiv": null, "relation": "related", "note": "R1-style RL for vision-language models", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "GUI-R1 achieves the best performance on eight evaluation datasets covering various platforms and task granularities, demonstrating the promising potential of RFT in GUI agent tasks.", "page": 2, "why": "Radar charts compare all models across grounding, low-level and high-level benchmarks at once."},
+  {"figure": "Fig 2", "caption": "Overview of the GUI-R1 Framework. Given the high-level instruction, action history, and visual image inputs, the policy model generates multiple responses containing reasoning steps. Then the verifiable rewards, such as action type reward, click point reward, and input text reward, are used with the policy gradient optimization algorithm to update the policy model.", "page": 3, "why": "Shows the rollout-reward-GRPO loop with a worked think/answer output."},
+  {"figure": "Fig 4", "caption": "Ablation study of image resolution and data quality.", "page": 8, "why": "Reward vs steps for three data/resolution settings."},
+  {"figure": "Fig 5", "caption": "Visualization of the training process of GUI-R1: format reward, accuracy reward, mean response length, and PG loss vs steps.", "page": 9, "why": "Shows format reward saturating early and response length not growing."}
+ ],
+ "code": [
+  {"where": "3.1, p.4", "snippet": "A_i = (r_i - mean({r_1,...,r_N})) / std({r_1,...,r_N})", "verbatim": false},
+  {"where": "3.2, p.5", "snippet": "R_o = alpha*R_f + beta*R_acc ; R_acc = R_act + R_point + R_text ; R_point = 1 if o_point in gt_bbox else 0 ; R_text = 1 if F1(o_text, gt_text) > 0.5 else 0", "verbatim": false}
+ ],
+ "problems": [
+  "Figures 1, 3, 4, 5 and tables extract as one value per line; table rows were read by position and the headline numbers cross-checked against the text.",
+  "Inconsistent data-fraction claim: 0.02% (3K vs 13M) in abstract/intro vs 0.2% (3K vs 14M) in 4.2.",
+  "Table 4 row alpha 0.8/beta 0.2 repeats UI-R1-3B per-metric numbers from Table 3 but overall differs (46.48 vs 46.35).",
+  "Section 4.2 cites GUI-Act-Web as [29] (ScreenSpot-Pro) while the reference list has it as [30].",
+  "No embedded instructions found in the text."
+ ]
 }

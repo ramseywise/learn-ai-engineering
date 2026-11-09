@@ -1,0 +1,220 @@
+{
+ "schema": 1,
+ "key": "2403.06634",
+ "pdf": "ai-engineering/09-safety-and-security/sources/carlini-2024-stealing-part-production-language-model.pdf",
+ "bib": {
+  "title": "Stealing Part of a Production Language Model",
+  "authors": ["Nicholas Carlini","Daniel Paleka","Krishnamurthy (Dj) Dvijotham","Thomas Steinke","Jonathan Hayase","A. Feder Cooper","Katherine Lee","Matthew Jagielski","Milad Nasr","Arthur Conmy","Itay Yona","Eric Wallace","David Rolnick","Florian Tramèr"],
+  "first_author": "Carlini",
+  "year": 2024,
+  "venue": "Proceedings of the 41st International Conference on Machine Learning, Vienna, Austria. PMLR 235, 2024",
+  "arxiv": "2403.06634",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 97784, "chars_total": 97784, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How much information can an adversary learn about a black-box production language model by querying its API?",
+ "hypothesis": "The final layer of a language model projects from hidden dimension h to a larger logit space, so it is low-rank and its width (and the layer up to symmetries) can be recovered from API queries that expose logits, logprobs or logit bias.",
+ "contributions": [
+  "A top-down model-stealing attack that recovers the embedding projection layer (up to symmetries) and hidden dimension of a transformer from API access",
+  "Logit-recovery methods for APIs exposing top-K logprobs with logit bias, top-1 with binary logit bias, and logprob-free logit-bias APIs",
+  "Application to OpenAI ada, babbage, babbage-002, gpt-3.5-turbo-instruct and gpt-3.5-turbo-1106 with permission, plus defenses and mitigations"
+ ],
+ "method": {
+  "summary": "Query the model on many random prefixes, recover the full logit vector for each (directly in a strawman logits API, or via logit-bias queries against a top-5 logprobs API), stack them in a matrix Q and take an SVD. The number of numerically significant singular values (largest multiplicative gap) gives the hidden dimension h; U*Sigma gives the projection matrix W up to an h x h linear transform G. Validated on six open models, then run on five OpenAI models with OpenAI's permission.",
+  "task": "Model extraction (high-fidelity) of the final embedding projection layer of a transformer LM",
+  "trains": false,
+  "datasets": [],
+  "models": [
+   {"name":"GPT-2 Small (fp32)","role":"evaluated","params":null,"architecture":"transformer, LayerNorm","hidden":"768","other":{"stolen_size":"757 ± 1","W_RMS":"4e-4","note":"effective rank 757 (App. A)"}},
+   {"name":"GPT-2 XL (fp32)","role":"evaluated","params":null,"architecture":"transformer, LayerNorm","hidden":"1600","other":{"stolen_size":"1599 ± 1","W_RMS":"6e-4"}},
+   {"name":"Pythia-1.4 (fp16)","role":"evaluated","params":"1.4B","architecture":"transformer","hidden":"2048","other":{"stolen_size":"2047 ± 1","W_RMS":"3e-5"}},
+   {"name":"Pythia-6.9 (fp16)","role":"evaluated","params":"6.9B","architecture":"transformer","hidden":"4096","other":{"stolen_size":"4096 ± 1","W_RMS":"4e-5"}},
+   {"name":"LLaMA 7B (fp16)","role":"evaluated","params":"7B","architecture":"transformer, RMSNorm","hidden":"4096","other":{"stolen_size":"4096 ± 2","W_RMS":"8e-5"}},
+   {"name":"LLaMA 65B (fp16)","role":"evaluated","params":"65B","architecture":"transformer, RMSNorm","hidden":"8192","other":{"stolen_size":"8192 ± 2","W_RMS":"5e-5"}},
+   {"name":"OpenAI ada","role":"evaluated","params":null,"architecture":null,"hidden":"1024","other":{"dimension_cost_USD":"$1","dimension_queries":"< 2e6","W_RMS":"5e-4","W_queries":"< 2e7","W_cost_USD":"$4"}},
+   {"name":"OpenAI babbage","role":"evaluated","params":null,"architecture":null,"hidden":"2048","other":{"dimension_cost_USD":"$2","dimension_queries":"< 4e6","W_RMS":"7e-4","W_queries":"< 4e7","W_cost_USD":"$12"}},
+   {"name":"OpenAI babbage-002","role":"evaluated","params":null,"architecture":null,"hidden":"1536","other":{"dimension_cost_USD":"$2","dimension_queries":"< 4e6","W_attack":"not implemented (dagger), estimated cost $12"}},
+   {"name":"OpenAI gpt-3.5-turbo-instruct","role":"evaluated","params":null,"architecture":null,"hidden":"withheld at OpenAI's request","other":{"dimension_cost_USD":"$200","dimension_queries":"< 4e7","W_attack":"not implemented, estimated cost $2,000 (< 4e8 queries)"}},
+   {"name":"OpenAI gpt-3.5-turbo-1106","role":"evaluated","params":null,"architecture":null,"hidden":"withheld at OpenAI's request","other":{"dimension_cost_USD":"$800","dimension_queries":"< 4e7","W_attack":"not implemented, estimated cost $8,000 (< 4e8 queries)"}},
+   {"name":"Gopher-7B","role":"evaluated","params":"7B","architecture":"RMSNorm with biases","hidden":null,"other":{"use":"only the LayerNorm-vs-RMSNorm detection stress test via released logprobs (App. B.2.2)"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Logit-bias attack on OpenAI APIs: biases of B on 4 tokens plus a reference token; top-5 logprobs read. Logprob-free variants use temperature 0 / argmax.",
+   "temperature": "0 for logprob-free attacks (argmax); otherwise null",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one query batch per random prefix; n > h prefixes needed (Pythia-1.4B figure uses 1024-3072 queries); production runs < 2e6 to < 4e7 queries for dimension",
+   "prompting": "Random prefixes (RandPrefix()); the exact prefix distribution and length are not stated",
+   "retrieval": null,
+   "parameters": {
+    "logit_bias_B": "large value; OpenAI limits are 300 tokens per request and bias in [-100, 100]",
+    "top_K": "5",
+    "gpt-3.5-turbo_overhead_tokens_delta": "7",
+    "attack_chosen_for_production": "logprob-4 (Section 5.3, 4 logits per query via reference token), with 0.25 queries per logit",
+    "cost-optimal_variant": "force token x repeated m times with bias B on x and B' < B on four others; query cost 1/(4m), token cost (1+m)/(4m)"
+   },
+   "other": {"value of B actually used": null, "numerical_rank": "largest multiplicative gap between consecutive singular values"}
+  },
+  "eval": {
+   "metrics": [
+    {"name":"Stolen hidden size","definition":"index of the largest multiplicative gap lambda_i / lambda_{i+1} in singular values of Q","unit":"dimensions","higher_is_better":null},
+    {"name":"W RMS","definition":"root mean square between actual W and extracted W~ after solving a least-squares h x h affine alignment W~ G ≈ W","unit":"RMS (weight units)","higher_is_better":false},
+    {"name":"Bits of precision (logit validation)","definition":"average bits of agreement between true and recovered logit vector","unit":"bits","higher_is_better":true},
+    {"name":"Queries per logit","definition":"amortized API queries to recover one logit","unit":"queries/logit","higher_is_better":false},
+    {"name":"Cost (USD)","definition":"monetary cost from per-token pricing","unit":"USD","higher_is_better":false}
+   ],
+   "baselines": ["RMS between a randomly initialized model and actual weights: 2e-2"],
+   "protocol": "Six open models with full logits; logit-estimation attacks compared on a limited-query interface (Table 4); five OpenAI models available on 1 January 2024 with OpenAI's advance permission, sizes confirmed by OpenAI. No seeds or repeated trials stated."
+  },
+  "availability": {"code": "Supplementary code for logprob-free attacks: github.com/dpaleka/stealing-part-lm-supplementary; Colab notebook for orthogonal recovery (App. H)", "weights": null, "data": "Extracted logprobs/weights deleted after the attack (and GPT-3.5 logprobs deleted for security)"},
+  "prompts": [],
+  "evidence": [
+   {"field":"models.OpenAI gpt-3.5-turbo-instruct","quote":"Attack not implemented to preserve security of the weights.","where":"Table 3 footnote"},
+   {"field":"models.OpenAI gpt-3.5-turbo-instruct","quote":"Estimated cost of attack given the size of the model and estimated scaling ratio.","where":"Table 3 footnote"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "The attack extracts the whole embedding projection matrix of OpenAI ada and babbage for under $20 and confirms their hidden dimensions as 1024 and 2048.",
+   "kind": "measured", "metric": "cost to extract full W (ada and babbage together)", "value": "20", "unit": "USD (upper bound)",
+   "setup": "OpenAI API with logit bias and top-5 logprobs, models available 1 Jan 2024, logprob-4 attack",
+   "quote": "For under $20 USD,",
+   "note": "Table 3 gives $4 (ada) and $12 (babbage) for the matrix; whether these are billed or computed is not explicitly stated, only the dagger/plus rows are flagged as estimated.",
+   "where": "Abstract; Table 3"
+  },
+  {
+   "claim": "Hidden dimension of ada recovered as 1024, cost $1 (dimension), $4 (full W).",
+   "kind": "measured", "metric": "dimension extraction cost", "value": "1", "unit": "USD",
+   "setup": "OpenAI ada; < 2e6 queries for dimension, < 2e7 for W; W RMS 5e-4",
+   "table": "Table 3, row OpenAI ada, columns Size 1024, Cost (USD) $1 / $4, RMS 5e-4",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Hidden dimension of babbage recovered as 2048, cost $2 (dimension), $12 (full W).",
+   "kind": "measured", "metric": "dimension extraction cost", "value": "2", "unit": "USD",
+   "setup": "OpenAI babbage; < 4e6 queries for dimension, < 4e7 for W; W RMS 7e-4",
+   "table": "Table 3, row OpenAI babbage, columns Size 2048, Cost (USD) $2 / $12, RMS 7e-4",
+   "where": "Table 3"
+  },
+  {
+   "claim": "babbage-002 hidden dimension recovered as 1536 for $2; the full-W attack was not implemented and its cost ($12) is an estimate.",
+   "kind": "measured", "metric": "dimension extraction cost", "value": "1536", "unit": "dimensions",
+   "setup": "OpenAI babbage-002; < 4e6 queries; W attack not run to preserve security of weights",
+   "table": "Table 3, row OpenAI babbage-002, column Size 1536",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Extracted OpenAI weights are nearly identical to the real ones up to an h x h transform.",
+   "kind": "measured", "metric": "RMS error", "value": "7e-4", "unit": "RMS (upper bound, up to h x h matrix)",
+   "setup": "Full layer-stealing run on ada and babbage (the models where W was actually extracted)",
+   "quote": "we confirmed that our extracted weights are nearly identical to the ac-",
+   "note": "Text says error < 7e-4 across the models; table RMS 5e-4 (ada), 7e-4 (babbage). Intro says MSE 10^-4 'up to unavoidable symmetries' while the table reports RMS.",
+   "where": "Section 7.2; Table 3"
+  },
+  {
+   "claim": "For gpt-3.5-turbo models only the hidden dimension was recovered (correct per OpenAI, size withheld); the full matrix was not extracted and its cost is estimated.",
+   "kind": "measured", "metric": "dimension extraction cost, gpt-3.5-turbo-instruct / gpt-3.5-turbo-1106", "value": "200", "unit": "USD (instruct); 800 USD (1106)",
+   "setup": "OpenAI gpt-3.5-turbo-instruct (< 4e7 queries) and gpt-3.5-turbo-1106 (< 4e7 queries); W cost estimated $2,000 and $8,000 (< 4e8 queries), dagger and plus marked, not run",
+   "table": "Table 3, rows gpt-3.5-turbo-instruct ($200, $2,000) and gpt-3.5-turbo-1106 ($800, $8,000)",
+   "note": "Intro says 'limited form of our attack to gpt-3.5 at a cost of under $200' and the abstract says 'under $2,000' for the full matrix; Table 3 gives $800 for turbo-1106 dimension and $8,000 for its matrix estimate.",
+   "where": "Abstract; Section 1; Table 3"
+  },
+  {
+   "claim": "Abstract: the exact gpt-3.5-turbo hidden dimension was recovered and the full matrix is estimated at under $2,000.",
+   "kind": "claim", "metric": null, "value": null, "unit": null,
+   "setup": "gpt-3.5-turbo; estimate, not implemented",
+   "quote": "estimate it would cost under",
+   "where": "Abstract"
+  },
+  {
+   "claim": "On six open models the dimension is recovered with error 0 or 1 in five of six cases (error up to 2 reported for LLaMA); the exception is GPT-2 Small at 757 vs 768, explained by effective rank.",
+   "kind": "measured", "metric": "stolen hidden dimension", "value": "757", "unit": "dimensions (GPT-2 Small, true 768)",
+   "setup": "Full logits API, GPT-2 Small/XL, Pythia 1.4B/6.9B, LLaMA 7B/65B",
+   "quote": "our attack reports a hidden dimension of 757",
+   "where": "Section 4.1; Table 2"
+  },
+  {
+   "claim": "W reconstruction RMS on open models ranges 3e-5 to 6e-4, over 100-500x below a randomly initialised model's 2e-2.",
+   "kind": "measured", "metric": "W RMS", "value": "2e-2 (random baseline)", "unit": "RMS",
+   "setup": "Six open models, logits API, after h x h affine alignment",
+   "quote": "weights is 2 · 10−2, over 100–500× higher than the error of",
+   "table": "Table 2, column W RMS",
+   "where": "Section 4.2; Table 2"
+  },
+  {
+   "claim": "Logit-estimation precision and cost: logprob-4 (top-5, reference token) is best, 23.0 bits at 0.25 queries per logit.",
+   "kind": "measured", "metric": "bits of precision", "value": "23.0", "unit": "bits",
+   "setup": "Logit validation, top-5 logprobs with logit bias; other rows: logprob-5 11.5 bits/0.64; logprob-1 6.1 bits/1.0; binary search 7.2/10.0; hyperrectangle 15.7/5.4; one-of-n 18.0/3.7 (no logprobs)",
+   "table": "Table 4, row logprob-4 (§5.3), column Bits of precision",
+   "where": "Table 4"
+  },
+  {
+   "claim": "The best logprob-free attack gets 18 bits at 3.7 queries per logit and is within a factor of two of an information-theoretic lower bound.",
+   "kind": "measured", "metric": "queries per logit", "value": "3.7", "unit": "queries/logit",
+   "setup": "Logprob-free API with logit bias, one-of-n attack; lower bound assumes i.i.d. uniform logits",
+   "quote": "recovers 18 bits of precision at just 3.7 queries per logit",
+   "where": "Section 7.1; Appendix G"
+  },
+  {
+   "claim": "Allowing both logit bias and logprobs makes the attack about 10x cheaper than logprob-free.",
+   "kind": "measured", "metric": "cost ratio", "value": "10", "unit": "x cheaper",
+   "setup": "Stated as motivation for the 'logit bias XOR logprobs' mitigation",
+   "quote": "Our attack is 10× cheaper",
+   "where": "Section 8.2"
+  },
+  {
+   "claim": "8-bit and 4-bit quantisation of Llama-7B does not change the recovered dimension or the number of queries needed.",
+   "kind": "measured", "metric": "recovered h", "value": null, "unit": null,
+   "setup": "Llama-7B via bitsandbytes at 16/8/4 bits",
+   "quote": "We observe no meaningful differences at different levels of quantization",
+   "where": "Appendix I.1; Fig 6"
+  }
+ ],
+ "limits": [
+  "Recovers one layer only (embedding projection) and only up to an h x h transform; exact W is impossible for transformers with residual connections (Lemma 4.2(ii)); an efficient algorithm exists only for affine ambiguity, an orthogonal-ambiguity method needs O(h^2) equations and O(h^6) time and was shown only on Pythia-14M",
+  "'We see no obvious methodology to extend it beyond just a single layer'",
+  "Threat model assumes a perfect oracle without timing or implementation leakage",
+  "Full-matrix extraction was only run on ada and babbage; babbage-002 and gpt-3.5 full-matrix costs are estimates (dagger/plus in Table 3); gpt-3.5-turbo sizes withheld at OpenAI's request, so not independently checkable",
+  "Only five OpenAI models were tested because only these received advance permission; no ablation of other attack variants on production APIs",
+  "The attack was disclosed and OpenAI and Google changed their APIs; logit bias affecting top logprobs was removed, so attacks as described no longer work as-is (dated)",
+  "Logprob-free lower bound assumes i.i.d. uniform logits, which is unrealistic",
+  "Assumes rank h for hidden matrix and W; GPT-2 Small shows effective rank 757 in lower precision (rank gap fits float64 only after tiny singular values)",
+  "Authors say there are no immediate practical consequences of learning this layer"
+ ],
+ "practices": [],
+ "terms": [
+  {"term":"Fidelity","definition":"the stolen model f^ should be functionally equivalent to the target model f on all inputs","where":"Section 2"},
+  {"term":"Token cost","definition":"the number of tokens the adversary sends to (or receives from) the model during the attack","where":"Section 5.2"},
+  {"term":"Query cost","definition":"the total duration of the attack","where":"Section 5.2"}
+ ],
+ "lineage": [
+  {"work":"Stealing machine learning models via prediction APIs","year":2016,"arxiv":null,"relation":"extends","note":"Tramèr et al. define model stealing","quote":null},
+  {"work":"High accuracy and high fidelity extraction of neural networks","year":2020,"arxiv":null,"relation":"related","note":"Jagielski et al.: accuracy vs fidelity objectives; finite-difference extraction of ReLU nets","quote":null},
+  {"work":"Cryptanalytic extraction of neural network models","year":2020,"arxiv":null,"relation":"related","note":"Carlini, Jagielski, Mironov; ReLU-network extraction that does not scale to LMs","quote":null},
+  {"work":"Grey-box extraction of natural language models","year":2021,"arxiv":null,"relation":"uses-method","note":"Zanella-Beguelin et al. extract final layer under a public encoder; Section 4.2 and App. E.3 are almost identical","quote":null},
+  {"work":"Language model inversion","year":2023,"arxiv":"2311.13647","relation":"related","note":"Morris et al., concurrent: weaker two-query logprob extraction needing top-2 and large bias","quote":null},
+  {"work":"Logits of API-protected LLMs leak proprietary information","year":2024,"arxiv":"2403.09539","relation":"related","note":"Finlayson et al., concurrent work finding the same vulnerability","quote":null},
+  {"work":"openlogprobs (Chiu)","year":2024,"arxiv":null,"relation":"related","note":"similar logit-from-logprob procedure during disclosure period","quote":null},
+  {"work":"Query-based adversarial prompt generation","year":2024,"arxiv":"2402.12329","relation":"related","note":"Hayase et al. use App. E.1 method","quote":null},
+  {"work":"Pythia; GPT-2; LLaMA","year":2023,"arxiv":null,"relation":"evaluates","note":"open models attacked in Table 2","quote":null},
+  {"work":"GPT-4 Technical Report; PaLM 2 Technical Report","year":2023,"arxiv":null,"relation":"related","note":"cited for withheld architecture details; APIs vulnerable at time of writing","quote":null}
+ ],
+ "figures": [
+  {"figure":"Fig 1","caption":"SVD can recover the hidden dimensionality of a model when the final output layer dimension is greater than the hidden dimension.","page":4,"why":"Shows singular values flat out at exactly 2048 once more than 2048 queries are sent"},
+  {"figure":"Fig 2","caption":"Our extraction attack recovers the hidden dimension by identifying a sharp drop in singular values.","page":4,"why":"Shows the gap spike that Algorithm 1 uses"},
+  {"figure":"Table 3","caption":"Attack success rate on five different black-box models","page":7,"why":"All production results: sizes, queries, costs, estimates marked"},
+  {"figure":"Fig 7","caption":"Post-hoc extend the dimensionality of the weight matrix to 1024 to mislead the adversary.","page":27,"why":"Visual of the spoofed-dimension defense"}
+ ],
+ "code": [
+  {"where":"Section 5.3","snippet":"y^B_R - y^B_i - B = z_R - z_i","verbatim":true},
+  {"where":"Appendix D","snippet":"p = (exp(ytop - y'top) - 1) / (1/e - 1)","verbatim":false}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "The abstract and intro describe gpt-3.5 costs ('under $200', 'under $2,000') more loosely than Table 3 ($800 for turbo-1106 dimension, $8,000 estimated matrix).",
+  "The paper does not state explicitly whether the Table 3 dollar figures for ada/babbage were billed or computed from token counts; only dagger/plus entries are flagged as not run/estimated.",
+  "Value of logit bias B and the random prefix distribution are not stated."
+ ]
+}

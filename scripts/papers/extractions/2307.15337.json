@@ -1,19 +1,764 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2307.15337",
  "pdf": "ai-engineering/07-inference-engineering/sources/ning-2023-skeleton-thought.pdf",
  "bib": {
   "title": "Skeleton-of-Thought: Prompting LLMs for Efficient Parallel Generation",
-  "first_author": "Xuefei Ning",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Xuefei Ning",
+   "Zinan Lin",
+   "Zixuan Zhou",
+   "Zifu Wang",
+   "Huazhong Yang",
+   "Yu Wang"
+  ],
+  "first_author": "Ning",
+  "year": 2023,
+  "venue": "ICLR 2024",
   "arxiv": "2307.15337",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 184531,
+  "chars_total": 184531,
+  "engine": "pymupdf",
+  "skipped": "Reference list and long figure number dumps skimmed; I.1.2-I.1.4 and I.2/I.4.5 worked answer examples and WizardLM-specific figures only skimmed."
  },
- "legacy_report": "SOURCE: Skeleton-of-Thought: Prompting LLMs for Efficient Parallel Generation. Xuefei Ning, Zinan Lin, Zixuan Zhou (equal contribution), Zifu Wang, Huazhong Yang, Yu Wang. Tsinghua / Microsoft Research / KU Leuven / Infinigence-AI. Published as a conference paper at ICLR 2024 (arXiv:2307.15337v3, 2 Mar 2024). Filed 2023.\n\nCOVERAGE: 184,533 chars total, 51 pages. I read all of the main text (pp.1-10), including the limitations section. I read appendices A-C, E, F, G.1.2-G.1.4, G.2 (latency part only), H, I.2 (text), I.3 and the start of I.4. I only skimmed the following: the reference list (pp.10-17), expanded related work D, the per-model and per-category speed-up figure dumps (G.1.1, G.2.x), the worked answer examples in I.1 (only the first two model-analysis examples and the Math category analysis were read), and I.4.2-I.4.5. Extraction was clean text. Figures and charts came out as bare numbers, so axis labels are partly lost.\n\nCLAIMS (ranked)\n- claim: SoT gives roughly 2x end-to-end speed-up on most models by drafting a skeleton and then expanding the points in parallel.\n  number: up to 2.39x, >2x on 8 of 12 models\n  setup: Vicuna-80 (80 questions), 12 models (9 open-source LLaMA-based 7B/13B/33B, 3 API: Claude, ChatGPT-3.5, GPT-4). Open-source latency is estimated from A100 profiling tables, FP16. API latency is measured as skeleton call plus slowest expansion call.\n  quote: \"We can see that SoT obtains a>2× speed-up (up to 2.39×) on 8 out of 12 models.\"\n  where: p.4, §3.1.1. Per-model range in Fig 2a: StableVicuna-13B 1.13x, Claude 1.31x, GPT-4 2.00x, LLaMA2-Chat-7B 2.39x.\n- claim: Real batched runs on one A100 confirm the estimate, with one model getting no speed-up.\n  number: >2x on 6 of 9 open-source models; >1.7x on two more; 0.97x on StableVicuna-13B\n  setup: Vicuna-80, actual batch testing, 5 runs per model, single A100.\n  quote: \"the current SoT solution obtains a > 2× speed-up on 6 out of the 9 open-source models ... SoT achieves no speed-up on StableVicuna-13B.\"\n  where: App. G.1.4, pp.28-29 (Fig 14). On the categories where quality holds up: \"2.15× to 2.50×\".\n- claim: Speed-up depends strongly on question category. It is large where the answer is a list of independent points and small for math and coding.\n  number: 1.89x-2.33x on the five good categories; math 1.34x\n  setup: Vicuna-80, average over all models. Fig 2b: math 1.34x, fermi 1.69x, counterfactual 1.89x, roleplay 1.95x, coding 2.06x, common-sense 2.24x, writing 2.26x, generic 2.31x, knowledge 2.33x.\n  quote: \"For the five question categories that SoT can provide high-quality answers (i.e., knowledge, generic, common-sense, roleplay, counterfactual), SoT can speed up the overall answer generation process by 1.89× to 2.33×\"\n  where: p.5, §3.1.2\n- claim: Quality is roughly maintained against sequential generation. Win and lose rates are close, and SoT is not worse in about 60% of cases.\n  number: SoT strictly better in 45.8% (LLMZoo) vs 29.5% (FastChat); not worse in ~60%\n  setup: GPT-4 as judge, Vicuna-80, all models and questions. Both answer orderings are run and results combined (win+tie = 1,0,-1 scoring). LLMZoo excludes math and coding.\n  quote: \"We notice a discrepancy between the two metrics on when SoT is strictly better than the baseline (45.8% v.s. 29.5%). Despite that, the two metrics agree that SoT is not worse than the baseline in around 60% of the cases\"\n  where: pp.5-6, Fig 3\n- claim: SoT improves diversity and relevance but hurts coherence and immersion.\n  number: none stated in prose (Fig 6 shows win/tie/lose per metric; the legible values are a 99.9% / 0.1% pair and a 61.4% value, but the label mapping was lost in extraction)\n  setup: LLMZoo detailed metrics, GPT-4 judge.\n  quote: \"On average, we can see that SoT improves the diversity and relevance while hurting the immersion and coherence.\"\n  where: p.7, §3.2.4\n- claim: SoT is unsuitable for step-by-step reasoning, since later points depend on earlier ones. It does well on questions with independent points.\n  number: none\n  setup: Net win rates by category (Fig 5). Good: generic, common-sense, knowledge, roleplay, counterfactual. Poor: writing, fermi, math, coding.\n  quote: \"it is fundamentally challenging to apply SoT on questions that require step-by-step thinking, in which the latter steps require the details from the earlier steps, such as math questions.\"\n  where: p.6-7, §3.2.3\n- claim: The router (SoT-R) falls back to normal decoding for unsuitable questions. This recovers quality at some cost in speed-up.\n  number: router overhead 0.65s (prompting, Vicuna-80) vs 0.04s (trained RoBERTa); 120M parameters, trained in 2 minutes\n  setup: Prompting router is GPT-4 with a 3-way A/B/C prompt. Trained router is roberta-base fine-tuned on 1,030 LIMA examples annotated by GPT-4 plus two human authors. Tversky loss with α=0.7 and β=0.3, to penalise false positives. Evaluated on Vicuna-80 and WizardLM (218 questions).\n  quote: \"the prompting and trained router have an average latency of 0.65s (0.39s ∼1.37s) and 0.04s (0.008s∼1.55s), respectively.\"\n  where: App. G.2 (p.29); C.2 (pp.20-21)\n- claim: On WizardLM the GPT-4 prompting router over-triggers SoT, giving many false positives. The trained router agrees better with the human labels.\n  number: GPT-4 router vs human: 66 false positives, 3 false negatives. RoBERTa vs human: 25 FP, 31 FN.\n  setup: Table 4, WizardLM (160 negative and 58 positive human labels). On Vicuna-80 (Table 3) both routers agree closely with the human labels (GPT-4: 5 FP, 0 FN; RoBERTa: 6 FP, 5 FN).\n  quote: \"the GPT-4 router produces many false positives, which pose adverse affects on the answer quality\"\n  where: App. C.3, p.21\n- claim: The cost is a large increase in prefill tokens, because each point is a separate request that repeats the question and skeleton. API users pay for it.\n  number: 60x-89x more prefill tokens on API models; ~29x-39x on open-source models; 6.8 points on average\n  setup: Vicuna-80 questions suited to SoT. Table 6: Claude 85.79x, ChatGPT-3.5 60.46x, GPT-4 89.20x. Table 7 (shared-prefix trick, batch size 1 for the common prefix): 29.40x-38.61x.\n  quote: \"SoT significantly increases the number of prefilling tokens. This is because that SoT issues an independent point-expanding request for each point, with the average number of points being 6.8\"\n  where: App. H, pp.31-32\n- claim: Why the speed-up works. Decode is weight-I/O bound, so batching B points costs little extra latency per token.\n  number: decode 0.31 TFLOPS (0.1% utilisation) vs prefill 43 TFLOPS (13.8%) for Vicuna-7B (LLaMA-7B)\n  setup: A100-80G, FP16, prefill 128 tokens, decode 64 tokens, batch size 1. Latency of one decode token is comparable to prefilling 128 tokens (40 ms). Peak memory grows slowly with batch size because weights dominate.\n  quote: \"the actual computing performance is only 0.31 TFLOPS (0.1% utilization) in the decoding phase, compared to 43 TFLOPS (13.8% utilization) during prefilling.\"\n  where: App. E, p.25\n- claim: Headline demo example.\n  number: Claude 22s to 12s (1.83x); Vicuna-33B on one A100 43s to 16s (2.69x)\n  setup: one question (workplace conflict resolution), Fig 1.\n  quote: \"we can reduce the latency from 22 seconds to 12 seconds (1.83 × speed-up) with Claude, and from 43 seconds to 16 seconds (2.69× speed-up) with Vicuna-33B V1.3 on an NVIDIA A100.\"\n  where: p.2\n- claim: Speed-up also holds on a consumer GPU.\n  number: 1.94x-2.40x average on three 7B models\n  setup: RTX 3090, FP16, Vicuna-80, three 7B models only. Math is 1.20x but does not reduce absolute latency.\n  quote: \"On these three models, SoT can obtain 1.94× to 2.40× speed-up on average on Vicuna-80.\"\n  where: App. G.1.3, p.28\n- claim: Quality holds up against a longer sequential baseline, which controls for the judge's length bias.\n  number: none given in prose (Fig 26 win/tie/lose; legible values 21.6%, 2.7%, 75.7%, 91.9%, 5.4%, labels not recoverable)\n  setup: ChatGPT-3.5 and LLaMA2-Chat-7B. The normal baseline is prompted for a \"long answer\". Evaluated only on questions suitable for SoT.\n  quote: \"when the overall answer lengths are similar, the quality of the SoT answer is comparable to that of the long normal answer.\"\n  where: App. I.3, p.46\n- claim: With ChatGPT-3.5 as the judge, SoT looks better.\n  number: not worse than baseline in >76% of cases; >89% on FastChat excluding math and coding; strictly better 50.2% (LLMZoo) vs 12.4% (FastChat)\n  setup: ChatGPT-3.5 judge. The authors say GPT-4 results are more reliable.\n  quote: \"SoT is not worse than the baseline in more than 89% of the cases.\"\n  where: App. I.4.1, p.47\n- claim: SoT-R trades some speed for quality. The trained router is the better choice on WizardLM.\n  number: none (see Figs 7, 8, 17)\n  setup: Vicuna-80 and WizardLM.\n  quote: \"SoT-R can still benefit most models with >1× speed-ups.\"\n  where: p.8\n\nLIMITS\n- Quality evaluation uses GPT-4 as the only judge. The authors concede \"the limited prompt set, the potential bias of GPT-4 judges\". There is no human evaluation, because SoT answers have a distinctive pattern. All results are on Vicuna-80 and WizardLM, which are small.\n- Open-source speed-ups are mostly estimated from profiling tables for LLaMA-architecture models on A100 and RTX 3090. Real batch testing is only on the 9 open-source models. API models were run on one date, through a Slack extension (Claude) and Azure (ChatGPT-3.5).\n- Speed-up is unpredictable: \"the acceleration ratio of SoT depends on the SoT prompt, the model, and the question\".\n- Weak models (OpenChat-13B, Vicuna-7B V1.1, StableVicuna-13B) do not follow the prompts. StableVicuna's expansions are as long as the full answer, so it gets no speed-up. SoT answers are 1-2x longer than normal ones.\n- SoT ignores dependencies between points. The authors suggest a Graph-of-Thoughts as future work.\n- The throughput argument only holds when concurrent queries are few (edge or single user, unsaturated servers). At saturation the extra prefill work is a computation overhead. Cost for API users goes up. KV-cache reuse from the skeleton stage and shorter prompts are proposed fixes but not tested.\n- The router-concurrent execution (run router, normal and SoT in parallel) was not tried.\n- Dated: models are mid-2023 (Vicuna, LLaMA2-Chat, Claude via Slack, gpt-4-0613). No later model was tested, and no reasoning models. Modern servers have prefix caching and speculative decoding, so the prefill-overhead and batching trade-offs would differ.\n- The paper's claim that SoT is complementary to speculative decoding is not tested.\n\nBUILDS ON\n- Chain-of-Thought (Wei et al., 2022; Kojima et al., 2022) and ToT (Yao et al., 2023), as prompting precedents. ReAct (Yao et al., 2022).\n- Speculative decoding (Stern et al., 2018 Blockwise parallel decoding; Leviathan et al., 2022; Chen et al., 2023a), and non-autoregressive generation (Gu et al., 2018). SoT is contrasted with these.\n- Evaluation: FastChat (Zheng et al., 2023), LLMZoo (Chen et al., 2023c), Vicuna-80 (Chiang et al., 2023), WizardLM (Xu et al., 2023).\n- Router: LIMA (Zhou et al., 2023), RoBERTa (Liu et al., 2019), Tversky loss (Wang et al., 2023b), label smoothing (Szegedy et al., 2016).\n- Efficiency background: FlashAttention (Dao et al., 2022), multi-query attention (Shazeer, 2019), GPTQ (Frantar et al., 2022), AWQ (Lin et al., 2023), FlexGen (Sheng et al., 2023), PagedAttention (Kwon et al., 2023). Contemporary Graph of Thoughts (Besta et al., 2023). Prompt compression: LLMLingua (Jiang et al., 2023).\n- Hierarchical text generation and planning (D.3, not read).\n\nCODE\n- Skeleton extraction regex (App. B.1, p.19): (\\d+)\\.\\s?([\\s\\S]+?)(?=\\n|\\n*$)\n- Prompt 1 skeleton template (p.3): \"You're an organizer responsible for only giving the skeleton (not the full content) for answering the question. Provide the skeleton in a list of points (numbered 1., 2., 3., etc.) to answer the question. Instead of writing a full sentence, each skeleton point should be very short with only 3~5 words. Generally, the skeleton should have 3~10 points.\" Assistant turn is prefilled with \"1.\"\n- Prompt 2 expansion template (p.3): \"Continue and only continue the writing of point {point index}. Write it **very shortly** in 1~2 sentence and do not continue with other points!\"\n- Prompt 4 router (p.20): options A (independent points), B (dependent points), C (not a list). \"Just say A, B, or C.\" Only A triggers SoT.\n- Eq. 1 latency estimate: T(li,lo,B) = t̃P_B(li) + sum_{k=li}^{li+lo-1} tD_B(k). SoT latency = skeleton stage with B=1 plus expansion stage with the longest request and response at batch B.\n- Multi-round chat (B.2): keep only the question and the final aggregated answer in the history and drop the SoT prompts, so there is no extra prefill in later rounds.\n- Two-shot demos (Prompt 3) are used for all models except GPT-4. \"**very shortly**\" is dropped for Claude and GPT-4. Left-padding is used for batched open-source decoding.\n\nFIGURES (captions not extracted with the figures script; read from text)\n- Fig 1 (p.2): left, the SoT pipeline (skeleton stage, then parallel point-expanding stage). Right, speed-up vs net win rate scatter per model (normal generation is at (1.0, 0.0)). Explains the method and the speed/quality trade-off at a glance.\n- Fig 2 (p.5): average speed-up per model and per category.\n- Fig 10 (p.25): decode latency stays flat as batch size B goes from 1 to 9, while GPU TFLOPS rises roughly linearly. This is the mechanism behind the speed-up.\n- Fig 9 (p.22): SoT-R pipeline, plus a speculative variant that runs the router, normal and SoT generation concurrently.\n- Fig 12 (p.28): latency breakdown by stage and phase. Decode dominates.\n\nPROBLEMS: No embedded instructions found. Figures and charts extracted as loose numbers, so Fig 6 and Fig 26 win/tie/lose labels are not recoverable from text. The figures.py captions script was not run; figure descriptions above come from the extracted text. The extracted text is at /tmp/sot/t.txt, outside the repo."
+ "type": "empirical",
+ "question": "Can an off-the-shelf LLM cut end-to-end generation latency by first writing a short answer skeleton and then expanding the points in parallel?",
+ "hypothesis": "Many long answers have independently expandable points, so decoding them in parallel (batched decoding or parallel API calls) gives about B times faster decoding without hurting, and sometimes improving, quality.",
+ "contributions": [
+  "Skeleton-of-Thought (SoT), a prompting method for parallel decoding of off-the-shelf LLMs",
+  "Evaluation on 12 LLMs of speed-up and answer quality",
+  "SoT-R, a router (GPT-4 prompting or trained RoBERTa) that triggers SoT only for suitable questions"
+ ],
+ "method": {
+  "summary": "A two-stage prompting pipeline: a skeleton prompt yields 3-10 short points, then one point-expanding request per point is run in parallel (batched decoding locally, parallel API calls for hosted models) and concatenated. SoT-R adds a router deciding SoT or normal decoding. Nothing in the LLMs is trained; only the RoBERTa router is fine-tuned.",
+  "task": "Latency reduction for open-ended chat answers; quality judged pairwise by an LLM judge",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Vicuna-80",
+    "role": "eval",
+    "size": "80 questions, 9 categories",
+    "split": "all",
+    "source": "Chiang et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "WizardLM",
+    "role": "eval",
+    "size": "218 questions",
+    "split": "all",
+    "source": "Xu et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "LIMA training set",
+    "role": "train",
+    "size": "1,030 Q&As, annotated for SoT suitability (371 suitable)",
+    "split": "train (router only)",
+    "source": "Zhou et al., 2023",
+    "preprocessing": "Labelled 1 if GPT-4's answer has a list of parallel-expandable points each with enough detail; two authors annotated independently and reconciled"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA2-Chat-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hf": "meta-llama/Llama-2-7b-chat-hf"
+    }
+   },
+   {
+    "name": "LLaMA2-Chat-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenChat-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-7B V1.3, V1.1; Vicuna-13B V1.3; Vicuna-33B V1.3",
+    "role": "evaluated",
+    "params": "7B/13B/33B",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "StableVicuna-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UltraLM-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude (Slack extension)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT-3.5 (Azure gpt-35-turbo 0301)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (gpt-4-0613)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "judge and prompting router"
+    }
+   },
+   {
+    "name": "GPT-4 (judge)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "alt_judge": "ChatGPT-3.5 in App I.4"
+    }
+   },
+   {
+    "name": "RoBERTa-base router",
+    "role": "proposed",
+    "params": "120M",
+    "architecture": "encoder transformer, sequence classification",
+    "init_from": "roberta-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens (padded or truncated)",
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Normal sequential decoding vs SoT: skeleton request, then B point-expanding requests as a left-padded batch (local) or parallel API calls",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Latency profiling: decode each setting 3 times (geometric mean); prefill 7 runs, first 2 warmup, geometric mean of last 5. Actual latency test: 5 runs per model. Quality: one answer per question per model, judged with both orderings.",
+   "prompting": "Skeleton prompt (3-5 word points, 3-10 points); 2-shot demos for all models except GPT-4; point-expanding prompt 'very shortly in 1~2 sentence' (dropped for Claude and GPT-4); partial answer '1.' / '{point index}. {point skeleton}' supplied to continue; no system message except LLaMA2",
+   "retrieval": null,
+   "parameters": {
+    "regex_point_extraction": "(\\d+)\\.\\s?([\\s\\S]+?)(?=\\n|\\n*$)",
+    "skeleton_points": "3-10",
+    "skeleton_point_length": "3-5 words",
+    "avg_points_Vicuna80": "6.8",
+    "router_training": "AdamW, weight decay 0.01, lr 5e-5 (warm-up first 1% then linear decay), 2 epochs, batch 32, seq 512, Tversky loss alpha 0.7 beta 0.3, label smoothing 0.2, 2 min on A100"
+   },
+   "other": {
+    "precision": "FP16 inference",
+    "gpu": "NVIDIA A100-80G (main), RTX 3090 (App G.1.3)",
+    "software": "CUDA 11.7, Hugging Face transformers 4.28.1, PyTorch 2.0.1, FastChat conversation templates",
+    "latency_profile": "Tables for LLaMA 7B/13B/33B: prefill lengths 1..691 step 10, batch 1-16; decode context 1..1024, batch 1-16; T = prefill + sum of decode steps (Eq 1)",
+    "API_latency": "skeleton call latency plus slowest point-expanding call, via time.time()",
+    "GPTQ": "4-bit weight-only quantisation in App J"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Speed-up",
+     "definition": "Latency of normal generation divided by latency of SoT (or SoT-R) generation",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "Win/tie/lose rate",
+     "definition": "Per-question GPT-4 pairwise judgement, run twice with both answer orders; scores +1/0/-1 summed; positive=win, zero=tie, negative=lose",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Net win rate",
+     "definition": "(#win - #lose) / total questions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Normal sequential generation with the same model",
+    "SoT without router",
+    "Longer normal answer (App I.3)"
+   ],
+   "protocol": "FastChat (general metric; special prompts for math and coding) and LLMZoo (general plus coherence, diversity, immersion, integrity, relevance; math and coding excluded) with GPT-4 judge; ChatGPT-3.5 judge in App I.4. No human evaluation, no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/imagination-research/sot",
+   "weights": "HF checkpoints listed in Table 2",
+   "data": "Vicuna-80, WizardLM, LIMA public"
+  },
+  "prompts": [
+   {
+    "purpose": "Skeleton prompt (Prompt 1)",
+    "text": "You're an organizer responsible for only giving the skeleton (not the full content) for answering the question. Provide the skeleton in a list of points (numbered 1., 2., 3., etc.) to answer the question. Instead of writing a full sentence, each skeleton point should be very short with only 3∼5 words. Generally, the skeleton should have 3∼10 points. Now, please provide the skeleton for the following question. {question} Skeleton: [Assistant:] 1.",
+    "where": "Sec 2, Prompt 1"
+   },
+   {
+    "purpose": "Point-expanding prompt (Prompt 2)",
+    "text": "You're responsible for continuing the writing of one and only one point in the overall answer to the following question. {question} The skeleton of the answer is {skeleton} Continue and only continue the writing of point {point index}. Write it **very shortly** in 1∼2 sentence and do not continue with other points! [Assistant:] {point index}. {point skeleton}",
+    "where": "Sec 2, Prompt 2"
+   },
+   {
+    "purpose": "Router prompt (Prompt 4)",
+    "text": "Question: {question} How would you like to answer the question? A. Organize the answer as a list of points or perspectives (in the format of 1., 2., 3., etc.), and the points or perspectives can be answered independently without referring to the contents of the previous points. B. Organize the answer as a list of points or perspectives (in the format of 1., 2., 3., etc.), and the contents of later points or perspectives cannot be answered independently without referring to the contents of the previous ones. C. Do not organize the answer as a list of points or perspectives. Just say A, B, or C. Do not explain. Do not provide an answer to the question.",
+    "where": "App C.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SoT gives more than 2x end-to-end speed-up on 8 of 12 models, up to 2.39x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed-up",
+   "value": "2.39",
+   "unit": "x speed-up",
+   "baseline_value": "1.0",
+   "n": null,
+   "setup": "Vicuna-80 (80 questions), 12 models, latency estimated from A100 profiling tables (open-source) or measured API latency",
+   "where": "Sec 3.1.1, Fig 2a",
+   "note": null,
+   "quote": "We can see that SoT obtains a >2× speed-up (up to 2.39×) on 8 out of 12 models."
+  },
+  {
+   "claim": "StableVicuna-13B gets almost no speed-up because it ignores the 'very shortly' instruction.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.13",
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80 (80 questions), 12 models, latency estimated from A100 profiling tables (open-source) or measured API latency",
+   "where": "Sec 3.1.1, Fig 2a",
+   "note": "Fig 2a prints 1.13x; Claude 1.31x",
+   "quote": "Consequently, SoT cannot accelerate StableVicuna-13B well."
+  },
+  {
+   "claim": "On the five categories where SoT keeps quality, speed-up is 1.89x to 2.33x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.89 to 2.33",
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80 (80 questions), 12 models, latency estimated from A100 profiling tables (open-source) or measured API latency, averaged over models",
+   "where": "Sec 3.1.2, Fig 2b",
+   "note": null,
+   "quote": "SoT can speed up the overall answer generation process by 1.89× to 2.33× in the meantime."
+  },
+  {
+   "claim": "Math has the lowest speed-up by category.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.34",
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80 (80 questions), 12 models, latency estimated from A100 profiling tables (open-source) or measured API latency, all models",
+   "where": "Fig 2b",
+   "note": null,
+   "quote": "1.34×"
+  },
+  {
+   "claim": "Actual batched runs on one A100 give >2x on 6 of 9 open-source models and no speed-up on StableVicuna-13B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.97",
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, 9 open-source models, 5 runs each, single A100, real batch testing",
+   "where": "App G.1.4, Fig 14a",
+   "note": "Fig 14a values range 0.97x to 2.88x",
+   "quote": "SoT achieves no speed-up on StableVicuna-13B."
+  },
+  {
+   "claim": "Actual-latency speed-up on the five good categories is 2.15x to 2.50x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.15 to 2.50",
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, 9 open-source models, real batch testing, A100",
+   "where": "App G.1.4",
+   "note": null,
+   "quote": "2.15× to 2.50×"
+  },
+  {
+   "claim": "On RTX 3090, the three 7B models get 1.94x to 2.40x average speed-up.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.94 to 2.40",
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, Vicuna-7B V1.1/V1.3, LLaMA2-Chat-7B, FP16, RTX 3090",
+   "where": "App G.1.3",
+   "note": null,
+   "quote": "SoT can obtain 1.94× to 2.40× speed-up on average on Vicuna-80."
+  },
+  {
+   "claim": "Intro example: Claude 22s to 12s and Vicuna-33B 43s to 16s on one question.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.69",
+   "unit": "x speed-up (Vicuna-33B)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One question in Fig 1; Vicuna-33B V1.3 on one A100; Claude via Slack API",
+   "where": "Sec 1",
+   "note": "Claude 1.83x",
+   "quote": "from 43 seconds to 16 seconds (2.69× speed-up) with Vicuna-33B V1.3"
+  },
+  {
+   "claim": "Quality: SoT is not worse than normal in about 60% of cases; strictly better in 45.8% (LLMZoo) vs 29.5% (FastChat).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "45.8 / 29.5",
+   "unit": "% win",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, all 12 models, GPT-4 judge, both answer orderings",
+   "where": "Sec 3.2.1, Fig 3",
+   "note": null,
+   "quote": "We notice a discrepancy between the two metrics on when SoT is strictly better than the baseline (45.8% v.s. 29.5%)."
+  },
+  {
+   "claim": "SoT improves diversity and relevance, hurts immersion and coherence.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80 excluding math and coding, LLMZoo metrics, GPT-4 judge",
+   "where": "Sec 3.2.4, Fig 6",
+   "note": null,
+   "quote": "On average, we can see that SoT improves the diversity and relevance while hurting the immersion and coherence."
+  },
+  {
+   "claim": "SoT works on generic, common-sense, knowledge, roleplay, counterfactual; poorly on writing, fermi, math, coding.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, FastChat and LLMZoo net win rates, GPT-4 judge",
+   "where": "Sec 3.2.3, Fig 5",
+   "note": null,
+   "quote": "SoT performs relatively well on generic, common-sense, knowledge, roleplay, and counterfactual, and relatively poorly on writing, fermi, math, and coding."
+  },
+  {
+   "claim": "SoT-R router adds little latency: prompting router 0.65s average on Vicuna-80, trained router 0.04s.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.65 / 0.04",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, GPT-4 prompting router vs RoBERTa router",
+   "where": "App G.2",
+   "note": null,
+   "quote": "0.65s (0.39s∼1.37s) and 0.04s"
+  },
+  {
+   "claim": "Trained RoBERTa router fine-tunes in about 2 minutes on one A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base 120M, LIMA 1,030 annotated Q&As",
+   "where": "App C.2.2",
+   "note": null,
+   "quote": "completing in 2 minutes on an NVIDIA A100 GPU"
+  },
+  {
+   "claim": "Suitable questions by human judgement: 37/80 Vicuna-80, 58/218 WizardLM, 371/1030 LIMA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "37/80; 58/218; 371/1030",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "human assessment",
+   "where": "App K.1",
+   "note": null,
+   "quote": "37/80, 58/218, 371/1030"
+  },
+  {
+   "claim": "SoT prefill token overhead on API models is about 60x to 89x normal.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "85.79 (Claude); 60.46 (ChatGPT-3.5); 89.20 (GPT-4)",
+   "unit": "ratio SoT/Normal",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80 questions suitable for SoT, average prefilling tokens",
+   "where": "App H",
+   "note": "avg points B = 6.8",
+   "quote": "Ratio (SoT / Normal)",
+   "table": "Table 6, column Ratio (SoT / Normal)"
+  },
+  {
+   "claim": "For open-source models with shared-prefix trick, prefill overhead is about 29x to 39x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "29.40 to 38.61",
+   "unit": "ratio SoT/Normal",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80 suitable questions, prefix prefilled with batch 1",
+   "where": "App H",
+   "note": null,
+   "quote": "Ratio (SoT / Normal)",
+   "table": "Table 7, column Ratio (SoT / Normal), rows Vicuna-7B V1.1 (29.40) to StableVicuna-13B (38.61)"
+  },
+  {
+   "claim": "Decoding is memory-bound: 0.31 TFLOPS (0.1% util) in decode vs 43 TFLOPS in prefill for LLaMA-7B on A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.31",
+   "unit": "TFLOPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-7B, A100, prefill 128 tokens, decode 64 tokens, batch 1",
+   "where": "App E, Table 5",
+   "note": null,
+   "quote": "the actual computing performance is only 0.31 TFLOPS (0.1% utilization) in the decoding phase"
+  },
+  {
+   "claim": "Peak memory overhead of SoT-R is below 1.11x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.11",
+   "unit": "x peak memory",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, SoT-R with prompting router",
+   "where": "App K.2",
+   "note": null,
+   "quote": "the overhead of peak memory is quite small (<1.11×)"
+  },
+  {
+   "claim": "4-bit GPTQ quantised models with SoT-R get 1.08x to 1.99x speed-up over quantised normal decoding.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.08 to 1.99",
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, GPTQ 4-bit weight-only, SoT-R",
+   "where": "App J.1",
+   "note": null,
+   "quote": "SoT-R obtain 1.08× to 1.99× speed-ups on all the models."
+  },
+  {
+   "claim": "Comparing against longer normal answers, SoT quality is comparable when lengths are similar.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT-3.5 and LLaMA2-Chat-7B, normal prompt prefixed with 'give a long answer'",
+   "where": "App I.3",
+   "note": null,
+   "quote": "the quality of the SoT answer is comparable to that of the long normal answer"
+  },
+  {
+   "claim": "With ChatGPT-3.5 as judge, SoT is not worse than baseline in more than 76% of cases (89% excluding math and coding for FastChat).",
+   "kind": "measured",
+   "source": null,
+   "metric": "not-worse rate",
+   "value": "76",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-80, ChatGPT-3.5 judge",
+   "where": "App I.4.1",
+   "note": null,
+   "quote": "SoT is not worse than the baseline in more than 76% of the cases."
+  },
+  {
+   "claim": "GPT-4 prompting router has many false positives on WizardLM (66 of 160 human-negative routed to SoT).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "66",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WizardLM 218 questions",
+   "where": "App C.3",
+   "note": null,
+   "quote": "the GPT-4 router produces many false positives",
+   "table": "Table 4, left, H0 row, G1 column"
+  }
+ ],
+ "limits": [
+  "Quality evaluation relies on GPT-4 judges with possible bias, a small prompt set (80 and 218 questions), no human evaluation (authors say SoT answers are easy to recognise).",
+  "Unsuited to step-by-step reasoning (math, coding) and short answers; SoT ignores dependencies between points.",
+  "Speed-up depends on prompt, model, question, so less predictable than model- or system-level methods; StableVicuna-13B gets no speed-up.",
+  "Helps latency only when concurrent queries are unsaturated; under load, prefill overhead (about 30x to 89x prefill tokens) hurts throughput and API cost.",
+  "Open-source speed-ups are mostly estimated from A100 profiling tables for LLaMA architectures; real batch test covers 9 open-source models only.",
+  "Decoding temperature, max tokens and seeds are not stated."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Vicuna-80 / Vicuna (Chiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Main eval set and models",
+   "quote": null
+  },
+  {
+   "work": "WizardLM (Xu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Second eval set",
+   "quote": null
+  },
+  {
+   "work": "FastChat / MT-Bench judge (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LLM-judge metric",
+   "quote": null
+  },
+  {
+   "work": "LLMZoo (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Detailed judge metrics",
+   "quote": null
+  },
+  {
+   "work": "LIMA (Zhou et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Router training set",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Trained router",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought (Wei et al.; Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Explicit thought in language; SoT unsuited to CoT-style tasks",
+   "quote": null
+  },
+  {
+   "work": "Speculative decoding (Stern et al.; Leviathan et al.; Chen et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Parallel decoding via assistant model; SoT needs none",
+   "quote": null
+  },
+  {
+   "work": "Non-autoregressive generation (Gu et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Parallel token sampling with modified models",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention (Dao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "System-level; does not speed up small-batch decoding",
+   "quote": null
+  },
+  {
+   "work": "GPTQ (Frantar et al.)",
+   "year": 2022,
+   "arxiv": "2210.17323",
+   "relation": "uses-method",
+   "note": "Quantisation combined with SoT in App J",
+   "quote": null
+  },
+  {
+   "work": "Graph of Thoughts (Besta et al.)",
+   "year": 2023,
+   "arxiv": "2308.09687",
+   "relation": "related",
+   "note": "Proposed future direction for dependencies",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Left: SoT illustration (skeleton stage, point-expanding stage). Right: net win rate vs speed-up of SoT-R per model.",
+   "page": 2,
+   "why": "Shows pipeline and the speed/quality trade per model at once"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Average speed-ups of SoT on different models and question categories.",
+   "page": 5,
+   "why": "Per-model and per-category speed-up range"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Latency, GPU performance and peak memory vs batch size B.",
+   "page": 25,
+   "why": "Shows why batching B points costs almost no extra per-token latency"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "SoT-R pipeline, and concurrent variant.",
+   "page": 22,
+   "why": "Router placement"
+  }
+ ],
+ "code": [
+  {
+   "where": "App F, Eq 1",
+   "snippet": "T(li, lo, B) = t~P_B(li) + sum_{k=li}^{li+lo-1} t^D_B(k)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure data came out as bare number lists; axis labels partly lost.",
+  "No embedded instructions found."
+ ]
 }

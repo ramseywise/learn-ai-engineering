@@ -1,0 +1,625 @@
+{
+ "schema": 1,
+ "key": "2408.04187",
+ "pdf": "ai-engineering/05-graph-engineering/sources/wu-2024-medical-graph-rag.pdf",
+ "bib": {
+  "title": "Medical Graph RAG: Towards Safe Medical Large Language Model via Graph Retrieval-Augmented Generation",
+  "authors": [
+   "Junde Wu",
+   "Jiayuan Zhu",
+   "Yunli Qi",
+   "Jingkun Chen",
+   "Min Xu",
+   "Filippo Menolascina",
+   "Vicente Grau"
+  ],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.04187",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 40725,
+  "chars_total": 40725,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can graph-based RAG be adapted to the medical domain so LLMs give evidence-based, source-traceable answers over private medical data?",
+ "hypothesis": "Linking user documents to credible sources and controlled vocabularies (Triple Graph Construction) and retrieving by tag hierarchy (U-Retrieval) will beat standard RAG and GraphRAG.",
+ "contributions": [
+  "First specialised framework for graph-based RAG in the medical domain (MedGraphRAG).",
+  "Triple Graph Construction and U-Retrieval enabling evidence-based responses using holistic RAG data.",
+  "Outperforms other retrieval methods and fine-tuned medical LLMs across a wide range of medical Q&A benchmarks, new SOTAs.",
+  "Human evaluation shows more understandable and evidence-based responses."
+ ],
+ "method": {
+  "summary": "Documents are chunked semantically by an LLM, entities (name, type from UMLS semantic types, context) are extracted, linked by embedding cosine similarity to a two-layer RepoGraph (medical books/papers, UMLS) to form [RAG entity, source, definition] triples, and relationships are generated, giving Meta-MedGraphs. Each graph gets predefined-tag summaries, clustered agglomeratively into a multi-layer tag hierarchy. U-Retrieval descends the tag hierarchy top-down to a target graph, answers from top-N entities and neighbours, then refines the answer bottom-up with higher-level tag summaries.",
+  "task": "medical QA (multiple choice), health fact-checking, long-form citation-backed generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MIMIC-IV",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Johnson et al. 2023, public EHR dataset; used as RAG data",
+    "preprocessing": null
+   },
+   {
+    "name": "MedC-K + FakeHealth and PubHealth evidence publications (upper RepoGraph layer)",
+    "role": "eval",
+    "size": "4.8 million biomedical papers and 30,000 textbooks (MedC-K)",
+    "split": null,
+    "source": "Wu et al. 2023; Dai et al. 2020; Kotonya and Toni 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "UMLS graph (bottom RepoGraph layer)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bodenreider 2004",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiMedQA 9 multiple-choice sets (MedQA, MedMCQA, PubMedQA, MMLU clinic topics)",
+    "role": "eval",
+    "size": null,
+    "split": "test split",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "FakeHealth, PubHealth",
+    "role": "eval",
+    "size": null,
+    "split": "test split",
+    "source": "Dai et al. 2020; Kotonya and Toni 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "DiverseHealth",
+    "role": "eval",
+    "size": "50 real-world clinical questions",
+    "split": null,
+    "source": "collected by authors, health equity topics; to be released",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama2",
+    "role": "evaluated",
+    "params": "13B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "as": "response LLM L_R"
+    }
+   },
+   {
+    "name": "Llama3",
+    "role": "evaluated",
+    "params": "8B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "as": "response LLM L_R"
+    }
+   },
+   {
+    "name": "gemini-1.0-pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama3-70B as graph construction LLM L_G",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-embedding-3-large",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5-shot response ensemble (Li et al. 2024, More agents is all you need); single run otherwise unstated; seeds not stated",
+   "prompting": "same query prompt for all models; graph prompt: 'Given QUESTION: {Q}. GRAPH: {...}. Answer the user question: QUESTION using the graph: GRAPH...'",
+   "retrieval": "U-Retrieval: 4 levels on GPT-4, 5 for others; top 60 entities with 16-hop neighbours; all thresholds 0.5 unless noted; text-embedding-3-large embeddings",
+   "parameters": {
+    "chunk sliding window w": "5 paragraphs",
+    "chunk hard threshold": "max token limit of L_G",
+    "delta_r (reference link)": "0.5 (pre-defined, set by 'all thresholds 0.5')",
+    "delta_t (tag merge)": "dynamic, merges top 20% most similar pairs each iteration",
+    "max tag layers": "12",
+    "retrieval layers": "4-6 depending on baseline LLM",
+    "Nu (top entities)": "60",
+    "ku (neighbour hops)": "16"
+   },
+   "other": {
+    "tag categories": "Symptoms, Patient History, Body Functions, Medication (most important)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "accuracy of selecting the correct option",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human rating (Pert., Cor., CP, CR, Und.)",
+     "definition": "five-level rating of pertinence, correctness, citation precision, citation recall, understandability",
+     "unit": "score (scale not stated, values 71-97)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "No retrieval",
+    "Standard RAG (LangChain)",
+    "GraphRAG (Microsoft Azure implementation)",
+    "Inline Search (Gao et al. 2023b)",
+    "ATTR-FIRST (Slobodkin et al. 2024)",
+    "MIRAGE (Qi et al. 2024)",
+    "Med-PaLM 2",
+    "Med-Gemini"
+   ],
+   "protocol": "All retrieval methods use same RAG and test data. Human evaluation by 7 certified clinicians and 5 laypersons. No significance test or seeds reported."
+  },
+  "availability": {
+   "code": "https://github.com/MedicineToken/Medical-Graph-RAG",
+   "weights": null,
+   "data": "DiverseHealth to be released alongside paper"
+  },
+  "prompts": [
+   {
+    "purpose": "tag summary system prompt (partial)",
+    "text": "Generate a structured summary from the provided medical content, strictly adhering to the following categories... {Tag Name: Description of the tag}...",
+    "where": "Sec 2.2"
+   },
+   {
+    "purpose": "graph-conditioned answer",
+    "text": "Given QUESTION: {Q}. GRAPH: {ei[na]+Rej_ei+ej[na], ...}. Answer the user question: QUESTION using the graph: GRAPH...",
+    "where": "Sec 2.3"
+   },
+   {
+    "purpose": "bottom-up refinement",
+    "text": "QUESTION: {Q}, LAST RESPONSE: ..., and SUMMARY: {T i-1}, and ask it to Adjust the response:RESPONSE of the question: QUESTION using the updated information: SUMMARY.",
+    "where": "Sec 2.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.retrieval",
+    "quote": "we picked top 60 entities with their 16-hop neighbors",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MedGraphRAG with GPT-4 gets 91.3 on MedQA vs 88.9 with GraphRAG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 91.3,
+   "unit": "%",
+   "baseline_value": 88.9,
+   "n": null,
+   "setup": "MedQA, GPT-4 gpt-4-0613, 5-shot ensemble",
+   "where": "Table 1",
+   "table": "Table 1, GPT-4 + MedGraphRAG row, column MedQA",
+   "note": null
+  },
+  {
+   "claim": "GPT-4 + MedGraphRAG reaches 83.3 on PubMedQA, 98.1 on MMLU College Biology.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 83.3,
+   "unit": "%",
+   "baseline_value": 77.9,
+   "n": null,
+   "setup": "PubMedQA, GPT-4",
+   "where": "Table 1",
+   "table": "Table 1, GPT-4 + MedGraphRAG row, column PubMedQA",
+   "note": null
+  },
+  {
+   "claim": "GPT-4 + MedGraphRAG on FakeHealth fact-checking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 86.5,
+   "unit": "%",
+   "baseline_value": 78.4,
+   "n": null,
+   "setup": "FakeHealth, GPT-4",
+   "where": "Table 1",
+   "table": "Table 1, GPT-4 + MedGraphRAG row, column FakeHealth",
+   "note": null
+  },
+  {
+   "claim": "Average gain over no-retrieval baselines in fact-checking is nearly 10%, medical QA 8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaged over 6 LLMs",
+   "where": "Sec 3.3.1",
+   "quote": "MedGraphRAG achieves an average improvement of nearly 10% in fact-checking and 8% in medical Q&A.",
+   "note": null
+  },
+  {
+   "claim": "Average gain over GraphRAG around 8% in fact-checking and 5% in medical Q&A.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaged over 6 LLMs",
+   "where": "Sec 3.3.1",
+   "quote": "it demonstrates an average improvement of around 8% in fact-checking and 5% in medical Q&A",
+   "note": null
+  },
+  {
+   "claim": "Smaller LLMs gain more: Llama2-13B on MedQA goes 42.7 (no retrieval) to 65.5 with MedGraphRAG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 65.5,
+   "unit": "%",
+   "baseline_value": 42.7,
+   "n": null,
+   "setup": "MedQA, Llama2-13B",
+   "where": "Table 1",
+   "table": "Table 1, Llama2-13B + MedGraphRAG row, column MedQA",
+   "note": null
+  },
+  {
+   "claim": "Ablation: adding Triple Graph Construction lifts PubMedQA from 78.5 to 81.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 81.8,
+   "unit": "%",
+   "baseline_value": 78.5,
+   "n": null,
+   "setup": "PubMedQA, GPT-4 assumed (model not stated in Table 3)",
+   "where": "Table 3",
+   "table": "Table 3, row +Triple Graph Construction, column PubMedQA",
+   "note": "Table 3 does not name the LLM; MedGraphRAG row matches GPT-4 Table 1 values for MedQA 91.3 and MedMCQA 81.5."
+  },
+  {
+   "claim": "Ablation: full MedGraphRAG vs GraphRAG on MedMCQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 81.5,
+   "unit": "%",
+   "baseline_value": 77.2,
+   "n": null,
+   "setup": "MedMCQA",
+   "where": "Table 3",
+   "table": "Table 3, row +U-Retrieval (MedGraphRAG), column MedMCQA",
+   "note": null
+  },
+  {
+   "claim": "U-Retrieval adds small gains over Triple Graph Construction on MedQA (91.1 to 91.3) but larger on PubMedQA (81.8 to 83.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 83.3,
+   "unit": "%",
+   "baseline_value": 81.8,
+   "n": null,
+   "setup": "Table 3 ablation",
+   "where": "Table 3",
+   "table": "Table 3, row +U-Retrieval (MedGraphRAG), column PubMedQA",
+   "note": null
+  },
+  {
+   "claim": "Human raters: MedGraphRAG citation precision 92 vs MIRAGE 84 on MultiMedQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Citation precision",
+   "value": 92,
+   "unit": "score",
+   "baseline_value": 84,
+   "n": null,
+   "setup": "MultiMedQA samples; 7 clinicians and 5 laypersons",
+   "where": "Table 2",
+   "table": "Table 2, MultiMedQA, row MedGrapgRAG, column CP",
+   "note": null
+  },
+  {
+   "claim": "Human raters: citation recall 86 vs 77 (ATTR-FIRST) on MultiMedQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Citation recall",
+   "value": 86,
+   "unit": "score",
+   "baseline_value": 77,
+   "n": null,
+   "setup": "MultiMedQA samples",
+   "where": "Table 2",
+   "table": "Table 2, MultiMedQA, row MedGrapgRAG, column CR",
+   "note": null
+  },
+  {
+   "claim": "DiverseHealth correctness 96 vs 91 ATTR-FIRST.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Correctness",
+   "value": 96,
+   "unit": "score",
+   "baseline_value": 91,
+   "n": null,
+   "setup": "DiverseHealth, 50 questions",
+   "where": "Table 2",
+   "table": "Table 2, Diverse Health, row MedGrapgRAG, column Cor.",
+   "note": null
+  },
+  {
+   "claim": "With MedGraphRAG, Med-Paper and Med-Dictionary data give gains over 6% and 8%; standard RAG gets under 2% and under 1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, retrieving each tier separately, read from Fig 3",
+   "where": "Sec 3.4.2",
+   "quote": "we see significant improvements of over 6% and 8% for Med-Paper and Med-Dictionary data, respectively",
+   "note": null
+  }
+ ],
+ "limits": [
+  "Only the future-work line concedes limits: real-time data updates and validation on real-world clinical data are not done.",
+  "RAG data is MIMIC-IV, a public dataset; no private clinical deployment tested.",
+  "Test sets are multiple-choice or fact-check; long-form quality is judged only on 50-question DiverseHealth plus MultiMedQA samples, rater scale and sample counts not given.",
+  "No seeds, variance or significance tests; 5-shot ensemble used for all models, and comparison with baselines on the same ensemble is stated but costs are not reported.",
+  "Decoding settings, temperature, prompts for chunking/entity/relationship steps are not given in the text.",
+  "Table 3 ablation does not name the LLM.",
+  "Cost claim (cheaper than GraphRAG communities) is asserted, no cost numbers.",
+  "Baselines are LangChain RAG and the Azure GraphRAG implementation, not tuned variants."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RepoGraph",
+   "definition": "a graph fixed across users that provides established sources and controlled vocabulary definitions for user RAG documents, built in two layers (papers/books, UMLS)",
+   "where": "Sec 2.1.3"
+  },
+  {
+   "term": "Triple Graph Construction",
+   "definition": "linking user RAG entities to source entities (TheReferenceOf) and these to dictionary entities (definition of), yielding [RAG entity, source, definition]",
+   "where": "Sec 2.1.3"
+  },
+  {
+   "term": "Meta-MedGraph",
+   "definition": "a directed graph generated for each data chunk",
+   "where": "Sec 2.1.4"
+  },
+  {
+   "term": "U-Retrieval",
+   "definition": "top-down precise retrieval through a tag hierarchy followed by bottom-up response refinement",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GraphRAG (Edge et al. 2024), From Local to Global",
+   "year": 2024,
+   "arxiv": "2404.16130",
+   "relation": "baseline",
+   "note": "Azure implementation as baseline; MedGraphRAG replaces community summaries with tag hierarchy",
+   "quote": null
+  },
+  {
+   "work": "GRAG: Graph Retrieval-Augmented Generation (Hu et al. 2024)",
+   "year": 2024,
+   "arxiv": "2405.16506",
+   "relation": "extends",
+   "note": "cited as GraphRAG (Hu et al. 2024) and ablation baseline",
+   "quote": null
+  },
+  {
+   "work": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al.)",
+   "year": 2021,
+   "arxiv": "2005.11401",
+   "relation": "baseline",
+   "note": "standard RAG via LangChain",
+   "quote": null
+  },
+  {
+   "work": "More agents is all you need (Li et al.)",
+   "year": 2024,
+   "arxiv": "2402.05120",
+   "relation": "uses-method",
+   "note": "5-shot response ensemble",
+   "quote": null
+  },
+  {
+   "work": "UMLS (Bodenreider)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "bottom RepoGraph layer, semantic types",
+   "quote": null
+  },
+  {
+   "work": "MedC-K (PMC-LLaMA, Wu et al.)",
+   "year": 2023,
+   "arxiv": "2304.14454",
+   "relation": "uses-data",
+   "note": "upper repository layer",
+   "quote": null
+  },
+  {
+   "work": "MIMIC-IV (Johnson et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "RAG data",
+   "quote": null
+  },
+  {
+   "work": "Enabling LLMs to generate text with citations (Gao et al.)",
+   "year": 2023,
+   "arxiv": "2305.14627",
+   "relation": "baseline",
+   "note": "Inline Search in human eval",
+   "quote": null
+  },
+  {
+   "work": "Attribute first, then generate (Slobodkin et al.)",
+   "year": 2024,
+   "arxiv": "2403.17104",
+   "relation": "baseline",
+   "note": "ATTR-FIRST",
+   "quote": null
+  },
+  {
+   "work": "MIRAGE (Qi et al.)",
+   "year": 2024,
+   "arxiv": "2406.13663",
+   "relation": "baseline",
+   "note": "human eval baseline",
+   "quote": null
+  },
+  {
+   "work": "Med-PaLM 2 (Singhal et al.)",
+   "year": 2023,
+   "arxiv": "2305.09617",
+   "relation": "related",
+   "note": "fine-tuned medical LLM surpassed",
+   "quote": null
+  },
+  {
+   "work": "Capabilities of Gemini models in medicine (Saab et al.)",
+   "year": 2024,
+   "arxiv": "2404.18416",
+   "relation": "related",
+   "note": "Med-Gemini surpassed",
+   "quote": null
+  },
+  {
+   "work": "FakeHealth, PubHealth",
+   "year": 2020,
+   "arxiv": "2002.00837",
+   "relation": "uses-data",
+   "note": "fact-checking benchmarks (Dai et al.; Kotonya and Toni 2010.09926)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The overall workflow of MedGraphRAG.",
+   "page": 3,
+   "why": "Shows the six steps from chunking to U-Retrieval."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Example responses from GraphRAG and MedGraphRAG, with abstracted graphs.",
+   "page": 6,
+   "why": "COPD plus heart failure case showing entity-to-reference links."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Impact of Repository Data on RAG, GraphRAG, and MedGraphRAG with GPT-4.",
+   "page": 6,
+   "why": "Data tier vs retrieval method effect."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Accuracy(%) of LLMs using different retrieval methods.",
+   "page": 7,
+   "why": "Main results over 6 LLMs and 11 benchmarks."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1.3",
+   "snippet": "R^{e1}_{e2} = {(e1_i, TheReferenceOf, e2_j) | cos(phi(Ce1_i), phi(Ce2_j)) >= delta_r}, Ce = Text[name: na; type: ty; context: cx]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equation extraction is garbled by PDF text; the equations are paraphrased in the code field.",
+  "Table 1 text is one cell per line; column order inferred from header (FakeHealth, PubHealth, MedQA, MedMCQA, PubMedQA, MMLU Col-Med, Col-Bio, Pro-Med, Anatomy, Gene, Clinic).",
+  "Method name misspelled MedGrapgRAG in Table 2.",
+  "No embedded instructions found. Abstract says 9 medical Q&A benchmarks; Table 1 shows 9 Q&A columns."
+ ]
+}

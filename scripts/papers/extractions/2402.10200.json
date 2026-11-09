@@ -1,19 +1,598 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.10200",
  "pdf": "ai-engineering/01-prompt-engineering/sources/wang-2024-chain-thought-reasoning-without-prompting.pdf",
  "bib": {
-  "title": "Chain-of-Thought Reasoning Without Prompting",
-  "first_author": "Xuezhi Wang",
-  "year": "2024",
-  "venue": null,
+  "title": "Chain-of-Thought Reasoning without Prompting",
+  "authors": [
+   "Xuezhi Wang",
+   "Denny Zhou"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2402.10200",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 74856,
+  "chars_total": 74856,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: Chain-of-Thought Reasoning without Prompting. Xuezhi Wang, Denny Zhou (Google DeepMind). arXiv:2402.10200v2, 23 May 2024 (preprint).\nCOVERAGE: 74,616 of 74,616 chars, 23 of 23 pages (main text, related work, limitations, appendices A-D, tables 8-13). References skimmed only. Figures 3, 4, 5 and 6 are bar and line charts with no extractable numbers. I did not run the figures script.\n\nCLAIMS (ranked)\n1. CoT-decoding takes the top-k first tokens, continues each greedily, and picks the path whose answer tokens have the highest top-1 minus top-2 probability margin. This beats greedy and every other decoding baseline when no prompt is used.\n number: GSM8K 9.9% to 25.1% (Mistral-7B pretrained); 34.8% to 63.2% (PaLM-2 L)\n setup: \"Q: [question]\\nA:\" format, k=10 at the first decoding position, greedy afterwards. Pretrained models, GSM8K test set, no CoT prompt.\n quote: \"Greedy decoding 9.9% 34.8% / Self-consistency without CoT-prompt (10 paths) 12.9% 40.6% / CoT-decoding (10 paths) 25.1% 63.2%\"\n where: Table 3, p.5\n2. Other decoders do not help. Sampling and beam search are worse than greedy without a CoT prompt.\n number: top-k sampling 4.9, nucleus 6.4, beam 6.7, temp 0.7 7.5, greedy 9.9, self-consistency 12.9, CoT-decoding 25.1\n setup: Mistral-7B pretrained, GSM8K, k=10, p=0.9, beam b=10\n quote: \"Top-𝑘 sampling (𝑘 = 10) 4.9% / Top-𝑝 / Nucleus sampling (𝑝 = 0.9) 6.4% / Beam search (𝑏 = 10) 6.7% / Temperature sampling (𝑇 = 0.7) 7.5% / Greedy decoding 9.9%\"\n where: Table 4, p.6\n3. The answer-confidence margin picks CoT paths better than model probability or length-normalised probability.\n number: GSM8K (top-100 questions) greedy 44.0, best raw log-prob 37.0, length-normalised 51.0, CoT-decoding 72.0. Year parity 57.0, 55.0, 57.0, 95.0.\n setup: PaLM-2 L, 10 paths. Also, on the first 100 GSM8K questions the highest-confidence path of the top 10 contained a CoT in 88% of cases.\n quote: \"CoT-decoding (decode 10 paths, rank by model’s answer confidence)72.0% 95.0%\" and \"among those, if we take the decoding path with the highest answer confidence among the top-10 decoding paths, 88% of them contain CoT paths\"\n where: Table 2, p.5 (88% claim p.4)\n4. Combined with a zero-shot CoT prompt, CoT-decoding with weighted path aggregation beats self-consistency. Cost is O(k).\n number: Mistral-7B / PaLM-2 L on GSM8K: zero-shot CoT 17.5 / 75.1; self-consistency + zero-shot CoT 39.4 / 85.3; CoT-decoding agg + zero-shot CoT 48.4 / 87.0; max-path + zero-shot CoT 40.2 / 78.6. Without a prompt, agg 25.3 / 64.1.\n setup: GSM8K test set, k=10 for every multi-path method. Aggregation picks the answer maximising the sum of Δ over paths with that answer.\n quote: \"CoT-decoding (agg path) + zero-shot CoT-prompt48.4% 87.0% O( 𝑘)\"\n where: Table 7, p.10\n5. Gains across instruction-tuned models are smaller but present.\n number: Mistral-7B inst-tuned: GSM8K 31.2 to 38.2; MultiArith 37.8 to 66.5; year parity 62.2 to 73.5. Pretrained: GSM8K 9.9 to 25.1; MultiArith 14.3 to 45.7; year parity 35.0 to 66.0.\n quote: \"MultiArith Greedy 14.3 37.8CoT-decoding 45.7 (+31.4) 66.5 (+28.7)\"\n where: Table 5, p.8\n6. Pretrained PaLM-2 L with CoT-decoding nearly matches the instruction-tuned model, and gains hold across scales.\n number: 63.2% vs 67.8% (GSM8K); \"+10-30% absolute\" on GSM8K across PaLM-2 sizes; year parity \"almost perfect accuracy at larger model scales\" while greedy stays flat with scale.\n quote: \"CoT-decoding achieves 63.2% accuracy on the pre-trained PaLM-2 Large model, close to the performance of the instruction-tuned model of the same scale at 67.8%\"\n where: p.7 (Fig 4)\n7. Gains shrink as synthetic tasks get harder. Correct CoT paths are rare at 3 or more steps. In some cases the few-shot CoT prompt acts as \"teaching\".\n number: PaLM-2 L, greedy to CoT-decoding. Coin flip 2/3/4 rounds: 70.0 to 94.0, 53.0 to 57.0, 48.0 to 55.0. Web of lies 3/4/5: 76.0 to 87.0, 58.0 to 63.0, 53.6 to 57.6. Multi-step arithmetic d2,l4: 0.0 to 16.0. Sports understanding 58.8 to 58.0 (slightly worse). Object counting 36.0 to 39.2.\n setup: 100 generated examples per difficulty level (Web-of-Lies 5 uses the existing BBH data).\n quote: \"models can generate the correct CoT paths when the solution involves at most 1 or 2 step knowledge manipulation, and the model starts to struggle with generating the correct CoT-paths when the steps become 3 or more\"\n where: Table 6, p.9\n8. CoT paths are usually not the top-ranked or majority path, so majority vote fails. Branching at the first token gives the most diversity.\n number: none (qualitative)\n quote: \"they often do not represent the predominant answer among all paths, rendering methods like self-consistency (Wang et al., 2023a) inapplicable\"\n where: p.4. Also p.5-6: \"early branching, e.g., at the first decoding step, significantly enhances the diversity of potential paths\". Sampling fails without a prompt because \"the model’s strong tendency in providing a direct answer\" makes the first token low-diversity.\n9. Larger k helps for pretrained models. For instruction-tuned models the effect is smaller, because CoT paths already sit in the first few paths.\n number: none in text (Fig 5 and 6)\n quote: \"higher values of 𝑘 typically result in improved model performance, suggesting that in many cases, the correct CoT paths may indeed exist but are often ranked lower\"\n where: p.8\n10. Year-parity example: greedy is at chance. Example Δ values for CoT versus non-CoT paths: 0.949 and 0.978 versus 0.117 to 0.207.\n quote: \"k = 3: 1964, aneven year. (0.949)\"\n where: Table 1, p.3\n\nSettings: PaLM-2 uses input length 256 and max 128 decode steps for CoT-decoding. Few-shot and zero-shot CoT prompting use 1024 input length and 256 output steps. Mistral math generates 200 new tokens (pretrained) or 400 (instruction-tuned). Model IDs: mistralai/Mistral-7B-v0.1, Mistral-7B-Instruct-v0.1, google/gemma-7b. Mistral year parity ground truth is the model's own recalled birth year. (App. D, p.20-21)\n\nLIMITS\n- Authors concede extra compute (k paths). Δ is \"less precise\" for open-ended answers. Only the first token is branched.\n- Not shown: any test on frontier or chat models, any latency or cost figure, any head-to-head with few-shot CoT on GSM8K without a prompt. Models are 2023-24 pretrained (PaLM-2, Mistral-7B v0.1, Gemma-7B).\n- Table 7 shows zero-shot CoT prompting alone (75.1% on PaLM-2 L) beats prompt-free CoT-decoding (63.2%). The decoding trick matters for pretrained models and for studying intrinsic ability, not as a replacement for prompting.\n- Needs token-level logprobs and control of the first decoding step, which most hosted APIs do not offer. This is my inference, not stated in the paper.\n- Sports Understanding fell slightly (58.8 to 58.0).\n- Answer extraction relies on heuristics (last number, or the continuation after \"So the answer is\"). Ill-formed outputs are filtered.\n- The paper does not compare against a plain \"think step by step\" prompt on pretrained models other than in Table 7.\n\nBUILDS ON: Wei et al. 2022 (few-shot CoT); Kojima et al. 2022 (zero-shot CoT, \"So the answer is\"); Wang et al. 2023a (self-consistency); Jiang and Gupta 2019 (min-margin uncertainty); Cobbe et al. 2021a (GSM8K); Allen-Zhu and Li 2023 (year parity / knowledge manipulation); Chung et al. 2022 (instruction tuning with CoT); Suzgun et al. 2022 (BBH); McCoy et al. 2023 (pretraining distribution effects).\n\nCODE: none. The only formula is the confidence measure: Δ_{k,answer} = (1/|answer|) Σ_{x_t∈answer} [p(x_t^1 | x_<t) − p(x_t^2 | x_<t)] (p.4). The aggregation score is Δ̃_a = Σ_k Δ_{k,a}. Worked example in Table 9: the correct answer 18 has Δ = 0.994, 0.911, 0.584 and 0.999 (sum 3.5).\n\nFIGURES (captions only, no images viewed)\n- Fig 1 (p.2): the apples example, greedy gives \"5\" while paths 2 and 4 give \"8\" with higher certainty. This is the fastest way to explain the idea.\n- Fig 2 (p.5): branching at later decoding steps.\n- Fig 3: accuracy gains on PaLM-2, Mistral and Gemma across three tasks.\n- Fig 4 (p.7): GSM8K and year parity accuracy by PaLM-2 scale, greedy vs CoT-decoding.\n- Fig 5: effect of k. Fig 6 (App. C): k on Mistral.\n\nPROBLEMS: Extraction is clean apart from missing spaces and garbled math symbols. Chart values for Figs 3-6 are not extractable. Table 3 and Table 4 share the same figures (12.9 and 25.1). No embedded instructions found. For note 03-core-techniques: this is a decoding method, not a prompt technique. The paper's usable prompt-side finding is that prompt-free greedy is weak on reasoning, and that zero-shot CoT with CoT-decoding stacks to 87.0% on PaLM-2 L."
+ "type": "empirical",
+ "question": "Can LLMs reason effectively without prompting, and to what extent?",
+ "hypothesis": "CoT reasoning paths are inherent in pre-trained LLMs' top-k alternative decoding paths and are hidden by greedy decoding; a CoT in the path correlates with higher answer confidence.",
+ "contributions": [
+  "LLMs can reason by simple decoding changes, without prompting",
+  "The method gives a view of intrinsic reasoning ability without human priors from prompts",
+  "CoT-decoding selects CoT paths by answer confidence, improving over greedy decoding"
+ ],
+ "method": {
+  "summary": "At the first decoding step, branch over the top-k tokens (k=10), continue greedy decoding on each branch, then pick the path (or aggregate answers across paths) with the highest answer confidence, defined as the mean top-1 minus top-2 probability margin over answer tokens. Input is the plain 'Q: [question]\\nA:' format with no CoT prompt.",
+  "task": "reasoning decoding (math, commonsense, symbolic) without prompts",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": "test set (Table 7); first 100 questions for the manual CoT analysis and Table 2 ('top-100')",
+    "source": "Cobbe et al. 2021a",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Roy and Roth 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Year parity",
+    "role": "eval",
+    "size": "top 100 celebrity names",
+    "split": null,
+    "source": "names from Berglund et al. 2023 reversal-curse list; task from Allen-Zhu and Li 2023",
+    "preprocessing": "For Mistral, ground-truth year is what Mistral-7B itself returns when asked the birth year; names with no retrievable year dropped (<2% on inst-tuned)"
+   },
+   {
+    "name": "Coin Flip, Web of lies, Multi-step arithmetic (synthetic)",
+    "role": "eval",
+    "size": "100 examples per difficulty level, except Web-of-Lies (5) which uses the existing dataset",
+    "split": null,
+    "source": "Wei et al. 2022; Big-Bench-Hard (Suzgun et al. 2022)",
+    "preprocessing": null
+   },
+   {
+    "name": "Sports Understanding, Object Counting",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Big-Bench",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM-2 (XS, Small, Medium, Large; pre-trained and inst-tuned)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes": "parameter counts not given"
+    }
+   },
+   {
+    "name": "Mistral-7B (v0.1, pre-trained and Instruct-v0.1)",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hf_ids": "mistralai/Mistral-7B-v0.1, mistralai/Mistral-7B-Instruct-v0.1"
+    }
+   },
+   {
+    "name": "Gemma-7B (pre-trained)",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "hf_id": "google/gemma-7b"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "CoT-decoding: top-k tokens at first step, then greedy continuation; select max-Delta path or aggregate by sum of Delta per answer",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "PaLM-2: input length 256, max decode steps 128 (CoT-decoding); few-shot input 1024, output 256 for few-/zero-shot CoT. Mistral: 200 new tokens pre-trained / 400 inst-tuned on math; 50 / 100 on year parity",
+   "samples": "k=10 paths per question (default); single run, no seeds stated",
+   "prompting": "Q: [question]\\nA: (multi-step arithmetic uses raw input, e.g. '3+5-6='); Mistral inst-tuned: '[INST] question [/INST]'",
+   "retrieval": null,
+   "parameters": {
+    "k": "10 (default, first decoding position)",
+    "Delta": "mean over answer tokens of p(x1_t|x<t) - p(x2_t|x<t)",
+    "aggregation": "answer a maximizing sum over paths of Delta_k,a",
+    "answer_span": "last number / final option (Mistral); PaLM-2: extend output with 'So the answer is' and align",
+    "ill_formed_filter": "drop empty, max-length, question-mark-ending responses and (Mistral) training-data-like text",
+    "binary_tasks": "Coin Flip/Web of Lies: difference of probability mass over yes/true vs no/false"
+   },
+   "other": {
+    "compute": "Mistral/Gemma: A100 40GB, ~10-20 hours per task; PaLM-2: TPU v4, a few hours to a few days per job"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions with correct final answer from the selected path",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "greedy decoding",
+    "self-consistency without CoT prompt (10 paths)",
+    "top-k sampling",
+    "nucleus sampling",
+    "beam search",
+    "temperature sampling",
+    "zero-shot CoT prompting",
+    "few-shot CoT prompting",
+    "self-consistency with zero-shot CoT prompt"
+   ],
+   "protocol": "Single configuration per cell; no seeds, variance or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": "public Mistral and Gemma HF models; PaLM-2 not public",
+   "data": "public benchmarks; year-parity name list URL in footnote 3"
+  },
+  "prompts": [
+   {
+    "purpose": "default input format",
+    "text": "Q: [question]\\nA:",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "answer span alignment for PaLM-2",
+    "text": "So the answer is",
+    "where": "Sec 2.2, App D"
+   },
+   {
+    "purpose": "Mistral instruct format",
+    "text": "[INST] question [/INST]",
+    "where": "App D"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CoT-decoding beats greedy on GSM8K for Mistral-7B pre-trained",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 25.1,
+   "unit": "%",
+   "baseline_value": 9.9,
+   "n": null,
+   "setup": "GSM8K, Mistral-7B pre-trained, k=10, no prompt",
+   "quote": null,
+   "table": "Table 3, row CoT-decoding (10 paths), column Mistral-7B",
+   "note": null,
+   "where": "Table 3/4"
+  },
+  {
+   "claim": "CoT-decoding on PaLM-2 L GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 63.2,
+   "unit": "%",
+   "baseline_value": 34.8,
+   "n": null,
+   "setup": "GSM8K, PaLM-2 L pre-trained, k=10",
+   "quote": null,
+   "table": "Table 3, row CoT-decoding (10 paths), column PaLM-2 L",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Other decoding strategies do not help; sampling/beam are below greedy",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 7.5,
+   "unit": "%",
+   "baseline_value": 9.9,
+   "n": null,
+   "setup": "Mistral-7B pre-trained, GSM8K; temperature 0.7 shown (top-k 4.9, nucleus 6.4, beam 6.7)",
+   "quote": null,
+   "table": "Table 4, row Temperature sampling (T = 0.7)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Self-consistency without CoT prompt is only a small gain",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 12.9,
+   "unit": "%",
+   "baseline_value": 9.9,
+   "n": null,
+   "setup": "Mistral-7B pre-trained, GSM8K, 10 paths",
+   "quote": null,
+   "table": "Table 4, row Self-consistency w/o CoT prompt (10 paths)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Delta ranking beats probability ranking for extracting CoT paths on year parity",
+   "kind": "measured",
+   "source": null,
+   "metric": "Year parity acc",
+   "value": 95.0,
+   "unit": "%",
+   "baseline_value": 57.0,
+   "n": null,
+   "setup": "PaLM-2 L, top-10 paths",
+   "quote": null,
+   "table": "Table 2, row CoT-decoding, column Year Parity",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Delta ranking on GSM8K top-100",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 72.0,
+   "unit": "%",
+   "baseline_value": 44.0,
+   "n": null,
+   "setup": "PaLM-2 L, first 100 GSM8K questions, top-10 paths",
+   "quote": null,
+   "table": "Table 2, row CoT-decoding, column GSM8K (top-100)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Highest-confidence path among top-10 contains a CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "share with CoT",
+   "value": 88,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "manual check of first 100 GSM8K questions, PaLM-2 L",
+   "quote": "88% of them contain CoT paths",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2"
+  },
+  {
+   "claim": "Pre-trained PaLM-2 L with CoT-decoding approaches the inst-tuned model",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 63.2,
+   "unit": "%",
+   "baseline_value": 67.8,
+   "n": null,
+   "setup": "GSM8K, PaLM-2 L",
+   "quote": "CoT-decoding achieves 63.2% accuracy on the pre-trained PaLM-2 Large model, close to the performance of the instruction-tuned model of the same scale at 67.8%",
+   "table": null,
+   "note": "67.8 is the inst-tuned greedy figure",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "CoT-decoding also improves instruction-tuned Mistral-7B on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 38.2,
+   "unit": "%",
+   "baseline_value": 31.2,
+   "n": null,
+   "setup": "Mistral-7B inst-tuned, GSM8K",
+   "quote": null,
+   "table": "Table 5, row GSM8K CoT-decoding, column Inst-tuned",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "MultiArith gain on pre-trained Mistral-7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "MultiArith acc",
+   "value": 45.7,
+   "unit": "%",
+   "baseline_value": 14.3,
+   "n": null,
+   "setup": "Mistral-7B pre-trained",
+   "quote": null,
+   "table": "Table 5, row MultiArith CoT-decoding, column Pre-trained",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Year parity gain on pre-trained Mistral-7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "Year parity acc",
+   "value": 66.0,
+   "unit": "%",
+   "baseline_value": 35.0,
+   "n": null,
+   "setup": "Mistral-7B pre-trained",
+   "quote": null,
+   "table": "Table 5, row Year Parity CoT-decoding, column Pre-trained",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Path aggregation lifts CoT-decoding combined with zero-shot CoT prompt on PaLM-2 L, above self-consistency",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 87.0,
+   "unit": "%",
+   "baseline_value": 85.3,
+   "n": null,
+   "setup": "GSM8K test, PaLM-2 L, k=10",
+   "quote": null,
+   "table": "Table 7, row CoT-decoding (agg path) + zero-shot CoT-prompt, column PaLM-2 L",
+   "note": "baseline is self-consistency with zero-shot CoT prompt",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Mistral-7B with zero-shot CoT prompt + CoT-decoding aggregation",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 48.4,
+   "unit": "%",
+   "baseline_value": 39.4,
+   "n": null,
+   "setup": "GSM8K test, Mistral-7B, k=10",
+   "quote": null,
+   "table": "Table 7, row CoT-decoding (agg path) + zero-shot CoT-prompt, column Mistral-7B",
+   "note": "baseline self-consistency with zero-shot CoT prompt; zero-shot CoT alone 17.5",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Zero-shot CoT prompt alone on PaLM-2 L beats prompt-free CoT-decoding",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K acc",
+   "value": 75.1,
+   "unit": "%",
+   "baseline_value": 63.2,
+   "n": null,
+   "setup": "GSM8K test, PaLM-2 L",
+   "quote": null,
+   "table": "Table 7, row Zero-shot CoT prompting, column PaLM-2 L",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Gains shrink with task difficulty: multi-step arithmetic d2,l4",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": 16.0,
+   "unit": "%",
+   "baseline_value": 0.0,
+   "n": null,
+   "setup": "PaLM-2 L, 100 examples per level",
+   "quote": null,
+   "table": "Table 6, row CoT-decoding, column d2, l4",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Coin Flip 2 rounds",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": 94.0,
+   "unit": "%",
+   "baseline_value": 70.0,
+   "n": null,
+   "setup": "PaLM-2 L",
+   "quote": null,
+   "table": "Table 6, row CoT-decoding, column Coin Flip 2",
+   "note": "3 rounds 57.0 vs 53.0; 4 rounds 55.0 vs 48.0",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Sports Understanding: CoT-decoding is below greedy",
+   "kind": "measured",
+   "source": null,
+   "metric": "acc",
+   "value": 58.0,
+   "unit": "%",
+   "baseline_value": 58.8,
+   "n": null,
+   "setup": "PaLM-2 L",
+   "quote": null,
+   "table": "Table 6, row CoT-decoding, column Sports Und.",
+   "note": null,
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Extra compute: k decoded paths per question (O(k)) versus O(1) for greedy (Table 7)",
+  "Confidence (top-2 margin) may be less precise for open-ended answers (Sec 5)",
+  "Branching only at the first token; later branching not explored",
+  "Gains shrink on more synthetic/complex tasks; correct CoT paths rarer at 3+ step manipulation",
+  "With zero-shot CoT prompting, PaLM-2 L GSM8K (75.1) beats prompt-free CoT-decoding (63.2)",
+  "Only three model families, PaLM-2 not public; single run, no variance reported",
+  "Year-parity ground truth for Mistral comes from the model's own birth-year answers",
+  "Pre-trained and instruction-tuned models only, all pre-2024 (PaLM-2, Mistral-7B v0.1, Gemma-7B); no reasoning-trained models"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CoT-decoding",
+   "definition": "Branch on top-k first tokens, continue greedily, and select the path with the highest answer confidence Delta",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Delta (answer confidence)",
+   "definition": "average over answer tokens of p(top-1) - p(top-2)",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "few-shot CoT prompting this work removes",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero-shot CoT; 'So the answer is' answer alignment",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sampling+majority vote; fails without CoT prompt",
+   "quote": null
+  },
+  {
+   "work": "Minimum-margin active learning (Jiang and Gupta)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis of the margin confidence",
+   "quote": null
+  },
+  {
+   "work": "Physics of language models 3.2 (Allen-Zhu and Li)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "year parity task",
+   "quote": null
+  },
+  {
+   "work": "Reversal curse (Berglund et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "celebrity names",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "math benchmark",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "evaluates",
+   "note": "main model",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "open model",
+   "quote": null
+  },
+  {
+   "work": "Tuning language models by proxy (Liu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs extra tuned models",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (Chung et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "instruction tuning with CoT data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Illustration of CoT-decoding.",
+   "page": 2,
+   "why": "shows top-k first tokens and confidence on answers"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Examples of greedy decoded paths and alternative top-k paths over the PaLM-2 Large model.",
+   "page": 3,
+   "why": "CoT paths have high Delta"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "CoT-decoding reliably improves reasoning performance across model scales (PaLM-2)",
+   "page": 7,
+   "why": "scale curves vs greedy"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.2",
+   "snippet": "Delta_{k,answer} = (1/|answer|) * sum_{x_t in answer} [ p(x_t^1 | x_<t) - p(x_t^2 | x_<t) ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure data (Fig 3, 4, 5, 6) is not in text; numbers there not recorded",
+  "Dataset sizes for GSM8K/MultiArith/year parity not stated beyond 'top 100 names'",
+  "Table 2 greedy GSM8K (44.0, top-100) differs from Table 3 (34.8, full test)"
+ ]
 }

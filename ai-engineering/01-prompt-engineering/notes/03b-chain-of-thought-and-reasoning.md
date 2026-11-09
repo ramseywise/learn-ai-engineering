@@ -120,7 +120,7 @@ Practical reading: choose demonstrations that are long and on-topic, check inter
 *Image Source: Zhang et al. (2022)*
 
 Practical notes:
-- **Put reasoning in a parseable place** — a `<thinking>` block or an `# Analysis` section before `# Conclusion` ([02](02b-document-types-formatting-and-templates.md#choosing-the-document-type)) — so the app can strip it before showing the answer.
+- **Put reasoning in a parseable place** — a `<thinking>` block or an `# Analysis` section before `# Conclusion` ([2b](02b-document-types-formatting-and-templates.md#choosing-the-document-type)) — so the app can strip it before showing the answer.
 - **Reasoning must come first.** "Answer, then explain" gets you rationalization, not reasoning. Forbidding the work costs most. On the 1,000 algebra word problems of DRAW-1K, ChatGPT (January–February 2023) gave only wrong answers or "No Solution" on 84% of problems when the prompt demanded "Just provide the final number", against 20% when it could show its work. Failure rose with the number of additions and subtractions in the problem ([arXiv:2302.13814](https://arxiv.org/abs/2302.13814) (Shakarian et al., AAAI-MAKE 2023)). Each condition ran once, and the answer-only prompt was long and insistent, so part of the gap may be the instruction itself.
 - Variants worth knowing by name: **pause tokens** (fine-tune on a meaningless "pause" token, then insert ~10 after the question: the extra positions give earlier information time to integrate, buying compute without words — the model's "uh, um"), **Multimodal CoT** (two stages — generate a rationale from text + image, then infer the answer from it; a fine-tuned 738M model scored 90.5% on ScienceQA vs. ~76% for GPT-3.5 with CoT), **Graph prompting** (GraphPrompt, for graph-structured tasks — niche).
 
@@ -241,6 +241,19 @@ Twelve more variants report gains over plain CoT. They fall into three kinds: ch
 | Hypotheses-to-Theories ([arXiv:2310.07064](https://arxiv.org/abs/2310.07064), Zhu et al., 2023-10) | Run CoT on training examples, keep the rules that recur and are usually right, prepend the library | GPT-4, base-16/11/9 arithmetic: 57.4% to 78.4%; CLUTRR 50.6% to 64.3%. Random rules cut CLUTRR to 9.9% | Needs a model that retrieves rules well and some training examples; GPT-3.5 gains on arithmetic are marginal (+3.3 with CoT, +2.9 even with GPT-4's rules); borrowed GPT-4 rules helped only with least-to-most prompting (+11.7) and on CLUTRR |
 
 Two results are worth keeping from the table. First, incorrect implicit rules caused 65% of GPT-4's CoT errors on CLUTRR and 81% on base-16 arithmetic (100 test examples each), which is why a checked rule library helps where more sampling would repeat the same wrong rule. Second, the vote-or-compare variants (RankPrompt, PEDAL, multi-expert) replace [self-consistency](#self-consistency)'s majority vote with a model call, and each paper's own table shows a case where plain voting or CoT wins. Our extrapolation: add the extra calls only after a cost-matched baseline, such as the same number of self-consistency samples, loses on your eval.
+
+---
+
+## Faithful CoT
+
+<details><summary>Have a solver run the chain instead of the model</summary>
+
+**Faithful CoT.** A chain of thought can reach the right answer for reasons it does not state. Faithful CoT has the model write each step as a natural-language comment plus code, which a deterministic solver then runs. With code-davinci-002 and greedy decoding, GSM8K accuracy was 72.3 against 63.3 for chain of thought, and CLUTRR 58.9 against 48.5 (Table 1). Letting the model predict the answer instead of the solver cost 50.8 points on GSM8K (Table 4). It lost on StrategyQA (63.0 against 72.5), where 29% of 70 sampled failures were Datalog syntax errors. Codex has been retired and Table 1 is single runs ([doi:10.18653/v1/2023.ijcnlp-main.20](https://doi.org/10.18653/v1/2023.ijcnlp-main.20) (Lyu et al., IJCNLP 2023)).
+
+![Faithful CoT in two stages: Translation, where a language model turns a natural-language query into a reasoning chain of comments and symbolic code, and Problem Solving, where a deterministic solver runs the chain to give the answer](../sources/images/lyu-faithful-cot-fig2.png)
+*Image Source: Lyu et al., [Faithful Chain-of-Thought Reasoning](https://doi.org/10.18653/v1/2023.ijcnlp-main.20) (2023), Fig. 2*
+
+</details>
 
 ---
 

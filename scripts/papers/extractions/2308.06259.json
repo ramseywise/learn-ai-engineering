@@ -1,0 +1,562 @@
+{
+ "schema": 1,
+ "key": "2308.06259",
+ "pdf": "generative-ai/05-RL/sources/li-2023-self-alignment-instruction-backtranslation.pdf",
+ "bib": {
+  "title": "Self-Alignment with Instruction Backtranslation",
+  "authors": [
+   "Xian Li",
+   "Ping Yu",
+   "Chunting Zhou",
+   "Timo Schick",
+   "Omer Levy",
+   "Luke Zettlemoyer",
+   "Jason Weston",
+   "Mike Lewis"
+  ],
+  "first_author": "Li",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2308.06259",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 75081,
+  "chars_total": 75081,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a language model build a high-quality instruction-following dataset by labelling unlabelled web text with instructions and curating it itself, without distillation from stronger models?",
+ "hypothesis": "Some subset of human-written web text suits as gold responses to instructions, and a model can predict those instructions and select the high-quality pairs.",
+ "contributions": [
+  "Instruction backtranslation: self-augmentation (generate instructions for web text) plus iterative self-curation",
+  "Humpback models outperform other non-distilled LLaMa models on the Alpaca leaderboard",
+  "Scaling analysis showing quality-filtered augmented data scales better than other instruction datasets"
+ ],
+ "method": {
+  "summary": "A backward model p(x|y) finetuned on 3200 Open Assistant seed pairs generates instructions for 502k ClueWeb segments. A seed-finetuned model M0 rates each pair 1-5 by prompting; pairs with score>=k join seed data to train M1, which rescores to give M2 (two iterations). Seed and augmented data are tagged with different system prompts.",
+  "task": "instruction tuning via self-training on web data",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Open Assistant seed",
+    "role": "train",
+    "size": "3200 examples",
+    "split": null,
+    "source": "Open Assistant (K\u00f6pf et al., 2023), first turn, English, rank 0",
+    "preprocessing": null
+   },
+   {
+    "name": "ClueWeb English segments",
+    "role": "train",
+    "size": "502k segments (502133)",
+    "split": null,
+    "source": "ClueWeb22 English portion",
+    "preprocessing": "segments after HTML header; length 600-3000 chars; Jaccard n-gram dedup of sentences; header quality filters (empty, all uppercase, navigation text)"
+   },
+   {
+    "name": "Eval prompt set",
+    "role": "eval",
+    "size": "1130 unique prompts from Vicuna 80, Self-instruct 252, Open Assistant 188, Koala 156, HH_RLHF 129, LIMA 300, authors 64",
+    "split": "256 prompts (excluding AlpacaEval test) as dev set",
+    "source": "various",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaEval",
+    "role": "eval",
+    "size": "805 prompts",
+    "split": null,
+    "source": "Li et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Humpback",
+    "role": "proposed",
+    "params": "7B, 33B, 65B (LLaMA); 70B (LLaMa 2)",
+    "architecture": "decoder-only transformer",
+    "init_from": "pretrained LLaMA (Touvron 2023a); LLaMa 2 70B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "M0 seed model",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": "LLaMA finetuned on seed (instruction, output)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Backward model Myx",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": "LLaMA finetuned on (output, instruction) seed pairs",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "AlpacaEval judge; also compared as data selector in Table 9"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised finetuning, loss on output tokens only",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": "linear decay to 9e-6 at end of training",
+   "warmup": null,
+   "batch_size": "32 examples (8 for fewer than 3000 examples)",
+   "steps": "Table 18, 7B scaling runs: N=100:30, 800:300, 1600:600, 3200:500, 6400:600, 12800:600, 25600:1200, 51200:1600",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "0.1",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "iterations": "2 self-curation iterations, final M2",
+    "curated_sets": "A4 (score>=4) 195043 examples; A5 (score>=4.5) 41821 examples",
+    "final_data": "3k seed + 45k total examples (Table 3)",
+    "system_prompt_tags": "Sa = 'Answer in the style of an AI Assistant.' seed; Sw = 'Answer with knowledge from web search.' augmented"
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": "0.7",
+   "top_p": "0.9",
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "inference system prompt {Sa,Sw} concatenated gave best win rate (Table 5)",
+   "retrieval": null,
+   "parameters": {
+    "curation_threshold_k": "k=4 or 5 reported (A4: score>=4, A5: score>=4.5 per Sec 3.3)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AlpacaEval win rate",
+     "definition": "pairwise win rate vs text-davinci-003 judged by GPT-4",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "human pairwise preference",
+     "definition": "MTurk workers choose better/worse/tie, order randomized",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "zero-shot accuracy",
+     "definition": "perplexity of correct answer on SIQA, PIQA, Arc-E, Arc-C, OBQA, MMLU",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "scaling coefficient alpha",
+     "definition": "fit w = alpha log N + C of win rate on N examples",
+     "unit": null,
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "text-davinci-003",
+    "LIMA",
+    "Guanaco",
+    "OASST SFT/RLHF",
+    "Vicuna",
+    "WizardLLM",
+    "Alpaca-GPT4",
+    "LLaMa2 Chat",
+    "GPT-4",
+    "Claude",
+    "ChatGPT"
+   ],
+   "protocol": "GPT-4 judge via AlpacaEval; human eval with 29 MTurk workers screened from 1000 applicants (agreement >85% on 10 screening examples); single run, standard errors on some tables; no seeds stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "self-curation quality rating",
+    "text": "Below is an instruction from an user and a candidate answer. Evaluate whether or not the answer is a good example of how AI Assistant should respond to the user's instruction. Please assign a score using the following 5-point scale: 1-5 (rubric in Table 19: 1 incomplete/off-topic/forum-like; 2 addresses most asks but not directly; 3 helpful but not AI-assistant style; 4 AI-assistant perspective, minor room for improvement; 5 perfect answer). Please first provide a brief reasoning you used to derive the rating score, and then write \"Score: <rating>\" in the last line.",
+    "where": "Table 19, p26 (condensed; rubric paraphrased)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Humpback 65B (two iterations of instruction backtranslation) reaches 83.71% win rate vs text-davinci-003, best non-distilled LLaMa model, vs Guanaco 65B 71.80.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": 83.71,
+   "unit": "%",
+   "baseline_value": 71.8,
+   "n": null,
+   "setup": "AlpacaEval, 805 prompts, GPT-4 judge, LLaMA 65B, 3k annotated seed examples + 45k total",
+   "where": "Table 3, p7",
+   "note": null,
+   "table": "Table 3, row Humpback 65B, column Win Rate %"
+  },
+  {
+   "claim": "Humpback 33B reaches 79.84% win rate, above OASST RLHF 33B (66.52) and Guanaco 33B (65.96).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": 79.84,
+   "unit": "%",
+   "baseline_value": 66.52,
+   "n": null,
+   "setup": "AlpacaEval, GPT-4 judge, LLaMA 33B",
+   "where": "Table 3, p7",
+   "note": null,
+   "table": "Table 3, row Humpback 33B, column Win Rate %"
+  },
+  {
+   "claim": "Humpback on LLaMa 2 70B reaches 87.94% win rate, below LLaMa2 Chat 70B (92.66, 1.4m annotated examples).",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": 87.94,
+   "unit": "%",
+   "baseline_value": 92.66,
+   "n": null,
+   "setup": "AlpacaEval, GPT-4 judge",
+   "where": "Table 3, p7",
+   "note": null,
+   "table": "Table 3, row Humpback 70B, column Win Rate %"
+  },
+  {
+   "claim": "Instruction backtranslation data has the best data scaling coefficient (alpha 6.95) vs WizardLLM 5.69, Alpaca-GPT4 5.40, Open Assistant 4.43, LIMA 2.86.",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha",
+   "value": 6.95,
+   "unit": null,
+   "baseline_value": 5.69,
+   "n": null,
+   "setup": "7B LLaMa finetuned on N examples, win rate w = alpha log N + C vs text-davinci-003",
+   "where": "Table 2, p5",
+   "note": null,
+   "table": "Table 2, row Humpback (this work), column alpha"
+  },
+  {
+   "claim": "Training on augmented data without self-curation does not improve instruction following despite more data; high-quality self-curated subsets keep improving with scale (values only in Fig 2).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B LLaMa, data sizes 3200 to 25600, win rate vs text-davinci-003",
+   "where": "Sec 3.3, Fig 2",
+   "note": null,
+   "quote": "We find that training on augmented data without self-curation does not improve instruction following performance despite scaling up data quantity."
+  },
+  {
+   "claim": "Authors contrast their finding with the superficial alignment hypothesis: more high-quality data gives further gains.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.3",
+   "where": "Sec 3.3",
+   "note": null,
+   "quote": "Our results provide a contrasting observation that increasing the quantity of high-quality data provides further gains (whereas increased quantities of low-quality data does not)."
+  },
+  {
+   "claim": "System-prompt tagging helps: train with Sa/Sw tags and infer with combined {Sa,Sw} gives 66.47% vs 59.96% with no system prompt in training or inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": 66.47,
+   "unit": "%",
+   "baseline_value": 59.96,
+   "n": null,
+   "setup": "7B, win rate vs text-davinci-003 with standard error",
+   "where": "Table 5, p9",
+   "note": "Stated standard error 3.04 vs 3.09",
+   "table": "Table 5, row 1, column Win Rate (%)"
+  },
+  {
+   "claim": "Self-curation selection quality improves from M0 to M1: precision 0.44 to 0.52, recall 0.09 to 0.44; GPT-4 gets 0.88/0.92.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 0.44,
+   "unit": null,
+   "baseline_value": 0.09,
+   "n": null,
+   "setup": "250 example dev set, 20% positives, labelled by an author; win rate from 7B finetuned on 100 selected examples (35.71, 37.70, 41.04 for M0, M1, GPT-4)",
+   "where": "Table 9, p16",
+   "note": null,
+   "table": "Table 9, rows M0, M1, column Recall"
+  },
+  {
+   "claim": "Humpback 65B zero-shot MMLU is 59.0 vs 54.8 for LLaMA 65B zero-shot, but below LLaMA 65B 5-shot (63.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.0,
+   "unit": "%",
+   "baseline_value": 54.8,
+   "n": null,
+   "setup": "Zero-shot, perplexity-based",
+   "where": "Table 7, p15",
+   "note": null,
+   "table": "Table 7, row Humpback 65B 0-shot, column Average"
+  },
+  {
+   "claim": "Adding self-augmented data fixed failure cases of the seed model on 41 of 251 test prompts (16%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seed model M0 vs M0+A5, vs baseline, dev prompts",
+   "where": "App B",
+   "note": null,
+   "quote": "Adding self-augmented data improved the failure cases of the seed model for 16% of test prompts (41 out of 251)."
+  },
+  {
+   "claim": "Humpback is more accurate than base LLaMA at detecting bias in CrowS-Pairs (average 60.28 vs 50.0), but the authors say this does not imply it generates less biased text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 60.28,
+   "unit": "%",
+   "baseline_value": 50.0,
+   "n": null,
+   "setup": "CrowS-Pairs, nine categories",
+   "where": "Table 6, p13",
+   "note": null,
+   "table": "Table 6, row Average, column Humpback"
+  },
+  {
+   "claim": "Augmented data pool is 502133 segments; A5 subset has 41821 and A4 195043 examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": 41821,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ClueWeb English, 502k segments",
+   "where": "Table 1, p4",
+   "note": null,
+   "table": "Table 1, row Augmented data A5, column # examples"
+  },
+  {
+   "claim": "Instruction backtranslation: seed model predicts instructions for web text, then curates pairs by 1-5 self-rating, keeping score>=k.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "method",
+   "where": "Abstract",
+   "note": null,
+   "quote": "The seed model is used to construct training examples by generating instruction prompts for web documents (self-augmentation), and then selecting high quality examples from among these candidates (self-curation)."
+  }
+ ],
+ "limits": [
+  "Web-sourced augmented data may amplify biases; CrowS-Pairs measures bias detection, not generation (App A.1)",
+  "Safety not optimised; tested only on 30 sensitive prompts (App A.2)",
+  "Fails on precise format constraints and out-of-distribution content such as ASCII art (Table 17)",
+  "Self-curation precision is low (0.44-0.52) for M0/M1 (Table 9)",
+  "Optimizer, hardware, compute, seeds and code/data availability not stated",
+  "Larger corpora not tried; Humpback 70B still below LLaMa2 Chat",
+  "Mostly GPT-4-judged win rates; LLM judge"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "instruction backtranslation",
+   "definition": "self-augment (generate instructions for unlabelled data) then self-curate (select high-quality pairs), iterated",
+   "where": "Sec 2"
+  },
+  {
+   "term": "self-alignment",
+   "definition": "utilizing the model to improve itself and align its response with desired behaviors",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Sennrich et al. back-translation",
+   "year": 2015,
+   "arxiv": "1511.06709",
+   "relation": "extends",
+   "note": "inspiration for method",
+   "quote": null
+  },
+  {
+   "work": "LIMA",
+   "year": 2023,
+   "arxiv": "2305.11206",
+   "relation": "contradicts",
+   "note": "contrasts superficial alignment hypothesis; also baseline",
+   "quote": null
+  },
+  {
+   "work": "Open Assistant",
+   "year": 2023,
+   "arxiv": "2304.07327",
+   "relation": "uses-data",
+   "note": "seed data",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "evaluation",
+   "quote": null
+  },
+  {
+   "work": "Constitutional AI",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "related",
+   "note": "self-alignment from model feedback",
+   "quote": null
+  },
+  {
+   "work": "LongForm (K\u00f6ksal et al.)",
+   "year": 2023,
+   "arxiv": "2304.08460",
+   "relation": "related",
+   "note": "concurrent; uses InstructGPT to generate instructions, no curation",
+   "quote": null
+  },
+  {
+   "work": "Self-instruct",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "model-generated instructions and outputs",
+   "quote": null
+  },
+  {
+   "work": "Guanaco",
+   "year": 2023,
+   "arxiv": "2305.14314",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Tagged back-translation (Caswell et al.)",
+   "year": 2019,
+   "arxiv": "1906.06442",
+   "relation": "uses-method",
+   "note": "system prompt tagging of synthetic data",
+   "quote": null
+  },
+  {
+   "work": "AlpaGasus",
+   "year": 2023,
+   "arxiv": "2307.08701",
+   "relation": "related",
+   "note": "concurrent data selection with ChatGPT",
+   "quote": null
+  },
+  {
+   "work": "Principle-driven self-alignment (Sun et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of our instruction backtranslation method.",
+   "page": 2,
+   "why": "shows the self-augment/self-curate loop M0 to M1 to M2"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Evaluating self-augmented data of different data size and quality using self-curation.",
+   "page": 5,
+   "why": "quality over quantity"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparing data efficiency of different instruction tuning datasets.",
+   "page": 6,
+   "why": "scaling curves"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures 2, 3, 5, 7 report win rates only as plots; Fig 4 human-eval numbers were not mapped to rows reliably so omitted from results",
+  "Table 19 prompt condensed in extraction JSON",
+  "No embedded instructions found"
+ ]
+}

@@ -5,6 +5,7 @@ sources:
   - https://arxiv.org/abs/1610.02413
   - https://arxiv.org/abs/1703.00056
   - https://doi.org/10.1089/big.2016.0047
+  - https://arxiv.org/abs/1610.07524
   - https://arxiv.org/abs/1609.05807
   - https://doi.org/10.4230/LIPIcs.ITCS.2017.43
   - https://arxiv.org/abs/1701.08230
@@ -98,6 +99,8 @@ B against A: 0.469 [0.430, 0.512]
 C against A: 0.806 [0.714, 0.910]
 ```
 
+The delta method turns the counts' variances into a standard error for a ratio of two rates, here on the log scale; it is derived in [DA 02/04](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#ratio-metrics-the-delta-method).
+
 ### The four-fifths rule: what it is
 
 Applies to: US federal employment selection. The Uniform Guidelines at [29 CFR 1607.4(D)](https://www.law.cornell.edu/cfr/text/29/1607.4) say a rate "less than four-fifths (4/5) (or eighty percent)" of the highest group's is generally regarded as evidence of adverse impact. The same paragraph then limits itself: "Smaller differences in selection rate may nevertheless constitute adverse impact, where they are significant in both statistical and practical terms or where a user's actions have discouraged applicants disproportionately", and "Greater differences in selection rate may not constitute adverse impact where the differences are based on small numbers and are not statistically significant".
@@ -163,7 +166,7 @@ Group B's rate is half of A's and its TPR is two-thirds of A's. The numbers answ
 
 A score is **calibrated within groups** if, among people scored at s in any group, a share s have the outcome. Then a score means the same thing whoever holds it. [Note 13](13-automate-review-or-reject.md#calibration-is-the-precondition) needed calibration so thresholds could be priced. Here the check is run per group: bin the score and compare the observed rate across groups at the same score.
 
-**Predictive parity** is the thresholded cousin: PPV equal across groups. A calibrated score doesn't guarantee it at a cutoff, as Chouldechova notes, because the groups can sit at different places within the bins above the cutoff.
+**Predictive parity** is the thresholded cousin: PPV equal across groups. A calibrated score doesn't guarantee it at a cutoff, as Chouldechova's long version notes ([arXiv:1703.00056](https://arxiv.org/abs/1703.00056)), because the groups can sit at different places within the bins above the cutoff.
 
 Calibration has a hole we will come back to: it is only calibration against the label you have.
 
@@ -189,6 +192,8 @@ print(round(fpr(0.4, 0.6, 0.7), 3), round(fpr(0.3, 0.6, 0.7), 3))
 ```text
 0.311 0.2
 ```
+
+Her short version ([arXiv:1610.07524](https://arxiv.org/abs/1610.07524), Chouldechova, FATML 2016 workshop, eq. 2.4) gives the case. On ProPublica's Broward County COMPAS data, two-year recidivism is 51% for Black and 39% for White defendants, and **FPR is 45% against 23%, FNR 28% against 48%**, with cutoff and sample size unstated. Under a two-level penalty, the penalty gap among people who don't reoffend is (t_H - t_L)(FPR_b - FPR_w).
 
 **Kleinberg's result.** [arXiv:1609.05807](https://arxiv.org/abs/1609.05807) (Kleinberg, Mullainathan and Raghavan, [ITCS 2017](https://doi.org/10.4230/LIPIcs.ITCS.2017.43)) works on the score, with no threshold. Take calibration within groups, and call the average score among people without the outcome x, and among people with it y. Balance means x matches across groups, and so does y. This is equalized odds stated on the score rather than at a cutoff. Calibration forces a line in each group, since the average score must equal the base rate:
 

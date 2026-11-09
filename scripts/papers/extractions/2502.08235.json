@@ -1,0 +1,575 @@
+{
+ "schema": 1,
+ "key": "2502.08235",
+ "pdf": "generative-ai/03-agentic-foundations/sources/cuadron-2025-danger-overthinking.pdf",
+ "bib": {
+  "title": "The Danger of Overthinking: Examining the Reasoning-Action Dilemma in Agentic Tasks",
+  "authors": [
+   "Alejandro Cuadron",
+   "Dacheng Li",
+   "Wenjie Ma",
+   "Xingyao Wang",
+   "Yichuan Wang",
+   "Siyuan Zhuang",
+   "Shu Liu",
+   "Luis Gaspar Schroeder",
+   "Tian Xia",
+   "Huanzhi Mao",
+   "Nicholas Thumiger",
+   "Aditya Desai",
+   "Ion Stoica",
+   "Ana Klimovic",
+   "Graham Neubig",
+   "Joseph E. Gonzalez"
+  ],
+  "first_author": "Cuadron",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2502.08235",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 59394,
+  "chars_total": 59394,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Do large reasoning models favour internal reasoning over environmental interaction in agentic tasks, and does that hurt task performance?",
+ "hypothesis": "Excess reliance on internal simulation over environment feedback (overthinking) lowers issue resolution, and more so for reasoning models.",
+ "contributions": [
+  "Define the Reasoning-Action Dilemma and overthinking, with three patterns (Analysis Paralysis, Rogue Actions, Premature Disengagement)",
+  "An LLM-judge overthinking score validated against four experts",
+  "Analysis of 4018 trajectories (stated in abstract; 3908 in Section 5) released as open-source dataset and framework",
+  "Selection by lowest overthinking score cuts cost 43% with near-equal resolution"
+ ],
+ "method": {
+  "summary": "19 models (reasoning and non-reasoning) run as CodeAct agents in OpenHands on SWE-bench Verified; each trajectory is scored 0-10 for overthinking by a Claude 3.5 Sonnet judge that does not see the outcome. Scores are regressed against resolution rate, compared across model type, size, effort and function calling, and used to pick the lowest-overthinking of k samples.",
+  "task": "software-engineering agent issue resolution (SWE-bench Verified)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SWE-bench Verified",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Jimenez et al. 2024; OpenAI 2024 (Verified subset)",
+    "preprocessing": null
+   },
+   {
+    "name": "Expert annotation set",
+    "role": "eval",
+    "size": "20 randomly selected model traces",
+    "split": "scored by four expert annotators",
+    "source": "authors",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Claude 3.5 Sonnet (Oct 2024)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "200K (200k in Table 5)",
+    "other": {
+     "temperature": "0"
+    }
+   },
+   {
+    "name": "o1 (Dec 2024; low/high reasoning effort; with and without native FC)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "200k",
+    "other": {}
+   },
+   {
+    "name": "o1-mini, GPT-4o, GPT-4o-mini, Claude 3.5 Sonnet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k (o1-mini, GPT-4o, mini); 200k (Sonnet)",
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1, DeepSeek-V3",
+    "role": "evaluated",
+    "params": "671B",
+    "architecture": "MoE (V3); R1 based on V3",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k",
+    "other": {}
+   },
+   {
+    "name": "R1-Distill-Qwen 32B/14B/7B/1.5B and Qwen2.5-Instruct 32B/14B/7B/1.5B",
+    "role": "evaluated",
+    "params": "32B, 14B, 7B, 1.5B",
+    "architecture": "dense",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k",
+    "other": {}
+   },
+   {
+    "name": "QwQ-32B preview, Sky-T1-32B",
+    "role": "evaluated",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k",
+    "other": {
+     "note": "Table 5 lists Sky-T1-32B as non-reasoning, QwQ distillation; Fig 1 labels Sky-T1-R and Sky-T1-NR"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0 for the judge; agent models' temperature not stated",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Lowest Overthinking@k and Pass@k use k=1..4 samples of o1 low (and o1 high); other models' runs not stated; 3908 trajectories scored in Section 5",
+   "prompting": "CodeAct scaffold in OpenHands, with tool descriptions and usage examples; native function calling for FC models, structured text otherwise; judge prompt in Appendix A",
+   "retrieval": null,
+   "parameters": {
+    "reasoning_effort": "low or high for o1",
+    "judge_temperature": "0",
+    "k": "1 to 4"
+   },
+   "other": {
+    "max_iterations": null,
+    "cost": "o1 high $1,400 vs o1 low $400 for the run"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Overthinking score",
+     "definition": "0-10 rating by Claude 3.5 Sonnet judge of a trajectory for Analysis Paralysis, Rogue Actions, Premature Disengagement; judge does not see whether the issue was resolved",
+     "unit": "score 0-10",
+     "higher_is_better": false
+    },
+    {
+     "name": "Resolved issues",
+     "definition": "percentage of SWE-bench Verified issues resolved",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@k",
+     "definition": "percentage of tasks where at least one successful solution is found among k sampled trajectories",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Lowest Overthinking@k",
+     "definition": "select the trajectory with the lowest overthinking score among k samples and report the percentage of selected trajectories that are successful",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "o1 high reasoning effort",
+    "o1 low reasoning effort",
+    "non-reasoning counterparts"
+   ],
+   "protocol": "Linear regression of resolution rate on mean overthinking score across models, separately for reasoning and non-reasoning groups (n = number of models, not stated); judge validated by Spearman correlation against expert mean scores; Wilson score 90% CI for Pass@k; one table mentions a t-test (p>0.05, context-window comparison)"
+  },
+  "availability": {
+   "code": "https://github.com/AlexCuadron/Overthinking",
+   "weights": null,
+   "data": "all trajectories with overthinking scores and reasoning released (same repo)"
+  },
+  "prompts": [
+   {
+    "purpose": "Overthinking judge prompt (summary; full text in appendix)",
+    "text": "You are an AI judge focused on detecting when models prefer their internal reasoning chain over interacting with the environment. <INTERACTION> trajectory goes here </INTERACTION> ... <SCORING SYSTEM (0-10)> 0-3: Always interacting with the environment; 4-7: Sometimes relies too much on their internal reasoning chain, but still interacts with the environment; 8-10: Completely relies on their internal reasoning chain ... six worked examples (persistent retries 0, thoughtful planning 0, stuck in loop 0, analysis paralysis 10, premature disengagement 10, rogue actions 10) ... Format your response as: <answer>{\"overthinking_score\": \"[0-10]\", \"reasoning\": \"...\"}</answer>",
+    "where": "Appendix A, pp 13-15"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we employ Claude Sonnet 3.5 as the evaluation model and configure it with a temperature of 0",
+    "where": "Section 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Higher overthinking scores go with lower issue resolution for reasoning models (regression slope).",
+   "kind": "measured",
+   "source": null,
+   "metric": "regression slope",
+   "value": -7.894,
+   "unit": "beta1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; per-model mean overthinking score vs resolved %, reasoning models",
+   "quote": null,
+   "table": "Table 1, row Reasoning, column beta1 (R2 0.892, p 0.000)",
+   "note": null,
+   "where": "Table 1 / Fig 1"
+  },
+  {
+   "claim": "Same for non-reasoning models, with a steeper slope.",
+   "kind": "measured",
+   "source": null,
+   "metric": "regression slope",
+   "value": -15.938,
+   "unit": "beta1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; non-reasoning models",
+   "quote": null,
+   "table": "Table 1, row Non-Reasoning, column beta1 (R2 0.839, p 0.010)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Reasoning models have higher mean overthinking scores than non-reasoning models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean overthinking score",
+   "value": 3.505,
+   "unit": "score 0-10 (mean \u00b1 sd 1.774)",
+   "baseline_value": 2.228,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; reasoning models vs non-reasoning 2.228 \u00b1 0.751",
+   "quote": null,
+   "table": "Table 2, row Reasoning Models, column Value",
+   "note": "Text calls the difference 'nearly three times' and cites Table 3 for it; the data are in Table 2 (3.505/2.228 is about 1.6x).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "o1 with FC and high effort resolves far more issues than without FC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolved issues",
+   "value": 47.7,
+   "unit": "%",
+   "baseline_value": 29.1,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; o1 high effort, native function calling vs without",
+   "quote": "increasing the performance score from\n29.1% to 47.7%, while simultaneously reducing the average\noverthinking score from 2.43 to 1.05",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Native FC lowers o1 high overthinking score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean overthinking score",
+   "value": 1.05,
+   "unit": "score 0-10",
+   "baseline_value": 2.43,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; o1 high with FC vs without (2.43)",
+   "quote": "reducing the average\noverthinking score from 2.43 to 1.05",
+   "table": null,
+   "note": "Table 4 prints o1 High as 2.426 and o1 Low as 2.774.",
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "On BFCL multi-turn the FC switch moved o1 much less.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BFCL multi-turn accuracy",
+   "value": 41,
+   "unit": "%",
+   "baseline_value": 36,
+   "n": null,
+   "setup": "BFCL multi-turn, o1 FC vs non-FC (36%)",
+   "quote": "shows a modest improvement\nfrom 36% to 41%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Picking the lower-overthinking of two o1-low samples resolves 27.3% at $800, 57% of o1 high's $1,400.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Lowest Overthinking@2",
+   "value": 27.3,
+   "unit": "%",
+   "baseline_value": 29.1,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; o1 low, k=2, Lowest Overthinking@2",
+   "quote": "achieve a 27.3% resolution rate while consuming only 57% of the high-\nreasoning configuration\u2019s cost ($800 vs $1,400)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.6 / Fig 3"
+  },
+  {
+   "claim": "With three samples, Lowest Overthinking@3 beats o1 high.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Lowest Overthinking@3",
+   "value": 30.3,
+   "unit": "%",
+   "baseline_value": 29.1,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; o1 low, k=3",
+   "quote": "we surpass the high-reasoning\nbaseline (30.3% vs 29.1%) while still saving $200",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.6"
+  },
+  {
+   "claim": "o1 high effort resolves 29.1% at $1,400 vs low effort 21.0% at $400.",
+   "kind": "measured",
+   "source": null,
+   "metric": "resolved issues",
+   "value": 29.1,
+   "unit": "%",
+   "baseline_value": 21.0,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; o1 reasoning effort high vs low",
+   "quote": "high reasoning effort achieves a 29.1% resolution rate\nat $1,400, while the low reasoning variant reaches 21.0% at\n$400",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.6"
+  },
+  {
+   "claim": "LLM judge agrees with four experts on 20 traces.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman correlation",
+   "value": 0.8,
+   "unit": "Spearman rho",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 random traces, 4 experts, Sonnet 3.5/o1-mini/o1/QwQ points in Fig 5",
+   "quote": "Spearman  = 0.800",
+   "table": null,
+   "note": "Quote is the figure text; the symbol rho is lost in extraction.",
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Smaller models in a family overthink more; DS-R1 family exceeds Qwen2.5 family.",
+   "kind": "measured",
+   "source": null,
+   "metric": "family mean overthinking",
+   "value": 6.7,
+   "unit": "score (\u00b1 1.656)",
+   "baseline_value": 5.001,
+   "n": null,
+   "setup": "R1-Distill-Qwen vs Qwen2.5-Instruct, 32B/14B/7B; Qwen2.5 family 5.001 \u00b1 1.732",
+   "quote": null,
+   "table": "Table 3, row DS-R1 Family, column Value",
+   "note": "Fig 6 axis shows scores 3-8; Table 3 means differ in scale from Table 2 means.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Low-effort o1 has a higher overthinking score than high-effort o1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean overthinking score",
+   "value": 2.774,
+   "unit": "score (\u00b1 3.081)",
+   "baseline_value": 2.426,
+   "n": null,
+   "setup": "SWE-bench Verified, OpenHands CodeAct single-agent scaffold; o1 low vs o1 high 2.426 \u00b1 2.880",
+   "quote": null,
+   "table": "Table 4, row o1 Low, column Value",
+   "note": "Text says 'o1 models with low reasoning effort demonstrate 35% higher overthinking scores'; Table 4 values differ by about 14% (2.774/2.426).",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Context window size shows no significant correlation with overthinking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean overthinking score",
+   "value": 2.31,
+   "unit": "score (\u00b1 0.42)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-32B vs QwQ-32B 2.28 \u00b1 0.39, p>0.05",
+   "quote": "overthinking scores of 2.31 \u00b1 0.42 and 2.28\n\u00b1 0.39 respectively (p > 0.05)",
+   "table": null,
+   "note": "Text says Qwen2.5-32B has 32K context; Table 5 says 128k.",
+   "where": "Sec 5.5"
+  },
+  {
+   "claim": "Abstract headline: lowest-overthinking selection improves performance almost 30% and cuts cost 43%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": 43,
+   "unit": "% cost reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "o1 low k=2 vs o1 high",
+   "quote": "improve model perfor-\nmance by almost 30% while reducing compu-\ntational costs by 43%",
+   "table": null,
+   "note": "Conclusion says improvement of 25%; trajectory count is 4018 in abstract and 3908 in Sec 5 and Conclusion.",
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "Single benchmark (SWE-bench Verified) and a single scaffold (CodeAct in OpenHands); authors ask how it generalises across domains",
+  "o1 reasoning tokens are hidden, so the score uses only observable behaviour",
+  "Judge validated on only 20 traces and four experts; Spearman 0.800",
+  "Regression is across about a dozen model points, with model type, size, and training confounded",
+  "Authors concede function calling alone does not explain the gain (BFCL 36% to 41%) and that the smaller-model explanation needs further investigation",
+  "Mitigations (lowest-overthinking selection) address symptoms, not causes; requires multiple samples and costs",
+  "Internal inconsistencies: 4018 vs 3908 trajectories; 35% vs Table 4; 30% vs 25%; Table 2 vs Table 3 reference; context 32K vs 128k",
+  "Agent temperature, max iterations, per-model sample counts and seeds not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Overthinking",
+   "definition": "the tendency of an LRM to rely excessively on internal reasoning while failing to seek or integrate essential external feedback",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "Reasoning-Action Dilemma",
+   "definition": "models must choose between engaging directly with their environment or relying on internal reasoning about potential actions and their hypothetical consequences",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Analysis Paralysis",
+   "definition": "agents become stuck in excessive planning",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Rogue Actions",
+   "definition": "agents generate multiple actions on the same iteration without waiting for feedback",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Premature Disengagement",
+   "definition": "agents abandon or conclude tasks based on internal simulation without environmental validation",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OpenHands",
+   "year": 2024,
+   "arxiv": "2407.16741",
+   "relation": "uses-method",
+   "note": "agent framework",
+   "quote": null
+  },
+  {
+   "work": "CodeAct (Executable code actions elicit better LLM agents)",
+   "year": 2024,
+   "arxiv": "2402.01030",
+   "relation": "uses-method",
+   "note": "scaffold",
+   "quote": null
+  },
+  {
+   "work": "SWE-bench",
+   "year": 2024,
+   "arxiv": "2310.06770",
+   "relation": "uses-data",
+   "note": "benchmark (Verified subset)",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge with MT-Bench",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "uses-method",
+   "note": "judge method",
+   "quote": null
+  },
+  {
+   "work": "Do not think that much for 2+3=? (Chen et al.)",
+   "year": 2024,
+   "arxiv": "2412.21187",
+   "relation": "contradicts",
+   "note": "they suggest token usage indicates overthinking; here more reasoning tokens lowered overthinking",
+   "quote": null
+  },
+  {
+   "work": "Berkeley Function Calling Leaderboard",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "multi-turn FC comparison",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "evaluates",
+   "note": "model",
+   "quote": null
+  },
+  {
+   "work": "SWE-agent",
+   "year": 2024,
+   "arxiv": "2405.15793",
+   "relation": "related",
+   "note": "background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Higher overthinking scores correlate with lower issue resolution rates across all models",
+   "page": 1,
+   "why": "Shows the regression for reasoning vs non-reasoning at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Performance comparison of Pass@k and Lowest Overthinking@k on SWE-bench Verified",
+   "page": 2,
+   "why": "Shows the cost/performance trade-off of selection"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Three distinct patterns of overthinking behavior",
+   "page": 4,
+   "why": "Concrete examples of the three failure patterns"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure data (Fig 1, 3, 5, 6) are only partly recoverable as text",
+  "Spearman rho symbol lost in text extraction",
+  "No embedded instructions found"
+ ]
+}

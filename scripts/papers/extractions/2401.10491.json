@@ -1,0 +1,638 @@
+{
+ "schema": 1,
+ "key": "2401.10491",
+ "pdf": "generative-ai/05-RL/sources/wan-2024-knowledge-fusion-large-language-models.pdf",
+ "bib": {
+  "title": "Knowledge Fusion of Large Language Models",
+  "authors": [
+   "Fanqi Wan",
+   "Xinting Huang",
+   "Deng Cai",
+   "Xiaojun Quan",
+   "Wei Bi",
+   "Shuming Shi"
+  ],
+  "first_author": "Wan",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2401.10491",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 80363,
+  "chars_total": 80363,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the knowledge of several structurally different LLMs be fused into one target LLM by distilling their combined next-token distributions through light continual training?",
+ "hypothesis": "After fusion the target model will surpass any of the source models in performance.",
+ "contributions": [
+  "Introduce knowledge fusion of LLMs: externalise the knowledge of multiple source LLMs via their generative distributions and transfer it to a target LLM",
+  "Token alignment by minimum edit distance (MinED) and two fusion functions (MinCE, AvgCE)",
+  "Experiments with Llama-2, OpenLLaMA and MPT on 42 tasks (reasoning, commonsense, code), plus comparison with ensemble and weight merging"
+ ],
+ "method": {
+  "summary": "Run K source LLMs on each MiniPile text, align their token-level distribution matrices (MinED), fuse them (MinCE picks the source with lowest cross-entropy to the gold tokens), and continually train a Llama-2 7B target with L = lambda*L_CLM + (1-lambda)*L_Fusion, lambda 0.9. Evaluated on BBH, Common Sense and MultiPL-E.",
+  "task": "multi-teacher distillation by continual pre-training (knowledge fusion)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MiniPile",
+    "role": "train",
+    "size": "about 1 million documents, 22 domains, 1.8 billion tokens",
+    "split": "single epoch",
+    "source": "curated from The Pile by E5-Large embeddings, K-means clustering and cluster filtering",
+    "preprocessing": "sequence packing with EOS separators; max length 2048"
+   },
+   {
+    "name": "Big-Bench Hard",
+    "role": "eval",
+    "size": "27 tasks (23 multiple-choice, 4 free-form)",
+    "split": null,
+    "source": "Suzgun et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Common Sense (ARC-e, ARC-c, BoolQ, HellaSwag, OpenBookQA)",
+    "role": "eval",
+    "size": "5 tasks",
+    "split": null,
+    "source": "lm-eval-harness",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiPL-E",
+    "role": "eval",
+    "size": "10 languages, HumanEval category",
+    "split": null,
+    "source": "Cassano et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "TriviaQA, DROP, LAMBADA, IWSLT2017, SciBench",
+    "role": "eval",
+    "size": "5 tasks",
+    "split": null,
+    "source": "App D",
+    "preprocessing": null
+   },
+   {
+    "name": "The Pile domains (PhilPapers, NIH ExPorter, USPTO Backgrounds)",
+    "role": "train",
+    "size": "1B tokens per domain for domain models; 0.1B tokens sampled for FuseLLM",
+    "split": null,
+    "source": "The Pile",
+    "preprocessing": null
+   },
+   {
+    "name": "RedPajama",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Computer 2023",
+    "preprocessing": "BPB per instance in 7 domains (App G)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-2 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "target starts from the same pre-trained Llama-2 7B weights as the source",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenLLaMA 7B",
+    "role": "teacher",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MPT 7B",
+    "role": "teacher",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FuseLLM",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "Llama-2 7B continually trained",
+    "init_from": "Llama-2 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens (training max length)",
+    "other": {}
+   },
+   {
+    "name": "Llama-2 13B",
+    "role": "teacher",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "teacher for the Llama-2 KD baseline"
+    }
+   },
+   {
+    "name": "Pythia 1B",
+    "role": "base",
+    "params": "1B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Sec 4.6 simulation"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = lambda*L_CLM + (1-lambda)*L_Fusion, lambda = 0.9 (static); L_Fusion divergence between target distribution Q_t and fused P_t; MinCE fusion default",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.95, gradient clipping 1.0",
+   "lr": "1e-5 (maximum)",
+   "lr_schedule": "cosine",
+   "warmup": "warmup ratio 0.008",
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "1",
+   "tokens": "inferred: about 1.57B tokens per Fig 2 x-axis end for the BBH curve; MiniPile is 1.8B tokens",
+   "seq_len": "2048 (maximum length, with packing)",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single node, 8 NVIDIA A100 GPUs, 40GB each",
+   "compute": null,
+   "wall_clock": "approximately 33 hours",
+   "seeds": null,
+   "other": {
+    "framework": "Huggingface Transformers with FlashAttention",
+    "divergence_D": "not named in Sec 3 beyond KL being equivalent to CLM; Eq 4 leaves D abstract",
+    "teacher_forward_passes": "source distributions computed for every training text; storage or on-the-fly not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "MultiPL-E pass@1 from 20 generated samples per question; no repeated runs or seeds stated for other benchmarks",
+   "prompting": "BBH few-shot CoT (follows Wang et al. 2023b; shot count not stated); CS zero-shot likelihood; MultiPL-E zero-shot; DROP and SciBench few-shot CoT; TriviaQA, LAMBADA, IWSLT2017 zero-shot",
+   "retrieval": null,
+   "parameters": {
+    "lambda": "0.9 static",
+    "fusion_function": "MinCE",
+    "alignment": "MinED",
+    "dynamic_lambda_alt": "linear 0.7 to 1.0"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact match accuracy (BBH, DROP, LAMBADA, TriviaQA, SciBench)",
+     "definition": "exact match of generated answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (Common Sense)",
+     "definition": "option with highest likelihood given context, lm-eval-harness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@1 (MultiPL-E)",
+     "definition": "from 20 generated samples per question, bigcode-evaluation-harness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Bits per UTF-8 byte (BPB)",
+     "definition": "perplexity per byte as in The Pile",
+     "unit": "BPB",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU (IWSLT2017)",
+     "definition": "BLEU",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Vicuna Benchmark",
+     "definition": "GPT-4 judge scores each answer 1 to 10",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-2 7B",
+    "OpenLLaMA 7B",
+    "MPT 7B",
+    "Llama-2 CLM (continued training on MiniPile with CLM only)",
+    "Llama-2 KD (distilled from Llama-2 13B)",
+    "Ensemble and weight merging (Pythia 1B experiment)",
+    "LLM-Blender"
+   ],
+   "protocol": "Single training run per configuration; no seeds, variance or significance tests reported. Relative improvements are computed against Llama-2 7B."
+  },
+  "availability": {
+   "code": "https://github.com/fanqiwan/FuseLLM",
+   "weights": "public at the same repository",
+   "data": "public at the same repository"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "MiniPile comprises approximately 1 million documents across 22 domains and 1.8 billion tokens",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FuseLLM improves Big-Bench Hard average (27 tasks, few-shot CoT, exact match) by 5.16% relative over Llama-2 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH EM accuracy, relative gain",
+   "value": "5.16",
+   "unit": "% relative",
+   "baseline_value": "39.70 (Llama-2); FuseLLM 41.75",
+   "n": null,
+   "setup": "Target Llama-2 7B, sources Llama-2 7B + OpenLLaMA 7B + MPT 7B, MinCE fusion, MinED alignment, lambda 0.9, continual training 1 epoch on MiniPile (1.8B tokens), single run",
+   "note": null,
+   "where": "Sec 4.2, Table 1",
+   "quote": "FUSELLM demonstrates an average relative performance gain of 5.16% over the original Llama-2 across all 27 tasks"
+  },
+  {
+   "claim": "Absolute BBH average: FuseLLM 41.75 vs Llama-2 39.70 (about 2.05 points).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH EM accuracy",
+   "value": "41.75",
+   "unit": "%",
+   "baseline_value": "39.70",
+   "n": null,
+   "setup": "Target Llama-2 7B, sources Llama-2 7B + OpenLLaMA 7B + MPT 7B, MinCE fusion, MinED alignment, lambda 0.9, continual training 1 epoch on MiniPile (1.8B tokens), single run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Avg. 27 Tasks, column FUSELLM"
+  },
+  {
+   "claim": "Plain continual training on the same corpus (Llama-2 CLM) gives only +1.86% relative on BBH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH relative gain",
+   "value": "1.86",
+   "unit": "% relative",
+   "baseline_value": "39.70",
+   "n": null,
+   "setup": "Llama-2 7B continually trained on MiniPile with CLM loss only",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Llama-2 CLM shows a relative improvement of 1.86% compared to Llama-2"
+  },
+  {
+   "claim": "Distilling from a single Llama-2 13B into Llama-2 7B gives +2.97% relative on BBH, below FuseLLM's 5.16%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH relative gain",
+   "value": "2.97",
+   "unit": "% relative",
+   "baseline_value": "FuseLLM 5.16%",
+   "n": null,
+   "setup": "Llama-2 KD: conventional KD from Llama-2 13B (47.92 BBH) to Llama-2 7B, same MiniPile corpus; BBH 40.88 vs 41.75",
+   "note": "Llama-2 13B itself scores 47.92 on BBH, far above all 7B models including FuseLLM",
+   "where": "Sec 4.5, Table 6",
+   "quote": "especially in the case of BBH (2.97% vs. 5.16%)"
+  },
+  {
+   "claim": "On Common Sense (5 zero-shot likelihood tasks) FuseLLM gains 1.25% relative over Llama-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CS accuracy relative gain",
+   "value": "1.25",
+   "unit": "% relative",
+   "baseline_value": "63.76 -> 64.56",
+   "n": null,
+   "setup": "Target Llama-2 7B, sources Llama-2 7B + OpenLLaMA 7B + MPT 7B, MinCE fusion, MinED alignment, lambda 0.9, continual training 1 epoch on MiniPile (1.8B tokens), single run",
+   "note": null,
+   "where": "Sec 4.2, Table 2",
+   "quote": "achieving a relative performance improvement of 1.25% over Llama-2"
+  },
+  {
+   "claim": "On MultiPL-E (10 languages, pass@1, 20 samples) FuseLLM gains 6.36% relative over Llama-2 but still trails OpenLLaMA and MPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MultiPL-E pass@1 relative gain",
+   "value": "6.36",
+   "unit": "% relative",
+   "baseline_value": "14.63 -> 15.56; OpenLLaMA 18.11, MPT 17.26",
+   "n": null,
+   "setup": "Target Llama-2 7B, sources Llama-2 7B + OpenLLaMA 7B + MPT 7B, MinCE fusion, MinED alignment, lambda 0.9, continual training 1 epoch on MiniPile (1.8B tokens), single run",
+   "note": null,
+   "where": "Sec 4.2, Table 3",
+   "quote": "an average performance gain of 6.36%"
+  },
+  {
+   "claim": "FuseLLM matches Llama-2 CLM's best BBH accuracy with 0.52B tokens versus 1.57B, a 3.9x reduction, and is 2.5% better.",
+   "kind": "measured",
+   "source": null,
+   "metric": "token reduction",
+   "value": "3.9",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBH few-shot CoT EM, training-token curve",
+   "note": null,
+   "where": "Sec 4.3, Fig 2",
+   "quote": "this represents a 3.9\u00d7 reduction in token requirements compared to the 1.57 billion tokens needed by Llama-2 CLM"
+  },
+  {
+   "claim": "Fusing more source models helps BBH monotonically (1 -> 3 models) but CS and ME gain most from two.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH avg",
+   "value": "41.00 / 41.16 / 41.75",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MinCE, Llama-2 target",
+   "note": null,
+   "where": "Sec 4.4, Table 4",
+   "table": "Table 4, rows Llama-2 + OpenLLaMA / Llama-2 + MPT / FUSELLM, column BBH"
+  },
+  {
+   "claim": "MinED token alignment beats exact match; MinCE beats AvgCE on all three benchmarks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH avg",
+   "value": "41.75",
+   "unit": "%",
+   "baseline_value": "EM 41.57; AvgCE 41.04",
+   "n": null,
+   "setup": "Llama-2 target, three sources",
+   "note": "differences are 0.2 to 0.7 points on single runs",
+   "where": "Sec 4.4, Table 5",
+   "table": "Table 5, BBH: EM 41.57, MinED 41.75, AvgCE 41.04, MinCE 41.75"
+  },
+  {
+   "claim": "In a same-architecture simulation (three Pythia 1B domain models), FuseLLM gets the lowest average perplexity versus ensemble and weight merging.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per UTF-8 byte",
+   "value": "0.7034",
+   "unit": "BPB",
+   "baseline_value": "Ensemble 0.7262; Weight Merging 0.7112",
+   "n": null,
+   "setup": "Pythia 1B continued on 1B tokens each of PhilPapers, NIH ExPorter, USPTO; FuseLLM trained on 0.1B tokens",
+   "note": "lower is better; the original Pythia has 0.7275 and the USPTO-tuned model 0.7395",
+   "where": "Sec 4.6, Table 7",
+   "table": "Table 7, row FUSELLM, column Average"
+  },
+  {
+   "claim": "Fusing instruction-tuned models: Vicuna Benchmark GPT-4 score 8.16 vs 8.03 for CLM and 7.88 for Llama-2 Evol-Instruct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Vicuna Benchmark GPT-4 score (1-10)",
+   "value": "8.16",
+   "unit": "score",
+   "baseline_value": "7.88",
+   "n": null,
+   "setup": "20k samples per source for SFT, 5k per dataset for fusion corpus",
+   "note": null,
+   "where": "App F, Table 10",
+   "table": "Table 10, row FUSELLM"
+  },
+  {
+   "claim": "LLM-Blender Rank&Fuse collapses on BBH and MultiPL-E compared with FuseLLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH avg",
+   "value": "24.48",
+   "unit": "%",
+   "baseline_value": "FuseLLM 41.75",
+   "n": null,
+   "setup": "open-source ranker and fuser, top three results fused",
+   "note": null,
+   "where": "App E, Table 9",
+   "table": "Table 9, row LLM-Blender (Rank&Fuse), columns BBH and ME"
+  },
+  {
+   "claim": "With OpenLLaMA as target, FuseLLM improves over OpenLLaMA CLM but still trails the original OpenLLaMA on MultiPL-E.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MultiPL-E pass@1",
+   "value": "17.75",
+   "unit": "%",
+   "baseline_value": "OpenLLaMA 18.11; OpenLLaMA CLM 17.13",
+   "n": null,
+   "setup": "OpenLLaMA 7B target",
+   "note": null,
+   "where": "App I, Table 12",
+   "table": "Table 12, row Avg. 10 Tasks, column FUSELLM"
+  },
+  {
+   "claim": "Static and dynamic lambda give comparable results, so static 0.9 is used.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH avg",
+   "value": "41.75",
+   "unit": "%",
+   "baseline_value": "Dynamic 41.75",
+   "n": null,
+   "setup": "dynamic: lambda linear 0.7 -> 1.0 (teacher annealing)",
+   "note": null,
+   "where": "App H, Table 11",
+   "table": "Table 11, row Static, column BBH"
+  }
+ ],
+ "limits": [
+  "Single run per configuration, no seeds or variance; several ablation gaps (EM vs MinED, static vs dynamic lambda) are 0.0 to 0.7 points.",
+  "Target is the strongest source (Llama-2) on BBH and CS, but on code Llama-2 is the weakest of the three, and FuseLLM still trails OpenLLaMA and MPT on MultiPL-E; authors blame the low code share of MiniPile (approx 7.59%).",
+  "FuseLLM degrades on some tasks (Geometric Shapes, Word Sorting) because other sources do poorly there.",
+  "The 13B KD baseline is stronger than any source (BBH 47.92) yet FuseLLM at 7B scale is the only one compared with it on gains, not absolute scores.",
+  "Fusion needs source logits for every training token and a MinED alignment across tokenizers.",
+  "Same-architecture comparison with ensemble and weight merging uses only Pythia 1B and perplexity, no downstream tasks.",
+  "Cost of computing source distributions is not reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "knowledge fusion of LLMs",
+   "definition": "combine existing LLMs into a new, more powerful one",
+   "where": "Sec 1"
+  },
+  {
+   "term": "MinCE",
+   "definition": "outputs the distribution matrix with the minimum cross-entropy score",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "AvgCE",
+   "definition": "weighted average of the distribution matrices based on cross-entropy scores",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "MinED",
+   "definition": "maps tokens from different tokenizers based on minimum edit distance",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Distilling the knowledge in a neural network (Hinton et al.)",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "extends",
+   "note": "multi-teacher distillation framing",
+   "quote": null
+  },
+  {
+   "work": "Specializing smaller language models towards multi-step reasoning (Fu et al.)",
+   "year": 2023,
+   "arxiv": "2301.12726",
+   "relation": "extends",
+   "note": "token alignment by exact match, replaced with MinED",
+   "quote": null
+  },
+  {
+   "work": "LLM-Blender (Jiang et al.)",
+   "year": 2023,
+   "arxiv": "2306.02561",
+   "relation": "baseline",
+   "note": "ensemble baseline in App E",
+   "quote": null
+  },
+  {
+   "work": "Model soups (Wortsman et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "weight merging",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "target and source",
+   "quote": null
+  },
+  {
+   "work": "OpenLLaMA (Geng & Liu)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "source",
+   "quote": null
+  },
+  {
+   "work": "MPT (MosaicML)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "source",
+   "quote": null
+  },
+  {
+   "work": "MiniPile (Kaddour et al.)",
+   "year": 2023,
+   "arxiv": "2307.06440",
+   "relation": "uses-data",
+   "note": "continual training corpus",
+   "quote": null
+  },
+  {
+   "work": "Distilling step-by-step (Hsieh et al.)",
+   "year": 2023,
+   "arxiv": "2305.02301",
+   "relation": "related",
+   "note": "cited for learnability of distributions",
+   "quote": null
+  },
+  {
+   "work": "Teacher annealing (Clark et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dynamic lambda variant",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of conventional model fusion techniques (ensemble and weight merging) and our knowledge fusion approach for LLMs (FUSELLM).",
+   "page": 2,
+   "why": "contrasts ensemble, weight merging and distribution-level fusion"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Effect of the fused distributions in accelerating the optimization process on BBH.",
+   "page": 8,
+   "why": "shows the 3.9x token saving"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "An example of different methods for token alignment.",
+   "page": 14,
+   "why": "EM vs MinED alignment"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2, Eq 5",
+   "snippet": "L = \u03bb L_CLM + (1 \u2212 \u03bb) L_Fusion",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 1 prints Llama-2 CLM Causal Judgement as 46.52 for both Llama-2 CLM and FuseLLM columns (appears as duplicate cell in the text layer).",
+  "Table 8 labels TriviaQA as 'TrivialQA'.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,0 +1,523 @@
+{
+ "schema": 1,
+ "key": "2308.07317",
+ "pdf": "generative-ai/05-RL/sources/lee-2023-platypus.pdf",
+ "bib": {
+  "title": "Platypus: Quick, Cheap, and Powerful Refinement of LLMs",
+  "authors": [
+   "Ariel N. Lee",
+   "Cole J. Hunter",
+   "Nataniel Ruiz"
+  ],
+  "first_author": "Lee",
+  "year": 2023,
+  "venue": "Workshop on Instruction Tuning and Instruction Following at NeurIPS 2023",
+  "arxiv": "2308.07317",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 52850,
+  "chars_total": 52850,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a small, curated, STEM and logic focused instruction dataset plus LoRA fine-tuning and merging of LoRA modules produce top open LLMs cheaply, without test-set contamination?",
+ "hypothesis": "Fine-tuning on a small high-quality domain dataset conserves the pretrained prior and, combined with merging, improves performance at low cost (building on LIMA's superficial alignment hypothesis).",
+ "contributions": [
+  "Open-Platypus, a small curated dataset of 11 open datasets for STEM and logic",
+  "Similarity exclusion process to reduce dataset size and redundancy",
+  "Detailed look at test-set contamination and a filtering process",
+  "Selection and merging process for specialised LoRA modules"
+ ],
+ "method": {
+  "summary": "LLaMA-2 13B and 70B are LoRA fine-tuned on Open-Platypus in Alpaca format, then the adapters are merged into other fine-tuned LLaMA-2 models (Camel, StableBeluga, Dolphin, instruct) via the PEFT library. Evaluated on the HF Open LLM Leaderboard.",
+  "task": "instruction tuning (SFT, LoRA) and model merging",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Open-Platypus",
+    "role": "train",
+    "size": "~25k questions (inferred: abstract 'using 25k questions')",
+    "split": "1 epoch",
+    "source": "Curated from 11 open datasets: PRM800K, MATH, ScienceQA, SciBench, ReClor, TheoremQA, leetcode-solutions-python-testgen-gpt4, airoboros-gpt4-1.4.1 (keyword-filtered), tigerbot-kaggle-leetcodesolutions-en-2k, ARB, Openassistant-guanaco (keyword-filtered); non-commercial licence due to training set",
+    "preprocessing": "Alpaca format; exact dedupe then 80% cosine dedupe keeping longer answer; >80% similarity to test questions removed after manual triage; ARB/ReClor get '{Choose A, B, C, or D}' as input; ScienceQA long-form answers without explicit choice"
+   },
+   {
+    "name": "ARC-Challenge",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "HF Open LLM Leaderboard",
+    "preprocessing": null
+   },
+   {
+    "name": "HellaSwag",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "HF Open LLM Leaderboard",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "HF Open LLM Leaderboard",
+    "preprocessing": null
+   },
+   {
+    "name": "TruthfulQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "HF Open LLM Leaderboard",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-2-13B / 70B",
+    "role": "base",
+    "params": "13B / 70B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "cutoff len 4096 in training",
+    "other": {}
+   },
+   {
+    "name": "Platypus2-13B / 70B (LoRA)",
+    "role": "proposed",
+    "params": "13B / 70B",
+    "architecture": "LLaMA-2 + LoRA",
+    "init_from": "LLaMA-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "trainable_params": "0.27% (13B), 0.2% (70B)"
+    }
+   },
+   {
+    "name": "Merge partners: Camel, StableBeluga, Llama-2-70b-instruct-v2, Dolphin",
+    "role": "base",
+    "params": "13B / 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "'base model' = model onto which LoRA adapters are merged"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised instruction tuning, loss not on inputs (train on inputs False)",
+   "optimizer": null,
+   "lr": "4e-4 (13B) / 3e-4 (70B)",
+   "lr_schedule": "cosine",
+   "warmup": "100 steps",
+   "batch_size": "16 (micro batch size 1)",
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": "4096 (cutoff len)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "LoRA dropout 0.05",
+   "regularisation": null,
+   "hardware": "13B: 1 A100 80GB; 70B: 4 A100 80GB",
+   "compute": null,
+   "wall_clock": "5 hours (13B); 22 hours (70B)",
+   "seeds": null,
+   "other": {
+    "lora_rank": "16",
+    "lora_alpha": "16 (1:1 ratio)",
+    "lora_target_modules": "gate_proj, down_proj, up_proj (earlier attempts used q/k/v/o_proj)",
+    "add_eos_token": "False",
+    "group_by_length": "False",
+    "prompt_template": "alpaca",
+    "lr_note": "70B lr lowered from 4e-4 to 3e-4 because loss went to zero after 15 steps",
+    "libraries": "Hugging Face transformers, PEFT"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Alpaca template; leaderboard shots: ARC 25, HellaSwag 10, MMLU 5, TruthfulQA 0",
+   "retrieval": null,
+   "parameters": {
+    "merge_method": "PEFT built-in merge of LoRA adapter into base model; merge weights not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ARC-Challenge, HellaSwag, MMLU, TruthfulQA accuracy and mean",
+     "definition": "HF Open LLM Leaderboard average of four benchmarks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Open LLM leaderboard models (Llama-2-70b-instruct-v2, StableBeluga2, etc.)",
+    "GPT-4 and GPT-3.5 (added for comparison)",
+    "unmerged base models"
+   ],
+   "protocol": "Single leaderboard run, no seeds or significance tests; Camel-Platypus2-70B evaluated locally (leaderboard pending)"
+  },
+  "availability": {
+   "code": "https://platypus-llm.github.io (project page)",
+   "weights": "released (HF), non-commercial",
+   "data": "Open-Platypus released"
+  },
+  "prompts": [
+   {
+    "purpose": "Alpaca template with input",
+    "text": "Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n### Instruction:\n{instruction}\n### Input:\n{input}\n### Response:",
+    "where": "Appendix"
+   },
+   {
+    "purpose": "Alpaca template without input",
+    "text": "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n### Instruction:\n{instruction}\n### Response:",
+    "where": "Appendix"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "we had to lower the initial learning rate for the 70B model from 4e-4 to 3e-4 because the loss went to zero after 15 steps",
+    "where": "Sec 2.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Platypus2-70B-instruct ranked first on the HF Open LLM Leaderboard with average 73.13.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HF leaderboard average",
+   "value": "73.13",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-2-70B + Open-Platypus LoRA merged with Llama-2-70b-instruct-v2; leaderboard 8/10/23; ARC 25-shot, HellaSwag 10-shot, MMLU 5-shot, TruthfulQA 0-shot",
+   "note": null,
+   "where": "Sec 3, Table 2",
+   "quote": "securing the top position with an average score of 73.13"
+  },
+  {
+   "claim": "Stable-Platypus2-13B was the top 13B open model with average 63.96.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HF leaderboard average",
+   "value": "63.96",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-2-13B Platypus LoRA merged with StableBeluga-13B; leaderboard 8/10/23",
+   "note": null,
+   "where": "Sec 3, Table 3",
+   "quote": "stands out as the premier 13 billion parameter model with an average score of 63.96"
+  },
+  {
+   "claim": "A 13B Platypus model trains on a single A100 GPU using 25k questions in 5 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU time",
+   "value": "5 hours (13B, 1xA100 80GB); 22 hours (70B, 4xA100 80GB)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LoRA on LLaMA-2-13B, Open-Platypus",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "our 13B model was fine-tuned using 1 A100 80GB for 5 hours and our 70B model using 4 A100s 80GB for 22 hours"
+  },
+  {
+   "claim": "Alpaca-7B full fine-tune comparison point: 3 hours on 8 A100s 80GB (Stanford figure).",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "3 hours on 8 A100 80GB",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Quoted from Stanford Alpaca",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "Stanford notes that their full fine-tune of Alpaca-7B took 3 hours on 8 A100s 80GB"
+  },
+  {
+   "claim": "Only about 10% of Open-Platypus questions are LLM-generated; it comprises 11 open datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~10%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-Platypus composition",
+   "note": null,
+   "where": "Sec 1, 2.1",
+   "quote": "It is comprised mainly of human-designed questions, with ∼10% of questions generated by an LLM"
+  },
+  {
+   "claim": "Dedup threshold: remove instructions with 80% cosine similarity (SentenceTransformers) after exact-duplicate removal, keeping the more verbose answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity threshold",
+   "value": "80%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-Platypus train set",
+   "note": null,
+   "where": "Sec 2.2",
+   "quote": "followed by removal of instructions which had 80% cosine similarity with the SentenceTransformers [30] embeddings of other instructions in our train set"
+  },
+  {
+   "claim": "Leaked (duplicate) test questions found in training sources: 77 in PRM800K and 77 in MATH, 13 each in airoboros and Openassistant-guanaco, 71 in SciQ (not included).",
+   "kind": "measured",
+   "source": null,
+   "metric": "leaked questions",
+   "value": "77",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Questions with >80% similarity to benchmark test questions, manually judged; only exact-copy category counts as true leak",
+   "note": null,
+   "where": "Sec 2.3, Table 1",
+   "quote": "Duplicate contamination is the only category we count as \"true\" contamination and corresponds to the number of leaked questions listed in Table 1.",
+   "table": "Table 1, column # Leaked Questions (PRM800K 77, MATH 77, SciQ 71, airoboros 13, Openassistant-guanaco 13, others 0)"
+  },
+  {
+   "claim": "Merging Platypus with StableBeluga-13B gave +2.91 points on TruthfulQA over the base model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA change",
+   "value": "2.91",
+   "unit": "points (printed %)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "13B merge, change in percent points vs base (Table 5)",
+   "note": null,
+   "where": "Sec 3, Table 5",
+   "quote": "with a notable 2.91% increase in TruthfulQA"
+  },
+  {
+   "claim": "Stable-Platypus2-13B overall increase of +1.05% over base model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.05",
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "13B merge vs StableBeluga-13B base",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "Stable-Platypus2-13B also showed an overall increase of +1.05% jump over base model"
+  },
+  {
+   "claim": "Camel-Platypus2-70B had the largest ARC-challenge gain, +4.12 percent change (+2.82 points).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+4.12",
+   "unit": "% change",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70B merge vs base",
+   "note": "Table 5 gives +2.82 as absolute change in percent",
+   "where": "Sec 3, Table 4",
+   "quote": "Camel-Platypus2-70B model exhibited the most significant positive change with a +4.12% improvement in ARC-challenge"
+  },
+  {
+   "claim": "Dolphin-Platypus2-70B was the only merge that did not beat both base and adapter models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "70B merges",
+   "note": "Quote may span line break in text; see check",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Merging effects are domain-specific: MMLU machine_learning +26.32% (Camel-P2-70B) versus abstract_algebra -15.62% (Camel-P2-13B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+26.32",
+   "unit": "% change",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Percent change over base, Table 6",
+   "note": null,
+   "where": "Sec 3, Table 6",
+   "table": "Table 6, row machine_learning, column C-P2-70 (+26.32); row abstract_algebra, column C-P2-13 (-15.62)"
+  },
+  {
+   "claim": "Platypus2-70B (no merge) ranked 15th with average 70.06; Platypus2-13B ranked 20th among 13B models with 61.35.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "70.06 / 61.35",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Leaderboard 8/10/23",
+   "note": null,
+   "where": "Tables 2, 3",
+   "table": "Table 2, row 15. Platypus2-70B, column Avg. (70.06); Table 3, row 20. Platypus2-13B, column Avg. (61.35)"
+  }
+ ],
+ "limits": [
+  "Inherits LLaMA-2 limitations: static knowledge, English-focused, may produce harmful or non-factual content",
+  "No adversarial or red-team testing",
+  "Keyword search and embedding cosine similarity may not exhaustively catch contamination; merge partners trained on closed datasets cannot be verified",
+  "PRM800K includes MATH train and test; used with similar questions removed",
+  "No ablation isolating dataset size, dataset content or LoRA versus merging; single run, no seeds",
+  "Merge gains are inconsistent: 70B merges vary marginally, Dolphin merge hurt",
+  "Claim that merging broadens knowledge not reasoning is inferred from TruthfulQA only",
+  "Leaderboard rankings are dated 8/10/23 and obsolete; non-commercial licence"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "gray-area contamination",
+   "definition": "questions that are not exact duplicates and fall within general knowledge, e.g. synonymous answers",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LIMA: Less is more for alignment",
+   "year": 2023,
+   "arxiv": "2305.11206",
+   "relation": "extends",
+   "note": "Superficial Alignment Hypothesis motivates small curated data",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Low-rank adapters",
+   "quote": null
+  },
+  {
+   "work": "He et al. unified view of PEFT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Chose MLP modules for LoRA",
+   "quote": null
+  },
+  {
+   "work": "PEFT library (Mangrulkar et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Merging",
+   "quote": null
+  },
+  {
+   "work": "Stanford Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Prompt template, compute comparison",
+   "quote": null
+  },
+  {
+   "work": "Textbooks are all you need",
+   "year": 2023,
+   "arxiv": "2306.11644",
+   "relation": "related",
+   "note": "High-quality data motivation",
+   "quote": null
+  },
+  {
+   "work": "Deduplicating training data makes language models better",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Dedup rationale",
+   "quote": null
+  },
+  {
+   "work": "PRM800K / MATH",
+   "year": 2023,
+   "arxiv": "2305.20050",
+   "relation": "uses-data",
+   "note": "Backbone of Open-Platypus",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Base models",
+   "quote": null
+  },
+  {
+   "work": "StableBeluga2 / Orca",
+   "year": 2023,
+   "arxiv": "2306.02707",
+   "relation": "baseline",
+   "note": "Orca-style fine-tune of Llama-2-70B and merge partner",
+   "quote": null
+  },
+  {
+   "work": "QLoRA / Guanaco",
+   "year": 2023,
+   "arxiv": "2305.14314",
+   "relation": "related",
+   "note": "Not used; future work",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1-3",
+   "caption": "Train vs test question comparison: duplicate, gray-area, similar-but-different",
+   "page": 5,
+   "why": "Concrete examples of the three contamination categories"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Hyperparameters for 13B and 70B Models",
+   "page": 17,
+   "why": "Full LoRA recipe"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Merge procedure (weights, method) and Open-Platypus exact size are not stated beyond 25k; Table text extraction scrambles columns"
+ ]
+}

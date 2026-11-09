@@ -220,7 +220,7 @@ This matches a standing checkpoint rule: checkpoint after each plan step, and in
 
    </details>
 
-4. In the [pillar lab](../practice/langgraph-graph/README.md), do its "Things to try" step 4: swap `MemorySaver` for `SqliteSaver`, and split the pause and the resume into two runs of the program.
+4. In the [pillar lab](../practice/langgraph-graph/README.md), do its "Things to try" step 4: swap the lab's in-memory saver (`MemorySaver`, the older name of `InMemorySaver`) for `SqliteSaver`, and split the pause and the resume into two runs of the program.
 
    <details><summary>Answer</summary>
 

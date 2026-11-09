@@ -1,0 +1,633 @@
+{
+ "schema": 1,
+ "key": "2406.16858",
+ "pdf": "ai-engineering/07-inference-engineering/sources/li-2024-eagle-2.pdf",
+ "bib": {
+  "title": "EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees",
+  "authors": [
+   "Yuhui Li",
+   "Fangyun Wei",
+   "Chao Zhang",
+   "Hongyang Zhang"
+  ],
+  "first_author": "Li",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2406.16858",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 46933,
+  "chars_total": 46933,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the static draft tree of EAGLE be replaced by a context-aware dynamic draft tree that raises accepted tokens per cycle without extra training or changing the output distribution?",
+ "hypothesis": "Draft-token acceptance depends on context as well as position, and the draft model's confidence approximates acceptance rate well enough to shape the tree.",
+ "contributions": [
+  "Observe that acceptance rate is context-dependent and that EAGLE's draft model is well-calibrated",
+  "Propose EAGLE-2: expansion by global value and reranking to build a dynamic draft tree, no extra training, lossless",
+  "Evaluate on three LLM series and six tasks, 3.05x-4.26x speedup, 20%-40% faster than EAGLE-1"
+ ],
+ "method": {
+  "summary": "EAGLE-2 keeps EAGLE's draft model and verification unchanged. It grows the draft tree layer by layer, expanding the top-k nodes by value (product of draft confidences along the path), then reranks all nodes, keeps the top m, flattens them and verifies with a tree attention mask.",
+  "task": "lossless speculative sampling for LLM inference acceleration",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MT-bench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zheng et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Alpaca",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Taori et al., 2023; also used for calibration/acceptance analysis (Figs 5, 6)",
+    "preprocessing": null
+   },
+   {
+    "name": "CNN/Daily Mail",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Nallapati et al., 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "Natural Questions",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kwiatkowski et al., 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Vicuna 7B, 13B",
+    "role": "evaluated",
+    "params": "7B, 13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-Chat 7B, 13B, 70B",
+    "role": "evaluated",
+    "params": "7B, 13B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA3-Instruct 8B, 70B",
+    "role": "evaluated",
+    "params": "8B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "EAGLE draft model",
+    "role": "base",
+    "params": null,
+    "architecture": "autoregression at feature level (second-to-top layer), reuses the LLM LM head",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "weights": "official EAGLE weights for Vicuna and LLaMA2-Chat; LLaMA3-Instruct draft trained on ShareGPT"
+    }
+   },
+   {
+    "name": "Vicuna-68M",
+    "role": "baseline",
+    "params": "68M",
+    "architecture": "draft model for standard speculative sampling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "speculative sampling with dynamic draft tree, tree attention, lossless verification",
+   "temperature": "0 and 1",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot/few-shot settings commonly used; same draft model weights across all tasks",
+   "retrieval": null,
+   "parameters": {
+    "total_draft_tokens": "60 (7B/8B), 50 (13B), 48 (70B)",
+    "draft_tree_depth": "6",
+    "expansion_nodes_per_layer_k": "10",
+    "rerank_top_m": "equals total draft tokens"
+   },
+   "other": {
+    "vanilla": "HF transformers, PyTorch backend, pre-allocated KV cache",
+    "SpS": "HF assisted generation, Vicuna-68M draft",
+    "PLD/Lookahead/Medusa/Hydra": "default settings, official weights",
+    "hardware": "not stated; paper says all methods were tested on the same devices"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Speedup ratio",
+     "definition": "actual test speedup relative to vanilla autoregressive decoding (1.00x)",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average acceptance length tau",
+     "definition": "average number of tokens generated per drafting-verification cycle",
+     "unit": "tokens",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "vanilla autoregressive decoding",
+    "standard speculative sampling (Vicuna-68M)",
+    "PLD",
+    "Medusa",
+    "Lookahead",
+    "Hydra",
+    "EAGLE"
+   ],
+   "protocol": "Spec-Bench based comparisons on same devices; generation quality not evaluated since lossless; no seeds, runs or variance reported"
+  },
+  "availability": {
+   "code": "https://github.com/SafeAILab/EAGLE",
+   "weights": "EAGLE weights officially released (per Appendix A)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "we set the total number of draft tokens to 60, 50, and 48",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "EAGLE-2 speedup range across models and tasks, claimed in the abstract",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "3.05x-4.26x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "three LLM series, six tasks",
+   "note": null,
+   "where": "Abstract",
+   "quote": "with EAGLE-2 achieving speedup ratios 3.05x-4.26x, which is 20%-40% faster than EAGLE-1"
+  },
+  {
+   "claim": "Vicuna 13B, temperature 0, MT-bench: EAGLE-2 speedup vs EAGLE",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 4.26,
+   "unit": "x",
+   "baseline_value": 3.07,
+   "n": null,
+   "setup": "Vicuna 13B, MT-bench, T=0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, V 13B, EAGLE-2, MT-bench Speedup"
+  },
+  {
+   "claim": "Vicuna 13B mean speedup over six tasks at T=0",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 4.04,
+   "unit": "x",
+   "baseline_value": 2.95,
+   "n": null,
+   "setup": "Vicuna 13B, mean of six tasks, T=0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, V 13B, EAGLE-2, Mean Speedup"
+  },
+  {
+   "claim": "Vicuna 7B mean speedup at T=0",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.39,
+   "unit": "x",
+   "baseline_value": 2.78,
+   "n": null,
+   "setup": "Vicuna 7B, mean of six tasks, T=0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, V 7B, EAGLE-2, Mean Speedup"
+  },
+  {
+   "claim": "LLaMA2-Chat 7B mean speedup at T=0",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.43,
+   "unit": "x",
+   "baseline_value": 2.78,
+   "n": null,
+   "setup": "LLaMA2-Chat 7B, mean, T=0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, L2 7B, EAGLE-2, Mean Speedup"
+  },
+  {
+   "claim": "LLaMA2-Chat 13B mean speedup at T=0",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 4.1,
+   "unit": "x",
+   "baseline_value": 3.09,
+   "n": null,
+   "setup": "LLaMA2-Chat 13B, mean, T=0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, L2 13B, EAGLE-2, Mean Speedup"
+  },
+  {
+   "claim": "Highest speedup is on HumanEval code generation, Vicuna 13B T=0",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 4.96,
+   "unit": "x",
+   "baseline_value": 3.58,
+   "n": null,
+   "setup": "Vicuna 13B, HumanEval, T=0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, V 13B, EAGLE-2, HumanEval Speedup"
+  },
+  {
+   "claim": "Vicuna 13B mean at temperature 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.65,
+   "unit": "x",
+   "baseline_value": 2.39,
+   "n": null,
+   "setup": "Vicuna 13B, mean of six tasks, T=1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Temperature=1, V 13B, EAGLE-2, Mean Speedup"
+  },
+  {
+   "claim": "Vicuna 7B mean at temperature 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 2.94,
+   "unit": "x",
+   "baseline_value": 2.18,
+   "n": null,
+   "setup": "Vicuna 7B, mean, T=1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Temperature=1, V 7B, EAGLE-2, Mean Speedup"
+  },
+  {
+   "claim": "Average acceptance length for Vicuna 13B at T=0 mean",
+   "kind": "measured",
+   "source": null,
+   "metric": "tau",
+   "value": 4.65,
+   "unit": "tokens",
+   "baseline_value": 3.82,
+   "n": null,
+   "setup": "Vicuna 13B, mean, T=0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, V 13B, EAGLE-2, Mean tau"
+  },
+  {
+   "claim": "Each EAGLE-2 cycle yields roughly 4-5.5 tokens, about twice standard speculative sampling and Medusa",
+   "kind": "claim",
+   "source": null,
+   "metric": "tau",
+   "value": null,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all tested models and datasets, Sec 5.1",
+   "note": "range stated in prose",
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "LLaMA2-Chat 70B, T=0, MT-bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.51,
+   "unit": "x",
+   "baseline_value": 3.01,
+   "n": null,
+   "setup": "LLaMA2-Chat 70B, MT-bench, T=0",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, LLaMA2-Chat 70B, EAGLE-2, Speedup"
+  },
+  {
+   "claim": "LLaMA3-Instruct 8B, T=0, MT-bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.46,
+   "unit": "x",
+   "baseline_value": 2.72,
+   "n": null,
+   "setup": "LLaMA3-Instruct 8B, MT-bench, T=0",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, LLaMA3-Instruct 8B, EAGLE-2, Speedup"
+  },
+  {
+   "claim": "LLaMA3-Instruct 70B, T=0, MT-bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.29,
+   "unit": "x",
+   "baseline_value": 2.83,
+   "n": null,
+   "setup": "LLaMA3-Instruct 70B, MT-bench, T=0",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, LLaMA3-Instruct 70B, EAGLE-2, Speedup"
+  },
+  {
+   "claim": "Draft tokens with confidence below 0.05 are accepted about 4% of the time and those above 0.95 about 98%, so confidence approximates acceptance",
+   "kind": "measured",
+   "source": null,
+   "metric": "acceptance rate",
+   "value": 0.98,
+   "unit": null,
+   "baseline_value": 0.04,
+   "n": null,
+   "setup": "Alpaca, Vicuna 7B, EAGLE draft model, Fig 6",
+   "quote": "about 0.98",
+   "note": "0.04 is the rate for confidence below 0.05, 0.98 for above 0.95",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Ablation: removing both value and reranking on Vicuna 7B MT-bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 2.81,
+   "unit": "x",
+   "baseline_value": 3.62,
+   "n": null,
+   "setup": "Vicuna 7B, T=0, MT-bench",
+   "note": "baseline_value is full EAGLE-2",
+   "where": "Table 3",
+   "table": "Table 3, w/o both, MT-bench Speedup"
+  },
+  {
+   "claim": "Ablation: w/o value (rank by confidence) on MT-bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.21,
+   "unit": "x",
+   "baseline_value": 3.62,
+   "n": null,
+   "setup": "Vicuna 7B, T=0, MT-bench",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, w/o value, MT-bench Speedup"
+  },
+  {
+   "claim": "Ablation: w/o reranking on MT-bench",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 3.48,
+   "unit": "x",
+   "baseline_value": 3.62,
+   "n": null,
+   "setup": "Vicuna 7B, T=0, MT-bench",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, w/o reranking, MT-bench Speedup"
+  },
+  {
+   "claim": "Ablation on GSM8K: w/o both vs full EAGLE-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 2.85,
+   "unit": "x",
+   "baseline_value": 3.63,
+   "n": null,
+   "setup": "Vicuna 7B, T=0, GSM8K",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, w/o both, GSM8K Speedup"
+  }
+ ],
+ "limits": [
+  "No hardware (GPU type, batch size) is stated; speedups are hardware-dependent and only batch-style single-request use is implied.",
+  "Tree-size settings (60/50/48 tokens, depth 6, k=10) are given without a tuning study or sensitivity analysis.",
+  "No variance, seeds or repeated runs reported.",
+  "Lower gains on summarization and QA, attributed by the authors to SFT-only draft-model training data.",
+  "Medusa, Hydra and others are not compared at temperature 1 because they relax acceptance conditions.",
+  "No separate limitations section."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Average acceptance length",
+   "definition": "The average number of tokens generated per drafting-verification cycle, which corresponds to the number of tokens accepted from the draft.",
+   "where": "Sec 5"
+  },
+  {
+   "term": "Value",
+   "definition": "Product of the draft confidence scores along the path from root to a node, approximating its global acceptance rate.",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "EAGLE: Speculative sampling requires rethinking feature uncertainty",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "EAGLE-2 changes only tree construction, keeps its draft model",
+   "quote": null
+  },
+  {
+   "work": "Leviathan et al. Fast inference from transformers via speculative decoding",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "speculative sampling framework and losslessness proof",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. Accelerating LLM decoding with speculative sampling",
+   "year": 2023,
+   "arxiv": "2302.01318",
+   "relation": "uses-method",
+   "note": "speculative sampling",
+   "quote": null
+  },
+  {
+   "work": "Medusa",
+   "year": 2024,
+   "arxiv": "2401.10774",
+   "relation": "baseline",
+   "note": "static tree",
+   "quote": null
+  },
+  {
+   "work": "Hydra",
+   "year": 2024,
+   "arxiv": "2402.05109",
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Lookahead decoding",
+   "year": 2024,
+   "arxiv": "2402.02057",
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "PLD (Saxena)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prompt lookup decoding",
+   "quote": null
+  },
+  {
+   "work": "Sequoia",
+   "year": 2024,
+   "arxiv": "2402.12374",
+   "relation": "related",
+   "note": "assumes acceptance depends only on position",
+   "quote": null
+  },
+  {
+   "work": "GLIDE and CAPE (Du et al.)",
+   "year": 2024,
+   "arxiv": "2402.02082",
+   "relation": "related",
+   "note": "partially dynamic trees; similar calibration observed",
+   "quote": null
+  },
+  {
+   "work": "Spec-Bench (Xia et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "comparison benchmark",
+   "quote": null
+  },
+  {
+   "work": "Vicuna, LLaMA2-Chat, LLaMA3-Instruct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "target LLMs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Differences between EAGLE and EAGLE-2.",
+   "page": 3,
+   "why": "Shows the dynamic vs fixed tree on '10+2='"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Average acceptance rates for different confidence score intervals of the draft model.",
+   "page": 4,
+   "why": "Calibration evidence that justifies using confidence as a proxy"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Illustration of EAGLE-2.",
+   "page": 5,
+   "why": "Expansion (top-2), rerank (top-8), flatten and attention mask in one picture"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.1",
+   "snippet": "V_i = prod over t_j in Path(root,t_i) of p_j \u2248 prod c_j",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions. Hardware, batch size and max tokens are not stated in the paper."
+ ]
+}

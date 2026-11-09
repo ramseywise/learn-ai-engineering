@@ -1,19 +1,545 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2404.08189",
  "pdf": "generative-ai/02-rag-retrieval/sources/bechard-2024-reducing-hallucination-structured-outputs-retrieval.pdf",
  "bib": {
   "title": "Reducing hallucination in structured outputs via Retrieval-Augmented Generation",
-  "first_author": "Patrice Béchard",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Patrice Béchard",
+   "Orlando Marquez Ayala"
+  ],
+  "first_author": "Béchard",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2404.08189",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 40410,
+  "chars_total": 40410,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Reducing hallucination in structured outputs via Retrieval-Augmented Generation\", Patrice Béchard and Orlando Marquez Ayala (ServiceNow), arXiv:2404.08189v1 [cs.LG], 12 Apr 2024. The Acknowledgements thank the NAACL reviewers, so it is likely an industry-track paper. The text says no venue.\nCOVERAGE: 40,402 of 40,402 chars read, including the appendices (training details, Tables 6 and 7, error examples). The Figure 4 text is truncated in the extraction. Figure 1-4 content is image-only. Nothing else was skipped.\n\nCLAIMS (ranked)\n- Claim: Adding a fine-tuned retriever that suggests step and table names cuts hallucinated steps and tables sharply in a fine-tuned StarCoderBase workflow generator.\n  number: hallucinated steps about 0.14-0.16 without a retriever, 0.017-0.072 with one. Hallucinated tables about 0.19-0.21 without, 0.016-0.044 with.\n  setup: Human Eval split (157 examples). Fine-tuned StarCoderBase at 1B, 3B, 7B and 15.5B. JSON workflow generation (IT domain). Greedy decoding. Single run, no variance reported.\n  quote: \"without a retriever (only LLM fine-tuning), the % of hallucinated steps and tables can be as high as 21% on the \"Human Eval\" split. Using a retriever, this decreases to less than 7.5% for steps and less than 4.5% for tables with all StarCoderBase LLMs.\"\n  where: Sec 5.2, p6, Table 4\n- Claim: A 3B model with RAG matches a 15.5B model without RAG on Trigger EM and Bag of Steps, with low hallucination. RAG therefore lets a smaller LLM be deployed.\n  number: 3B+RAG: Trigger EM 0.615, BofS 0.641, HS 0.017, HT 0.030. 15.5B without RAG: 0.632, 0.662, 0.160, 0.194.\n  setup: Human Eval, as above. The 3B and 15.5B models are the same family. The 7B+RAG model has Trigger EM 0.664, BofS 0.672 and is chosen as the best trade-off. 15.5B+RAG scores 0.667 and 0.667.\n  quote: \"the 3B version trained with RAG is competitive even with the 15.5B version without RAG on the Trigger EM and Bag of Steps metrics, while keeping hallucination low.\"\n  where: Sec 5.2, p6, Table 4\n- Claim: Fine-tuning the retriever matters far more than scaling an off-the-shelf encoder.\n  number: Step Recall@15 and Table Recall@10. gtr-t5-base (110M) 0.505/0.489. gtr-t5-xxl (4.8B) 0.561/0.489. all-mpnet-base-v2 (110M) untuned 0.425/0.170. Fine-tuned with all negative strategies 0.743/0.766.\n  setup: Human Eval. The fine-tuned encoder is all-mpnet-base-v2 (110M), trained on about 15,000 step pairs and 1,500 table pairs. Negative strategies: random 0.640/0.752, BM25 0.537/0.586, ANCE 0.556/0.699.\n  quote: \"Scaling the size of the off-the-shelf encoders, as we did with GTR-T5, does not yield significant improvements on both retrieval metrics.\" \"What was crucial to significantly improve the performance was fine-tuning the encoder.\"\n  where: Sec 5.1, p5, Table 3\n- Claim: Combining random, BM25 and ANCE negatives beats any single strategy. Step recall rises from 0.640 (random) to 0.743 (all). Table recall rises from 0.752 to 0.766.\n  number: 0.743 / 0.766\n  setup: Table 3, Human Eval, contrastive loss on query-JSON object pairs.\n  quote: \"+ All 0.743 0.766\"\n  where: Table 3, p5\n- Claim: With the retriever, out-of-domain performance roughly matches in-domain performance, without retuning the retriever or the LLM. Removing the suggestions at inference raises hallucinated tables from 0.066 to 0.428.\n  number: OOD weighted avg with RAG: Trigger EM 0.647, BofS 0.714, HS 0.018, HT 0.066. No-RAG avg: 0.544, 0.629, 0.020, 0.428. Human Eval: 0.664, 0.672, 0.019, 0.042.\n  setup: RAG fine-tuned StarCoderBase-7B on five OOD splits (42 to 429 examples each) from other deployments (HR, finance and others). 7% to 76% of steps are not in Train. The \"No RAG\" row is the same RAG-trained model run with the suggestions removed, not a model trained without RAG.\n  quote: \"We observe that on average, thanks to the retriever, all the OOD metrics are similar to the in-domain results represented by the \"Human Eval\" split.\"\n  where: Sec 5.3, p6, Table 5\n- Claim: Without suggestions the RAG-trained model hallucinates about the same share of steps. It becomes conservative and reuses steps seen in training. It invents tables much more often.\n  number: HS 0.020 without suggestions vs 0.018 with. HT 0.428 vs 0.066.\n  setup: Same as the previous claim. This is the authors' inspection of outputs, not a controlled test.\n  quote: \"the RAG fine-tuned model has learned to be conservative in generating steps when it does not receive suggestions, relying only on steps that it has seen during training.\"\n  where: Sec 5.3, p6\n- Claim: Hallucination by unique name is higher than the per-workflow rate. Suggestions cut the unique hallucinated step rate on OOD1 from 40% to 13%, but some splits stay above 10%.\n  number: OOD1 unique step names 52 with 40% hallucinated without suggestions, 100 with 13% hallucinated with suggestions. OOD3 37% to 9%. OOD5 17% to 3%. OOD4 rises from 5% to 9%. Unique hallucinated table names with suggestions: 9% to 22%.\n  setup: Tables 6 and 7, RAG fine-tuned StarCoderBase-7B on the OOD splits.\n  quote: \"even with suggestions, there is still an important gap in the percentage of unique step names that are hallucinated, as in some splits more than 10% of unique steps are invented.\"\n  where: Appendix B, p10\n- Claim: Larger LLMs copy retrieved items better, so scaling gives more consistent gains under RAG. The 1B RAG model hallucinates much more than 3B and larger.\n  number: HS with RAG: 1B 0.072, 3B 0.017, 7B 0.019, 15.5B 0.040.\n  setup: Table 4, Human Eval.\n  quote: \"This suggests that larger LLMs can better copy and paste retrieved steps and tables during generation.\"\n  where: Sec 5.2, p6\n- Claim: Code-pretrained StarCoderBase-7B outperformed CodeLlama-7B and Mistral-7B-v0.1 when all were fine-tuned with RAG. The authors only suspect why.\n  number: Trigger EM 0.664 vs 0.623 and 0.596. BofS 0.672 vs 0.617 and 0.617.\n  setup: Table 4, same data and hyperparameters.\n  quote: \"We suspect that pre-training on large amounts of natural language data may be detrimental to our task.\"\n  where: Sec 5.2, p6\n- Claim: Training design. The retriever and LLM are trained separately. The LLM is trained as if retrieval recall were 100%. The most frequent steps are left out of the suggestions. Retrieved JSON objects are put in the prompt before the user query so the LLM can copy them.\n  number: none\n  setup: Separate retriever and LLM training, in contrast to end-to-end RAG (Lewis et al., 2020). Retrieval uses a FAISS index with cosine similarity over top-K. Decoding is greedy.\n  quote: \"in every LLM training example, we assume the retriever has 100% recall: the steps and table required to build the structured output are always in the suggestions, except for the most frequent steps.\"\n  where: Sec 3.2, p4\n- Claim: Engineering. The 110M retriever shares one GPU with the 7B LLM with negligible effect and could run on CPU. A 7B model allows larger batches, at some latency cost. The decoupled retriever can be reused.\n  number: 110M retriever, 7B LLM\n  setup: Production deployment. The authors' stress tests and user research found response time \"acceptable\", with no latency numbers given.\n  quote: \"allowed us to deploy it on the same GPU with neg-ligible effect on the larger LLM. But we could even deploy the retriever on CPU due to its small size.\"\n  where: Sec 5.5, p7\n- Claim: Error analysis. Retrieval misses on rarely used steps cause lower-quality workflows. Logic steps (IF, TRY, FOREACH) are the LLM's typical structural failures.\n  number: none\n  setup: Qualitative, with examples in Fig 4. Suggested fixes: decompose the query into several retrieval calls, and generate synthetic data for the missed steps.\n  quote: \"if a crucial component is not in the retriever's suggestions, it becomes difficult for the LLM to generate a valid workflow in line with the user query.\"\n  where: Sec 5.4, p7\n\nLIMITS\n- Single task: JSON workflow generation at ServiceNow. The datasets are proprietary and internal, and mostly IT domain.\n- Very small eval sets: Human Eval has 157 examples, and the OOD splits have 42 to 429. There are no confidence intervals or seeds. Differences such as 0.017 vs 0.019 are likely noise.\n- Retrieves JSON objects (step and table names), not facts or text passages. It does not test classic open-domain QA RAG, so transfer to prose RAG is untested.\n- There is no ablation against guided/grammar-constrained decoding. The paper only mentions it as complementary. It does not compare against long-context prompting or in-context stuffing, which the authors call impractical.\n- No joint retriever-LLM training was tried (future work). Retrieval recall is only 0.743 for steps, yet the LLM was trained assuming 100% recall.\n- The \"No RAG Avg\" row is the RAG-trained model with suggestions removed, not a model trained without RAG. The no-retriever fine-tuned baselines appear only in Table 4.\n- The ethical note concedes that hallucination is not eliminated. Post-processing flags nonexistent steps for users.\n- Dated: models are StarCoderBase, CodeLlama-7B and Mistral-7B-v0.1 (2023-era). Paper from 2024.\n\nBUILDS ON: Lewis et al. 2020 (RAG). Gao et al. 2024 (RAG survey). Reimers and Gurevych 2019 (Sentence-BERT, siamese encoder with mean pooling). Li et al. 2023b (SANTA, structure-aware dense retrieval). Xiong et al. 2020 (ANCE negatives). Hadsell et al. 2006 (contrastive loss). Douze et al. 2024 (FAISS). Li et al. 2023a (StarCoder). Hu et al. 2021 (LoRA). Willard and Louf 2023 (guided generation, cited as complementary). Neelakantan et al. 2022 (scaling encoders gives no gain on code retrieval). Shuster et al. 2021 (retrieval reduces hallucination in conversation).\n\nCODE: Equations, verbatim. Retriever: \"R(q) =Norm(MeanPool(Enc(q)))\" (Eq 2, p3). Loss: \"L = 12 Y D2 + (1− Y ) · max(0, 12 − D)2\" with \"D = 1 − cossim(vq, vs)\" (Eq 3, p3-4). The extraction garbles the fractions, which should be 1/2. Hyperparameters (App A, p10). LLM: AdamW, lr 5e-4, 5,000 steps, cosine schedule with 100 warmup, effective batch 32, LoRA r=16, alpha=16, dropout 0.05, single A100 80GB. Retriever: AdamW, lr 2e-5, batch 128, 10 epochs, SentenceTransformers.\n\nFIGURES\n- Fig 1 (p1): sample JSON workflow output for a natural-language requirement.\n- Fig 2 (p3): architecture. The user query goes to both the retriever and the LLM, and the retriever's suggestions are appended to the prompt. The quickest way to see the pipeline.\n- Fig 3 (p4): training example. Suggested tables and steps are placed before the user query, and the last four lines are the expected output.\n- Fig 4 (p11): perfect output, retrieval error (send_slack_message not suggested), and LLM error (ignored \"Try\"). Its text is truncated in the extraction.\n\nPROBLEMS: The extraction mangles the Eq 3 fractions and Figure 4 text (truncated). The figures themselves are images and were not viewed. No embedded instructions were found in the PDF. Table 4's bold markers are not preserved, so \"best\" cells are not identifiable from the text."
+ "type": "empirical",
+ "question": "Can retrieval-augmented generation of existing JSON steps and table names reduce hallucination and allow a smaller LLM in a natural-language-to-workflow (structured output) task?",
+ "hypothesis": "Suggesting retrieved step and table names in the LLM prompt reduces hallucinated steps/tables, generalises to out-of-domain deployments without retraining, and lets a small LLM plus a small retriever match a larger LLM.",
+ "contributions": [
+  "We provide an application of RAG in workflow generation, a structured output task.",
+  "We show that using RAG reduces hallucination and improves results.",
+  "We demonstrate that RAG allows deploying a smaller LLM while using a very small retriever model, at no loss in performance."
+ ],
+ "method": {
+  "summary": "A siamese 110M sentence encoder is fine-tuned with contrastive loss to map natural-language requirements to JSON workflow step and table objects; a FAISS index returns top-K suggestions that are prepended to the prompt of a LoRA-fine-tuned code LLM (StarCoderBase 1B-15.5B, CodeLlama-7B, Mistral-7B) that generates the workflow JSON with greedy decoding. Retriever and LLM are trained separately.",
+  "task": "natural language to workflow JSON generation (structured output) with retrieval of steps and tables",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "In-domain workflows (Train)",
+    "role": "train",
+    "size": "2867 examples (823 triggers, 556 tables)",
+    "split": "Train",
+    "source": "around 4,000 deployed workflows from internal deployments with annotator-written requirements, plus around 1,000 deterministic simple samples (internal, not released)",
+    "preprocessing": "Most frequent steps excluded from retriever suggestions; in training the retriever is assumed 100% recall (needed steps/table always in suggestions). Retriever pairs: around 15,000 step pairs and 1,500 table pairs"
+   },
+   {
+    "name": "Dev",
+    "role": "dev",
+    "size": "318 (77 triggers, 44 tables)",
+    "split": "Dev",
+    "source": "internal",
+    "preprocessing": null
+   },
+   {
+    "name": "Test",
+    "role": "eval",
+    "size": "798 (247 triggers, 163 tables)",
+    "split": "Test",
+    "source": "internal",
+    "preprocessing": null
+   },
+   {
+    "name": "Human Eval",
+    "role": "eval",
+    "size": "157 (99 triggers, 60 tables)",
+    "split": "Human Eval",
+    "source": "expert users simulating interaction through a UI; used for final metrics",
+    "preprocessing": null
+   },
+   {
+    "name": "OOD1-OOD5",
+    "role": "eval",
+    "size": "146, 162, 429, 42, 353 examples",
+    "split": "five splits from other deployments; % steps not in Train: 49%, 76%, 34%, 33%, 7%",
+    "source": "real workflows from other deployments, annotator-written requirements",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "StarCoderBase 1B/3B/7B/15.5B",
+    "role": "proposed",
+    "params": "1B, 3B, 7B, 15.5B",
+    "architecture": "decoder-only code LLM",
+    "init_from": "pretrained StarCoderBase",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CodeLlama-7B",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B-v0.1",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "all-mpnet-base-v2 (fine-tuned)",
+    "role": "retriever",
+    "params": "110M",
+    "architecture": "siamese transformer encoder, mean pooling, L2 normalisation",
+    "init_from": "all-mpnet-base-v2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gtr-t5 base/large/xl/xxl",
+    "role": "baseline",
+    "params": "110M, 355M, 1.24B, 4.8B",
+    "architecture": "T5 dual encoder, off-the-shelf",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "LLM: supervised fine-tuning with retriever suggestions in prompt; retriever: contrastive loss L = 1/2 [Y D^2 + (1-Y) max(0, 1/2 - D)^2], D = 1 - cossim; negatives random, BM25 or ANCE",
+   "optimizer": "LLM: AdamW (beta1 0.9, beta2 0.999); retriever: AdamW",
+   "lr": "LLM 5e-4; retriever 2e-5",
+   "lr_schedule": "LLM cosine",
+   "warmup": "100 steps (LLM)",
+   "batch_size": "LLM effective 32 (gradient accumulation); retriever 128",
+   "steps": "LLM 5,000",
+   "epochs": "retriever 10",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.01 (LLM)",
+   "dropout": "0.05 (LoRA)",
+   "regularisation": "LoRA r=16, alpha=16",
+   "hardware": "single A100 80GB GPU (LLMs, flash-attention)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "retriever_framework": "SentenceTransformers",
+    "retriever_hardware": "inferred: not stated; only LLM hardware given"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: single greedy generation per item; no seeds or repeats reported",
+   "prompting": "short simple format: suggested tables and steps (JSON) before the user query, then expected output (Fig 3)",
+   "retrieval": "FAISS index of steps and tables, cosine similarity, top K; eval Recall@15 for steps, Recall@10 for tables; K used in the LLM prompt not stated",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Trigger Exact Match",
+     "definition": "generated JSON trigger identical to ground truth, including table name if required",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Bag of Steps",
+     "definition": "order-agnostic overlap between generated and ground-truth steps",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Hallucinated Steps / Tables",
+     "definition": "% of generated steps/tables per workflow that do not exist",
+     "unit": "fraction 0-1",
+     "higher_is_better": false
+    },
+    {
+     "name": "Recall@15 (steps), Recall@10 (tables)",
+     "definition": "top-K retrieved set covers the steps and table in the reference JSON",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "same LLMs fine-tuned without retriever",
+    "off-the-shelf GTR-T5 encoders",
+    "all-mpnet-base-v2 not fine-tuned",
+    "RAG-trained model run without suggestions on OOD"
+   ],
+   "protocol": "Single runs on Human Eval and OOD splits, no seeds or significance tests; OOD average weighted by samples per split."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "internal enterprise data, not stated as released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Without a retriever, fine-tuned StarCoderBase-1B hallucinates 19.2% of tables on Human Eval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hallucinated Tables",
+   "value": 0.192,
+   "unit": "fraction",
+   "baseline_value": 0.044,
+   "n": 157,
+   "setup": "Human Eval, StarCoderBase-1B, no retriever vs with retriever (0.044)",
+   "quote": null,
+   "table": "Table 4, row No Retriever StarCoderBase-1B, column Hallucinated Tables (0.192); with retriever 0.044",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Retriever cuts hallucinated steps for StarCoderBase-7B from 0.137 to 0.019 on Human Eval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hallucinated Steps",
+   "value": 0.019,
+   "unit": "fraction",
+   "baseline_value": 0.137,
+   "n": 157,
+   "setup": "Human Eval, StarCoderBase-7B, LoRA fine-tuned, greedy",
+   "quote": null,
+   "table": "Table 4, row With Retriever StarCoderBase-7B, column Hallucinated Steps (0.019); no retriever 0.137",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Without retriever, hallucinated steps and tables reach up to 21% on Human Eval; with retriever below 7.5% steps and 4.5% tables for StarCoderBase models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hallucination rate",
+   "value": "21%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 157,
+   "setup": "Human Eval, StarCoderBase 1B-15.5B",
+   "quote": "the % of hal- lucinated steps and tables can be as high as 21% on the \"Human Eval\" split",
+   "table": null,
+   "note": "The 21% is the table rate of StarCoderBase-3B (0.214).",
+   "where": "5.2"
+  },
+  {
+   "claim": "Fine-tuning the 110M encoder with all negative strategies gives Step Recall@15 of 0.743 vs 0.425 for the base all-mpnet-base-v2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step Recall@15",
+   "value": 0.743,
+   "unit": "recall",
+   "baseline_value": 0.425,
+   "n": 157,
+   "setup": "Human Eval, all-mpnet-base-v2 + All negatives (random, BM25, ANCE)",
+   "quote": null,
+   "table": "Table 3, row + All, column Step Recall@15 (0.743); all-mpnet-base-v2 0.425",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Table Recall@10 rises from 0.170 to 0.766 after fine-tuning with all negatives.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Table Recall@10",
+   "value": 0.766,
+   "unit": "recall",
+   "baseline_value": 0.17,
+   "n": 157,
+   "setup": "Human Eval, all-mpnet-base-v2 + All",
+   "quote": null,
+   "table": "Table 3, row + All, column Table Recall@10 (0.766)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Scaling off-the-shelf GTR-T5 encoders does not significantly improve retrieval (best step recall 0.579 for 1.24B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Step Recall@15",
+   "value": 0.579,
+   "unit": "recall",
+   "baseline_value": 0.505,
+   "n": 157,
+   "setup": "Human Eval, gtr-t5-xl vs gtr-t5-base",
+   "quote": "Scaling the size of the off-the-shelf encoders, as we did with GTR-T5, does not yield significant improvements",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "RAG fine-tuned 3B is competitive with 15.5B without RAG on Trigger EM and Bag of Steps while hallucination stays low.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Trigger EM",
+   "value": 0.615,
+   "unit": "EM",
+   "baseline_value": 0.632,
+   "n": 157,
+   "setup": "Human Eval, StarCoderBase-3B with retriever vs 15.5B no retriever",
+   "quote": null,
+   "table": "Table 4, row With Retriever StarCoderBase-3B Trigger EM 0.615 vs No Retriever StarCoderBase (15.5B) 0.632",
+   "note": "Bag of Steps 0.641 vs 0.662; the 3B is lower on both metrics, so 'competitive' not 'equal'.",
+   "where": "Table 4, 5.2"
+  },
+  {
+   "claim": "StarCoderBase-7B with retriever is the chosen trade-off: Trigger EM 0.664, BofS 0.672 versus 15.5B 0.667 / 0.667.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Trigger EM",
+   "value": 0.664,
+   "unit": "EM",
+   "baseline_value": 0.667,
+   "n": 157,
+   "setup": "Human Eval, with retriever",
+   "quote": null,
+   "table": "Table 4, row With Retriever StarCoderBase-7B, column Trigger EM",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "CodeLlama-7B and Mistral-7B with RAG are worse than StarCoderBase-7B across all metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hallucinated Tables",
+   "value": 0.108,
+   "unit": "fraction",
+   "baseline_value": 0.042,
+   "n": 157,
+   "setup": "Human Eval, with retriever, CodeLlama-7B vs StarCoderBase-7B",
+   "quote": null,
+   "table": "Table 4, row With Retriever CodeLlama-7B, column Hallucinated Tables (0.108)",
+   "note": "Authors suspect natural-language pretraining is detrimental; untested.",
+   "where": "Table 4, 5.2"
+  },
+  {
+   "claim": "On five OOD splits, weighted-average hallucinated steps with RAG is 0.018 versus 0.020 without suggestions, but hallucinated tables is 0.066 versus 0.428.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hallucinated Tables (OOD avg)",
+   "value": 0.066,
+   "unit": "fraction",
+   "baseline_value": 0.428,
+   "n": 1132,
+   "setup": "RAG fine-tuned StarCoderBase-7B on OOD1-5 without further fine-tuning; baseline is same model with suggestions removed",
+   "quote": null,
+   "table": "Table 5, rows Avg. and No RAG Avg., column HT (0.066 vs 0.428)",
+   "note": "n = sum of OOD sizes (146+162+429+42+353), inferred.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "OOD average Trigger EM 0.647 and BofS 0.714 with suggestions, vs 0.544 and 0.629 without.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Trigger EM (OOD avg)",
+   "value": 0.647,
+   "unit": "EM",
+   "baseline_value": 0.544,
+   "n": 1132,
+   "setup": "as above",
+   "quote": null,
+   "table": "Table 5, rows Avg. and No RAG Avg., column Trigger EM",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Without suggestions, the RAG-trained model hallucinated steps stay roughly the same because it learned to be conservative and reuse seen steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique hallucinated steps OOD1",
+   "value": "40% vs 13%",
+   "unit": "% of unique steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OOD1, without vs with suggestions (Table 6)",
+   "quote": null,
+   "table": "Table 6, row OOD1 (40% no suggestions, 13% with suggestions)",
+   "note": "Per-workflow rate (Table 5) is similar, unique-name rate differs.",
+   "where": "Appendix B"
+  }
+ ],
+ "limits": [
+  "Datasets are internal (ServiceNow), mostly IT domain, and not released; no code or weights stated.",
+  "Single runs, no seeds or significance tests; Human Eval only 157 examples.",
+  "Retriever and LLM trained separately; joint training not tried. In training retriever recall assumed 100%, a mismatch with inference.",
+  "Retrieval errors and LLM structure errors (IF, TRY, FOREACH) remain; more than 10% of unique steps still invented in some OOD splits.",
+  "Most frequent steps are excluded from suggestions and memorised, so hallucination of common steps is not retrieval-controlled.",
+  "No comparison against guided/grammar-constrained generation; latency numbers not reported.",
+  "Authors do not claim hallucination risk eliminated; deployed system post-processes to flag nonexistent steps.",
+  "Explanation for CodeLlama/Mistral underperformance is a suspicion only."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Hallucination (in this task)",
+   "definition": "generating properties such as steps or tables that do not exist",
+   "where": "1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Retrieval-augmented generation for knowledge-intensive NLP tasks (Lewis et al.)",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "extends",
+   "note": "RAG; this work trains retriever and LLM separately",
+   "quote": null
+  },
+  {
+   "work": "SANTA: Structure-aware language model pretraining improves dense retrieval on structured data (Li et al.)",
+   "year": 2023,
+   "arxiv": "2305.19912",
+   "relation": "uses-method",
+   "note": "retrieval training similar",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT (Reimers and Gurevych)",
+   "year": 2019,
+   "arxiv": "1908.10084",
+   "relation": "uses-method",
+   "note": "siamese encoder with mean pooling",
+   "quote": null
+  },
+  {
+   "work": "ANCE (Xiong et al.)",
+   "year": 2020,
+   "arxiv": "2007.00808",
+   "relation": "uses-method",
+   "note": "negative sampling",
+   "quote": null
+  },
+  {
+   "work": "StarCoder (Li et al.)",
+   "year": 2023,
+   "arxiv": "2305.06161",
+   "relation": "evaluates",
+   "note": "main LLM family",
+   "quote": null
+  },
+  {
+   "work": "Code Llama (Roziere et al.)",
+   "year": 2023,
+   "arxiv": "2308.12950",
+   "relation": "evaluates",
+   "note": "7B comparison",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B (Jiang et al.)",
+   "year": 2023,
+   "arxiv": "2310.06825",
+   "relation": "evaluates",
+   "note": "7B comparison",
+   "quote": null
+  },
+  {
+   "work": "Large dual encoders are generalizable retrievers (Ni et al., GTR)",
+   "year": 2022,
+   "arxiv": "2112.07899",
+   "relation": "baseline",
+   "note": "off-the-shelf encoders",
+   "quote": null
+  },
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "LLM fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Efficient guided generation for LLMs (Willard and Louf)",
+   "year": 2023,
+   "arxiv": "2307.09702",
+   "relation": "related",
+   "note": "complementary grammar-guided generation, not compared",
+   "quote": null
+  },
+  {
+   "work": "Retrieval augmentation reduces hallucination in conversation (Shuster et al.)",
+   "year": 2021,
+   "arxiv": "2104.07567",
+   "relation": "related",
+   "note": "prior RAG hallucination evidence",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "High-level architecture diagram showing how the user query is used by both the retriever and the LLM to generate the structured JSON output.",
+   "page": 3,
+   "why": "Shows the retrieve-then-prompt pipeline"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Training example, where the last four lines are the expected output (in red). The underlined text comes from the retriever's output.",
+   "page": 4,
+   "why": "Shows prompt format with suggestions"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Performance of various model types and sizes on the Human Eval split.",
+   "page": 6,
+   "why": "Core RAG vs no-RAG comparison"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue not printed in text (acknowledgements mention NAACL reviewers); recorded as preprint.",
+  "Retriever top-K used in the LLM prompt is not stated.",
+  "No instructions embedded in the PDF."
+ ]
 }

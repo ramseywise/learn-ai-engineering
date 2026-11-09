@@ -1,0 +1,156 @@
+{
+ "schema": 1,
+ "key": "2307.13269",
+ "pdf": "generative-ai/05-RL/sources/huang-2023-lorahub.pdf",
+ "bib": {
+  "title": "LoraHub: Efficient Cross-Task Generalization via Dynamic LoRA Composition",
+  "authors": ["Chengsong Huang", "Qian Liu", "Bill Yuchen Lin", "Tianyu Pang", "Chao Du", "Min Lin"],
+  "first_author": "Huang",
+  "year": 2024,
+  "venue": "COLM 2024 (arXiv v3, 19 Aug 2024; first posted 2023)",
+  "arxiv": "2307.13269",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 67794,
+  "chars_total": 67794,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can existing task-specific LoRA modules be composed automatically, using only a few examples of an unseen task and no gradients, to generalize across tasks?",
+ "hypothesis": "LoRA modules are modular enough that a weighted element-wise combination, with weights found by gradient-free search on a handful of examples, can match few-shot in-context learning at much lower inference cost.",
+ "contributions": [
+  "LoraHub: a framework with COMPOSE and ADAPT stages that assembles LoRA modules trained on upstream tasks for an unseen task from a few examples, with no extra parameters or gradients",
+  "Evaluation on BBH with FLAN-T5-large showing near-ICL average performance at zero-shot token cost, and a higher upper bound than ICL across demonstration sets",
+  "Release of code and pre-trained LoRA modules, with a vision of a LoRA sharing platform"
+ ],
+ "method": {
+  "summary": "Train one LoRA module per upstream Flan task on FLAN-T5-large. For an unseen task, randomly pick 20 modules, combine them element-wise with scalar coefficients, and tune the coefficients with CMA-ES (via Nevergrad Shiwa) for 40 steps on 5 labelled examples, minimising cross-entropy plus an L1 penalty on the coefficients. The merged module is then fixed and used for inference.",
+  "task": "few-shot cross-task generalization by composing LoRA modules (BBH multiple-choice tasks)",
+  "trains": true,
+  "datasets": [
+   {"name": "Flan Collection upstream tasks (LoRA training tasks)", "role": "train", "size": "nearly 200 distinct tasks; 20 modules sampled per experimental run", "split": null, "source": "tasks used to instruct FLAN-T5", "preprocessing": null},
+   {"name": "Big-Bench Hard (BBH)", "role": "eval", "size": "27 tasks (5 examples per task used for adaptation; test-set size not stated)", "split": "3 runs, each with different 5-shot examples", "source": "BBH multiple-choice benchmark", "preprocessing": null},
+   {"name": "WikiTableQuestions (WTQ)", "role": "eval", "size": null, "split": null, "source": "Pasupat & Liang 2015", "preprocessing": "used for the check that a WTQ-trained LoRA added to the pool gets the highest weight"}
+  ],
+  "models": [
+   {"name": "FLAN-T5-large", "role": "base", "params": null, "architecture": "encoder-decoder Transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "parameter count not stated in the text"}},
+   {"name": "FLAN-T5-xl", "role": "base", "params": null, "architecture": "encoder-decoder Transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"used_in": "Appendix D, Table 6"}},
+   {"name": "T5-large", "role": "base", "params": null, "architecture": "encoder-decoder Transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"used_in": "Appendix C, Table 5; non-instruction-tuned"}},
+   {"name": "LoRA modules (per upstream task)", "role": "proposed", "params": null, "architecture": "LoRA, W0 + AB, rank 16", "init_from": "base model, frozen", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"rank": 16}}
+  ],
+  "training": {
+   "objective": "Candidate LoRA modules: per-task LoRA tuning (loss not named). LoraHub ADAPT: minimise cross-entropy L on the few-shot examples + alpha * sum_i |w_i|",
+   "optimizer": "LoRA candidates: optimizer not stated. Coefficients w: gradient-free CMA-ES via Nevergrad (Shiwa selector), initialised at 0",
+   "lr": "1e-4 (candidate LoRA modules). Baselines: FFT 3e-5, IA3 and LoRA 2e-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 (candidate LoRA modules)",
+   "steps": "K = 40 CMA-ES iterations per unseen task (ADAPT)",
+   "epochs": "10 (candidate LoRA modules); 40 (FFT, IA3, LoRA baselines on 5 examples)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "L1 on coefficients, alpha = 0.05; coefficients clipped so |w| <= 1.5",
+   "hardware": "single A100 for adaptation in under a minute per BBH task; CPU-only feasible for LoraHub learning",
+   "compute": "memory: FFT about 40GB, LoRA about 34GB, LoraHub about 5GB (LoRA-FA memory test settings)",
+   "wall_clock": "less than a minute on one A100 per new BBH task (adaptation)",
+   "seeds": "3 runs with different 5-shot sets (main); 5 random seeds for FLAN-T5-xl and Fig 3 boxes",
+   "other": {"lora_library": "Huggingface PEFT", "composition": "m_hat = (sum w_i A_i)(sum w_i B_i); needs equal rank", "module_pool_per_run": "20 randomly chosen"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 runs, each with different 5-shot examples; the average is reported (best also reported in Table 4)",
+   "prompting": "LoraHub and zero-shot: no demonstrations (111.6 tokens per example). ICL: the same 5 examples as demonstrations (597.8 tokens per example)",
+   "retrieval": null,
+   "parameters": {"K": "40", "alpha": "0.05", "weight_bound": "1.5", "num_candidates": "20", "rank": "16", "initial_weights": "0"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "exact match (EM)", "definition": "exact match accuracy on BBH multiple-choice tasks, averaged over 27 tasks (Avg Performance Per Task)", "unit": "%", "higher_is_better": true},
+    {"name": "Avg Tokens Per Example", "definition": "input tokens per example at inference", "unit": "tokens", "higher_is_better": false}
+   ],
+   "baselines": ["zero-shot FLAN-T5-large", "5-shot in-context learning", "IA3 fine-tuning", "LoRA tuning", "full fine-tuning (FFT)", "LoRA retrieval (best single module by few-shot loss)"],
+   "protocol": "Mean over three runs with different 5-shot sets; gradient baselines are trained 40 epochs and tested at the end of training without model selection. No significance tests."
+  },
+  "availability": {
+   "code": "github.com/sail-sg/lorahub",
+   "weights": "huggingface.co/lorahub",
+   "data": "BBH and Flan Collection (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "In the case of FFT, a learning rate of 3e-5 is employed, whereas for IA3 and LoRA, we adopt a learning rate of 2e-4.", "where": "Sec 4.1 Baseline Setup"},
+   {"field": "training.batch_size", "quote": "setting the batch size at 64, the learning rate at 1e −4, and the number of training epochs at 10", "where": "Appendix G"}
+  ]
+ },
+ "results": [
+  {"claim": "Few-shot LoraHub on BBH averages 34.7 EM, above zero-shot (27.0) and below 5-shot ICL (37.3), at the zero-shot token count.", "kind": "measured", "source": null, "metric": "BBH average EM", "value": "34.7", "unit": "%", "baseline_value": "27.0 zero-shot; 37.3 ICL", "n": "27 tasks, 3 runs", "setup": "FLAN-T5-large, 20 random LoRA candidates, 5 examples, K=40", "quote": null, "table": "Table 1, row Avg Performance Per Task, column LoraHub avg (34.7); Zero 27.0; ICL avg 37.3", "note": "Fig 1 shows 27.0, 37.5 and 34.7; Table 1 prints ICL avg as 37.3", "where": "Table 1"},
+  {"claim": "LoraHub uses the same tokens per example as zero-shot and far fewer than ICL.", "kind": "measured", "source": null, "metric": "Avg Tokens Per Example", "value": "111.6", "unit": "tokens", "baseline_value": "597.8 (ICL)", "n": null, "setup": "BBH, FLAN-T5-large, 5-shot", "quote": null, "table": "Table 1, row Avg Tokens Per Example, columns LoraHub avg (111.6) and ICL avg (597.8)", "note": null, "where": "Table 1"},
+  {"claim": "LoraHub beats IA3 by 3.1 points on average but trails LoRA tuning (37.7) and full fine-tuning (42.1).", "kind": "measured", "source": null, "metric": "BBH average EM", "value": "3.1", "unit": "points", "baseline_value": "IA3 31.6; LoRA 37.7; FFT 42.1", "n": "27 tasks, 3 runs", "setup": "FLAN-T5-large, 40 epochs for gradient baselines on the same 5 examples", "quote": "our method exhibits a notable improvement of 3.1% on average in contrast to the promising IA3 method", "table": null, "note": null, "where": "Sec 4.2, Table 1"},
+  {"claim": "Best-of-three-runs LoraHub (41.2) exceeds best ICL (38.4) and, per the text, beats ICL on 18 tasks.", "kind": "measured", "source": null, "metric": "BBH best-run average EM", "value": "41.2", "unit": "%", "baseline_value": "ICL best 38.4; IA3 32.1; LoRA 40.9; FFT 46.2", "n": "27 tasks, max over 3 runs", "setup": "FLAN-T5-large, 5 examples", "quote": "the upper bound performance of our method across these runs can surpass ICL on 18 tasks", "table": "Table 4, row Best Performance (Average), columns LoraHub best (41.2), ICL best (38.4)", "note": "Selecting the best of three runs uses test performance, so it is an upper bound, not a deployable result", "where": "Sec 4.2, Table 4"},
+  {"claim": "Composition beats retrieving the single best LoRA by few-shot loss.", "kind": "measured", "source": null, "metric": "BBH average EM", "value": "34.7", "unit": "%", "baseline_value": "31.7 (LoRA retrieval)", "n": "27 tasks", "setup": "FLAN-T5-large; modules ranked by loss on the few-shot examples, best one tested", "quote": null, "table": "Table 2, columns LoRA Retrieval (31.7), LoraHub avg (34.7), LoraHub best (41.2)", "note": null, "where": "Table 2"},
+  {"claim": "LoraHub needs about 5GB of memory versus about 40GB for full fine-tuning and about 34GB for LoRA fine-tuning.", "kind": "measured", "source": null, "metric": "memory", "value": "5", "unit": "GB", "baseline_value": "40 (FFT); 34 (LoRA)", "n": null, "setup": "LoRA-FA memory test settings", "quote": "LoraHub only utilized about 5GB of memory", "table": null, "note": null, "where": "Sec 5"},
+  {"claim": "With FLAN-T5-xl, LoraHub averages 36.5 versus 25.8 zero-shot (best run 41.3).", "kind": "measured", "source": null, "metric": "BBH average EM", "value": "36.5", "unit": "%", "baseline_value": "25.8 zero-shot", "n": "27 tasks, 5 seeds", "setup": "FLAN-T5-xl, 5 examples, average over 5 random seeds", "quote": null, "table": "Table 6, row Average Performance per Task, columns Zero (25.8), LoraHub avg (36.5), LoraHub best (41.3)", "note": null, "where": "Appendix D, Table 6"},
+  {"claim": "On non-instruction-tuned T5-large, LoraHub reaches 20.78 average (rank 16) from near-zero zero-shot; rank 16 beats ranks 4 and 64.", "kind": "measured", "source": null, "metric": "BBH average EM", "value": "20.78", "unit": "%", "baseline_value": "16.14 (rank 4); 14.76 (rank 64); zero-shot 0.0 on all but Dyck (0.67)", "n": null, "setup": "T5-large, LoraHub, ranks 4/16/64", "quote": null, "table": "Table 5, row Average Performance per Task, column 16avg (20.78)", "note": null, "where": "Appendix C"},
+  {"claim": "Pre-filtering to the 20 lowest-loss candidates gives a small gain, 35.4 versus 34.7.", "kind": "measured", "source": null, "metric": "BBH average EM", "value": "35.4", "unit": "%", "baseline_value": "34.7", "n": "27 tasks", "setup": "FLAN-T5-large, loss-based pre-filtering of candidates", "quote": null, "table": "Table 7, row Avg Performance Per Task, column LoraHub filter (35.4)", "note": null, "where": "Appendix E"},
+  {"claim": "Removing the coefficient bound drops average performance from 34.7 to 33.5 (about 1.2), mostly via three tasks.", "kind": "measured", "source": null, "metric": "BBH average EM", "value": "33.5", "unit": "%", "baseline_value": "34.7", "n": "27 tasks", "setup": "FLAN-T5-large; bound of 1.5 removed", "quote": "The resulting performance decline led to an average decrease of 1.2% compared to the setting with threshold.", "table": null, "note": "Table 9 shows the threshold-free average as 33.5", "where": "Appendix I, Table 9"},
+  {"claim": "The top five influential upstream modules are mostly reading-comprehension and reasoning tasks; only RACE Is this the Right Answer gives a clear gain over FLAN-T5-large (+3.78).", "kind": "measured", "source": null, "metric": "BBH average EM delta", "value": "3.78", "unit": "points", "baseline_value": null, "n": null, "setup": "single module applied alone; Table 3 weights 0.72, 0.68, 0.63, 0.61, 0.58", "quote": null, "table": "Table 8, row ∆FLAN-T5-large, column RACE: Right (3.78)", "note": null, "where": "Appendix A, F"},
+  {"claim": "More candidate modules raise variance and the maximum achievable score, and most variance comes from which candidates are picked, not the optimizer seed.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Figure 3, 15 BBH tasks, 5, 10, 50 and 100 modules, 5 runs per box", "quote": "once the candidates are determined, random seeds have minimal impact on the final performance", "table": null, "note": null, "where": "Appendix H"}
+ ],
+ "limits": [
+  "LoraHub trails LoRA tuning and full fine-tuning, especially on tasks far from the upstream tasks (Dyck Languages: LoraHub and ICL about 1.0 while LoRA and FFT do well with 5 examples).",
+  "ADAPT costs extra inference steps (40 in the experiments); the authors say ICL is more pragmatic for one-time ad-hoc tasks, and LoraHub suits recurring tasks.",
+  "Performance is unstable with respect to which modules are randomly chosen; variance grows with the number of candidates, and the authors only add random selection or simple loss-based pre-filtering.",
+  "Everything is on BBH, mainly FLAN-T5-large, with candidate modules trained on the Flan tasks that FLAN-T5 was itself instruction-tuned on. No decoder-only LLMs are tested.",
+  "The 'upper bound beats ICL' claim takes the best of three runs on test data.",
+  "Modules must share base model and rank.",
+  "The reproducibility statement says code would be released on acceptance; the abstract gives the repository URLs.",
+  "Parameter count, candidate-LoRA optimizer, decoding settings and BBH test size are not stated in the text."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LoraHub learning", "definition": "Few-shot adaptation to an unseen task by composing LoRA modules (COMPOSE) and tuning the coefficients with a gradient-free method (ADAPT).", "where": "Sec 1, 3.1"},
+  {"term": "COMPOSE", "definition": "Element-wise combination of LoRA modules with scalar coefficients w_i: m_hat = (w1A1 + ... + wNAN)(w1B1 + ... + wNBN)", "where": "Sec 3.3, Eq 1"},
+  {"term": "ADAPT", "definition": "Updating w with a gradient-free algorithm to reduce loss on the few-shot examples Q", "where": "Sec 3.4"}
+ ],
+ "lineage": [
+  {"work": "LoRA: Low-rank adaptation of large language models (Hu et al.)", "year": 2022, "arxiv": "2106.09685", "relation": "extends", "note": "module type being composed; also a baseline", "quote": null},
+  {"work": "Scaling instruction-finetuned language models (FLAN-T5, Chung et al.)", "year": 2022, "arxiv": "2210.11416", "relation": "evaluates", "note": "base LLM", "quote": null},
+  {"work": "Black-box tuning for language-model-as-a-service (Sun et al.)", "year": 2022, "arxiv": "2201.08531", "relation": "uses-method", "note": "inspiration for gradient-free optimization of a small parameter set", "quote": null},
+  {"work": "Versatile black-box optimization (Shiwa, Liu et al.)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "optimizer selector, mostly CMA-ES", "quote": null},
+  {"work": "Few-shot parameter-efficient fine-tuning is better and cheaper than in-context learning (IA3, Liu et al.)", "year": 2022, "arxiv": "2205.05638", "relation": "baseline", "note": "IA3 baseline", "quote": null},
+  {"work": "Exploring the benefits of training expert language models over instruction tuning (Jang et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "inspired the LoRA retrieval baseline", "quote": null},
+  {"work": "Big-Bench Hard", "year": null, "arxiv": null, "relation": "uses-data", "note": "evaluation benchmark", "quote": null},
+  {"work": "The Flan Collection (Longpre et al.)", "year": 2023, "arxiv": "2301.13688", "relation": "uses-data", "note": "upstream tasks for the LoRA pool", "quote": null},
+  {"work": "Editing models with task arithmetic (Ilharco et al.)", "year": 2023, "arxiv": "2212.04089", "relation": "related", "note": "module composition via task vectors", "quote": null},
+  {"work": "TIES-merging (Yadav et al.)", "year": 2023, "arxiv": "2306.01708", "relation": "related", "note": "full model merging", "quote": null},
+  {"work": "Composing parameter-efficient modules with arithmetic operations (Zhang et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "concurrent PEFT composition", "quote": null},
+  {"work": "AdapterSoup (Chronopoulou et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "averages adapter weights", "quote": null},
+  {"work": "CrossFit (Ye et al.) and ReCross (Lin et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "cross-task generalization", "quote": null},
+  {"work": "LoRA-FA (Zhang et al.)", "year": 2023, "arxiv": "2308.03303", "relation": "uses-method", "note": "memory test settings", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "The illustration of zero-shot learning, few-shot in-context learning and few-shot LoraHub learning (ours).", "page": 1, "why": "Shows the three regimes with BBH scores 27.0, 37.5 and 34.7."},
+  {"figure": "Fig 2", "caption": "Our method encompasses two stages: the COMPOSE stage and the ADAPT stage.", "page": 4, "why": "The pipeline: weighted merge of modules, then K gradient-free updates of the weights."},
+  {"figure": "Fig 3", "caption": "The influence of number of LoRA modules on 15 tasks from BBH, and each box is obtained from 5 separate runs.", "page": 21, "why": "Variance against pool size (5, 10, 50, 100)."}
+ ],
+ "code": [
+  {"where": "Eq 1, Sec 3.3", "snippet": "m_hat = (w1 A1 + w2 A2 + ... + wN AN)(w1 B1 + w2 B2 + ... + wN BN)", "verbatim": false},
+  {"where": "Sec 3.4", "snippet": "minimize L + alpha * sum_{i=1..N} |w_i|", "verbatim": false}
+ ],
+ "problems": [
+  "The cached text has table cells on separate lines; the table numbers were matched to columns by order.",
+  "No embedded instructions found.",
+  "Fig 1 (37.5) and Table 1 (37.3) give different ICL averages."
+ ]
+}

@@ -1,0 +1,619 @@
+{
+ "schema": 1,
+ "key": "2312.08914",
+ "pdf": "generative-ai/07-agentic-applications/sources/hong-2023-cogagent.pdf",
+ "bib": {
+  "title": "CogAgent: A Visual Language Model for GUI Agents",
+  "authors": [
+   "Wenyi Hong",
+   "Weihan Wang",
+   "Qingsong Lv",
+   "Jiazheng Xu",
+   "Wenmeng Yu",
+   "Junhui Ji",
+   "Yan Wang",
+   "Zihan Wang",
+   "Yuxuan Zhang",
+   "Juanzi Li",
+   "Bin Xu",
+   "Yuxiao Dong",
+   "Ming Ding",
+   "Jie Tang"
+  ],
+  "first_author": "Hong",
+  "year": 2023,
+  "venue": "preprint (arXiv v3, 27 Dec 2024; CVPR-style layout)",
+  "arxiv": "2312.08914",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 67273,
+  "chars_total": 67273,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; figure images (Figs 1, 5-19) not viewable as text"
+ },
+ "type": "system",
+ "question": "Can a generalist vision-language model that reads only screenshots, at high resolution and within a manageable compute budget, beat HTML-reading LLMs on GUI navigation while staying strong on general VQA?",
+ "hypothesis": "GUI screenshots need high resolution for tiny text and icons, and a small-hidden-size cross-attention branch can supply that cheaply; GUI-specific pre-training data further helps.",
+ "contributions": [
+  "High-resolution cross-module added to CogVLM-17B, giving 1120x1120 input at lower compute",
+  "CCS400K web screenshot dataset with 140M REC and REG QA pairs plus OCR and grounding pre-training data",
+  "State of the art on nine VQA benchmarks as a generalist, and on Mind2Web and AITW using screenshots only"
+ ],
+ "method": {
+  "summary": "CogAgent adds a 0.30B EVA2-CLIP-L high-resolution branch, fused by small-hidden-size cross-attention into every layer of the CogVLM-17B decoder. It is pre-trained 60k steps on OCR, grounding, GUI and caption data, then multi-task fine-tuned 10k steps on VQA, human-annotated screenshots and converted Mind2Web and AITW data.",
+  "task": "GUI understanding and navigation (next-action prediction), plus VQA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic text renderings",
+    "role": "pretrain",
+    "size": "80M",
+    "split": null,
+    "source": "language pre-training text rendered on LAION-2B backgrounds",
+    "preprocessing": "Nougat-style augmentation"
+   },
+   {
+    "name": "Natural-image OCR (COYO, LAION-2B, PaddleOCR)",
+    "role": "pretrain",
+    "size": "18M",
+    "split": null,
+    "source": "COYO and LAION-2B",
+    "preprocessing": "images without text boxes filtered; aggressive rotation and flipping"
+   },
+   {
+    "name": "Academic documents (arXiv LaTeX, Nougat recipe)",
+    "role": "pretrain",
+    "size": "9M",
+    "split": null,
+    "source": "arXiv source",
+    "preprocessing": "Nougat augmentation"
+   },
+   {
+    "name": "Visual grounding",
+    "role": "pretrain",
+    "size": "40M images",
+    "split": null,
+    "source": "sampled from LAION-115M, as in CogVLM",
+    "preprocessing": "boxes [[x0,y0,x1,y1]] normalised to [000,999]"
+   },
+   {
+    "name": "CCS400K",
+    "role": "pretrain",
+    "size": "400,000 screenshots; 140M REC and REG QA pairs",
+    "split": null,
+    "source": "Common Crawl URLs, rendered with Playwright",
+    "preprocessing": "random common resolutions; redundant DOM attributes removed"
+   },
+   {
+    "name": "LAION-2B and COYO-700M captions",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "public",
+    "preprocessing": "broken URLs, NSFW, noisy captions and political bias removed"
+   },
+   {
+    "name": "Human-annotated screenshots",
+    "role": "train",
+    "size": "over two thousand screenshots",
+    "split": null,
+    "source": "over ten annotators; at least 20 screenshots per app/website",
+    "preprocessing": null
+   },
+   {
+    "name": "Mind2Web",
+    "role": "both",
+    "size": "over 2,000 tasks, 137 websites, 31 domains",
+    "split": "train; test on cross-website, cross-domain, cross-task",
+    "source": "Deng et al. 2023",
+    "preprocessing": "converted to QA with GPT-4; HTML cleansing for LLM baselines"
+   },
+   {
+    "name": "AITW",
+    "role": "both",
+    "size": "715k episodes, 30k instructions",
+    "split": "unified over five subsets; GoogleApps downsampled to 10%",
+    "source": "Rawles et al. (ref 31)",
+    "preprocessing": "converted to QA with GPT-4"
+   },
+   {
+    "name": "VQA datasets (VQAv2, OK-VQA, TextVQA, OCR-VQA, ST-VQA, ChartQA, InfoVQA, DocVQA)",
+    "role": "both",
+    "size": null,
+    "split": "VQAv2 test-dev, OK-VQA val, rest test",
+    "source": "public",
+    "preprocessing": "jointly fine-tuned"
+   },
+   {
+    "name": "MM-Vet and POPE",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot; POPE adversarial",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CogAgent-18B",
+    "role": "proposed",
+    "params": "18B",
+    "architecture": "CogVLM-17B plus high-resolution cross-attention branch",
+    "init_from": "CogVLM-17B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32",
+    "hidden": "4096",
+    "heads": "32",
+    "context": null,
+    "other": {
+     "decoder": "Vicuna-1.5-7B + visual expert",
+     "low_res_encoder": "EVA2-CLIP-E 224x224, patch 14",
+     "high_res_encoder": "EVA2-CLIP-L 0.30B 1120x1120, patch 14",
+     "cross_attention": "hidden 1024, 32 heads, d_cross=32",
+     "image_tokens": "L_hi=6400, L_lo=256",
+     "text_len_pretrain": "LT typically below 512 in earlier stages"
+    }
+   },
+   {
+    "name": "CogVLM-17B",
+    "role": "base",
+    "params": "17B",
+    "architecture": "EVA2-CLIP-E plus visual expert decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "4096",
+    "heads": "32",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-7B and LLaMA2-70B (fine-tuned by authors)",
+    "role": "baseline",
+    "params": "7B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen-VL, Auto-UI, GPT-3.5, GPT-4, Flan-T5-XL",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: autoregressive next-token loss on target text (decoder autoregressively outputs target text; loss not named)",
+   "optimizer": "Adam, beta (0.9, 0.95), eps 1e-5",
+   "lr": "2e-5 (both stages)",
+   "lr_schedule": "Cosine",
+   "warmup": "500 steps (both stages); data-curriculum warmup also used",
+   "batch_size": "4,608 pre-train; 1,024 multi-task",
+   "steps": "60,000 pre-train (20,000 cross-module only, then 40,000 with visual expert unfrozen); 10,000 multi-task",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": "0.1",
+   "regularisation": null,
+   "hardware": "inferred: A800 GPUs (only the ablation training-time measurement names A800, batch 8)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "curriculum": "easy text recognition and captioning first, then academic documents, grounding, web page data",
+    "stage_params": "646M (3.5%) trainable in stage 1",
+    "ablation_vqa": "3,000 iters, batch 1,280",
+    "ablation_mind2web": "2,400 iters, batch 128, top-10",
+    "mind2web_finetune": "fine-tuned on the train set; step count not stated",
+    "aitw_finetune": "unified over subsets; step count not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per benchmark; no seeds or repeats reported",
+   "prompting": "Input is task, screenshot and previous actions; output is Plan, Action, and operation with coordinates",
+   "retrieval": "Mind2Web element candidates from top-10 or top-50 given by the Deng et al. candidate generation model",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "step SR",
+     "definition": "Mind2Web: prediction correct only if same target element and operation as ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Matching score",
+     "definition": "AITW action matching per Rawles et al.",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA score / ANLS / EM / F1 / GPT-4 score",
+     "definition": "Per benchmark, Table 9",
+     "unit": "varies",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3.5",
+    "GPT-4",
+    "Flan-T5XL",
+    "LLaMA2-7B",
+    "LLaMA2-70B",
+    "Qwen-VL",
+    "CogVLM",
+    "Auto-UI"
+   ],
+   "protocol": "Single reported numbers, no seeds, no significance test. Mind2Web follows Deng et al. AITW LLM baseline numbers are from Zhan and Zhang."
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/CogVLM; CogAgent-9B-20241220 at https://github.com/THUDM/CogAgent",
+   "weights": "stated as open-sourced",
+   "data": "CCS400K release not stated"
+  },
+  "prompts": [
+   {
+    "purpose": "Convert a Mind2Web step into a plan and action QA pair with GPT-4",
+    "text": "Imagine that you are a robot operating a computer.",
+    "where": "Appendix 6.2 (first sentence only; the full prompt also gives the task, previous actions, the secretly-known future steps and a JSON output format)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "Training time is evaluated on A800 with the batch size of 8.",
+    "where": "Table 5 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CogAgent, from screenshots only, reaches 58.2 overall step SR on Mind2Web, above every HTML-input LLM compared.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step SR (overall)",
+   "value": "58.2",
+   "unit": "%",
+   "baseline_value": "54.4 (LLaMA2-70B, HTML, fine-tuned by the authors)",
+   "n": null,
+   "setup": "Mind2Web, three out-of-domain test subsets, step SR, candidates top-50 (GPT-4 row top-10), CogAgent fine-tuned on the Mind2Web train set from screenshots only",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row CogAgent (Ours), column overall"
+  },
+  {
+   "claim": "Fine-tuned LLaMA2-70B on cleaned HTML scores 54.4 overall on Mind2Web.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step SR (overall)",
+   "value": "54.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mind2Web, authors fine-tuned LLaMA2-70B with the Deng et al. HTML cleansing, top-50 candidates",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LLaMA2-70B, column overall"
+  },
+  {
+   "claim": "Few-shot GPT-4 on HTML scores 30.9 overall on Mind2Web; the number is copied from Deng et al. and uses top-10 candidates, unlike the top-50 of the fine-tuned rows.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step SR (overall)",
+   "value": "30.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mind2Web, GPT-4 few-shot, HTML input, element selection from top-10 candidates (dagger), result from Deng et al.",
+   "note": "Dagger marks top-10 candidate selection; other rows use top-50, so the comparison with 58.2 is not like for like.",
+   "where": "Table 3",
+   "table": "Table 3, row GPT-4 (few-shot), column overall"
+  },
+  {
+   "claim": "CogAgent beats LLaMA2-70B by 11.6, 4.7 and 6.6 points on cross-task, cross-website and cross-domain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step SR gap",
+   "value": "11.6, 4.7, 6.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mind2Web, three out-of-domain test subsets, step SR, candidates top-50 (GPT-4 row top-10), CogAgent fine-tuned on the Mind2Web train set from screenshots only",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "surpassing LLaMA2-70B, which is nearly 4× the scale of CogAgent, by 11.6%, 4.7%, and 6.6%, respectively"
+  },
+  {
+   "claim": "On AITW CogAgent scores 76.88 overall, +2.61 over the visual baseline Auto-UI (74.27) and far above language baselines using OCR+icon text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall matching score",
+   "value": "76.88",
+   "unit": "score (matching score)",
+   "baseline_value": "74.27 (Auto-UI unified)",
+   "n": null,
+   "setup": "AITW, unified model fine-tuned on all five subsets, GoogleApps subset downsampled to 10%",
+   "note": null,
+   "where": "Table 4, Sec 3.3",
+   "quote": "our model achieves +2.61 improvements in the overall performance",
+   "table": "Table 4, row CogAgent (Ours), column Overall"
+  },
+  {
+   "claim": "Language-model baselines on AITW overall: GPT-3.5 few-shot 7.72, LLaMA2-7B 28.40 (the latter fine-tuned per subset), both from Zhan and Zhang.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall matching score",
+   "value": "7.72 and 28.40",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AITW, text (OCR+icon) screen representation",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows GPT-3.5 and LLaMA2-7B, column Overall"
+  },
+  {
+   "claim": "In a sampled manual re-check of mismatches with the AITW labels, 42% were valid alternative actions, not errors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of sampled mismatches that were correct",
+   "value": "42",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AITW, sample of CogAgent responses that differ from the label; sample size not given beyond 'hundreds'",
+   "note": "Main text says 'randomly sample hundreds of cases ... more than 40% are determined to be correct'; appendix says 42% of 'sampled instances'. Sample size is never given as a number.",
+   "where": "Appendix 4",
+   "quote": "in 42% of these, the model’s response actually represented an alternative correct method"
+  },
+  {
+   "claim": "High-resolution cross-module cuts forward FLOPs: 12.56 TFLOPs at 224 plus 1120 versus 29.14 for the original architecture at 490.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TFLOPs forward",
+   "value": "12.56",
+   "unit": "TFLOPs",
+   "baseline_value": "29.14 (original architecture, 490)",
+   "n": null,
+   "setup": "Ablation, CogVLM-style architecture vs cross-module, forward pass; batch size 8 for training time; Table 5",
+   "note": null,
+   "where": "Table 5, Fig 3",
+   "table": "Table 5, row 224+1120 cross-module, column TFLOPs"
+  },
+  {
+   "claim": "At 1120 resolution the original architecture needs 143.2 TFLOPs, more than ten times the cross-module's 12.56 (value read from Fig 3 labels).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TFLOPs at 1120",
+   "value": "143.2",
+   "unit": "TFLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3, forward propagation; the figure's labels are 7.8, 8.8, 10.1, 12.6, 29.1, 66.3, 143.2",
+   "note": "143.2 is read from figure labels in the text layer, not stated in prose.",
+   "where": "Fig 3, Sec 4.1",
+   "quote": "Its FLOPs can even be more than 10 times higher compared to employing a cross-module at a resolution of 1120"
+  },
+  {
+   "claim": "The paper claims at least (6400+LT)/(256+LT) times lower attention complexity and over 25x in early pre-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "acceleration lower bound",
+   "value": "over 25",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Attention-complexity derivation, LT below 512, d_cross=32, H_cross=32, d_dec=128, H_dec=32",
+   "note": "Theory of attention cost only, not measured wall clock.",
+   "where": "Appendix 3",
+   "quote": "our high-resolution cross-module can get an over 25× reduction in computational cost"
+  },
+  {
+   "claim": "CogAgent reaches 52.8 on MM-Vet (zero-shot) and 85.9 on POPE-adversarial.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MM-Vet score",
+   "value": "52.8",
+   "unit": "GPT-4 score",
+   "baseline_value": "36.3 (LLaVA-1.5)",
+   "n": null,
+   "setup": "Zero-shot, MM-Vet test; POPE adversarial subset F1 85.9",
+   "note": null,
+   "where": "Sec 3.1, Table 2",
+   "quote": "our model achieved a remarkable score of 52.8, surpassing the closest competitor, LLaVA-1.5, by a substantial margin (+16.5)"
+  },
+  {
+   "claim": "Generalist VQA results: TextVQA 76.1, DocVQA 81.6, ChartQA 68.4, InfoVQA 44.5, STVQA 80.5, VQAv2 83.7, OKVQA 61.2, OCRVQA 75.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TextVQA VQA score",
+   "value": "76.1",
+   "unit": "%",
+   "baseline_value": "68.1 (CogVLM generalist)",
+   "n": null,
+   "setup": "Single generalist model fine-tuned jointly on all eight VQA sets",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row CogAgent (Ours), column TextVQA"
+  },
+  {
+   "claim": "Ablation: adding OCR then GUI and grounding pre-train data lifts Mind2Web from 38.6 (Cap) to 54.2 (All) and DocVQA from 57.6 to 76.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mind2Web (ablation, top-10)",
+   "value": "54.2",
+   "unit": "%",
+   "baseline_value": "38.6 (Cap, 490)",
+   "n": null,
+   "setup": "Ablation: shorter fine-tune (2,400 iters, batch 128) on Mind2Web, top-10; 'All' uses base 224 and cross 1120",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row All, column Mind2Web"
+  },
+  {
+   "claim": "In the architecture ablation, cross-module at 756 gives STVQA 73.6 vs 68.1 for the original at 490 while using about half the TFLOPs (10.08 vs 29.14).",
+   "kind": "measured",
+   "source": null,
+   "metric": "STVQA",
+   "value": "73.6",
+   "unit": "%",
+   "baseline_value": "68.1",
+   "n": null,
+   "setup": "Ablation, models pre-trained with Caption+OCR data; training time/it on A800 batch 8",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 224 + cross 756, column STVQA"
+  },
+  {
+   "claim": "The cross-module branch adds 0.30B parameters; pre-training first trains only 646M (3.5%) of the parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trainable parameters, stage 1",
+   "value": "646M (3.5%)",
+   "unit": "params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "First 20,000 of 60,000 pre-training steps",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "resulting in a total number of 646M (3.5%) trainable parameters"
+  }
+ ],
+ "limits": [
+  "Authors concede imprecise output coordinates and inability to process multiple images (Conclusion).",
+  "AITW action matching undercounts valid alternative paths; authors recommend a virtual-environment task-completion evaluation.",
+  "Mind2Web comparison mixes top-10 (GPT-4) and top-50 candidates, and mixes few-shot with fine-tuned baselines.",
+  "Mind2Web and AITW are offline next-action benchmarks, not live task completion.",
+  "Single runs, no seeds or variance; step counts for task fine-tuning and decoding settings not given.",
+  "Failure cases: incorrect action, incorrect coordinate, incorrect GUI observation, hallucination (Appendix 7).",
+  "The 18B version is dated; the authors point to CogAgent-9B-20241220."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "CogVLM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base VLM, visual expert (ref 38)",
+   "quote": "By building upon CogVLM [38]"
+  },
+  {
+   "work": "Mind2Web",
+   "year": 2023,
+   "arxiv": "2306.06070",
+   "relation": "uses-data",
+   "note": "benchmark, protocol and baselines",
+   "quote": null
+  },
+  {
+   "work": "Android in the Wild",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "AITW, Rawles et al. (ref 31)",
+   "quote": null
+  },
+  {
+   "work": "Auto-UI (Zhan and Zhang)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "visual AITW baseline and source of LLM baseline numbers",
+   "quote": null
+  },
+  {
+   "work": "AgentTuning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Llama2-70B fine-tuned on Mind2Web (ref 42)",
+   "quote": null
+  },
+  {
+   "work": "Nougat",
+   "year": 2023,
+   "arxiv": "2308.13418",
+   "relation": "uses-method",
+   "note": "academic document data and augmentation",
+   "quote": null
+  },
+  {
+   "work": "Qwen-VL",
+   "year": 2023,
+   "arxiv": "2308.12966",
+   "relation": "baseline",
+   "note": "also cited as a compression attempt at 448x448",
+   "quote": null
+  },
+  {
+   "work": "Pix2Struct",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "small hidden size for text tasks; DOM cleaning method",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Model architecture of CogAgent. We adopt CogVLM as the original VLM.",
+   "page": 4,
+   "why": "Shows the two image branches and per-layer cross-attention."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of FLOPs during forward propagation for different model architectures and resolutions.",
+   "page": 6,
+   "why": "FLOPs growth: near linear with the cross-module, steep without."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Performance on Mind2Web.",
+   "page": 6,
+   "why": "Headline screenshot vs HTML comparison, with top-10 vs top-50 dagger."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2 / Sec 2.2",
+   "snippet": "X'_i = MSA(layernorm(X_in_i)) + X_in_i ; X_out_i = MCA(layernorm(X'_i), X_hi) + X'_i",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 1 and 4 cell values read from flattened text; column order checked against headers.",
+  "Text says results are in 'Sec. 3.2' for Table 3 (typo).",
+  "Figure 3 values read from the text layer of the figure."
+ ]
+}

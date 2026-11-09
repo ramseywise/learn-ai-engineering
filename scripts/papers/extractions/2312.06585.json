@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "2312.06585",
+ "pdf": "generative-ai/05-RL/sources/singh-2023-beyond-human-data.pdf",
+ "bib": {
+  "title": "Beyond Human Data: Scaling Self-Training for Problem-Solving with Language Models",
+  "authors": [
+   "Avi Singh",
+   "John D Co-Reyes",
+   "Rishabh Agarwal",
+   "Ankesh Anand",
+   "Piyush Patil",
+   "Xavier Garcia",
+   "Peter J. Liu",
+   "James Harrison",
+   "Jaehoon Lee",
+   "Kelvin Xu",
+   "Aaron Parisi",
+   "Abhishek Kumar",
+   "Alex Alemi",
+   "Alex Rizkowsky",
+   "Azade Nova",
+   "Ben Adlam",
+   "Bernd Bohnet",
+   "Gamaleldin Elsayed",
+   "Hanie Sedghi",
+   "Igor Mordatch",
+   "Isabelle Simpson",
+   "Izzeddin Gur",
+   "Jasper Snoek",
+   "Jeffrey Pennington",
+   "Jiri Hron",
+   "Kathleen Kenealy",
+   "Kevin Swersky",
+   "Kshiteej Mahajan",
+   "Laura Culp",
+   "Lechao Xiao",
+   "Maxwell L Bileschi",
+   "Noah Constant",
+   "Roman Novak",
+   "Rosanne Liu",
+   "Tris Warkentin",
+   "Yundi Qian",
+   "Yamini Bansal",
+   "Ethan Dyer",
+   "Behnam Neyshabur",
+   "Jascha Sohl-Dickstein",
+   "Noah Fiedel"
+  ],
+  "first_author": "Singh",
+  "year": 2024,
+  "venue": "Transactions on Machine Learning Research (04/2024)",
+  "arxiv": "2312.06585",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 49550,
+  "chars_total": 49550,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can self-training on model-generated samples filtered by a scalar (binary) reward go beyond fine-tuning on human data for problem-solving with large LMs?",
+ "hypothesis": "Model-generated, reward-filtered solutions are more in-distribution and more plentiful than human solutions, so ReST-EM should beat human-data SFT and scale favourably with model size.",
+ "contributions": [
+  "Introduce ReST-EM, learning from self-generated data via expectation-maximization within an RL framework",
+  "Show training on self-generated solutions surpasses human solutions on math and code",
+  "Ablations pinpoint crucial elements",
+  "ReST-EM fine-tuned LLMs transfer robustly to held-out tasks"
+ ],
+ "method": {
+  "summary": "Iterate Generate (sample N solutions per problem from the model with few-shot prompt, keep those with reward 1) and Improve (SFT the original base model on the filtered set, reward-weighted NLL). Applied to PaLM 2 on MATH and APPS Introductory, evaluated on test and on transfer sets.",
+  "task": "competition math and code generation with verifiable binary reward; self-training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Hendrycks MATH",
+    "role": "both",
+    "size": "7500 train problems",
+    "split": "train for ReST-EM; test split for evaluation",
+    "source": "Hendrycks et al. 2021b; binary reward by ground-truth answer match",
+    "preprocessing": "max 10 correct solutions per problem kept"
+   },
+   {
+    "name": "APPS (Introductory)",
+    "role": "both",
+    "size": "2342 train problems",
+    "split": "train; test split for evaluation",
+    "source": "Hendrycks et al. 2021a; reward = passes test cases",
+    "preprocessing": "max 10 correct solutions per problem kept"
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "transfer eval from MATH"
+   },
+   {
+    "name": "Hungarian HS finals 2023",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Paster 2023",
+    "preprocessing": "1-shot Grok prompt, temperature 0.1, manual grading with examiner rubric"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": "transfer eval from APPS"
+   },
+   {
+    "name": "Big-Bench Hard",
+    "role": "eval",
+    "size": "23 tasks",
+    "split": null,
+    "source": "Suzgun et al. 2022",
+    "preprocessing": "few-shot and CoT following Google et al. 2023"
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM 2-S (Bison)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "public APIs on Google Cloud"
+    }
+   },
+   {
+    "name": "PaLM 2-S* (Codey)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "used": "APPS/code"
+    }
+   },
+   {
+    "name": "PaLM 2-L (Unicorn)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "teacher in distillation"
+    }
+   }
+  ],
+  "training": {
+   "objective": "reward-weighted negative log-likelihood J(theta)=E[r(x,y) log p_theta(y|x)] on filtered samples; with binary reward this is SFT on correct samples, loss on targets only",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "Improve step runs 'while reward improves on Dval' (Algorithm 1); iterations I: up to 3 on MATH, 2 shown on APPS",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "each iteration fine-tunes the base pretrained model, not the previous iterate, to limit drift; cap of 10 solutions per problem",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "input": "few-shot prompt plus question as input, model solutions as targets",
+    "dataset size ablation": "single run, variance not quantified"
+   }
+  },
+  "inference": {
+   "decoding": "E-step: top-K sampling K=40; evaluation: greedy decoding (following Google et al. 2023)",
+   "temperature": "0.7 for E-step sampling; 1.0 for pass@K (and difficulty bucketing); 0.1 for Hungarian exam",
+   "top_p": "0.95 nucleus for pass@K figure",
+   "max_tokens": null,
+   "samples": "E-step: 32 per problem on MATH, 64 on APPS; majority voting 64 samples; single run per config",
+   "prompting": "few-shot prompt with step-by-step solutions (math) or programs (code); 4-shot for MATH per Fig 1 axis",
+   "retrieval": null,
+   "parameters": {
+    "cutoff_solutions_per_problem": "10",
+    "difficulty buckets": "easy 75-100% base-model success at T=1.0, medium 50-75, hard 25-50, very hard <25"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1 test accuracy",
+     "definition": "greedy-decoded accuracy on test split",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@K",
+     "definition": "probability at least one of K samples is correct (answer correct or passes all unit tests)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "majority voting",
+     "definition": "most consistent answer across sampled reasoning paths",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "pretrained PaLM 2 models (iteration 0)",
+    "SFT on human-written solutions (full 7K, and 5K subset)",
+    "ReST* (one iteration, one sample per problem)",
+    "ReST (continue from previous iteration)",
+    "Distill from PaLM 2-L",
+    "3x-data single iteration"
+   ],
+   "protocol": "single runs, no seeds or significance tests; BBH over multiple checkpoints with std; Hungarian exam manually graded"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we sample from the language model using top-K sampling with K=40 and temperature of 0.7",
+    "where": "Sec 5 Implementation Details"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Majority voting with 64 samples on MATH: ReST-EM-tuned PaLM 2-L beats base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "maj@64",
+   "value": "48.82",
+   "unit": "% maj@64 test acc",
+   "baseline_value": 44.02,
+   "n": null,
+   "setup": "MATH test, PaLM 2-L, 64 samples per question",
+   "quote": "when using 64 samples per question, the PaLM 2-L fine-tuned with ReST𝐸𝑀obtains a test accuracy of 48.82, while the base model gets 44.02",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Test accuracy gain from ReST-EM on MATH, PaLM 2-S.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 improvement",
+   "value": "5.94",
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH test, PaLM 2-S, greedy pass@1, vs initial model",
+   "quote": "the test accuracy improvement with ReST𝐸𝑀is 5.94% for PaLM 2-S",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Test accuracy gain from ReST-EM on MATH, PaLM 2-L, larger than for 2-S.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 improvement",
+   "value": "6.34",
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH test, PaLM 2-L, greedy pass@1",
+   "quote": "compared to 6.34% for the larger PaLM 2-L model",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Gain on APPS (Introductory), PaLM 2-S*.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 improvement",
+   "value": "5.6",
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APPS Introductory test, PaLM 2-S*",
+   "quote": "on the APPS dataset, improvements are 5.6% for PaLM 2-S*",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Gain on APPS (Introductory), PaLM 2-L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 improvement",
+   "value": "6.4",
+   "unit": "% (as printed)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APPS Introductory test, PaLM 2-L",
+   "quote": "compared to 6.4% for PaLM 2-L",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "One iteration on 3x as many solutions per problem is worse than iterating (40.3 vs 41 at iter 2, 41.9 at iter 3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "40.3",
+   "unit": "% pass@1",
+   "baseline_value": 41.9,
+   "n": null,
+   "setup": "MATH, PaLM-2-L base, E-step with 3x solutions per problem, one iteration",
+   "quote": "pass@1 performance of 40.3%, which is lower than the 41% in second and 41.9% in third iteration",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Qualitative: model-generated solutions beat human solutions in SFT, especially for PaLM 2-L.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH and APPS, PaLM 2-S/S*/L; unfair in that model data has multiple solutions per problem",
+   "quote": "outperforms using human-written solutions, especially for the PaLM 2-L model",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 2-3"
+  },
+  {
+   "claim": "Qualitative: apples-to-apples with ~5K questions and one solution each, ReST-EM still beats SFT on human data.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH, ~5K questions with at least one correct model solution, PaLM 2-L",
+   "quote": "ReST𝐸𝑀outperforms fine-tuning on human data even in this much more restricted setting",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 6 left"
+  },
+  {
+   "claim": "Qualitative: test performance does not rise with iterations; APPS regresses at iteration 2 (overfitting to small train set).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Train pass@1 rises linearly with iterations; MATH PaLM-2-L, APPS PaLM-2-S*",
+   "quote": "test set performance does not",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 4"
+  },
+  {
+   "claim": "Qualitative: ReST-EM (always fine-tune base) transfers better than ReST (continue from last iteration), similar on APPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 2-S*, APPS train, HumanEval transfer",
+   "quote": "the transfer performance to HumanEval is substantially better with ReST𝐸𝑀",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 7"
+  },
+  {
+   "claim": "Qualitative: 1000 MATH questions give significant gains; 4000 slightly worse than 2000 (single run variance).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM-2-L, MATH, single ReST-EM iteration, no repeats",
+   "quote": "utilizing just 1000 MATH questions results in significant gains",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 8 left"
+  },
+  {
+   "claim": "Qualitative: no major degradation on BBH; MATH-tuned model better with CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBH 23 tasks, PaLM 2-L tuned on MATH or APPS, few-shot and CoT, multiple checkpoints",
+   "quote": "We see no major degradation on any of the BBH tasks",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4, Fig 9"
+  },
+  {
+   "claim": "Qualitative: MATH-tuned PaLM 2-L on 2023 Hungarian HS finals surpasses all models but GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1-shot Grok prompt, temperature 0.1, manually graded with examiner rubric",
+   "quote": "surpassing the performance of all existing models except GPT-4",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4, Fig 10"
+  },
+  {
+   "claim": "Qualitative: distilling PaLM 2-L ReST-EM data into PaLM 2-S beats human data and self-generated data.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH, PaLM 2-S student, PaLM 2-L teacher, ~5K questions",
+   "quote": "Distill∗surpasses the performance achieved by fine-tuning on human-written solutions",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 6 right"
+  }
+ ],
+ "limits": [
+  "Requires a moderately-sized set of problems/prompts collected from humans for each new task",
+  "Requires a manually designed or learned reward, ideally automatic",
+  "May not close the gap between pass@1 and pass@K",
+  "More iterations overfit small training sets (APPS regresses at iter 2)",
+  "No hyperparameters for optimizer, lr, batch size, compute given; internal PaLM 2 models, no code or weights",
+  "Dataset-size ablation is a single run; authors note variance (4000 questions slightly worse than 2000)",
+  "Human vs model comparison not fully fair since model data has multiple solutions per problem",
+  "Sequential to ReST-EM comparisons only on PaLM 2-S*, APPS"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ReST-EM",
+   "definition": "Generate (E-step) samples filtered by binary reward, Improve (M-step) SFT of the base model on them, repeated",
+   "where": "Sec 1, 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Reinforced Self-Training (ReST), Gulcehre et al.",
+   "year": 2023,
+   "arxiv": "2308.08998",
+   "relation": "extends",
+   "note": "simplifies ReST: no human data in E-step, fine-tune base each iteration, binary reward",
+   "quote": null
+  },
+  {
+   "work": "Scaling relationship on learning mathematical reasoning (RFT), Yuan et al.",
+   "year": 2023,
+   "arxiv": "2308.01825",
+   "relation": "contradicts",
+   "note": "RFT saw diminishing returns with model size; here gains grow with size",
+   "quote": null
+  },
+  {
+   "work": "STaR, Zelikman et al.",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "greedy, one sample; rationalization gave false positives",
+   "quote": null
+  },
+  {
+   "work": "RAFT, Dong et al.",
+   "year": 2023,
+   "arxiv": "2304.06767",
+   "relation": "related",
+   "note": "instance of the EM framework",
+   "quote": null
+  },
+  {
+   "work": "Expert Iteration, Anthony et al.",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "EM instance with search",
+   "quote": null
+  },
+  {
+   "work": "Dayan and Hinton, EM for RL",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "EM framework",
+   "quote": null
+  },
+  {
+   "work": "Reward weighted regression, Peters and Schaal",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "related",
+   "note": "EM with exp reward",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "evaluates",
+   "note": "base models and eval settings",
+   "quote": null
+  },
+  {
+   "work": "MATH, Hendrycks et al.",
+   "year": 2021,
+   "arxiv": "2103.03874",
+   "relation": "uses-data",
+   "note": "training/test",
+   "quote": null
+  },
+  {
+   "work": "APPS, Hendrycks et al.",
+   "year": 2021,
+   "arxiv": "2105.09938",
+   "relation": "uses-data",
+   "note": "training/test",
+   "quote": null
+  },
+  {
+   "work": "Large language models can self-improve, Huang et al.",
+   "year": 2022,
+   "arxiv": "2210.11610",
+   "relation": "related",
+   "note": "single iteration with majority-vote reward",
+   "quote": null
+  },
+  {
+   "work": "Many-shot in-context learning, Agarwal et al.",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspired by earlier version of this paper",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "ReST-EM for math problem-solving: MATH and GSM8K vs iterations, with SFT baseline",
+   "page": 8,
+   "why": "shows iterative gains and SFT gap"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Train-test performance gap vs ReST-EM iterations",
+   "page": 9,
+   "why": "shows overfitting"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "ReST-EM vs SFT on MATH; distillation",
+   "page": 11,
+   "why": "controlled human vs model data comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "for i=1..I: D_i = {(x_j,y_j)} x_j~D, y_j~p_theta(y|x_j); annotate r(x,y); while reward improves on D_val: optimise J(theta)=E_{D_i}[r(x,y) log p_theta(y|x)]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Paper has no appendix; optimizer, lr, batch size, compute not stated. Subscript glyphs in 'ReST-EM' are garbled in extracted text."
+ ]
+}

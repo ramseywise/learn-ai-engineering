@@ -1,0 +1,547 @@
+{
+ "schema": 1,
+ "key": "2412.18319",
+ "pdf": "generative-ai/05-RL/sources/yao-2024-mulberry.pdf",
+ "bib": {
+  "title": "Mulberry: Empowering MLLM with o1-like Reasoning and Reflection via Collective Monte Carlo Tree Search",
+  "authors": [
+   "Huanjin Yao",
+   "Jiaxing Huang",
+   "Wenhao Wu",
+   "Jingyi Zhang",
+   "Yibo Wang",
+   "Shunyu Liu",
+   "Yingjie Wang",
+   "Yuxin Song",
+   "Haocheng Feng",
+   "Li Shen",
+   "Dacheng Tao"
+  ],
+  "first_author": "Yao",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2412.18319",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 60348,
+  "chars_total": 60348,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can multiple MLLMs jointly searching a reasoning tree produce step-by-step and reflective reasoning data that teaches an MLLM o1-like reasoning?",
+ "hypothesis": "Tree search by a single MLLM gets trapped in homogeneous low-quality nodes and is slow; pooling several models in expansion and error positioning raises search success and cuts iterations.",
+ "contributions": [
+  "CoMCTS: collective learning introduced into MCTS for MLLM reasoning-path search",
+  "Mulberry-260K dataset of reasoning trees",
+  "Mulberry series of MLLMs with step-by-step reasoning and reflection",
+  "Experiments on various benchmarks"
+ ],
+ "method": {
+  "summary": "CoMCTS runs Expansion, Simulation and Error Positioning, Backpropagation and Selection over a tree whose nodes are proposed and scored by four MLLMs. Found correct paths (plus reflective paths built from negative sibling nodes) form Mulberry-260K, used for plain SFT of four base MLLMs. No RL is used.",
+  "task": "multimodal reasoning (math, charts, science, general VQA); tree-search data generation plus SFT",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Mulberry-260K raw questions",
+    "role": "train",
+    "size": "260K raw multimodal questions (image plus text instruction); 15K sampled for reflective reasoning training",
+    "split": null,
+    "source": "55K math (GLLaVA, GEOS, UniGeo, GeoQA Plus, Geo3K, MathVision, GeoMverse, MathV360K); 116K figure understanding (DVQA, DocVQA, FigureQA, PlotQA, ChartQA, InfoVQA, MultiHiertt, LRV-Chart); 41K math word problems (IconQA, TabMWP, CLEVR, CLEVR-Math, Super-CLEVR); 2K medical (VQA-RAD, PMC-VQA); 17K science (TQA, AI2D, ScienceQA); 24K natural world QA (VQA-AS, A-OKVQA, TextVQA, Vizwiz, VQA2.0)",
+    "preprocessing": "questions with a found correct path are kept with the tree; final count of questions with found paths not stated"
+   },
+   {
+    "name": "Geo3K + GeoQA-Plus subset",
+    "role": "eval",
+    "size": "1K samples",
+    "split": null,
+    "source": "Lu et al. 2021a; Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MathVista, MMStar, MMMU, ChartQA, DynaMath, HallBench, MM-Math, MME(sum)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "8 benchmarks (Huang & Zhang, 2024)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4o",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "search group member"
+    }
+   },
+   {
+    "name": "Qwen2-VL-72B",
+    "role": "teacher",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "search group member"
+    }
+   },
+   {
+    "name": "Qwen2-VL-7B / Mulberry-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Qwen2-VL-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "in search group and fine-tuned"
+    }
+   },
+   {
+    "name": "LLaMA-3.2-11B-Vision-Instruct / Mulberry-Llama-11B",
+    "role": "base",
+    "params": "11B",
+    "architecture": null,
+    "init_from": "LLaMA-3.2-11B-Vision-Instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "in search group and fine-tuned"
+    }
+   },
+   {
+    "name": "Qwen2-VL-2B / Mulberry-2B",
+    "role": "base",
+    "params": "2B",
+    "architecture": null,
+    "init_from": "Qwen2-VL-2B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "not in search; tests generalisation"
+    }
+   },
+   {
+    "name": "LLaVA-NeXT-8B / Mulberry-LLaVA-8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": null,
+    "init_from": "LLaVA-NeXT-8B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "not in search; tests generalisation"
+    }
+   }
+  ],
+  "training": {
+   "objective": "SFT: maximise log pi(Y|Q) on effective paths (Eq 9) plus log pi(Y_reflect|Q) on reflective paths (Eq 10)",
+   "optimizer": null,
+   "lr": "1e-5 (5e-6 for Qwen2-VL-7B)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "2",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "reflection_data": "15K reflective samples; reflection prompt e.g. 'The previous reasoning step is wrong and let's rethink it again.'",
+    "algorithm": "Algorithm 1 alternates search and training over MaxEpoch"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Mulberry output format: Image Description, Rationales, 'Let's think step by step', Step 1..n, final answer (Fig 5)",
+   "retrieval": null,
+   "parameters": {
+    "search_group": "4 models: GPT-4o, Qwen2-VL-7B, LLaMA-3.2-11B-Vision-Instruct, Qwen2-VL-72B",
+    "max_search_iterations": "20",
+    "candidates_per_iteration": "one subsequent candidate path per model",
+    "threshold_t": "0",
+    "UCB_c": null,
+    "prompt_eval": null
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Search Success Rate (S.S.R.)",
+     "definition": "share of questions for which search finds a correct reasoning path (definition not given precisely)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average Search Iteration",
+     "definition": "mean search iterations",
+     "unit": "times",
+     "higher_is_better": false
+    },
+    {
+     "name": "Benchmark accuracy / AVG over 8 benchmarks",
+     "definition": "per-benchmark score; AVG over 8 benchmarks (MME sum scaling in AVG not stated)",
+     "unit": "% (MME in points)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4o direct",
+    "MCTS (Coulom 2006)",
+    "ReST-MCTS",
+    "Omega-MCTS",
+    "LLaVA-CoT-11B",
+    "LLaVA-Reasoner-8B",
+    "Insight-V-8B",
+    "base models without Mulberry data"
+   ],
+   "protocol": "Single reported runs; no seeds or variance; benchmark eval prompt/decoding not stated"
+  },
+  "availability": {
+   "code": "https://github.com/HJYao00/Mulberry (stated 'will be available')",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Mulberry-7B improves Qwen2-VL-7B on MathVista",
+   "kind": "measured",
+   "source": null,
+   "metric": "MathVista",
+   "value": 63.1,
+   "unit": "%",
+   "baseline_value": 58.2,
+   "n": null,
+   "setup": "Qwen2-VL-7B SFT on Mulberry-260K, MathVista",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Mulberry-7B, column MathVista"
+  },
+  {
+   "claim": "Mulberry-7B gains on average over 8 benchmarks over Qwen2-VL-7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "AVG",
+   "value": 4.2,
+   "unit": "points (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 benchmarks, Mulberry-7B vs Qwen2-VL-7B",
+   "note": "Table 1 AVG 58.9 vs 54.7",
+   "where": "Sec 4.3",
+   "quote": "+4.2% over Qwen2-VL-7B and +7.5% over LLaMA-3.2-11B-Vision-Instruct averaged on 8 benchmarks"
+  },
+  {
+   "claim": "Mulberry-11B gain over Llama-3.2-11B-V-Instruct averaged",
+   "kind": "measured",
+   "source": null,
+   "metric": "AVG",
+   "value": 7.5,
+   "unit": "points (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 benchmarks",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "+7.5% over LLaMA-3.2-11B-Vision-Instruct averaged on 8 benchmarks"
+  },
+  {
+   "claim": "Mulberry-LLaVA-8B gain over LLaVA-NeXT-8B averaged (base not in search)",
+   "kind": "measured",
+   "source": null,
+   "metric": "AVG",
+   "value": 11.0,
+   "unit": "points (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 benchmarks",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "+5.4% and +11.0% gains averaged on 8 benchmarks"
+  },
+  {
+   "claim": "Mulberry-2B gain over Qwen2-VL-2B averaged (base not in search)",
+   "kind": "measured",
+   "source": null,
+   "metric": "AVG",
+   "value": 5.4,
+   "unit": "points (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 benchmarks",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "+5.4% and +11.0% gains averaged on 8 benchmarks"
+  },
+  {
+   "claim": "CoMCTS search success rate with all four models vs GPT-4o direct",
+   "kind": "measured",
+   "source": null,
+   "metric": "S.S.R.",
+   "value": 80.2,
+   "unit": "%",
+   "baseline_value": 58.2,
+   "n": null,
+   "setup": "1K samples from Geo3K and GeoQA-Plus, GPT-4o baseline",
+   "note": null,
+   "where": "Sec 4.4, Table 2",
+   "quote": "i.e.80.2%, validating the effectiveness of collective learning"
+  },
+  {
+   "claim": "Plain MCTS with GPT-4o only",
+   "kind": "measured",
+   "source": null,
+   "metric": "S.S.R.",
+   "value": 63.8,
+   "unit": "%",
+   "baseline_value": 58.2,
+   "n": null,
+   "setup": "same 1K geometry samples",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row MCTS, column Search Success Rate"
+  },
+  {
+   "claim": "CoMCTS average search iterations vs plain MCTS 42.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg search iteration",
+   "value": 12.7,
+   "unit": "iterations",
+   "baseline_value": 42.1,
+   "n": null,
+   "setup": "same 1K geometry samples",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row CoMCTS, column Average Search Iteration"
+  },
+  {
+   "claim": "Adding Qwen2-VL-7B to the search group raises S.S.R.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S.S.R.",
+   "value": 2.4,
+   "unit": "points (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 ablation, GPT-4o baseline group",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "even for including small models like Qwen2-VL-7B (i.e., +2.4%)"
+  },
+  {
+   "claim": "Reflection data adds on MathVista",
+   "kind": "measured",
+   "source": null,
+   "metric": "MathVista",
+   "value": 0.8,
+   "unit": "points (%)",
+   "baseline_value": 50.9,
+   "n": null,
+   "setup": "Mulberry ablation: 50.9 without vs 51.7 with reflection data; base model and data size not stated in the table",
+   "note": "Table 3 MathVista 50.9/51.7 differs from Table 1 Mulberry-7B 63.1, so the ablation base model is not identified",
+   "where": "Sec 4.4, Table 3",
+   "quote": "incorporating reflection data enhances the performance by 0.8%"
+  },
+  {
+   "claim": "Mean reasoning steps in Mulberry-260K",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7.5,
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole dataset; chart subset 6.8, geometry subset 8.9",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "with an average of 7.5, for the entire Mulberry-260k"
+  },
+  {
+   "claim": "Mulberry-Llama-11B beats LLaVA-CoT-11B on MathVista",
+   "kind": "measured",
+   "source": null,
+   "metric": "MathVista",
+   "value": 6.3,
+   "unit": "points (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same base Llama-3.2-11B-Vision-Instruct",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "surpasses LLaVA-COT-11B by +6.3% on reasoning-intensive benchmark MathVista"
+  }
+ ],
+ "limits": [
+  "No RL: SFT on searched paths only",
+  "Search relies on GPT-4o and Qwen2-VL-72B, so the data is partly distillation from stronger closed/larger models",
+  "Single runs, no seeds or variance",
+  "Search ablation on 1K geometry samples only; S.S.R. definition loose",
+  "Reflection ablation (Table 3) base model not stated",
+  "Optimizer, warmup, schedule, hardware, compute, eval decoding not stated",
+  "Final count of questions with found paths not stated; 260K is the raw question count",
+  "No discussion of limitations section"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CoMCTS",
+   "definition": "leverage collective knowledge from multiple models to collaboratively conjecture, search and identify effective reasoning paths",
+   "where": "Abstract"
+  },
+  {
+   "term": "Search Success Rate",
+   "definition": "Search Success Rates (S.S.R.)",
+   "where": "Sec 4.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MCTS (Coulom 2006)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "traditional MCTS baseline",
+   "quote": null
+  },
+  {
+   "work": "ReST-MCTS*",
+   "year": 2024,
+   "arxiv": "2406.03816",
+   "relation": "baseline",
+   "note": "partial search baseline",
+   "quote": null
+  },
+  {
+   "work": "Omega-MCTS (Luo et al. 2024)",
+   "year": 2024,
+   "arxiv": "2406.06592",
+   "relation": "baseline",
+   "note": "binary search baseline",
+   "quote": null
+  },
+  {
+   "work": "Iter-MCTS (Xie et al. 2024)",
+   "year": 2024,
+   "arxiv": "2405.00451",
+   "relation": "related",
+   "note": "MCTS self-bootstrapping for LLMs",
+   "quote": null
+  },
+  {
+   "work": "LLaVA-CoT",
+   "year": 2024,
+   "arxiv": "2411.10440",
+   "relation": "baseline",
+   "note": "reasoning MLLM comparison",
+   "quote": null
+  },
+  {
+   "work": "Insight-V",
+   "year": 2024,
+   "arxiv": "2411.14432",
+   "relation": "baseline",
+   "note": "reasoning MLLM comparison",
+   "quote": null
+  },
+  {
+   "work": "Qwen2-VL",
+   "year": 2024,
+   "arxiv": "2409.12191",
+   "relation": "evaluates",
+   "note": "base and search member",
+   "quote": null
+  },
+  {
+   "work": "Llama 3 herd of models",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "evaluates",
+   "note": "Llama-3.2-Vision base",
+   "quote": null
+  },
+  {
+   "work": "STaR",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "learning-based reasoning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview. CoMCTS trains Mulberry with two alternating phases.",
+   "page": 4,
+   "why": "search loop and training"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Comparison with other tree search methods.",
+   "page": 9,
+   "why": "search success rate vs iterations"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 6",
+   "snippet": "s* = argmax V(s) + c*sqrt(log N(parent) / (1+N(s)))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No venue printed in the PDF (arXiv v2, 31 Dec 2024)",
+  "Table 1 text extraction is column-flattened; values mapped by row order",
+  "No embedded instructions found"
+ ]
+}

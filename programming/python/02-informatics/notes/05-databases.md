@@ -11,7 +11,7 @@ cleaned: 2026-11-01
 
 ---
 
-This note covers the Python side of py4e's chapter. **SQL itself has its own track**: start at [SQL 01](../../../sql/notes/01-select-and-filter.md), and [SQL 09](../../../sql/notes/09-sql-from-python.md) covers parameters, DuckDB and pandas.
+This note covers the Python side of py4e's chapter. **SQL itself has its own track**: start at [SQL 01](../../../sql/notes/01-select-and-filter.md). Needs [SQL 04](../../../sql/notes/04-joins.md) (joins) and [SQL 07](../../../sql/notes/07-modeling-and-ddl.md#upsert) (upsert) first. [SQL 09](../../../sql/notes/09-sql-from-python.md) covers parameters, DuckDB and pandas.
 
 ## The ingest pattern
 
@@ -38,7 +38,15 @@ with conn:                                      # one transaction for the whole 
                      (title, artist_id, plays))
 ```
 
-- **Normalise.** Store each artist once and reference it by `id`. Join them back together when you query.
+- **Normalise.** Store each artist once and reference it by `id`. Join them back together when you query:
+
+  ```python
+  rows = conn.execute("""SELECT track.title, artist.name, track.plays
+                         FROM track JOIN artist ON track.artist_id = artist.id
+                         ORDER BY track.plays DESC""").fetchall()
+  ```
+
+- **`INSERT OR REPLACE`** is SQLite's shorthand for delete-then-insert. The portable upsert is `ON CONFLICT … DO UPDATE` ([SQL 07](../../../sql/notes/07-modeling-and-ddl.md#upsert)).
 - **`INSERT OR IGNORE` + `SELECT id`** is the get-or-create step. A `UNIQUE` constraint makes it safe to re-run.
 - **Many-to-many** relations (students ↔ courses) need a join table with a composite primary key: `member(user_id, course_id, role)`.
 - Commit once per batch, not once per row. Each commit waits for the disk. Inserting 2,000 rows into a one-column SQLite file on this repo's test laptop (an SSD) took about 0.5 s committing per row and about 0.001 s in one transaction, a gap of several hundred times. The exact ratio depends on the disk.

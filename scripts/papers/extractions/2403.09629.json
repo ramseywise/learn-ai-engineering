@@ -1,0 +1,146 @@
+{
+ "schema": 1,
+ "key": "2403.09629",
+ "pdf": "generative-ai/05-RL/sources/zelikman-2024-quiet-star.pdf",
+ "bib": {
+  "title": "Quiet-STaR: Language Models Can Teach Themselves to Think Before Speaking",
+  "authors": ["Eric Zelikman", "Georges Harik", "Yijia Shao", "Varuna Jayasiri", "Nick Haber", "Noah D. Goodman"],
+  "first_author": "Zelikman",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2403.09629",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 81984, "chars_total": 81984, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can an LM learn to generate useful unstated rationales at every token of arbitrary web text, so that thinking improves next-token prediction and downstream reasoning without task-specific fine-tuning?",
+ "hypothesis": "Reasoning is implicit in all text, so training an LM with a REINFORCE reward on whether a rationale improves prediction of future text teaches general reasoning; thinking should help mainly on hard tokens and improve with longer thoughts.",
+ "contributions": [
+  "Generalize STaR to learn reasoning from diverse unstructured text data.",
+  "Propose a parallel sampling algorithm generating rationales from all token positions.",
+  "Introduce custom start/end meta-tokens for thoughts.",
+  "Apply a mixing head to decide how much of the post-thought prediction to use.",
+  "Show a non-myopic loss over multiple tokens ahead improves the effect of thinking.",
+  "Show thinking improves prediction of difficult tokens, improving with longer thoughts."
+ ],
+ "method": {
+  "summary": "Continued pretraining of Mistral 7B on web text. At every token position, r thoughts of t tokens are sampled in parallel (think), a mixing head blends post-thought and base logits (talk), and REINFORCE rewards thoughts whose mixed prediction of the next n_true tokens beats the mean over that token's thoughts (learn), plus an NLL term. Evaluated zero-shot on GSM8K and CommonsenseQA with no task fine-tuning.",
+  "task": "continued language-model pretraining with latent rationales; zero-shot direct QA evaluation",
+  "trains": true,
+  "datasets": [
+   {"name": "OpenWebMath", "role": "train", "size": null, "split": "random 256-token span per sample", "source": "Paster et al. 2023", "preprocessing": "random span of 256 tokens per sample, padded if shorter"},
+   {"name": "C4", "role": "train", "size": null, "split": "random 256-token span per sample", "source": "Raffel et al. 2020", "preprocessing": null},
+   {"name": "GSM8K", "role": "eval", "size": null, "split": "test; 128 test items for the cot-maj@8 experiment", "source": "Cobbe et al. 2021", "preprocessing": null},
+   {"name": "CommonsenseQA", "role": "eval", "size": null, "split": null, "source": "Talmor et al. 2018", "preprocessing": "multiple choice A..E scored by logits over answer letter tokens"}
+  ],
+  "models": [
+   {"name": "Mistral 7B (base)", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Quiet-STaR Mistral 7B", "role": "proposed", "params": "7B", "architecture": "Mistral 7B plus learned start/end thought tokens and a mixing head", "init_from": "Mistral 7B base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"thought_token_init": "start/end embeddings initialised to the em dash embedding", "mixing_head": "three-layer MLP, ReLU, input 2x hidden size, scalar output"}},
+   {"name": "Mistral 7B trained on same data without thought tokens", "role": "baseline", "params": "7B", "architecture": "decoder-only transformer", "init_from": "Mistral 7B base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "NLL of true tokens under mixed (thought/base) logits plus REINFORCE on thoughts; reward r_j = log p_talk(true next n_true tokens | thought) minus mean over the thoughts at that token; negative rewards excluded",
+   "optimizer": "AdamW",
+   "lr": "1e-6",
+   "lr_schedule": null,
+   "warmup": "20 steps",
+   "batch_size": "8 (gradient accumulation to keep fixed)",
+   "steps": "inferred: 100 steps in Fig 2, up to 3500 in Fig 6, read from figure axes",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "256 tokens (random span per sample)",
+   "precision": null,
+   "weight_decay": "0.001",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single node of eight 80GB H100s",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "start_end_embedding_gradient_weight": "1e2",
+    "policy_weight": "1e6",
+    "thought_and_ahead_configs": "(thought tokens, ahead tokens): 8,4; 10,4; 12,4; 16,8; 24,12 (Fig 2); C4 run used 16 thought tokens and 4 true tokens ahead",
+    "thoughts_per_token": "2, 3 or 4 compared in ablation; the main setting is not stated",
+    "reinforce_temperature": "REINFORCE loss computed at T=3, samples treated as importance samples"
+   }
+  },
+  "inference": {
+   "decoding": "greedy decoding for thoughts during evaluation; temperature 1 sampling during training",
+   "temperature": "1 in training; 0.7 for CoT solutions in cot-maj@8; 1 for Appendix E samples",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "cot-maj@8: majority vote over up to 8 samples on 128 GSM8K test items",
+   "prompting": "zero-shot, no in-context examples; direct answer probability over A..E logits; CoT prompt 'Let's think step by step.'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Zero-shot direct accuracy (GSM8K, CommonsenseQA)", "definition": "probability of the correct answer conditioned on generating an answer; for multiple choice, accuracy over logits of A..E tokens", "unit": "%", "higher_is_better": true},
+    {"name": "cot-maj@8", "definition": "majority vote accuracy over 8 zero-shot CoT samples", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Base Mistral 7B", "Mistral 7B trained on same data without thought tokens", "Pause-token fine-tuning (Goyal et al. 2023, reported numbers)"],
+   "protocol": "Single training runs; no seeds or significance tests stated. Quiet-STaR never trained on GSM8K or CommonsenseQA."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "zero-shot chain of thought", "text": "Let's think step by step.", "where": "Section 5.3"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "a learning rate of 1e −6, a weight decay of 0.001, and a batch size of 8", "where": "Appendix A"}
+  ]
+ },
+ "results": [
+  {"claim": "Quiet-STaR raises zero-shot GSM8K accuracy of Mistral 7B after training on OpenWebMath.", "kind": "measured", "source": null, "metric": "GSM8K zero-shot accuracy", "value": "10.9", "unit": "%", "baseline_value": "5.9", "n": null, "setup": "Mistral 7B, OpenWebMath, best thought-length config; no GSM8K fine-tuning", "quote": "zero-shot improvements on GSM8K (5.9%→10.9%)", "table": null, "note": "Section 5.1 describes this as a 5.0% boost.", "where": "Abstract, Sec 5.1"},
+  {"claim": "Quiet-STaR raises zero-shot CommonsenseQA accuracy.", "kind": "measured", "source": null, "metric": "CommonsenseQA zero-shot accuracy", "value": "47.2", "unit": "%", "baseline_value": "36.3", "n": null, "setup": "Mistral 7B, OpenWebMath, no CSQA fine-tuning", "quote": "CommonsenseQA (36.3%→47.2%)", "table": null, "note": "Section 5.1 describes this as a 10.9% improvement.", "where": "Abstract, Sec 5.1"},
+  {"claim": "Training on C4 gives smaller gains on both tasks.", "kind": "measured", "source": null, "metric": "GSM8K accuracy (C4-trained)", "value": "8.1", "unit": "%", "baseline_value": "5.9", "n": null, "setup": "16 thought tokens, 4 true tokens ahead, C4", "quote": "GSM8K (5.9% →8.1%) and CommonsenseQA (36.3% →42.6%)", "table": null, "note": "CommonsenseQA with C4: 42.6% vs 36.3%.", "where": "Sec 5.1"},
+  {"claim": "Quiet-STaR rationales improve majority-vote CoT accuracy on GSM8K.", "kind": "measured", "source": null, "metric": "cot-maj@8", "value": "47.7", "unit": "%", "baseline_value": "40.6", "n": "128 GSM8K test items", "setup": "8-thought-token-trained model, zero-shot CoT, temperature 0.7", "quote": "increases from 40.6% to 47.7% with Quiet-STaR, as evaluated on a sample of 128 GSM8K test items", "table": null, "note": null, "where": "Sec 5.3"},
+  {"claim": "Pause-token fine-tuning gave a small CSQA gain, in prior work.", "kind": "reported", "source": "Goyal et al. 2023", "metric": "CommonsenseQA accuracy", "value": "28.8", "unit": "%", "baseline_value": "26.9", "n": null, "setup": "pause-token fine-tuning of a pretrained model, different base model and fine-tuned on downstream tasks", "quote": "they observed an improvement from 26.9% to 28.8%", "table": null, "note": "Goyal et al. found pause tokens harm GSM8K.", "where": "Sec 5.1"},
+  {"claim": "Using multiple thoughts per sequence beats the with-versus-without-thought loss difference baseline.", "kind": "measured", "source": null, "metric": "GSM8K generalization gain", "value": "0.5", "unit": "% (roughly)", "baseline_value": null, "n": null, "setup": "12-thought-token, 4-ahead ablation; roughly 3% on CommonsenseQA", "quote": "(by roughly 0.5% on GSM8K generalization and 3% on CommonsenseQA generalization)", "table": null, "note": null, "where": "Appendix D"},
+  {"claim": "Predicting more than one token ahead helps CommonsenseQA.", "kind": "measured", "source": null, "metric": "CSQA gain from multi-token-ahead", "value": "3.1", "unit": "%", "baseline_value": null, "n": null, "setup": "12 thought tokens; 0.3% on GSM8K; no gain beyond two tokens ahead", "quote": "helped by 0.3% on GSM8K and 3.1% on CommonsenseQA", "table": null, "note": null, "where": "Appendix D"},
+  {"claim": "Thoughts disproportionately help hard tokens; average token improvement is small.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "log-probability change distribution, Fig 7", "quote": "there is a disproportionate improvement on more difficult tokens", "table": null, "note": "Qualitative; no number.", "where": "Sec 5.2, Fig 7"},
+  {"claim": "Removing the mixing head makes the model ignore thoughts.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "ablation, no numbers", "quote": "the model quickly learned to simply ignore the thoughts (and we saw no generalization to any downstream tasks)", "table": null, "note": null, "where": "Appendix I"}
+ ],
+ "limits": [
+  "Only a 7B model (Mistral 7B) tested; training from scratch not tested.",
+  "Substantial compute overhead: many tokens generated before every token; compute-adjusted plots in Appendix C.",
+  "No dynamic decision of when to think or when to end a rationale.",
+  "Downstream accuracy appears to deteriorate in several curves later in training, attributed to not training on the tasks.",
+  "Thoughts not regularised for human interpretability; faithfulness not guaranteed and no safeguards against harmful reasoning (Ethics Statement).",
+  "Negative rewards excluded from REINFORCE; authors note this may introduce bias.",
+  "Single runs; no seeds or variance; cot-maj@8 uses only 128 test items; dataset sizes and token counts not stated; no code release stated.",
+  "Training instability: separate thinking and talking heads and value-function methods did not work (Appendix I)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Quiet-STaR", "definition": "generalization of STaR in which LMs learn to generate rationales at each token to explain future text, improving their predictions", "where": "Abstract"},
+  {"term": "mixing head", "definition": "a shallow MLP producing a weight determining how much the post-rationale next-token logits are incorporated compared to the base LM logits", "where": "Sec 4.1"},
+  {"term": "think / talk / learn", "definition": "generate rationales after every token; mix predictions with and without rationales; reinforce rationales that help predict future text", "where": "Fig 1"}
+ ],
+ "lineage": [
+  {"work": "STaR: Bootstrapping reasoning with reasoning", "year": 2022, "arxiv": null, "relation": "extends", "note": "REINFORCE-based self-taught rationale learning generalized from QA to arbitrary text", "quote": "In the Self-Taught Reasoner (STaR, Zelikman et al. 2022)"},
+  {"work": "Mistral 7B", "year": 2023, "arxiv": "2310.06825", "relation": "uses-method", "note": "base model", "quote": null},
+  {"work": "OpenWebMath", "year": 2023, "arxiv": "2310.06786", "relation": "uses-data", "note": "main training corpus", "quote": null},
+  {"work": "C4 (Raffel et al.)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "secondary training corpus", "quote": null},
+  {"work": "GSM8K (Cobbe et al.)", "year": 2021, "arxiv": "2110.14168", "relation": "uses-data", "note": "eval", "quote": null},
+  {"work": "CommonsenseQA", "year": 2018, "arxiv": "1811.00937", "relation": "uses-data", "note": "eval", "quote": null},
+  {"work": "Think before you speak: pause tokens (Goyal et al.)", "year": 2023, "arxiv": "2310.02226", "relation": "baseline", "note": "constrained version; compared via reported numbers", "quote": null},
+  {"work": "TRICE (Phan et al.)", "year": 2023, "arxiv": null, "relation": "extends", "note": "uses mean-subtracted log-likelihood reward over multiple rationales, without control variates", "quote": null},
+  {"work": "Zero-shot CoT (Kojima et al.)", "year": 2022, "arxiv": "2205.11916", "relation": "uses-method", "note": "CoT prompt for Sec 5.3", "quote": null},
+  {"work": "REINFORCE (Williams)", "year": 1992, "arxiv": null, "relation": "uses-method", "note": "policy gradient for rationale reward", "quote": null},
+  {"work": "Backpack language models (Hewitt et al.)", "year": 2023, "arxiv": "2305.16765", "relation": "related", "note": "mixing head similar to predicted weights over states", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Quiet-STaR. We visualize the algorithm as applied during training to a single thought. We generate thoughts, in parallel, following all tokens in the text (think). The model produces a mixture of its next-token predictions with and without a thought (talk). We apply REINFORCE, as in STaR, to increase the likelihood of thoughts that help the model predict future text while discarding thoughts that make the future text less likely (learn).", "page": 2, "why": "Shows the think/talk/learn loop at a glance."},
+  {"figure": "Fig 2", "caption": "Generalization Results: zero-shot accuracy on GSM8K and CommonsenseQA vs training steps for different thought/ahead token counts.", "page": 3, "why": "Shows longer thoughts give higher accuracy."},
+  {"figure": "Fig 3", "caption": "Parallel Generation: attention mask letting all thought tokens generate in parallel.", "page": 6, "why": "Explains the diagonal attention mask trick."},
+  {"figure": "Fig 4", "caption": "Forward Pass and Teacher Forcing.", "page": 7, "why": "Shows how future ground-truth tokens are included in the loss."},
+  {"figure": "Fig 7", "caption": "Distribution of changes in log probability resulting from generated thoughts.", "page": 24, "why": "Shows skew: most tokens unaffected, hard tokens improve."}
+ ],
+ "code": [
+  {"where": "Sec 4.4.3", "snippet": "r_j = log p_talk(X_{j+1:j+n_true+1}) - mean over thoughts of log p_talk(X_{j+1:j+n_true+1}); grad L_REINFORCE_j = -r_j * grad log p_theta(T_j | [X_:j; <|startofthought|>])", "verbatim": false}
+ ],
+ "problems": ["Figure axes read from extracted text only; step counts (100 and 3500) are from axis labels. No embedded instructions found. Em dash in thought-token init is garbled in the text."]
+}

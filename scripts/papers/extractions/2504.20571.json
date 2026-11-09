@@ -1,0 +1,292 @@
+{
+ "schema": 1,
+ "key": "2504.20571",
+ "pdf": "generative-ai/05-RL/sources/wang-2025-reinforcement-learning-reasoning-large-language.pdf",
+ "bib": {
+  "title": "Reinforcement Learning for Reasoning in Large Language Models with One Training Example",
+  "authors": ["Yiping Wang", "Qing Yang", "Zhiyuan Zeng", "Liliang Ren", "Liyuan Liu", "Baolin Peng", "Hao Cheng", "Xuehai He", "Kuan Wang", "Jianfeng Gao", "Weizhu Chen", "Shuohang Wang", "Simon Shaolei Du", "Yelong Shen"],
+  "first_author": "Wang",
+  "year": 2025,
+  "venue": "NeurIPS 2025",
+  "arxiv": "2504.20571",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 130356,
+  "chars_total": 130356,
+  "engine": "pymupdf",
+  "skipped": "Plot axis-tick debris of Figures 7-15 (about 600 lines of numbers) was skimmed, not read; all prose, tables and appendices read."
+ },
+ "type": "empirical",
+ "question": "To what extent can the RLVR training dataset be reduced while keeping performance comparable to the full dataset?",
+ "hypothesis": "Base models already hold strong reasoning ability, so a single well-chosen example with verifiable reward should be enough to elicit it.",
+ "contributions": [
+  "One example (pi_1 or pi_13) used as the whole RLVR training set matches the 1.2k DSR-sub subset on Qwen2.5-Math-1.5B (MATH500 36.0 to 73.6; 6-benchmark average 17.6 to 35.7).",
+  "1(few)-shot RLVR works across models (Qwen2.5-Math-1.5B/7B, Llama-3.2-3B-Instruct, DeepSeek-R1-Distill-Qwen-1.5B) and algorithms (GRPO, PPO).",
+  "Post-saturation generalization: test accuracy keeps rising after training accuracy on the single example saturates.",
+  "Cross-category generalization and more frequent self-reflection words under 1-shot RLVR.",
+  "Ablations: policy gradient loss is the main driver (not weight decay, so not grokking); entropy loss with a suitable coefficient helps; entropy loss alone gives a gain.",
+  "Discussion of format correction, label robustness and prompt modification."
+ ],
+ "method": {
+  "summary": "GRPO with a binary outcome reward (verl pipeline) is run on a training set of 1, 2, 4, 16 or 1209 math problems, where single examples are ranked by the variance of their per-epoch training accuracy (historical variance score) from a 500-step run on the full pool. The single example is duplicated to fill the 128 batch. Checkpoints are evaluated on six math benchmarks plus ARC.",
+  "task": "RL with verifiable reward for mathematical reasoning",
+  "trains": true,
+  "datasets": [
+   {"name": "DSR-sub (random subset of DeepScaleR-Preview-Dataset)", "role": "train", "size": "1209 examples (full DeepScaleR about 40,000)", "split": "random subset; also instance pool for choosing pi_j", "source": "DeepScaleR-Preview-Dataset (Luo et al. 2025), AIME 1984-2023, AMC pre-2023, Omni-MATH, Still", "preprocessing": "ranked by historical variance score from 500 steps of Qwen2.5-Math-1.5B training; ranking kept fixed for all experiments"},
+   {"name": "MATH train", "role": "train", "size": "7500 problems", "split": "train split (60% of 12,500)", "source": "Hendrycks et al. 2021", "preprocessing": null},
+   {"name": "MATH500", "role": "eval", "size": "500 problems", "split": "test", "source": "OpenAI (Lightman et al. 2023), subset of MATH test (5,000)", "preprocessing": null},
+   {"name": "AIME 2024", "role": "eval", "size": "30 problems", "split": "test", "source": "AoPS", "preprocessing": "test set repeated 8 times, avg@8"},
+   {"name": "AIME 2025", "role": "eval", "size": "30 problems", "split": "test", "source": "opencompass/AIME2025", "preprocessing": "test set repeated 8 times, avg@8"},
+   {"name": "AMC 2023", "role": "eval", "size": "40 problems", "split": "test", "source": "AoPS", "preprocessing": "repeated 8 times, avg@8"},
+   {"name": "Minerva Math", "role": "eval", "size": "272 problems", "split": "test", "source": "Lewkowycz et al. 2022", "preprocessing": null},
+   {"name": "OlympiadBench", "role": "eval", "size": "675 problems (English text-only open-ended subset of 8,476)", "split": "test", "source": "He et al. 2024", "preprocessing": null},
+   {"name": "ARC-Easy / ARC-Challenge", "role": "eval", "size": "2.38k / 1.17k test", "split": "test", "source": "Clark et al. 2018", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Qwen2.5-Math-1.5B", "role": "base", "params": "1.5B", "architecture": null, "init_from": "Hugging Face base model", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4096", "other": {"default_model": true}},
+   {"name": "Qwen2.5-Math-7B", "role": "base", "params": "7B", "architecture": null, "init_from": "Hugging Face base model", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "4096", "other": {}},
+   {"name": "Llama-3.2-3B-Instruct", "role": "base", "params": "3B", "architecture": null, "init_from": "Hugging Face instruct model", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "DeepSeek-R1-Distill-Qwen-1.5B", "role": "base", "params": "1.5B", "architecture": null, "init_from": "Hugging Face model", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"max_response_length_train": "8192"}},
+   {"name": "Qwen2.5-1.5B and Qwen2.5-Math-1.5B-Instruct", "role": "base", "params": "1.5B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"appendix_only": true}},
+   {"name": "QwQ-32B", "role": "judge", "params": "32B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "checks whether the response contains the correct answer regardless of \\boxed{}"}}
+  ],
+  "training": {
+   "objective": "GRPO loss = policy gradient (clipped, group-normalized advantage) + beta*KL + alpha*entropy; binary 0-1 outcome reward; no format reward (format reward used only as a baseline)",
+   "optimizer": null,
+   "lr": "1e-6 (stated in the DeepSeek-R1-Distill paragraph of B.4; inferred: default for all runs, not stated separately)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 train batch and 128 mini-batch; 8 responses per prompt, so 8 gradient updates per rollout step; single example duplicated to 128",
+   "steps": "2000 (Qwen2.5-Math-1.5B), 1000 (Qwen2.5-Math-7B), 1000 (Llama-3.2-3B-Instruct), 1200 (DeepSeek-R1-Distill-Qwen-1.5B), unless performance dropped sharply earlier",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max prompt 1024, max response 3072 (8192 for DeepSeek-R1-Distill-Qwen-1.5B)",
+   "precision": "verl creates the model in fp32 (checkpoints saved fp32); original models are bf16",
+   "weight_decay": "0.01 by default",
+   "dropout": null,
+   "regularisation": "KL coefficient beta = 0.001; entropy loss coefficient alpha = -0.001 (also -0.003 in one ablation)",
+   "hardware": "8 A100 GPUs per training experiment; 4 GPUs for evaluation",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"rollout_engine": "vLLM", "rollout_temperature": "0.6 (1.0 in one ablation)", "framework": "verl", "checkpoint_every": "20 steps for DeepSeek-R1-Distill run", "data_selection": "historical variance score v_i = var(s_i,1..s_i,E), E epochs of per-example training accuracy; 500-step run on Qwen2.5-Math-1.5B"}
+  },
+  "inference": {
+   "decoding": "temperature 0 for MATH500, Minerva Math, OlympiadBench; temperature 0.6 for AIME24, AIME25, AMC23",
+   "temperature": "0 / 0.6 (DeepSeek-R1-Distill: 0.6)",
+   "top_p": "1 by default; 0.95 for DeepSeek-R1-Distill-Qwen-1.5B",
+   "max_tokens": "3072 by default; 8k and 32k for DeepSeek-R1-Distill-Qwen-1.5B",
+   "samples": "AIME24, AIME25, AMC23: test set repeated 8 times, avg@8; DeepSeek-R1-Distill: avg@16 for MATH500/Minerva/OlympiadBench and avg@64 for AIME24/AIME25/AMC23; evaluation seed 0",
+   "prompting": "qwen25-math-cot template for Qwen models; original chat templates for Llama and distilled models; training prompts end with 'Let's think step by step and output the final answer within \\boxed{}.'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {"checkpoint_selection": "best average over 6 benchmarks by default; best per-benchmark in Tables 3, 5, 9, 11 (MATH500 and AIME24 only)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "avg@k / pass@1", "definition": "mean accuracy over k samples per question, with Qwen2.5-Math evaluation pipeline", "unit": "%", "higher_is_better": true},
+    {"name": "Pass@8", "definition": "fraction of questions solved in at least one of 8 samples", "unit": "%", "higher_is_better": true},
+    {"name": "Average over 6 benchmarks", "definition": "mean of MATH500, AIME24, AMC23, Minerva Math, OlympiadBench, AIME25", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Untrained base model", "RLVR on 1.2k DSR-sub", "RLVR on 7.5k MATH train", "Format-reward RLVR on DSR-sub", "16 random DSR-sub examples", "In-context learning with pi_1 or Qwen official examples", "DeepScaleR (40k DSR)"],
+   "protocol": "Single training run per configuration as far as stated; no seeds, confidence intervals or significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/ypwang61/One-Shot-RLVR",
+   "weights": "open source (same repository, per abstract)",
+   "data": "open source (same repository, per abstract)"
+  },
+  "prompts": [
+   {"purpose": "Training example pi_1 (the 1-shot example)", "text": "The pressure \\\\( P \\\\) exerted by wind on a sail varies jointly as the area \\\\( A \\\\) of the sail and the cube of the wind’s velocity \\\\( V \\\\). When the velocity is \\\\( 8 \\\\) miles per hour, the pressure on a sail of \\\\( 2 \\\\) square feet is \\\\( 4 \\\\) pounds. Find the wind velocity when the pressure on \\\\( 4 \\\\) square feet of sail is \\\\( 32 \\\\) pounds. Let’s think step by step and output the final answer within \\\\boxed{}.", "where": "Table 2"},
+   {"purpose": "Simplified variant pi_1'", "text": "(prompt described as: Calculate cube root of 2048)", "where": "Table 18 / C.2.5"}
+  ],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "The training batch size and mini-batch size are 128 3, and we sample 8 responses for each prompt.", "where": "Sec 3.1"},
+   {"field": "training.lr", "quote": "The learning rate is set to 1e-6.", "where": "Appendix B.4, in the DeepSeek-R1-Distill-Qwen-1.5B paragraph"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "A single training example raises Qwen2.5-Math-1.5B from 36.0% to 73.6% on MATH500, matching the 1.2k DSR-sub subset.",
+   "kind": "measured", "source": null, "metric": "MATH500 accuracy", "value": "73.6", "unit": "%", "baseline_value": "36.0", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, GRPO, example pi_13 (or pi_1: 72.8), 2000 steps, best average checkpoint, single run",
+   "quote": "improves the average performance across six common mathematical reasoning benchmarks from 17.6% to 35.7%",
+   "table": null, "note": "Abstract gives 36.0 to 73.6 for MATH500; 73.6 is the pi_13 cell in Table 8. Table 3 reports 74.4 for the best MATH500 checkpoint.", "where": "Abstract; Table 8"
+  },
+  {
+   "claim": "Average over six benchmarks goes from 17.6% to 35.7% with one example, versus 35.9% for 1.2k DSR-sub.",
+   "kind": "measured", "source": null, "metric": "6-benchmark average", "value": "35.7", "unit": "%", "baseline_value": "17.6", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, pi_13, GRPO, 2000 steps",
+   "quote": "We find that RLVR with 1 example {π13} (35.7%) performs close to that with 1.2k DSR-sub (35.9%)",
+   "table": null, "note": null, "where": "Fig 1 caption"
+  },
+  {
+   "claim": "Two examples slightly exceed the DSR-sub result (average 36.6%, MATH500 74.8%).",
+   "kind": "measured", "source": null, "metric": "6-benchmark average", "value": "36.6", "unit": "%", "baseline_value": "35.9", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, {pi_1, pi_13}, GRPO",
+   "quote": "RLVR with only two examples even slightly exceeds these results (MATH500: 74.8%, average: 36.6%)",
+   "table": null, "note": null, "where": "Abstract"
+  },
+  {
+   "claim": "Non-format gain: 8.6 points on MATH500 and 7.0 on the average beyond format correction.",
+   "kind": "measured", "source": null, "metric": "gain beyond format-reward baseline", "value": "8.6", "unit": "points (MATH500)", "baseline_value": null, "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, 1-shot versus format-reward RLVR baseline",
+   "quote": "MATH500 from 36.0% to 73.6% (8.6% improvement beyond format correc-",
+   "table": null, "note": "Text is hyphen-broken in the PDF; the average non-format gain is 7.0%.", "where": "Abstract"
+  },
+  {
+   "claim": "The format-reward baseline alone gives 65.0% MATH500 and 28.7% average, so format fixing explains much of the gain.",
+   "kind": "measured", "source": null, "metric": "MATH500", "value": "65.0", "unit": "%", "baseline_value": "36.0", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, format reward on DSR-sub", "quote": null,
+   "table": "Table 8, row Format Reward, columns MATH500 and Avg.", "note": null, "where": "Table 8"
+  },
+  {
+   "claim": "Qwen2.5-Math-7B: 1-shot RLVR with pi_1 improves the average by 17.8 points (5.9 over format reward); 4-shot matches DSR-sub.",
+   "kind": "measured", "source": null, "metric": "6-benchmark average", "value": "40.2", "unit": "%", "baseline_value": "22.4", "n": 1,
+   "setup": "Qwen2.5-Math-7B, GRPO, pi_1, 1000 steps",
+   "quote": "1-shot RLVR with π1 improves average performance by 17.8% (5.9% higher than format-reward baseline)",
+   "table": "Table 4, Qwen2.5-Math-7B + GRPO, row {pi1}, column Avg.", "note": "DSR-sub average is 42.8; 4-shot 42.5.", "where": "Sec 3.3; Table 4"
+  },
+  {
+   "claim": "Post-saturation generalization: training accuracy on pi_13 saturates before step 100 yet the test average keeps rising, by 9.9% from step 500 to 2000.",
+   "kind": "measured", "source": null, "metric": "6-benchmark average gain", "value": "9.9", "unit": "points", "baseline_value": null, "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, pi_13",
+   "quote": "while using π13 yields a 9.9% average improvement from step 500 to step 2000",
+   "table": null, "note": "pi_1 gets 3.4% from step 100 to step 1540.", "where": "Sec 3.2.2"
+  },
+  {
+   "claim": "Overfitting to the single example occurs very late: about step 1400 for pi_1 and 1800 for pi_13, after millions of rollouts.",
+   "kind": "measured", "source": null, "metric": "step of overfitting", "value": "1400", "unit": "steps", "baseline_value": null, "n": 1,
+   "setup": "Qwen2.5-Math-1.5B; each example sampled 1024 times per step",
+   "quote": "overfitting in RLVR occurs quite late (π1 after 1400 steps and π13 after 1800 steps)",
+   "table": null, "note": null, "where": "Sec 3.2.2"
+  },
+  {
+   "claim": "Many individual examples work: almost all give at least 30 points MATH500 improvement; the wrong-label pi_1207 (54.0) and too-hard pi_1208 (45.0) are the weakest.",
+   "kind": "measured", "source": null, "metric": "MATH500", "value": "74.0", "unit": "%", "baseline_value": "36.0", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, best MATH500 checkpoint, pi_1",
+   "quote": null, "table": "Table 3, row {pi1}, column MATH500", "note": "pi_11 reaches 64.0 and pi_7 64.0; format reward 65.6.", "where": "Table 3; Sec 3.2.3"
+  },
+  {
+   "claim": "Adding entropy loss to the 1-shot loss gives 4.0 points on MATH500 and 2.5 on AIME24.",
+   "kind": "measured", "source": null, "metric": "MATH500 gain from entropy loss", "value": "4.0", "unit": "points", "baseline_value": "70.8", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, pi_1, Table 5 row 4 versus row 5 (70.8 to 74.8)",
+   "quote": "while adding entropy loss (Row 5) can further bring 4.0% improvement for MATH500 and 2.5% for AIME24",
+   "table": null, "note": null, "where": "Sec 4.1; Table 5"
+  },
+  {
+   "claim": "Policy gradient loss alone already reaches 71.8% MATH500 (row 2), versus 39.8% for no loss, so the effect is not grokking.",
+   "kind": "measured", "source": null, "metric": "MATH500", "value": "71.8", "unit": "%", "baseline_value": "39.8", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, pi_1, policy gradient loss only",
+   "quote": null, "table": "Table 5, row 2, column MATH 500", "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "Entropy loss alone (no reward) gives 63.4% MATH500 after 20 steps on Qwen2.5-Math-1.5B, below the format-reward baseline.",
+   "kind": "measured", "source": null, "metric": "MATH500", "value": "63.4", "unit": "%", "baseline_value": "36.0", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, pi_1, entropy loss only, 20 steps",
+   "quote": null, "table": "Table 6, row +Entropy Loss 20 steps, column M500", "note": "Average 25.0 vs 28.7 for format reward.", "where": "Table 6; Table 13"
+  },
+  {
+   "claim": "Label robustness: a slightly wrong label (12.8 vs 12.7) does not hurt, but a guessable wrong label (4) drops MATH500 to 57.0 and an unguessable one (929725) gives 64.4.",
+   "kind": "measured", "source": null, "metric": "MATH500", "value": "57.0", "unit": "%", "baseline_value": "74.8", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, pi_1 with altered label",
+   "quote": null, "table": "Table 5, row 12, column MATH 500", "note": "Label printed 9292725 in text and 929725 in Table 5.", "where": "Table 5; Sec 4.2"
+  },
+  {
+   "claim": "With 90% random wrong labels in DSR-sub, full-set RLVR (31.2 average) is worse than 1-shot RLVR with one correct label (35.0).",
+   "kind": "measured", "source": null, "metric": "6-benchmark average", "value": "31.2", "unit": "%", "baseline_value": "35.0", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B GRPO; labels shifted by up to 10 at random", "quote": null,
+   "table": "Table 17, GRPO row DSR-sub 90%, column Avg.", "note": null, "where": "Table 17; C.2.4"
+  },
+  {
+   "claim": "Format-only reward RLVR with pi_1 reaches 65.4% MATH500; outcome reward with pi_1 is 7.4 points higher on MATH500 and 5.8 higher on average at similar boxed ratios.",
+   "kind": "measured", "source": null, "metric": "gap on MATH500", "value": "7.4", "unit": "points", "baseline_value": null, "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, pi_1, outcome vs format reward",
+   "quote": "(e.g., +7.4% on MATH500 and +5.8% on average)",
+   "table": null, "note": null, "where": "C.2.3"
+  },
+  {
+   "claim": "In-context learning with pi_1 lifts Qwen2.5-Math-7B MATH500 from 51.0 to 75.4 but 1-shot RLVR (79.2) is still better.",
+   "kind": "measured", "source": null, "metric": "MATH500", "value": "75.4", "unit": "%", "baseline_value": "51.0", "n": 1,
+   "setup": "Qwen2.5-Math-7B, one in-context example pi_1 with self-generated response",
+   "quote": "improve MATH500 from 51.0% to 75.4% and on average from 22.4% to 37.4%",
+   "table": null, "note": null, "where": "C.2.3 (c)"
+  },
+  {
+   "claim": "The simplified pi_1' (cube root of 2048 only) gives only 30.0 average, 1.3 above format reward, versus 35.0 for full pi_1.",
+   "kind": "measured", "source": null, "metric": "6-benchmark average", "value": "30.0", "unit": "%", "baseline_value": "35.0", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B outcome reward",
+   "quote": null, "table": "Table 18, row Simplified pi1', column Avg.", "note": null, "where": "Table 18"
+  },
+  {
+   "claim": "1-shot RLVR matches full-set pass@8 on three tasks (51.7 vs 50.3 at best checkpoints), while full-set RLVR declines after about 200 steps.",
+   "kind": "measured", "source": null, "metric": "Pass@8 average over AIME24, AIME25, AMC23", "value": "51.7", "unit": "%", "baseline_value": "39.7", "n": 1,
+   "setup": "Qwen2.5-Math-1.5B, best checkpoint (step 980)", "quote": null,
+   "table": "Table 20, row 1-shot RLVR (highest, step 980), column Avg. (3 tasks)", "note": "Text sentence is garbled in the extraction ('51.7(2) full-set RLVR').", "where": "Table 20; C.4"
+  },
+  {
+   "claim": "Post-saturation, the policy gradient stays nonzero because entropy loss causes occasional errors (99.x% training accuracy).",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Qwen2.5-Math-1.5B, pi_1; supported by Fig 16 policy gradient loss curve", "quote": null, "table": null,
+   "note": "Hypothesis offered in D.3, not tested by intervention.", "where": "D.3"
+  },
+  {
+   "claim": "Base model gets 12.7 on 57.8% of 128 samples for pi_1, so the example is easy for the base model.",
+   "kind": "measured", "source": null, "metric": "share of outputs 12.7/12.70", "value": "57.8", "unit": "%", "baseline_value": null, "n": 128,
+   "setup": "Qwen2.5-Math-1.5B, 128 samples, no training",
+   "quote": "57.8% of outputs are “12.7” or “12.70”",
+   "table": null, "note": null, "where": "Sec 3.2.1"
+  }
+ ],
+ "limits": [
+  "Authors concede they did not test larger models such as Qwen2.5-32B (compute) or domains other than math, such as coding.",
+  "1-shot RLVR does not save RL compute and may need more: the paper presents a phenomenon, not a method (D.1).",
+  "pi_1 was chosen with Qwen2.5-Math-1.5B and is not necessarily best for other models; 16-shot often beats 1-shot on other models (D.1). Variance-score selection is not claimed to be optimal.",
+  "A large share of the gain is format correction (format reward alone gives 65.0 MATH500 against 73.6); Qwen2.5-Math has about 40% repetition at the end of MATH500 responses.",
+  "Explanations (implicit regularization by policy loss, Double Descent link, why entropy loss alone helps) are conjectures; no rigorous analysis.",
+  "Single runs, no seeds or error bars reported; best-checkpoint selection on the test benchmarks (reported as best average or best per benchmark) inflates numbers.",
+  "Initial-model numbers differ between the downloaded bf16 model and the fp32 verl checkpoint (36.0 vs 39.6 MATH500, Table 7).",
+  "Llama-3.2-3B-Instruct is unstable and DeepSeek-R1-Distill-Qwen-1.5B shows a bigger gap between few-shot and full-set RLVR (Table 4, Table 12)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "1-shot RLVR", "definition": "RLVR with the training dataset reduced to one example", "where": "Sec 1"},
+  {"term": "post-saturation generalization", "definition": "the training accuracy on the single example rapidly approaches 100%, yet the model's test accuracy continues to improve", "where": "Sec 1, 3.2.2"},
+  {"term": "historical variance score", "definition": "variance of an example's per-epoch training accuracy, v_i = var(s_i,1, ..., s_i,E), used to rank training examples", "where": "Sec 2, Eqn 1"},
+  {"term": "format reward", "definition": "reward of 1 if and only if the final answer can be parsed from the model output, regardless of correctness", "where": "Sec 3.1, C.2.3"}
+ ],
+ "lineage": [
+  {"work": "DeepSeek-R1", "year": 2025, "arxiv": "2501.12948", "relation": "uses-method", "note": "GRPO and RLVR recipe; also the distilled model evaluated", "quote": null},
+  {"work": "DeepSeekMath (GRPO)", "year": 2024, "arxiv": "2402.03300", "relation": "uses-method", "note": "GRPO algorithm used by default", "quote": null},
+  {"work": "PPO", "year": 2017, "arxiv": "1707.06347", "relation": "uses-method", "note": "second RL algorithm tested", "quote": null},
+  {"work": "HybridFlow (verl)", "year": 2024, "arxiv": "2409.19256", "relation": "uses-method", "note": "training framework", "quote": null},
+  {"work": "LIMR: Less is more for RL scaling", "year": 2025, "arxiv": null, "relation": "extends", "note": "closest prior data-reduction study (6x fewer); this work goes to one example", "quote": null},
+  {"work": "Understanding R1-Zero-like training (Dr. GRPO)", "year": 2025, "arxiv": "2503.20783", "relation": "related", "note": "template effects on Qwen2.5-Math, base-model ability", "quote": null},
+  {"work": "Does RL really incentivize reasoning capacity beyond the base model?", "year": 2025, "arxiv": "2504.13837", "relation": "related", "note": "pass@k decline under RLVR echoed in Table 20", "quote": null},
+  {"work": "DeepScaleR", "year": 2025, "arxiv": null, "relation": "uses-data", "note": "source of DSR-sub and the DeepScaleR baseline", "quote": null},
+  {"work": "Qwen2.5-Math technical report", "year": 2024, "arxiv": "2409.12122", "relation": "evaluates", "note": "base models and evaluation pipeline", "quote": null},
+  {"work": "MATH", "year": 2021, "arxiv": "2103.03874", "relation": "uses-data", "note": "training set and MATH500 test", "quote": null},
+  {"work": "Grokking (Power et al.)", "year": 2022, "arxiv": "2201.02177", "relation": "contradicts", "note": "argues post-saturation generalization is distinct from grokking", "quote": null},
+  {"work": "Concurrent work [56] on RLVR with 4 examples", "year": 2025, "arxiv": null, "relation": "related", "note": "PPO with 4 examples; not systematic, no full-set match", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "RLVR with 1 example (green) can perform as well as using datasets with thousands of examples (blue).", "page": 2, "why": "Headline result: MATH500 and 6-benchmark average curves for 1, 2 shot versus 1.2k and 7.5k sets and format reward."},
+  {"figure": "Fig 2", "caption": "Post-saturation generalization in 1-shot RLVR.", "page": 5, "why": "Shows training accuracy saturated by step 100 while test accuracy keeps climbing."},
+  {"figure": "Fig 3", "caption": "The model can still generalize on test data after overfitting training example for 1-shot RLVR's post-saturation generalization.", "page": 6, "why": "Example responses at steps 0, 500, 1300, 1860 show gibberish on the train problem but clean test answers."},
+  {"figure": "Table 3", "caption": "1(Few)-Shot RLVR performance (%) for different categories in MATH500.", "page": 7, "why": "One-example results per MATH500 category for 15 different examples."},
+  {"figure": "Table 5", "caption": "Ablation study of loss function and label correctness.", "page": 9, "why": "Component and label ablation table behind the grokking and entropy claims."}
+ ],
+ "code": [
+  {"where": "App B.1 Eqn 6", "snippet": "A_i = (r_i - mean({r_1..r_G})) / std({r_1..r_G})", "verbatim": false},
+  {"where": "Sec 2 Eqn 1", "snippet": "v_i := var(s_i,1, ..., s_i,E)", "verbatim": false}
+ ],
+ "problems": [
+  "Figure 6-15 tick labels are in the text layer as numbers and carry no information; some table numbers in Table 14 are fused with boxed-ratio percentages (e.g. 73.6100% means 73.6 with 100% boxed).",
+  "The C.4 sentence about pass@8 is garbled in the text layer (51.7(2) full-set RLVR...). Numbers taken from Table 20.",
+  "Appendix C.1.6 refers to setup in Appendix B.3 but it is in B.5.",
+  "Learning rate is stated only in the DeepSeek-R1-Distill paragraph; other models' lr and optimizer are not stated."
+ ]
+}

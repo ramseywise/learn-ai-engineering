@@ -1,0 +1,713 @@
+{
+ "schema": 1,
+ "key": "2307.04964",
+ "pdf": "generative-ai/05-RL/sources/zheng-2023-secrets-rlhf-large-language-models.pdf",
+ "bib": {
+  "title": "Secrets of RLHF in Large Language Models Part I: PPO",
+  "authors": [
+   "Rui Zheng",
+   "Shihan Dou",
+   "Songyang Gao",
+   "Yuan Hua",
+   "Wei Shen",
+   "Binghai Wang",
+   "Yan Liu",
+   "Senjie Jin",
+   "Qin Liu",
+   "Yuhao Zhou",
+   "Limao Xiong",
+   "Lu Chen",
+   "Zhiheng Xi",
+   "Nuo Xu",
+   "Wenbin Lai",
+   "Minghao Zhu",
+   "Cheng Chang",
+   "Zhangyue Yin",
+   "Rongxiang Weng",
+   "Wensen Cheng",
+   "Haoran Huang",
+   "Tianxiang Sun",
+   "Hang Yan",
+   "Tao Gui",
+   "Qi Zhang",
+   "Xipeng Qiu",
+   "Xuanjing Huang"
+  ],
+  "first_author": "Zheng",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2307.04964",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 94542,
+  "chars_total": 94542,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why is PPO-based RLHF unstable for LLMs, which components of PPO matter, and what stable recipe (PPO-max) can be given?",
+ "hypothesis": "Policy constraints are the key factor for stable PPO in RLHF, and a carefully chosen combination of tricks avoids pattern collapse.",
+ "contributions": [
+  "Release competitive Chinese and English reward models with good cross-model generalization",
+  "In-depth analysis of PPO inner workings and the PPO-max algorithm for stable training",
+  "Release complete PPO-max code"
+ ],
+ "method": {
+  "summary": "Trains English (LLaMA-7B) and Chinese (OpenChineseLLaMA-7B) reward models, then ablates PPO implementation tricks on a Chinese 7B SFT policy, monitoring perplexity, response length and KL; selected tricks form PPO-max, evaluated by human and GPT-4 win/tie/lose against SFT and ChatGPT.",
+  "task": "RLHF / PPO for helpful and harmless alignment",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "HH-RLHF (English RM)",
+    "role": "train",
+    "size": "160k pairs (118k helpful, 42k harmless) train; 1k test (about 0.7k helpful, 0.3k harmless); rest validation",
+    "split": "train 160k / test 1k / remainder validation (from remaining 8.5k)",
+    "source": "Bai et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Chinese preference data (annotator labelled)",
+    "role": "train",
+    "size": "39k pairs (31k helpful, 8k harmless); train 24k helpful + 6k harmless; test 2.4k helpful + 0.6k harmless",
+    "split": "30k train / 3k test / rest validation",
+    "source": "professional annotators hired by authors",
+    "preprocessing": null
+   },
+   {
+    "name": "SFT instruction data (Chinese)",
+    "role": "train",
+    "size": "1M filtered instructions (400K single-round, 600K multi-turn)",
+    "split": null,
+    "source": null,
+    "preprocessing": "filtered"
+   },
+   {
+    "name": "PPO prompts (Chinese HH)",
+    "role": "train",
+    "size": "8k harmless queries and 20k helpful queries",
+    "split": null,
+    "source": "manually constructed",
+    "preprocessing": null
+   },
+   {
+    "name": "C-Eval",
+    "role": "eval",
+    "size": "about 13k multi-choice questions, 52 disciplines, four difficulty levels",
+    "split": null,
+    "source": "SJTU-LIT",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-7B (English RM/SFT)",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OpenChineseLLaMA-7B (Chinese RM/SFT)",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only; incremental Chinese pretraining of LLaMA-7B",
+    "init_from": "LLaMA-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Reward model",
+    "role": "reward",
+    "params": "7B",
+    "architecture": "pretrained LM with unembedding removed, linear head giving scalar at last token; also LM loss on preferred response",
+    "init_from": "LLaMA-7B (en) / OpenChineseLLaMA (zh)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SFT model / policy and reference",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "OpenChineseLLaMA, SFT 2 epochs on 1M instructions",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sft_lr": "9.5e-6, cosine decaying to 10% of peak",
+     "sft_global_batch": "1024"
+    }
+   },
+   {
+    "name": "Critic",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "reward model, then pretrained before PPO",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT gpt-3.5-turbo-0613",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "RM: pairwise log-sigmoid loss + beta_rm LM loss; policy: PPO-clip with token-level KL penalty (eta) on reward, optional PPO-ptx pretraining loss, MSE critic loss, GAE",
+   "optimizer": null,
+   "lr": "RM 5e-6; PPO policy 5e-7, critic 1.65e-6",
+   "lr_schedule": "warmup over first 10% steps (RM and PPO)",
+   "warmup": "10% of steps",
+   "batch_size": "RM dynamic by tokens, max 128 min 4; PPO sampling batch 128, training batch 32 (policy and critic)",
+   "steps": "RM fixed 1000 steps (~1.06 epoch); PPO 1000 steps in ablations, 10K steps for PPO-max (Fig 9)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty (0.05 in Fig 7 experiment; 0.05/0.1/0.2 compared in Fig 15); reward normalisation and clipping; value-loss clipping; global gradient clipping; GAE lambda 0.9",
+   "hardware": "machines with eight 80G A100 GPUs, 1TB RAM, 128 CPUs; ZeRO2 and gradient checkpointing",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "beta_rm": "1",
+    "gae_lambda": "0.9",
+    "reward_normalize_clip_delta_tested": "0.3 and 0.8 (Fig 6)",
+    "advantage_clip_delta_tested": "0.5 and 0.12 (Fig 6)",
+    "value_loss_clip_lambda_vf": "0.2 (Fig 14)",
+    "clipped_surrogate_test": "No Clip vs Clip=0.5 (Fig 17)",
+    "global_grad_clip_tested": "0, 0.5, 1.0 (Fig 18)",
+    "entropy_bonus_lr": "0.01 (Fig 16)",
+    "ppo_max_components": "normalise and clip rewards using historical mean/variance; token-level KL penalty; critic initialised from RM and pretrained before PPO; global gradient clipping; small experience buffer; pretraining LM loss (PPO-ptx); value function loss clipping. Final numeric values for PPO-max are deferred to the released code",
+    "ppo_epsilon": null
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": "0.8",
+   "top_p": "0.9",
+   "max_tokens": "2048",
+   "samples": "one response per test prompt per model",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "repetition_penalty": "1.1"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Preference win/tie/lose",
+     "definition": "annotators or GPT-4 compare one response from each model per held-out prompt",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "C-Eval",
+     "definition": "few-shot multiple-choice accuracy",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity, KL to SFT, response length",
+     "definition": "training monitors",
+     "unit": null,
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "SFT models (en and zh)",
+    "ChatGPT gpt-3.5-turbo-0613"
+   ],
+   "protocol": "Human annotators (number not stated) and GPT-4 as judge, single response per prompt; number of eval prompts not stated; no seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/OpenLMLab/MOSS-RLHF",
+   "weights": "reward models released",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Policy constraints (token-level KL penalty) are the key to stable PPO in RLHF; PPO-max combines the selected tricks to give long stable training.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B Chinese SFT policy, Chinese HH subset; stability judged by perplexity, response length, KL not reward",
+   "note": null,
+   "where": "Abstract",
+   "quote": "We identify policy constraints being the key factor for the effective implementation of the PPO algorithm."
+  },
+  {
+   "claim": "Vanilla PPO suffers pattern collapse: reward and training loss converge smoothly while human/GPT-4 judgement disagrees; the policy cheats the RM with specific patterns, giving long-tail reward scores, longer responses and lower perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vanilla PPO, 1000 steps, 7B Chinese SFT, Fig 4",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "However, we observe that the trained policy model has a tendency to cheat the reward model through specific patterns for anomalous higher scores."
+  },
+  {
+   "claim": "Collapsed model uniformly gives longer responses and lower perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vanilla PPO, Fig 4 bottom",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "We simultaneously observe that the collapsed model uniformly delivers longer responses and exhibits lower perplexity for such generative patterns."
+  },
+  {
+   "claim": "KL-penalty coefficient used in the policy-constraint experiment (Fig 7) is 0.05; Anthropic's value was 0.001.",
+   "kind": "measured",
+   "source": null,
+   "metric": "KL penalty coefficient",
+   "value": "0.05",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7 KL penalty experiment; Fig 15 compares 0.05, 0.1, 0.2",
+   "note": "Text calls it lambda; Eq 19 calls it eta. The paper does not state the final PPO-max coefficient in text (see code).",
+   "where": "Sec 5.3.2",
+   "quote": "Results with policy divergence penalty are illustrated in Figure 7 by setting lambda to 0.05"
+  },
+  {
+   "claim": "Anthropic used a KL weight of 0.001 and reported no significant effect; this paper finds KL penalty critical.",
+   "kind": "reported",
+   "source": "Bai et al. 2022 (HH-RLHF, arXiv 2204.05862)",
+   "metric": null,
+   "value": "0.001",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bai et al. 2022",
+   "note": null,
+   "where": "Sec 5.3.2",
+   "quote": "Anthropic [17] used a small weight to balance the ratio of reward and KL-penalty in PPO training (0.001)"
+  },
+  {
+   "claim": "Reward model English: LLaMA-7B on 160k HH-RLHF pairs (118k helpful, 42k harmless); 1k test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "English RM",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "We use 160k pairwise samples of the HH-RLHF dataset[17] which consists of 118k helpful and 42k harmless instances as training set."
+  },
+  {
+   "claim": "Reward model Chinese: OpenChineseLLaMA with 39k annotator-labelled pairs (31k helpful, 8k harmless); 30k train, 3k test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chinese RM",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "We hired professional annotators to manually label 39k pairwise samples including 31k helpful and 8k harmless samples."
+  },
+  {
+   "claim": "RM accuracy is only shown as curves (Fig 3), not numerically; Chinese RM accuracy is higher than English because Chinese pairs differ more; improvement slows after about 200 steps (~0.2 epoch).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RM training, 1000 steps",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "Besides, we find that the rate of improvement significantly slows down after 200 steps for both models, approximately equivalent to 0.2 epochs"
+  },
+  {
+   "claim": "A 200-step RM gives similar accuracy to full training but PPO from it performs unsatisfactorily, so accuracy alone is insufficient to judge an RM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PPO initialised with 200-step RM",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "Thus, accuracy alone is insufficient as a criterion for the RM."
+  },
+  {
+   "claim": "RLHF vs SFT human evaluation: English harmless 62% win vs 5% lose (33% tie); English helpful 44% win vs 30% lose (26% tie).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "62% win / 33% tie / 5% lose (en harmless); 44/26/30 (en helpful)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human annotators, PPO-max RLHF vs SFT, held-out prompts, one response per prompt, comparator = SFT",
+   "note": "Tie values 33% and 26% read from Fig 10a; 44% vs 30% quoted in text",
+   "where": "Sec 6.2, Fig 10a",
+   "quote": "the RLHF model on the English dataset exhibits significant advantages on the Harmless held-out dataset, receiving a rating of 62% compared to 5% for the SFT model."
+  },
+  {
+   "claim": "Human evaluation Chinese: RLHF vs SFT harmless 39% win / 29% tie / 32% lose; helpful 46% / 23% / 31%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human, PPO-max vs SFT (OpenChineseLLaMA SFT), read from Fig 10a bars (order zh harmless, zh helpful, en harmless, en helpful; win 39,46,62,44; tie 29,23,33,26; lose 32,31,5,30)",
+   "note": "Values read from figure bars; each triple sums to 100",
+   "where": "Fig 10a",
+   "quote": "Figure 10: Preference evaluations, compared RLHF models with SFT models in human evaluation (left) and GPT-4 evaluation (right)."
+  },
+  {
+   "claim": "GPT-4 judge RLHF vs SFT: win/tie/lose zh harmless 25/60/15, zh helpful 52/17/31, en harmless 34/59/7, en helpful 43/23/34 (%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 annotator, PPO-max vs SFT, read from Fig 10b",
+   "note": "Values read from bars; GPT-4 yields more ties than humans on harmless.",
+   "where": "Fig 10b",
+   "quote": "Figure 10: Preference evaluations, compared RLHF models with SFT models in human evaluation (left) and GPT-4 evaluation (right)."
+  },
+  {
+   "claim": "Vs ChatGPT (gpt-3.5-turbo-0613) on harmless (GPT-4 judge), RLHF cut the defeat rate from 45% to 24% (English) and 37% to 29% (Chinese).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "45% to 24% (en); 37% to 29% (zh)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 judge, harmless prompts, ours vs ChatGPT; Fig 11 win/tie/lose: SFT zh 5/58/37, RLHF zh 6/65/29, SFT en 16/39/45, RLHF en 18/58/24",
+   "note": "Win and tie values read from Fig 11; RLHF still lags ChatGPT",
+   "where": "Sec 6.3, Fig 11",
+   "quote": "the RLHF model trained on English text managed to decrease the defeat rate from 45% to 24%."
+  },
+  {
+   "claim": "PPO lowers C-Eval (Chinese NLU) scores; PPO-ptx (pretraining loss mixed in) alleviates the decline. Scores only in Fig 12 bars.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chinese RLHF 7B, C-Eval few-shot (~13k questions, 52 disciplines)",
+   "note": null,
+   "where": "Sec 6.4, Fig 12",
+   "quote": "The experimental results indicate a decrease in NLU capabilities after employing PPO."
+  },
+  {
+   "claim": "Policy initialised without SFT fails in PPO; critic init from RM vs SFT converges similarly; critic pre-training improves stability.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 8, on top of PPO-max",
+   "note": "Exact quote text in paper: 'Initializing the critic model with a reward or SFT model will converge to similar results' (line break differs)",
+   "where": "Sec 5.3.3",
+   "quote": "Based on the experimental results, we believe the critic model pre-training helps to improve the training stability by providing better advantage estimation."
+  },
+  {
+   "claim": "Entropy bonus is highly sensitive: a 10% change in the clip threshold makes the run fail; KL penalty recommended instead.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 16, entropy bonus loss lr 0.01",
+   "note": null,
+   "where": "App B.3",
+   "quote": "Delta is a hyperparameter that must be carefully tuned to prevent training collapse (our experiments fail with only a 10% change at this threshold)."
+  },
+  {
+   "claim": "Importance sampling with KL penalty stabilises PPO further but compromises final policy performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7",
+   "note": null,
+   "where": "Sec 5.3.2",
+   "quote": "Experimental results indicate that this implementation further stabilizes PPO training, but compromises the final performance of the policy model."
+  },
+  {
+   "claim": "GAE lambda set to 0.9 in all other experiments; lambda 0 (TD) is numerically unstable, lambda 1 (MC) has larger variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAE lambda",
+   "value": "0.9",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 19 compares 0.0, 0.9, 1.0",
+   "note": null,
+   "where": "App C.3",
+   "quote": "we set λ = 0.9 in all our other experiments"
+  },
+  {
+   "claim": "Reward scaling alone does not prevent collapse, contradicting Engstrom et al.; reward normalise+clip, advantage clip and value clip conflict if mixed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6, Fig 14",
+   "note": null,
+   "where": "Sec 5.3.1",
+   "quote": "we show that reward scaling doesn’t guide proper policy optimization"
+  }
+ ],
+ "limits": [
+  "Only 7B models studied; no scaling-law analysis of model or data size.",
+  "RM data is open English plus small self-built Chinese set; insufficient for comprehensive RM evaluation.",
+  "Evaluation relies on manual and GPT-4 judgement; no standard benchmarks except C-Eval.",
+  "Focus is stability not final performance; reward score cannot predict RLHF quality during training.",
+  "Exact PPO-max numeric hyperparameters, RM accuracy numbers, number of eval prompts and annotators are not stated in the text.",
+  "Ablations on a subset of Chinese data and not trained to optimum; single runs."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pattern collapse",
+   "definition": "SFT models are over-optimized and exhibit highly biased behavior",
+   "where": "Sec 5.2"
+  },
+  {
+   "term": "PPO-max",
+   "definition": "the most suitable implementation we find for the language model",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Bai et al., Training a helpful and harmless assistant (HH-RLHF)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-data",
+   "note": "English RM data and KL weight comparison",
+   "quote": null
+  },
+  {
+   "work": "Ouyang et al., InstructGPT",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "uses-method",
+   "note": "PPO-ptx pretraining loss",
+   "quote": null
+  },
+  {
+   "work": "Stiennon et al., Learning to summarize with human feedback",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RM loss and token-level KL penalty",
+   "quote": null
+  },
+  {
+   "work": "Engstrom et al., Implementation matters in deep policy gradients",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "finds reward scaling does not help here",
+   "quote": null
+  },
+  {
+   "work": "Andrychowicz et al., What matters for on-policy deep actor-critic methods",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "advantage normalisation, policy initialisation",
+   "quote": null
+  },
+  {
+   "work": "Schulman et al., PPO",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base algorithm",
+   "quote": null
+  },
+  {
+   "work": "Schulman et al., GAE",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "advantage estimation",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-data",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "OpenChineseLLaMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Chinese base",
+   "quote": null
+  },
+  {
+   "work": "Zheng et al., LLM-as-a-judge MT-bench",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GPT-4 judging",
+   "quote": null
+  },
+  {
+   "work": "AlpacaFarm",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "automatic evaluation support",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT gpt-3.5-turbo-0613",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "harmless comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "response reward and training loss under vanilla PPO; bottom: perplexity, KL, response length",
+   "page": 11,
+   "why": "Shows pattern collapse signature"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "implementation detail list for PPO with PPO-max starred",
+   "page": 12,
+   "why": "Map of 12 tricks"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Preference evaluations RLHF vs SFT, human (left) and GPT-4 (right)",
+   "page": 18,
+   "why": "Win/tie/lose numbers"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "harmless comparison vs ChatGPT",
+   "page": 19,
+   "why": "Defeat-rate reduction"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3 / 19",
+   "snippet": "r_total = r(x, y) - eta * KL(pi_RL(y|x), pi_SFT(y|x))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures 10 and 11 numbers are extracted from chart text with order inferred from the prose (en harmless 62 vs 5; en helpful 44 vs 30) and sums to 100.",
+  "Section 4.3 says 0.9k English test samples while Sec 4.1 says 1k; Chinese test 3k.",
+  "Several delta/lambda symbols lost in text extraction (Fig 6, 15, 18).",
+  "Text mentions entropy bonus lr 0.01 and 'Sec 7' that does not exist."
+ ]
+}

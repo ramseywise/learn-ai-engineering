@@ -91,7 +91,7 @@ Observed failure shapes:
 
 | Shape | What it looks like |
 |---|---|
-| Middle neglect | Information at the start and end is recalled; the middle is not — "lost in the middle". GPT-3.5 with the answer mid-context scored below its own no-documents baseline ([prompt 02](../../01-prompt-engineering/notes/02b-document-types-formatting-and-templates.md#ordering)) |
+| Middle neglect | Information at the start and end is recalled; the middle is not — "lost in the middle". In Liu et al., with 20 retrieved documents, GPT-3.5-Turbo scored about 76% with the answer first, about 63% last and about 54% in the middle, below its 56.1% closed-book score with no documents ([arXiv:2307.03172](https://arxiv.org/abs/2307.03172)). Extended-context versions often scored the same as the base models. Placement advice is in [prompt 2b](../../01-prompt-engineering/notes/02b-document-types-formatting-and-templates.md#ordering) |
 | Distractor sensitivity | Plausible-but-wrong content nearby pulls the answer off target more as the window grows |
 | Instruction decay | System-prompt constraints obeyed early in a session are quietly dropped later |
 | Needle degradation | Exact-match retrieval of a planted fact degrades as surrounding filler increases, even when the fact is verbatim present |

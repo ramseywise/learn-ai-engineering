@@ -1,0 +1,695 @@
+{
+ "schema": 1,
+ "key": "2305.07185",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/yu-2023-megabyte.pdf",
+ "bib": {
+  "title": "MEGABYTE: Predicting Million-byte Sequences with Multiscale Transformers",
+  "authors": [
+   "Lili Yu",
+   "Dániel Simig",
+   "Colin Flaherty",
+   "Armen Aghajanyan",
+   "Luke Zettlemoyer",
+   "Mike Lewis"
+  ],
+  "first_author": "Yu",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2305.07185",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 60216,
+  "chars_total": 60216,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a multiscale decoder over byte patches model million-byte sequences end to end, matching subword models without tokenization at lower cost?",
+ "hypothesis": "Most byte predictions are easy, so a small local model within patches plus a large global model across patches gives better performance per compute than a flat byte Transformer.",
+ "contributions": [
+  "Multiscale decoder (patch embedder, global model, local model) with sub-quadratic attention, per-patch feedforward and parallel decoding",
+  "Compute- and data-controlled comparison against Transformer and PerceiverAR on text, image and audio",
+  "State-of-the-art-matching ImageNet 64x64 density estimation and 1.2M-byte image modelling",
+  "Strided inference for patch-position loss"
+ ],
+ "method": {
+  "summary": "Bytes are grouped into fixed patches of P; a patch embedder concatenates byte embeddings, a large global decoder-only transformer runs over patches, and a small local decoder predicts bytes within each patch conditioned on the global output. Compared to a Transformer and PerceiverAR in one codebase (Metaseq) with matched forward time per byte and equal bytes of training.",
+  "task": "autoregressive byte-level language, image and audio modelling (next-byte prediction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PG-19",
+    "role": "both",
+    "size": "10.1GB, mean doc 411,404 bytes",
+    "split": null,
+    "source": "Rae et al. 2019b, Project Gutenberg books before 1919",
+    "preprocessing": null
+   },
+   {
+    "name": "Stories",
+    "role": "both",
+    "size": "21.3GB, mean doc 35,265 bytes",
+    "split": null,
+    "source": "Trinh & Le 2018, CommonCrawl subset",
+    "preprocessing": null
+   },
+   {
+    "name": "Books",
+    "role": "both",
+    "size": "79.7GB, mean doc 509,526 bytes",
+    "split": null,
+    "source": "Gao et al. 2020 (The Pile)",
+    "preprocessing": null
+   },
+   {
+    "name": "arXiv",
+    "role": "both",
+    "size": "91.5GB, mean doc 58,518 bytes",
+    "split": null,
+    "source": "LaTeX papers from arXiv",
+    "preprocessing": null
+   },
+   {
+    "name": "Code",
+    "role": "both",
+    "size": "353.7GB, mean doc 7,461 bytes",
+    "split": null,
+    "source": "open source code under Apache, BSD or MIT licenses",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet (64x64, 256x256, 640x640)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Oord et al. 2016 task variants",
+    "preprocessing": "3 bytes per pixel; patch scan (p x p x 3 bytes, p = sqrt(P/3)) used by default; sequence lengths 12288, 196608, 1228800"
+   },
+   {
+    "name": "Audio (Librilight-L referenced in ablation)",
+    "role": "both",
+    "size": "2 TB, roughly 18,000 hours, 16 kHz 16-bit (32k bytes per second)",
+    "split": null,
+    "source": "not named in Sec 7",
+    "preprocessing": "raw bytes read from file, 256 values"
+   }
+  ],
+  "models": [
+   {
+    "name": "MEGABYTE (text, controlled)",
+    "role": "proposed",
+    "params": "758M global / 262M local",
+    "architecture": "two decoder-only transformers (global D=2048 L=14, local D=1024 L=18)",
+    "init_from": null,
+    "tokenizer": "none (raw bytes)",
+    "vocab": "256",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192 bytes, patch size 8",
+    "other": {
+     "batch_size": 48,
+     "lr": "2.00E-04"
+    }
+   },
+   {
+    "name": "MEGABYTE (PG19 scaling / speed)",
+    "role": "proposed",
+    "params": "1.3B global / 218M local",
+    "architecture": "global D=2048 L=24, local D=1024 L=15",
+    "init_from": null,
+    "tokenizer": "none (raw bytes)",
+    "vocab": "256",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192 bytes, patch 8",
+    "other": {}
+   },
+   {
+    "name": "MEGABYTE (ImageNet64 SOTA)",
+    "role": "proposed",
+    "params": "2.7B global / 350M local",
+    "architecture": "global D=2560 L=32, local D=1024 L=24",
+    "init_from": null,
+    "tokenizer": "none (raw bytes)",
+    "vocab": "256",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "12,288, patch 12",
+    "other": {
+     "batch_size": 2,
+     "tokens": "1.4T"
+    }
+   },
+   {
+    "name": "Transformer (byte)",
+    "role": "baseline",
+    "params": "320M (text), 350M (speed)",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": "none (raw bytes)",
+    "vocab": "256",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 bytes",
+    "other": {}
+   },
+   {
+    "name": "PerceiverAR (byte)",
+    "role": "baseline",
+    "params": "248M (text)",
+    "architecture": "decoder with one cross-attention over long context; own reimplementation",
+    "init_from": null,
+    "tokenizer": "none (raw bytes)",
+    "vocab": "256",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192 bytes, 1024 latents",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-byte prediction, bits-per-byte",
+   "optimizer": "Adam beta1=0.9 beta2=0.98, gradient clip max norm 1.0",
+   "lr": "2.00E-04 text (Table 12); 3.00E-04 for ImageNet64/640 baselines; 1.50E-04 for w/o local model arXiv ablation",
+   "lr_schedule": "Metaseq polynomial decay to end LR 0",
+   "warmup": "500 warmup updates",
+   "batch_size": "varies per run: 48 (arXiv MEGABYTE), 72 (arXiv baselines), 2 (ImageNet64 SOTA), 32 (audio per Sec 7; 256 in Table 12), see Table 12",
+   "steps": null,
+   "epochs": null,
+   "tokens": "80 billion bytes (controlled); 400B bytes (PG19 scaling); 1.4T tokens (ImageNet64 SOTA)",
+   "seq_len": "8192 text; 524,288 audio; up to 1,228,800 images",
+   "precision": "mixed precision",
+   "weight_decay": 0.1,
+   "dropout": "0.1 throughout, none on embeddings",
+   "regularisation": "pre-norm, ReLU activation; init normal mean 0 std 0.006 truncated at 2 std (Megatron-LM variant)",
+   "hardware": "fairscale fully sharded model and optimizer states; GPU type and count not stated",
+   "compute": "matched forward time per byte across architectures; absolute FLOPs/GPU hours not stated",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "codebase": "Metaseq (PyTorch, fairscale)",
+    "convolutional encoder filter sizes": "3, 5, 7",
+    "note": "Sec 7 gives audio batch size 32 while Table 12 gives 256 for audio MEGABYTE"
+   }
+  },
+  "inference": {
+   "decoding": "evaluation only (bpb); generation speed measured for 8192 bytes",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "strided inference": "two forward passes offset by P/2, keep first half of each patch, 2X cost",
+    "sliding window": "PerceiverAR eval stride = num latents/2; sliding/strided used only when comparing with prior work (Tables 3, 4) and in Table 8"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "bits per byte (bpb)",
+     "definition": "negative log2 likelihood per byte",
+     "unit": "bits per byte",
+     "higher_is_better": false
+    },
+    {
+     "name": "word-level perplexity",
+     "definition": "bpb converted to word-level for comparison with subword models",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "generation time",
+     "definition": "seconds to generate 8192 bytes",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Transformer (byte)",
+    "PerceiverAR (byte, own reimplementation reproducing 3.53 vs 3.54 bpb on ImageNet64)",
+    "TransformerXL, Compressive Transformer, PerceiverAR, BlockRecurrent (subword, reported)",
+    "Routing Transformer, Combiner (ImageNet64)"
+   ],
+   "protocol": "Compute- and data-controlled: layers adjusted to match forward time per byte, same bytes trained; no seeds or significance tests."
+  },
+  "availability": {
+   "code": "Pseudocode in Appendix B; Metaseq used for training, MEGABYTE code link not stated",
+   "weights": null,
+   "data": "public datasets except audio source not named"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "500 warmup updates",
+    "where": "A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MEGABYTE beats a compute-matched byte-level Transformer and PerceiverAR on all five text datasets (PG-19 bpb shown).",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 1.0,
+   "unit": "bits per byte",
+   "baseline_value": "1.057 (Transformer), 1.104 (PerceiverAR)",
+   "n": null,
+   "setup": "Controlled: each model 80 billion bytes, same compute; Transformer 320M ctx 1024, PerceiverAR 248M ctx 8192, MEGABYTE 758M/262M global/local ctx 8192 patch 8",
+   "note": null,
+   "where": "Sec 5, Table 2",
+   "table": "Table 2, row MEGABYTE, column PG-19"
+  },
+  {
+   "claim": "On Code the MEGABYTE gap is largest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 0.411,
+   "unit": "bits per byte",
+   "baseline_value": "0.575 (Transformer), 0.546 (PerceiverAR)",
+   "n": null,
+   "setup": "Same controlled setup as Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MEGABYTE, column Code"
+  },
+  {
+   "claim": "At 400B bytes on PG-19, byte-level MEGABYTE reaches word-level test perplexity close to subword models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word-level test perplexity",
+   "value": 36.4,
+   "unit": "perplexity",
+   "baseline_value": "69.4 (byte Transformer), 88.8 (byte PerceiverAR); subword: TransformerXL 36.3, Compressive 33.6, PerceiverAR 28.9, BlockRecurrent 26.5",
+   "n": null,
+   "setup": "PG-19, 400B bytes, compute matched to byte baselines; word-level conversion from bpb",
+   "note": "Authors say comparison to subword models may be confounded by differing compute and tuning.",
+   "where": "Sec 5, Table 3",
+   "table": "Table 3, row MEGABYTE, column Test"
+  },
+  {
+   "claim": "MEGABYTE matches PerceiverAR state of the art on ImageNet 64x64 with about half the GPU hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 3.4,
+   "unit": "bits per byte",
+   "baseline_value": "3.40 (PerceiverAR), 3.42 (Combiner), 3.43 (Routing Transformer)",
+   "n": null,
+   "setup": "Global 2.7B / local 350M, 1.4T tokens; GPU hours estimated, not measured against a rerun",
+   "note": null,
+   "where": "Sec 6.2, Table 4",
+   "quote": "MEGABYTE matches the state-of-the-art performance of PerceiverAR whilst using only half the compute.",
+   "table": "Table 4, row MEGABYTE"
+  },
+  {
+   "claim": "At 640x640 (1.2288M bytes) MEGABYTE beats compute-matched baselines in one forward pass.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 2.282,
+   "unit": "bits per byte",
+   "baseline_value": "2.847 (Transformer), 2.345 (PerceiverAR)",
+   "n": null,
+   "setup": "ImageNet640, equal GPU hours and data; Transformer ctx 1024, PerceiverAR ctx 12000 (per Sec 6.3), MEGABYTE full context patch 192",
+   "note": "Sec 6.3 says PerceiverAR segment 12000, Table 12 lists 4,096 ctx with 1024 latents for Image640.",
+   "where": "Sec 6.3, Table 5",
+   "table": "Table 5, row MEGABYTE, column Image640"
+  },
+  {
+   "claim": "MEGABYTE generates 8192 bytes 40% faster than a 350M Transformer despite over 4x parameters, with lower bpb.",
+   "kind": "measured",
+   "source": null,
+   "metric": "generation speed-up",
+   "value": 40,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PG19, equal compute; MEGABYTE 1.3B global/218M local, ctx 8192 patch 8; Transformer 350M ctx 1024",
+   "note": "Table 6 times are 132 s vs 93 s, a 29.5% cut in time, i.e. 1.42x throughput; 40% is the paper's wording.",
+   "where": "Sec 8.1, Table 6",
+   "quote": "MEGABYTE also generates a sequence of 8192 tokens 40% faster than transformer"
+  },
+  {
+   "claim": "Table 6 generation time and bpb for MEGABYTE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "generation time",
+   "value": 93,
+   "unit": "s",
+   "baseline_value": "132 s Transformer",
+   "n": null,
+   "setup": "8192 bytes, PG19",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row MEGABYTE, column Generation Time (s)"
+  },
+  {
+   "claim": "Raw audio from files: MEGABYTE has lower bpb than PerceiverAR and a vanilla Transformer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 3.477,
+   "unit": "bits per byte",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2 TB (~18,000 hours) 16 kHz 16-bit audio, seq len 524,288, patch 32, batch 32",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "Our model obtains bpb of 3.477, much lower than the results with perceiverAR (3.543) and vanilla transformer model (3.567)."
+  },
+  {
+   "claim": "Removing the local model hurts a lot on arXiv bpb.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 1.263,
+   "unit": "bits per byte",
+   "baseline_value": "0.6871 full MEGABYTE",
+   "n": null,
+   "setup": "arXiv ablation, same compute and data",
+   "note": null,
+   "where": "Sec 8.2, Table 7",
+   "table": "Table 7, row w/o local model, column Arxiv"
+  },
+  {
+   "claim": "Removing the global model also hurts on arXiv.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 1.373,
+   "unit": "bits per byte",
+   "baseline_value": "0.6871 full MEGABYTE",
+   "n": null,
+   "setup": "arXiv ablation",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row w/o global model, column Arxiv"
+  },
+  {
+   "claim": "Removing cross-patch attention does not hurt on arXiv.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 0.6781,
+   "unit": "bits per byte",
+   "baseline_value": "0.6871 full MEGABYTE",
+   "n": null,
+   "setup": "arXiv ablation",
+   "note": "This number is lower (better) than the full model's 0.6871, yet the text says only 'competitive'; ImageNet256 is worse without it (3.259 vs 3.158).",
+   "where": "Table 7",
+   "table": "Table 7, row w/o cross-patch attention, column Arxiv"
+  },
+  {
+   "claim": "Strided inference plus sliding window gives the best PG19 test bpb at 4X inference cost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 0.8751,
+   "unit": "bits per byte",
+   "baseline_value": "0.9079 basic inference (1X)",
+   "n": null,
+   "setup": "PG19 test, best MEGABYTE model",
+   "note": "Strided alone 0.8926 at 2X; sliding window alone 0.8918 at 2X.",
+   "where": "Sec 8.4, Table 8",
+   "table": "Table 8, row w/ Sliding & Strided, column bpb"
+  },
+  {
+   "claim": "Patch scan beats raster scan for images (ImageNet256, MEGABYTE).",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 3.158,
+   "unit": "bits per byte",
+   "baseline_value": "3.428 raster scan",
+   "n": null,
+   "setup": "ImageNet256",
+   "note": "Table 13 lists 62M/8192-ctx config for MEGABYTE but 125M/125M 196,608-ctx for PerceiverAR rows, which looks swapped relative to Table 12.",
+   "where": "App D.2, Table 13",
+   "table": "Table 13, row MEGABYTE (patch scan)"
+  },
+  {
+   "claim": "A given compute budget is spent best when the global model is larger than the local model; larger global lowers PG19 bpb.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 0.991,
+   "unit": "bits per byte",
+   "baseline_value": "1.014 (global 350M)",
+   "n": null,
+   "setup": "PG19, compute and data matched, global 1.3B / local 218M",
+   "note": null,
+   "where": "Sec 8.5, Table 10",
+   "table": "Table 10, row 1.3B (D=2048,L=24), column bpb"
+  },
+  {
+   "claim": "Longer context (16,384) gave no gain on PG19 vs 8,192.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 0.8787,
+   "unit": "bits per byte",
+   "baseline_value": "0.8751 at 8,192",
+   "n": null,
+   "setup": "PG19, global 1.3B, local 350M, patch 8",
+   "note": null,
+   "where": "App D.3",
+   "table": "Table 14, row 16,384 (patch size 8)"
+  },
+  {
+   "claim": "Patch size is robust across a wide range on ImageNet256.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bpb",
+   "value": 3.158,
+   "unit": "bits per byte",
+   "baseline_value": "3.178 (patch 48), 3.186 (patch 768)",
+   "n": null,
+   "setup": "ImageNet256, same GPU hours and data, patch 192 best",
+   "note": null,
+   "where": "Sec 8.5, Table 9",
+   "table": "Table 9, row patch size 192"
+  },
+  {
+   "claim": "Claimed attention cost O(N^(4/3)) with P = T^(1/3); FLOPs about 2T*mg/P when mg >> ml, allowing a P-times larger model for the same FLOPs.",
+   "kind": "claim",
+   "source": null,
+   "metric": "complexity",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Analytic, not measured",
+   "note": null,
+   "where": "Sec 3.1",
+   "table": null,
+   "quote": null
+  },
+  {
+   "claim": "In GPT3 architecture quadratic self-attention is only 1.4% of FLOPS; the intro says over 98% of FLOPS are position-wise feedforward.",
+   "kind": "reported",
+   "source": "Kaplan et al. 2020",
+   "metric": "FLOPS share",
+   "value": 1.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT3 architecture, estimate following Kaplan et al. 2020",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "the quadratic self-attention computation accounts for only 1.4% of FLOPS"
+  }
+ ],
+ "limits": [
+  "Scale far below state-of-the-art LMs (authors: 'the scale of experiments here is far below those of state-of-the-art language models'); future work to scale up",
+  "Subword comparison in Table 3 is confounded by differing compute and tuning",
+  "Longer context (16,384) gave no further gain at this scale",
+  "No seeds, variance, hardware or GPU hours reported",
+  "Hyperparameters (patch size, ratio) tuned per modality; baselines are authors' own implementations",
+  "Text results are English only (plus code and LaTeX); no downstream tasks"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "patch",
+   "definition": "fixed-size group of P bytes, loosely analogous to tokens",
+   "where": "Sec 1"
+  },
+  {
+   "term": "strided inference",
+   "definition": "two forward passes offset by P/2 positions, combining first halves of each patch",
+   "where": "Sec 2.3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Perceiver AR (Hawthorne et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main baseline, reimplemented",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "uses-method",
+   "note": "FLOP estimates",
+   "quote": null
+  },
+  {
+   "work": "ViT (Dosovitskiy et al.)",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "extends",
+   "note": "patchification generalized to decoders",
+   "quote": null
+  },
+  {
+   "work": "Metaseq / OPT (Zhang et al.)",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "uses-method",
+   "note": "training codebase",
+   "quote": null
+  },
+  {
+   "work": "Block-recurrent transformers (Hutchins et al.)",
+   "year": 2022,
+   "arxiv": "2203.07852",
+   "relation": "baseline",
+   "note": "reported PG19 perplexity",
+   "quote": null
+  },
+  {
+   "work": "Compressive Transformers (Rae et al.)",
+   "year": 2019,
+   "arxiv": "1911.05507",
+   "relation": "baseline",
+   "note": "PG-19 dataset and baselines",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL (Dai et al.)",
+   "year": 2019,
+   "arxiv": "1901.02860",
+   "relation": "baseline",
+   "note": "reported PG19 number",
+   "quote": null
+  },
+  {
+   "work": "Shortformer (Press et al.)",
+   "year": 2020,
+   "arxiv": "2012.15832",
+   "relation": "uses-method",
+   "note": "sliding window evaluation",
+   "quote": null
+  },
+  {
+   "work": "RoFormer (Su et al.)",
+   "year": 2021,
+   "arxiv": "2104.09864",
+   "relation": "uses-method",
+   "note": "rotary embeddings in cross-patch attention",
+   "quote": null
+  },
+  {
+   "work": "Routing Transformer",
+   "year": 2020,
+   "arxiv": "2003.05997",
+   "relation": "baseline",
+   "note": "ImageNet64",
+   "quote": null
+  },
+  {
+   "work": "Combiner",
+   "year": 2021,
+   "arxiv": "2107.05768",
+   "relation": "baseline",
+   "note": "ImageNet64",
+   "quote": null
+  },
+  {
+   "work": "BPE (Sennrich et al.) / SentencePiece (Kudo & Richardson)",
+   "year": 2015,
+   "arxiv": "1508.07909",
+   "relation": "related",
+   "note": "the tokenization MEGABYTE aims to replace",
+   "quote": null
+  },
+  {
+   "work": "CANINE (Clark et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tokenization-free encoder with down/up-sampling",
+   "quote": null
+  },
+  {
+   "work": "The Pile (Gao et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Books dataset",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of MEGABYTE with patch size P = 4.",
+   "page": 1,
+   "why": "shows the global/local split and offset padding"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Computational cost (FLOPS/token) for different model architectures at different scales.",
+   "page": 4,
+   "why": "shows MEGABYTE cheaper than Transformer and Linear Transformer up to 1M length"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Average log probability by position within context.",
+   "page": 6,
+   "why": "evidence of using 8k bytes of context"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Illustration of strided inference with patch size 8.",
+   "page": 6,
+   "why": "explains per-position loss within a patch"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix B Listing 1",
+   "snippet": "global_in = rearrange(global_bytes_embedded, \"b (t p) e -> b t (p e)\", p=self.patch_size)",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 6",
+   "snippet": "p(x_t|x_0:t) = softmax(E_local-embed h_local-out_k,p)_{x_t}, t = k*P + p",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 12 labels the ImageNet64 SOTA row 'Table 3' but it is Table 4",
+  "Table 13 model sizes look swapped between MEGABYTE and PerceiverAR rows",
+  "Sec 7 audio batch size 32 vs Table 12 batch 256",
+  "PDF text contains no embedded instructions"
+ ]
+}

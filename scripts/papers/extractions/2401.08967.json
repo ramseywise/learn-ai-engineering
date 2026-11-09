@@ -1,0 +1,600 @@
+{
+ "schema": 1,
+ "key": "2401.08967",
+ "pdf": "generative-ai/05-RL/sources/luong-2024-reft.pdf",
+ "bib": {
+  "title": "ReFT: Reasoning with REinforced Fine-Tuning",
+  "authors": [
+   "Trung Quoc Luong",
+   "Xinbo Zhang",
+   "Zhanming Jie",
+   "Peng Sun",
+   "Xiaoran Jin",
+   "Hang Li"
+  ],
+  "first_author": "Luong",
+  "year": 2024,
+  "venue": "ACL 2024 (arXiv v3 13 Dec 2024)",
+  "arxiv": "2401.08967",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 57263,
+  "chars_total": 57263,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can online RL (PPO) after a short SFT warm-up, using only final-answer correctness as reward on the same training questions, give better math-reasoning generalisation than SFT on one annotated CoT per question?",
+ "hypothesis": "Learning from many sampled reasoning paths per question, rather than a single annotated path, generalises better than SFT.",
+ "contributions": [
+  "Introduce ReFT: SFT warm-up then PPO with rewards derived from ground-truth answers, on the same data as SFT.",
+  "Experiments with CodeLLaMA and Galactica on GSM8K, MathQA and SVAMP, natural-language and program CoT.",
+  "ReFT benefits further from majority voting and reward-model reranking at inference."
+ ],
+ "method": {
+  "summary": "Two stages: SFT warm-up for 1-2 epochs (more on MathQA), then PPO with a shared linear value head, reward 1 for correct extracted answer (0.1 partial for a numeric wrong answer on numeric datasets, 0 otherwise) plus a KL penalty to the warm-up policy. Compared with SFT, offline self-training and online self-training on the same questions; also combined with voting and RM reranking.",
+  "task": "math word-problem solving with chain-of-thought (natural-language N-CoT and Python program P-CoT)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "both",
+    "size": "train 7,465 N-CoT / 7,356 P-CoT; test 1,319",
+    "split": "standard train/test",
+    "source": "Cobbe et al. 2021a; CoT annotations from few-shot GPT-3.5-turbo following Jie et al. 2023",
+    "preprocessing": "program CoT is a Python function with docstring repeating the question"
+   },
+   {
+    "name": "SVAMP",
+    "role": "both",
+    "size": "train 3,076 N-CoT / 3,043 P-CoT; test 1,000",
+    "split": "standard",
+    "source": "Patel et al. 2021; GPT-3.5-turbo CoT",
+    "preprocessing": null
+   },
+   {
+    "name": "MathQA MCQ",
+    "role": "both",
+    "size": "train 14,862 N-CoT / 15,250 P-CoT; test 1,605",
+    "split": "standard",
+    "source": "Amini et al. 2019; GPT-3.5-turbo CoT",
+    "preprocessing": "answers are options A-E"
+   },
+   {
+    "name": "MathQA numeric",
+    "role": "both",
+    "size": "train 8,955 N-CoT / 7,672 P-CoT; test 1,605",
+    "split": "standard",
+    "source": "Jie and Lu 2023 variant with options removed",
+    "preprocessing": "numeric answer"
+   }
+  ],
+  "models": [
+   {
+    "name": "CodeLLaMA-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "codellama/CodeLlama-7b-hf",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 2 prints size as 0.7B; text says 7B"
+    }
+   },
+   {
+    "name": "Galactica-6.7B",
+    "role": "base",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": "facebook/galactica-6.7b",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Galactica-125M, Codeparrot-small, Codegen-350M-mono",
+    "role": "base",
+    "params": "125M / not stated / 350M",
+    "architecture": null,
+    "init_from": "HuggingFace checkpoints",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "small-model P-CoT experiment"
+    }
+   },
+   {
+    "name": "Reward model for reranking",
+    "role": "reward",
+    "params": "same as policy base",
+    "architecture": "LM with linear classifier on last-token hidden state",
+    "init_from": "best SFT checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "3 epochs, batch 24, max length 700, linear schedule, 10% warm-up, max lr 1e-6; data: 100 sampled CoTs per training question from warm-up model, deduplicated, binary labels"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Warm-up: token-level SFT cross-entropy (Eq 1). RL: PPO clipped policy loss + alpha * clipped value loss (Eq 2), reward 1 / 0.1 / 0 minus beta*KL to warm-up policy, GAE advantages",
+   "optimizer": "AdamW (warm-up stage)",
+   "lr": "warm-up 1e-5; RL 3e-7 (7B models); small models RL 3e-6 and SFT 2e-5",
+   "lr_schedule": null,
+   "warmup": "10% warm-up ratio for the optimiser; SFT warm-up epochs: 2 (GSM8K, SVAMP, MathQA P-CoT), 5 (MathQA MCQ N-CoT), 10 (MathQA numeric); small models 10 epochs (Galactica-125M, Codegen-350M on GSM8K/SVAMP), 40 on MathQA MCQ, Codeparrot-small 40 on all",
+   "batch_size": "warm-up 48; RL 32 (small models: global 256)",
+   "steps": null,
+   "epochs": "RL 300 epochs (7B); small models 700 RL epochs; SFT baseline 40 epochs (100 for small models on MathQA MCQ), best checkpoint chosen; Offline-ST 20 epochs",
+   "tokens": null,
+   "seq_len": "max length 1024 (warm-up/SFT); RL max question length 300, max sampling length 700",
+   "precision": null,
+   "weight_decay": "none",
+   "dropout": "none",
+   "regularisation": "KL coefficient beta 0.01 (P-CoT), 0.05 (N-CoT)",
+   "hardware": "8x A100-80GB, DeepSpeed ZeRO stage 2, HuggingFace Accelerate",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "ppo": "lambda 1, gamma 0.95, alpha 5, epsilon 0.2, U (updates per RL step) 2; alpha 5/1/0.1 for Galactica-125M/Codeparrot-small/Codegen-350M",
+    "value_model": "linear value head on policy last hidden states (shared)",
+    "partial_reward": "0.1 for extractable numeric but wrong answer, numeric datasets only"
+   }
+  },
+  "inference": {
+   "decoding": "sampling for voting/reranking and baseline data; greedy for accuracy inferred: Table 2 reports single value accuracy but decoding not stated",
+   "temperature": "1.0 (when sampling 100 CoTs for Offline-ST)",
+   "top_p": null,
+   "max_tokens": "1024 for Offline-ST sampling",
+   "samples": "100 CoTs per question for majority voting and reranking; 100 CoTs per training question for Offline-ST (then 10 random unique correct kept); single run per cell, no seeds stated",
+   "prompting": "few-shot GPT-3.5-turbo prompting only to create annotations (following Jie et al. 2023)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "value accuracy",
+     "definition": "extracted final answer equals ground truth (GSM8K, SVAMP numeric; MathQA option letter)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "human qualitative score",
+     "definition": "4 annotators score logic, naming, compactness each 0-1 on 50 GSM8K test questions all three models solve; overall = sum, max 3",
+     "unit": "score out of 3",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SFT",
+    "Offline self-training (expert-iteration-like)",
+    "Online self-training (same warm-up, SFT on correct samples + gold)",
+    "WizardMath, MathCoder, MAmmoTH-Coder, DeepSeekMath, GPT-3.5-turbo, GPT-4 (reported numbers, Table 4)"
+   ],
+   "protocol": "Single run per cell as far as stated; no seeds, intervals or significance tests. Voting: majority valid answer among 100 samples; reranking: highest RM score."
+  },
+  "availability": {
+   "code": "https://github.com/lqtrung1998/mwp_ReFT",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.decoding",
+    "quote": null,
+    "where": "decoding for Table 2 evaluation is not stated"
+   },
+   {
+    "field": "models.CodeLLaMA-7B.params",
+    "quote": "CodeLLAMA + SFT\n0.7B",
+    "where": "Table 2 size column prints 0.7B while Sec 4.3 says CodeLLAMA-7B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ReFT beats SFT on GSM8K N-CoT with CodeLLaMA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 53.3,
+   "unit": "% value accuracy",
+   "baseline_value": 43.59,
+   "n": null,
+   "setup": "CodeLLaMA-7B, GSM8K N-CoT, single run",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CodeLLAMA + ReFT, GSM8K N-CoT (SFT 43.59)"
+  },
+  {
+   "claim": "ReFT beats SFT on GSM8K P-CoT with CodeLLaMA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 75.28,
+   "unit": "% value accuracy",
+   "baseline_value": 63.68,
+   "n": null,
+   "setup": "CodeLLaMA-7B, GSM8K P-CoT",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CodeLLAMA + ReFT, GSM8K P-CoT (SFT 63.68)"
+  },
+  {
+   "claim": "Average gain over SFT with CodeLLaMA across datasets, P-CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy gain",
+   "value": "7.4",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeLLaMA, average over GSM8K, SVAMP, MathQA MCQ",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "On average, we achieve 6.7-point and 7.4-point improvements with CodeLLAMA on all datasets in N-CoT and P-CoT, respectively."
+  },
+  {
+   "claim": "Galactica-6.7B GSM8K P-CoT: ReFT vs SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 68.91,
+   "unit": "% value accuracy",
+   "baseline_value": 58.83,
+   "n": null,
+   "setup": "Galactica-6.7B, GSM8K P-CoT",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Galactica + ReFT, GSM8K P-CoT (SFT 58.83)"
+  },
+  {
+   "claim": "ReFT does not beat SFT on MathQA MCQ N-CoT with Galactica, attributed to reward hacking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 58.13,
+   "unit": "% value accuracy",
+   "baseline_value": 58.07,
+   "n": null,
+   "setup": "Galactica-6.7B MathQA MCQ N-CoT; SFT 58.07, Offline-ST 60.75",
+   "note": "Offline self-training is higher (60.75); the paper's own text says ReFT is better 'except on MathQA MCQ N-CoT'",
+   "where": "Table 2",
+   "table": "Table 2, row Galactica + ReFT, MathQA MCQ N-CoT (SFT 58.07)"
+  },
+  {
+   "claim": "Online self-training lags ReFT on average; Offline-ST gains are far behind ReFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 71.16,
+   "unit": "% avg P-CoT accuracy",
+   "baseline_value": 64.51,
+   "n": null,
+   "setup": "Galactica-6.7B average P-CoT; Offline-ST 66.69, Online-ST 66.25, SFT 64.51",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Galactica + ReFT, Average P-CoT"
+  },
+  {
+   "claim": "On MathQA numeric (no options) ReFT beats all baselines, supporting the reward-hacking explanation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 45.23,
+   "unit": "% value accuracy",
+   "baseline_value": 40.08,
+   "n": null,
+   "setup": "Galactica N-CoT MathQA numeric; SFT 40.08, Offline-ST 44.23, Online-ST 43.78; CodeLLaMA ReFT 42.24 vs SFT 37.32",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ReFT, column Galactica"
+  },
+  {
+   "claim": "Best result: CodeLLaMA + ReFT + reranking P-CoT on GSM8K, said to surpass GPT-3.5-turbo (78.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 81.2,
+   "unit": "% accuracy",
+   "baseline_value": 77.0,
+   "n": null,
+   "setup": "GSM8K P-CoT, 100 samples per question, RM reranking; SFT + reranking 77.0",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row CodeLLAMA + ReFT + Reranking, column P-CoT"
+  },
+  {
+   "claim": "ReFT + voting vs SFT + voting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy gain",
+   "value": 8.6,
+   "unit": "points average",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, across all settings in Table 4",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "ReFT + Voting significantly outperforms SFT + Voting by 8.6 points on average across all settings."
+  },
+  {
+   "claim": "Removing partial reward lowers accuracy; beta=0 collapses; non-shared value model equal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 74.4,
+   "unit": "% value accuracy",
+   "baseline_value": 75.28,
+   "n": null,
+   "setup": "CodeLLaMA GSM8K P-CoT ablation; full ReFT 75.28; non-shared value model 75.15",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row remove partial reward"
+  },
+  {
+   "claim": "With KL coefficient 0 the policy collapses to 0 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeLLaMA GSM8K P-CoT",
+   "note": null,
+   "where": "Sec 4.4 ablation",
+   "quote": "the policy distribution will easily collapse to produce unexpected results (i.e., 0 accuracy) if we set the KL coefficient \u03b2 to 0"
+  },
+  {
+   "claim": "Separate value model converges faster early but reaches the same accuracy at twice the compute and memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeLLaMA GSM8K P-CoT",
+   "note": null,
+   "where": "Sec 4.4 ablation",
+   "quote": "twice the memory cost"
+  },
+  {
+   "claim": "ReFT also beats SFT with small models (GSM8K P-CoT).",
+   "kind": "measured",
+   "source": null,
+   "metric": "value accuracy",
+   "value": 29.8,
+   "unit": "% value accuracy",
+   "baseline_value": 23.7,
+   "n": null,
+   "setup": "Galactica-125M P-CoT GSM8K; SFT 23.7; Codegen-350M 28.4 vs 20.4; Codeparrot-small 16.8 vs 13.8",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Galactica-125M + ReFT, column GSM8K"
+  },
+  {
+   "claim": "Human quality scores are close; ReFT slightly ahead.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative score",
+   "value": 2.982,
+   "unit": "score out of 3",
+   "baseline_value": 2.967,
+   "n": null,
+   "setup": "50 GSM8K test questions solved by all three models, 4 annotators, anonymised; SFT 2.967, Warmup 2.920",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row ReFT, column Overall Score"
+  },
+  {
+   "claim": "During RL on GSM8K P-CoT the mean reward at epoch 40 is 80-90% and KL stays between 0 and 10, while SFT overfits near epoch 40.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeLLaMA GSM8K P-CoT, read from Fig 4",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "the mean reward is around 80% to 90% for the ReFT policy at 40th epoch"
+  },
+  {
+   "claim": "DPO and IPO from sampled preference data only matched the offline self-training baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, preliminary, no numbers given",
+   "note": null,
+   "where": "Appendix D",
+   "quote": "Preliminary results indicate that their performance is on par with the \"Offline Self-Learning\" baseline on GSM8K."
+  }
+ ],
+ "limits": [
+  "ReFT needs many more epochs than SFT to converge (Fig 4b); a larger lr risks instability and collapse, a larger batch costs compute. No wall-clock, GPU-hour or token budget is given.",
+  "Reward depends only on the final answer, so it is hackable when the answer space is small (MathQA MCQ A-E); a wrong chain that picks the right letter gets reward 1. Process rewards are suggested for future work.",
+  "ReFT needs an SFT warm-up; a warm-up-free method is future work. Only PPO was used; DPO/IPO were tried briefly.",
+  "No seeds, intervals or significance tests; all table cells appear to be single runs. Decoding for Table 2 evaluation not stated.",
+  "Only math word problems; annotations come from GPT-3.5-turbo. Comparison rows in Table 4 are copied from other papers with different data sizes.",
+  "Gemma preliminary results were dropped for unresolved implementation issues (footnote 7).",
+  "Table 2 prints CodeLLaMA size as 0.7B; text says 7B."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Training Verifiers to Solve Math Word Problems (GSM8K)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "GSM8K dataset, verifier reranking",
+   "quote": null
+  },
+  {
+   "work": "Proximal Policy Optimization Algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "PPO clipped objective used for RL stage",
+   "quote": null
+  },
+  {
+   "work": "Fine-tuning language models from human preferences (Ziegler et al.)",
+   "year": 2019,
+   "arxiv": "1909.08593",
+   "relation": "uses-method",
+   "note": "value head on policy, PPO hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RLHF needs a learned reward model; ReFT does not",
+   "quote": null
+  },
+  {
+   "work": "Solving math word problems with process- and outcome-based feedback",
+   "year": 2022,
+   "arxiv": "2211.14275",
+   "relation": "uses-method",
+   "note": "outcome reward model reranking; expert-iteration-like baseline",
+   "quote": null
+  },
+  {
+   "work": "Let's verify step by step",
+   "year": 2023,
+   "arxiv": "2305.20050",
+   "relation": "related",
+   "note": "process reward suggested as future fix for reward hacking",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "majority voting",
+   "quote": null
+  },
+  {
+   "work": "PAL: Program-aided language models",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "program-based CoT format",
+   "quote": null
+  },
+  {
+   "work": "Design of chain-of-thought in math problem solving (Jie et al.)",
+   "year": 2023,
+   "arxiv": "2309.11054",
+   "relation": "uses-data",
+   "note": "N-CoT and P-CoT annotation procedure",
+   "quote": null
+  },
+  {
+   "work": "Beyond human data (ReST-EM, Singh et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "subsampling to 10 unique CoTs per question for Offline-ST",
+   "quote": null
+  },
+  {
+   "work": "Direct preference optimization",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tried early, on par with offline self-training",
+   "quote": null
+  },
+  {
+   "work": "Code Llama",
+   "year": 2023,
+   "arxiv": "2308.12950",
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "Galactica",
+   "year": 2022,
+   "arxiv": "2211.09085",
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "WizardMath, MathCoder, MAmmoTH, DeepSeekMath",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "open-source comparison rows in Table 4, using extra distilled data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An example of question (x), CoT (e), and answer (y) in GSM8K. SFT iterates several epochs on the training data. ReFT warms up from SFT and performs RL on the same data.",
+   "page": 1,
+   "why": "Shows the two-stage pipeline in one picture."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Training reward of ReFT, evaluation accuracy, KL against training epoch on GSM8K P-CoT.",
+   "page": 6,
+   "why": "Shows ReFT still improving after SFT converges and the KL staying bounded."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Example prediction of MathQA MCQ reveals reward hacking.",
+   "page": 4,
+   "why": "Concrete wrong chain that still earns reward 1."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 3.1",
+   "snippet": "L_RL(theta, phi) = L_policy + alpha * L_value; r_total = r - beta * KL(pi_theta || pi_theta^(0))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 prints CodeLLaMA size as 0.7B, text says 7B (typo).",
+  "Text says warm-up 'up to 5 and 10' epochs for MathQA MCQ and numeric; main text says RL 'trained for 300 epochs' with lr 3e-7 while Appendix B gives 700 epochs, 3e-6 for small models only.",
+  "Figure data (Fig 4, Fig 5) not extracted as numbers."
+ ]
+}

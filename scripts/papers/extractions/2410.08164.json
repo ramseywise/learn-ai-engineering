@@ -1,19 +1,505 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2410.08164",
  "pdf": "generative-ai/03-agentic-foundations/sources/agashe-2024-agent-s.pdf",
  "bib": {
   "title": "Agent S: An Open Agentic Framework that Uses Computers Like a Human",
-  "first_author": "Saaket Agashe",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Saaket Agashe",
+   "Jiuzhou Han",
+   "Shuyu Gan",
+   "Jiachen Yang",
+   "Ang Li",
+   "Xin Eric Wang"
+  ],
+  "first_author": "Agashe",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2410.08164",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 70553,
+  "chars_total": 70553,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Agent S: An Open Agentic Framework That Uses Computers Like a Human\", Saaket Agashe, Jiuzhou Han, Shuyu Gan, Jiachen Yang, Ang Li, Xin Eric Wang (Simular Research). Preprint, arXiv:2410.08164v1, 10 Oct 2024.\n\nCOVERAGE: All 23 of 23 pages read. That is all 70,613 of 70,613 chars, including appendices A-D. I skimmed the reference list for origins. The extraction is clean text. Figures are image-only, so the figure contents are not extracted. I did not read the target note in full, only grepped it. It currently covers MemGPT/Letta (Packer et al. 2023), with no Agent S material.\n\nCLAIMS (ranked)\n- Agent S roughly doubles the best OSWorld baseline.\n  number: 20.58% vs 11.21% (GPT-4o), +9.37 points, 83.6% relative.\n  setup: OSWorld full test set, 369 Ubuntu tasks, GPT-4o backbone, screenshot plus accessibility tree input.\n  quote: \"Agent S achieves an overall success rate of 20.58%, nearly doubling the performance of the best corresponding baseline (GPT-4o with 11.21%).\"\n  where: p.7, Sec 4.2; Table 1 p.8.\n- Removing experience retrieval costs the most when it is web knowledge, and removing all three sources roughly halves the score.\n  number: Agent S 26.15 overall. Without web knowledge 16.80, without narrative memory 21.41, without episodic memory 18.46, without all 13.85.\n  setup: testsub, a 65-task stratified subset of OSWorld, GPT-4o. The subset is small (OS has 6 tasks, Professional 10). The authors say they chose it for inference cost.\n  quote: \"- w/o Web Knowledge 16.60 11.76 24.49 30.00 6.25 16.80 / - w/o Narrative Memory 33.33 11.76 36.99 20.00 12.50 21.41 / - w/o Episodic Memory 33.33 5.88 25.00 30.00 12.50 18.46 / - w/o All 33.33 5.88 18.75 20.00 6.25 13.85\"\n  where: p.9, Table 2.\n  Note: of the two memory types, dropping episodic memory costs more (about 7.7 points) than dropping narrative (about 4.7).\n- Storing a self-evaluated summary beats storing raw trajectories. Self-supervised exploration matters most for building memory.\n  number: Agent S 26.15. Without self-evaluator 18.46, without exploration 15.38, without continual update 23.08 (Table 7). Figure 7 prints 23.18 for the same ablation.\n  setup: testsub, 65 tasks, GPT-4o. \"w/o Self-Evaluator\" replaces summaries with full trajectories.\n  quote: \"Agent S - w/o Exploration 15.38% / Agent S - w/o Self-Evaluator 18.46% / Agent S - w/o Continual Memory Update 23.18% / Agent S 26.15%\"\n  where: p.9, Figure 7; Appendix A.3 Table 7, p.15.\n- Retrieval helps much more once the ACI and hierarchical planning are present.\n  number: Baseline 10.77 goes to 12.31 with retrieval. Agent S ACI-only is 12.31, 20.00 with retrieval, 26.15 full.\n  setup: testsub, GPT-4o. The \"ACI-only + retrieval\" setup excludes hierarchical planning.\n  quote: \"Agent S 26.15% / Agent S (ACI + Retrieval) 20.00% / Agent S (ACI-only) 12.31% / Baseline + Retrieval 12.31% / Baseline 10.77%\"\n  where: p.9, Figure 6; Table 6 p.15.\n- Memory design is two-level.\n  number: none.\n  setup: Narrative memory (Manager) stores abstractive summaries of whole-task trajectories, successful and failed, with specific actions removed, keyed by the query Q. Episodic memory (Worker) stores successful subtask strategies with grounded actions, keyed by <task, subtask, context>. Retrieval is by embedding similarity (text-embedding-3-small). The Self-Evaluator writes these without human feedback or ground truth.\n  quote: \"Narrative Memory includes summaries of both successful and failed trajectories with specific actions removed as abstractive full task experience\" and \"Episodic Memory includes a complete plan with specific grounding actions and only summaries from the subtask trajectories designated as DONE or successful by a Worker.\"\n  where: p.4-5, Sec 3.1.\n- Memory is bootstrapped by self-supervised exploration, then updated continually at inference time.\n  number: top 50 common tasks per application, plus environment-aware generated tasks.\n  setup: exploration runs use web knowledge only. After that, memory is updated on each inference task.\n  quote: \"we leverage a task generator to generate the top 50 most common tasks from the various applications used in OSWorld\"\n  where: p.5-6, Sec 3.2.\n- Learning here is retrieval, not weight updates. The authors compare the loop to hierarchical RL.\n  number: none.\n  quote: \"mirrors a classic Hierarchical Reinforcement Learning process - but uses Retrieval as a learning strategy.\"\n  where: p.5, Sec 3.1.3.\n- Two modules are introduced beyond memory. The Trajectory Reflector gives the Worker advice to avoid repeated actions. The Experience Context Fusion step merges web knowledge with the retrieved narrative memory into one guideline.\n  number: none.\n  where: p.4-5.\n- It generalises to Windows with no adaptation.\n  number: 18.2% vs 13.3% (NAVI).\n  setup: WindowsAgentArena, all 154 tasks, GPT-4o, accessibility tree plus image. The baseline's best agent uses an internal model that is not accessible, so the comparison is against a similar configuration. Agent S scores 0.0 in Office and 13.3 in Web Browser against NAVI's 20.0.\n  quote: \"Agent S 0.0 13.3 45.8 29.2 19.1 22.2 18.2\"\n  where: p.10, Table 4.\n- Most failures are execution and grounding errors.\n  number: of failed testsub tasks, Execution Error 79.59%, Grounding 53.06%, Planning 34.69%, Subtask Failure 57.17%. Of 39 execution errors, 46% were caused by planning or grounding, and 54% were self-induced.\n  setup: failed tasks only. One task can have several errors.\n  quote: \"Planning Error 66.67 25.00 30.00 66.67 28.57 34.69 / Grounding Error 0.00 75.00 50.00 66.67 35.71 53.06 / Execution Error 33.33 87.50 100.00 66.67 71.43 79.59\"\n  where: p.10, Table 3; p.21, Fig 13.\n- The ACI bounds the action space to one discrete primitive per step.\n  number: 11 primitives in Table 5 (click, type, scroll, hotkey, hold_and_press, drag_and_drop, save_to_buffer, switch_applications, wait, done, fail). Elements are referenced by integer tags in the accessibility tree, which is augmented with OCR text blocks matched by IOU.\n  where: p.6-7, Sec 3.3; p.15.\n\nLIMITS\n- The authors concede they did not measure steps or wall-clock time, and call for Pareto analysis of time against accuracy (\"A key metric that has been unaddressed... is the number of agent steps and wall clock time\").\n- Open-source and smaller models are untested. Only GPT-4o and Claude-3.5-Sonnet were used.\n- Ablations use 65 tasks on GPT-4o only, so single-point differences are noisy. The full-test-set comparison has no variance or seeds reported.\n- There is no analysis of memory growth, staleness, retrieval failures or contamination. Exploration tasks are generated from the OSWorld and WindowsArena initial environments, so there may be overlap with the test environments. The paper does not discuss this.\n- The domain is GUI desktop control, so transfer of the memory design to chat or text agents is not shown.\n- Dated: the results are Oct 2024, and the baselines are 2024-era models.\n\nBUILDS ON (as printed): Sumers et al. 2024 (cognitive architectures for language agents); Shinn et al. 2023 (Reflexion); Park et al. 2023 (Generative Agents); Yang et al. 2024 (the SWE-agent ACI) and Lieberman & Selker 2003 (the ACI concept); Xie et al. 2024 (OSWorld); Bonatti et al. 2024 (WindowsAgentArena); Kagaya et al. 2024 (RAP); Fu et al. 2024 (AutoGuide); Kim et al. 2024 (RADA); Wei et al. 2022 and Yao et al. 2023 (chain-of-thought and ReAct style templated reasoning). MemGPT is not cited in the extracted text.\n\nCODE: no code listings. The formulas are the load-bearing items, in Sec 3.1.1 and Appendix C, p.17:\n\"Q = LLM(Tu, O0)\nKweb = Retrieve(Web, Q)\nEnu = Retrieve(Mn, Q)\nKfused = LLM(Mn(Q), Kweb)\"\nand \"Esi = Retrieve(Me, ⟨Tu, si, Csi ⟩)\".\n\nFIGURES\n- Fig 1, p.1: system overview showing the memory flow. Web search plus narrative memory feed planning, and episodic memory feeds subtask execution.\n- Fig 3, p.4: Manager and Worker with Narrative and Episodic memory, the Self-Evaluator write-back loop, and the ACI. Best single picture of the architecture.\n- Fig 4, p.6: exploration, then continual memory update pipeline.\n- Fig 6 and Fig 7, p.9: ablation bars (ACI and memory update).\n- Fig 2, p.2: per-category comparison against the OSWorld agent. Fig 13, p.21: execution error sources.\n\nPROBLEMS\n- No embedded instructions found.\n- Minor internal inconsistencies:\n  - Fig 7 gives 23.18 and Table 7 gives 23.08 for \"w/o Continual Memory Update\".\n  - Table 2 \"w/o Web Knowledge\" overall (16.80) does not match the per-column values (16.60 for OS).\n  - The setup text says \"Claude-3-Sonnet\" while Table 1 says Claude-3.5.\n  - The per-domain Table 8 baseline row differs from Table 1.\n  - Appendix D.1 success examples are images only.\n- The paper's memory is task-experience retrieval (RAG-style), not an OS-style context-paging design like MemGPT. It is a contrast case for note 03, not a direct extension."
+ "type": "system",
+ "question": "How can an MLLM-based GUI agent acquire domain knowledge, plan over long horizons and ground actions in dynamic interfaces to complete desktop computer tasks?",
+ "hypothesis": "Experience-augmented hierarchical planning (web knowledge plus narrative and episodic memory learned from self-evaluated experience) combined with a language-centric Agent-Computer Interface improves GUI agent success over a plain MLLM agent.",
+ "contributions": [
+  "A new agentic framework integrating experience-augmented hierarchical planning, self-supervised continual memory update and an ACI for MLLM-based GUI agents",
+  "An experience-augmented hierarchical planning method using external web knowledge and internal memory",
+  "Extending the ACI concept to GUI agents with a set of high-level predefined primitive actions",
+  "Experiments on OSWorld establishing new state-of-the-art, and generalisation to WindowsAgentArena"
+ ],
+ "method": {
+  "summary": "Agent S is a training-free agent. A Manager retrieves web knowledge (Perplexica) and narrative memory for a query, fuses them and plans a queue of subtasks; Workers retrieve episodic memory per subtask and emit one grounded action per step through an ACI (accessibility tree with OCR-added elements plus screenshot, bounded action space). A Self-Evaluator summarises successful subtasks into episodic memory and whole tasks into narrative memory, bootstrapped by self-supervised exploration on generated tasks.",
+  "task": "Desktop GUI task automation (OSWorld, WindowsAgentArena)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "OSWorld",
+    "role": "eval",
+    "size": "369 tasks (Ubuntu)",
+    "split": "full test set; ablations on testsub",
+    "source": "Xie et al. 2024",
+    "preprocessing": "categories OS, Office, Daily, Professional, Workflow"
+   },
+   {
+    "name": "OSWorld testsub",
+    "role": "eval",
+    "size": "65 tasks (OS 6, Office 17, Daily 16, Professional 10, Workflow 16)",
+    "split": "stratified sample of the full test set",
+    "source": "sampled by the authors because the OSWorld small set has only 39 tasks, 2 in OS",
+    "preprocessing": null
+   },
+   {
+    "name": "WindowsAgentArena",
+    "role": "eval",
+    "size": "154 tasks",
+    "split": "full test set",
+    "source": "Bonatti et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "Self-supervised exploration tasks",
+    "role": "train",
+    "size": "top 50 most common tasks per environment-independent generator, plus environment-aware tasks generated from initial OSWorld and WindowsAgentArena environments; total count not stated",
+    "split": null,
+    "source": "LLM Task Generator",
+    "preprocessing": "run with web knowledge only"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4o",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "backbone for all ablations, WindowsAgentArena, and one full OSWorld run"
+    }
+   },
+   {
+    "name": "Claude-3.5-Sonnet",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "second backbone on full OSWorld (Table 1 label 'Claude-3.5'; text says Claude-3-Sonnet in Settings)"
+    }
+   },
+   {
+    "name": "text-embedding-3-small",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaddleOCR",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "OCR toolkit",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "adds OCR text blocks to accessibility tree if IOU match finds no existing element"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Manager forms an observation-aware 'How to do X' query; Worker Action Generator emits a structured response (previous action status check, observation analysis, semantic next action, grounded next action); Trajectory Reflector gives advice; one discrete action per step",
+   "retrieval": "Web: Perplexica search engine. Narrative memory keyed by query Q, episodic memory keyed by <Q, subtask, context>; both retrieved by embedding similarity with text-embedding-3-small; top-k not stated",
+   "parameters": {
+    "narrative_memory_stores": "summaries of both successful and failed full-task trajectories with specific actions removed; written by the Self-Evaluator at end of task (all subtasks done or max steps); no human feedback or ground truth",
+    "episodic_memory_stores": "complete plan with specific grounding actions for subtasks marked DONE; Self-Evaluator writes a strategy summary after a successful subtask",
+    "action_space": "click, type, scroll, hotkey, hold and press, drag and drop, save to buffer, switch applications, wait, done, fail (Table 5)",
+    "max_steps": null,
+    "k_retrieved": null
+   },
+   "other": {
+    "seeds_runs": "not stated; no variance reported"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Success rate",
+     "definition": "percentage of tasks completed successfully per OSWorld/WindowsAgentArena evaluation scripts",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Error rate",
+     "definition": "proportion of failed tasks exhibiting a planning, grounding or execution error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Subtask failure rate",
+     "definition": "average percentage of failed subtasks relative to total attempts",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "OSWorld agents (Claude-3, Gemini-Pro-1.5, GPT-4V, GPT-4o) with accessibility tree + screenshot",
+    "NAVI (WindowsAgentArena)"
+   ],
+   "protocol": "single reported number per cell; no seeds or significance test stated; ablations on 65-task testsub with GPT-4o"
+  },
+  "availability": {
+   "code": "https://github.com/simular-ai/Agent-S",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Agent S with GPT-4o reaches 20.58% overall on full OSWorld vs 11.21% for the GPT-4o OSWorld baseline (+9.37 points, 83.6% relative).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "20.58",
+   "unit": "%",
+   "baseline_value": "11.21",
+   "n": 369,
+   "setup": "OSWorld full test set, 369 Ubuntu tasks, screenshot + accessibility tree input; backbone GPT-4o; baseline is the OSWorld-reported GPT-4o agent with coordinate-based accessibility tree + screenshots",
+   "note": null,
+   "where": "Sec 4.2, Table 1",
+   "quote": "Agent S achieves an overall success rate of 20.58%, nearly doubling the performance of the best corresponding baseline (GPT-4o with 11.21%)"
+  },
+  {
+   "claim": "Agent S with Claude-3.5-Sonnet reaches 20.48% overall on full OSWorld.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "20.48",
+   "unit": "%",
+   "baseline_value": "4.41",
+   "n": 369,
+   "setup": "OSWorld full test set, 369 Ubuntu tasks, screenshot + accessibility tree input; backbone Claude-3.5-Sonnet; Table 1 labels it 'Agent S w/ Claude-3.5'; baseline row printed as 'Claude-3' (4.41), the best baseline overall is GPT-4V 12.17 and GPT-4o 11.21",
+   "note": "Table 1 baseline rows: Claude-3 4.41, Gemini-Pro-1.5 5.10, GPT-4V 12.17, GPT-4o 11.21. The paper's 'best baseline' text names GPT-4o 11.21 although GPT-4V (12.17) is higher in the table.",
+   "where": "Table 1",
+   "table": "Table 1, row Agent S w/ Claude-3.5, column Overall"
+  },
+  {
+   "claim": "Abstract states improvement over baseline of 9.37% success rate (83.6% relative).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Absolute gain (points)",
+   "value": "9.37",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OSWorld full test set, 369 Ubuntu tasks, screenshot + accessibility tree input; GPT-4o",
+   "note": "Text: 'from 11.21% to 20.58%, with a relative improvement of 83.6%'. 9.37 is the difference 20.58-11.21; the abstract calls it 9.37% not points.",
+   "where": "Abstract; Sec 1",
+   "quote": "Agent S outperforms the base-"
+  },
+  {
+   "claim": "Ablation baseline (OSWorld Agent, GPT-4o) scores 10.77% on the 65-task testsub.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "10.77",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks, stratified sample), GPT-4o backbone",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row baseline (OSWorld Agent), column Overall (65)"
+  },
+  {
+   "claim": "Full Agent S scores 26.15% on testsub.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "26.15",
+   "unit": "%",
+   "baseline_value": "10.77",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Agent S, column Overall (65)"
+  },
+  {
+   "claim": "Agent S - w/o Web Knowledge scores 16.80% (largest drop among the three memory/knowledge ablations).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "16.80",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o",
+   "note": "Authors: web knowledge 'has the most significant impact'.",
+   "where": "Table 2",
+   "table": "Table 2, row - w/o Web Knowledge, column Overall (65)"
+  },
+  {
+   "claim": "Agent S - w/o Narrative Memory scores 21.41%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "21.41",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row - w/o Narrative Memory, column Overall (65)"
+  },
+  {
+   "claim": "Agent S - w/o Episodic Memory scores 18.46%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "18.46",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row - w/o Episodic Memory, column Overall (65)"
+  },
+  {
+   "claim": "Agent S - w/o All (no web, narrative or episodic) scores 13.85%, close to the 10.77% baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "13.85",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row - w/o All, column Overall (65)"
+  },
+  {
+   "claim": "Agent S - w/o Self-Evaluator (full trajectories stored instead of summaries) scores 18.46%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "18.46",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o; self-evaluator replaced by raw full trajectories",
+   "note": null,
+   "where": "Fig 7, Table 7",
+   "table": "Table 7, row - w/o Self-Evaluator, column Overall (65)"
+  },
+  {
+   "claim": "Agent S - w/o Continual Memory Update (exploration memory only) scores 23.08% in Table 7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "23.08",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o",
+   "note": "Fig 7 prints this bar as 23.18%, Table 7 prints 23.08%. 15/65 = 23.08, 17/65=26.15 so 23.08 is arithmetically consistent.",
+   "where": "Fig 7, Table 7",
+   "table": "Table 7, row - w/o Continual Memory Update, column Overall (65)"
+  },
+  {
+   "claim": "Agent S - w/o Self-supervised Exploration scores 15.38%, the biggest drop of the learning ablations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "15.38",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65 tasks), GPT-4o; memory updated only during inference",
+   "note": null,
+   "where": "Fig 7, Table 7",
+   "table": "Table 7, row - w/o Self-supervised Exploration, column Overall (65)"
+  },
+  {
+   "claim": "ACI ablation: ACI-only 12.31%, ACI + retrieval 20.00% (no hierarchical planning), baseline + retrieval 12.31%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "20.00",
+   "unit": "%",
+   "baseline_value": "26.15",
+   "n": 65,
+   "setup": "OSWorld testsub (65), GPT-4o. Agent S (ACI-only) excludes hierarchical planning",
+   "note": "Table 6 rows: Baseline 10.77; Baseline + Retrieval 12.31; Agent S (ACI-only) 12.31; + Retrieval 20.00.",
+   "where": "Fig 6, Table 6",
+   "quote": "performance drop (26.15% to 20.00%)",
+   "table": "Table 6, row Agent S (ACI-only) + Retrieval, column Overall (65)"
+  },
+  {
+   "claim": "WindowsAgentArena: Agent S 18.2% vs NAVI 13.3% with no adaptation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Success rate",
+   "value": "18.2",
+   "unit": "%",
+   "baseline_value": "13.3",
+   "n": 154,
+   "setup": "WindowsAgentArena, 154 tasks, GPT-4o, accessibility tree + image + OCR",
+   "note": null,
+   "where": "Sec 1, Table 4",
+   "quote": "we observe a performance improvement from 13.3% to 18.2% on an equivalent setup"
+  },
+  {
+   "claim": "Error analysis on failed testsub tasks: overall error rates are planning 34.69%, grounding 53.06%, execution 79.59%; subtask failure rate 57.17%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Error rate",
+   "value": "79.59",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Failed tasks of Agent S on OSWorld testsub; a task may have several errors",
+   "note": "Of 39 execution errors, 46% planning- or grounding-induced (Fig 13: grounding 31%, planning 15%, self-induced 54%).",
+   "where": "Sec 4.4, Table 3",
+   "table": "Table 3, row Execution Error, column Overall"
+  }
+ ],
+ "limits": [
+  "Step count and wall-clock time are unaddressed (authors, Future Work).",
+  "Ablations only on a 65-task subset, one run, no variance; per-category cells have 6 to 17 tasks.",
+  "Only closed models GPT-4o and Claude-3.5-Sonnet; open smaller models left to future work.",
+  "Execution and grounding errors remain most common (Table 3).",
+  "Windows comparison uses a similar configuration because the best WindowsAgentArena agent is closed-source.",
+  "Hyperparameters (temperature, top-k retrieval, max steps, exploration task count) not stated; prompts not given.",
+  "Inconsistencies: Settings text says Claude-3-Sonnet while Table 1 and later text say Claude-3.5; Fig 7 prints 23.18 where Table 7 prints 23.08."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Narrative Memory",
+   "definition": "summaries of both successful and failed trajectories with specific actions removed as abstractive full task experience",
+   "where": "Sec 3.1.1"
+  },
+  {
+   "term": "Episodic Memory",
+   "definition": "includes a complete plan with specific grounding actions and only summaries from the subtask trajectories designated as DONE or successful by a Worker",
+   "where": "Sec 3.1.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OSWorld",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark and baseline agent (Xie et al.)",
+   "quote": null
+  },
+  {
+   "work": "Windows Agent Arena",
+   "year": 2024,
+   "arxiv": "2409.08264",
+   "relation": "uses-data",
+   "note": "generalisation benchmark; NAVI baseline",
+   "quote": null
+  },
+  {
+   "work": "SWE-agent (Yang et al.) Agent-Computer Interface",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "ACI idea carried from software engineering to GUI control",
+   "quote": null
+  },
+  {
+   "work": "Lieberman & Selker, Agent-Computer Interface",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "origin of the ACI term",
+   "quote": null
+  },
+  {
+   "work": "AutoGuide",
+   "year": 2024,
+   "arxiv": "2403.08978",
+   "relation": "related",
+   "note": "state-aware guidelines retrieval",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought / ReAct (Wei 2022; Yao 2023)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "templated chain of thought in Action Generator",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of the Agent S framework.",
+   "page": 4,
+   "why": "shows Manager/Worker/Self-Evaluator and which memory each reads and writes"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The ablation study of experience-augmented hierarchical planning in OSWorld testsub.",
+   "page": 9,
+   "why": "per-component contribution"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The pipeline of memory construction and update.",
+   "page": 6,
+   "why": "exploration then continual update"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No instructions embedded in the PDF text.",
+  "Table cells came out as one value per line; row/column mapping inferred from order and checked against totals."
+ ]
 }

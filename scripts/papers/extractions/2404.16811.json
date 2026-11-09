@@ -1,19 +1,534 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2404.16811",
  "pdf": "ai-engineering/02-context-engineering/sources/an-2024-make-your-llm-fully-utilize.pdf",
  "bib": {
   "title": "Make Your LLM Fully Utilize the Context",
-  "first_author": "Shengnan An",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Shengnan An",
+   "Zexiong Ma",
+   "Zeqi Lin",
+   "Nanning Zheng",
+   "Jian-Guang Lou"
+  ],
+  "first_author": "An",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2404.16811",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 62941,
+  "chars_total": 62941,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Make Your LLM Fully Utilize the Context\", Shengnan An, Zexiong Ma, Zeqi Lin, Nanning Zheng, Jian-Guang Lou (Xi'an Jiaotong U., Peking U., Microsoft). The PDF is marked \"Preprint\", arXiv:2404.16811v2 [cs.CL], 26 Apr 2024. No venue is printed. The work was done during an internship at Microsoft.\n\nCOVERAGE: All 62,750 chars read: abstract, body, Tables 1-3, appendices A-D, and references skimmed. Figure data (curves) is not in the extraction, so only the tables and text numbers are available. A grep of the target note 11-failure-modes.md for \"lost-in-the-middle\" or \"lost in the middle\" found no match, so I could not see which claims it needs.\n\nCLAIMS (ranked)\n- The authors attribute lost-in-the-middle to a position bias in training data. They state this as a hypothesis and do not test it directly.\n  number: none\n  setup: Argument from pre-training next-token loss and from system-message placement in SFT.\n  quote: \"We hypothesize that the root cause of lost-in-the-middle stems from the unintentional bias hidden in the general training data.\"\n  where: Intro, p.2\n- Definition: models handle the start and end of a long context but miss the middle. The authors cite Liu et al. 2024 and Xu et al. 2023 for this.\n  number: none\n  setup: Background claim, not measured here.\n  quote: \"while the LLM can comprehend the information at the beginning and end of the long context, it often overlooks the information in the middle.\"\n  where: Intro, p.2\n- Vanilla Mistral-7B-Instruct-v0.2 loses a lot of middle information on all three VAL probes. Its worst-to-best position gap is 47.3 points averaged over the probes (the paper's \"AllAvg Gap\").\n  number: Min-max gap, averaged over the three probes (AllAvg): 47.3 (Mistral-v0.2) vs 13.9 (FILM-7B), 32.1 (GPT-4-Turbo)\n  setup: VAL Probing, about 32K-token contexts, about 3K examples per task. Greedy decoding. The Gap is the max minus min performance across positions, so smaller means more position-robust.\n  quote: \"Mistral-7B-Instruct-v0.2 (Jiang et al., 2023) 74.2 32.1 20.3 59.5 47.5 77.0 47.3 56.2\" and \"FILM-7B (ours) 85.4 6.1 83.3 18.7 89.0 16.8 85.9 13.9\"\n  where: Table 1, p.6. The column layout is Avg/Gap per task (Document, Code, Database), then All. The \"47.3 56.2\" ends the Mistral row, so Mistral's All-Avg is 47.3 and its All-Gap is 56.2. See PROBLEMS for how I read the columns.\n- Other long-context models still show the middle loss despite near-perfect Needle-in-the-Haystack (NIAH) scores.\n  number: AllAvg Gap: LongAlign-7B-64K 36.4, LongAlign-13B-64K 27.1, InternLM2-chat-7B 40.0, InternLM2-chat-20B 43.3, GPT-4-Turbo 32.1, FILM-7B 13.9\n  setup: Same as the previous claim.\n  quote: \"Despite their extended training context windows, these models still encounter the lost-in-the-middle problem. This is particularly noteworthy given their near-perfect performance on the Needle-in-the-Haystack task.\"\n  where: Sec 4.2, p.8, and Table 1\n- NIAH overstates long-context ability. It uses document-style text and forward retrieval, which induction heads make easy.\n  number: none\n  setup: Argument plus the probe results above. The forward-retrieval point is theoretical (induction heads, Olsson et al. 2022), not tested.\n  quote: \"we argue that the near-perfect performance on Needle-in-the-Haystack may overestimate the long-context capabilities of LLMs\"\n  where: Sec 3.1, p.6\n- The context style and the retrieval direction each change how hard the probe is.\n  number: none\n  setup: Document probe = bi-directional retrieval over natural language. Database probe = forward retrieval over structured data. Code probe = backward retrieval.\n  quote: \"both context styles and retrieval patterns significantly contribute to the hardness of the probing tasks.\"\n  where: Sec 4.2, p.9\n- IN2 training (synthetic long-context QA where the answer sits at random positions) largely removes the middle dip in the tested setting.\n  number: Document Gap 32.1 → 6.1, Code Gap 59.5 → 18.7, Database Gap 77.0 → 16.8 (Mistral-v0.2 → FILM-7B). Avg 74.2 → 85.4, 20.3 → 83.3, 47.5 → 89.0.\n  setup: Fine-tuning Mistral-7B-Instruct-v0.2. Data is 1.1M fine-grained QA (~63%), 300K multi-segment QA (~17%), 150K short QA (~9%), 200K OpenOrca instruction data (~11%). Contexts run 4K-32K tokens built from ~128-token C4 realnewslike segments. QA pairs were generated by GPT-4-Turbo. One epoch of ~14K steps, batch 128, peak LR 1e-6, ~300 GPU days (16 nodes x 8 A100 80G).\n  quote: \"FILM-7B has comparable performance with GPT-4-Turbo on the database probing task, and exhibits better robustness in document and code probing tasks.\"\n  where: Sec 4.2, Table 1, p.6 and p.8. Training details are in Sec 2.1-2.2, pp.4-5.\n- The gain transfers to real long-context tasks. The authors show only that the training helps; they do not show that the middle loss causes these tasks to fail.\n  number: NarrativeQA F1 23.5 → 26.9; average over 9 LongBench tasks 30.6 → 39.9 (GPT-4-Turbo 44.7). HotpotQA 42.4 → 62.1. MuSiQue 20.8 → 39.0. MultiFQA 45.9 → 56.0.\n  setup: 9 LongBench tasks. Inputs are middle-truncated to 32K. F1 for QA, ROUGE-L for summarization. Greedy decoding.\n  quote: \"FILM-7B (ours) 26.9 42.2 56.0 62.1 47.0 39.0 33.8 25.1 26.9 39.9\"\n  where: Table 2, p.7\n  - Summarization is flat or worse: MultiNews 26.8 → 26.9 and QMSum 24.8 → 25.1, but GovReport 33.3 → 33.8. Mistral-v0.2's row ends \"26.8 30.6\" and FILM-7B's ends \"26.9 39.9\".\n- Short-context ability is kept: MMLU 59.3 → 59.2.\n  number: Figure 5, text-visible values only: MMLU 59.3 → 59.2. The other bar values are garbled in the extraction (see PROBLEMS).\n  setup: 5-shot MMLU, 8-shot GSM8K, 4-shot MATH, 0-shot for the rest.\n  quote: \"maintaining a comparable performance on short-context tasks (e.g., 59.3→59.2 accuracy on MMLU)\"\n  where: Abstract, p.1\n- A sliding-window attention model cannot retrieve beyond its window, and IN2 training does not fix that.\n  number: 4K sliding window. Mistral-7B-Instruct-v0.1 (sliding window) scores Avg 44.8 on Document, 6.8 on Code and 8.8 on Database.\n  setup: Experiments use 20% of the training data. Window applied in IN2 only or in both pre-training and IN2.\n  quote: \"the performances drop dramatically when the distance between the retrieval question and information is longer than the sliding window size.\"\n  where: Sec 4.3, p.10, Fig 6\n- A larger RoPE base θ helps IN2 training, so the authors suggest 10x the default.\n  number: AllAvg 80.3 (1e6) → 83.8 (2e6) → 84.9 (1e7) → 84.6 (1e8); AllGap 23.6 → 16.5 → 14.3 → 14.0\n  setup: FILM-7B trained on 20% of the data. Sec 4.3 states \"We suggest to use a 10 times of the default RoPE base θ\".\n  quote: \"1.0 × 107 83.7 7.6 81.7 18.4 89.4 16.8 84.9 14.3\"\n  where: Table 3, p.9\n\nLIMITS\n- This is a training fix for a 7B model, not something a prompt-side practitioner can apply. The paper gives no prompt or context-placement remedy.\n- The root-cause explanation is a hypothesis. No ablation checks the position-bias story.\n- The probes are retrieval-only and about 32K tokens. Each uses a single model per row and greedy decoding, with no variance or seeds reported.\n- The model has a 32K window. The paper does not examine longer contexts or multi-needle placement, and it does not examine RAG-style distractors.\n- The paper does not state an explicit limitations section.\n- The paper does not run a separate test of position effects on real tasks.\n- It dates from April 2024. The models it compares (Mistral-7B-v0.2, GPT-4-Turbo, LongAlign, InternLM2) are old, and nothing in it speaks to current frontier models.\n- The paper does not compare against the original Liu et al. synthetic document-QA setup, which it cites.\n- The Table 2 figures for models marked ∗ are copied from other papers, so they are not run under the same conditions.\n\nBUILDS ON: Liu et al. 2024 and Xu et al. 2023 (lost-in-the-middle, as the paper cites them); Mohtashami & Jaggi 2024 (passkey retrieval); gkamradt Needle-in-the-Haystack (a GitHub repo); Olsson et al. 2022 (induction heads); Sun et al. 2021 and Sharan et al. 2018 (next-token loss depends on nearby tokens); Mistral 7B, Jiang et al. 2023; LongAlign, Bai et al. 2024; InternLM2, Cai et al. 2024; LongBench, Bai et al. 2023; RoPE-base context-extension work (Roziere et al. 2023; Xiong et al. 2023); RULER, Hsieh et al. 2024 (cited as related probing work); C4, Raffel et al. 2020; OpenOrca, Lian et al. 2023.\n\nCODE: Training and data-generation templates only, no code.\n- Training template, Appendix D Example 9, p.19: `[INST] Below is a context and an instruction. Based on the information provided in the context, write a response for the instruction. ### Context: Li ### Instruction: qi [/INST]` and the output is `ai`.\n- Data equations, p.3-4: Eq. 1 `Li = ⊕{Shuffle(si, [rj])}` for one required segment, and Eq. 2 `Li = ⊕{Shuffle([si], [rj])}` for two or more.\n- The multi-hop prompt (Example 8) says the question must require \"at least two pieces\".\n\nFIGURES (captions only; I did not run the figures script)\n- Fig 1, p.1: FILM-7B vs Mistral-7B-Instruct-v0.2 vs GPT-4-Turbo on the three probes. It shows the dip in the middle of the context and the flatter FILM-7B curve.\n- Fig 3, p.4: The three VAL probe formats (document sentence, code function name, database entity). This is the quickest way to see what forward, backward and bi-directional retrieval mean.\n- Fig 4a-c, p.5: FILM-7B against Mistral, LongAlign and InternLM2 over position.\n- Fig 6, p.9: Sliding-window runs, showing the cliff at the window size.\n- Fig 7, p.18: FILM-7B near-perfect on NIAH.\n\nPROBLEMS\n- Figure curve data and the short-context bar values are not recoverable from the text extraction. Fig 5's numbers come out as a jumble (\"59.3 85.4 46.0 70.0 55.9 83.6 40.4 8.7 59.2 87.7 ...\"), so I only report MMLU 59.3 → 59.2, which the abstract confirms.\n- The Table 1 header reads \"Document Code Database AllAvg Gap ↓ Avg Gap ↓ ...\". Each row has 8 numbers, which I read as three Avg/Gap pairs followed by the All pair. In the FILM-7B row 85.9 is the All-Avg and 13.9 is the All-Gap. The caller should check the column mapping against the PDF page before quoting a specific cell.\n- The Gap figures are max-minus-min across positions, so they measure position variance rather than the specific middle-position drop. The paper does not report a middle-versus-edge number.\n- No embedded instructions were found in the PDF.\n- The target note contained no \"lost-in-the-middle\" string, so claims were not matched to existing text."
+ "type": "empirical",
+ "question": "How can a long-context LLM be trained to use information at any position in its context, overcoming lost-in-the-middle?",
+ "hypothesis": "Lost-in-the-middle stems from insufficient explicit supervision during long-context training, which fails to show that any position can hold crucial information (a position bias from general training data); this is argued, not tested directly.",
+ "contributions": [
+  "IN2 (INformation-INtensive) training: a data-driven fix using synthesized long-context QA data",
+  "FILM-7B, Mistral-7B-Instruct-v0.2 fine-tuned with IN2",
+  "VAL Probing: three probing tasks across document, code and structured-data contexts and forward, backward and bi-directional retrieval",
+  "Analysis of sliding window and RoPE base theta during IN2 training"
+ ],
+ "method": {
+  "summary": "Synthesize 4K-32K token contexts by concatenating shuffled 128-token segments from C4 realnewslike, with GPT-4-Turbo QA pairs about one segment or multi-hop over two or more segments. Fine-tune Mistral-7B-Instruct-v0.2 on the mixture for one epoch to get FILM-7B, then evaluate on VAL Probing, LongBench and short-context tasks.",
+  "task": "long-context instruction tuning; long-context information retrieval and QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "IN2 training data",
+    "role": "train",
+    "size": "1.1M fine-grained long-context (~63%), 300K integration/reasoning long-context (~17%), 150K short-context QA (~9%), 200K OpenOrca general instruction data (~11%)",
+    "split": "one epoch over all",
+    "source": "Raw text: realnewslike subset of C4; QA generated by GPT-4-Turbo; OpenOrca",
+    "preprocessing": "128-token segments; context length evenly distributed 4K-32K via rejection sampling on random segments; 10-gram overlap filter against all evaluation data; ~10% of QA pairs kept with the original text Ci rather than a long context"
+   },
+   {
+    "name": "VAL Probing (document, code, database)",
+    "role": "eval",
+    "size": "~3K examples per task, ~32K tokens per context",
+    "split": null,
+    "source": "arXiv abstracts; StarCoder Python functions; Wikidata entities",
+    "preprocessing": "Three lines of definition chosen per function"
+   },
+   {
+    "name": "LongBench (9 tasks)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "NarrativeQA, Qasper, MultiFieldQA, HotpotQA, 2WikiMultihopQA, MuSiQue, GovReport, QMSum, MultiNews",
+    "preprocessing": "middle truncation to 32K tokens"
+   },
+   {
+    "name": "Short-context tasks (8)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "MMLU, BoolQ, RACE-High, CommonsenseQA, ARC-Challenge, HellaSwag, GSM8K, MATH",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "FILM-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only transformer (Mistral)",
+    "init_from": "Mistral-7B-Instruct-v0.2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32K",
+    "other": {
+     "rope_base_default": "1.0 x 10^6"
+    }
+   },
+   {
+    "name": "Mistral-7B-Instruct-v0.2",
+    "role": "base",
+    "params": "7B",
+    "architecture": "no sliding window",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B-Instruct-v0.1",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "sliding window",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LongAlign-7B-64K / 13B-64K",
+    "role": "baseline",
+    "params": "7B/13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "64K",
+    "other": {}
+   },
+   {
+    "name": "InternLM2-chat-7B / 20B",
+    "role": "baseline",
+    "params": "7B/20B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4-Turbo",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-Turbo, LongChat-v1.5-7B-32K, ChatGLM2/3-6B-32K, Yi-6B-200K, InternLM2-7B-LongWanjuan",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "starred results taken from Bai et al. 2023 and Lv et al. 2024"
+    }
+   }
+  ],
+  "training": {
+   "objective": "instruction tuning: long context and question as instruction, loss on answer tokens only",
+   "optimizer": null,
+   "lr": "1e-6 maximum",
+   "lr_schedule": "cosine decay",
+   "warmup": "3% of steps",
+   "batch_size": "128 (global)",
+   "steps": "~14K",
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": "4K-32K",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "16 nodes of 8x80G A100 GPUs, PyTorch FSDP full sharding with CPU offload",
+   "compute": "~300 GPU days",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "ablation_subset": "Section 4.3 experiments use 20% of the training examples",
+    "training_template": "[INST] ... ### Context: Li ### Instruction: qi [/INST]"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for all models and tasks",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one greedy run per item; no seeds reported",
+   "prompting": "zero-shot instruction following for long-context tasks; 5-shot MMLU, 8-shot GSM8K, 4-shot MATH, 0-shot others",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "long_context_truncation": "LongBench middle truncation to 32K tokens",
+    "eval_tools": "lm_eval for MMLU, BoolQ, RACE-H, ARC-C, HellaSwag; An et al. 2024 scripts for CSQA, GSM8K, MATH"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VAL Probing Avg",
+     "definition": "average performance across the whole context length",
+     "unit": "% (word recall for document, exact match for code, relaxed exact match for database)",
+     "higher_is_better": true
+    },
+    {
+     "name": "VAL Probing Gap",
+     "definition": "max minus min performance over positions",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "LongBench F1 / ROUGE-L",
+     "definition": "F1 for QA tasks, ROUGE-L for summarization, official scripts",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Mistral-7B-Instruct-v0.1/v0.2",
+    "LongAlign",
+    "InternLM2",
+    "LongChat",
+    "ChatGLM",
+    "Yi",
+    "GPT-3.5-Turbo",
+    "GPT-4-Turbo"
+   ],
+   "protocol": "single run per model; no significance tests or seeds reported"
+  },
+  "availability": {
+   "code": "github.com/microsoft/FILM",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "QA generation for single segment (Eq 1)",
+    "text": "Generate one question and the answer from the given context. The question should be highly specific to the information provided in the context. It should not be a general question that suits any context.\nRules to follow when generate the question:\n1. The question should be fully answerable from information present in given context.\n2. Make sure the question is clear and unambiguous.\n3. Phrases like 'based on the provided context', 'according to the context', etc, are not allowed to appear in the question.\nRules to follow when generate the answer:\n1. The answer must use the information provided in the context.\n2. Do not just copy words from the context. Answer the question in your own words.\n### Context ###:\nsi\n### Question ###:\n{completion}",
+    "where": "Appendix D, Example 7"
+   },
+   {
+    "purpose": "Multi-hop QA generation (Eq 2)",
+    "text": "Generate one question and the answer from the given context. The context contains several pieces. Answering the question should require the reader to make multiple logical connections or inferences using **at least two pieces**. [rules as in Example 7; context given as Piece 1: s1i, Piece 2: s2i, ...]",
+    "where": "Appendix D, Example 8"
+   },
+   {
+    "purpose": "Training template",
+    "text": "[INST] Below is a context and an instruction. Based on the information provided in the context, write a response for the instruction.\n### Context:\nLi\n### Instruction:\nqi [/INST]",
+    "where": "Appendix D, Example 9"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "The entire training process consumes ∼300 GPU days.",
+    "where": "Section 2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FILM-7B has the best all-task VAL Probing average with a small position gap; the base Mistral-7B-Instruct-v0.2 has a much larger gap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "All Avg",
+   "value": 85.9,
+   "unit": "% avg",
+   "baseline_value": "Mistral-7B-Instruct-v0.2: 47.3 (All Avg); GPT-4-Turbo: 79.0",
+   "n": null,
+   "setup": "VAL Probing all tasks, ~32K contexts, greedy",
+   "quote": null,
+   "table": "Table 1, row FILM-7B (ours), column All Avg",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "FILM-7B all-task min-max gap.",
+   "kind": "measured",
+   "source": null,
+   "metric": "All Gap",
+   "value": 13.9,
+   "unit": "points",
+   "baseline_value": "Mistral-7B-Instruct-v0.2: 56.2; GPT-4-Turbo: 32.1",
+   "n": null,
+   "setup": "VAL Probing all tasks",
+   "quote": null,
+   "table": "Table 1, row FILM-7B (ours), column All Gap",
+   "note": "Table 1 prints a stray 3.1 after the FILM-7B row, unexplained.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Mistral-7B-Instruct-v0.2 loses much on code retrieval in the middle (gap 59.5 vs FILM 18.7; averages 20.3 vs 83.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Code Avg",
+   "value": 83.3,
+   "unit": "% avg",
+   "baseline_value": "Mistral-7B-Instruct-v0.2: 20.3",
+   "n": null,
+   "setup": "VAL Probing code task",
+   "quote": null,
+   "table": "Table 1, row FILM-7B (ours), column Code Avg",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "NarrativeQA F1 rises from the backbone to FILM-7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 26.9,
+   "unit": "F1",
+   "baseline_value": "23.5",
+   "n": null,
+   "setup": "LongBench, 32K middle truncation",
+   "quote": "23.5→26.9 F1 score on NarrativeQA",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "FILM-7B LongBench average across nine tasks vs backbone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg",
+   "value": 39.9,
+   "unit": "avg score",
+   "baseline_value": "Mistral-7B-Instruct-v0.2: 30.6; GPT-4-Turbo: 44.7",
+   "n": null,
+   "setup": "LongBench 9 tasks",
+   "quote": null,
+   "table": "Table 2, row FILM-7B (ours), column Avg",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "MMLU is unchanged after IN2 training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.2,
+   "unit": "accuracy",
+   "baseline_value": "59.3",
+   "n": null,
+   "setup": "5-shot MMLU",
+   "quote": "59.3→59.2 accuracy on MMLU",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Larger RoPE base (2.0e6 to 1.0e8) beats default 1.0e6 on VAL Probing for FILM-7B (20% data); 1.0e7 gives 84.9 avg vs 80.3 default.",
+   "kind": "measured",
+   "source": null,
+   "metric": "All Avg",
+   "value": 84.9,
+   "unit": "% avg",
+   "baseline_value": "80.3 (default 1.0 x 10^6)",
+   "n": null,
+   "setup": "20% of IN2 data, VAL Probing all",
+   "quote": null,
+   "table": "Table 3, row 1.0 x 10^7, column All Avg",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "With a 4K sliding window, performance drops dramatically beyond window size (qualitative, Fig 6).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FILM-7B 20% with 4K sliding window in IN2 only or pre-training and IN2",
+   "quote": "the performances drop dramatically when the distance between the retrieval question and information is longer than the sliding window size",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Short-context tasks (read from Fig 5, order MMLU, BoolQ, RACE-H, CSQA, ARC-C, HellaSwag, GSM8K, MATH): FILM-7B 59.2, 87.7, 45.6, 75.3, 52.5, 79.1, 44.5, 11.3 vs backbone 59.3, 85.4, 46.0, 70.0, 55.9, 83.6, 40.4, 8.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5 bar labels; mapping to task by order is inferred",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 5"
+  }
+ ],
+ "limits": [
+  "Hypothesis about training-data position bias is not tested directly.",
+  "No seeds, variance or significance tests; single greedy run.",
+  "Only a 7B Mistral backbone and 32K context; ablations use 20% of data.",
+  "Needle-in-the-Haystack shown near-perfect for FILM-7B (Appendix C); VAL Probing authors' own benchmark.",
+  "Training data generated by GPT-4-Turbo; no weights or data release stated in the text beyond the GitHub link.",
+  "Starred baseline numbers in Table 2 are copied from other papers, so protocols may differ."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "IN2 training",
+   "definition": "INformation-INtensive training: a purely data-driven solution using synthesized long-context QA that requires fine-grained awareness of a short segment and integration of information from two or more segments",
+   "where": "Abstract"
+  },
+  {
+   "term": "Forward retrieval",
+   "definition": "the information being retrieved directly follows the retrieval keyword in a long context",
+   "where": "Section 3.1"
+  },
+  {
+   "term": "VAL Probing",
+   "definition": "VArious Long-context Probing: document, code, database tasks with bi-directional, backward, forward retrieval",
+   "where": "Section 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lost in the middle: How language models use long contexts",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "the problem addressed",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": "2310.06825",
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "LongBench",
+   "year": 2023,
+   "arxiv": "2308.14508",
+   "relation": "uses-data",
+   "note": "real-world eval",
+   "quote": null
+  },
+  {
+   "work": "LongAlign",
+   "year": 2024,
+   "arxiv": "2401.18058",
+   "relation": "baseline",
+   "note": "compared on probing",
+   "quote": null
+  },
+  {
+   "work": "InternLM2 technical report",
+   "year": 2024,
+   "arxiv": "2403.17297",
+   "relation": "baseline",
+   "note": "compared on probing",
+   "quote": null
+  },
+  {
+   "work": "C4 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "realnewslike subset",
+   "quote": null
+  },
+  {
+   "work": "OpenOrca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "general instruction data",
+   "quote": null
+  },
+  {
+   "work": "Needle-in-the-Haystack",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "argued to overestimate long-context ability",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Performance of FILM-7B, Mistral-7B-Instruct-v0.2, and GPT4-Turbo on our three probing tasks.",
+   "page": 1,
+   "why": "Shows the U-shaped dip of the base model and its removal"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The data construction process for IN2 training",
+   "page": 3,
+   "why": "Pipeline for the synthetic data"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Three tasks in VAL Probing",
+   "page": 4,
+   "why": "Retrieval pattern examples"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 text extraction has a stray 3.1 after the FILM-7B row.",
+  "Figure data (curves) not extractable; Fig 5 labels mapped to tasks by order."
+ ]
 }

@@ -38,6 +38,8 @@ cleaned: 2026-11-01
 
 A golden set of 300 questions scores grounding at 0.40, the generation team rewrites the prompt for a month, and the score barely moves, because half the rows could never have been answered from the index. A dataset decides what every later number means. This chapter covers where rows come from, how they stay representative as traffic changes, and which rows are fair for which measurement.
 
+**Needs.** The section on row eligibility uses RAG vocabulary (index, retriever, grounding). Read [GA 02 RAG and retrieval](../../02-rag-retrieval/README.md) first, or skip that section on a first pass.
+
 ---
 
 ## Start small, start real
@@ -46,7 +48,7 @@ The first useful dataset is **20–50 tasks taken from real failures**: user com
 
 | Stage | Size | Purpose |
 |---|---|---|
-| **Example suite** | 5–20 | Eyeball diffs while iterating on a prompt ([01/09](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md#offline-the-tech-tree)) |
+| **Example suite** | 5–20 | Eyeball diffs while iterating on a prompt ([01/08](../../../ai-engineering/01-prompt-engineering/notes/08-evaluating-prompts.md#offline-the-tech-tree)) |
 | **First golden set** | 20–50 | Real failures, hand-reviewed. Enough to catch big regressions |
 | **Working set** | 100–300 | Enough for ±5–8 point error bars on a pass rate ([09](09-reading-results.md#how-many-tasks)) |
 | **LLM-graded sample** | 50–200 | Cost-capped subset for expensive judges |

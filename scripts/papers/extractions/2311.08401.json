@@ -1,0 +1,584 @@
+{
+ "schema": 1,
+ "key": "2311.08401",
+ "pdf": "generative-ai/05-RL/sources/tian-2023-fine-tuning-language-models-factuality.pdf",
+ "bib": {
+  "title": "Fine-tuning Language Models for Factuality",
+  "authors": [
+   "Katherine Tian",
+   "Eric Mitchell",
+   "Huaxiu Yao",
+   "Christopher D. Manning",
+   "Chelsea Finn"
+  ],
+  "first_author": "Tian",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.08401",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 59791,
+  "chars_total": 59791,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can language models be fine-tuned, without human labels, to produce fewer factual errors in long-form generation?",
+ "hypothesis": "Preference pairs ranked by automatic truthfulness scores (reference-based or model-confidence-based) and optimised with DPO will reduce factual errors more than RLHF or factuality decoding.",
+ "contributions": [
+  "A straightforward approach to optimizing language models for factuality in long-form generation without human annotation",
+  "A reference-free truthfulness estimator based on the model's own confidence over extracted atomic claims",
+  "Evidence that factuality tuning beats RLHF and composes with decoding methods such as DOLA"
+ ],
+ "method": {
+  "summary": "Sample n responses per prompt at temperature 1.0 from an SFT/base model, score each by FactScore (Wikipedia-supported fraction of atomic claims) or by model confidence (largest-bin fraction of 20 resampled answers to GPT-3.5-generated questions), label the higher-scoring response of each pair as preferred, then run DPO. Evaluated on generated biographies and medical QA with FactScore counts, human and GPT-4 checks.",
+  "task": "preference optimisation for factuality of long-form generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Biographies",
+    "role": "both",
+    "size": "355 entities (296 train, 59 test), 10 responses per entity, 1 prompt per entity",
+    "split": "296 train / 59 test entities",
+    "source": "prompts generated with GPT-3.5; answers sampled from Llama-1-7B with a few-shot prompt; entities have Wikipedia pages",
+    "preprocessing": null
+   },
+   {
+    "name": "MedicalQA",
+    "role": "both",
+    "size": "200 medical conditions (150 train, 50 test), 6 questions per condition, 6 responses per question",
+    "split": "150 train / 50 test conditions",
+    "source": "prompts generated with GPT-3.5; answers sampled from Llama-1-7B with a few-shot prompt; conditions have Wikipedia pages",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-1-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "also samples the confidence answers for all experiments"
+    }
+   },
+   {
+    "name": "Llama-2-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2-7B-Chat",
+    "role": "base",
+    "params": "7B",
+    "architecture": "RLHF-tuned decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "also baseline RLHF model with human labels"
+    }
+   },
+   {
+    "name": "GPT-3.5",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "claim extraction, claim-to-question rewrite, relevance check, optional equivalence check"
+    }
+   },
+   {
+    "name": "FactScore fact-checker (Llama-1-7B fine-tuned for NLI)",
+    "role": "reward",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Llama-1-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "error counting and conversational-tone rating"
+    }
+   }
+  ],
+  "training": {
+   "objective": "DPO loss (Eq. 3) on automatically ranked pairs; SFT stage uses all model responses as targets",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pairs": "m*C(n,2)-k pairs, k = pairs with equal scores",
+    "beta": "not stated",
+    "responses_per_prompt": "10 (bios), 6 (MedQA)"
+   }
+  },
+  "inference": {
+   "decoding": "temperature sampling to build preference data; test-time sampling 'in the normal manner' (not specified)",
+   "temperature": "1.0 for preference-data sampling",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "20 resampled answers per claim for confidence (12 in Table 5 ablation); 10 (bios) / 6 (MedQA) responses per prompt",
+   "prompting": "few-shot prompting for models not fine-tuned",
+   "retrieval": "FactScore retrieves from Wikipedia at training and eval time only; none at inference",
+   "parameters": {
+    "confidence_metric": "fraction of samples in the largest semantic bin (max conf) or entropy over bins",
+    "equivalence": "heuristic string match (non-stop-word overlap) or GPT-3.5",
+    "fact_extraction": "atomic claims by GPT-3.5, or named entities (spaCy/nltk noun chunks)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "# Correct",
+     "definition": "number of correct (and relevant for MedQA) facts per response per FactScore",
+     "unit": "facts per response",
+     "higher_is_better": true
+    },
+    {
+     "name": "# Incorrect",
+     "definition": "number of inaccurate facts per response per FactScore",
+     "unit": "facts per response",
+     "higher_is_better": false
+    },
+    {
+     "name": "% Correct",
+     "definition": "proportion of correct relevant facts out of total extracted facts",
+     "unit": "proportion",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SFT",
+    "ITI (inference-time intervention)",
+    "DOLA (decoding by contrasting layers)",
+    "Llama-2-Chat (RLHF with human labels)"
+   ],
+   "protocol": "FactScore automated counts on test entities; human check via Prolific; GPT-4 error counts. Number of seeds or runs not stated; no significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-3.5 atomic fact to question (biography template)",
+    "text": "I will provide a statement containing one atomic fact related to [NAME] or people around [HIM/HER]. Please rephrase the following statement into a specific question testing knowledge of the key fact in the statement. For example: ... Statement: [STATEMENT] Question:",
+    "where": "Appendix A.1, Table 7 (few-shot examples abridged)"
+   },
+   {
+    "purpose": "GPT-3.5 atomic fact to question (MedicalQA template)",
+    "text": "I will provide a statement containing one atomic fact about the medical condition [CONDITION]. Please rephrase the following statement into a specific question testing knowledge of the key fact in the statement. For example: ... Statement: [STATEMENT] Question:",
+    "where": "Appendix A.1, Table 7 (few-shot examples abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.hyperparameters",
+    "quote": "Fine-tuning for Factuality",
+    "where": "no optimizer, learning rate, batch size, beta or epochs are printed anywhere in the text"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Factuality tuning cuts the factual error rate versus Llama-2-chat by 58% (biographies) and 40% (medical QA) at 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error-rate reduction",
+   "value": 58,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-2-7B, FactTune vs Llama-2-Chat, biographies; 40% for MedQA",
+   "quote": "At 7B scale, compared to Llama-2-chat, we observe 58% and 40% reduction",
+   "table": "",
+   "note": "40% is the MedQA figure",
+   "where": "Abstract"
+  },
+  {
+   "claim": "FactTune-FS on Llama-2 biographies reaches 0.895 correct vs 0.701 for SFT, with incorrect facts dropping from 5.19 to 2.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Correct",
+   "value": 0.895,
+   "unit": "proportion",
+   "baseline_value": 0.701,
+   "n": null,
+   "setup": "Llama-2-7B, biographies, FactScore, test entities",
+   "quote": null,
+   "table": "Table 2, row Llama-2 FactTune-FS, column Biographies % Correct",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "FactTune-FS on Llama-1 biographies reduces incorrect facts from 12.16 (SFT) to 3.75 while correct facts rise from 13.78 to 14.81.",
+   "kind": "measured",
+   "source": null,
+   "metric": "# Incorrect",
+   "value": 3.75,
+   "unit": "facts/response",
+   "baseline_value": 12.16,
+   "n": null,
+   "setup": "Llama-1-7B, biographies",
+   "quote": null,
+   "table": "Table 2, row Llama-1 FactTune-FS, column Biographies # Incorrect",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "FactTune-MC (reference-free) on Llama-2 biographies reaches 0.846 correct vs 0.701 SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Correct",
+   "value": 0.846,
+   "unit": "proportion",
+   "baseline_value": 0.701,
+   "n": null,
+   "setup": "Llama-2-7B, biographies",
+   "quote": null,
+   "table": "Table 2, row Llama-2 FactTune-MC, column Biographies % Correct",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "FactTune-FS on Llama-2 MedQA reaches 0.783 vs 0.635 SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Correct",
+   "value": 0.783,
+   "unit": "proportion",
+   "baseline_value": 0.635,
+   "n": null,
+   "setup": "Llama-2-7B, MedicalQA",
+   "quote": null,
+   "table": "Table 2, row Llama-2 FactTune-FS, column Medical QA % Correct",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Llama-2-Chat biographies score 0.748 correct; FactTune-FS on Llama-2 base (0.895) beats it, as does FactTune-FS applied to Chat (0.831).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Correct",
+   "value": 0.831,
+   "unit": "proportion",
+   "baseline_value": 0.748,
+   "n": null,
+   "setup": "Llama-2-7B-Chat tuned further, biographies",
+   "quote": null,
+   "table": "Table 3, row FactTune-FS, column Biographies % Correct",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Applied to Llama-2-Chat on MedQA, FactTune-FS gives 0.682 vs 0.636 for Chat and 0.582 for DOLA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Correct",
+   "value": 0.682,
+   "unit": "proportion",
+   "baseline_value": 0.636,
+   "n": null,
+   "setup": "Llama-2-7B-Chat, MedicalQA",
+   "quote": null,
+   "table": "Table 3, row FactTune-FS, column Medical QA % Correct",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Stacking DOLA on FactTune-FS raises Llama-1 biography accuracy to 0.864 from 0.812, but lowers Llama-2 biographies to 0.865 from 0.895.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Correct",
+   "value": 0.864,
+   "unit": "proportion",
+   "baseline_value": 0.812,
+   "n": null,
+   "setup": "Llama-1-7B, biographies, FactTune-FS + DOLA",
+   "quote": null,
+   "table": "Table 4, row Llama-1 FactTune-FS + DOLA, column Biographies %Correct",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Human evaluation: FactTune-FS raises biography accuracy from 0.582 (SFT) to 0.846.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": 0.846,
+   "unit": "proportion",
+   "baseline_value": 0.582,
+   "n": null,
+   "setup": "Llama-1-7B, Prolific annotators, biographies",
+   "quote": null,
+   "table": "Table 6, row Biographies Human, column FactTune-FS",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Human evaluation on MedQA: 0.838 for FactTune-FS vs 0.662 for SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": 0.838,
+   "unit": "proportion",
+   "baseline_value": 0.662,
+   "n": null,
+   "setup": "Llama-1-7B, MedQA",
+   "quote": null,
+   "table": "Table 6, row MedQA Human, column FactTune-FS",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "GPT-4 rates FactTune-FS as less conversational than SFT for 77.5% of Llama-1 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "less conversational",
+   "value": 77.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "n=40 Llama-1 questions",
+   "quote": "GPT-4 rates FactTune-FS as less conversational in tone than the SFT model for 77.5% (n=40)",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Using GPT-3.5 for equivalence binning yields worse preferences than a simple string heuristic (atomic, max conf, biographies 0.794 vs 0.840).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Correct",
+   "value": 0.794,
+   "unit": "proportion",
+   "baseline_value": 0.84,
+   "n": null,
+   "setup": "Llama-1-7B, 12 samples per Table 5 note",
+   "quote": null,
+   "table": "Table 5, rows Atomic LLM Max Conf vs Atomic Heuristic Max Conf, column Biographies %Correct",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Professional fact-checkers needed about 9 minutes per biography and $2,000 for 505 biographies.",
+   "kind": "reported",
+   "source": null,
+   "metric": "annotation cost",
+   "value": 2000,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Min et al. 2023 figure",
+   "quote": "it cost about $2,000",
+   "table": "",
+   "note": "Quoted from other work",
+   "where": "Section 1"
+  }
+ ],
+ "limits": [
+  "Only 7B models tested; scaling to larger models left open (Conclusion).",
+  "Two new tasks (biographies, medical QA) that the authors say do not fully cover factuality scenarios.",
+  "How to combine factuality rankings with typical RLHF rewards is left open.",
+  "Training hyperparameters (optimizer, lr, beta, batch size, epochs, hardware) are not reported, nor seeds or significance tests.",
+  "Outputs become terser, less conversational and not chronological after tuning (Sec 4.1, App A.2).",
+  "FactScore is both preference signal and main metric; mitigated by human and GPT-4 checks.",
+  "GPT-4 equivalence checking was not run for cost reasons.",
+  "DOLA stacking hurt Llama-2 on biographies."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "FactScore",
+   "definition": "fraction of extracted atomic claims supported by the reference text (Wikipedia)",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "FactTune-FS",
+   "definition": "model fine-tuned with reference-based FactScore preference pairs",
+   "where": "Sec 4"
+  },
+  {
+   "term": "FactTune-MC",
+   "definition": "model fine-tuned with model-confidence-based (reference-free) preference pairs",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Direct Preference Optimization",
+   "year": 2023,
+   "arxiv": "2305.18290",
+   "relation": "uses-method",
+   "note": "training algorithm",
+   "quote": null
+  },
+  {
+   "work": "FactScore (Min et al.)",
+   "year": 2023,
+   "arxiv": "2305.14251",
+   "relation": "uses-method",
+   "note": "reference-based truthfulness and eval metric",
+   "quote": null
+  },
+  {
+   "work": "Semantic uncertainty (Kuhn et al.)",
+   "year": 2023,
+   "arxiv": "2302.09664",
+   "relation": "extends",
+   "note": "semantic-bin confidence inspiration",
+   "quote": null
+  },
+  {
+   "work": "DOLA (Chuang et al.)",
+   "year": 2023,
+   "arxiv": "2309.03883",
+   "relation": "baseline",
+   "note": "decoding baseline, also stacked",
+   "quote": null
+  },
+  {
+   "work": "Inference-time intervention (Li et al.)",
+   "year": 2023,
+   "arxiv": "2306.03341",
+   "relation": "baseline",
+   "note": "ITI baseline",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "base and chat models, RLHF baseline",
+   "quote": null
+  },
+  {
+   "work": "Llama (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "evaluates",
+   "note": "Llama-1-7B base and confidence sampler",
+   "quote": null
+  },
+  {
+   "work": "FacTool (Chern et al.)",
+   "year": 2023,
+   "arxiv": "2307.13528",
+   "relation": "related",
+   "note": "alternative reference-based scorer",
+   "quote": null
+  },
+  {
+   "work": "Language models (mostly) know what they know (Kadavath et al.)",
+   "year": 2022,
+   "arxiv": "2207.05221",
+   "relation": "related",
+   "note": "calibration motivates confidence signal",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for reward model overoptimization (Gao et al.)",
+   "year": 2022,
+   "arxiv": "2210.10760",
+   "relation": "related",
+   "note": "overoptimisation concern checked in Sec 4.5",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our approach aims to improve the factuality of language models, specifically focusing on long-form generation",
+   "page": 2,
+   "why": "pipeline overview"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Factuality tuning (FactTune FS) is the only method that can produce a strict improvement in factuality over the SFT model",
+   "page": 5,
+   "why": "correct vs incorrect facts trade-off by method"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Average FactScore error counts and GPT-4 error counts are highly correlated",
+   "page": 9,
+   "why": "overoptimisation check"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 3",
+   "snippet": "L_DPO = -E[log sigma(beta log pi_theta(y_w|x)/pi_ref(y_w|x) - beta log pi_theta(y_l|x)/pi_ref(y_l|x))]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extracted cleanly; table cells are one value per line. No embedded instructions seen.",
+  "Percent claim in abstract (58%/40%) is vs Llama-2-chat; intro says over 50% for bios and 20-30% for medical, and Sec 4.1 says at least 23% / 12% over baselines."
+ ]
+}

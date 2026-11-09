@@ -93,11 +93,11 @@ Bojie Li's *AI Agents in Depth* (Apache-2.0) is synthesised into pillars [03](03
 
 **Objectives:** assemble retrieval, tools, memory, evaluation, and controls into scoped application patterns, including research ([Du et al.](https://arxiv.org/abs/2506.11763); [Li, ch. 6](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md)) and data-analysis agents.
 
-**Learning:** [chapters, deck, and practice](07-agentic-applications/README.md). **Evidence:** a working application with explicit permissions, data boundaries, success criteria, and human handoff.
+**Learning:** [chapters, deck, and practice](07-agentic-applications/README.md). **Evidence:** a working application with enforced limits, an independent check on its answers (held-out tests or recomputed numbers), and a scoped, costed product case.
 
 ### [08 Eval](08-eval/README.md)
 
-**Objectives:** design task datasets ([Anthropic, *Demystifying evals*](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)); choose metrics; use human and model judges cautiously ([Husain and Shankar](https://hamel.dev/blog/posts/field-guide/)); analyse uncertainty; test regressions; make evaluation a release gate.
+**Objectives:** design task datasets ([Anthropic, *Demystifying evals*](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)); choose metrics; use human and model judges cautiously ([Husain and Shankar](https://hamel.dev/blog/posts/field-guide/)); analyse uncertainty; test regressions; make evaluation a release gate; evaluate agents by outcome, trajectory, components and repeated trials; evaluate RAG retrieval and grounding separately; trace runs so scores attach to spans; sample and review production traffic; calibrate a judge against human labels before it gates anything.
 
 **Learning:** [chapters, deck, and practice](08-eval/README.md). **Evidence:** a versioned evaluation report with failure taxonomy, confidence/uncertainty, and a CI or release decision.
 

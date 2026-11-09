@@ -1,19 +1,250 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2404.03592",
  "pdf": "generative-ai/05-RL/sources/wu-2024-reft.pdf",
  "bib": {
   "title": "ReFT: Representation Finetuning for Language Models",
-  "first_author": "Zhengxuan Wu",
-  "year": "2024",
-  "venue": null,
+  "authors": ["Zhengxuan Wu", "Aryaman Arora", "Zheng Wang", "Atticus Geiger", "Dan Jurafsky", "Christopher D. Manning", "Christopher Potts"],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "preprint (arXiv v3, 22 May 2024, marked 'Preprint. Under review.')",
   "arxiv": "2404.03592",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 133176,
+  "chars_total": 133176,
+  "engine": "pymupdf",
+  "skipped": "Reference list (chars ~37,400-69,300) skimmed only for lineage; figures 3-11 are plots, only captions read."
  },
- "legacy_report": "SOURCE: ReFT: Representation Finetuning for Language Models. Zhengxuan Wu*, Aryaman Arora*, Zheng Wang, Atticus Geiger, Dan Jurafsky, Christopher D. Manning, Christopher Potts (Stanford, Pr(Ai)2R). arXiv 2404.03592v3, 22 May 2024. Marked \"Preprint. Under review.\" (the NeurIPS 2024 version is not what this PDF says).\n\nCOVERAGE: 49 pages, 133,393 chars. Read in full: abstract, sections 1-6 (chars 0-37,500), appendix A (pyreft code), the D.2 tuning advice, D.3, E, F, G, H and the start of I (chars 69,300-121,500). Skimmed by section headings only, not read line by line: references, B (RED, activation addition, RepE), C (dataset details), D.1 (per-task hyperparameter tables), the rest of I (generation examples) and J (licences). Memorisation figures 3-10 and runtime figure 11 are plots, so only their captions were read. This is NOT an RL paper: it is parameter-efficient finetuning by learned representation interventions. It has no reward, policy or RL content, so check that generative-ai/05-RL is the right home.\n\nCLAIMS (ranked)\n- ReFT trains interventions on frozen-model hidden states instead of weight updates. LoReFT edits the residual stream inside a rank-r subspace.\n  number: Phi(h) = h + R^T(Wh + b - Rh), with R in R^{r x d} having orthonormal rows\n  setup: only {R, W, b} are learned and the LM is frozen. It builds on distributed interchange intervention (DII, eq. 1) and DAS. In DII, the \"source\" is the target Rs, which LoReFT replaces with a learned linear projection Wh+b.\n  quote: \"ΦLoReFT(h)= h+ R⊺(Wh+ b− Rh) (2)\"\n  where: p.4, sec 3.2\n\n- LoReFT uses 15x-65x fewer parameters than LoRA.\n  number: 15x-65x\n  setup: against LoRA, across the evaluated models and benchmarks. Example: 0.031% trainable parameters on LLaMA-7B versus LoRA's 0.826%.\n  quote: \"learn interventions that are 15×–65× more parameter-efficient than LoRA\"\n  where: abstract\n\n- Commonsense reasoning: LoReFT beats LoRA and DoRA with about 25x fewer parameters. Averages on the eight-task COMMONSENSE170K benchmark:\n\n| Model | LoReFT | DiReFT | DoRA | LoRA |\n|---|---|---|---|---|\n| LLaMA-7B | 80.2 (0.031%) | 79.0 | 78.1 (0.838%) | 74.7 (0.826%) |\n| LLaMA-13B | 83.3 | 82.2 | 81.5 | 80.5 |\n| Llama-2 7B | 81.8 | 80.9 | 79.7 | 77.6 |\n| Llama-3 8B | 86.6 (0.026%) | 85.4 | 85.2 | 80.8 |\n\n  setup: single combined finetune on 170K examples. Scores are the mean of 3 seeds. Baseline numbers are copied from Liu et al. 2024c (DoRA paper), not rerun. Hyperparameters were tuned on a GSM8K dev split, with 6 epochs.\n  quote: \"LoReFT 0.031% 69.3 84.4 80.3 93.1 84.2 83.2 68.2 78.9 80.2\"\n  where: Table 1, p.7\n\n- Instruction following: LoReFT reaches 85.60 win-rate on Alpaca-Eval v1.0, above full finetuning, LoRA and RED.\n  number: 85.60 (LoReFT) and 84.85 (DiReFT) against 80.93 (FT), 81.48 (LoRA) and 81.69 (RED)\n  setup: Llama-2 7B trained on Ultrafeedback. Judge is GPT-4 against text-davinci-003. LoReFT and DiReFT train 0.0039% of parameters, the same as RED. Mean of 2 seeds. Hyperparameters were tuned on Alpaca-52K with LLaMA-7B and a GPT-4 turbo judge.\n  quote: \"Llama-2 7B & LoReFT (ours) 0.0039% 85.60\"\n  where: Table 3, p.8\n  also: with half the rank (0.0019%) it scores 84.12. With 1K examples it scores 81.91, and training on 1K examples takes 18 min on one A100 40G with ≈1MB of parameters on disk. The text says \"achieves a win-rate within 1% of GPT-3.5 Turbo 1106\" (86.30).\n\n- GLUE: LoReFT is comparable to the best PEFTs at the smallest parameter counts.\n  number: RoBERTa-base average 84.2 (0.015%) against LoRA 84.7 (0.239%), RED 84.3 and FT 85.6. RoBERTa-large average 88.2 (0.014%) against LoRA 88.1, RED 88.0 and FT 88.6.\n  setup: mean of 5 seeds, on a held-out half of the validation set. Hyperparameters tuned per task. DiReFT is worse (83.2 base, 87.4 large).\n  quote: \"LoReFT (ours) 0.014% 89.2 96.2 90.1 68.0 94.1 88.5 87.5 91.6 88.2\"\n  where: Table 4, p.9\n\n- Arithmetic reasoning is a loss. LoReFT is below LoRA and adapters.\n  number: LLaMA-7B average 42.6 against LoRA 46.9, with GSM8K 26.0 against 37.5. LLaMA-13B average 49.6 against LoRA 51.1, with GSM8K 38.1 against 47.5.\n  setup: MATH10K chain-of-thought training, four test sets, mean of 3 seeds. It beats prefix-tuning.\n  quote: \"We find that both LoReFT and DiReFT do not perform as well at arithmetic reasoning tasks compared to LoRA and adapters, but do outperform prefix-tuning.\"\n  where: sec 4.3, Table 2, p.7-8\n  also: the authors' guess is that \"greater length necessarily reduces the effect of the intervention\".\n\n- The commonsense gain is not just extra epochs. LoReFT was trained longer than LoRA and DoRA, so the authors reran with matched epochs and effective batch size.\n  number: LoReFT(e=3) averages 79.5 (7B) and 83.1 (13B)\n  setup: 3 epochs with batch size 16, matching DoRA's number of gradient steps. On arithmetic, e=3 gives 39.3 (7B) and 48.8 (13B).\n  quote: \"With matched hyperparameters, LoReFT shows similar results by outperforming previous methods significantly on eight commonsense reasoning datasets.\"\n  where: App D.3, Tables 14-15, p.29-30\n\n- Ablation: dropping the orthogonality constraint or the difference term barely changes accuracy at equal parameter count. Input-independent versions are clearly worse.\n  number: arithmetic average on LLaMA-7B is 42.6 (LoReFT), 42.9 (h+R^T(Wh+b)), 42.4 (non-orthogonal W1,W2 form) and 40.6 (DiReFT). Without Wh, it is 37.1 for h+R^T(b-Rh) and 31.3 for h+R^T b.\n  setup: LLaMA-1 7B/13B, arithmetic benchmark, 3 seeds, LoReFT hyperparameters.\n  quote: \"variants with a similar number of trainable parameters also achieve similar performance to LoReFT across two models.\"\n  where: App E, Table 17, p.32\n\n- Hyperparameter advice from the authors (D.2).\n  setup: advice, not a measured result\n  quote: \"Intervening on multiple positions delivers significant gains.\" / \"Intervening on all layers first, and then shrink down.\" / \"Higher rank may not entail better performance.\" / \"Tie intervention weights as much as you can.\"\n  where: App D.2, p.29. The paper suggests starting at rank 4 or lower than 32. Main method: intervene on p prefix and s suffix positions of the prompt only, so extra inference cost is a fixed number of positions, not tied to prompt length.\n\n- Memorisation: a rank-1 intervention at one layer on the last prompt token can store long sequences.\n  number: 100% recovery up to 2,048 tokens (LLaMA-1 7B and 13B, most layers). 13B holds up to 2,560 tokens. A random token sequence is only recoverable up to 128 tokens. A codebook of 256 input-output pairs is held reliably.\n  setup: simplified input-independent LoReFT with a single scalar b, 4,097 parameters on 7B and 5,121 on 13B (about 17.5KB). 1000 epochs, learning rate 4e-3. Text is the start of Alice in Wonderland. Scrambled text recovers much worse.\n  quote: \"both models can successfully remember up to 2,048 tokens across most layers with a 100% recovery rate\"\n  where: App F.1-F.2, p.33-35. The authors note that pretraining memorisation of the book probably helps.\n\n- Composition: different orthogonal subspaces of one LoReFT can be trained on different tasks, then used together.\n  number: rank 8, split 4+4. Training took under 10 min on one A100 40G. 1K examples per task, 3 epochs.\n  setup: LLaMA-7B. One half does German sentence completion (HellaSwag-DE variant), the other does instruction following (1K Ultrafeedback examples). Used together, the model answers in German. The evidence is qualitative only, with no metric and no tuning.\n  where: App G.1, p.36-37\n\n- Few-shot adaptation: LoReFT adapts a chat model to imitate GOODY-2 from 5 examples.\n  number: 5 examples, rank-4 LoReFT at layer 15, 32,772 learned parameters, 100 epochs, under 30 seconds on an A100 40G\n  setup: Llama-2-Chat. The result is qualitative only (a demo), and the paper includes a safety-use warning.\n  where: App G.2, p.38\n\n- Inference overhead exists and is small. Interventions are hooked into the forward pass and cannot be merged into the weights like LoRA's.\n  number: about 0.05 second\n  setup: LLaMA-1 7B, untrained LoReFT, 10 layers at rank 8 on the last prompt token, 256 generated tokens, greedy decoding.\n  quote: \"For intervening with 10 layers with a rank of 8 on the last prompt token, the overhead is about 0.05 second.\"\n  where: App H, p.39\n\nLIMITS\n- Authors concede: mostly LLaMA-family models, with no other model families or vision-language models. The hyperparameter search space is large and not automated. Llama-3 8B was only run on commonsense. The authors do not know why ReFT works. The causal effect \"may only emerge in the model's upstream computations\".\n- Arithmetic and chain-of-thought is the weak spot. Table 2 and App D.3 show losses to LoRA and adapters. The GSM8K gap is large.\n- GLUE and instruction results are mixed. On GLUE, LoReFT does not beat LoRA on RoBERTa-base (84.2 vs 84.7). In Table 16, LoReFT's median is below VeRA and LoRA on RoBERTa-base (83.6 against 85.2 and 86.6), a comparison the authors put in the appendix because VeRA's protocol differs.\n- Baseline numbers in the commonsense, arithmetic and instruction tables are taken from other papers (Liu 2024c, Hu 2023, Wu 2024a, Li 2023), not rerun under the same setup. The authors tuned on dev sets and say prior PEFT work tuned on test sets, so the comparisons are not exactly like for like.\n- ReFT cannot be merged into the weights, unlike LoRA. Overhead is small but real (App H).\n- The headline claim \"more powerful ... than any existing PEFTs\" (conclusion) is stronger than the tables support (see arithmetic).\n- Dated: 2024 models only (LLaMA-1, Llama-2, Llama-3 8B). Nothing on RL or preference optimisation. Later PEFT work is not covered.\n\nBUILDS ON\n- Distributed interchange intervention and distributed alignment search: Geiger et al. 2023b; Wu et al. 2023. Causal abstraction and interchange interventions: Geiger et al. 2021, 2023a. Interchange intervention training (IIT): Geiger et al. 2022; Wu et al. 2022; Huang et al. 2023c.\n- Representation editing and steering: RED (Wu et al. 2024a), activation addition (Turner et al. 2023), RepE (Zou et al. 2023), Li et al. 2024 (inference-time intervention). B.1-B.3 recast these as ReFT instances.\n- Weight-based PEFT baselines: LoRA (Hu et al. 2022), DoRA (Liu et al. 2024c), adapters (Houlsby et al. 2019, Pfeiffer et al. 2020), prefix-tuning (Li and Liang 2021), BitFit (Ben Zaken et al. 2022), VeRA (Kopiczko et al. 2024).\n- Experimental setups: Hu et al. 2023 (LLM-Adapters, commonsense and arithmetic), Wu et al. 2024a (RED, instruction tuning and GLUE). Library built on pyvene (Wu et al. 2024b).\n\nCODE (App A, p.20; verbatim, but the extraction inserted spaces inside tokens)\nreft_config = ReftConfig ( representations ={ \"layer\": 19, \"component\": \"block_output\", \"intervention\": LoreftIntervention ( embed_dim = model.config.hidden_size, low_rank_dimension =1) })\nreft_model = get_reft_model ( model , reft_config )\nImports: from pyreft import get_reft_model, ReftConfig, LoreftIntervention, ReftTrainerForCausalLM. Repo: https://github.com/stanfordnlp/pyreft\n\nFIGURES (captions only, nothing rendered)\n- Fig 1 (p.2): parameter count against performance for LoReFT and other PEFTs on four benchmarks (commonsense, arithmetic, instruction tuning, GLUE). Quickest view of the \"far fewer parameters, similar or better score\" claim.\n- Fig 2 (p.4): ReFT intervention. Left panel shows an intervention at positions P in layer l. Right panel shows rank-2 LoReFT on 3-d states: project, replace the subspace component with Wh+b, add the edit back. Best picture of eq. 2.\n- Figs 3-10 (p.34-35): memorisation heatmaps by layer and length, and the codebook test.\n- Fig 11 (p.40): generation runtime against prompt length for varying rank, layers and positions.\n\nPROBLEMS\n- No embedded instructions found in the PDF text. Extraction is clean apart from spacing artefacts in code and the equations (math symbols come out garbled), and a doubled \"2\" in the DiReFT row of Table 17 (\"221.3\", which should read 21.3). Table numbers come from the text extraction. I did not render any figures.\n- Not read line by line: D.1 hyperparameter tables (p.23-28), B, C and I. Claims about them are not made here."
+ "type": "empirical",
+ "question": "Can finetuning a small number of learned interventions on hidden representations of a frozen LM match or beat weight-based PEFTs such as LoRA with far fewer trainable parameters?",
+ "hypothesis": "Representations encode rich semantic information, so editing representations might be a more powerful alternative to weight updates.",
+ "contributions": [
+  "Define the ReFT family of methods that learn task-specific interventions on hidden representations of a frozen base model",
+  "Define LoReFT (low-rank linear subspace ReFT, built on distributed interchange interventions) and DiReFT, an ablation that trades some performance for efficiency",
+  "Evaluate on commonsense reasoning, arithmetic reasoning, instruction-following and GLUE against PEFTs, tuning on dev sets only",
+  "Release the pyreft library"
+ ],
+ "method": {
+  "summary": "A frozen LM gets interventions Phi(h) = h + R^T(Wh + b - Rh) (LoReFT) applied at p prefix and s suffix token positions in a chosen set of layers; only R (orthonormal rows, rank r), W and b are trained with the LM cross-entropy loss. DiReFT drops the orthogonality constraint and the subtraction. Baselines are mostly copied from earlier papers.",
+  "task": "parameter-efficient finetuning for commonsense reasoning, arithmetic reasoning, instruction following, and GLUE classification",
+  "trains": true,
+  "datasets": [
+   {"name": "COMMONSENSE170K (BoolQ, PIQA, SIQA, HellaSwag, WinoGrande, ARC-e, ARC-c, OBQA)", "role": "both", "size": "null (stated only as more than 20 times larger than GSM8K train; counts deferred to Hu et al. 2023)", "split": "train on combined set, test on each task's test set; dev set = last 300 GSM8K train examples", "source": "Hu et al. 2023 (LLM-Adapters); licences in Appendix J", "preprocessing": "Hu et al. prompt template plus stripping leading and trailing whitespace; BoolQ passage removed"},
+   {"name": "MATH10K (GSM8K, MAWPS, MAWPS-single, AQuA with LM-generated chain-of-thought)", "role": "both", "size": "null", "split": "test on AQuA, GSM8K, MAWPS, SVAMP; AddSub, MultiArith, SingleEq dropped because they leak into MAWPS training data; dev set = last 300 GSM8K train examples", "source": "Hu et al. 2023", "preprocessing": "only final numeric or multiple-choice answer scored"},
+   {"name": "Ultrafeedback", "role": "train", "size": "null for full set; a 1K-example subset used in the low-resource run", "split": null, "source": "Cui et al. 2023, MIT licence", "preprocessing": "Alpaca prompt template (Taori et al. 2023)"},
+   {"name": "Alpaca-52K", "role": "dev", "size": "52K", "split": "used only for hyperparameter tuning with LLaMA-7B", "source": "Taori et al. 2023", "preprocessing": null},
+   {"name": "GLUE (MNLI, SST-2, MRPC, CoLA, QNLI, QQP, RTE, STS-B)", "role": "both", "size": "null", "split": "validation set split in two by random seed; 1,000 samples for in-training eval on QQP, MNLI, QNLI, half of samples on the rest; best epoch picked on in-training half, tested on the other half", "source": "Wang et al. 2018; QQP custom licence", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaMA-1 7B", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": "pretrained, frozen, loaded in torch.bfloat16", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LLaMA-1 13B", "role": "base", "params": "13B", "architecture": "decoder-only transformer", "init_from": "pretrained, frozen", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Llama-2 7B", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": "pretrained, frozen", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Llama-3 8B", "role": "base", "params": "8B", "architecture": "decoder-only transformer", "init_from": "pretrained, frozen; commonsense only", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RoBERTa-base", "role": "base", "params": "125M", "architecture": "encoder-only masked LM", "init_from": "pretrained, frozen, plus trained classification head", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RoBERTa-large", "role": "base", "params": "350M", "architecture": "encoder-only masked LM", "init_from": "pretrained, frozen, plus trained classification head", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LoReFT / DiReFT", "role": "proposed", "params": "0.031% of LLaMA-7B, 0.025% of LLaMA-13B, 0.0039% of Llama-2 7B (instruction tuning), 0.015% RoBERTa-base, 0.014% RoBERTa-large", "architecture": "learned low-rank interventions on residual stream", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"LoReFT_params": "R, W in R^{r x d}, b in R^r", "DiReFT": "W1, W2 in R^{r x d}"}},
+   {"name": "Baselines: PrefT, AdapterS, AdapterP, LoRA, DoRA, DoRA (half), BitFit, RED, full FT, VeRA, ChatGPT", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "scores copied from Hu et al. 2023, Liu et al. 2024c (DoRA), Wu et al. 2024a (RED), Li et al. 2023, Kopiczko et al. 2024; not rerun"}}
+  ],
+  "training": {
+   "objective": "Cross-entropy with teacher forcing over output positions (generation); cross-entropy on a classification head over the first-token (CLS) representation for GLUE",
+   "optimizer": "AdamW",
+   "lr": "searched, per Tables 5-8: {9e-5 ... 3e-3} for LLaMA GSM8K; 9e-4 fixed for Alpaca-52K; {1e-4 ... 3e-3} for GLUE. Chosen LLaMA values are underlined in the PDF and lost in the text; GLUE chosen values in Tables 9-12 (e.g. 6e-4 for MNLI)",
+   "lr_schedule": "linear",
+   "warmup": "warmup ratio searched in {0, 0.06, 0.10} (LLaMA GSM8K), 0.00 (Alpaca), {0 ... 0.2} (GLUE); chosen values per Tables 9-12",
+   "batch_size": "searched {4, 8, 16, 32, 64} (GSM8K), {16, 32, 64, 128} (Alpaca, GLUE); GLUE chosen 32 (8 for DiReFT RoBERTa-base RTE)",
+   "steps": null,
+   "epochs": "6 (commonsense), 12 (arithmetic) chosen; GLUE 20-60 per task; Alpaca search {1, 3, 6, 9, 12}; 3-epoch reruns in Tables 14-15",
+   "tokens": null,
+   "seq_len": "512 (commonsense and arithmetic training), 768 (instruction tuning)",
+   "precision": "base LM loaded in torch.bfloat16",
+   "weight_decay": "searched {0, 1e-3, 2e-3} (LoReFT GSM8K); 0 (Alpaca); GLUE mostly 0.00",
+   "dropout": "searched {0.00, 0.05} (LLaMA), {0.00 ... 0.20} (GLUE)",
+   "regularisation": null,
+   "hardware": "single GPU: NVIDIA A100 40G/80G or RTX 6000",
+   "compute": null,
+   "wall_clock": "18 minutes to train Llama-2 Chat 7B on 1K examples on one A100 40G (Table 3 footnote); under 10 minutes for the multi-task demo; 30 seconds for the 5-example demo",
+   "seeds": "3 seeds (commonsense, arithmetic), 2 seeds (instruction tuning), 5 seeds (GLUE: 42 for tuning, plus 43-46); some RTE, CoLA and QQP seeds replaced or best-of-3",
+   "other": {
+    "intervention_hyperparameters": "prefix positions p, suffix positions s, layer set L, tied or untied weights across positions, rank r",
+    "search_space_LLaMA_GSM8K": "p+s in {p1+s1 ... p11+s11}; tied {True, False}; rank {8, 16, 32, 64}; layers {0;2;4;6;10;12;14;18, 10;12;14;18;20;22;24;28, 4;6;10;12;14;18;20;22, all}; epochs {3, 6, 9, 12, 18}",
+    "search_space_Alpaca": "rank {1..6}; layers {9;18, 3;9;18, 3;9;18;24}; p+s up to p7+s7",
+    "GLUE_settings": "rank 1, all layers, untied, per-task position p (p1 to p11, see Tables 9-12), tuned separately for LoReFT and DiReFT",
+    "dev_sets": "hyperparameters tuned on dev sets that do not overlap the test sets; the LLaMA-7B GSM8K setting is reused for commonsense (6 epochs) and for 13B, 'without additional tuning'",
+    "chosen_values_not_in_text": "the best LLaMA settings were marked by underline and are not recoverable from the extracted text"
+   }
+  },
+  "inference": {
+   "decoding": "greedy without sampling for commonsense; Hu et al. 2023 decoding for arithmetic; greedy with repetition penalty for instruction tuning",
+   "temperature": "0.3 (arithmetic)",
+   "top_p": null,
+   "max_tokens": "32 new tokens (commonsense, arithmetic); 2048 new tokens (instruction tuning)",
+   "samples": "1 generation per item; scores averaged over 3 (commonsense, arithmetic), 2 (instruction), 5 (GLUE) training seeds",
+   "prompting": "Hu et al. 2023 template with string normalisation (commonsense, arithmetic); Taori et al. 2023 Alpaca template (instruction)",
+   "retrieval": null,
+   "parameters": {"repetition_penalty": "1.1", "max_repetition_ngram_size": "5", "beam_search": "arithmetic uses beam-search-like Hu et al. settings; text gives temperature 0.3 only"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy", "definition": "exact match of final choice or number; commonsense and arithmetic", "unit": "%", "higher_is_better": true},
+    {"name": "Alpaca-Eval v1.0 win-rate", "definition": "win-rate against text-davinci-003 with GPT-4 as annotator (gpt-4-turbo during tuning)", "unit": "%", "higher_is_better": true},
+    {"name": "GLUE score", "definition": "accuracy; Matthews correlation for CoLA; Pearson for STS-B; MNLI matched only", "unit": "%", "higher_is_better": true},
+    {"name": "Params (%)", "definition": "trainable parameters divided by base LM parameters (RoBERTa: excluding classification head)", "unit": "%", "higher_is_better": false}
+   ],
+   "baselines": ["PrefT", "AdapterS", "AdapterP", "LoRA", "DoRA", "DoRA (half)", "BitFit", "RED", "full finetuning", "VeRA", "ChatGPT", "GPT-3.5 Turbo 1106", "Llama-2 Chat 7B/13B"],
+   "protocol": "Baseline numbers copied from prior papers; ReFT numbers averaged over seeds (median of 5 in Table 16); no significance test; hyperparameters tuned on non-overlapping dev sets, not test sets"
+  },
+  "availability": {
+   "code": "https://github.com/stanfordnlp/pyreft (Apache-2.0)",
+   "weights": "instruction-tuned ReFT weights (<1MB) on HuggingFace",
+   "data": "public datasets listed in Appendix J"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.epochs", "quote": "we use the hyperparameter settings of the model that performs best on a development set created from the GSM8K training set, except we use a lower number of epochs (6 instead of 12)", "where": "Section 4.2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "LoReFT reaches the best average commonsense accuracy among the compared PEFTs on LLaMA-7B with 0.031% trainable parameters.",
+   "kind": "measured", "source": null, "metric": "avg accuracy over 8 commonsense tasks", "value": "80.2", "unit": "%", "baseline_value": "78.1 (DoRA, 0.838%)", "n": "3 seeds",
+   "setup": "LLaMA-7B finetuned on COMMONSENSE170K, 6 epochs, test sets of eight tasks; baselines copied from Liu et al. 2024c",
+   "quote": null, "table": "Table 1, row LLaMA-7B LoReFT (ours), column Avg.", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "On LLaMA-13B LoReFT averages 83.3 on commonsense with 0.025% parameters.",
+   "kind": "measured", "source": null, "metric": "avg accuracy", "value": "83.3", "unit": "%", "baseline_value": "81.5 (DoRA, 0.681%)", "n": "3 seeds",
+   "setup": "LLaMA-13B, COMMONSENSE170K",
+   "quote": null, "table": "Table 1, row LLaMA-13B LoReFT (ours), column Avg.", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "On Llama-3 8B LoReFT averages 86.6 on commonsense, above DoRA at 85.2.",
+   "kind": "measured", "source": null, "metric": "avg accuracy", "value": "86.6", "unit": "%", "baseline_value": "85.2 (DoRA)", "n": "3 seeds",
+   "setup": "Llama-3 8B, COMMONSENSE170K; Llama-3 8B only run on this benchmark",
+   "quote": null, "table": "Table 1, row Llama-3 8B LoReFT (ours), column Avg.", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "LoReFT is 15x-65x more parameter efficient than LoRA.",
+   "kind": "measured", "source": null, "metric": "parameter ratio", "value": "15x-65x", "unit": "x", "baseline_value": null, "n": null,
+   "setup": "trainable parameters of LoReFT versus LoRA across the evaluated settings",
+   "quote": "learn interventions that are 15×–65× more parameter-efficient than LoRA", "table": null, "note": null, "where": "Abstract"
+  },
+  {
+   "claim": "In instruction tuning, LoReFT wins 85.60 against text-davinci-003 on Alpaca-Eval v1.0, above full finetuning, LoRA and RED.",
+   "kind": "measured", "source": null, "metric": "Alpaca-Eval v1.0 win-rate", "value": "85.60", "unit": "%", "baseline_value": "80.93 (full FT)", "n": "2 seeds",
+   "setup": "Llama-2 7B on Ultrafeedback, 0.0039% parameters; GPT-4 annotator; baselines from Wu et al. 2024a",
+   "quote": null, "table": "Table 3, row Llama-2 7B & LoReFT (ours), column Win-rate", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "LoReFT with half the rank still scores 84.12, and with only 1K training examples 81.91.",
+   "kind": "measured", "source": null, "metric": "Alpaca-Eval v1.0 win-rate", "value": "84.12", "unit": "%", "baseline_value": "85.60 (full rank)", "n": "2 seeds",
+   "setup": "Llama-2 7B; half = half the rank (0.0019%); 1K = 1K training examples",
+   "quote": null, "table": "Table 3, row Llama-2 7B & LoReFT (ours, half), column Win-rate", "note": "1K run is 81.91", "where": "Table 3"
+  },
+  {
+   "claim": "On arithmetic reasoning LoReFT is worse than LoRA and adapters on LLaMA-7B (42.6 vs 46.9 average).",
+   "kind": "measured", "source": null, "metric": "avg accuracy", "value": "42.6", "unit": "%", "baseline_value": "46.9 (LoRA)", "n": "3 seeds",
+   "setup": "LLaMA-7B on MATH10K, 12 epochs; four test sets; baselines from Hu et al. 2023",
+   "quote": null, "table": "Table 2, row LLaMA-7B LoReFT (ours), column Avg.", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "On LLaMA-13B arithmetic LoReFT averages 49.6 against LoRA 51.1.",
+   "kind": "measured", "source": null, "metric": "avg accuracy", "value": "49.6", "unit": "%", "baseline_value": "51.1 (LoRA)", "n": "3 seeds",
+   "setup": "LLaMA-13B on MATH10K",
+   "quote": null, "table": "Table 2, row LLaMA-13B LoReFT (ours), column Avg.", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "On GLUE, LoReFT is comparable to PEFTs when parameter-matched with RED: 84.2 (base) and 88.2 (large) average.",
+   "kind": "measured", "source": null, "metric": "GLUE avg", "value": "88.2", "unit": "%", "baseline_value": "88.0 (RED, large)", "n": "5 seeds",
+   "setup": "RoBERTa-large, 0.014% parameters; base value 84.2 vs RED 84.3",
+   "quote": null, "table": "Table 4, row large LoReFT (ours), column Avg.", "note": "base: LoReFT 84.2, RED 84.3, full FT 85.6", "where": "Table 4"
+  },
+  {
+   "claim": "Matching LoRA/DoRA epochs and effective batch size (3 epochs, batch 16) leaves LoReFT ahead on commonsense: 79.5 on LLaMA-7B.",
+   "kind": "measured", "source": null, "metric": "avg accuracy", "value": "79.5", "unit": "%", "baseline_value": "78.1 (DoRA)", "n": "3 seeds",
+   "setup": "LLaMA-7B, LoReFT e=3 variant",
+   "quote": null, "table": "Table 14, row LLaMA-7B LoReFT e=3, column Avg.", "note": "13B e=3: 83.1", "where": "Table 14"
+  },
+  {
+   "claim": "With 3 epochs the arithmetic average falls to 39.3 on LLaMA-7B, so the long schedule matters there.",
+   "kind": "measured", "source": null, "metric": "avg accuracy", "value": "39.3", "unit": "%", "baseline_value": "42.6 (12 epochs)", "n": "3 seeds",
+   "setup": "LLaMA-7B, MATH10K, LoReFT e=3",
+   "quote": null, "table": "Table 15, row LLaMA-7B LoReFT e=3, column Avg.", "note": "13B e=3: 48.8", "where": "Table 15"
+  },
+  {
+   "claim": "A rank-1 LoReFT with 4,097 parameters on LLaMA-1 7B recovers up to 2,048 tokens of Alice's Adventures in Wonderland at 100% across most layers.",
+   "kind": "measured", "source": null, "metric": "prefix-match recovery", "value": "2,048", "unit": "tokens", "baseline_value": null, "n": null,
+   "setup": "input-independent rank-1 LoReFT on last prompt token, 1000 epochs, lr 4e-3; random token sequences recoverable only to 128 tokens",
+   "quote": "both models can successfully remember up to 2,048 tokens across most layers with a 100% recovery rate", "table": null, "note": "values read from Figs 3-8 for the rest", "where": "Appendix F.1"
+  },
+  {
+   "claim": "A rank-1 intervention reliably remembers up to 256 random input-output pairs.",
+   "kind": "measured", "source": null, "metric": "pairs memorised", "value": "256", "unit": "pairs", "baseline_value": null, "n": null,
+   "setup": "LLaMA-1 7B and 13B, prompt RAND#ID1-> with one output token; near-perfect recall at layer 20 of 13B",
+   "quote": "a rank-1 intervention can reliably remember up to 256 pairs", "table": null, "note": null, "where": "Appendix F.2"
+  },
+  {
+   "claim": "Intervening at 10 layers with rank 8 on the last prompt token adds about 0.05 s of generation time.",
+   "kind": "measured", "source": null, "metric": "inference overhead", "value": "0.05", "unit": "s", "baseline_value": null, "n": null,
+   "setup": "LLaMA-1 7B, 256 new tokens, greedy decoding, untrained LoReFT, runtime vs prompt length (Fig 11)",
+   "quote": "the overhead is about 0.05 second", "table": null, "note": null, "where": "Appendix H"
+  },
+  {
+   "claim": "Ablated parametrisations with similar parameter count perform like LoReFT on arithmetic; dropping the W h term loses accuracy.",
+   "kind": "measured", "source": null, "metric": "avg accuracy", "value": "42.9", "unit": "%", "baseline_value": "42.6 (LoReFT)", "n": "3 seeds",
+   "setup": "LLaMA-7B, Phi(h) = h + R^T(Wh + b), arithmetic; the bias-only variant h + R^T b gets 31.3",
+   "quote": null, "table": "Table 17, row LLaMA-7B h + R⊺(Wh + b), column Avg.", "note": "Table 17 DiReFT GSM8K... AQuA cell prints '221.3' (garbled, likely 21.3)", "where": "Table 17"
+  }
+ ],
+ "limits": [
+  "Authors: mainly the LLaMA family explored for lack of resources; no other families or vision-language models.",
+  "Authors: the large hyperparameter search space is not fully explored; automating the search is future work.",
+  "Authors: arithmetic reasoning is weaker; they suggest chain-of-thought length dilutes a fixed-position intervention, and say no method wins across all four tasks.",
+  "Authors: how ReFT works is not explained; memorisation experiments are early and use untuned hyperparameters.",
+  "ReFT needs hooks in the computation graph, so it cannot be merged into weights as LoRA can; it adds inference overhead (Appendix H).",
+  "Baseline numbers are copied from other papers with different tuning protocols; LoReFT uses more epochs than LoRA/DoRA (checked in Appendix D.3 only for commonsense and arithmetic).",
+  "Llama-3 8B was run only on commonsense; instruction tuning is judged by GPT-4 win-rate on one 7B model with 2 seeds.",
+  "Not an RL paper: no reward, policy or RL objective; training is supervised cross-entropy.",
+  "Chosen LLaMA hyperparameters are underlined in the PDF and not recoverable from the text; step counts, FLOPs and total GPU hours are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "ReFT", "definition": "A set of f interventions I = {I1,...,If}; for two interventions on the same layer, positions must be disjoint and parameters independent.", "where": "Definition 3.2"},
+  {"term": "Intervention", "definition": "A tuple <Phi, P, l> of an intervention function, a set of input positions, and a layer.", "where": "Definition 3.1"},
+  {"term": "LoReFT", "definition": "Phi(h) = h + R^T(Wh + b - Rh), editing the representation in the r-dimensional subspace spanned by rows of R.", "where": "Eq. 2"},
+  {"term": "DiReFT", "definition": "Phi(h) = h + W2^T(W1h + b), LoReFT without the orthogonality constraint and the difference operation.", "where": "Eq. 3"}
+ ],
+ "lineage": [
+  {"work": "Finding alignments between interpretable causal variables and distributed neural representations (DAS)", "year": 2023, "arxiv": "2303.02536", "relation": "extends", "note": "LoReFT builds on distributed interchange interventions", "quote": null},
+  {"work": "RED (Wu et al.)", "year": 2024, "arxiv": null, "relation": "baseline", "note": "representation-editing PEFT; GLUE protocol and instruction-tuning setup followed", "quote": null},
+  {"work": "LoRA", "year": 2022, "arxiv": null, "relation": "baseline", "note": "main weight-based comparison", "quote": null},
+  {"work": "DoRA", "year": 2024, "arxiv": "2402.09353", "relation": "baseline", "note": "commonsense baselines copied from it", "quote": null},
+  {"work": "LLM-Adapters (Hu et al.)", "year": 2023, "arxiv": null, "relation": "replicates", "note": "commonsense and arithmetic setup replicated; notes test-set leakage into MATH10K", "quote": null},
+  {"work": "VeRA", "year": 2024, "arxiv": null, "relation": "baseline", "note": "compared in Table 16", "quote": null},
+  {"work": "Activation addition (Turner et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "cast as a ReFT in Appendix B", "quote": null},
+  {"work": "Representation engineering (Zou et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "cast as a ReFT in Appendix B", "quote": null},
+  {"work": "Inference-time intervention (Li et al.)", "year": 2024, "arxiv": null, "relation": "related", "note": "steering by representation intervention", "quote": null},
+  {"work": "UltraFeedback", "year": 2023, "arxiv": "2310.01377", "relation": "uses-data", "note": "instruction-tuning data", "quote": null},
+  {"work": "AlpacaEval", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "v1.0 win-rate vs text-davinci-003", "quote": null},
+  {"work": "LLaMA / Llama-2 / RoBERTa", "year": 2023, "arxiv": "1907.11692", "relation": "evaluates", "note": "base models", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Parameter count vs. performance for LoReFT and other PEFTs across four benchmarks", "page": 2, "why": "Shows the efficiency-performance tradeoff in one view."},
+  {"figure": "Fig 2", "caption": "Illustration of ReFT. Left: intervention function applied at positions P in layer l. Right: LoReFT edit restricted to the subspace of the rows of R", "page": 4, "why": "Geometry of the rank-r edit."},
+  {"figure": "Fig 11", "caption": "Runtime vs. number of prompt tokens across various settings of interventions with LoReFT compared to no intervention", "page": 40, "why": "Inference overhead by rank, layers and positions."}
+ ],
+ "code": [
+  {"where": "Eq. 2", "snippet": "Φ_LoReFT(h) = h + R^T (W h + b − R h)", "verbatim": false},
+  {"where": "Appendix A", "snippet": "reft_config = ReftConfig(representations ={\"layer\": 19, \"component\": \"block_output\", \"intervention\": LoreftIntervention(embed_dim=model.config.hidden_size , low_rank_dimension =1)})", "verbatim": false}
+ ],
+ "problems": [
+  "Best hyperparameter settings are underlined in the PDF; underlines are lost in the text, so chosen LLaMA values are unknown.",
+  "Table 17 shows '221.3' in DiReFT AQuA cell (extraction garble).",
+  "Venue: the PDF says 'Preprint. Under review.' (arXiv v3).",
+  "No embedded instructions found."
+ ]
 }

@@ -39,7 +39,7 @@ Each pattern is: set up a variable before the loop, update it inside, use it aft
 | Total | `total = 0` / `total += x` | `sum(xs)` |
 | Largest | `best = None` / `if best is None or x > best: best = x` | `max(xs, default=None)` |
 | Search | `found = False` / `if x == target: found = True; break` | `target in xs`, `any(cond(x) for x in xs)` |
-| Filter | `out = []` / `if cond(x): out.append(x)` | `[x for x in xs if cond(x)]` |
+| Filter | `out = []` / `if cond(x): out.append(x)` | `[x for x in xs if cond(x)]` (a *list comprehension*, a loop in one expression; [Python 03 · 02](../../03-language-for-engineers/notes/02-generators-and-iteration.md)) |
 | Transform | `out = []` / `out.append(f(x))` | `[f(x) for x in xs]` |
 
 Write the loop version once to understand it, then use the built-in. Note the `None` start in the "largest" pattern: starting from `0` gives the wrong answer for all-negative data.
@@ -65,3 +65,7 @@ for name, score in zip(names, scores):    # walk two sequences together
 ## Exercises
 
 [`practice/exercises/03_loops.py`](../practice/exercises/03_loops.py): write each pattern by hand. The asserts compare your answers with the built-ins.
+
+## Next
+
+[4 — Strings and files](04-strings-and-files.md): looping over the lines of a file.

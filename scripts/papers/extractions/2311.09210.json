@@ -1,19 +1,669 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2311.09210",
  "pdf": "generative-ai/02-rag-retrieval/sources/yu-2023-chain-note.pdf",
  "bib": {
   "title": "Chain-of-Note: Enhancing Robustness in Retrieval-Augmented Language Models",
-  "first_author": "Wenhao Yu",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Wenhao Yu",
+   "Hongming Zhang",
+   "Xiaoman Pan",
+   "Peixin Cao",
+   "Kaixin Ma",
+   "Jian Li",
+   "Hongwei Wang",
+   "Dong Yu"
+  ],
+  "first_author": "Yu",
+  "year": 2024,
+  "venue": "EMNLP 2024 (accepted; arXiv v2, 3 Oct 2024; first posted Nov 2023)",
   "arxiv": "2311.09210",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 57300,
+  "chars_total": 57300,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
  },
- "legacy_report": "SOURCE: Chain-of-Note: Enhancing Robustness in Retrieval-Augmented Language Models. Wenhao Yu, Hongming Zhang, Xiaoman Pan, Peixin Cao, Kaixin Ma, Jian Li, Hongwei Wang, Dong Yu (Tencent AI Lab). EMNLP 2024 (arXiv 2311.09210v2, 3 Oct 2024; first posted 2023).\n\nCOVERAGE: 57,294 of 57,294 chars read, including limitations, appendix A.1-A.7 and Table 6. The reference list was only skimmed. Figures were not rendered, but the caption text came through the extraction.\n\nCLAIMS (ranked)\n- claim: With LLaMa-2 7B and only noisy retrieved documents (100% noise), Chain-of-Note (CoN) lifts the 3-dataset average EM by about 7.9 over plain Retrieve-Read.\n  number: +7.94 EM average (NQ +7.55, TriviaQA +9.00, WebQ +7.27)\n  setup: LLaMa-2 7B fine-tuned on 10K GPT-4 notes from NQ. DPR on Wikipedia, top-5. Subsets keep only questions where DPR retrieved a gold document. Table 3 (NQ 34.28 to 41.83 EM).\n  quote: \"An average improvement of +7.9 in EM score on fully noisy documents is observed on three open-domain QA datasets, in average.\"\n  where: Sec 3.3 and Table 3, around char 28,000.\n- claim: At 100% noise, both plain RALM and CoN fall below the no-retrieval fine-tuned model, which means irrelevant documents mislead the reader. CoN gets close to the no-retrieval baseline.\n  number: no-retrieval average EM 35.98 (Table 2) vs Retrieve-Read 39.72 and CoN 47.66 at 100% noise (Table 3)\n  setup: LLaMa-2 7B. The paper's own statement is below. Note the Table 2 and Table 3 numbers come from different eval sets (full test set vs subset). The numbers I cite do not cleanly support \"underperformed the no-retrieval setting\", so check this before citing.\n  quote: \"when faced with entirely noisy documents, both the standard RALM and our Chain-of-Note enhanced RALM underperformed compared to the no-retrieval setting. This suggests that RALMs can be misled by noisy information, leading to more hallucinations.\"\n  where: Sec 3.3\n- claim: The CoN gain shrinks as noise falls. It is +3.18 EM average at 80% noise, then +2.20, +2.07 and +2.78 at 60%, 40% and 20%, and +2.72 at 0% noise. TriviaQA is roughly flat at low noise (+0.18 EM at 0%, F1 -0.50).\n  number: see list\n  setup: LLaMa-2 7B, Table 3, noise ratio r means k·r noisy docs among k (e.g. 20% noise with top-5 gives 4 relevant and 1 irrelevant).\n  quote: \"Experiments with lower noise ratios also consistently demonstrate the improvements brought by CON, aligning the overall QA performance.\"\n  where: Table 3 and Sec 3.3\n- claim: CoN raises the rejection rate on out-of-scope real-time questions by 6.9 points absolute (6.1 to 13.0), while EM and F1 barely move. The text's \"+10.5\" does not match the table.\n  number: RR 6.1 to 13.0; EM 15.6 to 15.7; F1 19.9 to 20.3\n  setup: LLaMa-2 7B, RealTimeQA questions collected after May 2023 (after the LLaMa-2 pretraining cutoff). RR = rejected questions / total.\n  quote: \"Retrieve-Read (Shi et al., 2023c) 15.6 19.9 6.1 + CHAIN-OF-NOTE (ours) 15.7 20.3 13.0\" and, in the abstract and intro, \"a +10.5 increase in the rejection rate for real-time questions\"\n  where: Table 4, Sec 3.4, intro. Flag: 13.0 minus 6.1 is 6.9, not 10.5 (internal inconsistency in the paper).\n- claim: On the full test set (DPR top-k, no controlled noise), the gain is modest. LLaMa-2 7B average EM is 48.49 to 50.46, +1.97.\n  number: +1.97 EM avg, +1.81 F1 avg. NQ 47.39 to 48.92, TriviaQA 74.92 to 76.27, WebQ 29.58 to 32.33.\n  setup: LLaMa-2 7B fine-tuned. Baseline SAIL (Luo et al., 2023) 45.77 EM avg. QA fine-tune without IR 35.98 EM avg.\n  quote: \"There is an average improvement of +1.97 in EM scores across all three datasets when using LLaMa-2 as backbone language model.\"\n  where: Sec 3.2, Table 2\n- claim: With GPT-4-1106 in zero-shot prompting (no training), CoN beats Chain-of-Thought (CoT) in retrieval-augmented QA, but the margins are small.\n  number: Accuracy, in the order of Table 2's four columns: Retrieve-Read 61.8 / 70.6 / 56.8 / 63.1; +CoT 63.6 / 71.2 / 58.4 / 64.4; +CoN 63.8 / 74.6 / 58.8 / 65.7 (average +2.6 over Retrieve-Read). Column order is not preserved in the extraction; the first three are probably NQ, TriviaQA, WebQ and the fourth the average.\n  setup: GPT-4-1106. Metric is accuracy (substring match), because EM is unsuitable for GPT-4. Prompts in A.5. Without retrieval, GPT-4 scores 54.0 / 74.2 / 56.2 / 61.5.\n  quote: \"+ CHAIN-OF-THOUGHT 63.6 71.2 58.4 64.4 + CHAIN-OF-NOTE (OURS) 63.8 74.6 58.8 65.7\"\n  where: Table 2, Sec 3.3. Caution: on TriviaQA, GPT-4 without retrieval (74.2) matches CoN (74.6) and beats plain Retrieve-Read (70.6).\n- claim: Larger models gain less from retrieval, and retrieval can hurt on easy datasets like TriviaQA.\n  number: none\n  setup: GPT-4 vs LLaMa-2 7B, Table 2.\n  quote: \"The impact of utilizing retrieval is observed to be less pronounced with larger models and can even be detrimental in certain cases, such as with TriviaQA, where questions are mostly straightforward.\"\n  where: Sec 3.2\n- claim: Generating notes is costly. Full CoN takes about 20 times longer to decode (12.02 s vs 0.61 s per example). Hybrid training removes that cost, at slightly lower robustness.\n  number: 0.6104 s (Retrieve-Read), 12.0192 s (CoN), 0.6074 s (CoN hybrid), average decoding time per example on 8×A100 GPUs. Figure 3 (EM by noise ratio, NQ), values 100% to 0% noise: standard 34.3, 54.3, 61.4, 64.6, 67.2, 69.2; CoN 41.8, 56.6, 63.4, 65.9, 70.0, 73.3; hybrid 36.3, 55.8, 63.6, 65.2, 70.1, 73.1.\n  setup: Hybrid training = 50% of training on standard RALM (no notes) and 50% on CoN, with a distinct prompt prefix for each type. At inference only the standard prompt is used.\n  quote: \"we allocate 50% of the training time to the standard RALM, which involves directly generating answers without notes, and the other 50% to RALM with CoN.\"\n  where: Sec 2.3.3, Sec 3.5, Table 5, Fig 3\n- claim: CoN helps more when DPR fails to retrieve a gold document. On NQ the gain is +1.2 when DPR retrieves relevant documents and +2.3 when it does not.\n  number: +1.2 vs +2.3\n  setup: NQ, LLaMa-2 7B.\n  quote: \"the average improvement is +1.2 when DPR retrieves relevant documents and +2.3 when it does not on the NQ dataset.\"\n  where: Sec 3.2\n\nMethod details\n- For each of k retrieved documents the model writes a reading note, then gives the final answer.\n- Three note types: (a) the document answers the question, so answer from it. (b) The document gives context, so combine it with the model's own knowledge to infer the answer. (c) Everything is irrelevant and the model knows nothing, so answer \"unknown\".\n- Training data: 10K questions sampled from NQ train. GPT-4 wrote the notes with instructions plus in-context examples, and quality was checked by human review of \"a small subset\". LLaMa-2 7B was then fine-tuned with ordinary supervised training.\n- Fine-tuning settings: 3 epochs, batch 128, learning rate 5e-6 (swept over 1e-6 to 2e-5), bfloat16, DeepSpeed ZeRO, greedy decoding.\n- Retriever: DPR over Wikipedia. Prompts use five passages.\n- Dataset stats (Table 1): DPR recall is 73.82 on NQ, 89.95 on TriviaQA and 64.22 on WebQ. Subset sizes are 2,086 of 3,610 (NQ), 7,074 of 7,993 (TriviaQA) and 1,231 of 2,032 (WebQ).\n- Case studies (Table 6): the last US Summer Olympics (plain RALM answered 2016, CoN answered 1996), and the language of the first Jnanpith recipient (plain RALM answered \"G. Sankara Kurup\", CoN answered Malayalam, by combining two passages).\n\nLIMITS\n- Authors concede: \"One major limitation of the Chain-of-Note (CoN) approach is its increased inference cost due to the sequential generation of notes.\" Note quality also varies with the complexity of the retrieved documents.\n- Not shown: only one trained model size (LLaMa-2 7B), and GPT-4 only zero-shot. Training notes come from NQ only. The retriever is DPR only, and the corpus is Wikipedia.\n- Noise is synthetic. The mix of gold and irrelevant documents is built by hand, and questions with no gold document in DPR's results are excluded from the robustness subsets.\n- Only a small human check of GPT-4 note quality; no significance tests or multiple seeds are reported.\n- Unknown-robustness is tested on RealTimeQA only. The rejection rate rises, but EM and F1 are flat, and the paper does not measure false refusals on answerable questions.\n- Dated: the model is LLaMa-2 7B and the reader is GPT-4-1106. EM scores are low compared with later systems.\n- Hybrid training: the paper shows only the NQ curve (Fig 3) and a timing table. There are no per-dataset numbers for hybrid.\n\nBUILDS ON\n- Chain-of-Thought: Wei et al., 2022; Kojima et al., 2022.\n- Retrieve-then-read RALMs: Lewis et al., 2020 (RAG); Guu et al., 2020 (REALM); Izacard and Grave, 2021 (FiD); Karpukhin et al., 2020 (DPR); Shi et al., 2023c; Lazaridou et al., 2022.\n- Irrelevant-context studies: Shi et al., 2023a (LLMs are easily distracted by irrelevant context); Creswell et al., 2022 (Selection-Inference); Mallen et al., 2023 (when not to trust LMs).\n- Closest prior work, training a RALM to ignore irrelevant context: Yoran et al., 2023.\n- SAIL baseline: Luo et al., 2023.\n- Related chain-of-X work: Chain-of-Verification (Dhuliawala et al., 2023); IR-CoT (Trivedi et al., 2023).\n- Datasets: Kwiatkowski et al., 2019 (NQ); Joshi et al., 2017 (TriviaQA); Berant et al., 2013 (WebQ); Kasai et al., 2023 (RealTimeQA).\n\nCODE: no code. The CoN prompt is in A.5 and is worth keeping verbatim:\n\"Task Description: 1. Read the given question and five Wikipedia passages to gather relevant information. 2. Write reading notes summarizing the key points from these passages. 3. Discuss the relevance of the given question and Wikipedia passages. 4. If some passages are relevant to the given question, provide a brief answer based on the passages. 5. If no passage is relevant, direcly provide answer without considering the passages.\"\nThe CoT baseline prompt is \"Task Description: Think step by step to answer the question.\" The plain RALM prompt is \"Task Description: The primary objective is to briefly answer the question.\"\nThe RALM formula is p(y|x) = Σ_i p(y|d_i, x) p(d_i|x), summed over the top-k documents (Sec 2.2).\n\nFIGURES\n- Fig 1 (p1): RALM with and without CoN on the \"It Must Have Been Love\" question. It shows the failure and the note-based fix in one picture.\n- Fig 2 (p3): the three note types, (a) relevant so find the answer, (b) irrelevant so infer the answer, (c) irrelevant so answer unknown. This is the clearest summary of the method.\n- Fig 3 (p6): EM vs noise ratio for standard, CoN and hybrid on NQ.\n- Table 6 (appendix): the two case studies.\n\nPROBLEMS: Table columns in Table 2's GPT-4 block lost their header alignment in the extraction, so the column mapping for GPT-4 is inferred. The RealTimeQA \"+10.5\" rejection-rate gain in the text conflicts with the Table 4 values (13.0 minus 6.1 is 6.9), so cite the table. The paper's wording that CoN \"performs nearly as well as\" the no-retrieval baseline at 100% noise is not clearly supported by the numbers I could compare, because Table 2 and Table 3 use different eval sets. No embedded instructions found. Working copy of the extraction is at /tmp/con.txt."
+ "type": "empirical",
+ "question": "Can a retrieval-augmented LM be made robust to irrelevant retrieved documents and to questions it cannot answer by having it write a reading note for each retrieved document before answering?",
+ "hypothesis": "Writing a relevance-assessing note per document lets the reader ignore noise, fall back on intrinsic knowledge, or answer unknown, beating direct answering and chain-of-thought.",
+ "contributions": [
+  "Chain-of-Note framework: sequential reading notes per retrieved document before the final answer, with three note types (relevant, inferable, unknown)",
+  "10K GPT-4-generated CoN training examples from NQ used to fine-tune LLaMa-2 7B",
+  "Evaluation of overall QA, noise robustness and unknown robustness on NQ, TriviaQA, WebQ and RealTimeQA",
+  "Hybrid training that internalises CoN without extra inference cost"
+ ],
+ "method": {
+  "summary": "GPT-4 writes reading notes plus final answers for 10K NQ training questions with DPR-retrieved Wikipedia passages; LLaMa-2 7B is fine-tuned on instruction+question+documents to emit a note per document and then the answer. Compared with a Retrieve-Read model trained on the same questions without notes, under controlled noise ratios and on RealTimeQA. GPT-4-1106 is also prompted zero-shot with CoN vs CoT.",
+  "task": "open-domain QA with retrieval-augmented generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "NQ (train sample)",
+    "role": "train",
+    "size": "10k questions randomly sampled; notes written by GPT-4",
+    "split": "train",
+    "source": "Kwiatkowski et al. 2019",
+    "preprocessing": "GPT-4 prompted with instructions and in-context examples for the three note types; quality checked by human evaluation on a small subset (size not stated)"
+   },
+   {
+    "name": "NQ",
+    "role": "eval",
+    "size": "3,610 full; 2,086 subset",
+    "split": "test",
+    "source": "Karpukhin et al. 2020 splits",
+    "preprocessing": "subset keeps questions where DPR retrieved a gold document; IR recall 73.82"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": "7,993 full; 7,074 subset",
+    "split": "Wikipedia dev set",
+    "source": "Joshi et al. 2017",
+    "preprocessing": "IR recall 89.95"
+   },
+   {
+    "name": "WebQ",
+    "role": "eval",
+    "size": "2,032 full; 1,231 subset",
+    "split": "test",
+    "source": "Berant et al. 2013",
+    "preprocessing": "IR recall 64.22"
+   },
+   {
+    "name": "RealTimeQA",
+    "role": "eval",
+    "size": null,
+    "split": "questions collected after May 2023",
+    "source": "Kasai et al. 2023",
+    "preprocessing": "used for unknown robustness; number of questions not stated"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMa-2 7B + Chain-of-Note",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "LLaMa-2 7B (Touvron et al. 2023)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMa-2 7B Retrieve-Read",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "LLaMa-2 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "trained on same training set, different input/output format"
+    }
+   },
+   {
+    "name": "LLaMa-2 7B QA fine-tune w/o IR",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "LLaMa-2 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SAIL (Luo et al. 2023)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "marked * in Table 2; size and training not restated"
+    }
+   },
+   {
+    "name": "GPT-4-1106",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "setting": "zero-shot, prompts only"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "writes the 10K CoN training notes; version not stated"
+    }
+   },
+   {
+    "name": "DPR",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense passage retriever",
+    "init_from": "official DPR repository",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "corpus": "Wikipedia"
+    }
+   }
+  ],
+  "training": {
+   "objective": "standard supervised fine-tuning: instruction, question and documents as prompt; generate notes and answer",
+   "optimizer": null,
+   "lr": "5e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lr_search": "{1e-6, 2e-6, 5e-6, 1e-5, 2e-5}; 5e-6 best and used for all reported numbers",
+    "framework": "DeepSpeed with ZeRO",
+    "hybrid_training": "50% of training time standard RALM, 50% RALM with CoN, a different prompt prefix per category; inference uses standard RALM prompt only",
+    "note": "lr was chosen by results, on which split is not stated"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one deterministic generation per question; runs/seeds not stated",
+   "prompting": "Instruction prompts in A.5; GPT-4 zero-shot; LLaMa-2 fine-tuned",
+   "retrieval": "DPR over Wikipedia; five passages (prompt says 'five Wikipedia passages'; stated top-k for experiments is inferred: from A.5 and the noise example)",
+   "parameters": {
+    "top_k": "inferred: 5 from the A.5 CoN prompt and the 20%-noise example"
+   },
+   "other": {
+    "noise_ratios": "six levels from fully noisy to none (Table 3); k*r noisy and k*(1-r) relevant docs of top-k"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM",
+     "definition": "normalized prediction matches any acceptable answer (Karpukhin et al. 2020 normalization)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "token-bag overlap between prediction and ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "correct if any substring of the prediction exactly matches a correct answer; used for GPT-4",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Reject rate (RR)",
+     "definition": "number of rejected questions / total questions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inference time",
+     "definition": "average decoding time per example on 8xA100 GPUs",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "QA fine-tune w/o IR",
+    "SAIL",
+    "Retrieve-Read",
+    "GPT-4 QA prompt w/o IR",
+    "GPT-4 Retrieve-Read",
+    "GPT-4 + Chain-of-Thought"
+   ],
+   "protocol": "Full-set evaluation plus noise-controlled subsets; no seeds, variance or significance tests reported; how 'unknown' answers are detected for RR is not stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "standard RALM instruction",
+    "text": "Task Description: The primary objective is to briefly answer the question.",
+    "where": "A.5"
+   },
+   {
+    "purpose": "RALM with CoT instruction",
+    "text": "Task Description: Think step by step to answer the question.",
+    "where": "A.5"
+   },
+   {
+    "purpose": "RALM with CoN instruction",
+    "text": "Task Description:\n1. Read the given question and five Wikipedia passages to gather relevant information.\n2. Write reading notes summarizing the key points from these passages.\n3. Discuss the relevance of the given question and Wikipedia passages.\n4. If some passages are relevant to the given question, provide a brief answer based on the passages.\n5. If no passage is relevant, direcly provide answer without considering the passages.",
+    "where": "A.5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "the empirical results indicated that 5e-6 yielded the best model performance",
+    "where": "A.4"
+   },
+   {
+    "field": "inference.decoding",
+    "quote": "Greedy decoding is applied during inference on all experiments to ensure deterministic generations.",
+    "where": "A.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fully noisy documents (noise ratio 100%): CoN raises 3-dataset average EM over Retrieve-Read.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM average",
+   "value": "+7.94",
+   "unit": "EM points",
+   "baseline_value": "39.72",
+   "n": null,
+   "setup": "LLaMa-2 7B fine-tuned on 10K GPT-4 notes from NQ; DPR top-5 on Wikipedia; subsets of questions where DPR retrieved a gold document, gold swapped out for 100% noise",
+   "note": null,
+   "where": "Sec 3.3, Table 3",
+   "quote": "An average improvement of +7.9 in EM score on fully noisy documents is observed on three open-domain QA datasets, in average."
+  },
+  {
+   "claim": "NQ EM at 100% noise: Retrieve-Read vs CoN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "41.83",
+   "unit": "EM",
+   "baseline_value": "34.28",
+   "n": null,
+   "setup": "LLaMa-2 7B, NQ subset (2,086 questions), noise ratio 100%",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + CHAIN-OF-NOTE, 100%, column NQ EM"
+  },
+  {
+   "claim": "Full test sets (DPR top-k, no controlled noise): CoN gives a modest average EM gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM average",
+   "value": "+1.97",
+   "unit": "EM points",
+   "baseline_value": "48.49",
+   "n": null,
+   "setup": "LLaMa-2 7B fine-tuned; NQ 3,610, TriviaQA 7,993, WebQ 2,032 test questions",
+   "note": null,
+   "where": "Sec 3.2, Table 2",
+   "quote": "There is an average improvement of +1.97 in EM scores across all three datasets when using LLaMa-2 as backbone language model."
+  },
+  {
+   "claim": "Full-set F1 average, Retrieve-Read vs CoN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 average",
+   "value": "58.78",
+   "unit": "F1",
+   "baseline_value": "56.97",
+   "n": null,
+   "setup": "LLaMa-2 7B, full test sets, Table 2 average",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row + CHAIN-OF-NOTE (ours), column Average F1"
+  },
+  {
+   "claim": "On RealTimeQA, CoN raises the reject rate (RR); EM and F1 barely move.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RR",
+   "value": "13.0",
+   "unit": "% reject rate",
+   "baseline_value": "6.1",
+   "n": null,
+   "setup": "LLaMa-2 7B, RealTimeQA questions collected after May 2023; RR = rejected questions / total",
+   "note": "Text (abstract/intro/3.4) says +10.5 but 13.0 - 6.1 = 6.9; the paper does not reconcile.",
+   "where": "Table 4, Sec 3.4",
+   "table": "Table 4, row + CHAIN-OF-NOTE (ours), column RR"
+  },
+  {
+   "claim": "Paper's stated reject-rate gain on RealTimeQA (does not match Table 4 difference of 6.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "RR gain",
+   "value": "+10.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMa-2 7B, RealTimeQA",
+   "note": "Table 4 gives 6.1 and 13.0, a 6.9 difference.",
+   "where": "Sec 3.4",
+   "quote": "In comparison to the standard RALM system, our method shows a significant improvement, exceeding +10.5 in its ability to reject to answer questions in unknown scenario."
+  },
+  {
+   "claim": "RealTimeQA EM, Retrieve-Read vs CoN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "15.7",
+   "unit": "EM",
+   "baseline_value": "15.6",
+   "n": null,
+   "setup": "LLaMa-2 7B, RealTimeQA",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row + CHAIN-OF-NOTE (ours), column EM"
+  },
+  {
+   "claim": "Decoding time per example: CoN is about 20x slower than Retrieve-Read; hybrid training matches Retrieve-Read.",
+   "kind": "measured",
+   "source": null,
+   "metric": "seconds",
+   "value": "12.0192",
+   "unit": "s per example",
+   "baseline_value": "0.6104",
+   "n": null,
+   "setup": "LLaMa-2 7B, average decoding time per example on 8xA100 GPUs",
+   "note": "Ratio 12.0192/0.6104 = 19.7 is computed here, not printed. Hybrid: 0.6074 s.",
+   "where": "Table 5",
+   "table": "Table 5, row + CHAIN-OF-NOTE, column Inference Time(s)"
+  },
+  {
+   "claim": "Hybrid training (50% standard, 50% CoN; plain RALM prompt at inference) keeps standard decoding time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "seconds",
+   "value": "0.6074",
+   "unit": "s per example",
+   "baseline_value": "0.6104",
+   "n": null,
+   "setup": "LLaMa-2 7B, 8xA100",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row + CHAIN-OF-NOTE (hybrid), column Inference Time(s)"
+  },
+  {
+   "claim": "Hybrid training at 100% noise on NQ is between standard and full CoN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "36.3",
+   "unit": "EM",
+   "baseline_value": "34.3",
+   "n": null,
+   "setup": "NQ subset, LLaMa-2 7B, noise 100%; standard 34.3, CoN 41.8; read from Fig 3 data labels (series order inferred: standard, CoN, hybrid)",
+   "note": "Values read from Figure 3 text labels, not a table.",
+   "where": "Fig 3",
+   "table": "Fig 3, series RALM with CoN (hybrid), 100%"
+  },
+  {
+   "claim": "With GPT-4-1106 zero-shot, CoN beats CoT in average accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy average",
+   "value": "65.7",
+   "unit": "accuracy % (substring match)",
+   "baseline_value": "64.4",
+   "n": null,
+   "setup": "GPT-4-1106 zero-shot, prompts in A.5; Table 2 columns taken to be NQ, TriviaQA, WebQ, Average (inferred: the fourth column matches the mean of the first three)",
+   "note": "CoT row 63.6 / 71.2 / 58.4 / 64.4; Retrieve-Read 61.8 / 70.6 / 56.8 / 63.1; no IR 54.0 / 74.2 / 56.2 / 61.5.",
+   "where": "Table 2",
+   "table": "Table 2, row + CHAIN-OF-NOTE (OURS), 4th column"
+  },
+  {
+   "claim": "Text says that with fully noisy documents both RALMs underperform the no-retrieval setting.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.3, LLaMa-2 7B",
+   "note": "Table 3 100%-noise averages (39.72 and 47.66 EM) are above the no-retrieval 35.98 in Table 2; the two use different question sets (subset vs full), so the text claim is not supported by the printed numbers on their face.",
+   "where": "Sec 3.3",
+   "quote": "when faced with entirely noisy documents, both the standard RALM and our CHAIN-OF-NOTE enhanced RALM underperformed compared to the no-retrieval setting."
+  },
+  {
+   "claim": "CoN gain on NQ differs by whether DPR retrieved a gold document.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+2.3",
+   "unit": "EM points (NQ, DPR did not retrieve relevant docs)",
+   "baseline_value": "+1.2 when relevant docs retrieved",
+   "n": null,
+   "setup": "LLaMa-2 7B, NQ",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "Specifically, the average improvement is +1.2 when DPR retrieves relevant documents and +2.3 when it does not on the NQ dataset."
+  },
+  {
+   "claim": "At 0% noise CoN still helps NQ and WebQ but TriviaQA is flat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "+0.18",
+   "unit": "EM points (TriviaQA)",
+   "baseline_value": "83.34",
+   "n": null,
+   "setup": "LLaMa-2 7B, noise ratio 0%; TriviaQA F1 is -0.50",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + CHAIN-OF-NOTE, 0%, column TriviaQA EM"
+  },
+  {
+   "claim": "DPR recall on full test sets: NQ 73.82, TriviaQA 89.95, WebQ 64.22.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IR recall",
+   "value": "64.22",
+   "unit": "IR recall (WebQ)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DPR top-k on Wikipedia; Table 1 gives subset sizes 2,086 / 7,074 / 1,231",
+   "note": "Not stated whether recall is top-5 or another k.",
+   "where": "Table 1",
+   "table": "Table 1, row WebQ, column IR Recall"
+  }
+ ],
+ "limits": [
+  "Authors concede increased inference cost from sequential note generation, and that quality depends on the conciseness and relevance of the generated notes (Sec 6).",
+  "Only LLaMa-2 7B is fine-tuned; larger models only prompted (GPT-4) with small margins.",
+  "Training notes come from GPT-4 on NQ only; human check of GPT-4 notes is on an unspecified small subset.",
+  "No seeds, variance or significance tests; lr chosen from a sweep without stated validation split.",
+  "Text and Table 4 disagree on RR gain (+10.5 vs 6.9).",
+  "Noise subsets keep only questions with a retrieved gold document, so robustness numbers are on easier-retrieval questions (NQ 2,086 of 3,610).",
+  "Code, weights and the 10K data are not stated as released; training hardware not given.",
+  "Page header misspells 'Tecent AI Lab'."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Noise robustness",
+   "definition": "The ability of a RALM to discern and disregard noisy information present in irrelevant retrieved documents, while appropriately leveraging its intrinsic knowledge.",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Unknown robustness",
+   "definition": "The capacity of a RALM to acknowledge its limitations by responding with unknown when given a query it does not have the corresponding knowledge to answer, and the relevant information is not found within the retrieved documents.",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Hybrid Training",
+   "definition": "50% of training time on standard RALM, 50% on RALM with CoN, so CoN reasoning is internalised and notes are not generated at inference.",
+   "where": "Sec 2.3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Retrieval-augmented generation for knowledge-intensive NLP tasks",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "CoN is built on the retrieve-then-read pipeline",
+   "quote": null
+  },
+  {
+   "work": "Shi et al. 2023c (Retrieve-Read baseline)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Retrieve-Read",
+   "quote": null
+  },
+  {
+   "work": "SAIL: Search-augmented instruction learning",
+   "year": 2023,
+   "arxiv": "2305.15225",
+   "relation": "baseline",
+   "note": "Luo et al.",
+   "quote": null
+  },
+  {
+   "work": "Making retrieval-augmented language models robust to irrelevant context",
+   "year": 2023,
+   "arxiv": "2310.01558",
+   "relation": "related",
+   "note": "Yoran et al.; most pertinent prior work, trains RALMs to ignore irrelevant contexts",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "baseline",
+   "note": "CoT compared with GPT-4",
+   "quote": null
+  },
+  {
+   "work": "Interleaving retrieval with chain-of-thought (IR chain-of-thought)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Trivedi et al.; closest chain-of-X work",
+   "quote": null
+  },
+  {
+   "work": "Dense passage retrieval",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DPR retriever and test splits",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "train questions and eval",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA; WebQuestions; RealTimeQA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "out-of-domain eval",
+   "quote": null
+  },
+  {
+   "work": "LLaMa-2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "7B backbone",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Compared with the current RALMs, the core idea behind CHAIN-OF-NOTE (CON) is to generate sequential reading notes for the retrieved documents",
+   "page": 1,
+   "why": "One example of a distractor passage ignored via a note"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the CHAIN-OF-NOTE (CON) framework with three distinct types of reading notes",
+   "page": 3,
+   "why": "Shows the three note types: answer found, infer from context, unknown"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Using a hybrid training strategy demonstrates slightly lower robustness across various noise ratios but consistently better performance than standard RALMs.",
+   "page": 7,
+   "why": "EM by noise ratio for three variants on NQ"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Evaluation on Noise Robustness",
+   "page": 6,
+   "why": "Full noise-ratio sweep"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Table cells flattened by extraction; Table 2 GPT-4 column order (NQ, TriviaQA, WebQ, Average) inferred.",
+  "Fig 3 values taken from figure labels in text, series order inferred."
+ ]
 }

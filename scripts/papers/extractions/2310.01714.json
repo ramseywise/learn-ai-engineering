@@ -1,19 +1,685 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.01714",
  "pdf": "ai-engineering/01-prompt-engineering/sources/yasunaga-2023-large-language-models-as-analogical.pdf",
  "bib": {
   "title": "Large Language Models as Analogical Reasoners",
-  "first_author": "Michihiro Yasunaga",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Michihiro Yasunaga",
+   "Xinyun Chen",
+   "Yujia Li",
+   "Panupong Pasupat",
+   "Jure Leskovec",
+   "Percy Liang",
+   "Ed H. Chi",
+   "Denny Zhou"
+  ],
+  "first_author": "Yasunaga",
+  "year": 2024,
+  "venue": "ICLR 2024",
   "arxiv": "2310.01714",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 88733,
+  "chars_total": 88733,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Appendix D full model outputs read but not itemised."
  },
- "legacy_report": "SOURCE: \"Large Language Models as Analogical Reasoners\", Yasunaga, Chen, Li, Pasupat, Leskovec, Liang, Chi, Zhou (Google DeepMind, Stanford). ICLR 2024 (arXiv 2310.01714v3, Mar 2024).\n\nCOVERAGE: All 25 pages, 96,753 chars, read (main text, limitations, Tables 1-8, appendices A-D; the reference list only skimmed; D.2-D.4 full example outputs skimmed). Extraction was clean. Table 1 header text is slightly jumbled (column order); I resolved it via the 5 values per row.\n\nCLAIMS (ranked)\n- Analogical prompting (the model self-generates relevant exemplars, optionally preceded by a tutorial, then solves the problem, all in ONE prompt) beats 0-shot CoT and fixed few-shot CoT on average.\n  number: +4% average accuracy gain\n  setup: GSM8K, MATH, Codeforces, 5 BIG-Bench tasks; GPT-3.5-turbo, GPT-4, PaLM2\n  quote: \"achieving an average accuracy gain of +4%\"\n  where: p.2 (Intro)\n- Math (Table 1). Self-generated exemplars vs 5-shot CoT vs 0-shot CoT. GSM8K: GPT-3.5-turbo 77.8 / 76.7 / 75.8; text-davinci-003 61.0 / 54.0 / 50.3; PaLM2 81.7 / 80.7 / 78.2. MATH: GPT-3.5-turbo 37.3 / 34.9 / 33.9; PaLM2 34.8 / 34.3 / 29.8. Temperature 0.\n  quote: \"Ours: Self-generated Exemplars 77.8% 61.0% † 81.7% 37.3% 34.8%\" ; \"5-shot CoT 76.7% 54.0% 80.7% 34.9% 34.3%\"\n  where: p.7. Caveat: for text-davinci-003 the paper adds \"For text-davinci models, we use an in-context demonstration of how to generate exemplars.\"\n  Gains on GSM8K with chat models are about 1 point; the largest gains are on MATH and davinci.\n- Gains depend on model scale. With small models, labeled few-shot CoT wins; self-generation only wins from text-davinci-002 up. GSM8K (Table 4), columns curie-001 / davinci-001 / davinci-002 / davinci-003: 0-shot 2/6/13/14; 0-shot CoT 2/6/22/50; 5-shot fixed CoT 2/10/43/54; 5-shot retrieved CoT 3/11/47/57; ours 2/9/48/61.\n  quote: \"When using smaller-scale LLMs (text-curie-001 and text-davinci-001), few-shot CoT leveraging labeled exemplars exhibits superior performance compared to ours. However, as the LLMs are scaled up to text-davinci-002 and text-davinci-003, our method outperforms few-shot CoT.\"\n  where: p.8-9 (6.4). Even at davinci-002 the margin over retrieved CoT is 48 vs 47.\n- Generated vs retrieved exemplars. Retrieval (Sentence-BERT, top-5 by cosine from the train set) is more reliable and better for small models. Generation is better for larger models.\n  quote: \"Our method outperforms the retrieved CoT with larger-scale LLMs, such as text-davinci-003.\" ; \"Conversely, with smaller-scale LLMs, the retrieved CoT performs better, and self-generation fails to produce useful or valid exemplars.\"\n  where: p.8-9 (6.3)\n- Code generation (Codeforces, Table 2). Self-generated knowledge (tutorial) plus exemplars gives extra gain over exemplars alone. GPT-3.5-turbo-16k Acc@1/Acc@10: 0-shot 8/24; 0-shot CoT 9/27; 3-shot CoT 11/27; exemplars 13/25; knowledge+exemplars 15/29. GPT-4: 16/30; 16/29; 17/31; 17/32; 19/37. GPT-3.5 with the method (15%) is close to GPT-4 0-shot (16%).\n  quote: \"Ours: Self-generated Knowledge + Exemplars 15% 29% 19% 37%\" ; \"GPT3.5-turbo achieves competitive performance with GPT4, with a 15% Acc@1 compared to GPT4's 16% Acc@1.\"\n  setup: temperature 0.7, 10 samples per problem. Exemplars alone on GPT-3.5 get Acc@10 25%, below 0-shot CoT's 27% and 3-shot CoT's 27%.\n  where: p.7\n- Knowledge ordering matters slightly. Knowledge before exemplars: 15/29. After: 14/27 (GPT-3.5-turbo, Codeforces).\n  quote: \"Ours: Self-generate knowledge before exemplars 15% 29%\"\n  where: p.17 (Table 7)\n- BIG-Bench (Table 3, GPT-3.5-turbo, temperature 0, 3 exemplars). Columns word sorting / logical deduction 5 objects / temporal sequences / colored objects / formal fallacies. Ours 75.2/41.6/57.6/68.0/58.8. 3-shot CoT 68.4/36.4/58.0/62.0/55.6. 0-shot CoT 67.6/35.2/44.8/61.6/55.6. Only temporal sequences is below manual 3-shot (57.6 vs 58.0).\n  quote: \"Ours: Self-generated Exemplars 75.2% 41.6% 57.6% 68.0% 58.8%\"\n  where: p.7\n- Number of self-generated exemplars K (GPT-3.5-turbo), GSM8K / MATH: K=1 76.1/34.8; K=2 77.0/36.7; K=3 77.5/37.3; K=4 77.3/37.0; K=5 77.8/37.1. Best at 3 or 5.\n  quote: \"When K =1, the LLM underperforms due to excessive reliance on a single exemplar generated. When K ≥ 3, the LLM demonstrates consistent performance\"\n  where: p.9 (Table 5)\n  The prompt instruction says K = 3 to 5 works best. Used K=5 for GSM8K, K=3 for MATH/BIG-Bench/Codeforces.\n- Asking for DIVERSE exemplars helps (GPT-3.5-turbo): GSM8K 75.9 to 77.8, MATH 35.2 to 37.3.\n  quote: \"Ours: Non-diverse exemplars 75.9% 35.2%\" / \"Ours: Diverse exemplars 77.8% 37.3%\"\n  where: p.17 (Table 6). Text: \"some LLMs have a tendency to repetitively generate identical problems, which can be misleading\"\n- Self-consistency stacks with it: GSM8K 77.8 to 85.3, MATH 37.3 to 46.0.\n  quote: \"Ours + Self-consistency 85.3% 46.0%\"\n  where: p.17 (Table 8). The number of samples is not stated in what I read.\n- Single-pass generation is about as good as sampling exemplars independently and re-prompting. No numbers are given.\n  quote: \"our current single-pass prompt approach achieves comparable performance and offers greater convenience\"\n  where: p.4\n- Error analysis (50 correct and 50 incorrect on GSM8K+MATH). Correct: 35/50 relevant and correct exemplars, 9/50 relevant but wrong solutions, 6/50 irrelevant. Incorrect: 28/50 exemplars fine but the model still failed (12 generalization gap, 8 overreliance on specific exemplars, 8 other); 12/50 relevant but wrong; 10/50 irrelevant. Note that 9/50 correct answers came from exemplars with wrong solutions.\n  quote: \"(35/50) Generated exemplars are relevant and correct\"\n  where: p.9 (6.6)\n\nLIMITS\n- Authors concede: more output tokens and more inference compute than 0-shot or 0-shot CoT. Versus few-shot CoT: \"we use fewer input tokens and more output tokens.\" Self-generation fails if the model is weak or has not seen related problems, so it is \"better suited for stronger or larger-scale LLMs\". It is prompt-sensitive (Jiang et al., 2020).\n- Not shown by the paper: GSM8K gains on chat models are small (about 1 point) and no variance, seeds or significance tests are reported. Codeforces is only 50 level-A problems from 2023 (collected Jan-Aug 2023), run twice and averaged (App. B), so the Acc@1 differences of 1-2 points are within noise. Models are 2023-era (GPT-3.5-turbo, GPT-4 June-Sept 2023, PaLM2, text-davinci). No reasoning models, and no comparison with modern strong baselines. The few-shot baseline uses 5 shots (GSM8K/MATH) or 3 hand-written (others). BIG-Bench was tested only on GPT-3.5-turbo. Exemplar correctness is not verified, so the generated exemplars can be wrong. The self-consistency sample count is not in the text I read.\n- The paper does not compare against \"generic\" dynamic exemplar selection beyond Sentence-BERT retrieval.\n\nBUILDS ON\nFew-shot CoT (Wei et al. 2022b); 0-shot CoT (Kojima et al. 2022); in-context learning (Brown et al. 2020); retrieval-based CoT (Zhang et al. 2022b, Auto-CoT; Shum et al. 2023); recitation (Sun et al. 2022); self-generated ICL (Kim et al. 2022); self-prompting (Li et al. 2022a); self-consistency (Wang et al. 2022); least-to-most (Zhou et al. 2022); Polya \"How to solve it\" (2004) and analogical reasoning in psychology (Vosniadou & Ortony 1989; Gentner 1983).\n\nCODE (prompt templates, verbatim)\n- p.3-4, generic exemplar template:\n  \"# Problem: [ x]\n  # Relevant problems: Recall three relevant and distinct problems. For each problem, describe it and explain the solution.\n  # Solve the initial problem:\"\n- p.4, knowledge add-on: \"# Tutorial: Identify core concepts in the problem and provide a tutorial.\"\n- p.17 (App. D.1), math prompt: \"Your task is to tackle mathematical problems. When presented with a math problem, recall relevant problems as examples. Afterward, proceed to solve the initial problem. ... ## Relevant Problems: Recall three examples of math problems that are relevant to the initial problem. Note that your problems should be distinct from each other and from the initial problem (e.g., involving different numbers and names). For each problem: - After \"Q: \", describe the problem - After \"A: \", explain the solution and enclose the ultimate answer in \\boxed{}. ## Solve the Initial Problem: ...\"\n- p.6 (Fig. 3), Codeforces: \"## Algorithms: Identify the core concepts or algorithms used to solve the problem. ## Tutorial: Write a tutorial about these algorithms. ## Example Problems: Provide three examples of relevant competitive programming problems that involve these algorithms. For each problem, describe the problem, explain the solution in detail, and then write the correct Python3 code. ## Python3 code to solve the original problem:\"\n- The paper says \"#\" headers help structure the output.\n\nFIGURES\n- Fig. 1 (p.2): 0-shot, 0-shot CoT, few-shot CoT and analogical prompting side by side on the same geometry problem. It shows fixed exemplars versus problem-tailored self-generated ones in one view.\n- Fig. 2 (p.5): the actual MATH prompt and GPT-3.5 output (probability exemplars).\n- Fig. 3 (p.6): Codeforces prompt with tutorial plus exemplars, with the generated prefix-product knowledge and code.\n- Tables 1-4 and 7-8 hold the results (they are text tables, not figures).\n\nPROBLEMS: No extraction faults beyond the garbled Table 1 header. No embedded instructions found in the text. The ledger or note files were not read, as the task did not require it; no files edited."
+ "type": "empirical",
+ "question": "Can an LLM be prompted to self-generate relevant exemplars (and knowledge) for each problem so that it reasons better than with 0-shot CoT or fixed labeled few-shot CoT, without labeling or retrieval?",
+ "hypothesis": "Prompting LLMs to recall relevant problems and solutions in context, as humans do by analogy, makes them perform in-context learning on tailored exemplars and so solve new problems better.",
+ "contributions": [
+  "Analogical prompting: self-generated exemplars and self-generated knowledge + exemplars in a single prompt",
+  "Gains over 0-shot CoT and few-shot CoT on GSM8K, MATH, Codeforces and BIG-Bench",
+  "Analysis of generation vs retrieval of exemplars and of base model scale"
+ ],
+ "method": {
+  "summary": "A single prompt instructs the LLM to recall K relevant, distinct problems with solutions (optionally preceded by a tutorial on core concepts), then solve the target problem in the same pass. Compared with 0-shot, 0-shot CoT, fixed few-shot CoT and retrieved few-shot CoT on math, code and BIG-Bench tasks with GPT-3.5-turbo, GPT-4, PaLM 2 and text-davinci/curie models.",
+  "task": "reasoning prompting: math word problems, competitive-programming code generation, BIG-Bench reasoning",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": "test set implied; train set used for few-shot and retrieved exemplars",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH",
+    "role": "eval",
+    "size": null,
+    "split": "train set used for 5-shot exemplars",
+    "source": "Hendrycks et al., 2021b",
+    "preprocessing": null
+   },
+   {
+    "name": "Codeforces level-A problems",
+    "role": "eval",
+    "size": "50 problems",
+    "split": "published Jan-Aug 2023, statement within 2000 GPT-3.5-turbo tokens",
+    "source": "scraped from codeforces.com; public tests plus hidden tests from result pages, truncated hidden tests skipped",
+    "preprocessing": "truncated hidden test cases skipped"
+   },
+   {
+    "name": "BIG-Bench: word sorting, logical deduction five objects, temporal sequences, reasoning about colored objects, formal fallacies",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Srivastava et al., 2022; Suzgun et al., 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-turbo (GPT3.5-turbo-16k for Codeforces)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "June-September 2023"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "June-September 2023"
+    }
+   },
+   {
+    "name": "PaLM 2-L",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-curie-001, text-davinci-001, -002, -003",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "used only in the scale analysis (Table 4) and text-davinci-003 in Table 1"
+    }
+   },
+   {
+    "name": "Sentence-BERT",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "encodes problem statements for retrieved-CoT baseline, cosine similarity"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling; temperature 0 for GSM8K, MATH, BIG-Bench; temperature 0.7 for Codeforces",
+   "temperature": "0 (math, BIG-Bench); 0.7 (Codeforces)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Math and BIG-Bench: one output per problem at temperature 0. Codeforces: 10 outputs per problem, whole evaluation run twice and averaged. No seeds or variance reported.",
+   "prompting": "Single prompt: problem, instructions to recall K distinct relevant problems (Q/A with answer in \\boxed{}), then solve the initial problem. K=5 exemplars for GSM8K, K=3 for MATH and BIG-Bench; Codeforces uses a tutorial plus K=3 exemplars, with knowledge before exemplars. text-davinci models get an in-context demonstration of how to generate exemplars. Baselines: 0-shot; 0-shot CoT ('think step by step'); few-shot CoT with K=5 train exemplars (GSM8K, MATH) or K=3 hand-annotated exemplars (others); retrieved CoT top K=5.",
+   "retrieval": "Baseline only: Sentence-BERT encodings, top K=5 train problems by cosine similarity",
+   "parameters": {
+    "K_GSM8K": "5",
+    "K_MATH": "3",
+    "K_BIGBench": "3",
+    "K_Codeforces": "3 plus knowledge (tutorial)",
+    "K_best_range": "3 to 5",
+    "diversity_instruction": "problems must be distinct from each other and from the initial problem",
+    "knowledge_order": "before exemplars"
+   },
+   "other": {
+    "cost": "more output tokens than 0-shot CoT; fewer input and more output tokens than few-shot CoT (Sec 8)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of problems answered correctly (GSM8K, MATH, BIG-Bench)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Acc@k (k=1,10)",
+     "definition": "whether at least one of k sampled outputs passes all test cases",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "0-shot",
+    "0-shot CoT",
+    "few-shot CoT (5-shot math, 3-shot others)",
+    "5-shot retrieved CoT (GSM8K, Table 4)"
+   ],
+   "protocol": "Single run at temperature 0 for math and BIG-Bench with no variance or significance test; Codeforces averaged over two evaluations. No test of statistical significance is reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Codeforces collection procedure described in Appendix B; release not stated"
+  },
+  "prompts": [
+   {
+    "purpose": "MATH self-generated exemplars (GPT-3.5-turbo), Appendix D.1",
+    "text": "Your task is to tackle mathematical problems. When presented with a math problem, recall relevant problems as examples. Afterward, proceed to solve the initial problem.\n# Initial Problem:\n[problem]\n# Instructions:\nMake sure to include all of the following points:\n## Relevant Problems:\nRecall three examples of math problems that are relevant to the initial problem. Note that your problems should be distinct from each other and from the initial problem (e.g., involving different numbers and names). For each problem:\n- After \"Q: \", describe the problem\n- After \"A: \", explain the solution and enclose the ultimate answer in \\boxed{}.\n## Solve the Initial Problem:\nSay \"Let's solve the following math problem.\" Then formulate your response in the following format:\nQ: Copy and paste the initial problem here.\nA: Explain the solution and enclose the ultimate answer in \\boxed{} here.",
+    "where": "Appendix D.1, p.17-18"
+   },
+   {
+    "purpose": "GSM8K self-generated exemplars (five)",
+    "text": "## Analogous Problems:\nOffer five diverse examples of math problems that are relevant or analogous to the initial problem. For each problem, elaborate on the solution and conclude with the ultimate answer (enclosed in \\boxed{}). For each problem:\n- After \"Q: \", describe the problem\n- After \"A: \", explain the solution and enclose the ultimate answer in \\boxed{}.\n## Solve the Initial Problem:\nQ: Copy and paste the initial problem here.\nA: Explain the solution and enclose the ultimate answer in \\boxed{} here.",
+    "where": "Appendix D.2 (preamble: 'Your task is to tackle mathematical problems...' as D.1)"
+   },
+   {
+    "purpose": "Codeforces self-generated knowledge + exemplars",
+    "text": "Your goal is to write Python3 code to solve competitive programming problems. Given a problem, explain the core concepts in it and provide other relevant problems. Then solve the original problem.\n# Problem:\n[problem]\n# Instruction:\n## Algorithms:\nIdentify the core concepts or algorithms used to solve the problem.\n## Tutorial:\nWrite a useful tutorial about these algorithms.\n## Example Problems:\nProvide three examples of relevant competitive programming problems that involve these algorithms. For each problem, describe the problem, explain the solution in detail, and then write the correct Python3 code.\n## Python3 code to solve the original problem:\nInclude the following points in your response:\n- Explanation of the solution:\n- Python3 code to solve the problem:",
+    "where": "Appendix D.3, p.20-21"
+   },
+   {
+    "purpose": "BIG-Bench formal fallacies self-generated exemplars",
+    "text": "Your task is to tackle reasoning problems. When presented with a problem, recall relevant problems as examples. Afterward, proceed to solve the initial problem.\n# Initial Problem:\n[problem]\n# Instructions:\nMake sure to include all of the following points:\n## Relevant Problems:\nRecall three examples of problems that are relevant to the initial problem. Note that your problems must be distinct from each other and from the initial problem. For each problem:\n- After \"Q: \", describe the problem\n- After \"A: \", explain the solution and enclose the ultimate answer in \\boxed{}.\n## Solve the Initial Problem:\nSay \"Let's solve the following reasoning problem.\" Then formulate your response in the following format:\nQ: Copy and paste the initial problem here.\nA: Explain the solution and enclose the ultimate answer in \\boxed{} here.",
+    "where": "Appendix D.4, p.24"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.K_GSM8K",
+    "quote": "We let LLMs self-generate K =5 exemplars for GSM8K and K =3 exemplars for MATH and BIG-Bench tasks.",
+    "where": "Sec 5.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Self-generated exemplars beat 5-shot CoT on GSM8K with GPT-3.5-turbo by about one point.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "77.8",
+   "unit": "%",
+   "baseline_value": "76.7",
+   "n": null,
+   "setup": "GSM8K, GPT-3.5-turbo, temperature 0, K=5 self-generated exemplars vs 5-shot CoT (K=5 from train set), single run, no variance reported",
+   "quote": null,
+   "table": "Table 1, row Ours: Self-generated Exemplars, column GSM8K GPT3.5-turbo (5-shot CoT row: 76.7%)",
+   "note": null,
+   "where": "Table 1, p.7"
+  },
+  {
+   "claim": "On GSM8K with PaLM 2 the gain over 5-shot CoT is one point.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "81.7",
+   "unit": "%",
+   "baseline_value": "80.7",
+   "n": null,
+   "setup": "GSM8K, PaLM 2 (PaLM 2-L), temperature 0",
+   "quote": null,
+   "table": "Table 1, row Ours: Self-generated Exemplars, column GSM8K PaLM2 (5-shot CoT: 80.7%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On MATH with GPT-3.5-turbo self-generated exemplars beat 5-shot CoT by 2.4 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "37.3",
+   "unit": "%",
+   "baseline_value": "34.9",
+   "n": null,
+   "setup": "MATH, GPT-3.5-turbo, temperature 0, K=3 self-generated exemplars; 5-shot CoT uses K=5 from MATH train set",
+   "quote": null,
+   "table": "Table 1, row Ours: Self-generated Exemplars, column MATH GPT3.5-turbo (5-shot CoT: 34.9%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On MATH with PaLM 2 the gain over 5-shot CoT is 0.5 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "34.8",
+   "unit": "%",
+   "baseline_value": "34.3",
+   "n": null,
+   "setup": "MATH, PaLM 2, temperature 0, K=3",
+   "quote": null,
+   "table": "Table 1, row Ours: Self-generated Exemplars, column MATH PaLM2 (5-shot CoT: 34.3%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "text-davinci-003 GSM8K: 61.0% vs 54.0% 5-shot CoT, but the davinci rows used an in-context demonstration of how to generate exemplars.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "61.0",
+   "unit": "%",
+   "baseline_value": "54.0",
+   "n": null,
+   "setup": "GSM8K, text-davinci-003, temperature 0; the dagger says for text-davinci models an in-context demonstration of how to generate exemplars was used, the other models got none",
+   "quote": "†For text-davinci models, we use an in-context demonstration of how to generate exemplars. For the other models, we do not.",
+   "table": null,
+   "note": "Table 1 prints 61.0%; Table 4 prints 61% for the same cell.",
+   "where": "Table 1 caption"
+  },
+  {
+   "claim": "Average accuracy gain over 0-shot CoT and few-shot CoT across tasks and base LLMs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy gain",
+   "value": "+4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, MATH, Codeforces, 5 BIG-Bench tasks; GPT-3.5, GPT-4, PaLM 2; how the average is computed is not stated",
+   "quote": "achieving an average accuracy gain of +4%",
+   "table": null,
+   "note": null,
+   "where": "Sec 1, p.2"
+  },
+  {
+   "claim": "Codeforces with GPT-3.5-turbo-16k: knowledge + exemplars reaches Acc@1 15% vs 11% for 3-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc@1",
+   "value": "15",
+   "unit": "%",
+   "baseline_value": "11",
+   "n": null,
+   "setup": "Codeforces level-A 2023 problems, 50 problems, GPT-3.5-turbo-16k, 10 samples at temperature 0.7, evaluated twice and averaged",
+   "quote": "With our prompting method, GPT3.5-turbo achieves competitive performance with GPT4, with a 15% Acc@1 compared to GPT4’s 16% Acc@1.",
+   "table": null,
+   "note": "The 15% is for self-generated knowledge + exemplars; exemplars alone give 13%. The 16% GPT4 figure is 0-shot and 0-shot CoT.",
+   "where": "Sec 6.1, Table 2"
+  },
+  {
+   "claim": "Codeforces with GPT-4: knowledge + exemplars Acc@10 37% vs 31% for 3-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc@10",
+   "value": "37",
+   "unit": "%",
+   "baseline_value": "31",
+   "n": null,
+   "setup": "Codeforces, 50 problems, GPT-4, 10 samples at temperature 0.7",
+   "quote": null,
+   "table": "Table 2, row Ours: Self-generated Knowledge + Exemplars, column GPT4 Acc@10 (3-shot CoT: 31%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Self-generated exemplars alone on Codeforces GPT-3.5-turbo-16k do not beat CoT at Acc@10 (25% vs 27%); knowledge is what adds the gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc@10",
+   "value": "25",
+   "unit": "%",
+   "baseline_value": "27",
+   "n": null,
+   "setup": "Codeforces, GPT-3.5-turbo-16k, exemplars only vs 3-shot CoT and 0-shot CoT (both 27%)",
+   "quote": null,
+   "table": "Table 2, row Ours: Self-generated Exemplars, column GPT3.5-turbo-16k Acc@10",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Knowledge before exemplars is slightly better than after on Codeforces.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc@1",
+   "value": "15",
+   "unit": "%",
+   "baseline_value": "14",
+   "n": null,
+   "setup": "Codeforces, GPT-3.5-turbo; before: 15% Acc@1 / 29% Acc@10, after: 14% / 27%",
+   "quote": null,
+   "table": "Table 7, row Self-generate knowledge before exemplars, column Acc@1",
+   "note": null,
+   "where": "Table 7, Appendix C"
+  },
+  {
+   "claim": "BIG-Bench word sorting: 75.2% vs 68.4% 3-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.2",
+   "unit": "%",
+   "baseline_value": "68.4",
+   "n": null,
+   "setup": "GPT-3.5-turbo, temperature 0, K=3 self-generated exemplars",
+   "quote": null,
+   "table": "Table 3, row Ours: Self-generated Exemplars, column Word sorting",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "BIG-Bench temporal sequences: 57.6% self-generated vs 58.0% 3-shot CoT, so slightly below manual few-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "57.6",
+   "unit": "%",
+   "baseline_value": "58.0",
+   "n": null,
+   "setup": "GPT-3.5-turbo, temperature 0, K=3",
+   "quote": null,
+   "table": "Table 3, row Ours: Self-generated Exemplars, column Temporal sequences",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "BIG-Bench logical deduction five objects 41.6% vs 36.4%; colored objects 68.0% vs 62.0%; formal fallacies 58.8% vs 55.6% (3-shot CoT).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "41.6",
+   "unit": "%",
+   "baseline_value": "36.4",
+   "n": null,
+   "setup": "GPT-3.5-turbo, temperature 0, K=3",
+   "quote": null,
+   "table": "Table 3, row Ours: Self-generated Exemplars, column Logical deduction five objects",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GSM8K scale: at text-davinci-001 self-generation (9%) is below 5-shot fixed CoT (10%) and retrieved CoT (11%); at curie-001 2% vs 2% and 3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "9",
+   "unit": "%",
+   "baseline_value": "10",
+   "n": null,
+   "setup": "GSM8K, text-davinci-001; 5-shot retrieved CoT 11%",
+   "quote": "When using smaller-scale LLMs (text-curie-001 and text-davinci-001), few-shot CoT leveraging labeled exemplars exhibits superior performance compared to ours.",
+   "table": "Table 4, row Ours: Self-generated Exemplars, column text-davinci-001",
+   "note": null,
+   "where": "Table 4, Sec 6.4"
+  },
+  {
+   "claim": "GSM8K scale: at text-davinci-002 self-generation 48% vs 43% fixed CoT and 47% retrieved CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "48",
+   "unit": "%",
+   "baseline_value": "43",
+   "n": null,
+   "setup": "GSM8K, text-davinci-002",
+   "quote": null,
+   "table": "Table 4, row Ours: Self-generated Exemplars, column text-davinci-002",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Self-generation beats retrieved CoT at text-davinci-003.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "61",
+   "unit": "%",
+   "baseline_value": "57",
+   "n": null,
+   "setup": "GSM8K, text-davinci-003; retrieval is Sentence-BERT top-5 cosine from train set; ours with in-context demonstration of generation (Table 1 dagger)",
+   "quote": null,
+   "table": "Table 4, row Ours: Self-generated Exemplars, column text-davinci-003 (5-shot retrieved CoT: 57%)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Number of exemplars: K=1 underperforms (76.1 GSM8K, 34.8 MATH); K=3 gives 77.5 and 37.3; K=5 gives 77.8 and 37.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy at K=3",
+   "value": "77.5",
+   "unit": "%",
+   "baseline_value": "76.1",
+   "n": null,
+   "setup": "GPT-3.5-turbo; K=1 baseline value is GSM8K",
+   "quote": null,
+   "table": "Table 5, row K=3, column GSM8K",
+   "note": "The Table 1 GSM8K 77.8 is the K=5 cell; Table 1 MATH 37.3 is the K=3 cell. Section 5.3 uses K=5 for GSM8K and K=3 for MATH and BIG-Bench.",
+   "where": "Table 5, Sec 6.5"
+  },
+  {
+   "claim": "Encouraging diversity in generated exemplars helps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "77.8",
+   "unit": "%",
+   "baseline_value": "75.9",
+   "n": null,
+   "setup": "GPT-3.5-turbo; non-diverse 75.9 GSM8K, 35.2 MATH vs diverse 77.8, 37.3",
+   "quote": null,
+   "table": "Table 6, row Ours: Diverse exemplars, column GSM8K",
+   "note": null,
+   "where": "Table 6, Appendix C"
+  },
+  {
+   "claim": "Self-consistency stacked on analogical prompting lifts GSM8K to 85.3% and MATH to 46.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "85.3",
+   "unit": "%",
+   "baseline_value": "77.8",
+   "n": null,
+   "setup": "GPT-3.5-turbo; number of self-consistency samples is not stated in the text",
+   "quote": null,
+   "table": "Table 8, row Ours + Self-consistency, column GSM8K",
+   "note": "No self-consistency baseline on plain few-shot CoT is given, so the gain is not compared like for like.",
+   "where": "Table 8, Appendix C"
+  },
+  {
+   "claim": "Manual analysis of 50 correct + 50 incorrect GSM8K+MATH solutions: of the 50 incorrect, 28 had relevant correct exemplars yet failed (12 generalization gap, 8 overreliance, 8 other); 10 irrelevant, 12 relevant but wrong.",
+   "kind": "measured",
+   "source": null,
+   "metric": "incorrect solutions with relevant correct exemplars",
+   "value": "28",
+   "unit": "of 50",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5-turbo presumably (not stated), GSM8K + MATH, manual annotation",
+   "quote": "(28/50) Generated exemplars are relevant and correct, but LLM fails to solve the new problem:",
+   "table": null,
+   "note": "Base model for this analysis is not stated in Sec 6.6.",
+   "where": "Sec 6.6"
+  },
+  {
+   "claim": "Codeforces set: 50 level-A problems, Jan-Aug 2023, each under 2000 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "problems",
+   "value": "50",
+   "unit": "problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Codeforces scrape, evaluated twice and averaged",
+   "quote": "resulting in 50 problems",
+   "table": null,
+   "note": null,
+   "where": "Appendix B"
+  }
+ ],
+ "limits": [
+  "Authors: more inference computation, since more tokens are generated than 0-shot and 0-shot CoT; fewer input and more output tokens than few-shot CoT.",
+  "Authors: self-generation can fail if the LLM is weak or has not learned related problems; the method suits stronger or larger models. With text-curie-001 and text-davinci-001 labeled few-shot CoT is better.",
+  "Authors: sensitive to specific prompt phrasing (Jiang et al., 2020).",
+  "Main results are single temperature-0 runs with no variance or significance test; GSM8K gains over 5-shot CoT are about 1 point.",
+  "Codeforces has only 50 problems (two evaluations averaged); Acc@1 differences of 1-4 points correspond to 0.5-2 problems.",
+  "Table 1 mixes protocols: text-davinci rows use an in-context demonstration of how to generate exemplars, other models do not.",
+  "Per-task K differs (5 GSM8K, 3 MATH) and K was tuned on GSM8K/MATH with GPT-3.5-turbo (Table 5).",
+  "The qualitative analysis shows that even with relevant correct exemplars the model failed 28 of 50 incorrect cases (generalization gap, overreliance).",
+  "Model versions (GPT-3.5-turbo, GPT-4 June-September 2023) are API snapshots and have dated; code and release of the Codeforces set are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "analogical prompting",
+   "definition": "prompting LLMs to self-generate relevant exemplars or knowledge in context before solving the given problem",
+   "where": "Abstract, Sec 1"
+  },
+  {
+   "term": "Acc@k",
+   "definition": "measures whether at least one of the k sampled model outputs is correct",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al., 2022b)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "few-shot CoT with fixed labeled exemplars",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "0-shot CoT 'think step by step'",
+   "quote": null
+  },
+  {
+   "work": "Retrieval-based CoT (Zhang et al., 2022b; Shum et al., 2023)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retrieved exemplars; the paper implements its own Sentence-BERT top-5 version",
+   "quote": null
+  },
+  {
+   "work": "Recitation-augmented language models (Sun et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "self-generates facts; this paper recalls problems and reasoning",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "combined with the method in Table 8",
+   "quote": null
+  },
+  {
+   "work": "Polya (2004) 'do I know a related problem'; Vosniadou & Ortony (1989)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "psychological motivation",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al., 2021)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "MATH (Hendrycks et al., 2021b)",
+   "year": 2021,
+   "arxiv": "2103.03874",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "BIG-Bench (Srivastava et al., 2022; Suzgun et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report (Anil et al., 2023)",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of our approach, analogical prompting.",
+   "page": 2,
+   "why": "Side by side prompts for 0-shot, 0-shot CoT, few-shot CoT and analogical prompting."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Actual example of our prompt (top) and LLM output (bottom) for MATH task.",
+   "page": 5,
+   "why": "Shows the full prompt template and a model output."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Actual example of our prompt (top) and LLM output (bottom) for the Codeforces task.",
+   "page": 6,
+   "why": "Shows the tutorial + exemplars prompt."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and 4 text is column-jumbled in extraction; columns resolved by five values per row.",
+  "Section 6.6 does not name the base model. How self-consistency in Table 8 was sampled is not stated. No embedded instructions found."
+ ]
 }

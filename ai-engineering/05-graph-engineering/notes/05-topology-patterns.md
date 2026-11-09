@@ -209,7 +209,7 @@ The data-processing argument assumes the single agent uses its context perfectly
 
 Ao, Gao & Simchi-Levi ([arXiv:2603.26993](https://arxiv.org/abs/2603.26993), MIT, 2026-03, preprint) prove the argument for any acyclic graph of agents. If no node receives a signal from outside, **the network can do no better than one Bayes-optimal decision maker who sees the same evidence**, whatever the roles, messages or rounds. What a pipeline loses is exactly how far each hand-off distorts the posterior. Transcript length, role count and round count are the wrong proxies, and an extra stage costs nothing if it passes the posterior on intact. A verifier can only help if its signal is not redundant given what it reads, so self-critique that rereads the draft cannot raise the ceiling, while executable tests can. Their MMLU experiments are deliberately worst-case, because the relay stages never see the question. On 200 questions, gpt-4.1-mini fell **from 90.7% alone to 41.2% with two agents and 22.5% with five**, below chance. On a 50-question subset, relaying a probability vector instead of prose held a 3-stage chain at 75.2% vs. 58.1%. A redundant second Wikipedia specialist added nothing, while a tool over a knowledge base the model had never seen took accuracy from 24.3% to 82.7%. The theorem stops at private signals. Once agents hold different evidence, the problem becomes a team-decision problem, where the reduction fails. Two OpenAI models were tested, and some figures in the paper disagree with its tables, so use it for the shape of the argument and not for the percentages.
 
-Kim et al. ([arXiv:2512.08296](https://arxiv.org/abs/2512.08296), 2025-12) add a second test from 260 controlled configurations: once a single agent already scores above about 45% on a task, adding agents had negative returns ([06](06-when-not-to-build-a-graph.md#what-fan-out-costs)).
+Kim et al. add a second test, from 260 controlled configurations: past about 45% single-agent performance, adding agents had negative returns. The setup and numbers are in [06](06-when-not-to-build-a-graph.md#what-fan-out-costs).
 
 Hold the information fixed and topology mostly moves the bill. Nechepurenko & Shuvalov ([arXiv:2605.03310](https://arxiv.org/abs/2605.03310), 2026-05, preprint) gave five topologies the same model (claude-opus-4-6), tools, prompt scaffold and 100 prediction-market questions with web search off. Brier scores ran **from 0.153 for a sequential pipeline to 0.181 for consensus alignment, and no pair differed after Bonferroni correction** (smallest uncorrected p = 0.075). Cost differed far more: an independent ensemble at $0.10 per question (Brier 0.159) beat an orchestrator with specialists at $0.31 (0.162) and peer-critique debate at $0.23 (0.170) on both axes. No configuration beat the market price (0.152), which is the point of the setup. With no new information the agents had nothing to add, so the result is the new-information test run as an experiment. It covers one model and one task family, and the authors estimate that about 500 questions would separate only the four pairs involving consensus alignment, about 2,500 most of the rest, and that one pair cannot be told apart at all.
 
@@ -226,15 +226,7 @@ More steps alone also plateau. Budget-aware tool-use work (Google, 2025; BAVT, 2
 
 ## How multi-agent systems fail
 
-Cemri et al. ([arXiv:2503.13657](https://arxiv.org/abs/2503.13657), 2025) found 40–80% of tasks fail in the multi-agent systems they studied, and sorted 14 failure modes into three groups:
-
-| Category | Examples |
-|---|---|
-| Specification issues | ignoring the role or task spec, repeating steps, losing context, not recognising completion |
-| Inter-agent misalignment | conversation resets, not asking for clarification, derailment, withholding information, ignoring other agents, reasoning that does not match action |
-| Task verification | missing or weak checks, premature termination |
-
-The taxonomy comes from expert annotation of about 150 conversation traces, each averaging over 15,000 lines. No single cause dominates: failures spread across all three categories, and they are correlated. A bad architecture, for example, causes inefficient communication downstream, so fixing one mode rarely fixes the system (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11).
+Cemri et al. ([arXiv:2503.13657](https://arxiv.org/abs/2503.13657), 2025) found 40–80% of tasks fail in the multi-agent systems they studied. Their MAST taxonomy sorts 14 failure modes into three groups: specification, inter-agent misalignment and verification. The groups and the ChatDev result are in [07](07-failure-modes-at-scale.md#mast-a-taxonomy). No single cause dominates: failures spread across all three groups and are correlated. A bad architecture, for example, causes inefficient communication downstream, so fixing one mode rarely fixes the system (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11).
 
 Four named problems come specifically from orchestration:
 

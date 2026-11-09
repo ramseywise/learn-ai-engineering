@@ -1,0 +1,622 @@
+{
+ "schema": 1,
+ "key": "2505.04588",
+ "pdf": "generative-ai/05-RL/sources/sun-2025-zerosearch.pdf",
+ "bib": {
+  "title": "ZEROSEARCH: Incentivize the Search Capability of LLMs without Searching",
+  "authors": [
+   "Hao Sun",
+   "Zile Qiao",
+   "Jiayan Guo",
+   "Xuanbo Fan",
+   "Yingyan Hou",
+   "Yong Jiang",
+   "Pengjun Xie",
+   "Yan Zhang",
+   "Fei Huang",
+   "Jingren Zhou"
+  ],
+  "first_author": "Sun",
+  "year": 2025,
+  "venue": "preprint (Under review; arXiv v3 dated 19 May 2026)",
+  "arxiv": "2505.04588",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 61610,
+  "chars_total": 61610,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM learn to search (via RL) without querying a real search engine during training, by using an SFT-tuned LLM as a simulated search engine, avoiding API cost and uncontrolled document quality?",
+ "hypothesis": "A lightly SFT-tuned LLM can simulate a search engine well enough (with controllable useful/noisy documents and a curriculum) to match or beat RL training against a real search engine.",
+ "contributions": [
+  "ZeroSearch: RL framework that incentivizes LLM search without interacting with real search engines during training",
+  "SFT turns an LLM into a retrieval simulator generating useful or noisy documents; curriculum rollout progressively degrades document quality",
+  "Experiments on in-domain and out-of-domain QA: outperforms real-search-based models at zero API cost, generalizes across base/instruct models and sizes and RL algorithms"
+ ],
+ "method": {
+  "summary": "A frozen simulation LLM (Qwen-2.5-3B/7B/14B-Instruct, SFT-tuned on query-document pairs from real-search trajectories labelled useful/noisy by an LLM judge) replaces the search engine in Search-R1-style multi-turn RL (think/search/answer). Noise probability follows an exponential curriculum from ps to pe; reward is word-level F1; document tokens are loss-masked. Evaluated with real Google search (SerpAPI) at test time.",
+  "task": "open-domain single-hop and multi-hop QA with search-augmented RL",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "NQ + HotpotQA (merged train sets)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "following Search-R1 [17]",
+    "preprocessing": null
+   },
+   {
+    "name": "NQ",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Kwiatkowski 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Joshi 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "PopQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Mallen 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "HotpotQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "ref [41]",
+    "preprocessing": null
+   },
+   {
+    "name": "2WikiMultiHopQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Ho 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "MuSiQue",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Trivedi 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Bamboogle",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Press 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen-2.5-7B / 3B (Base and Instruct)",
+    "role": "proposed",
+    "params": "7B, 3B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role_detail": "policy models"
+    }
+   },
+   {
+    "name": "LLaMA-3.2-3B (Base and Instruct)",
+    "role": "proposed",
+    "params": "3B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role_detail": "policy model"
+    }
+   },
+   {
+    "name": "Qwen-2.5-3B/7B/14B-Instruct simulation LLM (SFT)",
+    "role": "retriever",
+    "params": "3B, 7B, 14B",
+    "architecture": "decoder-only",
+    "init_from": "Qwen-2.5-3B-Instruct, Qwen-2.5-7B-Instruct, Qwen-2.5-14B-Instruct (one simulator per size)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "default": "14B",
+     "frozen_during_RL": true
+    }
+   },
+   {
+    "name": "LLM judge for useful/noisy labels",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "which LLM is not stated"
+    }
+   }
+  ],
+  "training": {
+   "objective": "max E[r(x,y)] - beta*KL(pi_theta || pi_ref) with frozen simulator pi_psi; reward = word-level F1 (2*I_N/(P_N+R_N)); no format reward; loss masking on document tokens; REINFORCE default, also GRPO and PPO",
+   "optimizer": null,
+   "lr": "1e-6 (SFT of simulator; policy for REINFORCE/GRPO/PPO); 1e-5 PPO value model",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 (rollout repetition 5)",
+   "steps": "200 training steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL term with beta (value not stated)",
+   "hardware": "simulation server on 4 H20 GPUs, RL training on another 4 H20 GPUs",
+   "compute": "~12 hours per RL run with Qwen-2.5-7B backbone (App D); cost table assumes A100s",
+   "wall_clock": "~12 hours",
+   "seeds": null,
+   "other": {
+    "sampled_responses_per_prompt": "5 (REINFORCE, GRPO)",
+    "GAE": "lambda=1, gamma=1 (PPO)",
+    "noise_prob_ps_pe": "Qwen-2.5-7B: 0 -> 0.75; Qwen-2.5-3B: 0 -> 0.25; LLaMA-3.2-3B: 0.25 -> 0.5",
+    "curriculum_base_b": "4 (default); p_i = ps + (b^(i/m)-1)/(b-1) * (pe-ps)",
+    "random_baseline": "noise probability fixed at 0.5",
+    "simulator_SFT_data_size": "not stated",
+    "simulator_SFT_epochs_batch": "not stated",
+    "KL_beta": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Search-R1-style template: reason in <think>, query in <search>, results in <information>, answer in <answer>; question appended",
+   "retrieval": "Google Web Search via SerpAPI at test time for all methods; 5 documents; simulator generates five ~30-word documents per query during training",
+   "parameters": {},
+   "other": {
+    "max_turns": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match",
+     "definition": "prediction correct if normalized form exactly matches any normalized ground-truth answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Direct Answer",
+    "CoT",
+    "RAG",
+    "RAgent",
+    "Search-o1",
+    "R1 (base/instruct, no search)",
+    "Search-R1 (base/instruct, real search, F1 reward)"
+   ],
+   "protocol": "Seven datasets; average EM reported; single run, no seeds or significance tests stated. Prompt baselines use Instruct models. All RL methods use F1 reward."
+  },
+  "availability": {
+   "code": "Homepage/Code links on title page (URLs not in extracted text)",
+   "weights": "Model link on title page",
+   "data": "Datasets link on title page"
+  },
+  "prompts": [
+   {
+    "purpose": "Policy training template",
+    "text": "Answer the given question. You must conduct reasoning inside <think> and </think> first every time you get new information. After reasoning, if you find you lack some knowledge, you can call a search engine by <search> query </search>, and it will return the top searched results between <information> and </information>. You can search as many times as you want. If you find no further external knowledge needed, you can directly provide the answer inside <answer> and </answer> without detailed illustrations. For example, <answer> Beijing </answer>. Question:",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "Search simulation prompt",
+    "text": "You are the Google search engine. Given a query, you need to generate five [useful / noisy] documents for the query. The user is trying to answer the question: [question] whose answer is [ground truth]. Each document should contain about 30 words, and these documents should contain [useful / noisy] information. Query: [query] [Useful / Noisy] Output:",
+    "where": "Table 2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "we perform reinforcement learning (RL) training with a batch size of 64, a rollout repetition of 5, and a total of 200 training steps",
+    "where": "App D"
+   },
+   {
+    "field": "eval.cost",
+    "quote": "Google ~64,000 ~12 hours None $586.7 $0.0 $586.7",
+    "where": "Table 8"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ZeroSearch-base beats Search-R1-base on Qwen-2.5-3B-Base average EM (34.47 vs 32.81).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 34.47,
+   "unit": "%",
+   "baseline_value": 32.81,
+   "n": null,
+   "setup": "Qwen-2.5-3B-Base policy. EM (%) averaged over 7 QA datasets (NQ, TriviaQA, PopQA, HotpotQA, 2Wiki, MuSiQue, Bamboogle); trained on merged NQ+HotpotQA train; test-time search = Google via SerpAPI, 5 docs, for all methods; REINFORCE; ZeroSearch trained with simulated search (default 14B SFT simulator), Search-R1 trained with real Google/SerpAPI search and F1 reward.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Qwen-2.5-3B block, row ZEROSEARCH-base, column Avg."
+  },
+  {
+   "claim": "ZeroSearch-inst beats Search-R1-inst on Qwen-2.5-3B-Instruct average EM (31.70 vs 28.13).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 31.7,
+   "unit": "%",
+   "baseline_value": 28.13,
+   "n": null,
+   "setup": "Qwen-2.5-3B-Instruct policy. EM (%) averaged over 7 QA datasets (NQ, TriviaQA, PopQA, HotpotQA, 2Wiki, MuSiQue, Bamboogle); trained on merged NQ+HotpotQA train; test-time search = Google via SerpAPI, 5 docs, for all methods; REINFORCE; ZeroSearch trained with simulated search (default 14B SFT simulator), Search-R1 trained with real Google/SerpAPI search and F1 reward.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Qwen-2.5-3B block, row ZEROSEARCH-inst, column Avg."
+  },
+  {
+   "claim": "On Qwen-2.5-7B, ZeroSearch-base 40.93 vs Search-R1-base 39.51; ZeroSearch-inst 39.08 vs Search-R1-inst 38.17.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 40.93,
+   "unit": "%",
+   "baseline_value": 39.51,
+   "n": null,
+   "setup": "Qwen-2.5-7B. EM (%) averaged over 7 QA datasets (NQ, TriviaQA, PopQA, HotpotQA, 2Wiki, MuSiQue, Bamboogle); trained on merged NQ+HotpotQA train; test-time search = Google via SerpAPI, 5 docs, for all methods; REINFORCE; ZeroSearch trained with simulated search (default 14B SFT simulator), Search-R1 trained with real Google/SerpAPI search and F1 reward.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Qwen-2.5-7B block, row ZEROSEARCH-base, column Avg."
+  },
+  {
+   "claim": "On LLaMA-3.2-3B, ZeroSearch-base 36.07 vs Search-R1-base 34.21; ZeroSearch-inst 30.98 vs Search-R1-inst 30.48.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 36.07,
+   "unit": "%",
+   "baseline_value": 34.21,
+   "n": null,
+   "setup": "LLaMA-3.2-3B. EM (%) averaged over 7 QA datasets (NQ, TriviaQA, PopQA, HotpotQA, 2Wiki, MuSiQue, Bamboogle); trained on merged NQ+HotpotQA train; test-time search = Google via SerpAPI, 5 docs, for all methods; REINFORCE; ZeroSearch trained with simulated search (default 14B SFT simulator), Search-R1 trained with real Google/SerpAPI search and F1 reward.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, LLaMA-3.2-3B block, row ZEROSEARCH-base, column Avg."
+  },
+  {
+   "claim": "Per-dataset cells are mixed: Qwen-2.5-3B-Instruct HotpotQA is 33.20 for Search-R1-inst vs 27.40 for ZEROSEARCH-inst, despite the text claiming consistent superiority.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 Qwen-2.5-3B block.",
+   "note": "Text: 'ZEROSEARCH consistently outperforms all baseline methods.' Averages favour ZeroSearch in all 6 configurations.",
+   "where": "Table 3, Sec 4.4",
+   "table": "Table 3, Qwen-2.5-3B block, row Search-R1-inst, column HotpotQA (33.20); row ZEROSEARCH-inst (27.40)"
+  },
+  {
+   "claim": "Cost of RL training: simulated search (SFT-3B/7B/14B) costs $17.7/$35.4/$70.8 vs $586.7 for Google SerpAPI, for ~64,000 queries and ~12 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Total cost",
+   "value": 586.7,
+   "unit": "$",
+   "baseline_value": 70.8,
+   "n": null,
+   "setup": "RL with batch size 64, rollout repetition 5, 200 steps, ~12 h with Qwen-2.5-7B backbone, ~64,000 search requests. API cost from SerpAPI pricing, GPU cost from AWS. Table 8 lists A100: 1x (3B), 2x (7B), 4x (14B).",
+   "note": null,
+   "where": "App D, Table 8",
+   "table": "Table 8, row Google, column Total Cost ($586.7); rows SFT-3B/7B/14B, column Total Cost ($17.7, $35.4, $70.8)"
+  },
+  {
+   "claim": "Text states the basis of the cost estimate.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix D.",
+   "note": null,
+   "where": "App D",
+   "quote": "This setup results in approximately 12 hours of training when using Qwen-2.5-7B as the backbone, generating approximately 64,000 search requests."
+  },
+  {
+   "claim": "Fine-tuned 7B simulator matches Google, 14B surpasses it (Qwen-2.5-3B-Base policy): SFT-7B 33.53, SFT-14B 34.47, Google 32.81.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 34.47,
+   "unit": "%",
+   "baseline_value": 32.81,
+   "n": null,
+   "setup": "Qwen-2.5-3B-Base policy, REINFORCE, avg EM over 7 datasets.",
+   "note": "Also: SFT-3B 30.47, Prompt-3B 29.44, Prompt-7B 31.39, Prompt-14B 31.50, Base Model (no RL) 8.82.",
+   "where": "Table 4",
+   "table": "Table 4, row SFT-14B, column Avg."
+  },
+  {
+   "claim": "Fine-tuned simulators beat prompt-only simulators of the same size (14B: 34.47 vs 31.50).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 setup.",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "the fine-tuned simulation engines significantly outperform prompt-based simulation engines."
+  },
+  {
+   "claim": "REINFORCE best of three RL algorithms: 34.47 vs GRPO 33.17 vs PPO 32.67 avg EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 34.47,
+   "unit": "%",
+   "baseline_value": 32.67,
+   "n": null,
+   "setup": "ZeroSearch, Qwen-2.5-3B-Base policy, 14B simulator (default), 7 datasets.",
+   "note": "REINFORCE row equals the Curriculum/SFT-14B row of Tables 4 and 6 (same run).",
+   "where": "Table 5, Sec 5.4",
+   "table": "Table 5, row REINFORCE, column Avg. (GRPO 33.17, PPO 32.67)"
+  },
+  {
+   "claim": "Curriculum rollout beats random (noise prob fixed 0.5): Qwen-2.5-3B-Base 34.47 vs 32.59; LLaMA-3.2-3B-Base 36.07 vs 34.84.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 34.47,
+   "unit": "%",
+   "baseline_value": 32.59,
+   "n": null,
+   "setup": "Policy models as stated; 7-dataset avg EM.",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Qwen-2.5-3B-Base Curriculum, column Avg."
+  },
+  {
+   "claim": "Document-token loss masking helps: 36.07 vs 34.53 avg EM without masking.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 36.07,
+   "unit": "%",
+   "baseline_value": 34.53,
+   "n": null,
+   "setup": "LLaMA-3.2-3B-Base policy.",
+   "note": null,
+   "where": "App C, Table 7",
+   "table": "Table 7, row w/ mask, column Avg."
+  },
+  {
+   "claim": "ZeroSearch training reward starts below Search-R1 but ends higher with less fluctuation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen-2.5-3B, Fig 2a-b.",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "ZEROSEARCH initially lags behind Search-R1 but eventually surpasses it with less fluctuation"
+  },
+  {
+   "claim": "Without RL, Qwen-2.5-3B-Base scores 8.82 avg EM with the simulator-test setup.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg EM",
+   "value": 8.82,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 Base Model row.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Base Model, column Avg."
+  }
+ ],
+ "limits": [
+  "Authors concede: deploying the simulator needs GPU servers, adding infrastructure cost (Sec 6, App D); simulator GPU utilisation is uneven (high in rollout, low in policy update).",
+  "Cost estimate: Table 8 gives A100 counts (1/2/4) but the experiments used H20 GPUs; GPU price per hour not stated; training time for Google row is listed as ~12 h.",
+  "Single runs, no seeds or variance; Bamboogle (125 questions) averages are noisy; differences of 1-2 EM points between ZeroSearch and Search-R1 are not tested for significance.",
+  "Search-R1 baseline was retrained with F1 reward rather than reported numbers; only Search-R1 compared among RL baselines.",
+  "Simulator is given the ground-truth answer in its prompt during training (leaks answer knowledge into simulated docs); at test time real search is used.",
+  "Simulator SFT data size, KL beta, optimizer, max turns, sequence length not stated.",
+  "RL algorithm comparison only on Qwen-2.5-3B-Base; masking ablation only on LLaMA-3.2-3B-Base; noise schedules ps/pe differ per model and tuning procedure not given."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "curriculum rollout",
+   "definition": "probability of generating noisy documents increases over training via p_i = ps + (b^(i/m)-1)/(b-1)(pe-ps)",
+   "where": "Sec 3.4, Eq 1"
+  },
+  {
+   "term": "useful / noisy documents",
+   "definition": "documents judged by an LLM to contain / not contain sufficient information to answer the query",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Search-R1",
+   "year": 2025,
+   "arxiv": "2503.09516",
+   "relation": "extends",
+   "note": "Template, data, EM metric, REINFORCE default and main baseline (real search)",
+   "quote": null
+  },
+  {
+   "work": "R1-Searcher",
+   "year": 2025,
+   "arxiv": "2503.05592",
+   "relation": "related",
+   "note": "two-stage outcome RL for search",
+   "quote": null
+  },
+  {
+   "work": "ReSearch",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Chen et al., RL reasoning with search",
+   "quote": null
+  },
+  {
+   "work": "DeepResearcher",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "live commercial search RL",
+   "quote": null
+  },
+  {
+   "work": "WebThinker",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Li et al.",
+   "quote": null
+  },
+  {
+   "work": "Search-o1",
+   "year": 2025,
+   "arxiv": "2501.05366",
+   "relation": "baseline",
+   "note": "Li et al. agentic search RAG",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "related",
+   "note": "RL reasoning motivation",
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "GRPO / DeepSeekMath",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "REINFORCE (Williams)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "default RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5 and LLaMA-3.2",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "evaluates",
+   "note": "policy and simulator backbones",
+   "quote": null
+  },
+  {
+   "work": "NQ, TriviaQA, PopQA, HotpotQA, 2WikiMultiHopQA, MuSiQue, Bamboogle",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "7 eval datasets; NQ+HotpotQA train",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Demonstration of PPO and GRPO training without the search engine.",
+   "page": 4,
+   "why": "Shows where the frozen simulation LLM sits in the rollout loop"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "(a-b) Reward curve comparison between ZEROSEARCH and Search-R1 using Qwen-2.5-3B. (c) Reward and interaction turns for LLaMA-3.2-3B-Base.",
+   "page": 8,
+   "why": "Training stability and curriculum effect"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Cost comparison between real search engine and our simulated search approach.",
+   "page": 14,
+   "why": "Concrete $ comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3.4",
+   "snippet": "p_i = p_s + (b^(i/m) - 1)/(b - 1) * (p_e - p_s)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Eq. 1 and the objective is garbled; reconstructed in code/training fields.",
+  "No embedded instructions found.",
+  "Table 8 says 'A100 GPUs' while the experiments section says H20 GPUs.",
+  "Figure 3 (appendix real-search comparison for LLaMA and Qwen-7B) has no readable data in text."
+ ]
+}

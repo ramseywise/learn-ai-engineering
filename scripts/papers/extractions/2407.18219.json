@@ -1,19 +1,269 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2407.18219",
  "pdf": "ai-engineering/04-loop-engineering/sources/qu-2024-recursive-introspection.pdf",
  "bib": {
   "title": "Recursive Introspection: Teaching Language Model Agents How to Self-Improve",
-  "first_author": "Yuxiao Qu",
-  "year": "2024",
-  "venue": null,
+  "authors": ["Yuxiao Qu", "Tianjun Zhang", "Naman Garg", "Aviral Kumar"],
+  "first_author": "Qu",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2407.18219",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 105995,
+  "chars_total": 105995,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only. Figure contents (Figs 4-10) not read, captions only."
  },
- "legacy_report": "SOURCE: \"Recursive Introspection: Teaching Language Model Agents How to Self-Improve\" (RISE), Yuxiao Qu, Tianjun Zhang, Naman Garg, Aviral Kumar (CMU, UC Berkeley, MultiOn). The PDF carries only \"arXiv:2407.18219v2 [cs.LG] 26 Jul 2024\", so I treat it as a preprint. It prints no venue.\n\nCOVERAGE: All 35 of 35 pages and 105,689 of 105,689 chars were read, including Appendices A-D, pseudocode and hyperparameters. The reference list was skimmed. Figures 1-9 are described only by their captions (no figure extraction run), and the chart values are not in the text.\n\nCLAIMS (ranked)\n1. RISE fine-tunes a single model to revise its own answers over up to 5 turns. Its 5-turn answer (maj@1) beats 5 parallel samples at turn 1 (maj@5) at equal sample count.\n - number: 4% to 8% on GSM8K, 6.5% on MATH (Mistral-7B)\n - setup: GSM8K and MATH, 7B models, no oracle. Majority vote over the candidates from turns 1..j.\n - quote: \"Comparing maj@5 performance at the end of 1 turn and 5 turns, we observe a consistent 4% to 8% improvement on GSM8K and an 6.5% improvement on MATH (with Mistral-7B model).\"\n - where: p11, 6.1.1\n2. 5-turn gains without an oracle (m1@t1 -> m1@t5), Table 1.\n - number: Llama2-7B on GSM8K goes 10.5 -> 11.1 base, then 32.9 -> 39.2 (+6.3) after Boost, 35.6 -> 50.7 (+15.1) at iteration 1 and 37.3 -> 55.0 (+17.7) at iteration 2. Mistral-7B goes 35.3 -> 59.2 (+23.9) on GSM8K and 6.7 -> 18.4 (+11.1) on MATH. Llama2 on MATH: +3.4 at iteration 1, +4.6 at iteration 2.\n - setup: Llama2-7B-chat and Mistral-7B-Instruct-v0.2. Supervision comes from GPT-3.5 samples (best of 5). Only 2 iterations. Eval temperature 1.0.\n - quote: \"RISE (“Iteration 1” and “Iteration 2”) boosts up the LLama2 base model’s five-turn performance by 15.1% and 17.7% respectively with each iteration on GSM8K and 3.4% and 4.6% on MATH, w/o any oracle.\"\n - where: p10, Table 1 and 6.1\n3. Prompted self-refine hurts without an oracle, even for GPT-3.5.\n - number: m1@t3 changes on GSM8K are GPT-3.5 -5.4, Mistral-7B -12.5, Eurus-7B-SFT -10.1. With an oracle (p1@t3) the changes are small: +5.2, +4.2, +6.5. Under RISE, GPT-3.5 itself improves only 4.6 over 5 turns.\n - setup: Self-Refine one-shot prompt (Fig 11), GSM8K, 3 turns\n - quote: \"Interestingly, we found using prompting-only self-refine [31] largely degrades performance across the board, even with a strong proprietary model, GPT-3.5.\"\n - where: p10; Table 6 p24 (GPT-3.5: 66.4, 61.0 (-5.4))\n4. Imitating the same expert data with single-turn SFT does not produce self-improvement.\n - number: Llama2 on GSM8K, SFT on correct oracle data: m1@t1 27.4 -> m1@t5 34.0 (+6.6). RISE iteration 1 is +15.1.\n - setup: same data RISE collects, trained with plain single-turn SFT\n - quote: \"this procedure does not still instill self-improvement capabilities, largely preserving or degrading sequential (“maj@1@turn5”) performance compared to simply sampling one response in the first turn.\"\n - where: p11\n5. Self-distillation (no teacher, best-of-N with N=16 from the learner) gives smaller gains, and only one iteration was run.\n - number: GSM8K, Llama-3-8B 45.3 -> 52.5 (+7.2) base. After iteration 1: 65.6 -> 73.8 (+8.2). Mistral-7B after iteration 1: 36.8 -> 39.5 (+6.6). Text: \"by more than 1%\" over turn 1.\n - setup: Table 2, no knowledge-boost phase\n - quote: \"RISE does not outperform the “m5@t1” performance of the fine-tuned model.\"\n - where: p11-12. The authors expect it needs more iterations or online RL.\n6. Sequential sampling with an oracle checker beats pass@k at turn 1.\n - number: Fig 8 right (no values in the text); Fig 6 shows 5-turn RISE solving problems that pass@B fails for B=5×k.\n - setup: GSM8K, early termination on a correct answer\n - quote: \"RISE is able to improve performance more beyond simply sampling more samples at the first turn and computing pass@K, despite this strong assumption of access to an oracle final answer verifier made by the parallel sampling approach.\"\n - where: p14\n7. Error analysis without an oracle: correct-to-incorrect flips fall over turns, unlike the GPT results in Huang et al. [21].\n - number: Fig 10. Default RISE flips fall from 12.3% to 3.9% across turns; the \"different correct response\" variant falls from 9.8% to 3.3%.\n - setup: Llama2 iteration 1, GSM8K\n - quote: \"Both Default RISE and appending a different correct response demonstrate a favorable trend, steadily decreasing from 12.3% to 3.9% and from 9.8% to 3.3%, respectively\"\n - where: p22 (Fig 9, p15)\n8. Out-of-distribution transfer (Table 3).\n - number: Llama2 base on GSM8K: m1@t1 10.5, m1@t5 11.1. A RISE iteration-1 model trained on MATH reaches 19.3 -> 32.6 (+13.3) on GSM8K. On SVAMP, the model trained on GSM8K goes 42.2 -> 50.0 (+7.8). The model trained on GSM8K and tested on MATH is flat: 4.3 -> 4.4 (+0.1).\n - quote: \"RISE Model trained on MATH 19.3 32.6 (+13.3) 48.4 (+29.1)\"\n - where: p13\n9. Data-composition ablations (Fig 7, 8; Table 4).\n - Multi-turn history with failed attempts beats 1-turn oracle data.\n - Reward-weighted (advantage-centred) training beats filtering to successes only.\n - On-policy, DAgger-style data beats expert-only data.\n - Appending a different correct response after a success gives m1@t5 51.1 (+18.0) vs default 50.7 (+15.1).\n - Repeating the same correct response gives 46.2, which the authors attribute to spurious correlations from duplication.\n - quote: \"We find that using all the data leads to improved performance over simply filtering good data\" (p14); \"repeating a correct response at the end of a successful rollout largely reduces performance.\" (p22)\n10. Weak-to-strong (Table 5, GSM8K).\n - number: Mistral-7B trained on Llama2-7B rollouts reaches m1@t5 62.7 (+24.5), vs 59.2 (+23.9) on its own rollouts. The reverse is worse: Llama2 trained on Mistral rollouts gets 45.2 (+18.1) vs 50.7 (+15.1) on its own, with a lower m1@t1 (27.1 vs 35.6).\n - quote: \"training the Llama2 model on Mistral’s mistakes leads to worse performance, likely because errors from the Mistral-7B model are harder to comprehend for a worse base model.\"\n - where: p23. Caveat: m1@t1 differs between the rows.\n11. Comparison with GLoRE (separate models): its 2-turn gain is 3.4% (+SORM, 48.2 -> 51.6), against RISE's 6.3% in two turns. RISE gains 13.4% in 3 turns without an oracle and 23.4% with one (GSM8K, Llama2). GLoRE numbers are taken from its paper, so the comparison is apples-to-oranges.\n - quote: \"RISE demonstrates its effectiveness in self-improvement by sequentially enhancing its performance by an impressive 13.4% within just 3 turns without an oracle feedback\"\n - where: p26\n12. Capacity argument: fitting a sequence of answers gives lower NLL than fitting only the oracle answer. The authors compare this to diffusion vs VAE. This is a hypothesis backed by training-loss curves (256 prompts, 95% CI) in Fig 4-5, with no numbers in the text.\n - where: p7-8\n13. Mechanism details.\n - Reward is a sparse binary answer-match.\n - Retry prompt: \"The answer is incorrect. Please try again. Here’s the question:<Query>\" (Fig 15).\n - Inference has two modes. \"With oracle\" stops when correct (p1@t5). \"Without oracle\" runs 5 forced turns and takes a majority vote over all turns so far (m1@t5).\n - Train a \"knowledge boosting\" SFT stage first.\n - Each iteration restarts from the base model and trains on data from all iterations so far.\n - The context window keeps only the last k turns at iteration k.\n - quote: \"starting from the base model but training on data from all iterations thus far is more beneficial than continued fine-tuning from the checkpoint obtained in the previous iteration.\"\n - where: p6-7\n\nLIMITS\n- Authors concede (p16):\n - \"we were not able to perform more than two iterations of training with RISE, and no more than one iteration when the supervision comes from the learner itself.\"\n - Manual iterations are needed, and a more online variant is the likely fix.\n - Fine-tuning is one task at a time.\n- Scope: only math (GSM8K, MATH, SVAMP), 7-8B models, a binary answer checker, and training on GSM8K/MATH train splits. No agent or tool tasks, despite the title.\n- Weaker or flat cases:\n - Self-distillation does not beat m5@t1.\n - Base Llama2 MATH is tiny (1.9% at turn 1).\n - GSM8K-trained to MATH transfer is about +0.1.\n- Not for knowledge-based QA: the authors expect RISE to only encourage hallucination there (p8).\n- Supervision comes from GPT-3.5 (best of 5) in the main results, so these are mostly distillation gains, not pure self-improvement. The Self-Refine, GLoRE and V-STaR baselines differ in base model and setup.\n- A paper claim (\"RISE... attaining an improvement over turns that previous work [21] has not observed in strong proprietary models\") is relative to 2023-24 models. Prompted self-correction results are from GPT-3.5 and Llama2 and have dated.\n- The Table 6 V-STaR comparison (44.5 vs 35.2 points) mixes iteration counts and sample budgets.\n\nBUILDS ON: Online imitation learning / DAgger (Ross et al. [36]); reward-weighted and advantage-weighted regression (Peters and Schaal [35], Peng et al. [34]); STaR (Zelikman et al. 2022); Self-Refine (Madaan et al. [31]); Huang et al. 2023, \"LLMs cannot self-correct reasoning yet\" [21]; GLoRE (Havrilla et al. 2024); self-consistency (Wang et al. [51]); V-STaR (Hosseini et al. 2024); Kang et al. 2024 on unfamiliar fine-tuning examples [24]; weak-to-strong generalization (Burns et al. 2023). Reference numbers are as printed. Author names in brackets were not verified against the list except where shown in the read text.\n\nCODE: None. Algorithm 1 (data collection) and Algorithm 2 (inference with a k-turn sliding window then majority vote) are pseudocode on p31.\n - Eq 4.6: max_θ E[ Σ_t log π_θ(ỹ_t|s_t) · exp(r_t/τ) ], with rewards centred per prompt as advantages (p6).\n - Table 7 hyperparameters (p32): 2 epochs, lr 1e-5, cosine schedule, warmup 0.04, 4xA40, batch 1 per device, grad accumulation 16, max length 2048.\n - Table 8 (p32): temperature 1.0 and max_new_tokens 1000 for open models; 0.7 and 512 for GPT.\n - Dataset sizes (p32-33): GSM8K train 7,473 / test 1,319; MATH 7,500 / 1,000; SVAMP 1,000 eval only.\n\nFIGURES (captions only)\n- Fig 1 (p2): RISE overview, iterative on-policy training plus majority vote at inference.\n- Fig 2 (p4): single-turn problem converted to a multi-turn MDP, and data collection by distillation or self-distillation. It is the quickest explanation of the method.\n- Fig 3 (p7): inference with oracle (early stop) vs without oracle (majority vote).\n- Fig 6 (p9): fraction of problems that pass@B fails but 5-turn RISE solves.\n- Fig 7-8 (p13-14): ablations, and sequential p1@turn k vs parallel pass@k.\n- Fig 9 (p15): correct/incorrect transition Venn diagrams over turns.\n- Fig 12-14 (p28-30): qualitative cases of small edits, big edits, noise tolerance and error localization.\n\nPROBLEMS\n- My first extraction wrote to a fixed shared scratch file, /tmp/papers-t3/loop-2/t.txt. That file was overwritten by another session with an unrelated paper (AlphaEvolve, arXiv:2511.02864). I discarded it. The RISE text used here is in /tmp/papers-t3/loop-2/rise/rise.txt, extracted from the correct PDF (35 pages). Treat anything else in /tmp/papers-t3/loop-2/ as another session's.\n- Extraction has dropped spaces in places (for example \"Acentralpieceinenabling\"), and the Table 1 columns are flattened but legible.\n- No embedded instructions were found in the PDF.\n- The word-level text \"NeurIPS\" does not appear, so I cannot confirm a venue from the PDF."
+ "type": "empirical",
+ "question": "Can a language model be fine-tuned so that it improves its own answer over sequential turns on a hard prompt, which prompted self-correction does not achieve in off-the-shelf models?",
+ "hypothesis": "Fine-tuning on on-policy multi-turn rollouts, with improved responses supplied by best-of-N and a reward-weighted objective, instils a self-improvement capability that prompting alone cannot, because a sequence of conditionals can represent the target distribution with more flexibility than a single-turn model.",
+ "contributions": [
+  "RISE: an iterative fine-tuning procedure that casts a single-turn prompt as a multi-turn MDP and trains on on-policy rollouts with improved next-turn responses.",
+  "Two supervision variants: distillation (responses from a more capable model, GPT-3.5) and self-distillation (best of N samples from the learner).",
+  "Reward-weighted (advantage-centred) regression objective that uses both successful and unsuccessful rollouts.",
+  "Two inference modes: with oracle (stop at first correct answer) and without oracle (majority vote over turns)."
+ ],
+ "method": {
+  "summary": "Each training problem is turned into a multi-turn MDP in which the model's answer is followed by a fixed 'the answer is incorrect, try again' message. The current model is rolled out up to i turns at iteration i, and the response at the next turn is replaced by the best of 5 GPT-3.5 samples (distillation) or best of N=16 learner samples (self-distillation), chosen by answer correctness. The model is fine-tuned from the base on all data so far with a reward-weighted loss, after an initial 'knowledge boosting' SFT stage.",
+  "task": "math reasoning with sequential self-correction (GSM8K, MATH; SVAMP out-of-distribution)",
+  "trains": true,
+  "datasets": [
+   {"name": "GSM8K", "role": "both", "size": "7,473 train, 1,319 test problems", "split": "train portion used to generate trajectories each iteration; test held out", "source": "Cobbe et al. 2021", "preprocessing": null},
+   {"name": "MATH", "role": "both", "size": "7,500 train, 1,000 test problems", "split": "train portion used to generate trajectories; test held out", "source": "Hendrycks et al. 2021", "preprocessing": null},
+   {"name": "SVAMP", "role": "eval", "size": "1,000 problems", "split": "evaluation only", "source": null, "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Llama-2-7b-chat-hf", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": "Hugging Face meta-llama/Llama-2-7b-chat-hf", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "model max length 2048 during fine-tuning", "other": {}},
+   {"name": "Mistral-7B-Instruct-v0.2", "role": "base", "params": "7B", "architecture": "decoder-only transformer", "init_from": "Hugging Face", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "model max length 2048 during fine-tuning", "other": {}},
+   {"name": "Llama-3-8B", "role": "base", "params": "8B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "used only in the self-distillation experiment, Table 2; exact checkpoint not stated"}},
+   {"name": "GPT-3.5", "role": "teacher", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "expert sampling 5 responses per state (best by reward); also an evaluated Self-Refine baseline"}},
+   {"name": "Eurus-7B-SFT", "role": "baseline", "params": "7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "reward-weighted regression, max over theta of E sum_t log pi_theta(y_t|s_t) * exp(r_t/tau), modified to centre the exponentiated rewards around the per-prompt mean (advantage-weighted)",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": "cosine",
+   "warmup": "warmup ratio 0.04",
+   "batch_size": "per device 1, gradient accumulation 16, 4 GPUs (inferred: effective 64)",
+   "steps": null,
+   "epochs": "2",
+   "tokens": null,
+   "seq_len": "model max length 2048",
+   "precision": "bf16 True, tf32 True",
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4xA40",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "FastChat codebase with the loss customised to be weighted by reward",
+    "tau": "value of tau in Eq. 4.6 not stated",
+    "iterations_run": "Llama2-7B: knowledge-boost stage then Iteration 1 and Iteration 2 (GSM8K and MATH); Mistral-7B: Iteration 1 only; self-distillation (Llama-3-8B, Mistral-7B): one iteration only; authors say compute prevented more",
+    "iteration_init": "each iteration starts from the base model and trains on data from all iterations so far, not continued from the previous checkpoint",
+    "knowledge_boosting": "initial SFT on in-domain multi-turn rollouts generated from a capable model, before on-policy collection; size not stated",
+    "data_per_iteration": "1 trajectory per unique problem; at iteration i the current model is rolled out for at most i steps",
+    "supervision_distillation": "GPT-3.5 given the conversation history, 5 responses sampled, the highest reward kept, ties broken arbitrarily",
+    "supervision_self_distillation": "N=16 samples from the learner, best by reward"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; Algorithm 2 writes arg max",
+   "temperature": "1.0 open-source models; 0.7 GPT models",
+   "top_p": "1.0 open-source; 1 GPT",
+   "max_tokens": "1000 max_new_tokens open-source; 512 GPT",
+   "samples": "5 turns; without oracle the answer at turn j is the majority vote over turns 1..j (maj@1 at turn 5 is 5 sequential samples); m5@t1 = majority of 5 parallel first-turn samples; number of runs or seeds not stated",
+   "prompting": "System prompt for step-by-step math with \\boxed{} answer, one-shot example, then user turn 'The answer is incorrect. Please try again. Here's the question: <Query>' for each retry. Self-refine baseline uses a critique-then-rewrite one-shot prompt.",
+   "retrieval": null,
+   "parameters": {
+    "turns": "5 for RISE evaluation; 3 for Self-Refine",
+    "history_window": "if turn j exceeds iteration k, only the most recent k interactions are kept to avoid test-time distribution shift",
+    "no_oracle_feedback": "a fixed retry message that always says the answer is incorrect, regardless of correctness",
+    "with_oracle": "rollout stops as soon as the answer checker says correct"
+   },
+   "other": {"serving": "FastChat web API; one A100 or A40 per 7B model; GPT via OpenAI API"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "m1@t1", "definition": "maj@1, i.e. a single sample, at turn 1", "unit": "% accuracy", "higher_is_better": true},
+    {"name": "m5@t1", "definition": "majority vote over 5 parallel samples at turn 1", "unit": "% accuracy", "higher_is_better": true},
+    {"name": "m1@t5 (without oracle)", "definition": "run all five turns, majority vote over the candidates from turns 1..5", "unit": "% accuracy", "higher_is_better": true},
+    {"name": "p1@t5 (with oracle)", "definition": "pass@1 at turn 5, stopping when the response is correct, so the verifier is queried after each turn", "unit": "% accuracy", "higher_is_better": true}
+   ],
+   "baselines": ["Self-Refine prompting (Llama2 variants, GPT-3.5, Mistral-7B, Eurus-7B-SFT)", "GLoRE (numbers copied from its paper, no code)", "V-STaR (Appendix B, numbers from its paper)", "single-turn SFT on the same oracle data (correct only; correct and incorrect)", "Eurus-7B-SFT", "GPT-3.5", "parallel pass@K / maj@K at turn 1"],
+   "protocol": "Parenthesised deltas in Tables 1, 2, 3, 5, 6 are relative to m1@t1 (Table 5 caption). No seeds, error bars or significance tests reported for accuracies. Authors say comparisons to GLoRE, Eurus and V-STaR are not apples-to-apples."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "RISE data generation and evaluation (GSM8K, MATH)", "text": "System: You are an AI language model designed to assist with math problem-solving. In this task, I will provide you with math problems. Your goal is to solve the problem step-by-step, showing your reasoning at each step. After you have finished solving the problem, present your final answer as \\boxed{Your Answer}. <One-shot Example 16> User: <Query> Agent: <Answer> User: The answer is incorrect. Please try again. Here's the question: <Query> Agent: <Answer> ...", "where": "Appendix D.4, Figure 15"},
+   {"purpose": "Self-Refine baseline", "text": "User: There is an error in the solution above because of lack of understanding of the question. What is the error? To find the error, go through each step of the solution, and check if everything looks good. Agent: <Critic> User: Now, rewrite the solution in the required format: Agent: <Refined Answer>", "where": "Appendix B.1, Figure 11"}
+  ],
+  "evidence": [
+   {"field": "training.hardware", "quote": "gpus 4xA40", "where": "Table 7"},
+   {"field": "iterations_run", "quote": "Due to computational constraints, we were not able to perform more than two iterations of training with RISE, and no more than one iteration when the supervision comes from the learner itself.", "where": "Section 7"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Llama2-7B trained with RISE (supervision from GPT-3.5 best-of-5), without oracle, gains 15.1 points at 5 turns after Iteration 1 and 17.7 after Iteration 2 on GSM8K, measured against its own turn-1 m1@t1.",
+   "kind": "measured", "source": null, "metric": "m1@t5 gain over m1@t1", "value": "17.7", "unit": "points", "baseline_value": "37.3 (m1@t1 at Iteration 2); base Llama2 11.1 at m1@t5",
+   "n": "1,319 GSM8K test problems",
+   "setup": "GSM8K test, Llama2-7B-chat, RISE Iteration 2, no oracle, m1@t5 = majority vote over the 5 turns' candidates, temperature 1.0. Iteration 1: 35.6 to 50.7 (+15.1). Iteration 2: 37.3 to 55.0 (+17.7).",
+   "quote": "RISE (“Iteration 1” and “Iteration 2”) boosts up the LLama2 base model’s five-turn performance by 15.1% and 17.7% respectively with each iteration on GSM8K and 3.4% and 4.6% on MATH, w/o any oracle.",
+   "table": null,
+   "note": "The Table 1 caption says the biggest gain is between m5@t1 and m1@t5, but the 15.1 and 17.7 deltas are relative to m1@t1. Against m5@t1 (49.7 and 51.0) the 5-turn gains are only +1.0 and +4.0.",
+   "where": "Section 6.1, Table 1"
+  },
+  {
+   "claim": "With the oracle, Llama2-7B RISE reaches 63.9 (Iteration 1) and 68.4 (Iteration 2) pass@1 at turn 5 on GSM8K.",
+   "kind": "measured", "source": null, "metric": "p1@t5", "value": "68.4", "unit": "% accuracy", "baseline_value": "13.9 (Llama2 base p1@t5)", "n": "1,319",
+   "setup": "GSM8K test, Llama2-7B, RISE Iteration 2, rollout stops once the answer checker says correct (verifier queried after every turn).",
+   "quote": null, "table": "Table 1, row +Iteration 2 (Llama2), column p1@t5: 68.4 (+31.1); Iteration 1: 63.9 (+28.3)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "GPT-3.5 with prompted Self-Refine on GSM8K: m1@t1 66.4; at turn 3 without oracle 61.0 (-5.4), with oracle 71.6 (+5.2). The paper reports only turn 1, turn 3 and (as a baseline row) turn 5 for GPT-3.5.",
+   "kind": "measured", "source": null, "metric": "m1@t3 change (self-refine, no oracle)", "value": "-5.4", "unit": "points", "baseline_value": "66.4 (m1@t1)", "n": "1,319",
+   "setup": "GSM8K, GPT-3.5, one-shot Self-Refine critique-then-rewrite prompt (Fig 11), 3 turns, temperature 0.7. Columns: m1@t1 66.4, m5@t1 80.2 (+13.8), m1@t3 61.0 (-5.4) without oracle, p1@t3 71.6 (+5.2) with oracle. On MATH: 39.7, 46.5, 36.5 (-3.2), 46.7 (+7.0).",
+   "quote": "Interestingly, we found using prompting-only self-refine [31] largely degrades performance across the board, even with a strong proprietary model, GPT-3.5.",
+   "table": "Table 6, Self-Refine block, row GPT-3.5, columns m1@t1, m5@t1, m1@t3, p1@t3: 66.4, 80.2 (+13.8), 61.0 (-5.4), 71.6 (+5.2)",
+   "note": "There are no per-turn values for turns 2 and 4 for GPT-3.5. The p1@t3 figure (71.6) is a pass@1 with early termination on the oracle, not a self-contained improvement.",
+   "where": "Table 1 and Table 6 (Appendix B.1), p10 and p24"
+  },
+  {
+   "claim": "GPT-3.5 with the plain retry prompt (the 'Baselines' row, not Self-Refine) improves only 4.6 points over five turns without oracle on GSM8K, 8.3 with oracle.",
+   "kind": "measured", "source": null, "metric": "m1@t5 gain over m1@t1", "value": "4.6", "unit": "points", "baseline_value": "66.4 (m1@t1); m1@t5 = 71.0; p1@t5 = 74.7 (+8.3)", "n": "1,319",
+   "setup": "GSM8K, GPT-3.5, 5 turns, retry message prompt, temperature 0.7, majority vote over turns.",
+   "quote": "In contrast, GPT-3.5 itself only improves by 4.6% over five turns.",
+   "table": "Table 6, Baselines row GPT-3.5, columns m1@t5, p1@t5: 71.0 (+4.6), 74.7 (+8.3)",
+   "note": "Its m5@t1 (80.6) is far higher than m1@t5 (71.0), so five turns of GPT-3.5 are worse than five parallel samples with a vote.",
+   "where": "Section 1; Table 6"
+  },
+  {
+   "claim": "Mistral-7B with RISE (Iteration 1) gains 23.9 points at 5 turns on GSM8K and 11.1 on MATH without oracle; Mistral-7B-Instruct alone gains 5.3 and 0.9.",
+   "kind": "measured", "source": null, "metric": "m1@t5 gain over m1@t1", "value": "23.9", "unit": "points", "baseline_value": "35.3 (m1@t1 after Iteration 1)", "n": "1,319 / 1,000",
+   "setup": "GSM8K 35.3 to 59.2; MATH 6.7 to 18.4; no oracle; GPT-3.5 supervision; one iteration.",
+   "quote": null, "table": "Table 1, row + Iteration 1 (Mistral-7B), column m1@t5: GSM8K 59.2 (+23.9), MATH 18.4 (+11.1)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Mistral-7B + RISE m1@t5 exceeds Eurus-7B-SFT on GSM8K.",
+   "kind": "measured", "source": null, "metric": "m1@t5", "value": "59.2", "unit": "% accuracy", "baseline_value": "47.9 (Eurus-7B-SFT m1@t5)", "n": "1,319",
+   "setup": "GSM8K, no oracle. Eurus has higher m1@t1 (36.3) and m5@t1 (66.3) than RISE Mistral (35.3, 50.6).",
+   "quote": null, "table": "Table 1, row 7B SoTA Eurus-7B-SFT, column m1@t5: 47.9 (+11.6)", "note": null, "where": "Table 1, Section 6.1.2"
+  },
+  {
+   "claim": "Self-distillation RISE (supervision from the learner, N=16, one iteration, no boost stage) improves 5-turn maj@1 over turn 1 for Llama-3-8B and Mistral-7B but does not beat m5@t1.",
+   "kind": "measured", "source": null, "metric": "m1@t5 gain over m1@t1", "value": "8.2", "unit": "points", "baseline_value": "65.6 (m1@t1 after Iteration 1)", "n": "1,319",
+   "setup": "GSM8K, Llama-3-8B: 65.6 to 73.8 (+8.2), m5@t1 80.7; Mistral-7B: 36.8 to 39.5 (+6.6), m5@t1 44.4. Both no oracle.",
+   "quote": "RISE improves the performance of LLaMa3-8B by 8.2% and Mistral-7B by 6.6%, entirely using their own data.",
+   "table": "Table 2, rows + Iteration 1, column m1@t5", "note": null, "where": "Section 1, 6.1.3, Table 2"
+  },
+  {
+   "claim": "Sequential 5-turn RISE (no oracle) beats 5 parallel first-turn samples with a vote, but by less than the quoted range for some cells.",
+   "kind": "measured", "source": null, "metric": "m1@t5 minus m5@t1", "value": "4% to 8%", "unit": "points", "baseline_value": null, "n": null,
+   "setup": "GSM8K (and MATH with Mistral-7B), equal sample count of 5.",
+   "quote": "Comparing maj@5 performance at the end of 1 turn and 5 turns, we observe a consistent 4% to 8% improvement on GSM8K and an 6.5% improvement on MATH (with Mistral-7B model).",
+   "table": null,
+   "note": "Table 1 gives Llama2 Iteration 1 as 50.7 vs 49.7 (+1.0), Iteration 2 as 55.0 vs 51.0 (+4.0), Mistral as 59.2 vs 50.6 (+8.6), and Mistral MATH as 18.4 vs 9.5 (+8.9, not 6.5), so the quoted range does not match every cell.",
+   "where": "Section 6.1.1"
+  },
+  {
+   "claim": "Single-turn SFT on the same GPT-3.5 oracle data does not instil self-improvement.",
+   "kind": "measured", "source": null, "metric": "m1@t5 vs m1@t1", "value": "34.0", "unit": "% accuracy", "baseline_value": "27.4 (m1@t1)", "n": "1,319",
+   "setup": "GSM8K, Llama2-7B, SFT on only correct oracle data: 27.4 to 34.0 (+6.6), m5@t1 42.2; SFT on correct and incorrect: 25.7 to 31.2. Both below RISE Iteration 1 (50.7).",
+   "quote": "This means that the algorithmic design of RISE is critical in enabling it to learn self-improvement capabilities, as opposed to simply the use of expert supervision.",
+   "table": "Table 1, rows SFT on oracle data, Only correct data: 27.4, 42.2 (+14.9), 34.0 (+6.6), 43.6 (+16.2)", "note": null, "where": "Section 6.1, Table 1"
+  },
+  {
+   "claim": "Out-of-distribution: RISE trained on MATH raises GSM8K m1@t5 to 32.6 (base 11.1); RISE trained on GSM8K reaches SVAMP m1@t5 50.0 (base 30.5), but MATH only 4.4 from GSM8K training.",
+   "kind": "measured", "source": null, "metric": "m1@t5", "value": "32.6", "unit": "% accuracy", "baseline_value": "11.1", "n": "1,319",
+   "setup": "Llama2-7B, Iteration 1, no oracle, GSM8K test after MATH training.",
+   "quote": null, "table": "Table 3, row Iteration 1 RISE Model trained on MATH (GSM8K), column m1@t5: 32.6 (+13.3)", "note": "MATH-from-GSM8K gain is only +0.1 without oracle (4.3 to 4.4).", "where": "Section 6.3, Table 3"
+  },
+  {
+   "claim": "Weak-to-strong: Mistral-7B trained on rollouts from Llama2-7B reaches 62.7 m1@t5, above the 59.2 from its own rollouts; the reverse hurts Llama2 (45.2 vs 50.7).",
+   "kind": "measured", "source": null, "metric": "m1@t5", "value": "62.7", "unit": "% accuracy", "baseline_value": "59.2", "n": "1,319",
+   "setup": "GSM8K, Iteration 1, no oracle.",
+   "quote": null, "table": "Table 5, row + Iteration 1 (Llama2-7B) under Mistral-7B, column m1@t5: 62.7 (+24.5)", "note": null, "where": "Appendix A.2, Table 5"
+  },
+  {
+   "claim": "Appending a novel correct response after successful rollouts gives the best Llama2 result; repeating the same correct response hurts.",
+   "kind": "measured", "source": null, "metric": "m1@t5", "value": "51.1", "unit": "% accuracy", "baseline_value": "50.7 (default RISE)", "n": "1,319",
+   "setup": "GSM8K, Llama2-7B Iteration 1 data modified. Repeating a correct response: 46.2.",
+   "quote": null, "table": "Table 4, row +Appending a different correct response, column m1@t5: 51.1 (+18.0)", "note": null, "where": "Appendix A.1, Table 4"
+  },
+  {
+   "claim": "Without oracle, Self-Refine prompting degrades Llama2 RISE models and open models at turn 3, e.g. Mistral-7B -12.5 and Eurus-7B-SFT -10.1 on GSM8K.",
+   "kind": "measured", "source": null, "metric": "m1@t3 change", "value": "-12.5", "unit": "points", "baseline_value": "33.7", "n": "1,319",
+   "setup": "GSM8K, Self-Refine prompt, 3 turns; Mistral-7B 33.7 to 21.2; Llama2 RISE Iteration 2 37.3 to 33.3 (-4.0).",
+   "quote": "However, our experiments show that without any oracle hint from the environment or human feedback, the self-refine approach leads to a degradation in performance across all models.",
+   "table": null, "note": null, "where": "Appendix B.1, Table 6"
+  },
+  {
+   "claim": "RISE (3-turn) gains 13.4 points without oracle against GLoRE's 3.4 over two turns.",
+   "kind": "reported", "source": "GLoRE (Havrilla et al. 2024), numbers copied from its paper", "metric": "gain", "value": "13.4", "unit": "points", "baseline_value": "3.4 (GLoRE +SORM)", "n": null,
+   "setup": "GSM8K; different base model, data and eval from RISE; no code available for GLoRE.",
+   "quote": "RISE’s capabilities is particularly noteworthy considering that GLoRE utilizes 3 independent models",
+   "table": null, "note": "The passage reads 'sequentially enhancing its performance by an impressive 13.4% within just 3 turns without an oracle feedback, and by a remarkable 23.4% with an oracle'.", "where": "Appendix B.1"
+  },
+  {
+   "claim": "RISE handles noisy feedback: with a verifier that always says the answer is wrong, the model still outputs correct answers in 3 of 4 later turns on one example.",
+   "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "One GSM8K example, Figure 13.",
+   "quote": null, "table": null, "note": null, "where": "Appendix B.2"
+  }
+ ],
+ "limits": [
+  "Authors: compute allowed no more than two RISE iterations, and only one when supervision comes from the learner itself; self-distilled RISE does not beat m5@t1.",
+  "Authors: RISE needs manual iterations; a fully online RL variant is suggested as future work.",
+  "Authors: fine-tunes one task at a time; mixing into general instruction tuning is untested.",
+  "Math reasoning only (GSM8K, MATH, SVAMP). Authors expect it would only incentivise hallucination on knowledge-based QA.",
+  "Comparisons with GLoRE, Eurus-7B-SFT and V-STaR differ in base model, data and eval setup; GLoRE and V-STaR numbers are copied from their papers.",
+  "No seeds, repeats or confidence intervals reported for accuracy; temperature 1.0 sampling.",
+  "The no-oracle protocol gives the model a message that always says 'incorrect'; the 'oracle' mode is not realistic where no checker exists, and the oracle supplies the stopping signal.",
+  "The knowledge-boost data size, tau, optimizer and total tokens are not stated; code and weights are not mentioned.",
+  "Internal inconsistency: Section 6.1.1 text says 4% to 8% and 6.5% on MATH but Table 1 cells give other values; Appendix B.1 says '3 iterations' for the V-STaR comparison while main text reports two RISE iterations after boosting."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "with oracle (p1@tk)", "definition": "the rollout terminates as soon as the response is correct, which queries the answer checker after each turn", "where": "Section 4.3, 6"},
+  {"term": "without oracle (m1@tk)", "definition": "full-length rollouts forcing retry, with a majority vote over all response candidates from turns 1..j", "where": "Section 4.3, 6"},
+  {"term": "knowledge boosting", "definition": "an initial phase of supervised fine-tuning on in-domain multi-turn rollouts from a capable model to give style and instruction-following information", "where": "Section 4.4"}
+ ],
+ "lineage": [
+  {"work": "Large language models cannot self-correct reasoning yet (Huang et al.)", "year": 2023, "arxiv": "2310.01798", "relation": "extends", "note": "RISE shows intrinsic self-improvement can be induced by fine-tuning; follows its error-analysis protocol", "quote": null},
+  {"work": "Self-Refine (Madaan et al.)", "year": 2023, "arxiv": "2303.17651", "relation": "baseline", "note": "prompted refinement baseline", "quote": null},
+  {"work": "GLoRE (Havrilla et al.)", "year": 2024, "arxiv": "2402.10963", "relation": "baseline", "note": "multi-model refinement; numbers from its paper", "quote": null},
+  {"work": "V-STaR (Hosseini et al.)", "year": 2024, "arxiv": "2402.06457", "relation": "baseline", "note": "verifier reranking baseline, Appendix B", "quote": null},
+  {"work": "Self-consistency (Wang et al.)", "year": 2022, "arxiv": "2203.11171", "relation": "uses-method", "note": "majority voting used for no-oracle answers", "quote": null},
+  {"work": "Advantage-weighted regression (Peng et al.)", "year": 2019, "arxiv": "1910.00177", "relation": "uses-method", "note": "centred reward weighting", "quote": null},
+  {"work": "Reward-weighted regression (Peters and Schaal)", "year": 2007, "arxiv": null, "relation": "uses-method", "note": "training objective", "quote": null},
+  {"work": "DAgger (Ross et al.)", "year": 2011, "arxiv": null, "relation": "uses-method", "note": "online imitation learning inspiration for on-policy rollouts", "quote": null},
+  {"work": "Self-Correct (Welleck et al.)", "year": 2023, "arxiv": null, "relation": "related", "note": "trains a separate corrector; at most two turns", "quote": null},
+  {"work": "Eurus (Yuan et al.)", "year": 2024, "arxiv": "2404.02078", "relation": "baseline", "note": "Eurus-7B-SFT, strong math 7B", "quote": null},
+  {"work": "STaR (Zelikman et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "iterative self-training", "quote": null},
+  {"work": "GSM8K (Cobbe et al.)", "year": 2021, "arxiv": "2110.14168", "relation": "uses-data", "note": "train and eval", "quote": null},
+  {"work": "MATH (Hendrycks et al.)", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "train and eval", "quote": null},
+  {"work": "Mistral 7B (Jiang et al.)", "year": 2023, "arxiv": "2310.06825", "relation": "evaluates", "note": "base model", "quote": null},
+  {"work": "Weak-to-strong generalization (Burns et al.)", "year": 2023, "arxiv": "2312.09390", "relation": "related", "note": "framing for Appendix A.2", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Recursive Introspection (RISE). Using iterative multi-round training on on-policy rollouts and supervision from a reward function, RISE trains models that are capable of improving themselves over multiple turns.", "page": 2, "why": "shows the whole training and majority-vote inference loop at a glance"},
+  {"figure": "Fig 3", "caption": "RISE Inference. There are two ways to query the model trained via RISE upon inference: with oracle or without oracle.", "page": 7, "why": "separates the two inference modes, the key to reading every table"},
+  {"figure": "Table 1", "caption": "RISE vs. other approaches (Self-Refine, GLoRE) and baselines.", "page": 10, "why": "main results with and without oracle"},
+  {"figure": "Fig 8", "caption": "Left: importance of data sources. Right: RISE with oracle error feedback to parallel sampling of 5 responses at turn 1.", "page": 14, "why": "shows sequential beats pass@k"}
+ ],
+ "code": [
+  {"where": "Eq 4.6", "snippet": "max_theta E[ sum_t log pi_theta(y_t | s_t) * exp(r_t / tau) ]", "verbatim": false}
+ ],
+ "problems": [
+  "Equations are garbled in the text layer; Eq 4.6 re-typed in a simplified form.",
+  "No embedded instructions found."
+ ]
 }

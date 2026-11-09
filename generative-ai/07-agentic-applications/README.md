@@ -1,7 +1,7 @@
 # 07 — Agentic Applications
 
 > Interview recall: the checklists in these notes. Role map: [interviewing](../../practice/interviewing/README.md).
-> Position in the path: the last of the build pillars in generative-ai, the payoff; the [Eval pillar](../08-eval/README.md) measures what it ships. It holds end-to-end applications built with the frameworks and patterns from [03-agentic-foundations](../03-agentic-foundations/README.md) and [04-agentic-frameworks](../04-agentic-frameworks/README.md).
+> Position in the path: the last of the build pillars in generative-ai, the payoff. Read it after [06 Observability](../06-observability/README.md) and [08 Eval](../08-eval/README.md): 08-eval measures what these applications ship. It holds end-to-end applications built with the frameworks and patterns from [03-agentic-foundations](../03-agentic-foundations/README.md) and [04-agentic-frameworks](../04-agentic-frameworks/README.md).
 
 ---
 
@@ -31,14 +31,14 @@ Start with an agent whose cost is bounded because the graph is fixed. Open the l
 | # | Note | Covers | Source |
 |---|---|---|---|
 | 01 | [Internet search agent](notes/01-internet-search-agent.md) | Router node vs search tool, structured decisions, the plan → section loop, checkpointers, FastAPI serving, code review, a stubbed graph you can run | internet-search-agent (MIT) |
-| 02 | [Deep research bot](notes/02-deep-research-bot.md) | A minimal agent loop, Exa tools, think/plan tools, context compaction, RACE scoring, RL with ART + RULER, how the design has spread into research and science agents | W&B workshop; DeepResearch Bench; 15 papers |
+| 02 | [Deep research bot](notes/02-deep-research-bot.md) | A minimal agent loop, Exa tools, think/plan tools, context compaction, RACE scoring, RL with ART + RULER; a survey of how the design has spread, under Further reading | W&B workshop; DeepResearch Bench; 15 papers |
 | 03 | [Real-time multimodal agents](notes/03-real-time-multimodal-agents.md) | Cascaded vs omni vs full-duplex voice, the latency budget, fast/slow thinking, computer use, the GUI-agent literature, VLA robotics, Sim2Real | Li, *AI Agents in Depth* ch. 6; GUI-agent papers |
 | 04 | [A coding agent](notes/04-coding-agent.md) | Reproduce, localize, patch, verify; the agent-computer interface; edits that fail safely; what each sandbox layer stops; held-out tests; supervision | SWE-agent; OpenDev; Shen & Tamkin; [practice/coding-agent](practice/coding-agent/) |
 | 05 | [A data-analysis agent](notes/05-data-analysis-agent.md) | Profiling, read-only access below the level of the text, agreeing the metric, a validator that recomputes, charts, guards | Biswal et al.; Liu et al.; [practice/data-analysis-agent](practice/data-analysis-agent/) |
-| 06 | [Application patterns](notes/06-application-patterns.md) | Chatbot, collaborative editing (merge levels, CRDT/OT, concurrency, undo) and ambient agents (triggers, memory, reflection); NLU routers; explanations and trust; one engine re-tasked to marketing, and its grounding failure | Oshin & Campos, *Learning LangChain* ch. 11; Rothman ch. 9; dialogue and HAI papers |
+| 06 | [Application patterns](notes/06-application-patterns.md) | Chatbot, collaborative editing (merge levels, CRDT/OT, concurrency, undo) and ambient agents (triggers, memory, reflection); when a small intent router still earns its place; explanations and trust; one engine re-tasked to marketing, and its grounding failure | Oshin & Campos, *Learning LangChain* ch. 11; Rothman ch. 9; dialogue and HAI papers |
 | 07 | [Scoping an AI product](notes/07-scoping-an-ai-product.md) | User, problem, metric and constraint; token and cost arithmetic with dated prices; ROI and its assumptions; build or buy; phased rollout cost; adoption as a funnel. All figures computed for a labelled hypothetical | Huyen; Brynjolfsson et al.; Becker et al.; vendor pricing pages |
 
-Note 06 is the synthesis, so read it after the agents, or first if you are designing the UI around one of them. Note 07 asks whether to build one at all, so read it last, or first if you are scoping a real project. Papers and upstream repos are in [references.md](references.md).
+Note 06 is the synthesis, so read it after the agents, or first if you are designing the UI around one of them. Note 07 asks whether to build one at all, so read it last, or first if you are scoping a real project. Claude prices also appear in [foundations 01b](../03-agentic-foundations/notes/01b-what-an-agent-costs.md) (what an agent run costs) and [observability 06](../06-observability/notes/06-cost-and-latency-dashboards.md) (pricing a traced turn); note 07 uses them to scope a product, and those two notes are the places to go for the rest. Papers and upstream repos are in [references.md](references.md).
 
 ## Builds on and feeds into
 
@@ -47,6 +47,7 @@ Note 06 is the synthesis, so read it after the agents, or first if you are desig
 | Chapter | Why |
 |---|---|
 | [DE 07/03 Catalog, semantic layer and contracts](../../data-engineering/07-architecture-and-governance/notes/03-catalog-semantic-layer-and-contracts.md) | Optional background: the production version of the agent's required metric definitions |
+| [DA 01 practice data](../../data-analytics/01-python-for-data-analysis/practice/) | Required for the note 05 lab only: it reads `tips.csv` and `titanic/train.csv` from there |
 | [DA 01/02 Loading and cleaning](../../data-analytics/01-python-for-data-analysis/notes/02-loading-and-cleaning.md) | Optional background: the checks a data-analysis agent should run |
 | [DA 01/05 Group-by and aggregation](../../data-analytics/01-python-for-data-analysis/notes/05-groupby-and-aggregation.md) | Optional background: rates and group sizes |
 | [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Optional background: whether a lead is within noise |
@@ -64,19 +65,24 @@ Note 06 is the synthesis, so read it after the agents, or first if you are desig
 
 ## Run the labs
 
-Both of the labs built for this pillar run offline, with a scripted stub model in place of an API. Neither needs a key.
+Three labs are built for this pillar. All run offline, with a scripted stub model in place of an API, and none needs a key. The data-analysis lab also needs two data files from another pillar (below).
 
 ```bash
 cd generative-ai/07-agentic-applications/practice/coding-agent
 uv run python run.py                 # all scenarios: fix, overfit, guards, timeout, loop, budget, giveup, escape
 uv run python -m unittest test_agent
 
-cd ../data-analysis-agent
+cd ../data-analysis-agent            # needs the DA 01 practice data, see below
 uv run --with pandas --with matplotlib python run.py
 uv run --with pandas --with matplotlib python -m unittest test_agent
+
+cd ../scoping-an-ai-product          # standard library only; prints every figure in note 07
+python3 cost_model.py
 ```
 
-Details are in the [coding-agent](practice/coding-agent/README.md) and [data-analysis-agent](practice/data-analysis-agent/README.md) READMEs. To drive either with Claude, see its `claude_model.py`, which needs `ANTHROPIC_API_KEY` and is marked illustrative.
+**Data dependency for note 05.** The data-analysis lab reads `tips.csv` and `titanic/train.csv` in place from the [DA 01 practice folder](../../data-analytics/01-python-for-data-analysis/practice/). It does not copy them, and it stops with a clear error if they are missing. Both are fetched, not committed: run `fetch_data.sh` in that folder first. Notes 01 to 04 and 06 to 07 do not need it.
+
+Details are in the [coding-agent](practice/coding-agent/README.md) and [data-analysis-agent](practice/data-analysis-agent/README.md) READMEs. To drive either agent with Claude, see its `claude_model.py`, which needs `ANTHROPIC_API_KEY` and is marked illustrative. The workshop agent, the benchmark scorer and the upstream labs need keys or services, and are listed under Coursework below.
 
 ## The deck
 
@@ -96,15 +102,18 @@ Details are in the [coding-agent](practice/coding-agent/README.md) and [data-ana
 │   ├── 03-real-time-multimodal-agents.md
 │   ├── 04-coding-agent.md
 │   ├── 05-data-analysis-agent.md
-│   └── 06-application-patterns.md
+│   ├── 06-application-patterns.md
+│   └── 07-scoping-an-ai-product.md
 ├── practice/
+│   ├── manifest.yaml
 │   ├── coding-agent/             # built here: read/edit/test agent, toy repo, stub model, offline
-│   ├── data-analysis-agent/      # built here: SQL + pandas agent over tips and Titanic, offline
+│   ├── data-analysis-agent/      # built here: SQL + pandas agent over tips and Titanic from DA 01, stub model
+│   ├── scoping-an-ai-product/    # built here: cost_model.py, the arithmetic of note 07, standard library only
 │   ├── deep-research-bot/        # W&B workshop agent (Apache-2.0), notebooks 01–03, RACE eval
 │   └── deep_research_bench/      # DeepResearch Bench RACE scorer (Apache-2.0), vendored
 ├── slides/                       # deck.yaml, agentic-applications.pptx and .pdf
 └── sources/
-    ├── images/                   # li-ai-agents-in-depth-fig6-*.svg, context-engineering-multi-agent-systems-fig9-1.png, lab chart
+    ├── images/                   # figures from the papers and books, and the lab chart
     ├── context-engineering-multi-agent-systems/   # ch. 9 PDF
     └── *.pdf                     # research-agent, GUI-agent, dialogue and human-AI interaction papers
 ```
@@ -175,7 +184,7 @@ The two labs built here run offline and are covered above. The items below were 
 
 ### Datasets used by the data-analysis lab
 
-Read in place and not copied: [tips.csv](../../data-analytics/01-python-for-data-analysis/practice/data/tips.csv) and [titanic/train.csv](../../data-analytics/01-python-for-data-analysis/practice/mckinney/datasets/titanic/train.csv).
+Read in place and not copied, so the lab depends on the DA 01 practice folder (fetch with `fetch_data.sh` there): [tips.csv](../../data-analytics/01-python-for-data-analysis/practice/data/tips.csv) and [titanic/train.csv](../../data-analytics/01-python-for-data-analysis/practice/mckinney/datasets/titanic/train.csv).
 
 ### Interview guide
 
@@ -183,5 +192,5 @@ Read in place and not copied: [tips.csv](../../data-analytics/01-python-for-data
 
 ### Layers
 
-- Previous: [06-observability](../06-observability/README.md).
-- Next: [08-eval](../08-eval/README.md), which measures these applications, and [ai-engineering](../../ai-engineering/README.md), the engineering layer under them (context, harness, loop and graph engineering).
+- Previous: [06-observability](../06-observability/README.md) and [08-eval](../08-eval/README.md), which measures what these applications ship.
+- Next: [ai-engineering](../../ai-engineering/README.md), the engineering layer under them (context, harness, loop and graph engineering).

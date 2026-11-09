@@ -989,6 +989,11 @@ The general approach is to write down the operations and how often each happens,
 | When is a linked list worth it? | When you hold node references and splice at them, as in an LRU. Otherwise the memory and pointer-chasing cost more. |
 | How do you build an LRU cache? | A dict from key to node in a doubly linked list. Both operations are constant time, and `OrderedDict` packages that. |
 
+## See also
+
+- [Python 03 · 08 Objects, inheritance and the MRO](../../python/03-language-for-engineers/notes/08-objects-inheritance-and-mro.md): how attribute lookup uses the `dict` described here.
+- [Python 03 · 09 Memory and the runtime](../../python/03-language-for-engineers/notes/09-memory-and-the-runtime.md): `__slots__` and object size in CPython.
+
 ## Next
 
 [3 — Algorithm patterns](03-algorithm-patterns.md): the handful of ideas behind most algorithms you'll write, on these structures.

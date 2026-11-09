@@ -1,0 +1,545 @@
+{
+ "schema": 1,
+ "key": "2404.19737",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/gloeckle-2024-better-faster-large-language-models.pdf",
+ "bib": {
+  "title": "Better & Faster Large Language Models via Multi-token Prediction",
+  "authors": [
+   "Fabian Gloeckle",
+   "Badr Youbi Idrissi",
+   "Baptiste Rozière",
+   "David Lopez-Paz",
+   "Gabriel Synnaeve"
+  ],
+  "first_author": "Gloeckle",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.19737",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 88152,
+  "chars_total": 88152,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; some summarization table rows skimmed."
+ },
+ "type": "empirical",
+ "question": "Does training a language model to predict the next n tokens at once with n output heads on a shared trunk improve downstream quality and inference speed over next-token prediction?",
+ "hypothesis": "Multi-token prediction as an auxiliary loss improves sample efficiency and generative abilities (especially code) at larger scale, by reducing the teacher-forcing/autoregressive mismatch.",
+ "contributions": [
+  "A simple multi-token prediction architecture with no train time or memory overhead (Section 2).",
+  "Experimental evidence that it is beneficial at scale, with models up to 13B parameters solving around 15% more code problems on average (Section 3).",
+  "Multi-token prediction enables self-speculative decoding, making models up to 3 times faster at inference time across a wide range of batch-sizes (Section 3.2)."
+ ],
+ "method": {
+  "summary": "A shared transformer trunk feeds n independent transformer-layer heads with a shared unembedding; loss is the sum of n cross-entropies for tokens t+1..t+n. Heads are added by removing n-1 trunk layers to keep parameters equal. Heads are run forward/backward sequentially to save memory; inference uses the next-token head or self-speculative decoding.",
+  "task": "next-token vs multi-token pretraining of decoder-only LMs on code and natural language; evaluated on code generation, summarization, GSM8K, synthetic tasks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Code corpus (unnamed)",
+    "role": "pretrain",
+    "size": "91B tokens (0.3B-3B), 209.7B (7B/13B, '200B'), 503.3B ('500B'), 1000B ('1T', 4 epochs); 314.6B bytes for byte-level",
+    "split": null,
+    "source": null,
+    "preprocessing": "32k-token tokenizer; byte-level variant uses replicated unembeddings"
+   },
+   {
+    "name": "Natural language corpus (unnamed)",
+    "role": "pretrain",
+    "size": "200B and 500B tokens",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP, HumanEval, APPS/Intro",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Austin 2021; Chen 2021; Hendrycks 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeContests",
+    "role": "train",
+    "size": null,
+    "split": "Python subset, train split with correct/incorrect annotations; test split for eval",
+    "source": "Li et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "8 summarization sets (CNN/DailyMail, Multi-News, OrangeSum, pn-summary, SAMSum, ThaiSum, WikiSummary, XSum) plus BigPatent in Table S13",
+    "role": "both",
+    "size": null,
+    "split": "finetune 3 epochs (BigPatent 1)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Children stories; books mix 9:1",
+    "role": "train",
+    "size": null,
+    "split": "100 test stories with names replaced",
+    "source": null,
+    "preprocessing": "character names replaced with random two-token names"
+   },
+   {
+    "name": "Polynomial arithmetic in F7[X]/(X^5)",
+    "role": "both",
+    "size": "2000 test samples per operation count",
+    "split": "train m=1..5 operations; m>5 out-of-domain",
+    "source": "synthetic",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Multi-token predictor (n=2,4,6,8; byte-level n=8, 16, 32)",
+    "role": "proposed",
+    "params": "0.3B, 0.6B, 1.3B, 3B, 6.7B (7B), 13B; small 1M-1B for synthetic",
+    "architecture": "shared transformer trunk + n transformer-layer heads + shared unembedding",
+    "init_from": "scratch (Llama 2 in Table S6)",
+    "tokenizer": "32k tokens; or bytes",
+    "vocab": "32k / bytes",
+    "layers": "7B: 32, 13B: 40 (Table S14, trunk+heads total)",
+    "hidden": "7B: 4096, 13B: 5120",
+    "heads": "7B: 32, 13B: 40",
+    "context": "4096 (8192 for bytes)",
+    "other": {
+     "table_S14": "0.3B 1024/18/16; 0.6B 1280/27/20; 1.3B 2048/24/16; 3B 2560/36/20 (dim/layers/heads)"
+    }
+   },
+   {
+    "name": "Next-token baseline (n=1)",
+    "role": "baseline",
+    "params": "same as above",
+    "architecture": "standard transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_n = -sum_t sum_{i=1..n} log P(x_{t+i} | z_{t:1}), n heads; parameter-matched by removing n-1 trunk layers",
+   "optimizer": "Adam, beta1 0.9, beta2 0.95, decoupled weight decay 0.1",
+   "lr": "3e-4 peak (pretraining); 1e-4 synthetic; 3e-5 summarization finetune; 5e-5 CodeContests",
+   "lr_schedule": "linear warmup then cosine decay to fraction of peak (decay ratio 0.03; 0.10 for language models; 0.004 CodeContests)",
+   "warmup": "1000-2000 steps pretraining; 100 summarization; 400 CodeContests",
+   "batch_size": "8 x 2^20 tokens (7 x 2^20 for 500B/1T code; 12 x 2^20 bytes; 0.25 x 2^20 synthetic)",
+   "steps": "10,850 (<=3B); 25,000 (7B/13B 200B); 68,570 (500B code); 136,240 (1T code); 60,000 (500B language)",
+   "epochs": "0.8 (200B), 4 (1T); up to 90 for induction",
+   "tokens": "91.0B, 209.7B, 503.3B, 1000B code; 314.6B bytes",
+   "seq_len": "4096 (8192 bytes; 2048/1024 synthetic)",
+   "precision": null,
+   "weight_decay": 0.1,
+   "dropout": null,
+   "regularisation": "gradient clipping at 1.0 (0.1 for CodeContests)",
+   "hardware": "A100-80GB and H100",
+   "compute": "around 500K GPU hours total",
+   "wall_clock": null,
+   "seeds": "two runs per config for synthetic tasks; otherwise not stated",
+   "other": {
+    "batch_size_unit": "Table S13 header says Batch size (2^20); inferred to be tokens",
+    "fsdp": "Fully Sharded Data Parallel"
+   }
+  },
+  "inference": {
+   "decoding": "Pass@k sampling for code; greedy self-speculative decoding for speed",
+   "temperature": "oracle temperature per model/dataset/pass@k (Table S12); 0.5-0.9 CodeContests; 0.2-1.4 GSM8K",
+   "top_p": "0.95 for GSM8K",
+   "max_tokens": "512 tokens (Table S2), 1024 bytes (Table S3)",
+   "samples": "200 samples per problem (Table 1); 1000 (Fig 3, Fig 4); 200 for GSM8K",
+   "prompting": "GSM8K 8-shot",
+   "retrieval": null,
+   "parameters": {
+    "speculative_heads_k": "1-4 (tokens), up to 32 (bytes)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k (k=1,10,100)",
+     "definition": "unbiased estimator of Chen et al. 2021",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L F1",
+     "definition": "LCS overlap F1, best validation checkpoint",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "relative speedup",
+     "definition": "decoding speed relative to autoregressive k=1 at same batch size",
+     "unit": "x",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "next-token prediction (n=1), parameter-matched"
+   ],
+   "protocol": "Bootstrapped 90% CIs in Fig 1 and 3; oracle temperature chosen on test scores; epoch oracle for induction."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "The temperatures were chosen optimally (based on test scores; i.e. these are oracle temperatures)",
+    "where": "Table 1 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "13B code models trained with 4-token prediction solve more MBPP and HumanEval problems than next-token baselines (abstract: 12% HumanEval, 17% MBPP).",
+   "kind": "measured",
+   "metric": "pass@1 relative gain",
+   "value": "12% HumanEval, 17% MBPP",
+   "unit": "relative %",
+   "setup": "13B params, trained from scratch on 209.7B tokens of code, n=4 vs n=1, equal parameter count, 1000 samples per problem",
+   "quote": "Our 13B parameter models solves 12 % more problems on HumanEval and 17 % more on MBPP than comparable next-token models.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "13B MBPP pass@1: n=4 vs n=1.",
+   "kind": "measured",
+   "metric": "MBPP pass@1",
+   "value": 30.5,
+   "unit": "%",
+   "baseline_value": 26.0,
+   "setup": "13B, 209.7B code tokens, Table S7 (n=4 row)",
+   "table": "Table S7, row 13B Fut 4 vs Fut 1, column MBPP @1",
+   "where": "Table S7"
+  },
+  {
+   "claim": "13B HumanEval pass@1: n=4 vs n=1.",
+   "kind": "measured",
+   "metric": "HumanEval pass@1",
+   "value": 15.8,
+   "unit": "%",
+   "baseline_value": 14.1,
+   "setup": "13B, 209.7B code tokens, Table S7",
+   "table": "Table S7, row 13B Fut 4 vs Fut 1, column HumanEval @1",
+   "where": "Table S7"
+  },
+  {
+   "claim": "Multi-token prediction is worse than baseline at small sizes and better at scale.",
+   "kind": "measured",
+   "setup": "Six sizes 0.3B-13B trained on 91B (<=3B) or 209.7B (7B, 13B) code tokens, MBPP/HumanEval pass@1,10,100 with 1000 samples",
+   "quote": "Multi-token prediction models are worse than the baseline for small model sizes, but outperform the baseline at scale.",
+   "where": "Fig 3 caption"
+  },
+  {
+   "claim": "Self-speculative decoding with a 4-token model gives 3.0x speedup on code with 2.5 accepted tokens of 3 suggestions, 2.7x on text.",
+   "kind": "measured",
+   "metric": "decoding speedup",
+   "value": "3.0x code, 2.7x text",
+   "unit": "x",
+   "setup": "Best 4-token 7B model, greedy self-speculative decoding (Stern et al. 2018) via xFormers, held-out code and text prompts",
+   "quote": "We observe a speedup of 3.0× on code with an average of 2.5 accepted tokens out of 3 suggestions on code, and of",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Table S2 relative speedup on code using 4 heads.",
+   "kind": "measured",
+   "metric": "relative speedup",
+   "value": 3.05,
+   "unit": "x",
+   "baseline_value": 1.0,
+   "setup": "7B 4-token model, 1T code tokens, 4200 sequences of 512 tokens, 512-token greedy completions, batch size 42; 3.50 tokens/forward",
+   "table": "Table S2, row 4 heads, column Code Rel. speedup",
+   "note": "Text says 3.0x; table prints 3.05. Wikipedia 2.74, Books 2.67 (text says 2.7x on text).",
+   "where": "Table S2"
+  },
+  {
+   "claim": "8-byte prediction byte-level model gets 6.4x speedup with self-speculative decoding.",
+   "kind": "measured",
+   "metric": "relative speedup",
+   "value": 6.39,
+   "unit": "x",
+   "setup": "7B byte-level model n=8, 4096 sequences of 1024 bytes, batch size 16, 8 heads",
+   "table": "Table S3, row 8 heads, column n = 8 Rel. speedup",
+   "note": "Text prints 6.4x.",
+   "where": "Table S3"
+  },
+  {
+   "claim": "Multi-byte prediction (n=8) beats next-byte prediction on MBPP and HumanEval pass@1.",
+   "kind": "measured",
+   "metric": "MBPP pass@1",
+   "value": 32.3,
+   "unit": "%",
+   "baseline_value": 19.3,
+   "setup": "7B byte-level, 313B bytes of code (0.5 epoch), 200 samples per problem, oracle temperature",
+   "quote": "solving 67% more problems on MBPP pass@1 and 20% more problems on HumanEval pass@1.",
+   "where": "Sec 3.3, Table 1"
+  },
+  {
+   "claim": "4-token prediction best n on 7B/200B-token code: MBPP gains +3.8%, +2.1%, +3.2% at pass@1,10,100.",
+   "kind": "measured",
+   "setup": "7B, 200B code tokens, n in {1,2,4,6,8}, 32k vocab, oracle temperature, 200 samples per problem",
+   "quote": "+3.8%, +2.1% and +3.2% for MBPP and +1.2%, +3.7% and +4.1% for HumanEval.",
+   "where": "Sec 3.4",
+   "note": "Gains are absolute points vs n=1; Table 1 n=4 MBPP 33.8/55.9/76.9 vs 30.0/53.8/73.7."
+  },
+  {
+   "claim": "On APPS/Intro n=6 is best, so optimal n depends on data.",
+   "kind": "measured",
+   "setup": "7B, 200B code tokens",
+   "quote": "Interestingly, for APPS/Intro, n = 6 takes the lead with +0.7%, +3.0% and +5.3%.",
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "With 4 epochs (1T tokens) the n=4 edge shrinks but remains: MBPP pass@1 43.1 vs 40.7.",
+   "kind": "measured",
+   "metric": "MBPP pass@1",
+   "value": 43.1,
+   "unit": "%",
+   "baseline_value": 40.7,
+   "setup": "7B, 1T code tokens (4 epochs), n=4 vs n=1, oracle temperature",
+   "quote": "The improvements diminish but we still have a",
+   "table": "Table 1, 1T tokens rows, column MBPP @1",
+   "where": "Sec 3.5, Table 1"
+  },
+  {
+   "claim": "Fine-tuning on CodeContests: both 4-token-pretrained variants beat next-token baseline on pass@k across k.",
+   "kind": "measured",
+   "setup": "7B models, CodeContests Python train split, 1000 samples per test problem, T in {0.5..0.9}, max over T",
+   "quote": "both ways of finetuning the 4-token prediction model outperform the next-token prediction baseline.",
+   "where": "Fig 4 caption"
+  },
+  {
+   "claim": "On 6 standard multiple-choice/likelihood NLP benchmarks, n=2 matches baseline and n=4 regresses.",
+   "kind": "measured",
+   "setup": "7B, 200B natural-language tokens",
+   "quote": "The 2 future token model has the same performance as the baseline and the 4 future token model regresses a bit.",
+   "where": "Fig 5 caption"
+  },
+  {
+   "claim": "Average summarization ROUGE-L F1 improves with n=2 and n=4, gap shrinking with more data.",
+   "kind": "measured",
+   "metric": "avg ROUGE-L F1",
+   "value": "+0.51",
+   "unit": "ROUGE-L F1 delta",
+   "baseline_value": 26.23,
+   "setup": "7B, 200B tokens, n=2 (26.23+0.51), 8 summarization datasets, finetuned 3 epochs, best-val checkpoint",
+   "table": "Table S9, row Average, columns Baseline 200B and Delta n=2",
+   "note": "Value is the printed delta of n=2 over baseline 26.23. At 500B: baseline 27.08, +0.28 (n=2), +0.31 (n=4); 200B n=4 +0.46.",
+   "where": "Table S9"
+  },
+  {
+   "claim": "GSM8K 8-shot: n=2 better at 200B tokens, order reverses at 500B; n=4 worse throughout.",
+   "kind": "measured",
+   "setup": "7B, 200B and 500B language tokens, 8-shot, nucleus p=0.95, temps 0.2-1.4",
+   "quote": "For 200B training tokens, the n = 2 model clearly outperforms the next-token prediction baseline, while the pattern reverses after 500B tokens and n = 4 is worse throughout.",
+   "where": "Sec 3.7, Fig S13"
+  },
+  {
+   "claim": "2-token loss greatly improves induction formation for small models; advantage vanishes at ~100M non-embedding params.",
+   "kind": "measured",
+   "setup": "1M-1B non-embedding params, children stories, up to 90 epochs with epoch oracle, two seeds, 100 test stories with random two-token names",
+   "quote": "We find that 2-token prediction loss leads to a vastly improved formation of induction capability for models of size 30M nonembedding parameters and below, with their advantage disappearing for sizes of 100M nonembedding parameters and above.",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Multi-token prediction improves polynomial-arithmetic accuracy, including out-of-domain, more than tripling model size.",
+   "kind": "measured",
+   "setup": "30M and 100M models, F7[X]/(X^5), greedy, 2000 test samples per operation count, two runs per config",
+   "quote": "Tripling the model size, on the other hand, has a considerably smaller effect than replacing next-token prediction with multi-token prediction loss (Figure S16).",
+   "where": "Fig 8 caption"
+  },
+  {
+   "claim": "Training time overhead of n=4 relative to n=1 is 7-22%, n=2 2-7%.",
+   "kind": "measured",
+   "metric": "relative training time",
+   "value": "1.07 (6.7B n=4)",
+   "unit": "x",
+   "baseline_value": 1.0,
+   "setup": "FSDP implementation; 0.3B n=4 is 1.22, 13B n=4 1.09",
+   "table": "Table S5, row 6.7B, column n=4",
+   "note": "Abstract says no overhead in training time; Table S5 shows a slight overhead the authors attribute to suboptimal FSDP use.",
+   "where": "Table S5"
+  },
+  {
+   "claim": "Peak GPU memory reduced from O(nV+d) to O(V+d) via sequential head forward/backward.",
+   "kind": "claim",
+   "setup": "Section 2 implementation claim, no measurement",
+   "quote": "we have reduced the peak GPU memory utilization from O(nV + d) to O(V + d), at no expense in runtime (Table S5).",
+   "where": "Sec 2"
+  },
+  {
+   "claim": "n-token prediction gives choice points weight n(n+1)/2 vs n for inconsequential tokens (illustrative model).",
+   "kind": "worked-example",
+   "quote": "n-token prediction associates a weight of n(n+1) 2",
+   "setup": "Simplified sequential-decision model, App L.3",
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Fine-tuning Llama 2 with 4-token prediction did not significantly improve over baseline.",
+   "kind": "measured",
+   "setup": "Llama 2 continued on 200B code tokens, Table S6",
+   "table": "Table S6, row n=4 transformer, column MBPP @1 (38.3 vs 39.6 baseline)",
+   "where": "Table S6"
+  },
+  {
+   "claim": "Total compute for all models in paper.",
+   "kind": "measured",
+   "value": "500K GPU hours",
+   "setup": "A100-80GB and H100; about 50 tCO2eq",
+   "quote": "required around 500K GPU hours of computation on hardware",
+   "where": "Environmental impact"
+  }
+ ],
+ "limits": [
+  "Oracle temperatures chosen on test scores in Table 1 and Fig 4, which can favour all models but is a tuned test-set protocol.",
+  "Multi-token prediction is worse than baseline for small models and hurts on multiple-choice NLP at 7B (n=4).",
+  "Optimal n depends on data (n=4 for MBPP/HumanEval, n=6 for APPS/Intro) and is not chosen automatically.",
+  "GSM8K advantage for n=2 reverses at 500B tokens, n=4 worse throughout.",
+  "Fine-tuning Llama 2 with the loss gave no significant gain.",
+  "Explanations in Sec 5 are speculation; computation-sharing hypothesis not confirmed (App K).",
+  "Training data sources, seeds, precision and code release are not stated in text; experiments up to 7B/1T tokens (13B only 209.7B tokens).",
+  "Abstract claims no training-time overhead but Table S5 shows 2-22% overhead."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "self-speculative decoding",
+   "definition": "Using the extra output heads to draft tokens verified by the next-token head, without a separate draft model",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ProphetNet: Predicting future n-gram for sequence-to-sequence pre-training",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Qi et al. prior multi-token prediction; replicates residual stream n-fold",
+   "quote": null
+  },
+  {
+   "work": "Blockwise parallel decoding for deep autoregressive models",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Stern et al.; self-speculative decoding used",
+   "quote": null
+  },
+  {
+   "work": "Medusa",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cai et al.; multi-head decoding acceleration, compatible",
+   "quote": null
+  },
+  {
+   "work": "Fast inference from transformers via speculative decoding",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Leviathan et al.",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code (HumanEval)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "benchmark and pass@k estimator",
+   "quote": null
+  },
+  {
+   "work": "Program synthesis with large language models (MBPP)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (GSM8K)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "In-context learning and induction heads",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Olsson et al.; induction capability",
+   "quote": null
+  },
+  {
+   "work": "Think before you speak: pause tokens",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Goyal et al.; App K",
+   "quote": null
+  },
+  {
+   "work": "Scheduled sampling",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Bengio et al.; compared in App L.1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of multi-token prediction.",
+   "page": 1,
+   "why": "Shows shared trunk and n heads and MBPP scaling"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Results of n-token prediction models on MBPP by model size.",
+   "page": 3,
+   "why": "Shows crossover with scale"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Multi-token prediction improves performance and unlocks efficient byte level training.",
+   "page": 4,
+   "why": "Main n ablation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2, Eq 2",
+   "snippet": "Ln = -sum_t log P_theta(x_{t+n:t+1} | x_{t:1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction flattens tables; table cells located by row/column from reading order."
+ ]
+}

@@ -20,7 +20,7 @@ cleaned: 2026-10-29
 | `node file.ts` | Node 22.18+ **strips** the types and runs the rest. No checking at all |
 | `tsc` / bundler | Emits `.js` files for production |
 
-There are no runtime types. `x as User` checks nothing, and an `interface` produces no code. Data from outside the program has to be validated ([note 08](08-runtime-validation-zod.md)).
+There are no runtime types. `x as User` (a type assertion: you tell the checker the type) checks nothing, and an `interface` produces no code. Data from outside the program has to be validated ([note 08](08-runtime-validation-zod.md)).
 
 ## Python → JavaScript
 
@@ -40,7 +40,7 @@ There are no runtime types. `x as User` checks nothing, and an `interface` produ
 | `d.get(k, 0)` | `d.get(k) ?? 0` | `??` treats only `null`/`undefined` as missing. `||` also replaces `0` and `""` |
 | `a and a.b` | `a?.b` | Optional chaining |
 | `lambda x: x * 2` | `(x) => x * 2` | Arrow functions don't rebind `this` |
-| `raise` / `try/except` | `throw` / `try/catch` | The caught value is `unknown`. Narrow it with `instanceof Error` |
+| `raise` / `try/except` | `throw` / `try/catch` | The caught value is `unknown` (the safe "could be anything" type, [note 02](02-everyday-types.md)). Narrow it with `instanceof Error` |
 | `import x from y` | `import { x } from './y.ts'` | ES modules ([note 07](07-modules-and-tooling.md)) |
 
 ## Truthiness and equality

@@ -105,7 +105,7 @@ Change the metric when it stops describing what you want. Your Peacetopia quiz h
 
 ## Bias, variance and the human yardstick
 
-[Classical ML's bias and variance](../../01-classical-ml/notes/01-statistical-foundations.md) assumed error could go to zero. In practice the floor is the **Bayes error**, and human-level error is the usable proxy. Take the best available human, so the best team of experts for Peacetopia's 0.3%, not the average one, because it is a bound. Add a **train-dev** set, which comes from the training distribution but isn't trained on, and each gap names one problem:
+[Classical ML's bias and variance](../../01-classical-ml/notes/01-statistical-foundations.md#bias-variance-and-model-complexity) already has a floor: expected squared error splits into bias², variance and an irreducible noise term, so error can't go below the noise in $y$ however good the model. That floor is the **Bayes error**, and the deep-learning workflow adds one step, which is to estimate it, because human-level error is the usable proxy. Take the best available human, so the best team of experts for Peacetopia's 0.3%, not the average one, because it is a bound. Add a **train-dev** set, which comes from the training distribution but isn't trained on, and each gap names one problem:
 
 ```python
 def diagnose(human, train, train_dev=None, dev=None, test=None):

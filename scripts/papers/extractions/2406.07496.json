@@ -1,0 +1,587 @@
+{
+ "schema": 1,
+ "key": "2406.07496",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/yuksekgonul-2024-textgrad.pdf",
+ "bib": {
+  "title": "TextGrad: Automatic \"Differentiation\" via Text",
+  "authors": [
+   "Mert Yuksekgonul",
+   "Federico Bianchi",
+   "Joseph Boen",
+   "Sheng Liu",
+   "Zhi Huang",
+   "Carlos Guestrin",
+   "James Zou"
+  ],
+  "first_author": "Yuksekgonul",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2406.07496",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 131621,
+  "chars_total": 131621,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can textual feedback from LLMs be backpropagated through a computation graph of LLM calls and tools, PyTorch-style, to optimize prompts, solutions and other text variables of compound AI systems with one general framework?",
+ "hypothesis": "Current state-of-the-art LLMs can reason about individual components and subtasks of a system well enough that their natural-language criticism works as a general-purpose gradient.",
+ "contributions": [
+  "TextGrad, an autograd-style framework (Variables, Functions, TGD optimizer, tg.sum) with PyTorch syntax, open-sourced",
+  "Instance optimization results on LeetCode Hard code, GPQA and MMLU subsets",
+  "Prompt optimization results for gpt-3.5-turbo on Object Counting, Word Sorting, GSM8k versus DSPy",
+  "Proof-of-concept molecule design (58 DOCKSTRING targets) and radiotherapy plan hyperparameter optimization"
+ ],
+ "method": {
+  "summary": "Each AI system is a computation graph of text variables. A backward LLM call per edge produces natural-language feedback ('textual gradients') from successors, concatenated over successors; a Textual Gradient Descent (TGD) LLM call rewrites the variable from its value plus feedback. Used for instance optimization (test-time refinement of a solution) and prompt optimization (minibatch system-prompt tuning).",
+  "task": "Optimizing text variables (code, answers, system prompts, SMILES strings, planning hyperparameters) in compound LLM systems",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LeetCode Hard (Reflexion pipeline)",
+    "role": "eval",
+    "size": "39 problems",
+    "split": "all; submitted to LeetCode platform for hidden tests",
+    "source": "Shinn et al. [26], re-extracted by authors with the authors' pipeline; may differ from the Reflexion paper's copy",
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA Diamond",
+    "role": "eval",
+    "size": "198 questions",
+    "split": "all",
+    "source": "Rein et al. [27]",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU Machine Learning",
+    "role": "eval",
+    "size": "112 questions",
+    "split": "all",
+    "source": "Hendrycks et al. [45]",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU College Physics",
+    "role": "eval",
+    "size": "92 questions",
+    "split": "all",
+    "source": "Hendrycks et al. [45]",
+    "preprocessing": null
+   },
+   {
+    "name": "BBH Object Counting",
+    "role": "both",
+    "size": "50/100/100 train/val/test",
+    "split": "random split of BBH examples",
+    "source": "BIG-Bench Hard [50,51]",
+    "preprocessing": null
+   },
+   {
+    "name": "BBH Word Sorting",
+    "role": "both",
+    "size": "50/100/100 train/val/test",
+    "split": "random split of BBH examples",
+    "source": "BIG-Bench Hard [50,51]",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8k",
+    "role": "both",
+    "size": "200/300/1319 train/val/test",
+    "split": "DSPy splits",
+    "source": "Cobbe et al. [52] via DSPy",
+    "preprocessing": null
+   },
+   {
+    "name": "DOCKSTRING benchmark",
+    "role": "eval",
+    "size": "58 protein targets, 3 initial fragments each (acetamide, pentane, benzene)",
+    "split": "10 iterations per target and fragment",
+    "source": "[61]; 118 approved DrugBank small molecules for 29 targets used as reference",
+    "preprocessing": "SMILES sanitised with RDKit; invalid molecules return an 'invalid' string"
+   },
+   {
+    "name": "Prostate IMRT plans",
+    "role": "eval",
+    "size": "5 patients",
+    "split": "3 clinician plans given as in-context examples",
+    "source": "CT scans, structures and clinically approved Eclipse plans; inner loop solved with matRad",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-4o",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "forward model for instance optimization; backward (gradient) engine and TGD optimizer everywhere; judge for Word Sorting; gradient engine for molecule/treatment tasks"
+    }
+   },
+   {
+    "name": "gpt-3.5-turbo-0125",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "forward model whose system prompt is optimized"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "GPQA/MMLU CoT baseline run at temperature 0 (gpt-4o release reports temperature 0.5); TextGrad temperatures otherwise not stated",
+   "temperature": "0 for the CoT baseline on GPQA/MMLU; not stated for TextGrad backward or optimizer calls",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "LeetCode: 5 seeds averaged, 5 iterations. GPQA/MMLU: 3 test-time updates then majority vote over the solutions. Prompt optimization: 12 iterations x batch 3 = 36 training examples sampled with replacement. Molecules: 10 iterations x 3 fragments x 58 targets. Radiotherapy: max 10 iterations, 5 patients.",
+   "prompting": "Zero-shot for TextGrad; Reflexion baseline one-shot; DSPy BFSR 8 demonstrations; CoT baseline uses simple-evals template and ChatGPT system prompt",
+   "retrieval": null,
+   "parameters": {
+    "prompt_opt_batch_size": "3",
+    "prompt_opt_iterations": "12",
+    "prompt_opt_acceptance": "after each iteration run validation; update Prompt only if validation performance is better than previous iteration",
+    "code_opt_iterations": "5",
+    "code_calls_per_iteration": "3 gpt-4o calls (test-time loss, gradient, update)",
+    "qa_test_time_iterations": "3",
+    "qa_calls_per_iteration": "3 gpt-4o calls (loss, gradient, update)",
+    "qa_final_answer": "majority voting across solutions, string-match accuracy",
+    "initial_system_prompt_example": "You are a helpful language model. Think step by step.",
+    "momentum_window_example": "3 (snippet; not stated as used in experiments)",
+    "molecule_vina_qed_ratio": "10",
+    "molecule_overall_score": "Vina + (1 - QED), lower is better",
+    "treatment_initial_weights": "100 for every organ and PTV; dose objectives 70.20 PTV, 0.00 bladder and rectum, 30.00 femoral heads and body",
+    "treatment_stop": "all protocols met or 10 iterations",
+    "calls_per_iteration_bound": "at most n additional LLM calls for a graph with n edges"
+   },
+   "other": {
+    "momentum_and_in_context": "Treatment-plan task uses 'projected gradient descent with momentum': 3 clinician plans as in-context examples plus past hyperparameters and gradients in the prompt",
+    "gpt4_reported_leetcode": "7% (GPT-4), 15% (GPT-4 + Reflexion) from [26]"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Completion Rate (LeetCode Hard)",
+     "definition": "fraction of problems passing all hidden test cases on the LeetCode platform",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (GPQA, MMLU, Object Counting, Word Sorting, GSM8k)",
+     "definition": "exact match of final letter or last number; Word Sorting judged by gpt-4o",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Vina score",
+     "definition": "AutoDock Vina docking score via DOCKSTRING",
+     "unit": "kcal/mol",
+     "higher_is_better": false
+    },
+    {
+     "name": "QED",
+     "definition": "Quantitative Estimate of Druglikeness from RDKit, range 0 to 1",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "PTV/OAR dose metrics",
+     "definition": "mean dose, Dq (minimum dose to q% of volume), deviation from clinical goal",
+     "unit": "Gy",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Zero-shot gpt-4o",
+    "Reflexion (1 demonstration, 5 iterations)",
+    "CoT / zero-shot CoT",
+    "Best reported gpt-4o on GPQA (53.6)",
+    "DSPy BootstrapFewShotRandomSearch (10 candidate programs, 8 few-shot examples)",
+    "Clinically approved DrugBank molecules",
+    "Radiation oncologist plans"
+   ],
+   "protocol": "LeetCode: 5 seeds, mean +/- reported. QA and prompt-optimization tables report a single accuracy with no variance or seeds stated. Molecule and plan results are in silico only."
+  },
+  "availability": {
+   "code": "https://github.com/zou-group/textgrad",
+   "weights": null,
+   "data": "public benchmarks; clinical plans not stated as released"
+  },
+  "prompts": [
+   {
+    "purpose": "Backward-mode system prompt (gradient engine)",
+    "text": "You are part of an optimization system that improves a given text (i.e. the variable). You are the gradient (feedback) engine. Your only responsibility is to give intelligent and creative feedback and constructive criticism to variables, given an objective specified in <OBJECTIVE_FUNCTION> </OBJECTIVE_FUNCTION> tags. The variables may be solutions to problems, prompts to language models, code, or any other text-based variable. Pay attention to the role description of the variable, and the context in which it is used. You should assume that the variable will be used in a similar context in the future. Only provide strategies, explanations, and methods to change in the variable. DO NOT propose a new version of the variable, that will be the job of the optimizer. Your only job is to send feedback and criticism (compute 'gradients'). ... If a variable is already working well (e.g. the objective function is perfect, an evaluation shows the response is accurate), you should not give feedback. {GLOSSARY}",
+    "where": "Appendix A.3 (abridged with '...' in the examples sentence)"
+   },
+   {
+    "purpose": "TGD optimizer system prompt",
+    "text": "You are part of an optimization system that improves text (i.e., variable). You will be asked to creatively and critically improve prompts, solutions to problems, code, or any other text-based variable. You will receive some feedback, and use the feedback to improve the variable. The feedback may be noisy, identify what is important and what is correct. Pay attention to the role description of the variable, and the context in which it is used. This is very important: You MUST give your response by sending the improved variable between <IMPROVED_VARIABLE> improved variable </IMPROVED_VARIABLE> tags. The text you send between the tags will directly replace the variable. {GLOSSARY}",
+    "where": "Appendix A.4"
+   },
+   {
+    "purpose": "Solution refinement objective (GPQA/MMLU)",
+    "text": "Below is a multi-choice question and a prediction. You are a critical and creative scientist. Your job is to investigate the prediction. Critically go through reasoning steps, and see if there is a reason why the prediction could be incorrect. Use the Janusian Process, think about whether alternative answers could be true. Question: {Question} Answer by the language model: {Solution}",
+    "where": "Sec 3.2, Appendix D.2"
+   },
+   {
+    "purpose": "Code refinement objective (LeetCode)",
+    "text": "You are an intelligent assistant used as an evaluator, and part of an optimization system. You will analyze a code implementation for a coding problem and unit test results. The code will be tested with harder tests, so do not just check if the code passes the provided tests. Think about the correctness of the code and its performance in harder test cases. Give very concise feedback. Investigate the code problem and the provided implementation. For each failed unit test case, start analyzing it by saying \"The code did not pass this test because...\". Explain why the current implementation is not getting the expected output. Do not provide a revised implementation. Carefully suggest why there are issues with the code and provide feedback. {Test-time Instruction} **The coding problem:** {Problem} **Code generated that must be evaluated for correctness and runtime performance** {Code} **The test results:** {Local test Results}",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "Multiple choice answering template and constraint",
+    "text": "Answer the following multiple choice question. The last line of your response should be of the following format: 'Answer: $LETTER' (without quotes) where LETTER is one of ABCD. Think step by step before answering.",
+    "where": "Appendix D.1"
+   },
+   {
+    "purpose": "Word Sorting judge",
+    "text": "Below is a question from a question-answering task, the ground truth answer, and reasoning with the final prediction. Is the final prediction correct, i.e. the same as the ground truth answer? Say only 1 (yes) or 0 (no). Return your response within <ACCURACY> </ACCURACY> tags.",
+    "where": "Appendix E.1"
+   },
+   {
+    "purpose": "Molecule loss prompt",
+    "text": "Given a docking and a druglikeness score, and a molecule as a SMILES string provide a short criticism to improve the druglikeness of this molecule and its binding affinity with the protein {protein_name}. For docking, lower is better (less than -10 is considered good) and for druglikeness, 1 is the best and 0 is the worst (greater than 0.8 is considered good). In terms of prioritization, the docking score is {vina_qed_ratio} times as important as the druglikeness score. Make sure your criticism is very succinct and to the point.",
+    "where": "Appendix F.2"
+   },
+   {
+    "purpose": "Momentum / constraint / in-context postfixes",
+    "text": "Here are the past iterations of this variable: <PAST_ITERATIONS>{past_values}</PAST_ITERATIONS>",
+    "where": "Appendix B"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.prompt_opt_batch_size",
+    "quote": "We use a batch size of 3 with 12 iterations, i.e., the model sees 36 training examples in total, sampled randomly with replacement.",
+    "where": "Sec 3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TextGrad raises gpt-4o zero-shot accuracy on GPQA from CoT 51.0 to 55.0 by 3 test-time refinements plus majority vote",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 55.0,
+   "unit": "%",
+   "baseline_value": 51.0,
+   "n": null,
+   "setup": "GPQA Diamond (198 q), gpt-4o, 3 test-time updates + majority vote, CoT baseline at temperature 0",
+   "note": "Best previously reported gpt-4o result is 53.6 (Table 2). No seeds or variance given.",
+   "where": "Sec 1, Table 2",
+   "quote": "we improve the zero-shot accuracy from 51% to 55% by refining the solutions at test-time."
+  },
+  {
+   "claim": "TextGrad beats Reflexion and zero-shot on LeetCode Hard with gpt-4o and no demonstrations",
+   "kind": "measured",
+   "source": null,
+   "metric": "completion rate",
+   "value": 0.36,
+   "unit": "completion rate",
+   "baseline_value": 0.31,
+   "n": 39,
+   "setup": "LeetCode Hard, 39 problems, gpt-4o, 5 iterations, 5 seeds; Reflexion is one-shot",
+   "note": "Table 1 prints zero-shot as 0.26 but the text says 23%. Reflexion 0.31 +/- 0.012, TextGrad 0.36 +/- 0.018. Abstract says '20% relative performance gain'.",
+   "where": "Sec 3.1, Table 1",
+   "quote": "With TEXTGRAD, we can optimize solutions to achieve a performance of 36%."
+  },
+  {
+   "claim": "TextGrad-optimized system prompt lifts gpt-3.5-turbo on Object Counting from zero-shot CoT 77.8 to 91.9, above DSPy 84.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.9,
+   "unit": "%",
+   "baseline_value": 77.8,
+   "n": 100,
+   "setup": "Object Counting, 100 test samples, gpt-3.5-turbo-0125 forward model, gpt-4o as backward/optimizer engine, batch 3, 12 iterations, validation-gated",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row TEXTGRAD (instruction-only, 0 demonstrations), Object Counting column Accuracy (%)"
+  },
+  {
+   "claim": "On GSM8k TextGrad matches DSPy BFSR (both 81.1) versus zero-shot CoT 72.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81.1,
+   "unit": "%",
+   "baseline_value": 72.9,
+   "n": 1319,
+   "setup": "GSM8k 1319 test, gpt-3.5-turbo-0125 forward model, gpt-4o as backward/optimizer engine, batch 3, 12 iterations, validation-gated",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row TEXTGRAD (instruction-only, 0 demonstrations), GSM8k column Accuracy (%)"
+  },
+  {
+   "claim": "On Word Sorting TextGrad ties DSPy at 79.8, versus zero-shot CoT 76.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.8,
+   "unit": "%",
+   "baseline_value": 76.7,
+   "n": 100,
+   "setup": "Word Sorting, 100 test samples, judged by gpt-4o, gpt-3.5-turbo-0125 forward model, gpt-4o as backward/optimizer engine, batch 3, 12 iterations, validation-gated",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row TEXTGRAD (instruction-only, 0 demonstrations), Word Sorting column Accuracy (%)"
+  },
+  {
+   "claim": "Adding DSPy's demonstrations to TextGrad's optimized instruction raises GSM8k accuracy further",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.1,
+   "unit": "%",
+   "baseline_value": 81.1,
+   "n": null,
+   "setup": "GSM8k, gpt-3.5-turbo-0125 with TextGrad instruction plus DSPy demonstrations",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "increases the accuracy to 82.1%"
+  },
+  {
+   "claim": "TextGrad improves MMLU Machine Learning with gpt-4o from 85.7 to 88.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.4,
+   "unit": "%",
+   "baseline_value": 85.7,
+   "n": 112,
+   "setup": "MMLU Machine Learning (112 q), gpt-4o, 3 updates + majority vote",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row TEXTGRAD, MMLU-Machine Learning, column Accuracy (%)"
+  },
+  {
+   "claim": "TextGrad improves MMLU College Physics with gpt-4o from 91.2 to 95.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 95.1,
+   "unit": "%",
+   "baseline_value": 91.2,
+   "n": 92,
+   "setup": "MMLU College Physics (92 q), gpt-4o, 3 updates + majority vote",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row TEXTGRAD, MMLU-College Physics, column Accuracy (%)"
+  },
+  {
+   "claim": "95% of TextGrad molecules are novel versus ChEMBL (Tanimoto <= 0.80) by iteration 6",
+   "kind": "measured",
+   "source": null,
+   "metric": "novel proportion",
+   "value": 95,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "58 DOCKSTRING targets x 3 fragments, gpt-4o, all molecules at iteration 6",
+   "note": null,
+   "where": "Appendix F.5",
+   "quote": "By the 6th iteration, 95% of all the molecules generated by TEXTGRAD across all 58 targets and 3"
+  },
+  {
+   "claim": "TextGrad plans hit PTV D95 exactly and have smaller mean-dose overshoot than clinicians (+0.51 vs +1.97 Gy)",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean dose deviation",
+   "value": 0.51,
+   "unit": "Gy",
+   "baseline_value": 1.97,
+   "n": 5,
+   "setup": "5 prostate patients, average deviation from 70.20 Gy goal, std in brackets 0.09",
+   "note": null,
+   "where": "Supp. Table 1",
+   "table": "Supplementary Table 1, row TEXTGRAD, column Mean dose [Gy]"
+  },
+  {
+   "claim": "TextGrad plans lower rectum mean dose than clinical plans (17.18 vs 23.88 Gy)",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean dose",
+   "value": 17.18,
+   "unit": "Gy",
+   "baseline_value": 23.88,
+   "n": 5,
+   "setup": "5 prostate patients, rectum mean dose",
+   "note": null,
+   "where": "Supp. Table 2",
+   "table": "Supplementary Table 2, row Rectum TEXTGRAD, column Mean dose [Gy]"
+  }
+ ],
+ "limits": [
+  "Authors say molecule and plan results are in silico proof of concept; experimental and clinical assessment is out of scope",
+  "Authors list stability improvements (variance reduction, adaptive gradients, self-verification) as future work, implying the optimization is unstable",
+  "Authors note reliability of constraint following drops with many constraints",
+  "No variance, seeds or significance tests for QA and prompt-optimization tables; Table 3 test sets are 100 examples for two tasks",
+  "LeetCode dataset was re-extracted and may not match Reflexion's; zero-shot printed as 0.26 in Table 1 but 23% in text",
+  "Prompt optimization is gated by validation accuracy and compared to a DSPy run configured by the authors",
+  "Cost and latency are not reported although each iteration needs several gpt-4o calls (up to n gradient calls for n edges)",
+  "Temperatures for TextGrad's own calls and max tokens are not stated",
+  "gpt-4o and gpt-3.5-turbo-0125 are dated API models; results may not reproduce"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "textual gradient",
+   "definition": "natural language feedback from an LLM describing how a variable should change to improve the downstream objective",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Textual Gradient Descent (TGD)",
+   "definition": "optimizer that asks an LLM to produce a new variable given the current value and its gradients",
+   "where": "Sec 2"
+  },
+  {
+   "term": "instance optimization",
+   "definition": "treating a solution to a single problem as the optimization variable, improved at test time",
+   "where": "Sec 2"
+  },
+  {
+   "term": "prompt optimization",
+   "definition": "finding a prompt that improves an LLM's performance across multiple queries for a task",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Automatic Prompt Optimization with Gradient Descent and Beam Search (ProTeGi), Pryzant et al.",
+   "year": 2023,
+   "arxiv": "2305.03495",
+   "relation": "extends",
+   "note": "origin of textual gradients; TextGrad generalises to full autodiff and instance optimization",
+   "quote": null
+  },
+  {
+   "work": "DSPy, Khattab et al.",
+   "year": 2024,
+   "arxiv": "2310.03714",
+   "relation": "baseline",
+   "note": "BootstrapFewShotRandomSearch baseline on prompt tasks and inspiration for programmatic LLM systems",
+   "quote": null
+  },
+  {
+   "work": "Reflexion, Shinn et al.",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "baseline",
+   "note": "LeetCode Hard baseline and data source; also self-refinement background",
+   "quote": null
+  },
+  {
+   "work": "Large Language Models are Human-Level Prompt Engineers, Zhou et al.",
+   "year": 2023,
+   "arxiv": "2211.01910",
+   "relation": "related",
+   "note": "LLMs as prompt optimizers",
+   "quote": null
+  },
+  {
+   "work": "GPQA, Rein et al.",
+   "year": 2023,
+   "arxiv": "2311.12022",
+   "relation": "uses-data",
+   "note": "challenging science QA",
+   "quote": null
+  },
+  {
+   "work": "MMLU, Hendrycks et al.",
+   "year": 2021,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "ML and College Physics subsets",
+   "quote": null
+  },
+  {
+   "work": "BIG-Bench Hard, Suzgun et al.",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Object Counting and Word Sorting",
+   "quote": null
+  },
+  {
+   "work": "GSM8k, Cobbe et al.",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "math word problems",
+   "quote": null
+  },
+  {
+   "work": "DOCKSTRING, Garcia-Ortegón et al.",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "58 docking targets",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (zero-shot CoT)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Think step by step baseline",
+   "quote": null
+  },
+  {
+   "work": "Backpropagation, Rumelhart et al.",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "related",
+   "note": "conceptual analogy",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Automatic \"Differentiation\" via Text (a, b). Abstractions in TextGrad (c). Applications of TextGrad (d,e,f,g).",
+   "page": 3,
+   "why": "Side-by-side PyTorch versus TextGrad abstractions and the five application domains"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Prompt optimization for reasoning tasks. gpt-3.5-turbo system prompt optimized using gpt-4o as gradient engine.",
+   "page": 11,
+   "why": "Main prompt optimization comparison with DSPy"
+  }
+ ],
+ "code": [
+  {
+   "where": "Code Snippet 2 (p10)",
+   "snippet": "system_prompt = tg.Variable(\"You are a helpful language model. Think step by step.\", requires_grad=True, role_description=\"system prompt to the language model\")\nmodel = tg.BlackboxLLM(system_prompt=system_prompt)\noptimizer = tg.TextualGradientDescent(parameters=[system_prompt])\nfor iteration in range(max_iterations):\n    batch_x, batch_y = next(train_loader)\n    optimizer.zero_grad()\n    responses = model(batch_x)\n    losses = [loss_fn(response, y) for (response, y) in zip(responses, batch_y)]\n    total_loss = tg.sum(losses)\n    total_loss.backward()\n    optimizer.step()",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of code snippets and equations is line-broken; prompts in the JSON were re-joined by hand and some are abridged",
+  "Training block is null because nothing is trained; inference/eval slots hold the rerun details",
+  "Text contains no embedded instructions"
+ ]
+}

@@ -1,0 +1,729 @@
+{
+ "schema": 1,
+ "key": "2405.03548",
+ "pdf": "generative-ai/05-RL/sources/yue-2024-mammoth2.pdf",
+ "bib": {
+  "title": "MAmmoTH2: Scaling Instructions from the Web",
+  "authors": [
+   "Xiang Yue",
+   "Tuney Zheng",
+   "Ge Zhang",
+   "Wenhu Chen"
+  ],
+  "first_author": "Yue",
+  "year": 2024,
+  "venue": "preprint (arXiv v4, 23 May 2024); the note cites NeurIPS 2024, which the PDF does not print",
+  "arxiv": "2405.03548",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 81550,
+  "chars_total": 81550,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can large-scale, high-quality reasoning instruction data be mined from the pre-training web corpus instead of human annotation or GPT-4 distillation?",
+ "hypothesis": "Web corpora already contain diverse, high-quality instruction-response pairs that can be recalled, extracted and refined to improve reasoning generalisation.",
+ "contributions": [
+  "WebInstruct: 10M instruction-response pairs mined via recall, extract, refine",
+  "MAmmoTH2 models trained on WebInstruct, large held-out reasoning gains",
+  "MAmmoTH2-Plus after further tuning on public datasets, strong reasoning and chat results"
+ ],
+ "method": {
+  "summary": "Three-step pipeline: fastText recall of 18M Common Crawl docs, Qwen-72B extraction of ~5M Q-A pairs, refinement by Mixtral-8x22B and Qwen-72B into 10M pairs. Base models are SFT'd on it (WebInstruct), then optionally on public sets (Plus).",
+  "task": "instruction tuning for reasoning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebInstruct",
+    "role": "train",
+    "size": "10M Q-A pairs, ~5B tokens (from 18M recalled documents, ~5M extracted candidates)",
+    "split": null,
+    "source": "Common Crawl (internal CC, RedPajama cited); recalled by fastText, extracted by Qwen-72B, refined by Mixtral-8x22B and Qwen-72B",
+    "preprocessing": "HTML rule-based cleaning; 10-gram string match decontamination against all eval questions/answers; only domains with >1000 docs retained; ~600K domains, ~50K labelled positive by GPT-3.5"
+   },
+   {
+    "name": "fastText seed set",
+    "role": "train",
+    "size": "100K positive (crawled quiz/exam sites) + 100K random negative CC docs",
+    "split": null,
+    "source": "crawled educational sites",
+    "preprocessing": "fastText dim 256, 3 epochs, lr 0.1, max n-gram 3, max word occurrences 3; round 2 retrained on documents from GPT-3.5-selected domains vs rest"
+   },
+   {
+    "name": "OpenHermes 2.5",
+    "role": "train",
+    "size": "~1M examples",
+    "split": null,
+    "source": "Teknium 2023",
+    "preprocessing": "TheoremQA removed from Platypus"
+   },
+   {
+    "name": "Code-Feedback",
+    "role": "train",
+    "size": "68,000 multi-turn interactions",
+    "split": null,
+    "source": "Zheng et al. 2024c",
+    "preprocessing": null
+   },
+   {
+    "name": "Math-Plus",
+    "role": "train",
+    "size": "894K examples",
+    "split": null,
+    "source": "MetaMathQA 395K + Orca-Math 200K + 300K GPT-4 rewrites of MATH train",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1.32K",
+    "split": "test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MATH",
+    "role": "eval",
+    "size": "5000",
+    "split": "test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "TheoremQA",
+    "role": "eval",
+    "size": "800",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "BBH",
+    "role": "eval",
+    "size": "6511",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ARC-C",
+    "role": "eval",
+    "size": "1,172",
+    "split": "test",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA diamond",
+    "role": "eval",
+    "size": "198",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU-STEM",
+    "role": "eval",
+    "size": "3.13K",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Mistral-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-3-8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x7B",
+    "role": "base",
+    "params": "8x7B (13B active)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Yi-34B",
+    "role": "base",
+    "params": "34B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen-72B",
+    "role": "teacher",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x22B (written Mixtral-22Bx8)",
+    "role": "teacher",
+    "params": "8x22B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 / GPT-4",
+    "role": "teacher",
+    "params": "not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MAmmoTH2 (7B, 8B, 8x7B, 34B) and -Plus",
+    "role": "proposed",
+    "params": "7B/8B/8x7B/34B",
+    "architecture": null,
+    "init_from": "base models above",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Plus": "WebInstruct first, then continued on additional public datasets"
+    }
+   }
+  ],
+  "training": {
+   "objective": "SFT loss (multi-turn instruction format); ablation compares LM loss",
+   "optimizer": null,
+   "lr": "5e-6 for Mistral 7B; 1e-5 for Mixtral, Llama-3 8B, Yi 34B",
+   "lr_schedule": "cosine",
+   "warmup": "3% warm-up period",
+   "batch_size": "512 (global)",
+   "steps": "9000 steps in the Table 4 refiner ablation; main run not stated",
+   "epochs": "2",
+   "tokens": null,
+   "seq_len": "4096 (maximum)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "32 A100 GPUs; DeepSpeed ZeRO-3; LLaMA-Factory",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "Plus training": "first WebInstruct, then continue on public datasets (Appendix E); hyperparameters for the second stage not stated",
+    "scaling ablation": "1M to 10M instructions read from Fig 5"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "few-shot CoT: TheoremQA 5-shot, MATH 4-shot, GSM8K 4-shot, GPQA 5-shot, MMLU-STEM 5-shot, BBH 3-shot, ARC-C 8-shot",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "per benchmark few-shot CoT accuracy; AVG is mean of seven",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "HumanEval(+)/MBPP(+) average",
+     "definition": "EvalPlus average",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench, AlpacaEval 2.0, Arena Hard, MMLU, MMLU-Pro",
+     "definition": "from leaderboards/original papers for baselines",
+     "unit": "score / %",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Qwen-1.5-110B/72B/7B",
+    "Mixtral-8x7B(-Instruct)",
+    "Llama-3-8B(-Instruct)",
+    "Mistral-7B",
+    "Yi-34B",
+    "DeepSeek-Math",
+    "Llemma",
+    "Intern-Math",
+    "WizardMath",
+    "Abel",
+    "Rho-1",
+    "Gemma-7B",
+    "GPT-4-Turbo"
+   ],
+   "protocol": "Single runs, no seeds or significance tests stated; baseline numbers taken from papers/leaderboards when available, else own script; human check on 50 refined samples"
+  },
+  "availability": {
+   "code": null,
+   "weights": "project page https://tiger-ai-lab.github.io/MAmmoTH2/ (header only)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.Mixtral-8x22B",
+    "quote": "Mixtral-22B×8",
+    "where": "Sec 2.3; printed as 22B×8 though Mixtral is 8x7B in Sec 1 and elsewhere"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MAmmoTH2-7B (Mistral) raises MATH from 11% to 36.7% with WebInstruct only",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "36.7",
+   "unit": "%",
+   "baseline_value": "11.2",
+   "n": null,
+   "setup": "Mistral-7B base fine-tuned on WebInstruct only (10M pairs), 2 epochs, few-shot CoT eval (MATH 4-shot, GSM8K 4-shot); no benchmark training data, 10-gram decontamination",
+   "note": null,
+   "where": "Sec 1; Table 2",
+   "quote": "Notably, Mistral-7B’s MATH accuracy can rise from 11.2% to 36.7% after training on WEBINSTRUCT."
+  },
+  {
+   "claim": "MAmmoTH2-7B raises GSM8K from 36% to 68.4%",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "68.4",
+   "unit": "%",
+   "baseline_value": "36.2",
+   "n": null,
+   "setup": "Mistral-7B base fine-tuned on WebInstruct only (10M pairs), 2 epochs, few-shot CoT eval (MATH 4-shot, GSM8K 4-shot); no benchmark training data, 10-gram decontamination",
+   "note": "Abstract prints 36%; Table 2 base Mistral-7B is 36.2.",
+   "where": "Abstract; Table 2",
+   "quote": "from 11% to 36.7% on MATH and from 36% to 68.4% on GSM8K without training"
+  },
+  {
+   "claim": "Average gain over base on seven reasoning benchmarks, 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "average of 7 benchmarks",
+   "value": "+14.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MAmmoTH2-7B vs Mistral-7B, WebInstruct only; TheoremQA, MATH, GSM8K, GPQA, MMLU-STEM, BBH, ARC-C",
+   "note": null,
+   "where": "Sec 4.1; Table 2",
+   "quote": "MAmmoTH2-7B boosts the performance of Mistral-7B by an average of 14 points."
+  },
+  {
+   "claim": "MAmmoTH2-34B average gain over Yi-34B",
+   "kind": "measured",
+   "source": null,
+   "metric": "average",
+   "value": "+5.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Yi-34B base, WebInstruct only, same seven benchmarks",
+   "note": null,
+   "where": "Sec 1; Table 2",
+   "quote": "MAmmoTH2-34B enhances Yi-34B’s performance by an average of 5.8 absolute points."
+  },
+  {
+   "claim": "MAmmoTH2-8B average gain over Llama-3-8B",
+   "kind": "measured",
+   "source": null,
+   "metric": "average",
+   "value": "8.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3-8B base, WebInstruct only",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "MAmmoTH2-8B boosts the performance of Llama-3-8B-base by an average of 8.8 points."
+  },
+  {
+   "claim": "MAmmoTH2-8B-Plus beats Llama-3-8B-Instruct on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "average over reasoning benchmarks",
+   "value": "6",
+   "unit": "points (reported as % in text)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3-8B base; WebInstruct then additional public datasets; Llama-3-Instruct trained on 10M human-annotated data plus public data",
+   "note": "Table 2 averages: 59.1 vs 53.4 (5.7); intro says 6 points.",
+   "where": "Sec 4.1",
+   "quote": "MAmmoTH2-8B-Plus outperforms Llama3-Instruct by an average of 6% across the benchmarks."
+  },
+  {
+   "claim": "MAmmoTH2-8x7B-Plus about matches Qwen-1.5-110B with 13B active parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "average",
+   "value": "62.9",
+   "unit": "points",
+   "baseline_value": "63.6",
+   "n": null,
+   "setup": "Table 2 average, vs Qwen-1.5-110B 63.6",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "MAmmoTH2-8x7B-Plus can even match the performance of Qwen-1.5-110B with only 13B active parameters.",
+   "table": "Table 2, row MAmmoTH2-8x7B-Plus, column AVG"
+  },
+  {
+   "claim": "Q-A extraction keeps only 30% of recalled documents",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of docs with Q-A pairs",
+   "value": "30",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "18M recalled docs, Qwen-72B extractor with in-context examples",
+   "note": null,
+   "where": "Sec 2.2",
+   "quote": "only 30% of the recalled documents were identified as containing naturally existing Q-A pairs, resulting in roughly 5M Q-A pairs"
+  },
+  {
+   "claim": "Human check of 50 refined examples: improved vs hallucinated",
+   "kind": "measured",
+   "source": null,
+   "metric": "share improved",
+   "value": "78",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 randomly sampled refined QA examples, human annotators",
+   "note": null,
+   "where": "Sec 5.4, Fig 6",
+   "quote": "78% examples have been improved after refinement and only 10% examples introduce hallucinations after refinement."
+  },
+  {
+   "claim": "Merged (Mixtral+Qwen) refinement vs single refiner, GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K",
+   "value": "65.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B, 9000 steps, global batch 512; Mixtral 62.9, Qwen 65.4",
+   "note": "Merged does not win everywhere: TheoremQA Mixtral 26.1 vs merged 24.8; MMLU-S Qwen 60.6 vs merged 60.5.",
+   "where": "Table 4",
+   "table": "Table 4, row Merged, column GSM"
+  },
+  {
+   "claim": "Education sources beat forum sources on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K",
+   "value": "58.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B trained on subsets by source; forum 51.0; base 47.4",
+   "note": "MMLU-S forum 54.7 vs education 54.3, so not uniform despite 'consistently'.",
+   "where": "Table 5",
+   "table": "Table 5, row Education, column GSM"
+  },
+  {
+   "claim": "Math-domain subset helps MATH most but not GSM8K or science",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH",
+   "value": "27.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B trained on math subset; GSM8K 52.9, ARC-C 74.1 (base 77.6)",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Math, column MATH"
+  },
+  {
+   "claim": "WebInstruct composition by subject",
+   "kind": "measured",
+   "source": null,
+   "metric": "share Science",
+   "value": "81.69",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Labels from Llama-3-8B-Instruct; math 68.36% within science",
+   "note": null,
+   "where": "App G",
+   "quote": "81.69% of the data falling under the broad \"Science\" category"
+  },
+  {
+   "claim": "WebInstruct source split, exam-style vs forum",
+   "kind": "measured",
+   "source": null,
+   "metric": "share exam-style",
+   "value": "86.73",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "by source URL",
+   "note": null,
+   "where": "App G",
+   "quote": "the vast majority (86.73%) of the instruction-response pairs come from exam-style questions, while forum discussions make up the remaining 13.27%"
+  },
+  {
+   "claim": "SFT loss beats LM loss and accuracy rises with more instructions (1M to 10M)",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B, MATH/TheoremQA/ARC-C, read from Fig 5; no numbers in text",
+   "note": null,
+   "where": "Fig 5",
+   "quote": null
+  },
+  {
+   "claim": "MAmmoTH2-8x7B-Plus AlpacaEval 2.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "AlpacaEval 2.0",
+   "value": "33.8",
+   "unit": "%",
+   "baseline_value": "23.7",
+   "n": null,
+   "setup": "8x7B-Plus, vs Mixtral-8x7B-Instruct 23.7",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MAmmoTH2-8x7B-Plus, column AlpacaEval 2.0"
+  },
+  {
+   "claim": "MAmmoTH2-8x7B-Plus Arena Hard",
+   "kind": "measured",
+   "source": null,
+   "metric": "Arena Hard",
+   "value": "32.6",
+   "unit": "%",
+   "baseline_value": "23.4",
+   "n": null,
+   "setup": "vs Mixtral-8x7B-Instruct 23.4",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MAmmoTH2-8x7B-Plus, column Arena Hard"
+  },
+  {
+   "claim": "MAmmoTH2-7B-Plus code average HumanEval(+)/MBPP(+)",
+   "kind": "measured",
+   "source": null,
+   "metric": "code avg",
+   "value": "66.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3; (+) 58.2",
+   "note": null,
+   "where": "Table 3, Table 6",
+   "table": "Table 3, row MAmmoTH2-7B-Plus, column Code Generation"
+  }
+ ],
+ "limits": [
+  "Noise and inaccuracies remain; extraction and refinement depend on the LLMs used (App H)",
+  "Humanities and daily-chat topics underrepresented (App H)",
+  "81.69% science, 68.36% math (App G)",
+  "Single runs, no seeds, variance not reported",
+  "Baseline numbers mix official sources and own evaluation, so settings differ",
+  "Raw documents lacking CoT rationale; refinement can change intent (10% hallucinations in 50-sample check)",
+  "Intro says Mixtral extracts Q-A pairs, Sec 2.2 says Qwen-72B; refiner printed as Mixtral-22Bx8 / Mixtral-8x7B inconsistently",
+  "First-round recalled docs are discarded; GPT-3.5/GPT-4 are used to select domains, so pipeline is not GPT-free"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "WebInstruct",
+   "definition": "10M instruction-response pairs mined from the web",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeekMath",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "uses-method",
+   "note": "fastText recall from Common Crawl and 10-gram decontamination",
+   "quote": "we follow previous work (Shao et al., 2024) and filter out web pages"
+  },
+  {
+   "work": "fastText",
+   "year": 2016,
+   "arxiv": "1612.03651",
+   "relation": "uses-method",
+   "note": "recall classifier",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": "2310.06825",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "Mixtral of experts",
+   "year": 2024,
+   "arxiv": "2401.04088",
+   "relation": "uses-method",
+   "note": "base and refiner",
+   "quote": null
+  },
+  {
+   "work": "Llama-3-8B-Instruct",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "apple-to-apple comparison with MAmmoTH2-8B-Plus",
+   "quote": null
+  },
+  {
+   "work": "MetaMath",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MetaMathQA in Math-Plus",
+   "quote": null
+  },
+  {
+   "work": "Orca-Math",
+   "year": 2024,
+   "arxiv": "2402.14830",
+   "relation": "uses-data",
+   "note": "Math-Plus",
+   "quote": null
+  },
+  {
+   "work": "OpenHermes 2.5",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Plus stage",
+   "quote": null
+  },
+  {
+   "work": "Code-Feedback / OpenCodeInterpreter",
+   "year": 2024,
+   "arxiv": "2402.14658",
+   "relation": "uses-data",
+   "note": "Plus stage",
+   "quote": null
+  },
+  {
+   "work": "MAmmoTH",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "earlier hybrid instruction tuning from same group",
+   "quote": null
+  },
+  {
+   "work": "LLaMA-Factory",
+   "year": 2024,
+   "arxiv": "2403.13372",
+   "relation": "uses-method",
+   "note": "training library",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Step 1: Recall relevant documents from Common Crawl. Step 2: Extracting Q-A pairs. Step 3: Refine with the extracted Q-A pairs.",
+   "page": 3,
+   "why": "Pipeline overview"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Mistral-7B model reasoning performance improves with scaling instructions. Additionally, SFT Loss is a more effective learning approach compared to LM Loss.",
+   "page": 7,
+   "why": "scaling and loss ablation"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Quality distribution of 50 sampled refined QA examples.",
+   "page": 9,
+   "why": "error rate"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Table cells flattened into one value per line by text extraction; read by row order.",
+  "Figure 5, 7, 8 values not in text."
+ ]
+}

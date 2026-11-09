@@ -1,19 +1,734 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2405.01535",
  "pdf": "generative-ai/08-eval/sources/kim-2024-prometheus-2.pdf",
  "bib": {
-  "title": "Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models",
-  "first_author": "Seungone Kim",
-  "year": "2024",
-  "venue": null,
+  "title": "PROMETHEUS 2: An Open Source Language Model Specialized in Evaluating Other Language Models",
+  "authors": [
+   "Seungone Kim",
+   "Juyoung Suk",
+   "Shayne Longpre",
+   "Bill Yuchen Lin",
+   "Jamin Shin",
+   "Sean Welleck",
+   "Graham Neubig",
+   "Moontae Lee",
+   "Kyungjae Lee",
+   "Minjoon Seo"
+  ],
+  "first_author": "Kim",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2405.01535",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 69643,
+  "chars_total": 69643,
+  "engine": "pymupdf",
+  "skipped": "Reference list (chars ~38400-49900) skimmed for lineage only."
  },
- "legacy_report": "SOURCE: \"Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models\", Seungone Kim, Juyoung Suk, Shayne Longpre, Bill Yuchen Lin, Jamin Shin, Sean Welleck, Graham Neubig, Moontae Lee, Kyungjae Lee, Minjoon Seo. No venue is printed on the PDF; the only stamp is \"arXiv:2405.01535v2 [cs.CL] 4 Dec 2024\", so treat it as a preprint, 2024.\n\nCOVERAGE: 20 of 20 pages, 70,072 of 70,072 chars extracted. Body, Limitations and Appendices A-J (Tables 7-17, prompts) were read in full; the reference list (p9-12) was skimmed for origins only.\n\nCLAIMS\n\n- claim: Prometheus 2 correlates with GPT-4, Claude-3-Opus and humans above 0.5 on every direct-assessment benchmark, where most open baselines fall below 0.5.\n  number: Pearson > 0.5\n  setup: Vicuna Bench (320 judgments), MT Bench (320), FLASK (2,000), Feedback Bench (1,000, in-domain); reference-based, 1-5 rubric scoring, averaged over 3 runs.\n  quote: \"yielding Pearson correlations higher than 0.5 regardless of the reference evaluator and benchmark\"\n  where: p6, section 5.1, Table 3\n\n- claim: Against human scores on FLASK, Prometheus-2-8x7B halves the gap between the original Prometheus-13B and GPT-4.\n  number: 0.555 vs 0.449 (Prometheus-13B) vs 0.679 (GPT-4-1106); Prometheus-2-7B 0.545\n  setup: FLASK, Pearson with humans, 200 prompts, 12 rubrics, 2,000 responses, reference-based.\n  quote: \"while the correlation between humans and GPT-4 is 0.679, the highest correlation previously achieved by Prometheus-13B with humans was 0.449. PROMETHEUS-2-8X7B achieves a correlation of 0.555 with humans, halving the gap.\"\n  where: p6\n\n- claim: Prometheus 2 beats the original Prometheus and Auto-J by at least 0.2 Pearson in agreement with proprietary judges.\n  number: 0.2\n  setup: Table 3, e.g. Vicuna Bench vs GPT-4-1106: 0.685 (8x7B) and 0.666 (7B) vs 0.492 (Prometheus-13B) and 0.351 (Auto-J).\n  quote: \"PROMETHEUS 2 models outperform Prometheus and Auto-J by at least 0.2 units across benchmarks in their correlation with proprietary LMs.\"\n  where: p6\n\n- claim: On pairwise ranking, the 8x7B model has the highest accuracy among open judges but still trails GPT-4 on the human-judged sets.\n  number: HHH Alignment 85.52 vs GPT-4 90.95; MT Bench Human Judgment without ties 71.96 vs 79.90; Auto-J Eval without ties 79.98 vs 83.12\n  setup: accuracy against human preferences, reference-free, single run; n = 221, 3,360 and 1,392 pairs.\n  quote: \"PROMETHEUS -2-8 X7B 84.75 96.55 81.97 76.74 85.52 55.07 71.96 58.41 79.98 90.65\"\n  where: p6, Table 4\n\n- claim: Merging the weights of a direct-assessment model and a pairwise model beats joint training and single-format training.\n  number: Mixtral-8x7B average Pearson 0.670 merged vs 0.595 joint vs 0.625 direct-only; pairwise average 79.15 vs 75.29 vs 75.36\n  setup: Table 5, Pearson with GPT-4-1106 on Vicuna, MT Bench and FLASK; accuracy on HHH, MT Bench Human Judgment and Auto-J.\n  quote: \"WEIGHT MERGING 0.685 0.665 0.659 0.670 85.52 71.96 79.98 79.15\"\n  where: p8, Table 5\n\n- claim: The gain is not an ensembling effect; merging two models of the same format hurts.\n  number: 0.517 (direct and direct) vs 0.539 (single) vs 0.624 (direct and pairwise)\n  setup: Mistral-7B, different seeds, Table 6.\n  quote: \"the beneficial task transfer in weight merging arises from integrating different evaluation formats, not ensembling multiple models\"\n  where: p7\n\n- claim: Removing the reference answer lowers correlation with humans for every judge, and most for Prometheus 2.\n  number: FLASK: 7B 0.545 to 0.425 (delta 0.120); 8x7B 0.555 to 0.411 (0.144); GPT-4-1106 0.679 to 0.616 (0.063)\n  setup: Table 16, Pearson with humans, FLASK and BiGGen Bench (2,840 human judgments).\n  quote: \"Even for GPT-4-1106, there is a significant performance degradation (0.045, 0.063). This suggests that including a reference answer is crucial\"\n  where: p18, Appendix F\n\n- claim: Run-to-run consistency of scores is lower than the proprietary judges, and depends on model size more than on judge training.\n  number: Krippendorff's alpha on Vicuna / MT Bench / FLASK: 8x7B 0.6383 / 0.6862 / 0.7874; GPT-4 0.7366 / 0.8271 / 0.8355; 7B 0.6018 / 0.5340 / 0.5991\n  setup: 3 samples at temperature 1.0, Table 14.\n  quote: \"training on feedback data only slightly improves consistency\"\n  where: p16, Appendix E\n\n- claim: Training data are synthetic and the pairwise feedback is written by GPT-4.\n  number: 1,000 criteria, 20,000 instructions; 200,000 pairwise and 100,000 direct instances; human check on 200 samples by 5 annotators, coherence 99.5%, suitability 98.5%\n  setup: Preference Collection derived from Feedback Collection, English only.\n  quote: \"we prompt GPT-4-1106 to identify the commonalities and differences between the two responses\"\n  where: p3, Table 1; p13, Table 7\n\nLIMITS\n- Conceded: validation is indirect, by agreement with humans or with GPT-4 and Claude. \"it is crucial to use model-based evaluations in conjunction with human evaluation instead of solely relying on it\" (p9). This supports the note's calibration advice.\n- Conceded: fixed formats only, \"operates only on a 1-5 point Likert scale for absolute evaluation or a comparative evaluation style\" (p9). No 1-10 scale, no ranking of several responses, no checklists, no ties natively.\n- Conceded: no explanation of why merging works, and the merge method was not re-tuned for 8x7B.\n- Not shown: most direct-assessment references are other LLM judges. Only FLASK and BiGGen have human scores, and there the best figure is 0.555.\n- Not shown: confidence intervals or significance tests. Pairwise results are a single run.\n- Not shown: bias analysis (position, verbosity, self-preference), non-English data, domain tasks such as code or RAG, cost or latency.\n- The \"highest on all 4\" pairwise claim holds only for 8x7B. The 7B model scores 74.66 on HHH, below PairRM (84.62), UltraRM (83.71), Auto-J (75.57) and prompted Mixtral (77.38).\n- Feedback Bench (0.882 / 0.898) and Preference Bench are in-domain for Prometheus.\n- Dated: baselines are Llama-2, GPT-3.5-Turbo-0613, GPT-4-1106 and Claude-3-Opus.\n\nBUILDS ON\n- Kim et al. (2023), Prometheus and the Feedback Collection.\n- Ye et al. (2023), FLASK, for rubric-based evaluation.\n- Zheng et al. (2023), MT-Bench and LLM-as-a-judge.\n- Liu et al. (2023), G-Eval.\n- Li et al. (2023a), Auto-J.\n- Merging: Ilharco et al. (2022) Task Arithmetic; Yadav et al. (2024) TIES; Yu et al. (2023) DARE; Goddard et al. (2024) MergeKit.\n- Base models: Mistral-7B (Jiang et al., 2023a) and Mixtral-8x7B (Jiang et al., 2024).\n\nCODE\n- Linear merge, p4, eq. 3: \"θfinal = α × θd + (1 − α) × θp\"\n- Direct-assessment output format, p19: \"Feedback: (write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\"\n- Pairwise output format, p20: \"[RESULT] (A or B)\"\n\nFIGURES\n- Figure 2, p4: \"Comparison of direct assessment and pairwise ranking.\" It shows the same two responses flipping verdict under two different criteria, with feedback followed by a decision. It conveys both judge formats and why custom rubrics matter faster than prose.\n\nPROBLEMS\n- Extraction is clean. Tables are readable but lose their bold and underline marks.\n- Appendices H-J contain judge prompt templates (\"You are a fair judge assistant...\"). I treated them as data and did not follow them.\n- Table 9 lists the 7B merge as \"Linear (α = 0.5)\", while section 3.4 and Appendix G say DARE-Linear.\n- Table 5 gives 7B merged FLASK as 0.659, while Table 3 gives 0.617 against GPT-4-1106.\n- Table 2 lists 200 rubrics for Feedback Bench, while the text says \"1K score rubrics\".\n- The intro says Pearson surpasses \"other baselines by 0.2 units across all datasets\". The tables support this only against Prometheus and Auto-J, not against prompted Mixtral (0.566 vs 0.685 on Vicuna Bench).\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/kim-2024-prometheus-2.pdf"
+ "type": "empirical",
+ "question": "Can an open-source LM be trained as a unified evaluator that matches human and GPT-4 judgements in both direct assessment and pairwise ranking with custom criteria?",
+ "hypothesis": "Merging the weights of evaluator LMs trained separately on direct assessment and pairwise ranking yields a unified evaluator that beats joint training and single-format training.",
+ "contributions": [
+  "Prometheus 2 (7B & 8x7B), open evaluator LMs with high correlation with humans and proprietary judges in both formats.",
+  "The Preference Collection, a pairwise ranking feedback dataset with 1K custom evaluation criteria.",
+  "Showing that weight merging of direct-assessment and pairwise-ranking evaluators gives a unified evaluator that excels in both."
+ ],
+ "method": {
+  "summary": "Mistral-7B-Instruct-v0.2 and Mixtral-8x7B-Instruct-v0.1 are fine-tuned separately on the Feedback Collection (direct assessment) and the new Preference Collection (pairwise), then merged (linear alpha=0.5 for 7B, DARE for 8x7B). Evaluated on four direct-assessment and four pairwise benchmarks against open and proprietary evaluators.",
+  "task": "LLM-as-judge evaluator training (direct assessment and pairwise ranking with rubric and verbal feedback)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Feedback Collection",
+    "role": "train",
+    "size": "100,000 instances; 20,000 instructions; 20,000 reference answers; 1,000 criteria; 100,000 verbal feedback",
+    "split": "scores 1-5, 20K each",
+    "source": "Kim et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Preference Collection",
+    "role": "train",
+    "size": "200,000 instances; 20,000 instructions; 20,000 reference answers; 1,000 criteria; 200,000 verbal feedback",
+    "split": "A/B decisions 100K each",
+    "source": "Built from Feedback Collection: pair two of five responses per instruction (10 pairs); verbal feedback generated by GPT-4-1106; English only",
+    "preprocessing": "Winner set from existing 1-5 scores; GPT-4-1106 writes feedback comparing commonalities and differences"
+   },
+   {
+    "name": "Vicuna Bench",
+    "role": "eval",
+    "size": "80 prompts, 80 rubrics, 320 judgments",
+    "split": null,
+    "source": "Chiang et al. 2023; responses from WizardLM-13B, Vicuna-13B, Llama-2-Chat-13B, GPT-3.5-Turbo-0613",
+    "preprocessing": null
+   },
+   {
+    "name": "MT Bench",
+    "role": "eval",
+    "size": "80 prompts, 80 rubrics, 320 judgments",
+    "split": null,
+    "source": "Zheng et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "FLASK",
+    "role": "eval",
+    "size": "200 prompts, 12 rubrics, 2,000 judgments",
+    "split": null,
+    "source": "Ye et al. 2023; human and proprietary LM scores",
+    "preprocessing": null
+   },
+   {
+    "name": "Feedback Bench",
+    "role": "eval",
+    "size": "200 instructions, 1,000 rubrics/judgments",
+    "split": "test set of Feedback Collection, non-overlapping",
+    "source": "Kim et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "HHH Alignment",
+    "role": "eval",
+    "size": "221 prompts, 4 rubrics, 221 pairs",
+    "split": null,
+    "source": "Askell et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MT Bench Human Judgment",
+    "role": "eval",
+    "size": "80 prompts, 3,360 pairs",
+    "split": "w/ tie and w/o tie",
+    "source": "Zheng et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Auto-J Eval",
+    "role": "eval",
+    "size": "58 prompts, 1,392 pairs",
+    "split": "w/ tie and w/o tie",
+    "source": "Li et al. 2023a",
+    "preprocessing": null
+   },
+   {
+    "name": "Preference Bench",
+    "role": "eval",
+    "size": "200 prompts, 2,000 pairs, 200 criteria",
+    "split": "in-domain",
+    "source": "Feedback Bench with two of five responses paired",
+    "preprocessing": null
+   },
+   {
+    "name": "BiGGen Bench",
+    "role": "eval",
+    "size": "2,840 human judgments (excluding multilingual)",
+    "split": null,
+    "source": "Kim et al. 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Prometheus-2-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only",
+    "init_from": "mistralai/Mistral-7B-Instruct-v0.2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "Max Seq Length 4096 (training)",
+    "other": {}
+   },
+   {
+    "name": "Prometheus-2-8x7B",
+    "role": "proposed",
+    "params": "8x7B",
+    "architecture": "sparse mixture of experts",
+    "init_from": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "Max Seq Length 4096 (training)",
+    "other": {}
+   },
+   {
+    "name": "Llama-2-Chat 7B/13B/70B, Mistral-Instruct-7B, Mixtral-Instruct-8x7B",
+    "role": "baseline",
+    "params": "7B-70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Prometheus-7B/13B, Auto-J (13B), UltraRM-13B, PairRM-0.4B",
+    "role": "baseline",
+    "params": "0.4B-13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-Turbo-0613, GPT-4-1106, Claude-3-Opus",
+    "role": "baseline",
+    "params": null,
+    "architecture": "proprietary",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "GPT-4-1106 also used as reference judge and as the feedback generator"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Supervised fine-tuning on verbal feedback plus decision, separately per format, then weight merging",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4 (7B); 8 (8x7B)",
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": "4096",
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": "0.1 (LoRA dropout, 8x7B)",
+   "regularisation": null,
+   "hardware": "eight 40GB NVIDIA A100 GPUs",
+   "compute": "approximately 800 GPU hours",
+   "wall_clock": null,
+   "seeds": "Random seed 42",
+   "other": {
+    "7B merge": "Linear, alpha=0.5 (Table 9); text says DARE-Linear used for both models (Section 3.4, App G)",
+    "8x7B": "PEFT LoRA r=256, alpha=512, targets Q,K,V,O,W proj and LM_Head; DARE merging p=0.1, lambda=1.95",
+    "framework": "Alignment Handbook; MergeKit for merging",
+    "inconsistency": "Table 9 lists Linear (alpha=0.5) for 7B while Appendix G says DARE-Linear trained Prometheus-2-7B"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "1.0",
+   "top_p": "0.9",
+   "max_tokens": "1024 new tokens",
+   "samples": "Direct assessment averaged over 3 runs; pairwise single run",
+   "prompting": "Rubric, reference answer (direct assessment), feedback then [RESULT]; pairwise reference-free; system prompts given in Appendix I, J",
+   "retrieval": null,
+   "parameters": {
+    "repetition_penalty": "1.03",
+    "framework": "vllm",
+    "prompting baselines": "loop until score can be parsed"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pearson / Spearman / Kendall-Tau",
+     "definition": "Correlation of evaluator scores with reference evaluators (GPT-4-1106, Claude-3-Opus, GPT-4-0613, humans)",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "Agreement with human (or proprietary LM) pairwise preference; ties handled w/ tie via direct scores or w/o tie by removal",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Krippendorff alpha",
+     "definition": "Consistency across 3 sampled runs",
+     "unit": "alpha",
+     "higher_is_better": true
+    },
+    {
+     "name": "Transitivity",
+     "definition": "Share of consistent A>B, B>C implying A>C",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-2-Chat",
+    "Mistral-Instruct",
+    "Mixtral-Instruct",
+    "Prometheus",
+    "Auto-J",
+    "UltraRM",
+    "PairRM",
+    "GPT-3.5-Turbo-0613",
+    "GPT-4-1106",
+    "Claude-3-Opus"
+   ],
+   "protocol": "Direct assessment reference-based, averaged over 3 runs; pairwise reference-free single run; no error bars, consistency stats reported instead"
+  },
+  "availability": {
+   "code": "https://github.com/prometheus-eval/prometheus-eval",
+   "weights": "Apache 2.0",
+   "data": "Preference Collection, subject to OpenAI's Terms of Use; research use"
+  },
+  "prompts": [
+   {
+    "purpose": "Direct assessment",
+    "text": "###Task Description: An instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given. 1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general. 2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric. 3. The output format should look as follows: \"Feedback: (write a feedback for criteria) [RESULT] (an integer number between 1 and 5)\" 4. Please do not generate any other opening, closing, and explanations. ###The instruction to evaluate: {orig_instruction} ###Response to evaluate: {orig_response} ###Score Rubrics: {score_rubric} ###Feedback:",
+    "where": "Appendix I (system prompt: You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance.)"
+   },
+   {
+    "purpose": "Pairwise ranking",
+    "text": "###Task Description: ... 2. After writing a feedback, choose a better response between Response A and Response B. ... \"Feedback: (write a feedback for criteria) [RESULT] (A or B)\" ... ###Instruction: {orig_instruction} ###Response A: {response_A} ###Response B: {response_B} ###Score Rubric: {score_rubric} ###Feedback:",
+    "where": "Appendix J (abridged here; full in paper)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Prometheus-2-8x7B reaches 0.555 Pearson with humans on FLASK, halving the gap between GPT-4 and humans (0.679); the best prior open model was 0.449.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson vs humans",
+   "value": "0.555",
+   "unit": "correlation",
+   "baseline_value": "0.449 (Prometheus-13B)",
+   "n": null,
+   "setup": "FLASK, 2,000 responses, reference-based 1-5 rubric scoring, mean of 3 runs",
+   "note": null,
+   "where": "5.1",
+   "quote": "PROMETHEUS-2-8X7B achieves a correlation of 0.555 with humans, halving the gap."
+  },
+  {
+   "claim": "Prometheus-2-8x7B Pearson with GPT-4-1106 on Vicuna Bench.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson vs GPT-4-1106",
+   "value": "0.685",
+   "unit": "correlation",
+   "baseline_value": "Prometheus-13B 0.492; Mixtral-Instruct 0.566",
+   "n": null,
+   "setup": "Vicuna Bench, 320 judgments, reference-based",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row PROMETHEUS-2-8X7B, column Vicuna Bench GPT-4-1106"
+  },
+  {
+   "claim": "Prometheus-2-8x7B Pearson with GPT-4-1106 on MT Bench.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson vs GPT-4-1106",
+   "value": "0.665",
+   "unit": "correlation",
+   "baseline_value": "Mixtral-Instruct 0.551",
+   "n": null,
+   "setup": "MT Bench, 320 judgments",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row PROMETHEUS-2-8X7B, column MT Bench GPT-4-1106"
+  },
+  {
+   "claim": "Prometheus models outperform Prometheus-1 and Auto-J by at least 0.2 in correlation with proprietary LMs, and exceed 0.5 correlation with every reference evaluator while most other open models fall below 0.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": "0.2",
+   "unit": "units (minimum margin)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four direct assessment benchmarks",
+   "note": "Quote supports the >0.5 claim; the 0.2 margin is the paper's statement in 5.1 (and in the Introduction as surpassing baselines by 0.2 units).",
+   "where": "5.1",
+   "quote": "yielding Pearson correlations higher than 0.5"
+  },
+  {
+   "claim": "Prometheus-2-8x7B pairwise accuracy on HHH Alignment total average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "85.52",
+   "unit": "%",
+   "baseline_value": "GPT-4-1106 90.95; Claude-3-Opus 94.57; PairRM 84.62; UltraRM 83.71",
+   "n": null,
+   "setup": "HHH Alignment, 221 pairs, human labels, reference-free",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PROMETHEUS-2-8X7B, column HHH Total Avg."
+  },
+  {
+   "claim": "Prometheus-2-8x7B pairwise accuracy on Auto-J Eval without ties (Auto-J's own in-domain test set).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "79.98",
+   "unit": "%",
+   "baseline_value": "Auto-J 76.64; GPT-4-1106 83.12",
+   "n": null,
+   "setup": "Auto-J Eval, 1,392 pairs, w/o tie",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PROMETHEUS-2-8X7B, column AUTO-J EVAL w/o TIE"
+  },
+  {
+   "claim": "Prometheus-2-8x7B pairwise accuracy on MT Bench Human Judgment without ties.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "71.96",
+   "unit": "%",
+   "baseline_value": "GPT-4-1106 79.90",
+   "n": null,
+   "setup": "MT Bench Human Judgment, 3,360 pairs, w/o tie",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PROMETHEUS-2-8X7B, column MT BENCH HUMAN JUDG. w/o TIE"
+  },
+  {
+   "claim": "Prometheus-2-7B accuracy on Preference Bench (in-domain).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "93.25",
+   "unit": "%",
+   "baseline_value": "GPT-4-1106 85.50",
+   "n": null,
+   "setup": "Preference Bench, 2,000 pairs, instance-wise criteria",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PROMETHEUS-2-7B, column Preference Bench"
+  },
+  {
+   "claim": "Weight merging beats joint training and single-format training; Mixtral-8x7B base direct-assessment average 0.670 vs joint 0.595 and DA-only 0.625.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg Pearson with GPT-4-1106",
+   "value": "0.670",
+   "unit": "correlation",
+   "baseline_value": "0.595 joint training",
+   "n": null,
+   "setup": "Mixtral-Instruct-8x7B base, Vicuna/MT/FLASK average",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row WEIGHT MERGING (Mixtral), column Average (direct assessment)"
+  },
+  {
+   "claim": "Mixtral-8x7B weight merging pairwise average accuracy vs joint training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy",
+   "value": "79.15",
+   "unit": "%",
+   "baseline_value": "75.29 joint training",
+   "n": null,
+   "setup": "HHH, MT Bench HJ, Auto-J average",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row WEIGHT MERGING (Mixtral), column Average (pairwise)"
+  },
+  {
+   "claim": "Merging two models trained on the same format (ensembling) does not help: DA&DA average 0.517 vs DA&PR 0.624 (Mistral-7B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg Pearson with GPT-4-1106",
+   "value": "0.624",
+   "unit": "correlation",
+   "baseline_value": "0.517 (DA & DA)",
+   "n": null,
+   "setup": "Mistral-7B-Instruct base; Table 6",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row DIRECT ASSESSMENT & PAIRWISE RANKING, column Average (direct)"
+  },
+  {
+   "claim": "Optimal merging alpha is 0.5 for direct assessment and 0.3 for pairwise ranking; pairwise training helps direct assessment more than the reverse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha",
+   "value": "0.5 / 0.3",
+   "unit": "linear merge weight on direct-assessment model",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear merging, 8 benchmarks, Fig 3",
+   "note": "Text: DA optimal at alpha 0.5 and pairwise optimal at alpha 0.3; the 0.3/0.5 values read from Section 6.3 text.",
+   "where": "6.3",
+   "quote": "the performance is optimal when α is set to"
+  },
+  {
+   "claim": "DARE-Linear is the best merging method on average (83.32), ahead of DARE-TIES (83.27) and Linear (82.93).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average (Pearson*100 combined with accuracy)",
+   "value": "83.32",
+   "unit": "points",
+   "baseline_value": "83.27 DARE-TIES; 82.93 Linear",
+   "n": null,
+   "setup": "Mistral-7B base, 8 benchmarks",
+   "note": null,
+   "where": "Table 17",
+   "table": "Table 17, row DARE-LINEAR, column Average"
+  },
+  {
+   "claim": "Prometheus-2 models are highly transitive in pairwise ranking, on par with GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Transitivity",
+   "value": "97.60",
+   "unit": "%",
+   "baseline_value": "GPT-4-1106 95.70; Claude-3-Opus 96.20; GPT-3.5 84.35",
+   "n": null,
+   "setup": "Preference Collection test, Prometheus-2-7B",
+   "note": null,
+   "where": "Table 15",
+   "table": "Table 15, row PROMETHEUS-2-7B"
+  },
+  {
+   "claim": "Prometheus-2-7B direct-to-pair vs pair-to-pair accuracy gap on HHH is tiny.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Delta between formats",
+   "value": "0.45",
+   "unit": "points",
+   "baseline_value": "Auto-J 28.96; GPT-4 7.24",
+   "n": null,
+   "setup": "HHH Alignment, evaluating pairs via two direct scores vs pairwise prompt",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row PROMETHEUS-2-7B, column HHH ALIGNMENT Delta"
+  },
+  {
+   "claim": "Krippendorff alpha across 3 non-deterministic runs for Prometheus-2-8x7B on FLASK, below GPT-4-1106.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Krippendorff alpha",
+   "value": "0.7874",
+   "unit": "alpha",
+   "baseline_value": "GPT-4-1106-Preview 0.8355; Claude-3-Opus 0.8976",
+   "n": null,
+   "setup": "FLASK, 3 runs at temperature 1.0",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row PROMETHEUS-2-8X7B, column FLASK"
+  },
+  {
+   "claim": "Dropping the reference answer lowers human correlation, even for GPT-4-1106.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson with humans, reference-free vs reference-based",
+   "value": "0.616 vs 0.679",
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLASK, GPT-4-1106",
+   "note": "Text states drop as 0.045, 0.063 for BiGGen and FLASK.",
+   "where": "Table 16",
+   "table": "Table 16, row GPT-4-1106, columns FLASK Reference-free / Reference-based"
+  },
+  {
+   "claim": "Human verification of the Preference Collection verbal feedback: coherence 99.5%, suitability 98.5%, criticality 88% win rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Coherence pass rate",
+   "value": "99.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200 randomly sampled instances, five annotators",
+   "note": null,
+   "where": "Appendix A, Table 7",
+   "table": "Table 7, row Coherence"
+  },
+  {
+   "claim": "Training used about 800 GPU hours on eight 40GB A100s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "800",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training of the Prometheus 2 models",
+   "note": null,
+   "where": "Appendix B",
+   "quote": "800 GPU hours"
+  }
+ ],
+ "limits": [
+  "Evaluator quality is measured indirectly, by agreement with humans or GPT-4/Claude-3-Opus, which may not be the best approach.",
+  "Generalisation rests on overlap analysis from Kim et al. (2023); human-judgment benchmarks are scarce.",
+  "Only 1-5 Likert and A/B formats; no 1-10 scale, five-way ranking or checklist evaluation.",
+  "Why weight merging works is not explained; Section 6 is indirect.",
+  "DARE-Linear chosen from 7B ablation and applied to 8x7B without further tests due to compute.",
+  "Preference Collection is English only and its feedback is GPT-4-1106 generated (OpenAI terms).",
+  "Results on the 8x7B still trail GPT-4-1106 and Claude-3-Opus on pairwise benchmarks (e.g. HHH 85.52 vs 90.95).",
+  "Authors say model-based evaluation should be used alongside human evaluation."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "direct assessment",
+   "definition": "mapping an instruction i and response r into a scalar value score s",
+   "where": "3.1"
+  },
+  {
+   "term": "pairwise ranking",
+   "definition": "mapping an instruction i and two pair of responses (rm, rn) into either i or j",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Prometheus (Kim et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Predecessor; Feedback Collection comes from it",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge with MT-Bench and Chatbot Arena",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "uses-data",
+   "note": "MT Bench, human judgments; reference answers help",
+   "quote": null
+  },
+  {
+   "work": "FLASK (Ye et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "FLASK benchmark, 3-run Krippendorff protocol",
+   "quote": null
+  },
+  {
+   "work": "Auto-J (Li et al. 2023a)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Jointly trained evaluator",
+   "quote": null
+  },
+  {
+   "work": "UltraRM / UltraFeedback (Cui et al. 2023)",
+   "year": 2023,
+   "arxiv": "2310.01377",
+   "relation": "baseline",
+   "note": "Pairwise reward model",
+   "quote": null
+  },
+  {
+   "work": "PairRM (Jiang et al. 2023c)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "0.4B pairwise ranker",
+   "quote": null
+  },
+  {
+   "work": "DARE (Yu et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Merging",
+   "quote": null
+  },
+  {
+   "work": "TIES merging (Yadav et al. 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Merging ablation",
+   "quote": null
+  },
+  {
+   "work": "Task arithmetic (Ilharco et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Merging ablation",
+   "quote": null
+  },
+  {
+   "work": "MergeKit (Goddard et al. 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Merging implementation, SLERP",
+   "quote": null
+  },
+  {
+   "work": "Mistral-7B / Mixtral-8x7B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Base models",
+   "quote": null
+  },
+  {
+   "work": "HHH Alignment (Askell et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Pairwise benchmark",
+   "quote": null
+  },
+  {
+   "work": "BiGGen Bench (Kim et al. 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Reference-free ablation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Performance of Direct Assessment and Pairwise Ranking when altering the alpha value to merge evaluator LMs trained on different formats.",
+   "page": 7,
+   "why": "Shows optimal merge ratio per format"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of direct assessment and pairwise ranking.",
+   "page": 3,
+   "why": "Shows the two formats on one example"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3",
+   "snippet": "θfinal = α × θd + (1 −α) × θp",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 9 (7B, Linear alpha=0.5) conflicts with the text claiming DARE-Linear for both models.",
+  "Table 3 columns for GPT-4-1106 and Claude-3-Opus rows use '/' for self-comparison.",
+  "Figure 3 values are not in the text."
+ ]
 }

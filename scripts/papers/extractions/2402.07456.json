@@ -1,19 +1,517 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.07456",
  "pdf": "ai-engineering/03-harness-engineering/sources/wu-2024-os-copilot.pdf",
  "bib": {
   "title": "OS-Copilot: Towards Generalist Computer Agents with Self-Improvement",
-  "first_author": "Zhiyong Wu",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Zhiyong Wu",
+   "Chengcheng Han",
+   "Zichen Ding",
+   "Zhenmin Weng",
+   "Zhoumianze Liu",
+   "Shunyu Yao",
+   "Tao Yu",
+   "Lingpeng Kong"
+  ],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "preprint (arXiv:2402.07456v2 [cs.AI], 15 Feb 2024; no conference printed)",
   "arxiv": "2402.07456",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 70235,
+  "chars_total": 70235,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: OS-Copilot: Towards Generalist Computer Agents with Self-Improvement. Zhiyong Wu, Chengcheng Han, Zichen Ding, Zhenmin Weng, Zhoumianze Liu, Shunyu Yao, Tao Yu, Lingpeng Kong. ICLR 2024 (arXiv:2402.07456v2, 15 Feb 2024).\n\nCOVERAGE: 74,541 of 74,541 chars read, including appendices A-G and Tables 1-14. I skimmed the references and the prompt tables (5-9) and read the Critic prompt in full. The PDF text extracted cleanly. The Graph-based Planner prompt appears twice because the PDF repeats it. I did not read the note beyond its first 60 lines. Its frontmatter lists arXiv 2405.15793 (SWE-agent) and a different arXiv id, and does not list this paper.\n\nCLAIMS (ranked)\n- claim: The framework puts four control methods behind one runtime (Python interpreter, bash, API calls, mouse/keyboard) and presents this as the \"universal interface\" for OS agents.\n  number: 4 methods\n  setup: Linux and MacOS; the executor emits a command or function call that the runtime runs.\n  quote: \"This universal interface consolidates common practices for OS manipulation, including Python code interpreter (Significant-Gravitas, 2023), bash terminal, mouse/keyboard control (Cheng et al., 2024), and API calls (Qin et al., 2023).\"\n  where: p.2 (Intro); also Sec 2.3 and Table 4.\n- claim: A tool repository is a store of tools in two forms, a POST-invoked API service or a Python file. It is seeded with 4 hand-made tools, and the agent writes the rest.\n  number: 4 seed tools\n  setup: GAIA setting; the dev-set run added 9 tools.\n  quote: \"We seed OS-Copilot with 4 manually created tools for basic computer functionalities, such as web browsing and speech-to-text translation\"\n  where: p.4 (Sec 2.2.2). Settings on p.6: \"(result in 9 more tools)\".\n- claim: Tools are retrieved by dense retrieval over the stored tool descriptions. If similarity is below a threshold, a Tool Generator writes a new tool. The threshold value is not given.\n  number: none\n  setup: FRIDAY's Configuration Tracker, in the \"dark mode\" running example.\n  quote: \"employs dense retrieval to recall relevant information from the long-term memory\"; \"no suitable tools are identified (similarities below a specified threshold), prompting activation of the Tool Generator\"\n  where: p.5 (Sec 3.1).\n- claim: A generated tool is kept only if the critic scores it above 8 out of 10 for reuse. Failed actions go through at most 3 self-correction attempts.\n  number: score above 8; 3 attempts\n  setup: Critic scores are LLM-assigned. The Critic prompt defines 1-4 as too task-specific, 5-7 as reusable but weak on security, comments, efficiency or error handling, and 8 and above as good generality.\n  quote: \"tools scoring above 8 are preserved by updating the tool repository\"; \"until the subtask is considered completed or a maximum of three attempts is reached.\"\n  where: p.5 (Sec 3.1); Table 9 prompt.\n- claim: Tool format is strictly constrained. Each tool is a Python class that subclasses BaseAction. Its constructor sets only a short `_description`, which doubles as the retrieval key. It exposes a `__call__`, and the prompt tells the generator to prefer Python libraries over bash and to use subprocess.run when bash is needed.\n  number: none\n  setup: Tool Generator prompt (Table 5/6) and the example tool in Table 13.\n  quote: \"In the init method of the class, only ”self. description” is initialized. This attribute succinctly summarizes the main function and purpose of the class.\"; \"We strictly define the format of the tool code to match the Executor\"\n  where: p.14 (App F.4); p.16 prompt; Table 13.\n- claim: FRIDAY reaches 40.86% on GAIA level 1 (private test set), against 30.3% for the best previous system and 14.4% for AutoGPT-4.\n  number: 40.86% vs 30.3%; 6.12% on level 3\n  setup: GPT-4-turbo-1106, 4 seed tools plus 9 learned on the GAIA dev set, evaluated on the official server. Table 1 lists AutoGPT-4 at 15.05 on level 1, while the intro text says 14.4%, an inconsistency inside the paper. Table 1 columns: GPT-4 Plugins 30.30 / 9.70 / 0; FRIDAY 40.86 / 20.13 / 6.12; FRIDAY w/o learning 36.56 / 17.61 / 6.12.\n  quote: \"FRIDAY achieves a success rate of 40.86%, marking a 35% relative improvement over the previous best system (30.3%), and significantly outperforming the popular AutoGPT-4 system (14.4%).\"\n  where: p.2 and Table 1, p.6.\n- claim: Self-directed learning is the largest gain in the spreadsheet test. FRIDAY goes from 0% to 60% Pass@1 on SheetCopilot-20 after generating 10 self-set tasks and accumulating 8 tools.\n  number: 0% to 60%; SheetCopilot GPT-4 55%\n  setup: GPT-4; 20 spreadsheet tasks from SheetCopilot's 221; tasks run once (Pass@1); the learning tasks used openpyxl. The SheetCopilot figures are the numbers reported by Li et al. (2023), not rerun.\n  quote: \"Initially, FRIDAY, without self-directed learning, is unable to complete any tasks and tends to use the pandas and matplotlib packages for spreadsheet control, resulting in failures.\"\n  where: p.7 (Sec 4.2), Table 2.\n- claim: The learned tools are small, atomic and named for one operation, such as sort_excel_by_column or change_ppt_slide_text_font_size. The paper notes they have \"a degree of atomicity and universality\", and that SheetCopilot's hand-crafted atomic operations were matched by self-generated ones.\n  number: 8 Excel tools; 7 PPT tools; 9 GAIA tools\n  setup: Tables 10-12.\n  quote: \"FRIDAY generates a set of tools that exhibit a degree of atomicity and universality.\"\n  where: p.14 (App F.1); Tables 10-12.\n- claim: Learning tools gives a small gain on GAIA, and the critic and refiner matter more. Learning moves level 1 from 36.56 to 40.86 and level 2 from 17.61 to 20.13, with no change on level 3.\n  number: +4.3 pts on level 1 (36.56 to 40.86); +2.5 pts on level 2 (17.61 to 20.13)\n  setup: Same as the GAIA setup above. The paper explains the AutoGPT-4 gap by \"self-criticism and refinement\" and the GPT-4 Plugins gap by tool-library access. These explanations are hypotheses and were not ablated.\n  quote: \"while the ability to utilize tools and access to a broad tool set is crucial for the success of general agents, the planner, critic, and refiner are what elevate them to the next level.\"\n  where: p.6-7, Table 1.\n- claim: FRIDAY is faster than AutoGPT-4 but slower than GPT-4 Plugins on GAIA. Its time includes tool retrieval and generation.\n  number: 105 s (text) vs more than 500 s for AutoGPT-4\n  setup: Average seconds to answer on level 1. Table 3 gives 118 s for FRIDAY and 456 s for AutoGPT-4. The 105 s in the text does not match the table, and neither matches the \"more than 500\" figure. Plugins is 39 s, and its time excludes the human plugin selection.\n  quote: \"executing in 105 seconds compared to more than 500 seconds in the case of AutoGPT-4. This marks a fourfold speed increase.\"\n  where: p.12 (App B), Table 3.\n- claim: The DAG planner lets independent subtasks run in parallel, each with its own sub-agent (a separate configurator and actor). Subtasks are typed API, Code or QA. The planner is given an \"Action List\" of atomic tools so it can plan at the right granularity.\n  number: none\n  setup: Described, not ablated. No numbers isolate the planner's contribution.\n  quote: \"the planner needs to comprehend the agent's capabilities to generate plans at the correct granularity.\"\n  where: p.3; App A, p.11-12; Table 5.\n\nLIMITS\n- The tool-retrieval threshold is never given.\n- The paper does not ablate the retrieval-and-generation loop against a fixed tool set or against no tool descriptions. It also does not test how description wording affects tool selection.\n- The test-set gains come from one model (GPT-4-turbo-1106) and one budget-limited run. There are no variance or seed numbers.\n- The 4 seed tools plus 9 learned ones are tiny repositories. The paper does not test tool-set bloat or overlapping tools.\n- The authors concede these limits: it relies on prompting and \"may suffer dramatic performance changes when the underlying LLMs change\"; evaluating subtasks has \"absence of ground truth\"; the critic is LLM-judged and \"potentially inaccurate\"; there is no GUI/screenshot input; safety is only discussed, not tested; the User Profile module is \"a conceptual design at the current stage\".\n- Web browsing is read-only: \"can not perform actions within the web, such as clicks\". Multimodal tasks are weak.\n- The paper's own numbers are inconsistent: AutoGPT-4 is 14.4% in the text and 15.05 in Table 1, and FRIDAY is 105 s in the text and 118 s in Table 3.\n- Dated: 2024, GPT-4-turbo-1106 era. The GAIA leaderboard has long since moved on.\n- The paper has no ACI-style claim and does not compare an interface designed for the model against a plain shell, so it does not support the 18.0% vs 11.0% SWE-agent claim in the note. SWE-agent is not cited here.\n\nBUILDS ON (as printed)\n- Voyager (Wang et al., 2023a): the skill library and self-directed curriculum.\n- LLMs as tool makers (Cai et al., 2023), Toolformer (Schick et al., 2023), Qin et al. 2023 for API calls.\n- Self-instruct (Wang et al., 2022): the task generation.\n- Plan-and-Solve (Wang et al., 2023c), Graph of Thoughts (Besta et al., 2023), ReAct (Yao et al., 2022b), Reflexion (Shinn et al., 2023): planning and critique.\n- AutoGPT (Significant-Gravitas, 2023) as the main baseline; TaskWeaver (Qiao et al., 2023); InterCode (Yang et al., 2023a); SheetCopilot (Li et al., 2023).\n- Memory split from Baddeley (2003) and Packard (2009): declarative, procedural and working memory.\n- GAIA (Mialon et al., 2023b) as the evaluation.\n\nCODE (verbatim, Table 13, p.21)\n```\nfrom friday.action.base_action import BaseAction\nimport subprocess\nclass change_system_appearance (BaseAction):\ndef __init__(self):\nself._description = \"Execute an AppleScript command using\n`osascript` to change the Mac system appearance to dark\nmode.\"\n```\nA representative tool description from Table 10: \"Execute Bing Search - get top snippets for queries. Avoid using complex filters. Use web browser for more page details.\" This one description both says what the tool does and routes to a sibling tool. It is probably the best quote for the note.\nThe Critic prompt returns a JSON object with keys 'reasoning', 'judge' (boolean) and 'score' (1-10), defined in Table 9.\n\nFIGURES\n- Figure 2 (p.3): overview of the framework (planner, configurator, actor); shows the module layout.\n- Figure 3 (p.5): configurator flow and the dark-mode running example; shows tool retrieval, generation, and critic scoring.\n- Figure 4 (p.8): PowerPoint task before and after learning.\n- Figure 5 (p.12): the DAG planner example, and level-1 scores by capability.\nI did not run the figures script, and the captions above are paraphrased from the extracted text.\n\nPROBLEMS\n- No embedded instructions were found in the PDF.\n- Table 9 is cut across pages. The Graph-based Planner prompt is duplicated in the extraction, and the Tool Generator, Executor and Refiner prompts (Tables 6-8) were only skimmed.\n- Table-cell line breaks drop spaces in the extraction (for example \"Description\" rows).\n- The paper's own inconsistencies are listed under LIMITS.\n- Fit with the target note: the paper supports only tool-repository and tool-description points (retrieval over descriptions, atomic tools, a fixed tool format, LLM-generated tools gated by a critic score). The note's SWE-agent ACI claim is not in this paper.\n- The extracted text is saved at /tmp/osc.txt."
+ "type": "system",
+ "question": "How can a general-purpose agent interface with a whole operating system and learn to control unfamiliar applications by accumulating tools?",
+ "hypothesis": "A planner/configurator/actor design with a critic, self-correction and self-directed learning that stores generated tools lets one agent generalise to unseen applications.",
+ "contributions": [
+  "OS-Copilot, a conceptual framework for generalist computer agents on Linux and MacOS with a unified interface",
+  "FRIDAY, a self-improving agent built on it, strong on GAIA and able to learn Excel and PowerPoint control"
+ ],
+ "method": {
+  "summary": "OS-Copilot has a DAG planner, a configurator with declarative (user profile, semantic knowledge), procedural (tool repository) and working memory, and an actor (executor plus critic, refiner). FRIDAY seeds 4 tools, generates tools when dense retrieval finds none above a threshold, stores tools the critic scores above 8, and self-corrects up to three times; self-directed learning proposes a task curriculum for an unfamiliar app.",
+  "task": "general computer-task automation / GAIA QA / spreadsheet control",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GAIA",
+    "role": "eval",
+    "size": "466 questions",
+    "split": "dev set used for tool accumulation (9 tools); private test set for scores via official server; levels 1-3 (93 level-1 test tasks manually checked in App B)",
+    "source": "Mialon et al. 2023b",
+    "preprocessing": null
+   },
+   {
+    "name": "SheetCopilot-20",
+    "role": "eval",
+    "size": "20 spreadsheet tasks (selected from 221 by Li et al. 2023)",
+    "split": "all 20 used",
+    "source": "Li et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Self-instructed Excel tasks",
+    "role": "dev",
+    "size": "10 tasks generated by FRIDAY",
+    "split": null,
+    "source": "self-instruct style generation using openpyxl",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT4-turbo-1106 (FRIDAY on GAIA)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "reason": "limited budget"
+    }
+   },
+   {
+    "name": "GPT-4 (FRIDAY on SheetCopilot-20)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4, GPT-4-Turbo, GPT-4 Plugins, AutoGPT-4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SheetCopilot (GPT-3.5-Turbo, Claude, GPT-4)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Pass@1: each task performed once; GAIA run submitted to the server; no seeds or repeats stated",
+   "prompting": "Zero-shot role prompts for planner, tool generator, refiner, executor and critic (Tables 5-9) filled with memory contents",
+   "retrieval": "Dense retrieval over long-term memory (tools, user profile, OS version, working directory); a tool is generated if similarities fall below 'a specified threshold'; the threshold value and embedding model are not given",
+   "parameters": {
+    "seed_tools": "4 manually created (bing search, bing load page, audio2text, image caption)",
+    "gaia_learned_tools": "9",
+    "sheetcopilot_self_tasks": "10",
+    "sheetcopilot_tools": "8",
+    "pptx_tools": "7",
+    "critic_store_threshold": "score above 8 on a 0-10 scale (prompt says integer 1-10)",
+    "max_self_correction_attempts": "3"
+   },
+   "other": {
+    "control_methods": "Python interpreter, bash, API calls, mouse/keyboard",
+    "tool_format": "Python class (BaseAction) or API service"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GAIA success rate",
+     "definition": "fraction of questions answered correctly per level (official server)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass@1",
+     "definition": "pass rate with each task performed once",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "avg time to answer",
+     "definition": "seconds per task, includes tool retrieval and generation",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "GPT-4",
+    "GPT-4-Turbo",
+    "AutoGPT-4",
+    "GPT-4 Plugins (human-selected)",
+    "Human",
+    "FRIDAY w/o learning",
+    "SheetCopilot"
+   ],
+   "protocol": "Single run, no seeds or significance tests; GAIA scored by official server; SheetCopilot figures taken from Li et al. 2023"
+  },
+  "availability": {
+   "code": "https://os-copilot.github.io/ (project page)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Critic (completion judge and generality score)",
+    "text": "Evaluating the code's generality: ... assigning an integer score between 1 and 10 to reflect the code's generality, with a score of 1-4 indicating that the code is not sufficiently generalized ... a score of 8 and above indicates that the code has good versatility",
+    "where": "Table 9, App E (full prompts for planner, generator, refiner, executor in Tables 5-8)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.max_self_correction_attempts",
+    "quote": "or a maximum of three attempts is reached",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FRIDAY reaches 40.86% on GAIA level 1, a 35% relative gain over the best baseline (GPT-4 Plugins 30.3%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAIA level-1 success rate",
+   "value": "40.86",
+   "unit": "%",
+   "baseline_value": "30.3",
+   "n": null,
+   "setup": "GAIA private test set (official server), FRIDAY with GPT4-turbo-1106, 4 seed tools, 9 tools self-generated on GAIA dev set",
+   "note": "40.86/30.3 = 1.348, so 35% is rounded. Intro says AutoGPT-4 14.4% while Table 1 says 15.05.",
+   "where": "Intro; Table 1",
+   "quote": "In the easiest level-1 tasks, FRIDAY achieves a success rate of 40.86%, marking a 35% relative improvement over the previous best system (30.3%)"
+  },
+  {
+   "claim": "FRIDAY on GAIA level 2 with self-directed learning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAIA level-2 success rate",
+   "value": "20.13",
+   "unit": "%",
+   "baseline_value": "9.70",
+   "n": null,
+   "setup": "GAIA private test set (official server), FRIDAY with GPT4-turbo-1106, 4 seed tools, 9 tools self-generated on GAIA dev set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FRIDAY, column Level 2"
+  },
+  {
+   "claim": "FRIDAY on GAIA level 3 with self-directed learning; all baselines score 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAIA level-3 success rate",
+   "value": "6.12",
+   "unit": "%",
+   "baseline_value": "0",
+   "n": null,
+   "setup": "GAIA private test set (official server), FRIDAY with GPT4-turbo-1106, 4 seed tools, 9 tools self-generated on GAIA dev set",
+   "note": null,
+   "where": "Intro; Table 1",
+   "quote": "Even in the most challenging level-3 tasks, previously unsolvable by any other systems, FRIDAY achieves a success rate of 6.12%."
+  },
+  {
+   "claim": "Without learning on the GAIA dev set, FRIDAY level 1 falls to 36.56% (learning adds 4.30 points).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAIA level-1 success rate",
+   "value": "36.56",
+   "unit": "%",
+   "baseline_value": "40.86",
+   "n": null,
+   "setup": "GAIA private test set (official server), FRIDAY with GPT4-turbo-1106, 4 seed tools, 9 tools self-generated on GAIA dev set but learning on dev disabled (4 seed tools only)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FRIDAY w/o learning, column Level 1"
+  },
+  {
+   "claim": "Without learning, FRIDAY level 2 is 17.61% (vs 20.13% with learning).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAIA level-2 success rate",
+   "value": "17.61",
+   "unit": "%",
+   "baseline_value": "20.13",
+   "n": null,
+   "setup": "GAIA private test set (official server), FRIDAY with GPT4-turbo-1106, 4 seed tools, 9 tools self-generated on GAIA dev set, learning disabled",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FRIDAY w/o learning, column Level 2"
+  },
+  {
+   "claim": "Without learning, FRIDAY level 3 is 6.12%, identical to the learned version, so learning added nothing at level 3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAIA level-3 success rate",
+   "value": "6.12",
+   "unit": "%",
+   "baseline_value": "6.12",
+   "n": null,
+   "setup": "GAIA private test set (official server), FRIDAY with GPT4-turbo-1106, 4 seed tools, 9 tools self-generated on GAIA dev set, learning disabled",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FRIDAY w/o learning, column Level 3"
+  },
+  {
+   "claim": "Baselines on GAIA level 1: AutoGPT-4 15.05, GPT-4 Plugins 30.30, GPT-4 9.68, GPT-4-Turbo 9.68, Human 93.90.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GAIA level-1 success rate",
+   "value": "15.05",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AutoGPT-4 with GPT-4 backend, GAIA test",
+   "note": "Human is averaged over dev and test; baselines are likely quoted from the GAIA paper but the text does not say so.",
+   "where": "Table 1",
+   "table": "Table 1, row AutoGPT-4, column Level 1"
+  },
+  {
+   "claim": "On SheetCopilot-20 FRIDAY without learning solves nothing (0% Pass@1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SheetCopilot-20 (20 tasks), GPT-4, before self-directed learning",
+   "note": null,
+   "where": "Sec 4.2; Table 2",
+   "quote": "Initially, FRIDAY, without self-directed learning, is unable to complete any tasks",
+   "table": "Table 2, row FRIDAY (w/o learning), column Pass@1"
+  },
+  {
+   "claim": "After self-directed learning on 10 self-generated Excel tasks FRIDAY reaches 60% Pass@1 on SheetCopilot-20, above SheetCopilot GPT-4 (55%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "60",
+   "unit": "%",
+   "baseline_value": "55",
+   "n": 20,
+   "setup": "SheetCopilot-20 (20 tasks), GPT-4; 10 self-instructed tasks using openpyxl; 8 tools accumulated; one attempt per task",
+   "note": "Tool file says openyxl (typo) in text. SheetCopilot baselines 40 (GPT-3.5-Turbo), 45 (Claude), 55 (GPT-4) are reported from Li et al. 2023.",
+   "where": "Sec 4.2; Table 2",
+   "table": "Table 2, row FRIDAY, column Pass@1"
+  },
+  {
+   "claim": "FRIDAY generated 10 self-instructed tasks and accumulated 8 tools.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tools accumulated",
+   "value": "8",
+   "unit": "tools",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SheetCopilot self-directed learning",
+   "note": null,
+   "where": "Sec 4.2; Table 11",
+   "quote": "FRIDAY then solves these 10 tasks and autonomously accumulates 8 tools"
+  },
+  {
+   "claim": "Tool store threshold: critic scores a generated tool 0 to 10 and tools scoring above 8 are saved.",
+   "kind": "measured",
+   "source": null,
+   "metric": "critic score threshold",
+   "value": "8",
+   "unit": "score 0-10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Critic prompts an LLM after a successful subtask",
+   "note": "Critic prompt (Table 9) says integer 1 to 10 and calls '8 and above' good generality, so '>8' vs '>=8' and 0-10 vs 1-10 differ between text and prompt.",
+   "where": "Sec 3.1",
+   "quote": "In the current implementation, tools scoring above 8 are preserved by updating the tool repository in procedural memory"
+  },
+  {
+   "claim": "Self-correction loop runs at most three attempts per subtask.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max attempts",
+   "value": "3",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Execute-critic-refine loop",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "or a maximum of three attempts is reached"
+  },
+  {
+   "claim": "FRIDAY is seeded with 4 manual tools and adds 9 on GAIA dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tools",
+   "value": "9",
+   "unit": "tools learned",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GAIA dev set exploration",
+   "note": null,
+   "where": "Sec 4; Table 10",
+   "quote": "accumulate more tools (result in 9 more tools)"
+  },
+  {
+   "claim": "Average time per answer on GAIA level 1: FRIDAY 118 s vs AutoGPT-4 456 s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg time to answer",
+   "value": "118",
+   "unit": "s",
+   "baseline_value": "456",
+   "n": null,
+   "setup": "GAIA level 1",
+   "note": "Appendix text says FRIDAY 105 s and AutoGPT-4 'more than 500 seconds', Table 3 prints 118 and 456.",
+   "where": "Appendix B; Table 3",
+   "table": "Table 3, row FRIDAY, column Level 1"
+  }
+ ],
+ "limits": [
+  "Relies on prompt engineering; performance may change drastically with the underlying LLM (App D).",
+  "Cannot control closed-source GUI applications; no screenshot input yet.",
+  "Web browsing is read-only (no clicks); weak on web browsing and multi-modal tasks (App B).",
+  "Evaluating subtask completion has no ground truth and LLM or rule checks may be inaccurate.",
+  "User profile module is conceptual only, untested.",
+  "GAIA run uses GPT4-turbo-1106 only; baseline backbones differ; single run with no variance; SheetCopilot-20 has only 20 tasks so one task is 5 points.",
+  "Safety of OS-acting agents not studied.",
+  "Retrieval threshold, temperature, and embedding model are unstated.",
+  "Learning gain on GAIA is 0 at level 3 and the dev/test overlap in tool reuse is not analysed."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "self-directed learning",
+   "definition": "FRIDAY is prompted to propose a continuous stream of tasks related to the objective, spanning from easy to challenging",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GAIA",
+   "year": 2023,
+   "arxiv": "2311.12983",
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "SheetCopilot",
+   "year": 2023,
+   "arxiv": "2305.19308",
+   "relation": "baseline",
+   "note": "spreadsheet dataset and baseline",
+   "quote": null
+  },
+  {
+   "work": "Voyager",
+   "year": 2023,
+   "arxiv": "2305.16291",
+   "relation": "extends",
+   "note": "self-directed learning and skill accumulation in Minecraft",
+   "quote": null
+  },
+  {
+   "work": "AutoGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "general agent baseline",
+   "quote": null
+  },
+  {
+   "work": "Large language models as tool makers",
+   "year": 2023,
+   "arxiv": "2305.17126",
+   "relation": "related",
+   "note": "tool creation",
+   "quote": null
+  },
+  {
+   "work": "Self-Instruct",
+   "year": 2022,
+   "arxiv": "2212.10560",
+   "relation": "uses-method",
+   "note": "task generation for learning",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "related",
+   "note": "reflection",
+   "quote": null
+  },
+  {
+   "work": "Plan-and-Solve",
+   "year": 2023,
+   "arxiv": "2305.04091",
+   "relation": "related",
+   "note": "alternative planner",
+   "quote": null
+  },
+  {
+   "work": "Graph of Thoughts",
+   "year": 2023,
+   "arxiv": "2308.09687",
+   "relation": "related",
+   "note": "non-linear planning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of OS-Copilot framework.",
+   "page": 3,
+   "why": "Shows planner, configurator, actor"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The architecture of the configurator with (a) a typical working flow and (b) a concrete running example.",
+   "page": 5,
+   "why": "Tool retrieve, generate, critic, refine loop"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text says F.4 tool format is in 'Tool Generator prompts (Table 5)' but that prompt is Table 6.",
+  "Intro says AutoGPT-4 14.4% on level 1; Table 1 says 15.05.",
+  "Appendix B text: FRIDAY 105 s and AutoGPT-4 over 500 s; Table 3: 118 and 456.",
+  "Critic threshold: text 'above 8' on 0-10; prompt integer 1-10 with '8 and above'.",
+  "'openyxl' typo for openpyxl in the paper."
+ ]
 }

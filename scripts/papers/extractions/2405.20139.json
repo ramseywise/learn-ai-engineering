@@ -1,0 +1,723 @@
+{
+ "schema": 1,
+ "key": "2405.20139",
+ "pdf": "ai-engineering/05-graph-engineering/sources/mavromatis-2024-gnn-rag.pdf",
+ "bib": {
+  "title": "GNN-RAG: Graph Neural Retrieval for Large Language Model Reasoning",
+  "authors": [
+   "Costas Mavromatis",
+   "George Karypis"
+  ],
+  "first_author": "Mavromatis",
+  "year": 2024,
+  "venue": "preprint (Under review)",
+  "arxiv": "2405.20139",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 70771,
+  "chars_total": 70771,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a GNN used as retriever over a dense KG subgraph, with a fine-tuned LLM as reader, beat LLM-based retrieval on multi-hop KGQA?",
+ "hypothesis": "GNNs handle complex multi-hop graph structure better than LLMs, so GNN retrieval plus LLM reasoning outperforms LLM-based retrieval, and combining both retrievers adds further gains.",
+ "contributions": [
+  "Framework: GNN-RAG repurposes GNNs for KGQA retrieval to enhance the reasoning abilities of LLMs",
+  "Effectiveness & Faithfulness: state-of-the-art on WebQSP and CWQ; retrieves multi-hop information",
+  "Efficiency: improves vanilla LLMs without additional LLM calls; outperforms or matches GPT-4 with a 7B tuned LLM"
+ ],
+ "method": {
+  "summary": "A GNN (ReaRev) scores all nodes in a PageRank-Nibble dense subgraph (top 2,000 entities) as answer vs non-answer; nodes up to cumulative softmax probability 0.95 are candidates, and shortest paths from question entities to them (NetworkX) are verbalised and fed to a LLaMA2-Chat-7B fine-tuned (RoG recipe) on the benchmark training sets. Retrieval augmentation (RA) takes the union of GNN paths and RoG LLM-generated relation paths.",
+  "task": "knowledge graph question answering (KGQA), weakly supervised (question-answer pairs only)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebQSP",
+    "role": "both",
+    "size": "4,737 questions; Freebase subset 164.6M facts, 24.9M entities",
+    "split": "2,848 train / 250 dev / 1,639 test",
+    "source": "Yih et al. 2015",
+    "preprocessing": "dense subgraph by PageRank Nibble from linked entities, top m=2,000 entities (He et al. 2021); avg |Vq| 1,429.8; answer coverage 94.9%"
+   },
+   {
+    "name": "CWQ (Complex WebQuestions 1.1)",
+    "role": "both",
+    "size": "34,699 questions (text), 34,689 (appendix)",
+    "split": "27,639 train / 3,519 dev / 3,531 test",
+    "source": "Talmor and Berant 2018",
+    "preprocessing": "same KG as WebQSP; avg |Vq| 1,305.8; answer coverage 79.3%; up to 4 hops; composition 45%, conjunction 45%, comparative 5%, superlative 5%"
+   },
+   {
+    "name": "MetaQA-3",
+    "role": "both",
+    "size": "more than 100k 3-hop questions; KG about 43k entities, 135k triples",
+    "split": "114,196 train / 14,274 dev / 14,274 test; only 1,000 (1%) training questions used",
+    "source": "Zhang et al. 2018 / WikiMovies Miller et al. 2016",
+    "preprocessing": "avg |Vq| 497.9; coverage 99.0%"
+   }
+  ],
+  "models": [
+   {
+    "name": "ReaRev (GNN retriever, +SBERT default, +LMSR)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "question-conditioned GNN, sum aggregation, L layers; relation matching w(q,r)=phi(q(k) * r) with pretrained LM encoder",
+    "init_from": "SBERT (Reimers and Gurevych 2019) or LMSR (Zhang et al. 2022a) as LM in Eq 3",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "deep L=3 in Table 1 analysis; the ReaRev layer count is not stated",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "probability_threshold": "0.95 cumulative softmax",
+     "note": "suggested hyperparameters of official ReaRev code used; no hyperparameter search"
+    }
+   },
+   {
+    "name": "LLaMA2-Chat-7B (tuned) reader",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only LLM",
+    "init_from": "LLaMA2-Chat-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "fine_tuned_on": "training question-answer pairs, with shortest paths from question entities to answers as input (RoG recipe)"
+    }
+   },
+   {
+    "name": "RoG",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "LLaMA2-Chat-7B fine-tuned to generate relation paths, beam search k (3 or 4 calls)",
+    "init_from": "LLaMA2-Chat-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ToG",
+    "role": "baseline",
+    "params": "LLaMA2-70B, ChatGPT, GPT-4",
+    "architecture": "LLM hop-by-hop retrieval",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "numbers": "quoted from Sun et al. 2024"
+    }
+   },
+   {
+    "name": "ChatGPT gpt-3.5-turbo; Alpaca-7B; Flan-T5-xl; LLaMA2-Chat-70B",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "plug-in readers in Table 5; ChatGPT accessed via API as of May 2024"
+    }
+   }
+  ],
+  "training": {
+   "objective": "GNN: node classification answers vs non-answers (softmax over subgraph nodes); LLM: instruction fine-tuning to output list of answers given reasoning paths",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "GNNs: one Nvidia GeForce RTX-3090, 128GB RAM; LLMs: 4 A100 GPUs with NVLink, 512GB memory",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "hyperparameters": "'we use their suggested hyperparameters, without performing further hyperparameter search' (ReaRev and RoG code)",
+    "model_selection": "validation data",
+    "framework": "PyTorch",
+    "training_data": "retriever and reader trained on WebQSP+CWQ per Table 14 (GNN-RAG retriever on a single dataset)"
+   }
+  },
+  "inference": {
+   "decoding": "GNN: top nodes by sorted probability with cumulative probability threshold; LLM reader decoding not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; tables give single values, no seeds or variance",
+   "prompting": "fine-tuned reader prompt with verbalised reasoning paths 'q entity -> relation -> entity ... -> answer entity'",
+   "retrieval": "PageRank-Nibble subgraph m=2,000; GNN answer candidates; NetworkX shortest paths from question entities; RA = union with RoG paths",
+   "parameters": {
+    "gnn_probability_threshold": 0.95,
+    "subgraph_size_m": "2,000",
+    "rog_beams_k": "3 (4 total calls incl. reader; Table 6 compares 1 vs 3)",
+    "gnn_depth_analysis": "L=3 vs L=1"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Hit",
+     "definition": "whether any true answer is found in the generated response",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "H@1",
+     "definition": "accuracy of the top/first predicted answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "harmonic balance of recall (true answers found) and precision (false answers found) of generated answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Answer Coverage",
+     "definition": "whether retriever fetches at least one correct answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "#Input Tokens",
+     "definition": "median number of input tokens of retrieved KG paths",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "KV-Mem",
+    "EmbedKGQA",
+    "TransferNet",
+    "Rigel",
+    "GraftNet",
+    "PullNet",
+    "NSM",
+    "NSM+h",
+    "SR+NSM",
+    "SQALER",
+    "UniKGQA",
+    "ReaRev",
+    "Flan-T5-xl",
+    "Alpaca-7B",
+    "LLaMA2-Chat-7B",
+    "ChatGPT",
+    "ChatGPT+CoT",
+    "KD-CoT",
+    "StructGPT",
+    "KB-BINDER",
+    "ToG",
+    "RoG",
+    "G-Retriever"
+   ],
+   "protocol": "single run per configuration as printed; no seeds, variance or significance test reported; semantic-parsing methods excluded because they need SPARQL annotations; most baseline numbers quoted from prior papers"
+  },
+  "availability": {
+   "code": "https://github.com/cmavro/GNN-RAG",
+   "weights": null,
+   "data": "KGQA results provided at the same repo; datasets public"
+  },
+  "prompts": [
+   {
+    "purpose": "LLM retrieval (RoG) relation paths",
+    "text": "Please generate a valid relation path that can be helpful for answering the following question:\n{Question}",
+    "where": "App C"
+   },
+   {
+    "purpose": "reader (default, Prompt A)",
+    "text": "Based on the reasoning paths, please answer the given question. Please keep the answer as simple as possible and return all the possible answers as a list.\\n Reasoning Paths: {Reasoning Paths} \\n Question: {Question}",
+    "where": "App C and D.5"
+   },
+   {
+    "purpose": "reader Prompt B",
+    "text": "Based on the provided knowledge, please answer the given question. Please keep the answer as simple as possible and return all the possible answers as a list.\\n Knowledge: {Reasoning Paths} \\n Question: {Question}",
+    "where": "App D.5"
+   },
+   {
+    "purpose": "reader Prompt C",
+    "text": "Your tasks is to use the following facts and answer the question. Make sure that you use the information from the facts provided. Please keep the answer as simple as possible and return all the possible answers as a list.\\n The facts are the following: {Reasoning Paths} \\n Question: {Question}",
+    "where": "App D.5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.other.hyperparameters",
+    "quote": "For both training and inference of these methods, we use their suggested hyperparameters, without performing further hyperparameter search.",
+    "where": "App C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GNN-RAG+RA beats RoG on Hit by 5.0-6.1 points and matches/outperforms ToG+GPT-4 with a 7B LLM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hit gain over RoG",
+   "value": "5.0-6.1",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebQSP and CWQ (Freebase), dense 2,000-entity PageRank-Nibble subgraph, ReaRev+SBERT GNN retriever, LLaMA2-Chat-7B tuned on WebQSP+CWQ train, single reported run",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "GNN-RAG+RA outperforms RoG by 5.0–6.1% points at Hit"
+  },
+  {
+   "claim": "GNN-RAG+RA WebQSP Hit 90.7 vs RoG 85.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hit",
+   "value": 90.7,
+   "unit": "%",
+   "baseline_value": 85.7,
+   "n": null,
+   "setup": "WebQSP and CWQ (Freebase), dense 2,000-entity PageRank-Nibble subgraph, ReaRev+SBERT GNN retriever, LLaMA2-Chat-7B tuned on WebQSP+CWQ train, single reported run; default GNN-RAG+RA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GNN-RAG+RA, column WebQSP Hit"
+  },
+  {
+   "claim": "GNN-RAG+RA CWQ Hit 68.7 vs ToG+GPT-4 69.5 (below it) and RoG 62.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hit",
+   "value": 68.7,
+   "unit": "%",
+   "baseline_value": 69.5,
+   "n": null,
+   "setup": "WebQSP and CWQ (Freebase), dense 2,000-entity PageRank-Nibble subgraph, ReaRev+SBERT GNN retriever, LLaMA2-Chat-7B tuned on WebQSP+CWQ train, single reported run",
+   "note": "Baseline value is ToG+GPT-4 (69.5); RoG is 62.6. Text says 'outperforms or matches'.",
+   "where": "Table 2",
+   "table": "Table 2, row GNN-RAG+RA, column CWQ Hit"
+  },
+  {
+   "claim": "GNN-RAG+RA F1 WebQSP 73.5 and CWQ 60.4 (default configuration)",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 73.5,
+   "unit": "%",
+   "baseline_value": 70.8,
+   "n": null,
+   "setup": "WebQSP and CWQ (Freebase), dense 2,000-entity PageRank-Nibble subgraph, ReaRev+SBERT GNN retriever, LLaMA2-Chat-7B tuned on WebQSP+CWQ train, single reported run",
+   "note": "CWQ F1 60.4; RoG is 70.8 / 56.2. Table 4 row i (LMSR+RoG union) has CWQ F1 61.0, higher than the default 60.4.",
+   "where": "Table 2, Table 4 row h",
+   "table": "Table 2, row GNN-RAG+RA, column WebQSP F1"
+  },
+  {
+   "claim": "Multi-hop WebQSP F1: GNN-RAG 69.8 vs RoG 63.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 69.8,
+   "unit": "%",
+   "baseline_value": 63.3,
+   "n": null,
+   "setup": "Table 3, questions with hops>=2, WebQSP, default GNN-RAG",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GNN-RAG, column WebQSP multi-hop"
+  },
+  {
+   "claim": "Multi-hop CWQ F1: GNN-RAG 68.2 vs RoG 59.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 68.2,
+   "unit": "%",
+   "baseline_value": 59.3,
+   "n": null,
+   "setup": "Table 3, hops>=2, CWQ",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GNN-RAG, column CWQ multi-hop"
+  },
+  {
+   "claim": "GNN-RAG outperforms RoG by 6.5-17.2 F1 points on WebQSP multi-hop/multi-entity",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gain",
+   "value": "6.5-17.2",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "outperforms RoG (LLM-based retrieval) by 6.5–17.2% points at F1 on WebQSP"
+  },
+  {
+   "claim": "Abstract: outperforms competing approaches by 8.9-15.5 points on multi-hop and multi-entity questions",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gain",
+   "value": "8.9-15.5",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 1 (KG-RAG vs GNN-RAG)",
+   "note": null,
+   "where": "Abstract",
+   "quote": "outperforming competing approaches by 8.9–15.5% points at answer F1"
+  },
+  {
+   "claim": "On 1-hop WebQSP questions RoG (LLM retriever) beats GNN-RAG: F1 73.4 vs 72.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 73.4,
+   "unit": "%",
+   "baseline_value": 72.0,
+   "n": null,
+   "setup": "Table 8, WebQSP 1 hop",
+   "note": "GNN-RAG+RA gets 74.6 on 1 hop WebQSP; on CWQ 1 hop RoG 50.4 vs GNN-RAG 47.4.",
+   "where": "Table 8",
+   "table": "Table 8, row RoG, column WebQSP 1 hop"
+  },
+  {
+   "claim": "Union of GNN and LLM retrieval (GNN-RAG+RA) F1 73.5 / 60.4 beats single retrievers; adding the second GNN lowers it to 72.3 / 59.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 72.3,
+   "unit": "%",
+   "baseline_value": 73.5,
+   "n": null,
+   "setup": "Table 4 rows h and j, WebQSP / CWQ, #input tokens 299/540 vs 330/668",
+   "note": "Paper's 'confuse' is an interpretation, not tested.",
+   "where": "Table 4, Sec 6",
+   "quote": "Augmenting all retrieval approaches does not necessarily cause improved performance (F1) as the long input (#Input Tokens) may confuse the LLM",
+   "table": "Table 4, row j GNN-RAG+All, column F1 WebQSP / CWQ"
+  },
+  {
+   "claim": "Weak GNN retrievers hurt: GNN-RAG with NSM gets CWQ H@1 52.5 vs RoG 57.8 and ReaRev 61.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "H@1",
+   "value": 52.5,
+   "unit": "%",
+   "baseline_value": 57.8,
+   "n": null,
+   "setup": "Table 10, CWQ, GNN-RAG with NSM retriever, LLaMA2-Chat-7B tuned",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row GNN-RAG: NSM, column H@1"
+  },
+  {
+   "claim": "Weak GNNs underperform ReaRev retrieval by 9.2-9.8 and RoG by 5.3-5.9 points H@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "H@1 gap",
+   "value": "9.2-9.8",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CWQ, Table 10",
+   "note": null,
+   "where": "App D.2",
+   "quote": "Retrieval with weak GNNs (NSM and GraftNet) underperfoms retrieval with ReaRev by 9.2–9.8% and retrieval with RoG by 5.3–5.9% points at H@1"
+  },
+  {
+   "claim": "Deep GNN (L=3) retrieves more answers on 2-hop WebQSP questions than RoG or L=1 GNN with fewer tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer coverage",
+   "value": 88.5,
+   "unit": "%",
+   "baseline_value": 82.1,
+   "n": null,
+   "setup": "Table 1, WebQSP 2-hop; median input tokens 357 vs 435 (RoG) and 2,582 (L=1)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row GNN (L = 3), column 2-hop %Ans. Cov."
+  },
+  {
+   "claim": "On 1-hop WebQSP RoG has higher answer coverage than GNN L=3 (87.1 vs 82.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer coverage",
+   "value": 87.1,
+   "unit": "%",
+   "baseline_value": 82.4,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row RoG, column 1-hop %Ans. Cov."
+  },
+  {
+   "claim": "Retrieval cost: GNN-RAG default uses 0 LLM calls vs 3 for RoG (k=3) with F1 71.3/59.4 vs 70.8/56.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 71.3,
+   "unit": "%",
+   "baseline_value": 70.8,
+   "n": null,
+   "setup": "Table 4 rows d and e, WebQSP",
+   "note": "0 LLM calls counts retrieval only; reasoning LLM call still made.",
+   "where": "Table 4",
+   "table": "Table 4, row e GNN-RAG (default), column F1 WebQSP / CWQ"
+  },
+  {
+   "claim": "GNN-RAG improves tuned LLaMA2-Chat-7B with no retrieval by up to 176% F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative F1 gain",
+   "value": 176,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 row c vs e",
+   "note": "Appendix D.4 says 149-182% when LLM calls are matched.",
+   "where": "Sec 6",
+   "quote": "GNN-RAG improves the vanilla LLM by up to 176% at F1 without incurring additional LLM calls"
+  },
+  {
+   "claim": "MetaQA-3 (3-hop, 1% of train) Hit@1: GNN-RAG 98.6 vs RoG 84.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hit@1",
+   "value": 98.6,
+   "unit": "%",
+   "baseline_value": 84.8,
+   "n": null,
+   "setup": "MetaQA-3, trained on 1,000 questions",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row GNN-RAG, column MetaQA-3 Hit@1"
+  },
+  {
+   "claim": "Greedy decoding drops LLM-based retrieval performance by 8.3-9.9 points at Hit (efficiency-effectiveness trade-off)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hit drop",
+   "value": "8.3-9.9",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoG k=3 beams vs 1; ToG 21 vs 3 calls (Table 6, WebQSP)",
+   "note": null,
+   "where": "App A",
+   "quote": "the KGQA performance drops by 8.3–9.9% points at answer hit"
+  },
+  {
+   "claim": "GNN-RAG deployable on a single 24GB GPU; authors estimate ToG+GPT-4 cost above $800",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost estimate",
+   "value": 800,
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' estimate, no derivation given",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "we estimate ToG+GPT-4 has an overall cost above $800, while GNN-RAG can be deployed on a single 24GB GPU"
+  },
+  {
+   "claim": "Sparse (pruned) subgraph hurts GNN-RAG: CWQ F1 53.3 vs 58.9 on dense subgraph, due to disconnected parts giving empty paths",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 53.3,
+   "unit": "%",
+   "baseline_value": 58.9,
+   "n": null,
+   "setup": "Table 15 rows c and d, CWQ",
+   "note": null,
+   "where": "Table 15",
+   "table": "Table 15, row d GNN-RAG: (B), column CWQ F1"
+  },
+  {
+   "claim": "Only 79.3% of CWQ subgraphs contain an answer (upper bound on retrieval)",
+   "kind": "measured",
+   "source": null,
+   "metric": "coverage",
+   "value": 79.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 7, CWQ; WebQSP 94.9",
+   "note": null,
+   "where": "App E",
+   "quote": "CWQ subgraphs contain an answer in 79.3% of the questions"
+  }
+ ],
+ "limits": [
+  "GNN-RAG assumes the subgraph contains answer nodes; CWQ subgraphs contain an answer in only 79.3% of questions (App E).",
+  "Shortest-path extraction returns empty paths if the KG has disconnected parts (App D.7, E).",
+  "GNNs are weak on simple 1-hop questions needing semantic matching (Theorem A.3, Table 8); LLM retriever better there.",
+  "Weak GNNs (NSM, GraftNet) are not effective retrievers (Table 10).",
+  "No seeds, variance or significance tests; no optimizer, learning rate, batch size or epochs reported (defers to ReaRev and RoG code).",
+  "Baseline numbers (ToG etc.) are quoted from other papers, so setups may differ; the ToG+GPT-4 cost is an unexplained estimate.",
+  "Reader is fine-tuned on WebQSP+CWQ training data, whereas ToG is prompt-only.",
+  "Theorem B.3 is shown for a binary relevance function w, a simplification of the learned w."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Answer Coverage",
+   "definition": "evaluates whether the retriever is able to fetch at least one correct answer for RAG",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "Retrieval augmentation (RA)",
+   "definition": "combines the retrieved KG information from different approaches to increase diversity and answer recall",
+   "where": "Sec 4.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReaRev: Adaptive reasoning for question answering over knowledge graphs",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GNN retriever (authors' own prior work)",
+   "quote": null
+  },
+  {
+   "work": "Reasoning on graphs (RoG)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LLM-based retriever; also its prompt-tuning recipe used for the reader",
+   "quote": null
+  },
+  {
+   "work": "Think-on-graph (ToG)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LLM hop-by-hop retriever; GPT-4 numbers quoted",
+   "quote": null
+  },
+  {
+   "work": "NSM (He et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dense subgraph extraction and question-relation matching w(q,r)",
+   "quote": null
+  },
+  {
+   "work": "SR / LMSR (Zhang et al.)",
+   "year": 2022,
+   "arxiv": "2202.13296",
+   "relation": "uses-method",
+   "note": "LMSR as LM in Eq 3",
+   "quote": null
+  },
+  {
+   "work": "G-Retriever (He et al.)",
+   "year": 2024,
+   "arxiv": "2402.07630",
+   "relation": "baseline",
+   "note": "GNN+LLM baseline",
+   "quote": null
+  },
+  {
+   "work": "RA-DIT / RAFT (Lin et al. 2023; Zhang et al. 2024)",
+   "year": 2024,
+   "arxiv": "2403.10131",
+   "relation": "uses-method",
+   "note": "RAG prompt tuning",
+   "quote": null
+  },
+  {
+   "work": "WebQSP",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Yih et al.",
+   "quote": null
+  },
+  {
+   "work": "CWQ",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Talmor and Berant",
+   "quote": null
+  },
+  {
+   "work": "MetaQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Zhang et al. 2018",
+   "quote": null
+  },
+  {
+   "work": "LLaMA 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "reader base",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "GNN-RAG: The GNN reasons over a dense subgraph to retrieve candidate answers, along with the corresponding reasoning paths (shortest paths from question entities to answers).",
+   "page": 5,
+   "why": "pipeline in one picture"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Performance comparison (F1 at KGQA) of different retrieval augmentations",
+   "page": 8,
+   "why": "calls, tokens and F1 for every retriever combination"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Retrieval effect on multi-hop/entity KGQA.",
+   "page": 2,
+   "why": "headline gain 8.9-15.5 points"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "h_v^(l) = psi( h_v^(l-1), sum_{v' in N_v} omega(q, r) * m_vv'^(l) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text gives CWQ size 34,699 (Sec 5) and 34,689 (App C).",
+  "ReaRev+LMSR CWQ: Table 2 gives H@1 53.3 F1 49.7, Tables 12 and 15 give 52.7 and 49.1.",
+  "Text-extracted Table 4 columns are slightly garbled (rows a-b lack token columns)."
+ ]
+}

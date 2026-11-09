@@ -143,6 +143,8 @@ flowchart LR
 | **Grader calibration** | Gating judges are `calibrated`, calibration not stale | A gating judge is experimental or out of date |
 | **Release** | All above pass. Efficiency within budget | Any upstream failure |
 
+The ladder lists calibration after generation, but a judge that gates a generation row must already be calibrated. So calibration status is checked on every run, before any gate that uses a judge scores a row; the Grader calibration gate then reports it. The numbering stays as it is.
+
 This is distinct from the **maturity ladder** ([11](11-production-and-the-maturity-ladder.md#the-ladder)), which orders the stages of *building* an eval practice. The gate ladder orders checks *within* one run.
 
 ### What a gate emits

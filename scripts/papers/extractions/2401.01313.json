@@ -1,19 +1,306 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2401.01313",
  "pdf": "generative-ai/02-rag-retrieval/sources/tonmoy-2024-comprehensive-survey-hallucination-mitigation-techniques.pdf",
  "bib": {
   "title": "A Comprehensive Survey of Hallucination Mitigation Techniques in Large Language Models",
-  "first_author": "S. M Towhidul Islam Tonmoy",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "S.M Towhidul Islam Tonmoy",
+   "S M Mehedi Zaman",
+   "Vinija Jain",
+   "Anku Rani",
+   "Vipula Rawte",
+   "Aman Chadha",
+   "Amitava Das"
+  ],
+  "first_author": "Tonmoy",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2401.01313",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 75183,
+  "chars_total": 75183,
+  "engine": "pymupdf",
+  "skipped": "nothing; the paper has no appendices; reference list skimmed"
  },
- "legacy_report": "SOURCE: \"A Comprehensive Survey of Hallucination Mitigation Techniques in Large Language Models\", S.M Towhidul Islam Tonmoy, S M Mehedi Zaman, Vinija Jain, Anku Rani, Vipula Rawte, Aman Chadha, Amitava Das. It is an arXiv preprint, 2401.01313v3 [cs.CL], dated 8 Jan 2024. The extraction shows no venue.\n\nCOVERAGE: All 75,172 of 75,172 chars read, with the extraction saved to /tmp/tonmoy.txt. That covers the text, the references and Table 1 (the limitations table). Figure 1 is a taxonomy tree and came through as text. I ran no figure-caption extraction because nothing needed it. The paper has no appendices and no results tables.\n\nThis is a survey with no experiments of its own. Every method description is the survey authors' paraphrase of another paper, so for anything that matters cite the original.\n\nCLAIMS (ranked; the paper has almost no numbers)\n- claim: The survey sorts mitigation techniques into prompt engineering and model development. Prompt engineering splits into RAG, self-refinement and prompt tuning. RAG splits by when retrieval happens: before, during, after generation, or end-to-end.\n  number: \"over thirty-two techniques\"\n  setup: A taxonomy of literature, with no benchmark comparison.\n  quote: \"This paper presents a comprehensive survey of over thirty-two techniques developed to mitigate hallucination in LLMs.\"\n  where: Abstract, chars 0-2,000; Fig. 1, p.2\n- claim: RAG reduces hallucination by drawing on external, authoritative sources instead of stale or internal knowledge, which makes answers current and verifiable. This is an assertion with no measurement.\n  number: none\n  quote: \"RAG effectively mitigates the issue of hallucination in LLMs by generating responses that are not only pertinent and current but also verifiable\"\n  where: §2.1.1\n- claim: LLMs can ignore correct retrieved references and fall back on wrong references or bias. This happens when the user's question does not align with the stored information. MixAlign addresses it by asking the user a clarifying question.\n  number: none\n  setup: Zhang et al. 2023b, GPT-3.5, FuzzyQA. Table 1 lists its limit as extra computation and time.\n  quote: \"Despite having accurate reference points, LLMs may disregard them and rely on incorrect references or biases instead.\"\n  where: §2.1.2\n- claim: Context-Aware Decoding (CAD) contrasts output probabilities with and without the context. This amplifies the context and overrides prior knowledge that contradicts it. It needs no training.\n  number: none in the survey\n  setup: Shi et al. 2023, tested on OPT (13B, 30B), GPT-Neo, LLaMA and FLAN-T5. Datasets are CNN-DM, XSUM, MemoTrap and NQ-Swap. The survey gives no numbers.\n  quote: \"CAD is particularly effective in overriding a model's prior knowledge when it contradicts the provided context\"\n  where: §3.1\n  note: The extraction has \"particu-\\nlarly\" with the line break joined. It is a decoding-time counter to the prior-versus-context failure that note 06 handles by prompt strength.\n- claim: Hallucination snowballs. A sentence with a hallucination in it makes later hallucinated sentences more likely. This is the rationale for retrieving and validating sentence by sentence during generation.\n  number: none\n  setup: Varshney et al. 2023, \"A Stitch in Time\", GPT-3.5 and Vicuna. It uses logit-based confidence to detect, and retrieved knowledge to repair. Logits are optional and often unavailable from API-only models.\n  quote: \"it raises the probability of producing a sentence with hallucinations when the model has previously experienced hallucinations in its output\"\n  where: §2.1.1.2\n- claim: EVER verifies and corrects each step during generation, and the authors say it is better than post-hoc rectification and non-retrieval baselines. The survey gives no numbers.\n  number: none\n  setup: Kang et al. 2023, InstructGPT, Llama 2 7B/13B Chat, Llama 1 65B and GPT-3.5. Tasks are short-form QA, biography and multi-hop reasoning. Table 1 limit: it relies on references that may be inaccurate.\n  quote: \"EVER employs a real-time, stepwise strategy during the generation process to detect and rectify hallucinations as they occur.\"\n  where: §2.1.1.2, Table 1\n- claim: D&Q reached one headline score. The survey gives no other setup details.\n  number: 59.6% F1\n  setup: Cao et al. 2023, HotPotQA question-only. It also claims competitive performance against GPT-3.5 on ChitChatQA.\n  quote: \"achieving a noteworthy 59.6% F1 score on HotPotQA (question-only)\"\n  where: §2.1.1.2\n  note: This is the only specific metric in the survey.\n- claim: RARR does retrieval after generation. It researches the output and edits it for attribution while preserving the original text's properties.\n  number: none\n  setup: Gao et al. 2023, PaLM 540B, GPT-3 and LaMDA. Datasets are NQ, SQA and QReCC. Metrics are AIS, auto-AIS and preservation.\n  quote: \"RARR conducts research and post-editing to align content with retrieved evidence while preserving original qualities, operating seamlessly after LLM generation.\"\n  where: §2.1.1.3\n  note: Table 1 lists its limits. It keeps unattributed claims that may be hallucinations, it is computationally intensive, and it is not equipped for long documents.\n- claim: CoNLI detects ungrounded hallucination as a chain of sentence-level and entity-level NLI judgments, then post-edits to fix it. It needs no fine-tuning and no domain-specific prompts. It targets hallucination against a given background context.\n  number: none\n  setup: Lei et al. 2023, GPT-3.5 and GPT-4, on HaluEval, FactCC, SummEval and QAGS.\n  quote: \"By formulating detection as a chain of natural language inference tasks, the framework incorporates sentence and entity-level judgments with interpretability.\"\n  where: §2.1.2\n- claim: FreshPrompt (search-augmented few-shot prompting) beat competing methods and commercial systems on FreshQA. The survey says the number and order of retrieved evidence affect correctness.\n  number: none\n  setup: Vu et al. 2023, Google Search API. Table 1 limit: answers go stale between manual updates.\n  quote: \"further analysis emphasizing the impact of the number and order of retrieved evidence on correctness\"\n  where: §2.1.1.1\n  note: It supports the note's \"order and size of context\" section, but only as an assertion.\n- claim: R-Tuning teaches refusal. It finds the questions the model gets wrong, appends refusal expressions to those training examples, and fine-tunes on them so the model learns to decline out-of-competence questions.\n  number: none\n  setup: Zhang et al. 2023a, OpenLLaMA-3B, LLaMA-7B and LLaMA-13B. Datasets are ParaRel, MMLU, WiCE, HotpotQA and FEVER. The survey gives no results.\n  quote: \"constructs refusal-aware training data to teach the LLM when to refrain from responding, specifically when a question falls outside its competence\"\n  where: §3.4\n  note: It relates to note 06's pseudo-helpfulness and negative rejection as a training-side fix.\n- claim: HAR fine-tunes on counterfactual (hallucinated) context so the model learns to trust the given text over memorised facts. It is reported to improve grounding even with smaller training sets and models.\n  number: none\n  setup: Köksal et al. 2023, T5, CF-TriviaQA.\n  quote: \"models fine-tuned with these counterfactual datasets significantly improve text grounding and outperform those trained on factual datasets\"\n  where: §3.4\n- claim: Cross-lingual transfer improves summarisation quality but amplifies hallucination.\n  number: none\n  setup: Qiu et al. 2023b, mFACT-weighted loss. Table 1 notes the gains across languages are inconsistent.\n  quote: \"while common cross-lingual transfer methods benefit summarisation performance, they amplify hallucinations compared to monolingual counterparts\"\n  where: §3.3\n- claim: Verification and feedback loops cost extra compute and latency. Table 1 repeats this for LLM-Augmenter (multiple queries per response), CoVe, MixAlign, TWEAK and RARR.\n  number: none\n  quote: \"Interactive feedback with ChatGPT slows down user experience as it requires multiple queries per response.\"\n  where: Table 1\n\nLIMITS\n- The survey is descriptive and gives no head-to-head comparison. Table 1 has an empty cell (\"Details not provided\") for many methods' limitations.\n- The Discussion names no concrete results. It lists future directions only: hybrid models, unsupervised or weakly supervised learning, ethics, and collaboration. It says SynTra raises \"questions about effectiveness compared to human feedback.\"\n- The paper does not define a taxonomy-wide evaluation protocol.\n- It has dated. It covers only work up to about Dec 2023, so it has no long-context RAG, no reasoning models, no RAGAS-era metrics and no agentic RAG. It does not mention lost-in-the-middle or distractor-passage work.\n- Its cited Lewis et al. RAG is dated 2021 (arXiv v4), not the 2020 original.\n\nBUILDS ON: RAG, Lewis et al. 2021. Self-refinement, Madaan et al. 2023 (Self-Refine). Prompt tuning, Lester et al. 2021. Jain 2023 (Distilled AI). Rawte et al. 2023, the authors' own hallucination work. Faithfulness defined via Chrysostomou & Aletras 2021. Plug-and-play modules, Li et al. 2023b. Decoding-strategy framing, Lango & Dusek 2023. The surveyed methods are credited as printed above.\n\nCODE: none. The paper has no code. It gives CoVe's four steps as a list (draft, plan verification questions, answer them independently, generate the final response) in §2.1.2.\n\nFIGURES: Figure 1 (p.2) is the taxonomy tree of mitigation techniques. It gives the whole structure at a glance, but it came through only as text. Table 1 (pp.8-13) lists, for each technique, its detection support, tasks, metrics, evaluated LLMs, datasets and limitations. The Limitations column is the useful one.\n\nPROBLEMS: No embedded instructions. The text extracted cleanly apart from table cells that wrapped across lines. The Mündler et al. reference is duplicated. Hyphenation breaks inside the extracted words, so some quotes join across a line break. Check the quote above marked with a note. Do not treat any survey paraphrase as the primary source's finding without checking the original.\n\nRelevance to the note: the survey is mostly background for 06-generation-for-rag.md. It would add a taxonomy citation covering before, during and after generation. It adds almost no quantitative evidence. The notable pointers are CAD (decoding-time fix for context versus prior), MixAlign, R-Tuning and HAR (the training-side counters to pseudo-helpfulness and ignoring context), RARR (post-hoc attribution, relevant to the \"citation is not attribution\" section) and CoNLI (NLI-chain faithfulness checking). Under the repo's cite-even-when-covered rule, the note's \"context against the model's prior\" and \"hallucinations and citations\" sections are the places where this source sharpens existing claims."
+ "type": "survey",
+ "question": "How can the many techniques proposed to mitigate hallucination in LLMs be organised into one taxonomy, and what are their limits?",
+ "hypothesis": null,
+ "contributions": [
+  "Introduction of a systematic taxonomy designed to categorize hallucination mitigation techniques for LLMs, encompassing Vision Language Models (VLMs).",
+  "Synthesis of the essential features characterizing these mitigation techniques, thereby guiding more structured future research endeavors within this domain.",
+  "Deliberation on the limitations and challenges inherent in these techniques, accompanied by potential solutions and proposed directions for future research."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The survey covers more than thirty-two mitigation techniques.",
+   "kind": "claim",
+   "source": null,
+   "metric": "techniques surveyed",
+   "value": "over thirty-two",
+   "unit": "techniques",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Survey of published work to Jan 2024; no experiments of its own",
+   "quote": "This paper presents a comprehensive survey of over thirty-two techniques",
+   "table": null,
+   "note": "The taxonomy figure and Table 1 list roughly 32 works.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "D&Q reaches 59.6% F1 on HotPotQA (question-only), as described by the survey.",
+   "kind": "reported",
+   "source": "Cao et al., 2023 (D&Q)",
+   "metric": "F1",
+   "value": "59.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotPotQA question-only setting; competitive with GPT-3.5 on ChitChatQA; as paraphrased by the survey",
+   "quote": "achieving a noteworthy 59.6% F1 score on HotPotQA (question-only)",
+   "table": null,
+   "note": "Only quantitative result in the survey.",
+   "where": "Sec 2.1.1.2"
+  },
+  {
+   "claim": "SynTra reduced hallucination for two 13B-parameter LLMs.",
+   "kind": "reported",
+   "source": "Jones et al., 2023 (SynTra)",
+   "metric": null,
+   "value": "13B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": 2,
+   "setup": "Prefix-tuning of system message on a synthetic task, transferred to abstractive summarization",
+   "quote": "Experiments demonstrate reduced hallucination for two 13B parameter LLMs",
+   "table": null,
+   "note": "Model size, not an effect size.",
+   "where": "Sec 2.1.3"
+  },
+  {
+   "claim": "Taxonomy splits mitigation into Prompt Engineering (RAG before/during/after/end-to-end, self-refinement via feedback and reasoning, prompt tuning) and Developing Models (new decoding strategy, knowledge graph, faithfulness loss, supervised fine-tuning).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 1 and Sec 2-3",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 1"
+  },
+  {
+   "claim": "RAG is framed as mitigating hallucination by grounding in external authoritative knowledge, with retrieval timing (before, during, after generation) as the organising axis.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 2.1.1",
+   "quote": "RAG effectively mitigates the issue of hallucination in LLMs by generating responses that are not only pertinent and current but also verifiable",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1.1"
+  },
+  {
+   "claim": "Table 1 records per-method limitations, mostly extra compute or latency, narrow evaluation, single language or domain, or 'Details not provided'.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, taken from each cited paper's own limitations",
+   "quote": null,
+   "table": "Table 1, column Limitation(s)",
+   "note": "E.g. RARR 'computationally intensive'; CoVe 'only addresses hallucinations in the form of directly stated factual inaccuracies'; DoLa 'lacks external retrieval modules'. Several rows say 'Details not provided'.",
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "No experiments, no comparison of methods on a common benchmark; no numbers beyond one F1 and a model size, so nothing ranks techniques.",
+  "Every method description is the survey's paraphrase of another paper (often of its abstract); cite originals for results.",
+  "Authors concede only future directions (hybrid models, weak supervision, ethics); Section 5 lists no survey-specific limitations.",
+  "Coverage ends late 2023 and omits later RAG, self-correction and detection work; Table 1 column 'Detection' is a tick/cross with no definition of how detection was judged.",
+  "Duplicate M\u00fcndler 2023 reference; Mind's Mirror row in Table 1 repeats the EVER row's tasks, metrics, LLMs and datasets, so it looks copy-pasted and unreliable.",
+  "Taxonomy placement is loose: TWEAK (a decoding method) sits under supervised fine-tuning, and 'Developing Models' says it avoids fine-tuning then lists SFT."
+ ],
+ "practices": [
+  "Ground generation in retrieved external knowledge, choosing retrieval before, during (sentence by sentence) or after generation (Sec 2.1.1).",
+  "Use feedback loops that verify a draft and revise it, as LLM-Augmenter, CoVe, Self-Reflection do (Sec 2.1.1.1, 2.1.2).",
+  "In CoVe, answer verification questions independently so the answers are unbiased (Sec 2.1.2).",
+  "Use contrastive decoding (CAD, DoLa) or activation shifts (ITI) when no retrieval or training is available (Sec 3.1).",
+  "Teach models to refuse questions outside their competence by appending refusal to uncertain training examples (R-Tuning, Sec 3.4).",
+  "Treat consecutive high-entropy words as one unit when masking and replacing (Sec 2.1.1.3).",
+  "Future: hybrid models combining mitigation approaches, weakly supervised learning, ethics review (Sec 5)."
+ ],
+ "terms": [
+  {
+   "term": "Hallucination",
+   "definition": "the creation of factually erroneous information spanning a multitude of subjects",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Prompt engineering",
+   "definition": "the process of experimenting with various instructions to get the best output possible from an AI text generation model",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Retrieval-Augmented Generation",
+   "definition": "enhances the responses of LLMs by tapping into external, authoritative knowledge bases rather than relying on potentially outdated training data or the model's internal knowledge",
+   "where": "Sec 2.1.1"
+  },
+  {
+   "term": "Faithfulness",
+   "definition": "the model's capacity to faithfully and properly reflect data from the input without adding errors, omissions, or distortions",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Prompt tuning",
+   "definition": "adjusting the instructions provided to a pre-trained LLM during the fine-tuning phase; learns 'Soft Prompts' through backpropagation",
+   "where": "Sec 2.1.3"
+  },
+  {
+   "term": "Supervised fine-tuning",
+   "definition": "LLM weights adjusted from gradients of a task-specific loss between predictions and ground truth labels",
+   "where": "Sec 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Retrieval-augmented generation for knowledge-intensive NLP tasks",
+   "year": 2021,
+   "arxiv": "2005.11401",
+   "relation": "surveys",
+   "note": "End-to-end RAG (DPR + BART, top-K marginalisation)",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-verification reduces hallucination in LLMs",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "CoVe: draft, plan verification questions, answer independently, final response",
+   "quote": null
+  },
+  {
+   "work": "RARR",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "post-generation research and revision for attribution",
+   "quote": null
+  },
+  {
+   "work": "A Stitch in Time Saves Nine (Varshney)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "logit-based detection and validation during generation",
+   "quote": null
+  },
+  {
+   "work": "Check your facts and try again (LLM-Augmenter)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "before-generation retrieval with utility feedback",
+   "quote": null
+  },
+  {
+   "work": "FreshLLMs (FreshPrompt)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "search-engine augmented few-shot prompting",
+   "quote": null
+  },
+  {
+   "work": "EVER",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "stepwise real-time verification",
+   "quote": null
+  },
+  {
+   "work": "Context-aware decoding (Shi et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "contrastive decoding with and without context",
+   "quote": null
+  },
+  {
+   "work": "DoLa",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "contrast later and earlier layers",
+   "quote": null
+  },
+  {
+   "work": "Inference-time intervention",
+   "year": 2023,
+   "arxiv": "2306.03341",
+   "relation": "surveys",
+   "note": "shift attention-head activations",
+   "quote": null
+  },
+  {
+   "work": "R-Tuning",
+   "year": 2023,
+   "arxiv": "2311.09677",
+   "relation": "surveys",
+   "note": "refusal-aware tuning",
+   "quote": null
+  },
+  {
+   "work": "Fine-tuning language models for factuality (Tian et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "DPO with automated fact-checking",
+   "quote": null
+  },
+  {
+   "work": "Rawte et al. The troubling emergence of hallucination",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Authors' own prior work; HVI, HILT",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Taxonomy of hallucination mitigation techniques in LLMs, focusing on prevalent methods that involve model development and prompting techniques.",
+   "page": 2,
+   "why": "One-page tree of the whole taxonomy, giving each method's category."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Summary of all the works related to hallucination mitigation in two categories.",
+   "page": null,
+   "why": "Per-method detection, tasks, metrics, evaluated LLMs, datasets and limitations in one place."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Preprint has no venue; v3 dated 8 Jan 2024.",
+  "No embedded instructions found.",
+  "Table 1 text extraction is column-fragmented; rows read by order. Mind's Mirror row appears duplicated from EVER."
+ ]
 }

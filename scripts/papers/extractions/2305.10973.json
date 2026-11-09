@@ -1,0 +1,207 @@
+{
+ "schema": 1,
+ "key": "2305.10973",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/pan-2023-drag-your-gan.pdf",
+ "bib": {
+  "title": "Drag Your GAN: Interactive Point-based Manipulation on the Generative Image Manifold",
+  "authors": ["Xingang Pan", "Ayush Tewari", "Thomas Leimkühler", "Lingjie Liu", "Abhimitra Meka", "Christian Theobalt"],
+  "first_author": "Pan",
+  "year": 2023,
+  "venue": "SIGGRAPH '23 Conference Proceedings, August 6-10, 2023, Los Angeles, CA, USA",
+  "arxiv": "2305.10973",
+  "doi": "10.1145/3588432.3591500"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 54425,
+  "chars_total": 54425,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. Figures (images) not viewable in text; captions read."
+ },
+ "type": "system",
+ "question": "Can a user drag arbitrary handle points on a GAN-generated image to precise target points, flexibly and across object categories, without extra networks or annotated training data?",
+ "hypothesis": "The feature space of a GAN generator is discriminative enough to support both motion supervision and precise point tracking by simple feature matching.",
+ "contributions": [
+  "Feature-based motion supervision (shifted feature patch loss) that optimizes the StyleGAN latent code so handle points move toward targets",
+  "A point tracking approach using nearest-neighbour search in the generator feature space, with no additional network such as RAFT or PIPs",
+  "An interactive GUI and demonstrations on diverse categories and on real images via GAN inversion"
+ ],
+ "method": {
+  "summary": "DragGAN edits an image from a pretrained StyleGAN2 by repeating two steps: one Adam step on the W+ latent code (first 6 layers only) with an L1 shifted-patch loss on the feature map after the 6th block, then handle-point re-localisation by nearest-neighbour search of the original handle feature in the new feature map. The loop runs until handles are within d pixels of targets, with an optional mask keeping unmasked regions fixed. Nothing is trained; a latent code is optimised per edit.",
+  "task": "Interactive point-based image manipulation on the GAN image manifold; point tracking on GAN-generated frames",
+  "trains": false,
+  "datasets": [
+   {"name": "FFHQ", "role": "eval", "size": "StyleGAN2 pretrained at 512", "split": "face landmark evaluation: 1000 tests of random image pairs", "source": "Karras et al. 2019", "preprocessing": "landmarks from dlib (King 2009) treated as ground truth"},
+   {"name": "AFHQCat", "role": "eval", "size": "512 resolution", "split": null, "source": "Choi et al. 2020", "preprocessing": null},
+   {"name": "SHHQ", "role": "eval", "size": "512 resolution", "split": null, "source": "Fu et al. 2022", "preprocessing": null},
+   {"name": "LSUN Car", "role": "eval", "size": "512 resolution", "split": "paired reconstruction, 1000 samples", "source": "Yu et al. 2015", "preprocessing": null},
+   {"name": "LSUN Cat", "role": "eval", "size": "256 resolution", "split": "paired reconstruction, 1000 samples", "source": "Yu et al. 2015", "preprocessing": null},
+   {"name": "Landscapes HQ", "role": "eval", "size": "256 resolution", "split": null, "source": "Skorokhodov et al. 2021", "preprocessing": null},
+   {"name": "microscope", "role": "eval", "size": "512 resolution", "split": null, "source": "Pinkney 2020", "preprocessing": null},
+   {"name": "Lion / Dog / Elephant (self-distilled)", "role": "eval", "size": "Lion 512, Dog 1024, Elephant 512", "split": "paired reconstruction on Lion and Dog, 1000 samples", "source": "Mokady et al. 2022", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "StyleGAN2 (pretrained per dataset)", "role": "base", "params": null, "architecture": "StyleGAN2; 512-d z mapped to w in R^512; W+ = l x 512", "init_from": "pretrained checkpoints, no fine-tuning", "tokenizer": null, "vocab": null, "layers": null, "hidden": "512 (latent)", "heads": null, "context": null, "other": {"feature_map_used": "after 6th block, 256 x 256, bilinearly resized to image size", "latent_layers_updated": "first 6 layers of W+"}},
+   {"name": "UserControllableLT", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"mask_handling": "16 x 16 grid of points outside the mask used as fixed points"}},
+   {"name": "RAFT", "role": "baseline", "params": null, "architecture": "optical flow, substituted for the tracking step", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "PIPs", "role": "baseline", "params": null, "architecture": "point tracking, substituted for the tracking step", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1000 tests for face landmark MD and for paired reconstruction; the same test set for all methods; seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "optimizer": "Adam on latent code w",
+    "step_size": "2e-3 for FFHQ, AFHQCat and LSUN Car; 1e-3 for others",
+    "lambda": "20 (weight of the mask reconstruction term)",
+    "r1": "round(3/512 x size), motion supervision patch radius",
+    "r2": "round(12/512 x size), tracking search radius",
+    "stop_threshold_d": "1 pixel for no more than 5 handle points, 2 otherwise",
+    "latent_space": "W+, only first 6 layers updated",
+    "iterations": "usually 30-200 until handles reach targets",
+    "max_steps_face_landmark": "300",
+    "max_steps_paired_reconstruction": "100",
+    "real_images": "PTI inversion (Roich et al. 2022)"
+   },
+   "other": {"hardware": "a few seconds per edit on a single RTX 3090 GPU in most cases", "precision": null}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Mean distance (MD)", "definition": "mean distance between landmarks detected (dlib) in the edited image and target landmarks, 1, 5 or 68 points", "unit": "pixels (inferred: distance in image space; unit not printed)", "higher_is_better": false},
+    {"name": "FID", "definition": "FID between edited images and initial images, as image quality indicator, reported for the 1 point setting", "unit": "FID", "higher_is_better": false},
+    {"name": "Time", "definition": "running time per edit, 1 point setting", "unit": "s", "higher_is_better": false},
+    {"name": "MSE", "definition": "paired image reconstruction of I2 from I1 and 32 sampled optical-flow pixels", "unit": "x10^2", "higher_is_better": false},
+    {"name": "LPIPS", "definition": "perceptual distance on paired reconstruction", "unit": "x10", "higher_is_better": false}
+   ],
+   "baselines": ["UserControllableLT (Endo 2022)", "Ours with RAFT tracking", "Ours with PIPs tracking", "No edit (face landmark table)"],
+   "protocol": "Face landmark: two random FFHQ images, move first image landmarks to second's, averaged over 1000 tests. Paired reconstruction follows Endo 2022: w1 sampled, perturbed to w2, optical flow between I1 and I2, 32 flow pixels as user input, 1000 samples. No significance test or variance reported."
+  },
+  "availability": {"code": "project page https://vcai.mpi-inf.mpg.de/projects/DragGAN/ (code link not stated in text)", "weights": null, "data": "public pretrained StyleGAN2 checkpoints cited; not stated as released"},
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.parameters.stop_threshold_d", "quote": "where 𝑑is set to 1 for no more than 5 handle points and 2 otherwise", "where": "3.4"},
+   {"field": "eval.metrics.MSE", "quote": "report MSE (×102)↓and LPIPS (×10)↓scores", "where": "Table 2 caption"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "DragGAN gets the lowest mean landmark distance with 1 point on FFHQ face landmark manipulation, versus UserControllableLT and no edit.",
+   "kind": "measured", "source": null, "metric": "MD", "value": "2.44", "unit": "MD", "baseline_value": "11.64 (UserControllableLT)", "n": 1000,
+   "setup": "StyleGAN2 FFHQ 512, 1 handle point, 300 max steps, 1000 tests",
+   "quote": null, "table": "Table 1, row Ours, column 1 point (UserControllableLT 11.64, no edit 12.93)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "With 68 landmark points DragGAN reaches MD 4.73 against 10.15 for UserControllableLT.",
+   "kind": "measured", "source": null, "metric": "MD", "value": "4.73", "unit": "MD", "baseline_value": "10.15", "n": 1000,
+   "setup": "FFHQ, 68 points, 300 max steps",
+   "quote": null, "table": "Table 1, row Ours, column 68 points", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "With 5 points DragGAN reaches MD 3.18 against 10.41 for UserControllableLT.",
+   "kind": "measured", "source": null, "metric": "MD", "value": "3.18", "unit": "MD", "baseline_value": "10.41", "n": 1000,
+   "setup": "FFHQ, 5 points, 300 max steps",
+   "quote": null, "table": "Table 1, row Ours, column 5 points", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Image quality (FID vs initial image, 1 point) is best for DragGAN, ahead of UserControllableLT, PIPs and RAFT variants.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "9.28", "unit": "FID", "baseline_value": "25.32 (UserControllableLT); 31.87 (PIPs); 51.37 (RAFT)", "n": 1000,
+   "setup": "FFHQ 1 point setting",
+   "quote": null, "table": "Table 1, row Ours, column FID", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "DragGAN takes 2.0 s per edit versus 0.03 s for UserControllableLT; RAFT variant 15.4 s, PIPs variant 6.6 s.",
+   "kind": "measured", "source": null, "metric": "Time", "value": "2.0", "unit": "s", "baseline_value": "0.03 (UserControllableLT)", "n": 1000,
+   "setup": "FFHQ 1 point setting; hardware stated generally as a single RTX 3090",
+   "quote": null, "table": "Table 1, row Ours, column Time (s)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Replacing the GAN-feature tracker with RAFT leaves 1-point MD near the no-edit level (13.43 vs 12.93) and FID at 51.37, so the baseline tracker fails here.",
+   "kind": "measured", "source": null, "metric": "MD", "value": "13.43", "unit": "MD", "baseline_value": "12.93 (no edit)", "n": 1000,
+   "setup": "FFHQ 1 point, Ours w. RAFT tracking",
+   "quote": null, "table": "Table 1, row Ours w. RAFT tracking, column 1 point", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Paired image reconstruction: DragGAN beats all baselines on all four datasets, e.g. Dog MSE 0.48 vs 1.23 for UserControllableLT.",
+   "kind": "measured", "source": null, "metric": "MSE (x10^2)", "value": "0.48", "unit": "x10^2", "baseline_value": "1.23", "n": 1000,
+   "setup": "Dog, 32 flow-sampled points, 100 max steps, 1000 samples",
+   "quote": null, "table": "Table 2, row Ours, column Dog MSE", "note": "Other cells: Lion 0.66 vs 1.82; LSUN Cat 1.04 vs 1.25; LSUN Car 1.67 vs 1.98. LPIPS Dog 0.44 vs 0.92.", "where": "Table 2"
+  },
+  {
+   "claim": "The feature map after the 6th StyleGAN block is best for both motion supervision and tracking (MD 2.44, 1 point).",
+   "kind": "measured", "source": null, "metric": "MD", "value": "2.44", "unit": "MD", "baseline_value": "3.61 (block 4 tracking)", "n": 1000,
+   "setup": "FFHQ 1 point face landmark manipulation, ablating block number",
+   "quote": null, "table": "Table 3, columns Block No. 6 (Motion sup. and Tracking)", "note": "Block 4 motion sup. 2.73; block 5 2.50/2.55; block 7 2.51/2.58; 5+6 2.47; 6+7 2.45.", "where": "Table 3"
+  },
+  {
+   "claim": "Performance is not very sensitive to r1; r1 = 3 is slightly best.",
+   "kind": "measured", "source": null, "metric": "MD", "value": "2.44", "unit": "MD", "baseline_value": "2.51 (r1=2)", "n": 1000,
+   "setup": "FFHQ 1 point, r1 from 1 to 5",
+   "quote": "It can be observed that the performance is not very sensitive to the choice of 𝑟1, and", "table": "Table 4, column r1=3 (r1=1 2.49; 4 2.45; 5 2.46)", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "Optimisation takes 30-200 iterations until handles reach targets.",
+   "kind": "measured", "source": null, "metric": "iterations", "value": "30-200", "unit": "iterations", "baseline_value": null, "n": null,
+   "setup": "authors' general experiments, no per-dataset breakdown",
+   "quote": "which usually takes 30-200 iterations in our experiments", "table": null, "note": null, "where": "3.1"
+  },
+  {
+   "claim": "Most edits take only a few seconds on a single RTX 3090.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "interactive use, most cases",
+   "quote": "only taking a few seconds on a single RTX 3090 GPU in most cases", "table": null, "note": null, "where": "1"
+  }
+ ],
+ "limits": [
+  "Editing quality is affected by the diversity of training data: poses outside the training distribution create artifacts (Fig. 14a, StyleGAN-human where most arms and legs are downward).",
+  "Handle points in texture-less regions sometimes drift more in tracking; authors suggest texture-rich handle points.",
+  "Limited to images generated by (or inverted into) a pretrained StyleGAN2; real-image editing depends on GAN inversion (PTI).",
+  "Out-of-distribution manipulation may be unwanted; latent regularisation is suggested but not studied.",
+  "Misuse risk: fake pose, expression or shape of real people; authors say applications must respect personality rights and privacy regulations.",
+  "Quantitative evaluation is on face landmarks (dlib as ground truth) and a flow-based paired reconstruction; no user study, no variance or seeds, and MD unit not stated.",
+  "Slower than UserControllableLT (2.0 s vs 0.03 s).",
+  "Future work: extend to 3D generative models."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Handle point", "definition": "user-clicked point on the image whose content is to be moved to its target point", "where": "3.1"},
+  {"term": "Motion supervision", "definition": "a loss that enforces handle points to move towards target points is used to optimize the latent code w", "where": "3.1"},
+  {"term": "Point tracking", "definition": "updating handle point positions after each step by nearest-neighbour search of the original handle feature in the new feature map", "where": "3.3"}
+ ],
+ "lineage": [
+  {"work": "StyleGAN2 (Karras et al. 2020)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "Generator architecture the method is built on", "quote": "Our study is based on the StyleGAN2 architecture"},
+  {"work": "UserControllableLT (Endo 2022)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "Closest prior setting; single point, imprecise", "quote": null},
+  {"work": "RAFT (Teed and Deng 2020)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "Optical flow used as alternative tracker", "quote": null},
+  {"work": "PIPs (Harley et al. 2022)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "Particle-video tracker used as alternative tracker", "quote": null},
+  {"work": "PTI (Roich et al. 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "GAN inversion for real image editing", "quote": null},
+  {"work": "Image2StyleGAN (Abdal et al. 2019)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "W+ latent space", "quote": null},
+  {"work": "StyleGAN style mixing (Karras et al. 2019)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "Inspires updating only the first 6 layers of w", "quote": null},
+  {"work": "Adam (Kingma and Ba 2014)", "year": 2014, "arxiv": "1412.6980", "relation": "uses-method", "note": "Optimizer for latent code", "quote": null},
+  {"work": "GANWarping (Wang et al. 2022a)", "year": 2022, "arxiv": null, "relation": "related", "note": "Point-based editing limited to out-of-distribution", "quote": null},
+  {"work": "EditGAN (Ling et al. 2021)", "year": 2021, "arxiv": null, "relation": "related", "note": "Editing via joint image/segmentation model", "quote": null},
+  {"work": "Latent diffusion (Rombach et al. 2021)", "year": 2021, "arxiv": "2112.10752", "relation": "related", "note": "Text-guided diffusion lacks spatial precision", "quote": null},
+  {"work": "dlib (King 2009)", "year": 2009, "arxiv": null, "relation": "uses-method", "note": "Landmark detector for evaluation ground truth", "quote": null},
+  {"work": "FFHQ, AFHQCat, LSUN, SHHQ, Landscapes HQ, self-distilled StyleGAN", "year": null, "arxiv": null, "relation": "uses-data", "note": "Datasets behind pretrained StyleGAN2 checkpoints", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Overview of our pipeline. ... iteratively performs motion supervision (Sec. 3.2) and point tracking (Sec. 3.3).", "page": 4, "why": "Shows the alternating optimise-then-track loop in one picture"},
+  {"figure": "Fig 3", "caption": "Method. Our motion supervision is achieved via a shifted patch loss on the feature maps of the generator. We perform point tracking on the same feature space via the nearest neighbor search.", "page": 4, "why": "Shows the loss and the stop-gradient target patch"},
+  {"figure": "Fig 6", "caption": "Qualitative tracking comparison of our approach to RAFT, PIPs, and without tracking.", "page": 6, "why": "Shows tracker drift off the lion's nose in the baselines"},
+  {"figure": "Fig 14", "caption": "Limitations. (a) out-of-distribution pose ... (b)&(c) texture-less vs texture-rich handle point drift.", "page": 11, "why": "Failure cases"}
+ ],
+ "code": [
+  {"where": "Eq. 1, 3.2", "snippet": "L = sum_{i=0}^{n} sum_{q_i in Omega_1(p_i, r_1)} ||F(q_i) - F(q_i + d_i)||_1 + lambda ||(F - F_0) * (1 - M)||_1, d_i = (t_i - p_i)/||t_i - p_i||_2 (gradient not back-propagated through F(q_i))", "verbatim": false},
+  {"where": "Eq. 2, 3.3", "snippet": "p_i := argmin_{q_i in Omega_2(p_i, r_2)} ||F'(q_i) - f_i||_1, f_i = F_0(p_i)", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text extraction scrambles equations and table layout; table values were mapped by reading order.",
+  "Code release not stated in text beyond project page URL; no seeds, no hardware besides RTX 3090 mention, unit of MD not printed.",
+  "The paper's Table 1 caption says FID and Time are 'based on the 1 point setting'."
+ ]
+}

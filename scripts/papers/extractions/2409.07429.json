@@ -1,0 +1,106 @@
+{
+ "schema": 1,
+ "key": "2409.07429",
+ "pdf": "generative-ai/03-agentic-foundations/sources/wang-2024-agent-workflow-memory.pdf",
+ "bib": {"title": "Agent Workflow Memory", "authors": ["Zora Zhiruo Wang", "Jiayuan Mao", "Daniel Fried", "Graham Neubig"], "first_author": "Wang", "year": 2024, "venue": "preprint", "arxiv": "2409.07429", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 59798, "chars_total": 59798, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can a web agent improve on long-horizon tasks by inducing reusable workflows (abstract sub-routines) from past experiences and placing them in its memory to guide later actions?",
+ "hypothesis": "Abstract, reusable workflows induced from past (offline) or self-generated (online) experiences help agents more than concrete example trajectories, and generalise across tasks, websites and domains.",
+ "contributions": ["Agent Workflow Memory (AWM): induces workflows and selectively provides them to the agent, offline or online", "State-of-the-art results on WebArena and Mind2Web with cross-task, cross-website and cross-domain generalisation"],
+ "method": {
+  "summary": "An LM induction module turns (instruction, trajectory) experiences into workflows (NL description plus steps of state description, reasoning, action) which are appended to the agent's text memory. Offline: induced once from all training examples of a website. Online: after each test task, an LM evaluator judges success and successful trajectories are induced into workflows added to memory for the next task. Run per website.",
+  "task": "web navigation (WebArena, Mind2Web)",
+  "trains": false,
+  "datasets": [
+   {"name": "WebArena", "role": "eval", "size": "812 tasks, five websites", "split": "test only; online AWM only; cross-template subset picks one random example per task template (website sizes 51, 45, 24, 45, 32 shown in Table 2)", "source": "Zhou et al., 2024", "preprocessing": "accessibility-tree page representation, BrowserGym action space"},
+   {"name": "Mind2Web", "role": "both", "size": null, "split": "train set used for offline induction; cross-task, cross-website, cross-domain test splits", "source": "Deng et al., 2023", "preprocessing": "element filtering of MindAct (relevance predictor) and multi-choice format"}
+  ],
+  "models": [
+   {"name": "gpt-4 (gpt-4-0613)", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "same model for induction and acting on Mind2Web; WebArena uses gpt-4-0613"}},
+   {"name": "gpt-3.5-turbo", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Mind2Web only; also used to verbalise workflows for AWM_text"}},
+   {"name": "LM evaluator of Pan et al. (2024)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "binary success label for online induction; underlying model not stated in this paper"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature 0.0",
+   "temperature": "0.0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting implied; seeds and repeats not stated",
+   "prompting": "workflows concatenated into agent memory (system/auxiliary prompt); offline induction concatenates all training examples of one website into a single prompt; workflows segmented by double line breaks and stored separately",
+   "retrieval": "no retrieval: all workflows of the website (offline) or accumulated so far (online) are in context; cross-website offline baseline uses random workflows from the same domain, cross-domain from all domains",
+   "parameters": {"rule_based_dedup_n": "n = 1 experience per action-sequence group (and per task template on WebArena)", "workflows_per_example": "7.3-7.4 (Table 10)"},
+   "other": {"max_steps": "a maximum pre-determined number of steps, value not stated", "AWM_AS": "workflows wrapped as callable high-level actions in action space"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "WebArena success rate (SR)", "definition": "execution-based functional correctness of the trajectory", "unit": "%", "higher_is_better": true},
+    {"name": "# Steps", "definition": "average number of steps per task", "unit": "steps", "higher_is_better": false},
+    {"name": "Element accuracy", "definition": "correct page element selected", "unit": "%", "higher_is_better": true},
+    {"name": "Action F1", "definition": "action on the element is correct", "unit": "%", "higher_is_better": true},
+    {"name": "Step SR", "definition": "element and action both correct at the step", "unit": "%", "higher_is_better": true},
+    {"name": "Task SR", "definition": "all steps of the task score 1 on step SR", "unit": "%", "higher_is_better": true},
+    {"name": "Workflow quality: # workflows, coverage, function overlap, utility rate", "definition": "workflow count in memory; fraction of trajectory steps covered; overlapping sub-trajectories (<=2 steps) per workflow pair on same website; how often workflows are used by test examples", "unit": "count / fraction", "higher_is_better": null}
+   ],
+   "baselines": ["BrowserGym (Drouin et al., 2024)", "BrowserGym ax-tree only", "AutoEval (Pan et al., 2024)", "WebArena agent (Zhou et al., 2024)", "SteP (Sodhi et al., 2023; 14 human-written workflows)", "MindAct (Deng et al., 2023)", "Synapse (Zheng et al., 2024)", "CogAgent"],
+   "protocol": "One result per configuration; no seeds, confidence intervals or significance tests reported. Online AWM streams test queries in order; order not stated."
+  },
+  "availability": {"code": "https://github.com/zorazrw/agent-workflow-memory", "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "LM-based workflow induction (same for WebArena and Mind2Web)", "text": "Given a list of web navigation tasks, your task is to extract the common workflows. Each given task contains a natural language instruction, and a series of actions to solve the task. You need to find the repetitive subset of actions across multiple tasks, and extract each of them out as a workflow. Each workflow should be a commonly reused sub-routine of the tasks. Do not generate similar or overlapping workflows. Each workflow should have at least two steps. Represent the non-fixed elements (input text, button strings) with descriptive variable names as shown in the example.", "where": "Appendix A.1 (the in-prompt example is not printed)"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "AWM online reaches 35.5% overall success on WebArena with gpt-4, best published, vs 23.5% for BrowserGym.", "kind": "measured", "source": null, "metric": "Total SR", "value": "35.5", "unit": "%", "baseline_value": "23.5", "n": 812, "setup": "WebArena, gpt-4-0613, temp 0.0, online AWM, accessibility tree input", "quote": "surpassing the BrowserGym baseline by 12.0 absolute points and 51.1% relative increase in overall success rate", "table": "Table 1, row AWM, column Total SR", "note": "BrowserGym uses both HTML and accessibility tree; the ax-tree-only version scores 15.0.", "where": "Sec 3.1.1, Table 1"},
+  {"claim": "AWM beats SteP, which uses 14 human-written workflows, on WebArena.", "kind": "measured", "source": null, "metric": "Total SR", "value": "35.5", "unit": "%", "baseline_value": "33.0", "n": 812, "setup": "WebArena, gpt-4, online AWM vs SteP", "quote": "by a 7.6% relative increase in overall success rate", "table": "Table 1, rows SteP and AWM, column Total SR", "note": "Intro says 7.9% relative; Sec 3.1.1 says 7.6%.", "where": "Sec 3.1.1"},
+  {"claim": "AWM takes fewer steps than BrowserGym and far fewer than AutoEval.", "kind": "measured", "source": null, "metric": "# Steps", "value": "5.9", "unit": "steps", "baseline_value": "7.9 (BrowserGym ax-tree), 46.7 (AutoEval)", "n": 812, "setup": "WebArena, gpt-4", "quote": "uses 40.8 fewer steps on average", "table": "Table 1, column # Steps", "note": "Text says about 2.0 fewer than BrowserGym.", "where": "Sec 3.1.1"},
+  {"claim": "On the WebArena cross-template subset AWM scores highest overall.", "kind": "measured", "source": null, "metric": "Total SR", "value": "33.2", "unit": "%", "baseline_value": "20.5 (BrowserGym ax-tree), 32.1 (SteP), 23.2 (AutoEval)", "n": null, "setup": "WebArena subset with one random example per task template, gpt-4, online", "quote": "AWM still achieves the highest performance, overall and on each website split", "table": "Table 2, row AWM, column Total SR", "note": "Table 2 website counts: 51, 45, 24, 45, 32; Shopping/CMS/Reddit/GitLab/Maps columns align oddly in the extracted text.", "where": "Sec 3.1.3, Table 2"},
+  {"claim": "Offline AWM on Mind2Web cross-task with gpt-4 raises step SR from 36.2 to 45.1 and task SR from 2.0 to 4.8.", "kind": "measured", "source": null, "metric": "Step SR", "value": "45.1", "unit": "%", "baseline_value": "36.2", "n": null, "setup": "Mind2Web cross-task, gpt-4, offline induction from training set vs MindAct gpt-4", "quote": "leading to 4.0–8.9% relative and 0.4–2.8 absolute points increases in step-wise and task-wise success rates", "table": "Table 3, row AWM4, column Step SR", "note": "Abstract says 24.6% relative step SR gain on Mind2Web (45.1/36.2).", "where": "Sec 3.2.1, Table 3"},
+  {"claim": "Offline AWM with gpt-3.5-turbo beats Synapse on cross-task step SR.", "kind": "measured", "source": null, "metric": "Step SR", "value": "34.6", "unit": "%", "baseline_value": "30.6 (Synapse), 17.4 (MindAct)", "n": null, "setup": "Mind2Web cross-task, gpt-3.5-turbo, offline", "quote": "AWM achieves a +5.0 element accuracy and leads to a +4.0 increase in step success rate", "table": "Table 3, row AWM3.5, column Step SR", "note": null, "where": "Sec 3.2.1"},
+  {"claim": "AWM online and offline both beat MindAct across the three Mind2Web splits; online generalises better as the gap widens.", "kind": "measured", "source": null, "metric": "Step SR improvement over MindAct", "value": "7.4-8.9 cross-task; 3.6-3.8 cross-website; 14.0-16.9 cross-domain", "unit": "absolute points", "baseline_value": "36.2 / 30.1 / 18.6", "n": null, "setup": "Mind2Web, gpt-4; AWM_online step SR 43.6 / 33.9 / 35.5; AWM_offline 45.1 / 33.7 / 32.6", "quote": "resulting in 7.4–8.9, 3.6–3.8, and 14.0–16.9 absolute point improvements in step success rates", "table": "Table 4, columns Step SR", "note": "Task SR in cross-domain: offline 0.7 is below MindAct 1.0; online 1.7.", "where": "Sec 3.2.2, Table 4"},
+  {"claim": "Fast learning phase: gains appear within about 40 online examples (WebArena map).", "kind": "measured", "source": null, "metric": "gap over baseline", "value": "22.5", "unit": "points", "baseline_value": null, "n": 40, "setup": "WebArena map split, online AWM, cumulative success rate; read from Fig 1/5", "quote": "This gap over the baseline rises as high as 22.5 points on WebArena after rolling over only tens of examples", "table": null, "note": null, "where": "Sec 1, Fig 1, Fig 5"},
+  {"claim": "Rule-based and LM-based induction perform comparably on WebArena.", "kind": "measured", "source": null, "metric": "Total SR", "value": "35.6 (rule) vs 35.5 (lm)", "unit": "%", "baseline_value": null, "n": 812, "setup": "WebArena, gpt-4", "quote": "using rule- and LM-based workflow induction performs comparably, with a small 0.1 gap in success rate", "table": "Table 5", "note": "Steps 6.3 vs 5.9.", "where": "Sec 4.1"},
+  {"claim": "LM-based induction beats rule-based on Mind2Web cross-task step SR.", "kind": "measured", "source": null, "metric": "Step SR", "value": "45.1", "unit": "%", "baseline_value": "43.4", "n": null, "setup": "Mind2Web cross-task, gpt-4", "quote": "compared to AWMrule, AWMlm improves by a 2.8", "table": "Table 6, rows AWM4,rule and AWM4,lm, column Step SR", "note": "Text says 2.8 without unit; refers to task SR (4.8 vs 2.0) or element accuracy is unclear; step SR gap is 1.7.", "where": "Sec 4.1"},
+  {"claim": "Text and code workflow formats perform similarly.", "kind": "measured", "source": null, "metric": "Step SR", "value": "45.4", "unit": "%", "baseline_value": "45.1", "n": null, "setup": "Mind2Web cross-task, AWM_text vs AWM", "quote": "we do not find substantial performance variance between workflows represented in text and code formats", "table": "Table 7, row AWMtext", "note": "Task SR drops 4.8 to 3.6.", "where": "Sec 4.2"},
+  {"claim": "NL state descriptions beat HTML in workflows; combining both is worse.", "kind": "measured", "source": null, "metric": "Step SR", "value": "34.6 (desc), 33.8 (HTML), 32.9 (both)", "unit": "%", "baseline_value": null, "n": null, "setup": "Mind2Web cross-task, gpt-3.5-turbo", "quote": "missing all correct elements 47% of the time", "table": "Table 8", "note": "Filtered HTML omits the correct element 47% of the time.", "where": "Sec 4.3"},
+  {"claim": "Adding workflows as callable actions (AWM_AS) slightly raises step SR; agents rarely call them.", "kind": "measured", "source": null, "metric": "Step SR", "value": "46.4", "unit": "%", "baseline_value": "45.1", "n": null, "setup": "Mind2Web cross-task, gpt-4", "quote": "they call workflow actions in merely 18.5% of the tasks", "table": "Table 9, row AWMAS, column Step SR", "note": "Text says task SR is the 'same, 3.2' as AWM, but Table 9 prints 3.6 for AWM_AS and 4.8 for AWM.", "where": "Sec 5, Table 9"},
+  {"claim": "Induced workflows are few and widely used.", "kind": "measured", "source": null, "metric": "Utility rate / # workflows", "value": "0.94 (WebArena), 0.91 (Mind2Web); 7.4 and 7.3 workflows", "unit": "fraction / count", "baseline_value": null, "n": null, "setup": "LM-based induction; coverage 0.40 and function overlap 0.20 on Mind2Web, 0.08 on WebArena", "quote": "used by 0.94 of the test examples", "table": "Table 10", "note": "Table 10 caption says Mind2Web only but it has both rows.", "where": "Appendix A.3"},
+  {"claim": "Combining offline and online workflows falls between the two rather than adding.", "kind": "measured", "source": null, "metric": "Step SR", "value": "44.5 / 33.3 / 34.1", "unit": "%", "baseline_value": null, "n": null, "setup": "Mind2Web cross-task / website / domain, gpt-4, AWM_off+on", "quote": "workflows induced offline and online are not fully compatible with each other", "table": "Table 11, row AWMoff +on", "note": null, "where": "Appendix C"}
+ ],
+ "limits": [
+  "Authors concede offline workflows can bias agents and agents struggle to diverge from workflows, lowering action F1 (3.2.1).",
+  "Online induction depends on an LM evaluator; incorrect trajectories judged correct can yield bad workflows (3.2.2).",
+  "Workflow actions in the action space cannot react to dynamic states such as pop-up options (Sec 5, Fig 7); agents use them in only 18.5% of tasks.",
+  "Offline and online workflows do not combine additively (Appendix C).",
+  "Only two web benchmarks and GPT-3.5/GPT-4; single runs, no variance reported; memory is a flat prompt with no retrieval, so scaling with many workflows is untested; per-website grouping gives small memories; gains in Mind2Web task SR are tiny in absolute terms (2.0 to 4.8).",
+  "WebArena baseline comparisons mix BrowserGym with HTML+tree against AWM with tree only; the like-for-like ax-tree baseline scores 15.0."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "workflow", "definition": "a textual description d of a goal plus a series of steps (p1, p2, ...), each with an NL state description, reasoning and an executable action", "where": "Sec 2.2"},
+  {"term": "AWM offline", "definition": "workflows induced from canonical training examples before test inference and held fixed", "where": "Sec 2.3"},
+  {"term": "AWM online", "definition": "supervision-free streaming loop of infer, evaluate, induce, integrate on test queries", "where": "Sec 2.3"}
+ ],
+ "lineage": [
+  {"work": "WebArena", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "Zhou et al., main evaluation benchmark", "quote": null},
+  {"work": "Mind2Web", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "Deng et al., second benchmark; MindAct baseline", "quote": null},
+  {"work": "BrowserGym / WorkArena", "year": 2024, "arxiv": "2403.07718", "relation": "baseline", "note": "Drouin et al., agent framework and WebArena baseline", "quote": null},
+  {"work": "SteP / HeaP", "year": 2023, "arxiv": "2310.03720", "relation": "baseline", "note": "Sodhi et al., human-written workflows", "quote": null},
+  {"work": "Autonomous evaluation and refinement of digital agents", "year": 2024, "arxiv": "2404.06474", "relation": "uses-method", "note": "Pan et al., evaluator used for online success judgement; AutoEval baseline", "quote": null},
+  {"work": "Synapse", "year": 2024, "arxiv": null, "relation": "baseline", "note": "Zheng et al., retrieved trajectory exemplars", "quote": null},
+  {"work": "Voyager", "year": 2024, "arxiv": null, "relation": "related", "note": "Wang et al. 2024a, skill library", "quote": null},
+  {"work": "TroVE", "year": 2024, "arxiv": null, "relation": "related", "note": "Wang et al. 2024c, LM-based toolbox induction", "quote": null},
+  {"work": "Large language models as tool makers", "year": 2023, "arxiv": "2305.17126", "relation": "related", "note": "Cai et al.", "quote": null},
+  {"work": "Reinforcement learning on web interfaces using workflow-guided exploration", "year": 2018, "arxiv": null, "relation": "related", "note": "Liu et al., earlier workflow notion", "quote": null},
+  {"work": "CLIN", "year": 2023, "arxiv": "2310.10134", "relation": "related", "note": "Majumder et al., continually learning agent", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "AWM enables agents to continuously induce and apply workflows to improve performance, compared to stagnant baselines.", "page": 1, "why": "Shows the snowball of workflows and the 22.5-point gap on WebArena map."},
+  {"figure": "Fig 2", "caption": "Illustration of our AWM pipeline: an agent takes actions to solve given queries, induces workflows from successful ones, and integrates them into memory.", "page": 3, "why": "The whole loop and workflow format in one picture."},
+  {"figure": "Fig 6", "caption": "AWM builds increasingly complex workflows over time, by learning from past examples and earlier workflows.", "page": 6, "why": "Concrete example of workflow composition."}
+ ],
+ "code": [],
+ "problems": ["Table cells are flattened in the text extraction; column alignment for Tables 1-2 inferred from the printed order.", "Paper text inconsistencies noted in result notes (7.9 vs 7.6 relative; AWM_AS task SR 3.2 vs table 3.6/4.8).", "No embedded instructions found."]
+}

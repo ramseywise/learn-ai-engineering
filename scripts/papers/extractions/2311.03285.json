@@ -1,19 +1,639 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2311.03285",
  "pdf": "ai-engineering/07-inference-engineering/sources/sheng-2023-s-lora.pdf",
  "bib": {
   "title": "S-LoRA: Serving Thousands of Concurrent LoRA Adapters",
-  "first_author": "Ying Sheng",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Ying Sheng",
+   "Shiyi Cao",
+   "Dacheng Li",
+   "Coleman Hooper",
+   "Nicholas Lee",
+   "Shuo Yang",
+   "Christopher Chou",
+   "Banghua Zhu",
+   "Lianmin Zheng",
+   "Kurt Keutzer",
+   "Joseph E. Gonzalez",
+   "Ion Stoica"
+  ],
+  "first_author": "Sheng",
+  "year": 2024,
+  "venue": "MLSys 2024 (Proceedings of the 5th MLSys Conference); arXiv v3 5 Jun 2024",
   "arxiv": "2311.03285",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 71929,
+  "chars_total": 71929,
+  "engine": "pymupdf",
+  "skipped": "Reference list (lines ~1335-1660) skimmed only; figure plots (Figs 5-12) have no extractable values."
  },
- "legacy_report": "SOURCE: S-LoRA: Serving Thousands of Concurrent LoRA Adapters. Sheng, Cao, Li, Hooper, Lee, Yang, Chou, Zhu, Zheng, Keutzer, Gonzalez, Stoica. MLSys 2024 (arXiv 2311.03285v3, 5 Jun 2024).\nCOVERAGE: 71,956 of 71,956 chars read (all pages, incl. appendices A and B, references skimmed). Clean extraction. Figures 5-12 data are plots, so only captions and text were read, not values.\n\nVERDICT ON THE NOTE\n- Llama-7B rank 8, A100 80GB, 5 -> 2000 adapters 8.05 -> 7.61 req/s: CONFIRMED (Table 3, setup S1).\n- \"vLLM OOM by 100\": CONFIRMED (OOM at n=100 in S1, S2, S4). Paper text says vLLM-packed \"can only serve fewer than 5 adapters\". Note the vLLM baseline is not real LoRA serving: LoRA weights are merged into the base and m separate vLLM processes run under NVIDIA MPS.\n- Merge-and-switch ablation: mostly CONFIRMED but needs tightening. Setup is S2 (Llama-7B, mixed ranks {64,32,16,8}) on A10G 24GB, R=2, cv=1, input and output lengths U[8,512], alpha 0.1 and 1, 1 to 5 adapters. The text says merge wins at one adapter, but \"its performance declines with more than 2 adapters\". So \"beats only at one adapter\" is a fair paraphrase, but the paper hedges at 2. The merge variant is also not PEFT: it keeps continuous batching and PagedAttention.\n\nCLAIMS (ranked)\n- S-LoRA is up to 4x vLLM-packed and up to 30x PEFT, with orders of magnitude more adapters.\n  number: 4x, 30x\n  setup: Llama-7B/13B, single A100 80GB, Table 3; vLLM-packed only runs at small n.\n  quote: \"Overall, S-LoRA achieves a throughput up to 4x higher than vLLM-packed when serving a small number of adapters, and up to 30x higher than PEFT, while supporting a significantly larger number of adapters.\"\n  where: Sec 7.2, p.6\n  Check against Table 3: S1 n=5 is 8.05/2.04 = 3.9x vs vLLM and 8.05/0.88 = 9.1x vs PEFT. S1 n=100 is 7.99/0.25 = 32x vs PEFT. S4 n=2 is 4.49 vs 3.83 vs 0.54, only 1.17x vs vLLM and 8.3x vs PEFT. So the 4x vs vLLM is a best case at n=5, and the 30x vs PEFT is at n=100 where PEFT runs for a shorter duration.\n- Table 3 (single A100 80GB, req/s, S-LoRA / vLLM-packed / PEFT):\n  S1 (7B, rank 8): n=5 8.05/2.04/0.88; n=100 7.99/OOM/0.25; n=1000 7.64/OOM/-; n=2000 7.61/OOM/-.\n  S2 (7B, ranks 64,32,16,8): n=5 7.48/2.04/0.74; n=100 7.29/OOM/0.24; n=1000 6.69/OOM/-; n=2000 6.71/OOM/-.\n  S4 (13B, ranks 64,32,16): n=2 4.49/3.83/0.54; n=100 4.28/OOM/0.13; n=1000 3.96/OOM/-.\n  quote: \"Remarkably, S-LoRA can serve 2,000 adapters simultaneously, maintaining minimal overhead for the added LoRA computation.\"\n  where: Sec 7.2 / Table 3, p.5-6\n  Caveat: the table caption says 100, 1000 and 2000 for S1, but Table 3 notes PEFT was not run for n>=1000 \"as its throughput is already very low for a small n\".\n- Throughput flattens past about 100 adapters because the active set in a batch stays constant. Capacity is bounded by host main memory.\n  quote: \"once the number of adapters reaches a certain threshold (e.g., 100 in most experiments), the throughput of S-LoRA no longer decreases.\"\n  where: Sec 7.2, p.6\n- Unified Paging: KV cache and adapter weights share one pool, with page size = one hidden-dimension vector H. A KV tensor of length S takes S pages and a LoRA weight of rank R takes R pages. Ablations: S-LoRA-no-unify-mem and S-LoRA-bmm (no unified memory and no custom kernels, padded batched matmul) are both worse. The numbers are only in Fig 5 plots, and the text only says \"noticeably higher throughput and lower latency\".\n  quote: \"a KV cache tensor with a sequence length of S uses up S pages, while a LoRA weight tensor of rank R takes up R pages.\"\n  where: Sec 5.1, p.4\n- Tensor parallelism: LoRA communication is negligible against base-model communication. Base model: one all-reduce, 2(N-1)Bh/N. LoRA: 5(N-1)Br/N. Memory is optimal, with no replicated weight matrix. Going from 2 to 4 GPUs gives more than 2x throughput (superlinear, because the system is memory-bound).\n  number: 5(N-1)Br/N vs 2(N-1)Bh/N; \">2x\" from 2 to 4 GPUs\n  setup: Llama-30B on 2 and 4 A100 40GB, n=10 and 100; Llama-70B on 2 and 4 A100 80GB, n=10 (Fig 8). The exact req/s are only in the plot.\n  quote: \"when transitioning from 2 GPUs to 4 GPUs, the serving throughput increases by more than 2 times.\"\n  where: Sec 7.4, p.7; Sec 6.2, p.6\n- Merge vs on-the-fly (see verdict above).\n  quote: \"with just one adapter, the merging approach outperforms the on-the-fly computation owing to a one-time merging cost. However, its performance declines with more than 2 adapters, primarily because of the time-consuming switch between adapters.\"\n  where: Sec 7.5, p.7-8\n- PEFT is slow even with one adapter. Cause: no KV cache and no continuous batching. In A10G S1, S-LoRA's max batch size is 30 and PEFT's is 6. PEFT throughput on S1 falls from 0.26 req/s at 1 adapter to 0.17 at 200 adapters, with attainment 0.0 throughout.\n  quote: \"in A10G S1, S-LoRA can accommodate a maximal batch size of 30, while PEFT can only accommodate a maximal batch size of 6.\"\n  where: App A.1, Table 4, p.13\n- Real workload: LMSYS Chatbot Arena trace, base models treated as adapters. The trace has about 26 adapters, average input 85 tokens and output 165 tokens, on S2 A10G. The result is the same pattern as synthetic workloads.\n  quote: \"the average input length is 85 tokens, the average output length is 165 tokens, and the number of adapters is around 26.\"\n  where: Sec 7.3, p.6\n- Adapter clustering (batching same-adapter requests first) has a small effect, and a small cluster count d is generally better. It can hurt latency and fairness. Early abort scheduling beats FCFS and LCFS on SLO attainment and user satisfaction as cv grows (Fig 10, Appendix B).\n  quote: \"the impact is not significant but observable, especially for larger α and cv. Generally, a small d can result in better performance.\"\n  where: App A.2, p.13\n\nOTHER METHOD FACTS\n- Design: base model GEMM is batched, and xAB is computed per adapter with custom kernels (MBGMM for prefill in Triton, MBGMV for decode). The decode kernel was modified from Punica and was faster than the Triton version.\n- Adapters live in host memory, the active ones are fetched to the GPU, and the next batch's adapters are predicted from the waiting queue and prefetched.\n- Built on LightLLM. Iteration-level scheduling from Orca.\n- Hardware: A10G 24GB, A100 40GB/80GB, host memory 64 to 670 GB. Metric: SLO attainment is the share of requests whose first token returns within 6 s.\n- Workload: Gamma arrivals, power-law rates across adapters. Table 2 defaults: 7B @ A10G n=200, R=2; 7B @ A100-80G n=200, R=10; 13B @ A100-40G n=200, R=2; 13B @ A100-80G n=400, R=6; alpha=1, cv=1, lengths [8,512] for input and output, 5-minute traces.\n\nLIMITS\n- Adapters are applied to Q, K, V and O projections only. The paper says the feed-forward module is excluded (\"excluding the feed-forward module\").\n- Footnote: Llama-70B uses non-official architecture parameters and no grouped-query attention.\n- The vLLM baseline is a merged-weights multi-process workaround, not native LoRA. vLLM later added LoRA support, so the 4x claim has dated.\n- Throughput numbers are synthetic traces, except the Arena trace which has only about 26 adapters. The \"2000 adapters\" runs use a power-law, so most adapters are cold.\n- Table 3 mixes request rates and durations. PEFT was run for a shorter duration at n=100.\n- Authors name future work: other adapter methods, better fused kernels, multiple CUDA streams to overlap base and LoRA computation.\n- Adapter clustering trades latency and fairness. No quality (accuracy) evaluation; this is systems-only.\n- Related-work mention that matters for the note's encoder section: PetS (Zhou 2022) did parameter-efficient serving for small encoder-only BERT models only. S-LoRA is decoder-only.\n\nBUILDS ON: LoRA (Hu et al., 2021) including merge and add/subtract swapping; vLLM / PagedAttention (Kwon et al., 2023); Orca (Yu et al., 2022); Megatron-LM tensor parallelism (Shoeybi et al., 2019); Punica (Chen et al., 2023, concurrent, kernels reused); Triton (Tillet et al., 2019); LightLLM (ModelTC, 2023); PetS (Zhou et al., 2022).\n\nCODE: none. Repo cited: https://github.com/S-LoRA/S-LoRA. Key formulas: h = xW' = x(W+AB) = xW + xAB (Eqs 1-2, p.2).\n\nFIGURES (no image extraction run; captions from text)\n- Fig 1 (p.3): separated batched base GEMM plus per-adapter custom-kernel LoRA add. Explains why batching works.\n- Fig 3 (p.4): unified memory pool, KV and adapter pages interleaved, page = H elements.\n- Fig 4 (p.6): TP partition strategy with fused all-gather and all-reduce.\n- Fig 5 (p.6): throughput and latency vs adapter count for S-LoRA variants.\n- Fig 9 (p.7): merge vs on-the-fly, S2 A10G, 1 to 5 adapters.\n\nPROBLEMS: none blocking. Plots (Fig 5-12) did not extract numerically. Text has typos (\"Unfied\"). No embedded instructions found."
+ "type": "system",
+ "question": "How can one machine serve thousands of LoRA adapters of a single base LLM concurrently with high throughput?",
+ "hypothesis": "Computing xAB on the fly while batching the shared base xW across adapters beats merging adapters into the base weights when many adapters are served.",
+ "contributions": [
+  "Unified Paging: unified memory pool for adapter weights and KV cache",
+  "Heterogeneous batching: custom CUDA kernels for varying ranks on non-contiguous memory",
+  "S-LoRA TP: tensor parallelism strategy with minimal LoRA communication"
+ ],
+ "method": {
+  "summary": "S-LoRA keeps all adapters in host memory, fetches the adapters needed by the running batch into a unified GPU page pool shared with the KV cache (page = vector of size H), and computes base xW batched via GEMM plus per-adapter xAB with custom kernels (MBGMM prefill in Triton, MBGMV decode adapted from Punica). Built on LightLLM with iteration-level scheduling, adapter prefetching, early-abort admission control and Megatron-aligned tensor parallelism.",
+  "task": "multi-LoRA LLM serving (inference system)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Synthetic Gamma-process traces",
+    "role": "eval",
+    "size": "5 minutes per trace; n adapters; total rate R req/s",
+    "split": null,
+    "source": "generated; per-adapter rates follow power law with exponent alpha; CV cv; input/output lengths U[8,512]",
+    "preprocessing": "ranks assigned round-robin from Table 1"
+   },
+   {
+    "name": "LMSYS Chatbot Arena trace (Zheng et al. 2023a,b)",
+    "role": "eval",
+    "size": "R*D requests sampled; D=5 min; avg input 85 tokens, avg output 165 tokens, ~26 adapters",
+    "split": null,
+    "source": "downsampled raw log; base-model distribution treated as adapter distribution",
+    "preprocessing": "timestamps rescaled to [0,D]"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "4096",
+    "heads": null,
+    "context": null,
+    "other": {
+     "settings": "S1 ranks {8}; S2 ranks {64,32,16,8}"
+    }
+   },
+   {
+    "name": "Llama-13B",
+    "role": "base",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "5120",
+    "heads": null,
+    "context": null,
+    "other": {
+     "settings": "S4 ranks {64,32,16}"
+    }
+   },
+   {
+    "name": "Llama-30B",
+    "role": "base",
+    "params": "30B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "7168",
+    "heads": null,
+    "context": null,
+    "other": {
+     "settings": "S5 ranks {32}"
+    }
+   },
+   {
+    "name": "Llama-70B",
+    "role": "base",
+    "params": "70B",
+    "architecture": "decoder-only transformer (non-official arch params, no GQA)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "8192",
+    "heads": null,
+    "context": null,
+    "other": {
+     "settings": "S6 ranks {64}"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "output length sampled U[8,512] (synthetic)",
+   "samples": "one trace per configuration, 5-minute duration; number of runs/seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "default_workloads": "7B@A10G(24G): n=200,alpha=1,R=2,cv=1; 7B@A100(80G): n=200,alpha=1,R=10,cv=1; 13B@A100(40G): n=200,alpha=1,R=2,cv=1; 13B@A100(80G): n=400,alpha=1,R=6,cv=1; all input/output [8,512]",
+    "scheduling": "FCFS iteration-level (Orca-style) by default; early abort optional",
+    "slo": "first token within 6 s",
+    "adapter_clustering_d": "swept 0-30 in App A.2",
+    "kernel": "Punica-derived MBGMV used (faster than Triton version); MBGMM in Triton",
+    "adapters_modified": "query, key, value, output projections (LoRA background)"
+   },
+   "other": {
+    "hardware": "single A10G 24GB, A100 40GB, A100 80GB, multi-A100 40/80GB; host RAM 64GB-670GB",
+    "framework": "LightLLM on PyTorch and Triton",
+    "vllm_packed": "m vLLM processes on one GPU under NVIDIA MPS, merged weights, GPU memory allocated proportional to average request rate",
+    "peft": "server batching single-adapter requests, switching adapters between batches",
+    "tp_test": "Llama-30B on 2/4 A100 40GB, n=10 and 100; Llama-70B on 2/4 A100 80GB, n=10"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "throughput",
+     "definition": "requests served per second",
+     "unit": "req/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "average request latency",
+     "definition": "mean end-to-end request latency",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "average first token latency",
+     "definition": "mean time to first token",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "SLO attainment",
+     "definition": "percentage of requests that return the first token within 6 seconds",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "user satisfaction",
+     "definition": "reward function of first-token latency in [0,1], 0 if latency exceeds SLO (App B)",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "HuggingFace PEFT",
+    "vLLM m-packed",
+    "S-LoRA-no-unify-mem",
+    "S-LoRA-bmm",
+    "S-LoRA-merge (ablation)",
+    "S-LoRA FCFS/LCFS vs Abort"
+   ],
+   "protocol": "Single trace per setting, no seeds, confidence intervals or significance tests reported; PEFT and S-LoRA-bmm run for shorter durations in some cases"
+  },
+  "availability": {
+   "code": "https://github.com/S-LoRA/S-LoRA",
+   "weights": null,
+   "data": "synthetic generator parameters given; Arena logs are public (LMSYS-Chat-1M)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.other.vllm_packed",
+    "quote": "we run m vLLM workers on a single GPU, where multiple workers are separate processes managed by NVIDIA MPS",
+    "where": "Sec 7.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "S1 throughput at n=5 adapters: S-LoRA 8.05, vLLM-packed 2.04, PEFT 0.88 req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 8.05,
+   "unit": "req/s",
+   "baseline_value": "2.04",
+   "n": null,
+   "setup": "Llama-7B, setting S1 (hidden 4096, all adapters rank 8), single A100 80GB, synthetic Gamma-arrival workload (alpha=1, R=10, cv=1, input/output U[8,512], 5 min), throughput in req/s",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S1 n=5, columns S-LoRA / vLLM-packed / PEFT (S-LoRA 8.05, vLLM-packed 2.04, PEFT 0.88)"
+  },
+  {
+   "claim": "S1 throughput at n=100 adapters: S-LoRA 7.99, vLLM-packed OOM, PEFT 0.25 req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 7.99,
+   "unit": "req/s",
+   "baseline_value": "OOM",
+   "n": null,
+   "setup": "Llama-7B, setting S1 (hidden 4096, all adapters rank 8), single A100 80GB, synthetic Gamma-arrival workload (alpha=1, R=10, cv=1, input/output U[8,512], 5 min), throughput in req/s",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S1 n=100, columns S-LoRA / vLLM-packed / PEFT (S-LoRA 7.99, vLLM-packed OOM, PEFT 0.25)"
+  },
+  {
+   "claim": "S1 throughput at n=1000 adapters: S-LoRA 7.64, vLLM-packed OOM, PEFT - req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 7.64,
+   "unit": "req/s",
+   "baseline_value": "OOM",
+   "n": null,
+   "setup": "Llama-7B, setting S1 (hidden 4096, all adapters rank 8), single A100 80GB, synthetic Gamma-arrival workload (alpha=1, R=10, cv=1, input/output U[8,512], 5 min), throughput in req/s",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S1 n=1000, columns S-LoRA / vLLM-packed / PEFT (S-LoRA 7.64, vLLM-packed OOM, PEFT -)"
+  },
+  {
+   "claim": "S1 throughput at n=2000 adapters: S-LoRA 7.61, vLLM-packed OOM, PEFT - req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 7.61,
+   "unit": "req/s",
+   "baseline_value": "OOM",
+   "n": null,
+   "setup": "Llama-7B, setting S1 (hidden 4096, all adapters rank 8), single A100 80GB, synthetic Gamma-arrival workload (alpha=1, R=10, cv=1, input/output U[8,512], 5 min), throughput in req/s",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S1 n=2000, columns S-LoRA / vLLM-packed / PEFT (S-LoRA 7.61, vLLM-packed OOM, PEFT -)"
+  },
+  {
+   "claim": "S1 intermediate adapter counts 10-50 are not tested; Table 3 only lists n=5,100,1000,2000 (no 10, 20, 50, 500)",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B, setting S1 (hidden 4096, all adapters rank 8), single A100 80GB, synthetic Gamma-arrival workload (alpha=1, R=10, cv=1, input/output U[8,512], 5 min), throughput in req/s",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "S2 throughput at n=5: S-LoRA 7.48, vLLM-packed 2.04, PEFT 0.74 req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 7.48,
+   "unit": "req/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B, setting S2 (ranks {64,32,16,8}), single A100 80GB, same workload as S1",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S2 n=5, columns S-LoRA / vLLM-packed / PEFT"
+  },
+  {
+   "claim": "S2 throughput at n=100: S-LoRA 7.29, vLLM-packed OOM, PEFT 0.24 req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 7.29,
+   "unit": "req/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B, setting S2 (ranks {64,32,16,8}), single A100 80GB, same workload as S1",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S2 n=100, columns S-LoRA / vLLM-packed / PEFT"
+  },
+  {
+   "claim": "S2 throughput at n=1000: S-LoRA 6.69, vLLM-packed OOM, PEFT - req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 6.69,
+   "unit": "req/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B, setting S2 (ranks {64,32,16,8}), single A100 80GB, same workload as S1",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S2 n=1000, columns S-LoRA / vLLM-packed / PEFT"
+  },
+  {
+   "claim": "S2 throughput at n=2000: S-LoRA 6.71, vLLM-packed OOM, PEFT - req/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 6.71,
+   "unit": "req/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B, setting S2 (ranks {64,32,16,8}), single A100 80GB, same workload as S1",
+   "note": null,
+   "where": "Table 3, p.5",
+   "table": "Table 3, row S2 n=2000, columns S-LoRA / vLLM-packed / PEFT"
+  },
+  {
+   "claim": "S4 (Llama-13B ranks {64,32,16}, A100 80GB): n=2 S-LoRA 4.49, vLLM-packed 3.83, PEFT 0.54; n=100 S-LoRA 4.28, vLLM OOM, PEFT 0.13; n=1000 S-LoRA 3.96, vLLM OOM",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 4.49,
+   "unit": "req/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-13B S4, single A100 80GB, 13B default workload may differ (Table 2: n=400, R=6)",
+   "note": "Table 2 default for 13B@A100 80G is n=400, R=6; Table 3's exact request rate per row is not stated.",
+   "where": "Table 3",
+   "table": "Table 3, rows S4 n=2/100/1000, columns S-LoRA / vLLM-packed / PEFT"
+  },
+  {
+   "claim": "vLLM-packed runs out of memory at n=100 adapters in S1, S2 and S4 (the smallest count above 5 tested); text says it serves fewer than 5 adapters",
+   "kind": "measured",
+   "source": null,
+   "metric": "adapters before OOM",
+   "value": 5,
+   "unit": "adapters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A100 80GB, m vLLM worker processes under NVIDIA MPS, merged weights per adapter",
+   "note": "Exact OOM threshold between 5 and 100 not tested.",
+   "where": "Sec 7.2, p.5",
+   "quote": "vLLM-packed needs to maintain multiple weight copies and can only serve fewer than 5 adapters due to the GPU memory constraint."
+  },
+  {
+   "claim": "S-LoRA throughput is within about 5-6% of its own n=5 value at n=2000 in S1 (8.05 to 7.61), flat beyond ~100 adapters",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput drop",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B, setting S1 (hidden 4096, all adapters rank 8), single A100 80GB, synthetic Gamma-arrival workload (alpha=1, R=10, cv=1, input/output U[8,512], 5 min), throughput in req/s",
+   "note": "Percentage is derived from Table 3, not printed.",
+   "where": "Sec 7.2, p.5",
+   "quote": "once the number of adapters reaches a certain threshold (e.g., 100 in most experiments), the throughput of S-LoRA no longer decreases."
+  },
+  {
+   "claim": "S-LoRA improves throughput up to 4x over vLLM-packed and up to 30x over HuggingFace PEFT",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 4,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7B/13B, A100, small adapter counts",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "S-LoRA achieves a throughput up to 4x higher than vLLM-packed when serving a small number of adapters,"
+  },
+  {
+   "claim": "Up to 30x over PEFT",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 30,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "note": "Line break in source; quote kept as printed. Table 3 ratio S1 n=5: 8.05/0.88 = 9x; 30x is not directly visible in Table 3 (S1 n=100: 7.99/0.25 = 32x).",
+   "where": "Sec 7.2",
+   "quote": "and up to 30x higher than PEFT, while supporting a signifi-"
+  },
+  {
+   "claim": "Merge-vs-on-the-fly ablation: with one adapter merging beats on-the-fly; merging declines with more than 2 adapters due to switching cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 9: S2 (Llama-7B ranks {64,32,16,8}) on A10G 24GB, 1 to 5 adapters, alpha in {0.1,1}, R=2, cv=1, input/output U[8,512]; y-axis range 1.1-1.8 req/s",
+   "note": "Result is a plot only; the text gives no req/s values per adapter count, so the exact crossover count (text: 'more than 2 adapters') is not in numbers. Text continues: 'the merging approach outperforms the on-the-fly computation owing to a one-time merging cost. However, its performance declines with more than 2 adapters'.",
+   "where": "Sec 7.5, p.7",
+   "quote": "Results in Figure 9 demonstrate that with just one adapter,"
+  },
+  {
+   "claim": "Tensor parallelism: LoRA communication overhead is small; 2 to 4 GPUs more than doubles throughput",
+   "kind": "measured",
+   "source": null,
+   "metric": "scaling",
+   "value": 2,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-30B on 2x/4x A100 40GB (n=10,100), Llama-70B on 2x/4x A100 80GB (n=10)",
+   "note": "Text: 'more than 2 times'; values only in Fig 8 plot.",
+   "where": "Sec 7.4",
+   "quote": "Furthermore, when transitioning from 2 GPUs to 4 GPUs, the serving through-"
+  },
+  {
+   "claim": "PEFT on S1 A10G achieves 0.26 req/s at 1 adapter falling to 0.17 at 200",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 0.26,
+   "unit": "req/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "S1, A10G 24GB, PEFT, avg latency 1021.86 s to 1609.50 s, attainment 0.0",
+   "note": null,
+   "where": "App A.1",
+   "table": "Table 4, row num adapters=1, column throughput (0.26; 200 adapters: 0.17)"
+  },
+  {
+   "claim": "PEFT max batch size 6 vs S-LoRA 30 in A10G S1",
+   "kind": "measured",
+   "source": null,
+   "metric": "batch size",
+   "value": 30,
+   "unit": "requests",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A10G S1",
+   "note": null,
+   "where": "App A.1",
+   "quote": "S-LoRA can accom-\nmodate a maximal batch size of 30, while PEFT can only\naccommodate a maximal batch size of 6."
+  },
+  {
+   "claim": "Real Chatbot Arena trace: average input 85 tokens, output 165 tokens, ~26 adapters",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": 85,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LMSYS Chatbot Arena downsampled, S2 A10G",
+   "note": null,
+   "where": "Sec 7.3",
+   "quote": "the average input length is 85 tokens, the average output length\nis 165 tokens, and the number of adapters is around 26."
+  },
+  {
+   "claim": "Added LoRA communication is 5(N-1)Br/N vs base 2(N-1)Bh/N, negligible since r<<h",
+   "kind": "claim",
+   "source": null,
+   "metric": "comm cost",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "analysis, not measured",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "Under our strategy, the additional communication cost intro-\nduced by LoRA is negligible when compared to the communication cost of the base model, because r ≪h."
+  }
+ ],
+ "limits": [
+  "Evaluated only on Llama models and LoRA; other adapter types left as future work.",
+  "vLLM-packed baseline is a merged-weights multi-process setup, not real LoRA serving, so the 4x gain is vs a weak baseline.",
+  "Table 3 gives no counts between 5 and 100 adapters, so the vLLM OOM threshold is not located; PEFT not run beyond 100 adapters.",
+  "Single run per configuration, no variance reported; request-rate per Table 3 row not stated.",
+  "Merge ablation measured only on A10G with 1-5 adapters; reported as plot only.",
+  "Real workload has ~26 adapters only; thousands tested on synthetic traces.",
+  "No accuracy/quality evaluation; adapters are synthetic ranks, not trained.",
+  "Future work: more adapter methods, fused kernels, multiple CUDA streams."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Unified Paging",
+   "definition": "unified memory pool that jointly manages KV cache and adapter weights in pages of H elements",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "MBGMM / MBGMV",
+   "definition": "Multi-size Batched Gather Matrix-Matrix / Matrix-Vector Multiplication kernels",
+   "where": "Sec 5.3"
+  },
+  {
+   "term": "adapter clustering",
+   "definition": "prioritising requests that share adapters to reduce the number of active adapters in a batch",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "extends",
+   "note": "serves LoRA adapters; rejects merge-into-base for multi-adapter serving",
+   "quote": null
+  },
+  {
+   "work": "vLLM / PagedAttention (Kwon et al.)",
+   "year": 2023,
+   "arxiv": "2309.06180",
+   "relation": "extends",
+   "note": "Unified Paging generalises PagedAttention; also baseline",
+   "quote": null
+  },
+  {
+   "work": "Orca (Yu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "iteration-level scheduling",
+   "quote": null
+  },
+  {
+   "work": "Punica (Chen et al.)",
+   "year": 2023,
+   "arxiv": "2310.18547",
+   "relation": "related",
+   "note": "concurrent work; kernels derived from its blog post",
+   "quote": null
+  },
+  {
+   "work": "HuggingFace PEFT (Mangrulkar et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "30x throughput claim",
+   "quote": null
+  },
+  {
+   "work": "Megatron-LM (Shoeybi et al.)",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "uses-method",
+   "note": "base TP strategy that LoRA partition aligns with",
+   "quote": null
+  },
+  {
+   "work": "PetS (Zhou et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "encoder-only BERT multi-adapter serving",
+   "quote": null
+  },
+  {
+   "work": "LightLLM",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "codebase S-LoRA is built on",
+   "quote": null
+  },
+  {
+   "work": "LMSYS Chatbot Arena / LMSYS-Chat-1M",
+   "year": 2023,
+   "arxiv": "2309.11998",
+   "relation": "uses-data",
+   "note": "real traces",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Separated batched computation for the base model and LoRA computation.",
+   "page": 3,
+   "why": "Shows batched xW plus per-adapter xAB"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Unified memory pool.",
+   "page": 4,
+   "why": "KV cache and adapter pages interleaved"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Tensor parallelism partition strategy for batched LoRA computation.",
+   "page": 5,
+   "why": "Partition graph with fused all-gather/all-reduce"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Ablation study comparing adapter merging and on-the-fly compute for S2 on A10G (24GB).",
+   "page": 7,
+   "why": "Merge vs on-the-fly crossover"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Throughput (req/s) comparison between S-LoRA, vLLM-packed, and PEFT.",
+   "page": 5,
+   "why": "Core scaling result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2 Eq 1-2",
+   "snippet": "h = xW' = x(W + AB) = xW + xAB",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures 5-12 are plots; their values were not extractable.",
+  "Table 3 S4 rows lack stated request rate."
+ ]
 }

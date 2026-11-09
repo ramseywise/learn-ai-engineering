@@ -1,19 +1,566 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.14658",
  "pdf": "ai-engineering/04-loop-engineering/sources/zheng-2024-opencodeinterpreter.pdf",
  "bib": {
   "title": "OpenCodeInterpreter: Integrating Code Generation with Execution and Refinement",
-  "first_author": "Tianyu Zheng",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Tianyu Zheng",
+   "Ge Zhang",
+   "Tianhao Shen",
+   "Xueling Liu",
+   "Bill Yuchen Lin",
+   "Jie Fu",
+   "Wenhu Chen",
+   "Xiang Yue"
+  ],
+  "first_author": "Zheng",
+  "year": 2024,
+  "venue": "preprint (arXiv v3, 7 Jan 2025; ACL-style format)",
   "arxiv": "2402.14658",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 100008,
+  "chars_total": 100008,
+  "engine": "pymupdf",
+  "skipped": "Appendix E/figure A3-A10 example dialogues skimmed (illustrative transcripts, no numbers); Figures A1/A2 are images with no text numbers."
  },
- "legacy_report": "SOURCE: OpenCodeInterpreter: Integrating Code Generation with Execution and Refinement. Tianyu Zheng, Ge Zhang, Tianhao Shen, Xueling Liu, Bill Yuchen Lin, Jie Fu, Wenhu Chen, Xiang Yue. arXiv:2402.14658v3 (cs.SE), 7 Jan 2025. The venue is not printed in the text; I treat it as a preprint. The EvalPlus leaderboard snapshot used is dated 10 Feb 2024.\n\nCOVERAGE: All 99,947 chars were extracted. I read the main text, tables 1-5, limitations, references (skimmed) and appendices A-D (prompts). Appendix E (example dialogues) was skimmed only. Figures A1/A2 (data-filtering counts, language pie) are images, so their numbers are not extractable. The target note was read as well. It does not cite this paper, and the paper has no Reflexion, DGM or evolve-loop content.\n\nCLAIMS (ranked)\n- Claim: Execution feedback (up to 2 rounds) lifts the 33B model to roughly GPT-4 Turbo single-turn level. Synthetic human feedback lifts it further.\n  number: 83.2 (76.4) avg with execution feedback, versus 79.0 (70.4) single-turn. GPT-4 Turbo single-turn is 84.2 (76.2). Synthetic human feedback gives 88.0 (81.0), and the oracle variant gives 91.6 (84.6).\n  setup: OpenCodeInterpreter-DS-33B, average over HumanEval and MBPP (EvalPlus \"plus\" scores in brackets), pass@1, greedy decoding, max 2 refinement rounds. The human feedback is GPT-4-simulated.\n  quote: \"OpenCodeInterpreter-33B achieves an accuracy of 83.2 (76.4) on the average (and plus versions) of HumanEval and MBPP, closely rivaling GPT-4's 84.2 (76.2) and further elevates to 91.6 (84.6) with synthesized human feedback from GPT-4.\"\n  where: Abstract; Table 1 (~chars 14,000-21,000, 33B block).\n- Claim: The \"oracle\" feedback gain is partly leakage. The oracle GPT-4 sees the ground-truth canonical solution, so 91.6 is an upper bound, not a deployable result.\n  number: 91.6 (84.6) oracle vs 88.0 (81.0) non-oracle (33B)\n  setup: Same as above. The prompt says to guide without revealing the canonical solution.\n  quote: \"GPT-4 also accesses the ground-truth solution, offering insight into OpenCodeInterpreter's optimal performance in code refinement when guided by precise feedback.\"\n  where: Section 3 Evaluation Setup; Appendix D.\n- Claim: Execution feedback helps the baselines too, but unevenly. GPT-4 Turbo and GPT-3.5 gain on average. WizardCoder-33B and Magicoder-S-DS-6.7B get worse with execution feedback. This means refinement is not free. A loop can degrade a model that was not trained to use the feedback.\n  number: GPT-4 Turbo 84.2 (76.2) -> 90.0 (81.2). GPT-3.5 Turbo 77.2 (67.7) -> 81.9 (72.3). WizardCoder-V1.1 33B 79.4 (70.1) -> 77.2 (68.9). Magicoder-S-DS 6.7B 76.3 (67.6) -> 75.3 (67.2).\n  setup: Table 1, averages, max 2 rounds. Baseline numbers are copied from the EvalPlus leaderboard or replicated from official checkpoints.\n  quote: \"WizardCoder-V1.1 (Luo et al., 2023) 79.9 (73.2) 78.9 (66.9) 79.4 (70.1) + Execution Feedback 33B Instruct • ◦ 74.4 (69.5) 79.9 (68.2) 77.2 (68.9)\"\n  where: Table 1 (~chars 17,000-20,000).\n- Claim: The feedback gain holds at every scale tested, and it is larger for the weaker-single-turn models.\n  number: 6.7B DS 75.1 (67.9) -> 81.9 (75.6); 13B CL 74.1 (66.5) -> 79.7 (72.0); 34B CL 75.7 (67.0) -> 81.0 (73.3); 70B CL 74.6 (66.3) -> 80.7 (73.7)\n  setup: Table 1 averages, base models CodeLlama and DeepSeekCoder, 2 rounds.\n  quote: \"OpenCodeInterpreter-CL 76.2 (70.7) 73.0 (61.9) 74.6 (66.3) + Execution Feedback 70B Instruct • • 79.9 (77.4) 81.5 (69.9) 80.7 (73.7)\"\n  where: Table 1, 70B block.\n- Claim: Training on multi-turn data is what makes the model benefit from feedback. The 0:1 mix (no single-turn data) vs 2:1 shows this, as does the Code-Feedback ablation (Table 3).\n  number: Table 3: execution-feedback average rises from 77.5 (69.5) with Single-turn Packing alone to 79.1 (71.3) with packing + simulation + correction, and 81.9 (75.6) with the full set. Without execution feedback the full set scores 75.1 (67.9).\n  setup: DeepSeekCoder-6.7B and 33B base. The 2:1 single-turn : Code-Feedback mix is best (Table 2).\n  quote: \"Code-Feedback (Full) ✔ 81.9 (75.6)\"\n  where: Table 3 (~chars 31,000-32,000).\n- Claim: Mixing in high-quality single-turn data improves multi-turn performance. The best ratio is 2:1 (WizardCoder 110K : Code-Feedback).\n  number: 2:1 with execution feedback gives 81.9 (75.6). 1:1 gives 78.2 (69.3). 0:1 gives 71.5 (74.0).\n  setup: Table 2, soft-target fine-tuning, six ratios. The 0:1 MBPP cell \"66.7 ( 76.6)\" has the plus score above the base score, probably a typo in the paper.\n  quote: \"✗ 73.8 (68.9) 73.9 (62.9) 73.9 (65.9)0:1 ✔ 76.2 (71.3) 66.7 ( 76.6) 71.5 (74.0)\"\n  where: Table 2.\n- Claim: The simulated data pipeline is a generate-execute-refine loop with a cap of three iterations. GPT-3.5 drafts, the code is executed, and GPT-4 gets the output and refines. It stops when GPT-4 thinks the answer is correct or after three rounds. The stop criterion is a model's own judgment.\n  number: max 3 iterations; 51K examples from Interaction Simulation; 500 Code Correction; 16.6K from packing (105K single-turn sources)\n  setup: Training data construction, 156K filtered queries (from 287K, complexity 4-5 by Qwen-72B-Chat, two prompts).\n  quote: \"This cycle is repeated until GPT-4 delivers what it deems a correct solution or until a maximum of three iterations is reached.\"\n  where: Section 2.1.\n- Claim: Code-Feedback is 68K dialogues and 192K turns, with ten feedback categories.\n  number: 68K samples, 192K turns\n  setup: Figure 2 table.\n  quote: \"Code-Feedback (Ours) 68K 192K ✔ ✔ ✔\"\n  where: Figure 2.\n- Claim: Multi-turn improvement shows on MT-Bench coding questions (10 questions, GPT-4 scores 1-10). Second-turn gains over the same-base Instruct model are large.\n  number: OpenCI-DS-33B second turn 6.7 (avg 6.8) vs DS-33B-Instruct 4.2 (avg 5.5). GPT-4 averages 8.6.\n  setup: 10 coding questions, each with a follow-up.\n  quote: \"OpenCI-DS-33B 6.8 6.7 6.8 ... DS-33B-Instruct 6.7 4.2 5.5\"\n  where: Table 5.\n- Claim: The leakage check is low-overlap but covers only line-level duplication.\n  number: 5 consecutive lines: 1.19% HumanEval(+), 0.51% MBPP(+). 7 lines: 0.00% both.\n  quote: \"5 lines 1.19% 0.51%\"\n  where: Table 4.\n\nLIMITS\n- Authors concede: \"it may struggle with extremely complex or ambiguous user intents\". Performance may vary by language and domain.\n- Case study (Fig A10): the model fixed errors one at a time and exceeded the maximum of three attempts, so it fails with multiple simultaneous hard errors.\n- The 2-round cap is imposed \"to maintain fairness\". More rounds are untested.\n- \"Human feedback\" is GPT-4-simulated, not human. The human-feedback runs cover only 6.7B and 33B, \"Due to budget constraints\".\n- The evaluation is HumanEval/MBPP, small function-level tasks with unit tests. There is no repository-level or long-horizon evaluation, no cost or latency figures, and no multi-seed variance. Greedy decoding, single run.\n- This is a supervised fine-tuning method, not a runtime loop that edits itself. It trains the model to use feedback. It does not show a loop improving its own scaffold, harness or weights over iterations.\n- Dated: baselines are from the Feb 2024 EvalPlus leaderboard (GPT-4 Turbo, CodeLlama, DeepSeekCoder). HumanEval/MBPP are likely saturated now.\n- Training data is generated by GPT-3.5/GPT-4, so the gains are partly distillation from a stronger model and not self-improvement. The paper states that the initial training set had \"significant presence of low-quality or incorrect data\".\n\nBUILDS ON: Self-Refine (Madaan et al., 2023). Self-debug (Chen et al., 2023, \"Teaching large language models to self-debug\"). EvalPlus (Liu et al., 2023). HumanEval (Chen et al., 2021). MBPP (Austin et al., 2021). Self-Instruct (Wang et al., 2023b). WizardCoder / Code Evol-Instruct (Luo et al., 2023). Magicoder (Wei et al., 2023). StepCoder (Dou et al., 2024), which uses RL with compiler feedback. CodeRL (Le et al., 2022). DebugBench (Tian et al., 2024). In-context pretraining (Shi et al., 2023), for the packing idea. MT-Bench (Zheng et al., 2024). Base models CodeLlama (Roziere et al., 2023) and DeepSeek-Coder (Guo et al., 2024).\n\nCODE: none worth keeping. The appendix has prompts only. One is a verbatim feedback-simulator rule that could fit the note's \"structured verdict\" theme: the JSON schema {\"satisfied\", \"not_satisfied\", \"feedback\"} with \"Feedback must come from a point included in 'not_satisfied' field\" (Appendix B).\n\nFIGURES (not rendered; I did not run the captions script)\n- Fig 1: pass@1 on HumanEval for 6.7B and 33B across Single Turn, w/ Exec Feedback, w/ Human Feedback and w/ H.F. (Oracle), against GPT-4 CI and GPT-3.5 CI. The extracted numbers are jumbled, so use Table 1 instead.\n- Fig 2: dataset construction pipeline and comparison table. It explains the five data sources quickly.\n- Fig A10: a failure case, in which the model fixed errors one at a time and hit the three-attempt cap.\n\nPROBLEMS\n- Extraction of Figure 1 and the Table 1 row labels is jumbled (the \"+ Execution Feedback\" rows are separated from their model names). I attributed rows by position and cross-checked with the abstract's 83.2/76.4/91.6/84.6.\n- The Table 2 cell \"66.7 ( 76.6)\" looks like a typo.\n- No embedded instructions found. The prompts in Appendices B-D are dataset-construction prompts, not directed at me.\n- Relevance to note 08: the paper is weak support for the note's self-improving-loop claims. Its strongest transferable points are that execution feedback gives a measurable multi-turn gain, that some models regress with feedback, and that \"oracle\" feedback is an upper bound. It is a fine-tuning paper, not about a loop that rewrites itself, and it reports no cost figures."
+ "type": "empirical",
+ "question": "Can fine-tuning open code LLMs on multi-turn dialogues containing execution and human feedback let them refine code iteratively at a level close to GPT-4 Code Interpreter?",
+ "hypothesis": "Training on multi-turn data with execution and human feedback improves open-source models' ability to use feedback to fix code, narrowing the gap to proprietary systems.",
+ "contributions": [
+  "Code-Feedback: 68K multi-turn interactions (192K turns) with execution and human feedback",
+  "OpenCodeInterpreter family (6.7B to 70B) fine-tuned on it",
+  "Evaluation of single-turn and multi-turn (execution feedback, synthetic human feedback, oracle) pass@1 on HumanEval/MBPP(+)"
+ ],
+ "method": {
+  "summary": "Builds Code-Feedback by filtering 287K open-source coding queries to 156K hard ones, then converting them to multi-turn dialogues by single-turn packing, GPT-3.5/GPT-4 interaction simulation with executed code and simulated human feedback, deliberate-error code correction, and LeetCode similar-problem/follow-up grouping. Fine-tunes CodeLlama, DeepSeekCoder and StarCoder2 bases on Code-Feedback mixed 2:1 with WizardCoder 110K single-turn data, and evaluates with up to two refinement rounds.",
+  "task": "code generation with iterative refinement from execution/human feedback",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Code-Feedback",
+    "role": "train",
+    "size": "68K multi-turn samples, 192K turns",
+    "split": null,
+    "source": "Built from Magicoder-OSS-Instruct, Python code ShareGPT, Magicoder-Evol-Instruct, Evol-Instruct-Code (287K queries; Qwen-72B-Chat complexity score 4-5 kept: 156K) plus LeetCode via TACO",
+    "preprocessing": "Packing 16K samples (33.5K turns); Interaction Simulation 51K (155.5K turns); Code Correction 0.5K (1.2K turns); LeetCode Similar Problem 0.3K (0.65K turns); LeetCode Follow-Up 0.2K (0.76K turns); query filtering done twice with two prompts"
+   },
+   {
+    "name": "WizardCoder 110K",
+    "role": "train",
+    "size": "110K single-turn",
+    "split": "mixed with Code-Feedback at 2:1",
+    "source": "Magicoder-Evol-Instruct-110K link in footnote",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval / HumanEval+ / MBPP / MBPP+ (EvalPlus)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021; Austin et al. 2021; Liu et al. 2023",
+    "preprocessing": "EvalPlus sanitizer"
+   },
+   {
+    "name": "MT-Bench coding questions",
+    "role": "eval",
+    "size": "10 coding questions, each with follow-up",
+    "split": null,
+    "source": "Zheng et al. 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OpenCodeInterpreter-CL (CodeLlama-Python bases)",
+    "role": "proposed",
+    "params": "7B, 13B, 34B, 70B",
+    "architecture": "decoder-only (CodeLlama)",
+    "init_from": "CodeLlama",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 token cutoff in training",
+    "other": {}
+   },
+   {
+    "name": "OpenCodeInterpreter-DS (DeepSeekCoder bases)",
+    "role": "proposed",
+    "params": "6.7B, 33B",
+    "architecture": "decoder-only",
+    "init_from": "DeepSeekCoder-Base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 token cutoff in training",
+    "other": {}
+   },
+   {
+    "name": "OpenCodeInterpreter-SC2 (StarCoder2 bases)",
+    "role": "proposed",
+    "params": "7B, 15B",
+    "architecture": "decoder-only",
+    "init_from": "StarCoder2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 Turbo, GPT-3.5 Turbo, Gemini Pro, WizardCoder, Magicoder, DeepseekCoder-Instruct, others",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 and GPT-4 (data simulation); Qwen-72B-Chat (filter)",
+    "role": "teacher",
+    "params": "Qwen 72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (synthetic human feedback)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised instruction fine-tuning on multi-turn dialogues (text says 'soft-target fine-tuning strategy' in ablation; undefined)",
+   "optimizer": null,
+   "lr": "2e-5",
+   "lr_schedule": "cosine",
+   "warmup": "0.05 warm-up ratio",
+   "batch_size": null,
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": "4096 token cutoff length",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "data_mix": "WizardCoder 110K single-turn : Code-Feedback = 2:1 (Table 2 best); ablation ratios 2:1,1:1,1:2,1:3,1:5,0:1",
+    "hyperparameters": "uniform across all models"
+   }
+  },
+  "inference": {
+   "decoding": "greedy decoding (temperature 0 for GPT-3.5/4 Turbo)",
+   "temperature": "0 (GPT models)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 greedy sample per task; single run; pass@1",
+   "prompting": "Appendix D instruction prompt for first turn; refinement re-feeds solution and test results into the prompt",
+   "retrieval": null,
+   "parameters": {
+    "max_refinement_rounds_eval": "2",
+    "max_iterations_data_simulation": "3",
+    "feedback_scenarios": "execution feedback; synthetic human feedback (GPT-4, sees task, response, execution feedback); oracle (GPT-4 also sees ground-truth solution)",
+    "failure_feedback_types": "exception message; not-expected (test inputs, expected, actual); timeout 'Execution timed out'",
+    "human_feedback_eval_scope": "only OpenCodeInterpreter 6.7B and 33B (budget)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1",
+     "definition": "EvalPlus pass@1 on HumanEval/MBPP and plus versions; multi-turn: loop ends on pass or after 2 rounds",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench score",
+     "definition": "GPT-4 scores 1-10 on 10 coding questions, first and second turn",
+     "unit": "score 1-10",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4 Turbo",
+    "GPT-3.5 Turbo",
+    "Gemini Pro",
+    "CodeLlama-Python",
+    "WizardCoder",
+    "Magicoder",
+    "DeepSeekCoder",
+    "StarCoder2",
+    "CodeT5+",
+    "CodeGen-Mono",
+    "OpenChat",
+    "XwinCoder",
+    "Phind-CL",
+    "Speechless-CL"
+   ],
+   "protocol": "Baselines copied from EvalPlus leaderboard (10 Feb 2024) or rerun from official checkpoints; single greedy run, no seeds or confidence intervals; leakage checked by duplicate consecutive lines."
+  },
+  "availability": {
+   "code": "open-sourced per ethics statement; site opencodeinterpreter.github.io",
+   "weights": "open-sourced per ethics statement",
+   "data": "Code-Feedback open-sourced per ethics statement"
+  },
+  "prompts": [
+   {
+    "purpose": "Query complexity filtering (prompt 1)",
+    "text": "Rate the following code queries on a scale of 1 to 5 based on their complexity, where 1 is the easiest and 5 is the most difficult. Consider the complexity of the query",
+    "where": "Appendix A (full rubric there)"
+   },
+   {
+    "purpose": "System prompt for multi-turn execution feedback simulation",
+    "text": "You are an AI code interpreter.\nYour goal is to help users do a variety of jobs by executing Python code.",
+    "where": "Appendix B"
+   },
+   {
+    "purpose": "HumanEval first-turn prompt",
+    "text": "You are an exceptionally intelligent coding assistant that consistently delivers accurate and reliable responses to user instructions.\n@@ Instruction\nHere is the given code to do completion:",
+    "where": "Appendix D"
+   },
+   {
+    "purpose": "Synthetic human feedback with canonical solution (oracle)",
+    "text": "You are tasked with providing guidance to a programmer who has drafted a code for a programming problem.",
+    "where": "Appendix D; response limited to no more than three sentences"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The learning rate is set as 2e-5 with a 0.05 warm-up ratio and a cosine scheduler.",
+    "where": "Sec 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "OpenCodeInterpreter-DS-33B with execution feedback reaches 83.2 (76.4) average pass@1 on HumanEval/MBPP (plus), close to GPT-4 Turbo single-turn 84.2 (76.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 83.2,
+   "unit": "% avg pass@1",
+   "baseline_value": 79.0,
+   "n": null,
+   "setup": "DeepSeekCoder-33B base fine-tuned; up to 2 refinement rounds with execution feedback; HumanEval and MBPP averaged; GPT-4 Turbo single turn baseline",
+   "quote": "achieves an accuracy of 83.2 (76.4) on the average (and plus versions) of HumanEval and MBPP, closely rivaling GPT-4\u2019s 84.2 (76.2)",
+   "table": null,
+   "note": "Single-turn OpenCodeInterpreter-DS-33B Average is 79.0 (70.4); abstract compares the with-feedback number to GPT-4 Turbo without feedback.",
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "With GPT-4 synthesized human feedback, OpenCodeInterpreter-33B rises to 91.6 (84.6); this is the oracle setting where GPT-4 sees the ground-truth solution.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 91.6,
+   "unit": "% avg pass@1",
+   "baseline_value": 88.0,
+   "n": null,
+   "setup": "DS-33B; 2 rounds; oracle feedback sees canonical solution",
+   "quote": "further elevates to 91.6 (84.6) with synthesized human feedback from GPT-4",
+   "table": null,
+   "note": "Non-oracle synthetic human feedback gives 88.0 (81.0); abstract does not say 91.6 is the oracle row.",
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "Execution feedback does not help every model: WizardCoder-V1.1 33B falls from 79.4 to 77.2 average pass@1 with the loop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 77.2,
+   "unit": "% avg pass@1",
+   "baseline_value": 79.4,
+   "n": null,
+   "setup": "Baseline rerun, 2 rounds execution feedback, HumanEval+MBPP average",
+   "quote": "",
+   "table": "Table 1, row WizardCoder-V1.1 33B + Execution Feedback, column Average (+)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Magicoder-S-DS 6.7B drops from 76.3 to 75.3 average pass@1 with execution feedback.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 75.3,
+   "unit": "% avg pass@1",
+   "baseline_value": 76.3,
+   "n": null,
+   "setup": "2 rounds execution feedback, HumanEval+MBPP average",
+   "quote": "",
+   "table": "Table 1, row Magicoder-S-DS + Execution Feedback, column Average (+)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "GPT-4 Turbo improves from 84.2 to 90.0 with execution feedback.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 90.0,
+   "unit": "% avg pass@1",
+   "baseline_value": 84.2,
+   "n": null,
+   "setup": "2 rounds, HumanEval+MBPP average",
+   "quote": "",
+   "table": "Table 1, row GPT-4 Turbo + Execution Feedback, column Average (+)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "OpenCodeInterpreter-DS-6.7B with synthetic human feedback reaches 86.7 (80.4), above GPT-4 Turbo single-turn 84.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 86.7,
+   "unit": "% avg pass@1",
+   "baseline_value": 75.1,
+   "n": null,
+   "setup": "DS-6.7B, 2 rounds, GPT-4 simulated human feedback (no oracle)",
+   "quote": "",
+   "table": "Table 1, row OpenCodeInterpreter-DS 6.7B + Synth. Human Feedback, column Average (+)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Mixing WizardCoder single-turn data with Code-Feedback at 2:1 gives the best execution-feedback average: 81.9 (75.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 81.9,
+   "unit": "% avg pass@1",
+   "baseline_value": 71.5,
+   "n": null,
+   "setup": "DS-6.7B base, ratio ablation, execution feedback on",
+   "quote": "",
+   "table": "Table 2, ratio 2:1, E.F checked, column Average (+)",
+   "note": "Row 0:1 with feedback prints MBPP 66.7 (76.6), plus above base, apparently a typo. Baseline 71.5 is 0:1 with E.F.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adding all data sources (Code-Feedback full) lifts execution-feedback average from 77.5 (packing only) to 81.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average pass@1",
+   "value": 81.9,
+   "unit": "% avg pass@1",
+   "baseline_value": 75.1,
+   "n": null,
+   "setup": "DS base model, incremental data sources, execution feedback",
+   "quote": "",
+   "table": "Table 3, row Code-Feedback (Full), E.F checked, column Average (+)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Leakage check: duplicate consecutive lines between Code-Feedback and benchmarks are 1.19% for 5 lines on HumanEval(+).",
+   "kind": "measured",
+   "source": null,
+   "metric": "duplicate line ratio",
+   "value": 1.19,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 consecutive lines duplicate ratio",
+   "quote": "1.19%",
+   "table": null,
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "On MT-Bench coding questions OpenCI-DS-33B scores 6.8 average against GPT-4 8.6 and DS-33B-Instruct 5.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench coding avg",
+   "value": 6.8,
+   "unit": "score 1-10",
+   "baseline_value": 5.5,
+   "n": null,
+   "setup": "10 coding questions, GPT-4 judged, first and second turn",
+   "quote": "",
+   "table": "Table 5, row OpenCI-DS-33B, column Average",
+   "note": null,
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Authors concede performance may vary across languages and domains and may struggle with extremely complex or ambiguous intents (Limitations).",
+  "Case study Fig A10 failed: errors fixed incrementally and the maximum of three attempts exceeded.",
+  "Human-feedback and oracle runs only for 6.7B and 33B due to budget.",
+  "Evaluation limited to two refinement rounds; single greedy run, no seeds or intervals.",
+  "Baselines copied from EvalPlus leaderboard (10 Feb 2024) or rerun; execution-feedback baselines of other models were not trained for it.",
+  "Training data produced by GPT-3.5/GPT-4; 'human' feedback is simulated, oracle sees ground truth.",
+  "Batch size, optimizer, hardware and compute not reported; 'soft-target' fine-tuning undefined.",
+  "Authors acknowledge significant low-quality or incorrect data in the initial training set."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "CodeLlama",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-Coder",
+   "year": 2024,
+   "arxiv": "2401.14196",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "StarCoder 2",
+   "year": 2024,
+   "arxiv": "2402.19173",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "EvalPlus (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "HumanEval+/MBPP+ and framework",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "MBPP (Austin et al.)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "Magicoder",
+   "year": 2023,
+   "arxiv": "2312.02120",
+   "relation": "baseline",
+   "note": "data source and baseline",
+   "quote": null
+  },
+  {
+   "work": "WizardCoder",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "baseline and 110K single-turn data",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine (Madaan et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "general-LLM iterative refinement",
+   "quote": null
+  },
+  {
+   "work": "Teaching LLMs to self-debug (Chen et al.)",
+   "year": 2023,
+   "arxiv": "2304.05128",
+   "relation": "related",
+   "note": "evaluation practice cited",
+   "quote": null
+  },
+  {
+   "work": "StepCoder (Dou et al.)",
+   "year": 2024,
+   "arxiv": "2402.01391",
+   "relation": "related",
+   "note": "RL from compiler feedback; this work avoids RL",
+   "quote": null
+  },
+  {
+   "work": "MT-Bench (Zheng et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "multi-turn coding eval",
+   "quote": null
+  },
+  {
+   "work": "TACO",
+   "year": 2023,
+   "arxiv": "2312.14852",
+   "relation": "uses-data",
+   "note": "LeetCode problems",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of the OpenCodeInterpreter and its pass@1 accuracy on the HumanEval",
+   "page": 1,
+   "why": "Shows single-turn vs execution vs human vs oracle gain at 6.7B and 33B against GPT-4 CI"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Summary of Code-Feedback construction and comparison with existing code instruction tuning datasets",
+   "page": 3,
+   "why": "Data counts by construction method"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Pass@1 accuracy of different code models on HumanEval (+), MBPP (+) and their average (+)",
+   "page": 5,
+   "why": "Main results including feedback gains and losses"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 cells extracted in flattened order; row-to-number mapping inferred from layout. No embedded instructions found."
+ ]
 }

@@ -1,19 +1,559 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2306.15595",
  "pdf": "ai-engineering/02-context-engineering/sources/chen-2023-extending-context-window-large-language.pdf",
  "bib": {
-  "title": "Extending Context Window of Large Language Models via Positional Interpolation",
-  "first_author": "Shouyuan Chen",
-  "year": "2023",
-  "venue": null,
+  "title": "Extending Context Window of Large Language Models via Position Interpolation",
+  "authors": [
+   "Shouyuan Chen",
+   "Sherman Wong",
+   "Liangjian Chen",
+   "Yuandong Tian"
+  ],
+  "first_author": "Chen",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2306.15595",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 51573,
+  "chars_total": 51573,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Extending Context Window of Large Language Models via Position Interpolation\", Shouyuan Chen, Sherman Wong, Liangjian Chen, Yuandong Tian (Meta Platforms Inc.). arXiv:2306.15595v2 [cs.CL], 28 Jun 2023. It is a preprint, and the text names no venue.\n\nCOVERAGE: All 18 pages. I read about 44,000 of 51,623 chars: the body, tables, appendices A to C, and the first part of the references. I skimmed the middle of the reference list and the end of the C.2 code (not read) for origins only. The extraction is clean.\n\nCLAIMS (ranked)\n\n- Claim: Directly extrapolating a RoPE model past its trained window fails catastrophically. Perplexity goes above 1000, comparable to an untrained model.\n  number: >10^3 perplexity\n  setup: LLaMA 7B, trained at 2048, evaluated at 4096 to 32768 on PG19 (Table 1).\n  quote: \"when directly extending to larger context windows unseen in the training, the perplexity may shoot up to very high numbers (i.e., > 103), comparable to untrained models.\"\n  where: p.3, Sec 2.2; Table 1, p.7\n\n- Claim: Position Interpolation (PI) rescales position indices from [0, L') to [0, L) before RoPE. It adds no weights and changes no architecture.\n  number: f'(x,m) = f(x, mL/L')\n  setup: RoPE models (LLaMA). Example in Fig 1: 4096 mapped down to 2048.\n  quote: \"instead of extrapolation, we directly down-scale the position indices so that the maximum position index matches the previous context window limit in the pre-training stage.\"\n  where: p.2, Sec 1; Eq. 4, p.4\n\n- Claim: PI needs very little fine-tuning. 1000 steps on the Pile is the default. The effective window reaches its target after about 200 steps.\n  number: 1000 steps (200 steps for the effective window)\n  setup: LLaMA 7B/33B, windows 8192, 16384, 32768. Passkey retrieval, kmax defined as the largest k where every k' ≤ k has at least 20% success.\n  quote: \"the effective context window size reaching maximum kmax = L′, after merely fine-tuning for 200 steps, consistently across both 7B and 33B model sizes and up to 32768 context windows.\"\n  where: p.9, Sec 3.3; Table 4\n\n- Claim: Direct fine-tuning to a longer window barely helps. After more than 10000 steps the effective window grew from 2048 to only 2560.\n  number: 2048 to 2560 after 10000 steps\n  setup: LLaMA 7B, 8192 target, no PI (Table 4).\n  quote: \"LLaMA models that are extended via direct fine-tuning only saw a minimal increase of the effective context window size kmax from 2048 to 2560, even after fine-tuning for more than 10000 steps\"\n  where: p.9; p.1\n\n- Claim: Without any fine-tuning, PI already gives a usable model at 8192. Fine-tuning then improves it quickly.\n  number: 16.10 at 8192 (step 0), 7.12 at step 200, 6.95 at step 1000. For 16384: 112.13 at step 0, then 7.05 and 6.83.\n  setup: LLaMA 7B, PG19 perplexity (Table 3). Original 2048 model scores 7.20 at 2048.\n  quote: \"7B 8192 16.10 7.12 7.10 7.02 6.99 6.95\" and \"At 200 steps the models surpassed the original model's perplexity on 2048 context window size\"\n  where: p.7-8, Table 3\n\n- Claim: Perplexity falls steadily as the window grows under PI. Direct fine-tuning (FT) regresses as the window grows.\n  number: PG19, 7B at 32768 window: 7.23 (at 2048), 7.04, 6.91, 6.80, 6.77 (at 32768). 7B FT at 8192: 7.21, 7.34, 7.69.\n  setup: PG19 test (100 docs), sliding window stride 256. Proof-pile is a 128-doc subsample truncated to 32768 tokens.\n  quote: \"7B 32768 PI 7.23 7.04 6.91 6.80 6.77\" ; \"models extended via the direct fine-tuning method has shown regression (up to +0.48) or minor improvement (up to -0.12)\"\n  where: p.6-7, Table 1 and Table 2\n\n- Claim: PI costs a little at short context. Proof-pile perplexity at 2048 degrades by 0.01 to 0.05. Zero-shot benchmark drops reach up to 2% at 8192, and more at longer extensions.\n  number: 0.01 to 0.05 perplexity; up to 2%. 7B BoolQ falls from 76.1 to 73.2 (8192), 69.8 (16384), 64.7 (32768).\n  setup: LLaMA 7B and 33B, benchmarks within 2048 tokens (Table 5).\n  quote: \"with a degradation of up to 2% on the benchmark tasks, for both 7B and 33B model sizes. Models extended to longer context windows regressed more on the benchmarks\"\n  where: p.6-7, p.9; Table 5, p.10\n\n- Claim: Interpolation error is bounded far below extrapolation error.\n  number: ~600x smaller\n  setup: Theoretical, LLaMA 7B (d=128, c=10000). Interpolation bound is d·max|hj|/294.73. The extrapolation bound is at least 2× larger than that bound's coefficient.\n  quote: \"the interpolation bound is at least 2 · 294.73 ∼ 600× smaller than the extrapolation bound\"\n  where: p.5, Sec 2.3; Eq 7-8; proof in App. A\n\n- Claim: Extrapolated attention scores can blow up outside the trained range, even though they stay near ±1 inside it.\n  number: values above 8000\n  setup: Least-squares fit of Eqn 3 with d=128, L=2048, random points. Illustrative, not the trained model.\n  quote: \"out of this region it may goes beyond 8000, causing catastrophic issues in attention computation.\"\n  where: p.4, Fig 2 caption\n\n- Claim: Summarisation at a 16K window is competitive but not best.\n  number: ROUGE-1/2/L 60.0 / 28.0 / 29.5\n  setup: GovReport, inputs truncated to the first 15000 tokens, PI-16384 LLaMA-7B fine-tuned 10 epochs. CoLT5 XL 16K scores 61.3 / 32.2 / 33.8.\n  quote: \"LLaMA-7B Extended 16K 60.0 28.0 29.5\"\n  where: p.9-10, Table 6\n\n- Claim: Context extension runs up to 32× on the same recipe. Training used 128 A100s for most cases and 32 A100s for 7B/13B/33B at 8192.\n  number: 32×, 32768 from 2048\n  setup: Learning rate 2e-5 for 7B/13B and 1e-5 for 33B/65B. Batch 64 or 128. AdamW, 20-step warmup.\n  quote: \"We show Position Interpolation can effectively extend context window up to 32 times of the original size\"\n  where: p.6, Sec 3 and 3.1\n\n- Claim: Perplexity gain from longer context is modest. 2048 to 16384 gives -0.28 (PG19) and -0.5 (proof-pile) for 7B. 65B at 8192 gains -0.12 and -0.3.\n  number: -0.28 / -0.5 (7B), -0.27 / -0.48 (13B), -0.14 / -0.42 (33B), -0.12 / -0.3 (65B)\n  setup: 65B is extended only to 8192.\n  quote: \"we observed -0.28 and -0.5 reductions of perplexity for extending LLaMA 7B models on both datasets\"\n  where: p.6\n\nLIMITS\n- The method applies to RoPE models. Learnable absolute embeddings such as OPT are only conjectured to work, and \"we plan to investigate this in the future\".\n- The paper reports mild degradation within the original window, and says a small degradation \"is expected since Position Interpolation forces position encodings in original context window to reside in a much narrower region\".\n- The passkey task is synthetic. It uses a 5-digit key, 10 trials at each of 32 positions, and a 20% success threshold. Passing it does not show quality at long range, and the paper has no multi-hop or reasoning long-context evaluation.\n- The 7B 32768 model's proof-pile perplexity rises at the longest window (2.24 at 16384 to 2.48 at 32768). The paper does not discuss this. Table 4 also has an odd 18432 entry for 7B 32768 at 600 steps.\n- Inference cost: full attention over all tokens costs more (\"albeit with higher inference costs\"). Memory and attention cost are not measured.\n- 65B is evaluated only at 8192. Summarisation is shown for one model and one dataset.\n- The theory bounds attention score, not task quality. The PI bound compares against the RoPE paper's extrapolation bound, which the authors call loose.\n- It has dated. Later methods (NTK-aware scaling, YaRN, etc.) are not covered. I know that from outside the text, not from the paper.\n\nBUILDS ON\n- RoPE: Su et al., 2021 (RoFormer), the position encoding used in LLaMA (Touvron et al., 2023).\n- Position-embedding interpolation: Dosovitskiy et al., 2021 (Vision Transformer). It interpolated learned embeddings up to 4×. PI interpolates indices instead.\n- Concurrent work: kaiokendev (2023, SuperHOT blog), Reddit and llama.cpp discussions, and LoRA (Hu et al., 2021).\n- Length extrapolation: ALiBi (Press et al., 2022), LeX (Sun et al., 2022), Haviv et al., 2022.\n- Passkey task: Mohtashami & Jaggi, 2023. Sliding-window perplexity: Press et al., 2022.\n- Data: Pile (Gao et al., 2020), PG-19 (Rae et al., 2020), proof-pile, RedPajama, GovReport (Huang et al., 2021), SCROLLS.\n- Hypothesis it reaffirms: Vaswani et al., 2017.\n- Compared with or complementary to: CoLT5 (Ainslie et al., 2023), retrieval-augmented LLMs, landmark attention, memory transformers.\n\nCODE\n- p.4, Eq. 4: `f'(x, m) = f(x, m·L/L')`. This is the whole method.\n- App. C.1 (p.17) fits sin/cos bases by least squares on positions 0 to 2047 and evaluates over 0 to 4095 to show the extrapolation blow-up. It is a demonstration, not the method.\n\nFIGURES (captions read from the extraction, no figure tool run)\n- Fig 1 (p.2): Position Interpolation versus extrapolation. It shows position indices 0 to 4096 squashed into the 0 to 2048 range. It is the fastest way to see the method.\n- Fig 2 (p.4): fitted attention score. It is bounded within [0, 2048], above 8000 beyond 2048 (extrapolation), and smooth between integer positions (interpolation).\n- Fig 3 (p.8): passkey prompt format.\n- Fig 4 (p.10): summarisation prompt.\n- Fig 5 (p.16): B(s)/d is at least 1.\n\nPROBLEMS: None. The text contained no instructions to me. The tables extracted cleanly. Fig 2 and Fig 5 axes are garbled but their captions are readable. The author affiliation is Meta Platforms Inc.\n\nFor the target note `03-budgeting-the-window.md`: the claims most relevant to budgeting the window are that nominal window size, effective window (passkey kmax) and in-window quality are separate quantities, and that extension trades a small short-context loss for long-range use. This is my inference from the claims above, not something the paper says. I did not open the note."
+ "type": "empirical",
+ "question": "Can the context window of an existing pretrained RoPE LLM be extended cheaply without extrapolating to unseen positions?",
+ "hypothesis": "Interpolating position indices into the trained range is easier for the model to adapt to than extrapolating.",
+ "contributions": [
+  "PI extends LLaMA 7B to 65B to up to 32768 with at most 1000 fine-tuning steps",
+  "Extended models use longer windows for language modeling (perplexity falls)",
+  "Quality preserved relatively well within the original window",
+  "Theoretical interpolation bound ~600x smaller than extrapolation bound"
+ ],
+ "method": {
+  "summary": "Position Interpolation rescales RoPE position indices from [0, L') to [0, L) (f'(x,m)=f(x, mL/L')) so a longer input sits inside the trained position range, then fine-tunes briefly with next-token prediction. LLaMA 7B to 65B extended to 8192, 16384 and 32768 and evaluated on perplexity, passkey retrieval, original benchmarks and GovReport summarisation.",
+  "task": "context window extension of pretrained RoPE LLMs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "The Pile",
+    "role": "train",
+    "size": null,
+    "split": "training split",
+    "source": "Gao et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "RedPajama",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Computer 2023",
+    "preprocessing": "used for one 7B 8192 comparison"
+   },
+   {
+    "name": "PG19",
+    "role": "eval",
+    "size": "100 documents",
+    "split": "whole test split",
+    "source": "Rae et al. 2020",
+    "preprocessing": "sliding window perplexity, stride S = 256"
+   },
+   {
+    "name": "Arxiv Math Proof-pile",
+    "role": "eval",
+    "size": "128 random documents with at least 32768 SentencePiece tokens",
+    "split": "test",
+    "source": "Azerbayev et al. 2022",
+    "preprocessing": "truncated to first 32768 tokens"
+   },
+   {
+    "name": "GovReport",
+    "role": "both",
+    "size": "17457 train, 972 eval documents",
+    "split": "train/eval",
+    "source": "Huang et al. 2021",
+    "preprocessing": "inputs truncated to first 15000 tokens; ground-truth summary truncated to 1000 tokens; prompt-part loss excluded"
+   },
+   {
+    "name": "Passkey retrieval (synthetic)",
+    "role": "eval",
+    "size": "32 values of k x 10 runs per model",
+    "split": null,
+    "source": "Mohtashami & Jaggi 2023",
+    "preprocessing": "random 5-digit passkey"
+   },
+   {
+    "name": "LLaMA benchmarks BoolQ PIQA Race-M Race-H WinoGrande",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "zero-shot, within 2048 tokens"
+   }
+  ],
+  "models": [
+   {
+    "name": "7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "LLaMA decoder-only, RoPE, architecture unchanged",
+    "init_from": "pretrained LLaMA (Touvron et al. 2023)",
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 original; extended to 8192/16384/32768",
+    "other": {}
+   },
+   {
+    "name": "13B",
+    "role": "base",
+    "params": "13B",
+    "architecture": "LLaMA decoder-only, RoPE, architecture unchanged",
+    "init_from": "pretrained LLaMA (Touvron et al. 2023)",
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 original; extended to 8192/16384/32768",
+    "other": {}
+   },
+   {
+    "name": "33B",
+    "role": "base",
+    "params": "33B",
+    "architecture": "LLaMA decoder-only, RoPE, architecture unchanged",
+    "init_from": "pretrained LLaMA (Touvron et al. 2023)",
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 original; extended to 8192/16384/32768",
+    "other": {}
+   },
+   {
+    "name": "65B",
+    "role": "base",
+    "params": "65B",
+    "architecture": "LLaMA decoder-only, RoPE, architecture unchanged",
+    "init_from": "pretrained LLaMA (Touvron et al. 2023)",
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 original; extended to 8192/16384/32768",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next token prediction with interpolated position encodings",
+   "optimizer": "AdamW beta1=0.9 beta2=0.95",
+   "lr": "2e-5 (7B, 13B); 1e-5 (33B, 65B)",
+   "lr_schedule": null,
+   "warmup": "linear warmup 20 steps starting from 10% of max lr",
+   "batch_size": "64 global (7B/13B/33B to 8192, 32 A100); 128 global otherwise (128 A100)",
+   "steps": "1000 for PI unless specified; 10000 for direct fine-tuning; GovReport fine-tune 10 epochs",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "extended window 8192, 16384 or 32768",
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "32 or 128 A100 GPUs; PyTorch, FSDP, Flash Attention",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "PI step count is 1000 by default; Table 3/4 report 200 to 1000 steps"
+   }
+  },
+  "inference": {
+   "decoding": "GovReport: sampling",
+   "temperature": "0.5",
+   "top_p": "0.95",
+   "max_tokens": "1000 (summary output)",
+   "samples": "passkey: 10 runs per k; perplexity and benchmarks single run",
+   "prompting": "passkey prompt (Fig 3) and summarisation template (Fig 4)",
+   "retrieval": null,
+   "parameters": {
+    "PI scale": "L/L' (e.g. 2048/8192)",
+    "rope base c": "10000"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "sliding-window, stride 256, at various context sizes",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "kmax (effective context window)",
+     "definition": "max k such that for all k' <= k success rate on passkey at distance k' is at least 20%",
+     "unit": "tokens",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-1/2/L",
+     "definition": "Lin 2004",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "benchmark accuracy",
+     "definition": "zero-shot, BoolQ/PIQA/Race/WinoGrande",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Direct fine-tuning (FT) at 8192",
+    "original LLaMA at 2048",
+    "CoLT5 Base and XL (GovReport)"
+   ],
+   "protocol": "single run per configuration; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "appendix C code for Fig 2 and Fig 5 only",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "passkey retrieval",
+    "text": "There is an important info hidden inside a lot of irrelevant text. Find it and memorize them. I will quiz you about the important information there. The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again. (repeat X times) The pass key is 12345. Remember it. 12345 is the pass key. The grass is green. ... (repeat Y times) What is the pass key? The pass key is",
+    "where": "Fig 3"
+   },
+   {
+    "purpose": "GovReport summarisation",
+    "text": "Read the following article and then summarize it.\n# ....\nDocument goes here\nNow summarize the above article.\nSummary:",
+    "where": "Fig 4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval.metrics kmax",
+    "quote": "kmax is defined as the maximum k such that, for all k′ ≤k, the model has a success rate of at least 20% on k′.",
+    "where": "Sec 3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Direct extrapolation of a RoPE LLaMA 7B past its 2048 training window gives perplexity above 1000 at 4096 to 32768.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": ">10^3",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B, trained at 2048, PG19 test (100 docs), sliding window stride 256",
+   "note": null,
+   "where": "Table 1; Sec 2.2",
+   "quote": "the perplexity may shoot up to very high numbers (i.e., > 103), comparable to untrained models.",
+   "table": "Table 1, row 7B 2048 None, columns 4096-32768"
+  },
+  {
+   "claim": "With PI and no fine-tuning, 7B extended to 8192 has PG19 perplexity under 20; 16384 gives 112.13 at step 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "16.10 (8192); 112.13 (16384)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B, PG19, step 0 of fine-tuning",
+   "note": null,
+   "where": "Table 3; Sec 3.2",
+   "quote": "as indicated by < 20 perplexity for extending to 8192 context window",
+   "table": "Table 3, rows 7B 8192 and 7B 16384, column 0"
+  },
+  {
+   "claim": "After 200 PI fine-tuning steps the 7B models surpass the original model's 2048-window perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B to 8192 and 16384, PG19",
+   "note": null,
+   "where": "Sec 3.2; Table 3",
+   "quote": "At 200 steps the models surpassed the original model’s perplexity on 2048 context window size"
+  },
+  {
+   "claim": "PI reaches effective window kmax = L' after 200 fine-tuning steps for 7B and 33B at 8192 and 16384 (7B 32768 also, except 18432 at 600 steps).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Passkey retrieval, 32 values of k uniformly spaced in L', 10 runs each, 5-digit passkey; kmax = largest k such that all k' <= k have success rate >= 20%",
+   "note": "Table 4 cell 7B 32768 PI at 600 steps is 18432, a dip below L'; the text does not comment on it.",
+   "where": "Sec 3.3; Table 4",
+   "quote": "the effective context window size reaching maximum kmax = L′, after merely fine-tuning for 200 steps",
+   "table": "Table 4, PI rows"
+  },
+  {
+   "claim": "Direct fine-tuning raises effective window only from 2048 to 2560 after 10000 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kmax",
+   "value": 2560,
+   "unit": "tokens",
+   "baseline_value": 2048,
+   "n": null,
+   "setup": "LLaMA 7B extended to 8192 by direct fine-tuning, passkey kmax",
+   "note": null,
+   "where": "Sec 3.3; Table 4",
+   "quote": "only saw a minimal increase of the effective context window size kmax from 2048 to 2560, even after fine-tuning for more than 10000 steps",
+   "table": "Table 4, row 7B 8192 FT, column 10000"
+  },
+  {
+   "claim": "Extended 7B at 8192 raises PG19 perplexity gain with window: 7.13 at 2048 to 6.95 at 8192; direct FT gets worse (7.21 to 7.69).",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": "6.95 (PI at 8192) vs 7.69 (FT at 8192)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B, PG19, PI vs FT, 8192 context",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows 7B 8192 PI and FT"
+  },
+  {
+   "claim": "Going from 2048 to 16384 reduces perplexity by 0.28 (PG19) and 0.5 (Proof-pile) for 7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B extended with PI, PG19 and Proof-pile",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "By increasing the context window size from 2048 to 16384, we observed -0.28 and -0.5 reductions of perplexity for extending LLaMA 7B models on both datasets"
+  },
+  {
+   "claim": "PI costs a small perplexity loss within the original 2048 window on Proof-pile.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Proof-pile, all PI-extended models",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "we saw a degradation ranging from 0.01 to 0.05 across all models with extended with Position Interpolation"
+  },
+  {
+   "claim": "Models extended to 8192 lose up to 2% on short-context benchmarks; longer extensions regress more.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B and 33B, zero-shot BoolQ, PIQA, Race-M, Race-H, WinoGrande, within 2048 tokens",
+   "note": "Table 5 shows 7B 8192 Pile BoolQ 73.2 vs 76.1 original, a 2.9 point drop (percent unit ambiguous: points vs relative). RedPajama fine-tune BoolQ 75.5. Text says 'up to 2%'; caption singles out BoolQ as the exception.",
+   "where": "Sec 3.4; Table 5",
+   "quote": "with a degradation of up to 2% on the benchmark tasks, for both 7B and 33B model sizes"
+  },
+  {
+   "claim": "7B BoolQ falls from 76.1 to 64.7 at 32768 extension.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BoolQ accuracy",
+   "value": 64.7,
+   "unit": null,
+   "baseline_value": 76.1,
+   "n": null,
+   "setup": "LLaMA 7B, Pile fine-tuned, zero-shot BoolQ",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 7B 32768 Pile, column BoolQ"
+  },
+  {
+   "claim": "LLaMA-7B extended to 16K gets GovReport ROUGE-1 60.0, ROUGE-2 28.0, ROUGE-L 29.5, competitive on R1 with CoLT5 Base (58.7) and below CoLT5 XL (61.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 60.0,
+   "unit": null,
+   "baseline_value": "58.7 (CoLT5 Base)",
+   "n": null,
+   "setup": "GovReport 17457 train / 972 eval docs, inputs truncated to 15000 tokens, 16384 window, 10 epochs fine-tune, temperature 0.5, top_p 0.95, output truncated at 1000 tokens",
+   "note": null,
+   "where": "Table 6; Sec 3.5",
+   "table": "Table 6, row LLaMA-7B Extended, column ROUGE-1"
+  },
+  {
+   "claim": "Theory: interpolation upper bound is at least ~600x smaller than extrapolation bound (LLaMA 7B setting, c=10000, d=128).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 2.1; bound d*max|h_j|/294.73 vs 2*max|h_j|*B(s), B(s)>=d",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "the interpolation bound is at least 2 · 294.73 ∼600× smaller than the extrapolation bound"
+  },
+  {
+   "claim": "Fine-tuning on Pile vs RedPajama made no significant benchmark difference.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "8192 7B, Table 5",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "the choice of fine-tuning datasets does not seem to lead significant difference in the benchmark performances"
+  }
+ ],
+ "limits": [
+  "Evaluates only LLaMA (RoPE); applicability to other encodings is conjecture",
+  "Effective window measured on passkey retrieval only, with a 20% success threshold",
+  "Perplexity degrades slightly in the original window; BoolQ degrades markedly at 32768 (64.7 vs 76.1)",
+  "Only one run per configuration; no seeds, variance or significance tests stated",
+  "65B only extended to 8192; 33B to 16384; 32768 only for 7B and 13B",
+  "Summarisation compared only against CoLT5 on one dataset",
+  "Authors suggest regularising |h_j| during pretraining as untested future work",
+  "Pile token count of fine-tuning not stated; steps x batch size 128 x seq len is implied only"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "effective context window",
+   "definition": "the maximum distance of a token can effectively attend to during inference",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Position Interpolation",
+   "definition": "linearly down-scales the input position indices to match the original context window size",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RoFormer: rotary position embedding",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "PI modifies RoPE inputs; also cites its Sec 3.4.3 bound as too loose",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models extended",
+   "quote": null
+  },
+  {
+   "work": "Landmark attention / passkey retrieval",
+   "year": 2023,
+   "arxiv": "2305.16300",
+   "relation": "uses-data",
+   "note": "passkey task and prompt",
+   "quote": null
+  },
+  {
+   "work": "SuperHOT (kaiokendev)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent blog with same idea, 2K to 8K",
+   "quote": null
+  },
+  {
+   "work": "ViT position embedding interpolation (Dosovitskiy et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "most related technique; PI interpolates indices not embeddings",
+   "quote": null
+  },
+  {
+   "work": "ALiBi (Press et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "length extrapolation, not applicable to RoPE LLaMA",
+   "quote": null
+  },
+  {
+   "work": "CoLT5",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GovReport baseline",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": "fine-tuning data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An illustration of our Position Interpolation method.",
+   "page": 2,
+   "why": "shows indices downscaled from [0,4096] into [0,2048]"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Extrapolation versus interpolation.",
+   "page": 4,
+   "why": "shows fitted attention score exploding beyond 2048 but smooth between integers"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Effective context window sizes after fine-tuning.",
+   "page": 8,
+   "why": "PI hits target in 200 steps; FT stays at 2560"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eqn 4",
+   "snippet": "f′(x, m) = f(x, mL/L′)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Equations and Table 6 extracted fine; Fig 2 and Fig 5 axis labels are garbled in text. Text says Table 4 caption anomaly 18432 at 600 steps."
+ ]
 }

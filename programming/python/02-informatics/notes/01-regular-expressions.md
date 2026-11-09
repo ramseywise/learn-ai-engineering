@@ -61,3 +61,7 @@ re.findall(r"<.+?>", "<b>hi</b>")   # ['<b>', '</b>']
 ## Exercises
 
 [`practice/exercises/01_regex.py`](../practice/exercises/01_regex.py)
+
+## Next
+
+[2 — Networks and HTTP](02-network-and-http.md): fetching the text you will match.

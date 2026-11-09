@@ -40,6 +40,8 @@ The notes follow the [full chapter standard](https://github.com/ramseywise/libra
 
 **Builds on**
 
+Read this track after Python 03: the rows below are what it leans on, and Python 03 links back here only as further reading.
+
 | Chapter | Why |
 |---|---|
 | [Python 03: Concurrency](../python/03-language-for-engineers/notes/07-concurrency.md) | The `asyncio` and thread pool APIs, whose underlying model chapter 5 explains |

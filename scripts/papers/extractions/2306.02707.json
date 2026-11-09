@@ -1,0 +1,677 @@
+{
+ "schema": 1,
+ "key": "2306.02707",
+ "pdf": "generative-ai/05-RL/sources/mukherjee-2023-orca.pdf",
+ "bib": {
+  "title": "Orca: Progressive Learning from Complex Explanation Traces of GPT-4",
+  "authors": [
+   "Subhabrata Mukherjee",
+   "Arindam Mitra",
+   "Ganesh Jawahar",
+   "Sahaj Agarwal",
+   "Hamid Palangi",
+   "Ahmed Awadallah"
+  ],
+  "first_author": "Mukherjee",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2306.02707",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 142513,
+  "chars_total": 142513,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a 13B model learn the reasoning process, not just the style, of GPT-4 and ChatGPT by training on large-scale, diverse, explanation-augmented imitation data, and how much of the gap does it close under a more rigorous evaluation?",
+ "hypothesis": "Richer imitation signals (system-prompted explanation traces), more and more diverse tasks, and a ChatGPT intermediate teacher before GPT-4 let a small model close much of the reasoning gap that style imitation leaves open.",
+ "contributions": [
+  "Explanation tuning: augment query-response pairs with detailed GPT-4 responses elicited by system instructions",
+  "Scaling tasks and instructions: sample from FLAN-v2; 5M ChatGPT responses, 1M of them also with GPT-4 responses",
+  "Evaluation: GPT-4 auto-eval on Vicuna, WizardLM, Awesome prompts; AGIEval; BBH; TruthfulQA; ToxiGen; case studies"
+ ],
+ "method": {
+  "summary": "LLaMA-13B is fine-tuned in two stages on (system message, user query, teacher response) triples sampled from FLAN-v2: first 5M ChatGPT responses (FLAN-5M), then 1M GPT-4 responses (FLAN-1M), with 16 hand-written system messages eliciting step-by-step explanations. Evaluated zero-shot against Vicuna-13B, ChatGPT and GPT-4 on open-ended GPT-4-judged sets, AGIEval, BBH, TruthfulQA-MC and ToxiGen.",
+  "task": "instruction tuning / explanation-trace distillation from closed-box LFMs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "FLAN-5M (FLAN-v2 queries with ChatGPT responses)",
+    "role": "train",
+    "size": "5M queries",
+    "split": "stage 1",
+    "source": "Flan 2022 collection: CoT 150K (all), NiV2 440K (300 per task, stratified), Flan2021 2.5M, T0 2M (Algorithm 1 task-uniform sampling); Dialogue skipped; T0 excludes Big-Bench",
+    "preprocessing": "each query paired with one of 16 system messages; only zero-shot queries"
+   },
+   {
+    "name": "FLAN-1M (random subset of FLAN-5M with GPT-4 responses)",
+    "role": "train",
+    "size": "1M queries",
+    "split": "stage 2",
+    "source": "GPT-4 via Azure OpenAI",
+    "preprocessing": null
+   },
+   {
+    "name": "Vicuna / Awesome / WizardLM prompts",
+    "role": "eval",
+    "size": "80 / 164 / 218 prompts",
+    "split": null,
+    "source": "public prompt sets",
+    "preprocessing": null
+   },
+   {
+    "name": "AGIEval (English MCQ)",
+    "role": "eval",
+    "size": "3546 examples",
+    "split": null,
+    "source": "Zhong et al. 2023",
+    "preprocessing": "first capital character of response compared with gold id"
+   },
+   {
+    "name": "Big-Bench Hard (MCQ tasks)",
+    "role": "eval",
+    "size": "5511 examples",
+    "split": null,
+    "source": "Suzgun et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "TruthfulQA-MC",
+    "role": "eval",
+    "size": "684 questions, 38 categories",
+    "split": null,
+    "source": "EleutherAI truthful_qa_mc",
+    "preprocessing": "questions with <4 choices removed; 4 choices sampled"
+   },
+   {
+    "name": "ToxiGen",
+    "role": "eval",
+    "size": "subset, 13 categories",
+    "split": null,
+    "source": "Hartvigsen et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Orca-13B",
+    "role": "proposed",
+    "params": "13B",
+    "architecture": "LLaMA decoder-only",
+    "init_from": "LLaMA-13B",
+    "tokenizer": "LLaMA BPE plus [[PAD]]",
+    "vocab": "32,001",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: max_len 2048 tokens packed sequences",
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "teacher",
+    "params": "undisclosed",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "api": "2023-03-15-preview, 8K"
+    }
+   },
+   {
+    "name": "ChatGPT (GPT-3.5-turbo)",
+    "role": "teacher",
+    "params": "undisclosed",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "intermediate teacher assistant; also baseline and GPT-4 judge reference"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": "undisclosed",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-13B",
+    "role": "baseline",
+    "params": "13B",
+    "architecture": "LLaMA",
+    "init_from": "LLaMA-13B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "checkpoint": "current as of April 21, 2023"
+    }
+   },
+   {
+    "name": "Text-davinci-003",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HateBERT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "toxicity probability scorer"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy on teacher-generated tokens only (loss masked on system message and instruction)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "4 on FLAN-5M, then the same number (4) on FLAN-1M",
+   "tokens": null,
+   "seq_len": "2048 tokens (packing, 2.7 examples per sequence)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "20 NVIDIA A100 80GB",
+   "compute": "inferred: 200 hours x 20 A100 (160h + 40h)",
+   "wall_clock": "160 hours on FLAN-5M, 40 hours on FLAN-1M; data collection 2 weeks (ChatGPT) and 3 weeks (GPT-4)",
+   "seeds": null,
+   "other": {
+    "packing": "examples shuffled and grouped to at most 2048 tokens, padded",
+    "curriculum": "ChatGPT (5M) first, then GPT-4 (1M)",
+    "gpt4_response_length": "about 1.5x longer than ChatGPT",
+    "teacher_api_pricing": "ChatGPT $0.002 per 1K tokens; GPT-4 8K $0.03 prompt / $0.06 completion per 1K"
+   }
+  },
+  "inference": {
+   "decoding": "sampling at temperature 0.7 for Orca in experiments; greedy decoding for the case studies",
+   "temperature": "0.7 (Orca); GPT-4 data collection 0.7",
+   "top_p": "0.95 (GPT-4 data collection)",
+   "max_tokens": "1024 (TruthfulQA)",
+   "samples": null,
+   "prompting": "zero-shot, no exemplars, no CoT; empty system message (Id 1) by default; MCQ prompt from AGIEval ending 'Among 0 through 3, the answer is'; only first capital character parsed",
+   "retrieval": null,
+   "parameters": {
+    "gpt4_data_collection": "temperature=0.7, top_p=0.95, frequency_penalty=0, presence_penalty=0, stop=None"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GPT-4 rated relative quality",
+     "definition": "GPT-4 scores both answers 1-10 with the Vicuna template; candidate total score as a percent of reference total; reference placed first",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AGIEval / BBH accuracy",
+     "definition": "exact match of first capital character against gold answer id",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "TruthfulQA-MC accuracy",
+     "definition": "multiple choice accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "HateBERT toxicity probability",
+     "definition": "toxicity probability of continuation of ToxiGen prompts",
+     "unit": "probability",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Vicuna-13B",
+    "Text-davinci-003",
+    "ChatGPT",
+    "GPT-4",
+    "LLaMA-13B, Alpaca-13B, Bard (Fig 1 only)"
+   ],
+   "protocol": "single run; no seeds or significance tests stated; ChatGPT/GPT-4/TD-003 AGIEval numbers copied from the AGIEval paper"
+  },
+  "availability": {
+   "code": null,
+   "weights": "planned: diff of weights at https://aka.ms/orca-lm, pending legal review",
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "system message Id 7 (step-by-step)",
+    "text": "You are an AI assistant. User will you give you a task. Your goal is to complete the task as faithfully as you can. While performing the task think step-by-step and justify your steps.",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "GPT-4 judge template",
+    "text": "We would like to request your feedback on the performance of two AI assistants in response to the user question displayed above. Please rate the helpfulness, relevance, accuracy, level of details of their responses.",
+    "where": "Figure 10 (truncated; full 16-message list in Table 2)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "It took 160 hours to train Orca on FLAN-5M (ChatGPT augmentations) for 4 epochs",
+    "where": "Section 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Orca-13B retains 95% of ChatGPT quality and 85% of GPT-4 quality on open-ended generation as judged by GPT-4",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4-rated relative quality vs ChatGPT",
+   "value": 94.8,
+   "unit": "% (score vs reference)",
+   "baseline_value": 85.2,
+   "n": null,
+   "setup": "Average over Vicuna, Awesome and WizardLM prompts, GPT-4 judge, reference first, Orca vs ChatGPT",
+   "note": "Vicuna-13B scores 85.2 vs ChatGPT in the same setup",
+   "where": "Table 7, Section 5",
+   "quote": "Orca retains 95% of ChatGPT quality and 85% of GPT-4 quality aggregated across all datasets as assessed by GPT-4."
+  },
+  {
+   "claim": "On AGIEval English MCQ zero-shot, Orca averages 41.7 vs Vicuna 29.3 (+42%) and retains 88% of ChatGPT",
+   "kind": "measured",
+   "source": null,
+   "metric": "AGIEval average accuracy",
+   "value": 41.7,
+   "unit": "%",
+   "baseline_value": 29.3,
+   "n": null,
+   "setup": "Zero-shot, no CoT, 8 English MCQ tasks, Orca with empty system message",
+   "note": null,
+   "where": "Table 8",
+   "quote": "Overall, Orca performs at par with Text-da-vinci-003; retaining 88% of ChatGPT quality;",
+   "table": "Table 8, row Average, column Orca-13B (ChatGPT 47.2, GPT-4 62)"
+  },
+  {
+   "claim": "On Big-Bench Hard zero-shot MCQ, Orca matches ChatGPT on average (49.7 vs 48.9) and more than doubles Vicuna",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH average accuracy",
+   "value": 49.7,
+   "unit": "%",
+   "baseline_value": 23.3,
+   "n": null,
+   "setup": "Zero-shot, no exemplars, no CoT, 23 BBH task variants",
+   "note": "Authors flag possible BBH contamination in ChatGPT/GPT-4",
+   "where": "Table 11",
+   "quote": "performance of 49.7%, lags GPT-4 by 26%",
+   "table": "Table 11, row Average, column Orca-13B (ChatGPT 48.9, GPT-4 67.4, Vicuna 23.3)"
+  },
+  {
+   "claim": "Training first on 5M ChatGPT data then 1M GPT-4 data beats GPT-4-only (1M) by 4.5 points on AGIEval",
+   "kind": "measured",
+   "source": null,
+   "metric": "AGIEval average gain from ChatGPT teacher assistance",
+   "value": 4.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Orca vs Orca trained on FLAN-1M only, AGIEval zero-shot",
+   "note": null,
+   "where": "Table 10",
+   "quote": "significantly improves the model performance by 4.5 points on aggregate.",
+   "table": "Table 10, row Average (41.7 vs 37.18)"
+  },
+  {
+   "claim": "Best system message per task leaves a 4.4 point gap to ChatGPT on AGIEval",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap to ChatGPT",
+   "value": 4.4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best of three system messages per task, AGIEval",
+   "note": null,
+   "where": "Table 9",
+   "quote": "Orca has a performance gap of 4.4 pts against ChatGPT"
+  },
+  {
+   "claim": "GPT-4 judging overestimates small models: Vicuna keeps 92% of ChatGPT by GPT-4 judge but only 64% on exams and 48% on BBH",
+   "kind": "measured",
+   "source": null,
+   "metric": "Vicuna retention of ChatGPT quality on exams",
+   "value": 64,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vicuna-13B vs ChatGPT, AGIEval professional exams",
+   "note": null,
+   "where": "Section 1",
+   "quote": "Vicuna to retain only 64%"
+  },
+  {
+   "claim": "GPT-4 judge is biased toward the first-listed model: Vicuna scores 84.87 vs 77.1 on WizardLM prompts when placed first",
+   "kind": "measured",
+   "source": null,
+   "metric": "Vicuna WizardLM score when listed first",
+   "value": 84.87,
+   "unit": "%",
+   "baseline_value": 77.1,
+   "n": null,
+   "setup": "Vicuna vs ChatGPT, GPT-4 judge, order swapped",
+   "note": "Footnote 18 gives 84.87; Table 7 gives 77.1 with ChatGPT first",
+   "where": "Section 5 and footnote 18",
+   "quote": "there is a positive bias in GPT-4 evaluation towards the response of the first model in the comparison set"
+  },
+  {
+   "claim": "Training cost: 160 hours on FLAN-5M plus 40 hours on FLAN-1M on 20 A100 80GB",
+   "kind": "measured",
+   "source": null,
+   "metric": "training wall clock stage 1",
+   "value": 160,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 A100 80GB, 4 epochs per stage",
+   "note": null,
+   "where": "Section 3.2",
+   "quote": "It took 160 hours to train Orca on FLAN-5M (ChatGPT augmentations) for 4 epochs, and 40 hours to continue training on FLAN-1M (GPT-4 augmentations) for the same number of epochs."
+  },
+  {
+   "claim": "Orca is weaker than ChatGPT on math, geometry, tables and world knowledge subsets",
+   "kind": "measured",
+   "source": null,
+   "metric": "SAT-Math accuracy",
+   "value": 32.3,
+   "unit": "%",
+   "baseline_value": 42.7,
+   "n": null,
+   "setup": "AGIEval zero-shot; ChatGPT 42.7",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row SAT-Math, column Orca-13B"
+  },
+  {
+   "claim": "Orca more truthful and less toxic than Vicuna but behind ChatGPT/GPT-4 on TruthfulQA-MC (read from figures, no numbers in text)",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA-MC",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TruthfulQA-MC 684 questions, empty system message, 1024 max tokens, temperature 0.7",
+   "note": "values only in plots",
+   "where": "Fig 14, 18"
+  },
+  {
+   "claim": "Case study: Orca gets compound-interest doubling time wrong (5 years, using 100/rate) where ChatGPT and GPT-4 use the rule of 72 and give 3.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "Orca answer, years to double at 20%",
+   "value": 5,
+   "unit": "years",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Section 11.7, greedy decoding, single prompt",
+   "quote": "It will take 5 years for the item to double in value when it is growing at a 20% annual",
+   "note": "single qualitative example, greedy decoding",
+   "where": "Fig 26"
+  },
+  {
+   "claim": "Case study: Orca answers the 5-clothes drying problem as 30 hours, same as ChatGPT and GPT-4 (the commonsense trap from Yejin Choi's talk)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Orca answer, hours to dry 30 clothes",
+   "value": 30,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Section 11.10, greedy decoding",
+   "quote": "So, it would take 30 hours to dry 30 clothes completely.",
+   "note": "single qualitative example, greedy decoding",
+   "where": "Fig 29"
+  },
+  {
+   "claim": "Case study: Orca gives a wrong spatial-reasoning answer (says A is right of P) and a wrong jug-measuring procedure; GPT-4 is also marked wrong on the row puzzle",
+   "kind": "measured",
+   "source": null,
+   "metric": "Orca spatial answer",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Sections 11.9 and 11.10, greedy decoding",
+   "quote": "So, the person to the right of P is A..",
+   "note": "single qualitative example, greedy decoding",
+   "where": "Fig 28"
+  }
+ ],
+ "limits": [
+  "Work in progress; weights not released at time of writing; no code",
+  "Optimizer, learning rate, schedule, batch size, precision, seeds not stated",
+  "Single runs, no significance tests or variance",
+  "Zero-shot only; multi-turn, ICL, few-shot and CoT prompting untested",
+  "Performance tied to tuning data distribution; weak in math, coding, geometry, tables",
+  "BBH contamination possible for GPT-4/ChatGPT; ChatGPT and GPT-4 AGIEval numbers copied from other work",
+  "GPT-4 judge has position and length bias; safety eval uses one detector (HateBERT) and TruthfulQA in MC form only",
+  "Safety attributed partly to Azure content filters in the teacher data, not isolated",
+  "Hallucination: small models poor as knowledge stores; research use only",
+  "Case studies show Orca failures: compound interest (5 years vs rule-of-72 3.6), seating-row puzzle (answers A), 12L/6L jug (pours 12L into 6L, no valid method), blink-count arithmetic error (72 years * 60 minutes per year = 4,320 minutes), and a quadratic-roots answer flagged 'Correct answer, Wrong format'",
+  "Case studies are single hand-picked prompts under greedy decoding, several taken from external blog/talk sources, with no counts of wins or losses; the authors mark GPT-4 as wrong on the spatial puzzle and Vicuna as wrong on temporal reasoning",
+  "Hallucination case (Fig 31): all models invent address, phone and email for a named professor; ChatGPT gets the field wrong (psychology), Orca invents a placeholder phone (555) 555-5555"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "explanation tuning",
+   "definition": "augment query-response pairs with detailed teacher responses explaining its reasoning, elicited by system instructions",
+   "where": "Section 1.2"
+  },
+  {
+   "term": "progressive learning",
+   "definition": "train first on easier ChatGPT responses then on harder, longer GPT-4 responses",
+   "where": "Section 3.1.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Flan Collection (Longpre et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of all training queries",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "main open-source baseline; GPT-4 judge protocol",
+   "quote": null
+  },
+  {
+   "work": "Alpaca / Self-Instruct / WizardLM / Koala",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "prior imitation-tuned models criticised for shallow, small data",
+   "quote": null
+  },
+  {
+   "work": "The false promise of imitating proprietary LLMs (Gudibande et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Orca argues imitation conditions (scale, diversity) are attainable",
+   "quote": "model imitation is a false promise"
+  },
+  {
+   "work": "Distilling step-by-step (Hsieh et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "rationales as richer signal",
+   "quote": null
+  },
+  {
+   "work": "MiniLM (Wang et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "intermediate teacher assistant against capacity gap",
+   "quote": null
+  },
+  {
+   "work": "AGIEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval and MCQ prompt/parsing",
+   "quote": null
+  },
+  {
+   "work": "Challenging BIG-Bench tasks (Suzgun et al.)",
+   "year": 2022,
+   "arxiv": "2210.09261",
+   "relation": "uses-data",
+   "note": "BBH eval",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "extends",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "Constitutional AI (Bai et al.)",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "related",
+   "note": "model supervising models",
+   "quote": null
+  },
+  {
+   "work": "Large language models are not fair evaluators (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "GPT-4 judge position bias",
+   "quote": null
+  },
+  {
+   "work": "ToxiGen / TruthfulQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "safety evals",
+   "quote": null
+  },
+  {
+   "work": "ReWOO (Xu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "offloads ChatGPT reasoning into 7B LLaMA for tool-augmented use; shares an author",
+   "quote": null
+  },
+  {
+   "work": "Reprompting (Xu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "used to sanity-check ChatGPT zero-shot BBH numbers",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (Chung et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "TD-003 BBH numbers cross-checked",
+   "quote": null
+  },
+  {
+   "work": "Efficient sequence packing (Krell et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "packing technique",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "Explanation-tuning with GPT-4",
+   "page": 8,
+   "why": "shows how system instructions change a terse answer into a step-by-step trace"
+  },
+  {
+   "figure": "Table 8",
+   "caption": "Zero-shot AGIEval comparison",
+   "page": 18,
+   "why": "the rigorous evaluation that contradicts GPT-4-judge numbers"
+  },
+  {
+   "figure": "Table 11",
+   "caption": "Zero-shot BBH comparison",
+   "page": 21,
+   "why": "per-task wins and losses vs ChatGPT"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions",
+  "TruthfulQA and ToxiGen results appear only as plots; no numbers in text",
+  "Table 10 header typo 'FLAM-5M'",
+  "Full text now read including Section 11 case studies (Figs 20-33) and references"
+ ]
+}

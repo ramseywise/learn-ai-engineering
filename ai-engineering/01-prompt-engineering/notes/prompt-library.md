@@ -8,7 +8,7 @@ cleaned: 2026-11-01
 ---
 # Prompt Library
 
-> Small, copyable prompts grouped by task, each with the lesson it teaches. Most date from the GPT-3.5/GPT-4 era. The *shape* of each prompt still transfers, but strong current models rarely need the scaffolding. `{input}` marks a slot ([02](02b-document-types-formatting-and-templates.md#prompt-templates)).
+> Small, copyable prompts grouped by task, each with the lesson it teaches. Most date from the GPT-3.5/GPT-4 era. The *shape* of each prompt still transfers, but strong current models rarely need the scaffolding. `{input}` marks a slot ([2b](02b-document-types-formatting-and-templates.md#prompt-templates)).
 
 When you have a task and a blank prompt, you need the shape that works for that task and the lesson behind it, not a theory. Copied blindly these go wrong: without an empty case, the extraction prompt invents answers, and "exclusively" didn't stop GPT-4 adding a BMI to a medical note. Each entry here names its lesson.
 
@@ -112,7 +112,7 @@ Human: {question}
 Explain the above in one sentence:
 ```
 
-The content goes first and the instruction last ([02](02b-document-types-formatting-and-templates.md#ordering)). Swap in "for a 10-year-old" or "as three bullet points" to control audience and form.
+The content goes first and the instruction last ([2b](02b-document-types-formatting-and-templates.md#ordering)). Swap in "for a 10-year-old" or "as three bullet points" to control audience and form.
 
 ---
 
@@ -214,7 +214,7 @@ Output from model A: {output_1}
 Output from model B: {output_2}
 ```
 
-This is the simplest pairwise judge. For a real eval, make it a rubric with specific, ordinal, multi-aspect criteria, and hide which model wrote which output ([09 — LLM-as-judge](09-evaluating-prompts.md#llm-as-judge)).
+This is the simplest pairwise judge. For a real eval, make it a rubric with specific, ordinal, multi-aspect criteria, and hide which model wrote which output ([08 — LLM-as-judge](08-evaluating-prompts.md#llm-as-judge)).
 
 ---
 
@@ -261,7 +261,7 @@ Specific, visual feedback ("the arms are too short") works better than "make it 
    <details><summary>Answer</summary>15 + 5 + 13 + 7 + 1 = 41, which is odd, so the statement is false. For the probe, g(9) = 6 means f(6) = 9, g(7) = 9 means f(9) = 7, and g(4) = 7 means f(7) = 4, so the answer is 4. Probes test a model, and they aren't for production.</details>
 2. Adapt the extraction prompt to pull drug names from clinical notes, with an empty case. Add it to the [prompt eval harness](../practice/prompt-eval-harness/README.md) as a case with no drug names. What should pass?
    <details><summary>Answer</summary>"Your task is to extract drug names from clinical notes. Your response is an array in the format ["drug_name"]. If you don't find any or you are not sure, return ["NA"]." The case passes only on an exact `["NA"]`, which is the failure the escape hatch is there to stop.</details>
-3. Turn the "compare as if you were a teacher" prompt into something you could use for a real eval. What three changes does [09](09-evaluating-prompts.md#llm-as-judge) call for?
+3. Turn the "compare as if you were a teacher" prompt into something you could use for a real eval. What three changes does [08](08-evaluating-prompts.md#llm-as-judge) call for?
    <details><summary>Answer</summary>Specific questions, an ordinal scale with described levels, and separate aspects. Also hide which model wrote which output.</details>
 
 ## Interview checklist

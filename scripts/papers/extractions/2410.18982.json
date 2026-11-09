@@ -1,0 +1,230 @@
+{
+ "schema": 1,
+ "key": "2410.18982",
+ "pdf": "generative-ai/05-RL/sources/qin-2024-o1-replication-journey.pdf",
+ "bib": {
+  "title": "O1 Replication Journey: A Strategic Progress Report – Part 1",
+  "authors": ["Yiwei Qin", "Xuefeng Li", "Haoyang Zou", "Yixiu Liu", "Shijie Xia", "Zhen Huang", "Yixin Ye", "Weizhe Yuan", "Hector Liu", "Yuanzhi Li", "Pengfei Liu"],
+  "first_author": "Qin",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2410.18982",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 92252,
+  "chars_total": 92252,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; all 22 pages of text read, no appendix beyond Table 7."
+ },
+ "type": "empirical",
+ "question": "Can the capabilities of OpenAI o1 be replicated, and does training on full exploration paths (trial, reflection, backtracking) beat training on correct shortcut solutions?",
+ "hypothesis": "Models trained on the whole exploration process (journey learning) will reason and self-correct better than models trained only on correct root-to-answer paths (shortcut learning).",
+ "contributions": [
+  "A real-time 'progress report' format documenting successes and failures of an o1 replication.",
+  "The 'journey learning' paradigm: supervised learning of the whole exploration path including trial and error, reflection and backtracking.",
+  "A pipeline to build long-thought data from a reasoning tree with a process reward model and GPT-4o rewriting.",
+  "Released resources: hypotheses, cognitive exploration map, annotation platform and analysis tools (GitHub GAIR-NLP/O1-Journey)."
+ ],
+ "method": {
+  "summary": "Build step-level reasoning trees on MATH problems with an Abel-fine-tuned DeepSeekMath-7B policy, prune with a process-level reward (Math-Shepherd, then o1-mini), derive a shortcut (correct path) and a long thought (DFS path including incorrect trials with reasons), rewrite the long thought with GPT-4o, then SFT deepseek-math-7b-base in two phases (shortcut SFT, then either shortcut or journey SFT on 327 examples) and a final outcome-level DPO stage.",
+  "task": "Mathematical reasoning; supervised fine-tuning on long-thought vs shortcut data, followed by DPO",
+  "trains": true,
+  "datasets": [
+   {"name": "Abel", "role": "train", "size": "120k examples", "split": "one epoch (phase 1)", "source": "Chern et al. 2023, GAIR-NLP/abel", "preprocessing": "solutions divided into lines, each beginning with a line number, giving explicit reasoning steps"},
+   {"name": "PRM800K (shortcut SFT subset)", "role": "train", "size": "6,998 examples", "split": "one epoch (phase 1)", "source": "Lightman et al. 2024", "preprocessing": "one correct step-by-step solution per question; responses not reaching the final answer discarded"},
+   {"name": "Long thought data (journey learning)", "role": "train", "size": "327 examples", "split": "3 epochs (phase 2)", "source": "synthesised from reasoning tree; problem source stated for the pipeline as the MATH dataset", "preprocessing": "DFS traversal with at most K trials per correct-path node, wrong-node reasoning attached, then rewritten by GPT-4o for coherence"},
+   {"name": "ShortCut data (matched control)", "role": "train", "size": "327 examples", "split": "3 epochs (phase 2)", "source": "correct path of the same reasoning trees", "preprocessing": "only correct answer and valid intermediate steps"},
+   {"name": "MATH Train (re-divided from PRM800K)", "role": "train", "size": "12,000 examples", "split": "DPO prompts", "source": "re-divided dataset from PRM800K", "preprocessing": "20 sampled responses per question, labelled by final-answer correctness; 5 positive and 5 negative randomly chosen to form 5 pairs"},
+   {"name": "MATH500 (MATH test set, re-divided subset of PRM800K)", "role": "eval", "size": "500 examples", "split": "test", "source": "Lightman et al. 2024", "preprocessing": null},
+   {"name": "MR-GSM8K subset", "role": "eval", "size": null, "split": "subset, size not stated", "source": "Zeng et al. 2023", "preprocessing": "used to compare reward models by F1"},
+   {"name": "PRM800K subset", "role": "eval", "size": null, "split": "subset, size not stated", "source": "Lightman et al. 2024", "preprocessing": "used to compare reward models by F1"}
+  ],
+  "models": [
+   {"name": "deepseek-math-7b-base", "role": "base", "params": "7B", "architecture": "decoder-only LLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Abel-DSMath (policy model pi for tree generation)", "role": "proposed", "params": "7B", "architecture": null, "init_from": "DeepSeekMath-7B-Base fine-tuned on Abel data", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "deepseek-sft-abel / deepseek-sft-prm800k (final models)", "role": "proposed", "params": "7B", "architecture": null, "init_from": "deepseek-math-7b-base, phase-1 SFT on Abel (120k) or PRM800K (6,998)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "o1-mini", "role": "reward", "params": null, "architecture": "proprietary", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "second-generation reasoning tree: per-step correct/incorrect judgement with reasoning, used to prune"}},
+   {"name": "Math-Shepherd (Mistral-7B)", "role": "reward", "params": "7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "first-generation tree: step score in [0,1], top K kept"}},
+   {"name": "GPT-4o", "role": "teacher", "params": null, "architecture": "proprietary", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "rewrites the raw DFS draft into a coherent long thought, preserving wrong steps, reflections and corrections"}}
+  ],
+  "training": {
+   "objective": "SFT (next-token) in two stages, then DPO loss on outcome-level preference pairs",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "Phase 1 shortcut SFT: 1 epoch on each dataset (Abel, PRM800K). Phase 2: 3 epochs on the 327 examples for both long-thought SFT and shortCut SFT. DPO epochs not stated.",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "dpo_pairs_per_question": "5 (from 5 positive and 5 negative of 20 samples)",
+    "dpo_beta": null,
+    "tree_width_w_example": "w=3, D=10 gives 3^10 steps in last iteration (illustration)",
+    "dfs_constraint": "each node on correct path permitted max K trials: one on an incorrect path and one on the correct path",
+    "tree_pruning": "beam search; Math-Shepherd keeps top K by score; o1-mini keeps at most K steps judged correct; generation count reduced from (n^D - 1)/(n - 1) to nKD"
+   }
+  },
+  "inference": {
+   "decoding": "DPO data sampling only: nucleus sampling; evaluation decoding not stated",
+   "temperature": "0.7 (DPO sampling)",
+   "top_p": "0.95 (DPO sampling)",
+   "max_tokens": null,
+   "samples": "20 responses per question for DPO data; evaluation samples per item, runs and seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "MATH500 accuracy", "definition": "fraction of 500 test problems answered correctly (printed as a decimal in Table 6, as % gain in text)", "unit": "fraction (0-1); gains in points", "higher_is_better": true},
+    {"name": "F1 of step-level correctness", "definition": "reward model judgements vs labels on subsets of MR-GSM8K and PRM800K", "unit": "F1 (0-1)", "higher_is_better": true}
+   ],
+   "baselines": ["SFT-phase1", "SFT-phase2 shortcut learning (same 327 problems)", "GPT-4o and o1-preview (qualitative case study only)"],
+   "protocol": "Single results per cell; no seeds, repeated runs, confidence intervals or significance tests reported."
+  },
+  "availability": {
+   "code": "https://github.com/GAIR-NLP/O1-Journey",
+   "weights": null,
+   "data": "stated to be shared at the GitHub repo; not confirmed in text"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.epochs", "quote": "Both the long thought SFT and shortCut SFT settings are trained for 3 epochs on these 327 examples.", "where": "Section 6.8, p16"},
+   {"field": "datasets (MATH500)", "quote": "using a re-divided subset from PRM800K, which includes 500 examples", "where": "Section 6.8, p17"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "With deepseek-sft-abel, journey learning on 327 examples scores 0.470 on MATH500 versus 0.386 for shortcut learning on the same trees (+8.4).",
+   "kind": "measured", "source": null, "metric": "MATH500 accuracy", "value": "0.470", "unit": "fraction", "baseline_value": "0.386", "n": 500,
+   "setup": "deepseek-math-7b-base, phase-1 SFT on Abel 120k (1 epoch), phase 2 on 327 examples for 3 epochs; single run.",
+   "quote": null, "table": "Table 6, row SFT-phase2-journeyLearining, column deepseek-sft-abel (shortcut: row SFT-phase2-shortcutLearning, 0.386)",
+   "note": "Text rounds the gain to +8.4; abstract says 'over 8%'. No variance reported.", "where": "Table 6, p17"
+  },
+  {
+   "claim": "With deepseek-sft-prm800k, journey learning scores 0.428 versus 0.348 for shortcut learning (+8.0).",
+   "kind": "measured", "source": null, "metric": "MATH500 accuracy", "value": "0.428", "unit": "fraction", "baseline_value": "0.348", "n": 500,
+   "setup": "deepseek-math-7b-base, phase-1 SFT on PRM800K 6,998 examples (1 epoch), phase 2 on 327 examples for 3 epochs; single run.",
+   "quote": null, "table": "Table 6, row SFT-phase2-journeyLearining, column deepseek-sft-prm800k (shortcut: 0.348)",
+   "note": null, "where": "Table 6, p17"
+  },
+  {
+   "claim": "The paper states journey learning beats conventional supervised learning by over 8% on MATH with only 327 samples.",
+   "kind": "measured", "source": null, "metric": "MATH accuracy gain", "value": "8", "unit": "% (over)", "baseline_value": null, "n": 327,
+   "setup": "As Table 6; training set is 327 long thoughts; headline claim from abstract.",
+   "quote": "With only 327 training samples and without any additional tricks, journey learning outperformed conventional supervised learning by over 8% on the MATH dataset",
+   "table": null, "note": "Gains are in accuracy points on MATH500 (500 problems), not relative percent.", "where": "Abstract"
+  },
+  {
+   "claim": "DPO adds only 0.2 points on the Abel model (0.470 to 0.472).",
+   "kind": "measured", "source": null, "metric": "MATH500 accuracy", "value": "0.472", "unit": "fraction", "baseline_value": "0.470", "n": 500,
+   "setup": "DPO on journey-learning SFT model, 12,000 MATH Train questions, 5 pairs per question from 20 samples at T=0.7, top-p 0.95.",
+   "quote": null, "table": "Table 6, row DPO, column deepseek-sft-abel",
+   "note": "Difference of 1 problem in 500; far inside plausible noise, no variance given.", "where": "Table 6, p17"
+  },
+  {
+   "claim": "DPO adds 1.2 points on the PRM800K model (0.428 to 0.440).",
+   "kind": "measured", "source": null, "metric": "MATH500 accuracy", "value": "0.440", "unit": "fraction", "baseline_value": "0.428", "n": 500,
+   "setup": "As above, on deepseek-sft-prm800k.",
+   "quote": null, "table": "Table 6, row DPO, column deepseek-sft-prm800k",
+   "note": null, "where": "Table 6, p17"
+  },
+  {
+   "claim": "Authors describe the DPO improvement as modest and an initial exploratory result.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Section 6.8 discussion of Table 6.",
+   "quote": "However, the improvement from DPO was more modest, and we acknowledge that this is an initial exploratory result.",
+   "table": null, "note": null, "where": "Section 6.8, p17"
+  },
+  {
+   "claim": "Phase-1 SFT baselines: 0.372 (Abel) and 0.290 (PRM800K).",
+   "kind": "measured", "source": null, "metric": "MATH500 accuracy", "value": "0.372", "unit": "fraction", "baseline_value": null, "n": 500,
+   "setup": "After phase 1 shortcut SFT only.",
+   "quote": null, "table": "Table 6, row SFT-phase1, columns deepseek-sft-abel (0.372) and deepseek-sft-prm800k (0.290)",
+   "note": "Shortcut phase 2 adds 1.4 points (Abel: 0.372 to 0.386) and 5.8 points (PRM800K: 0.290 to 0.348).", "where": "Table 6, p17"
+  },
+  {
+   "claim": "o1-mini is the best step-level reward model on the MR-GSM8K subset (F1 0.855 vs 0.734 Math-shepherd, 0.722 GPT-4o-mini).",
+   "kind": "measured", "source": null, "metric": "F1", "value": "0.855", "unit": "F1", "baseline_value": "0.734", "n": null,
+   "setup": "Subset of MR-GSM8K, subset size not stated.",
+   "quote": null, "table": "Table 4, row o1-mini, column F1 score (Math-shepherd 0.734, ReasonEval-34B 0.735, ReasonEval-7B 0.728, GPT-4o-mini 0.722)",
+   "note": null, "where": "Table 4, p15"
+  },
+  {
+   "claim": "o1-mini scores F1 0.880 on the PRM800K subset, above o1-preview (0.867) and GPT-4o-mini (0.756).",
+   "kind": "measured", "source": null, "metric": "F1", "value": "0.880", "unit": "F1", "baseline_value": "0.756", "n": null,
+   "setup": "Subset of PRM800K, subset size not stated.",
+   "quote": null, "table": "Table 5, row o1-mini, column F1 Score",
+   "note": null, "where": "Table 5, p15"
+  },
+  {
+   "claim": "Tree search with branching w=3 and depth D=10 needs 3^10 generations at the last level, motivating pruning.",
+   "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Reasoning tree construction, Section 6.5.",
+   "quote": "setting w to 3 and D to 10, the last iteration requires generating 310 reasoning steps",
+   "table": null, "note": "Text extraction prints 3^10 as '310'.", "where": "Section 6.5, p15"
+  },
+  {
+   "claim": "Analysis of o1's eight released thought examples: Math example has 18751 tokens, 521 lines; Cipher 8915 tokens, 668 lines; length grows with difficulty.",
+   "kind": "measured", "source": null, "metric": "tokens", "value": "18751", "unit": "tokens", "baseline_value": null, "n": 8,
+   "setup": "Eight o1 thought examples published by OpenAI; counts per domain.",
+   "quote": null, "table": "Table 3, row Math, column Token Count",
+   "note": null, "where": "Table 3, p14"
+  }
+ ],
+ "limits": [
+  "Single run per cell with no seeds, variance, confidence intervals or significance tests; the DPO gain on Abel (0.002 = 1 of 500 problems) cannot be distinguished from noise.",
+  "Optimizer, learning rate, batch size, precision, hardware, compute, sequence length and DPO beta are not stated.",
+  "The 327-example journey set and its matched shortcut set are not described by how they were selected (problem sources, difficulty), so the comparison is for one base model (deepseek-math-7b-base) on one benchmark (MATH500).",
+  "Journey data were rewritten by GPT-4o and pruned with o1-mini rewards, so a stronger-teacher distillation effect is confounded with the journey-vs-shortcut format; the paper does not ablate this.",
+  "Authors say Q2 (how long thought works) is only a hypothesis lacking empirical evidence, and describe results as initial and exploratory; future work includes RL, process-level DPO, scaling laws.",
+  "DFS traversal uses restrictive constraints (max one wrong trial per correct node); relation between trial length and performance not studied.",
+  "Not a replication of o1; authors state parity is not the goal. The 'most crucial component of O1 technology' claim is asserted, not shown.",
+  "Paper is a progress report; many sections (Q2, Q9, Table 7 nodes, Future Plan) are plans or hypotheses, not experiments."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "journey learning", "definition": "encourages models to learn not just shortcuts, but the complete exploration process, including trial and error, reflection, and backtracking", "where": "Abstract"},
+  {"term": "shortcut learning", "definition": "supervised training of a direct root-to-leaf shortcut path (only correct steps and final answer)", "where": "Figure 4 caption / Section 4"},
+  {"term": "long thought", "definition": "a DFS path through a reasoning tree that includes reasoning for incorrect nodes, concatenated and rewritten by GPT-4o", "where": "Section 6.6"}
+ ],
+ "lineage": [
+  {"work": "Learning to reason with LLMs (OpenAI o1 thought examples)", "year": 2024, "arxiv": null, "relation": "evaluates", "note": "Eight o1 thought examples analysed for token, line and keyword statistics.", "quote": null},
+  {"work": "Let's verify step by step (PRM800K, MATH500)", "year": 2024, "arxiv": "2305.20050", "relation": "uses-data", "note": "PRM800K for shortcut SFT and MATH500 evaluation split.", "quote": null},
+  {"work": "Abel: Generative AI for math", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "120k step-formatted data; line-numbered format defines reasoning steps.", "quote": null},
+  {"work": "DeepSeekMath", "year": 2024, "arxiv": "2402.03300", "relation": "extends", "note": "deepseek-math-7b-base is the base model.", "quote": null},
+  {"work": "Math-Shepherd", "year": 2024, "arxiv": "2312.08935", "relation": "baseline", "note": "First reward model for pruning; weaker on hard problems.", "quote": null},
+  {"work": "Direct Preference Optimization (Rafailov et al.)", "year": 2024, "arxiv": "2305.18290", "relation": "uses-method", "note": "Phase 2 preference stage.", "quote": null},
+  {"work": "OlympicArena", "year": 2024, "arxiv": null, "relation": "uses-data", "note": "Used for initial evaluation of o1.", "quote": null},
+  {"work": "MR-GSM8K (Zeng et al.)", "year": 2023, "arxiv": "2312.17080", "relation": "uses-data", "note": "Reward model comparison.", "quote": null},
+  {"work": "Physics of language models 2.2 (Ye et al.)", "year": 2024, "arxiv": null, "relation": "related", "note": "Error-correction data helps reasoning.", "quote": null},
+  {"work": "STaR / Quiet-STaR / RISE / Iterative reasoning preference optimization", "year": 2024, "arxiv": null, "relation": "related", "note": "Self-improvement and internal thought background.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 4", "caption": "A paradigm shift from shortcut learning to journey learning. A searching tree for reasoning tasks; (c) performance of shortcut learning and journey learning on MATH500, base deepseek-math-7b-base fine-tuned on Abel training data and PRM800K separately.", "page": 5, "why": "Shows the tree view of shortcut vs full-path supervision and the bar comparison."},
+  {"figure": "Fig 2", "caption": "Chronological overview of the O1 exploration journey and training pipeline.", "page": 2, "why": "Maps the four long-thought construction attempts and pipeline stages."},
+  {"figure": "Table 6", "caption": "Training Results on MATH Test Set", "page": 17, "why": "Only quantitative training result: phase 1, shortcut, journey and DPO per base."}
+ ],
+ "code": [],
+ "problems": [
+  "Table 6 row label is spelled 'SFT-phase2-journeyLearining' in the source.",
+  "Section 6.3 lists attempts in a different order than Table 7 (Propose-Critique Loop vs Tree Search numbering).",
+  "Exponents extract as plain digits (3^10 appears as '310').",
+  "Section 6.8 does not say which prompts produced the 327 problems; text only says MATH dataset in Table 7 node 6 and Section 6.9.",
+  "No embedded instructions found in the PDF text."
+ ]
+}

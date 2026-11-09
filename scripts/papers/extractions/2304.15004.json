@@ -1,0 +1,526 @@
+{
+ "schema": 1,
+ "key": "2304.15004",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/schaeffer-2023-emergent-abilities-large-language-models.pdf",
+ "bib": {
+  "title": "Are Emergent Abilities of Large Language Models a Mirage?",
+  "authors": [
+   "Rylan Schaeffer",
+   "Brando Miranda",
+   "Sanmi Koyejo"
+  ],
+  "first_author": "Schaeffer",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 22 May 2023; 'Preprint. Under review.')",
+  "arxiv": "2304.15004",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 42531,
+  "chars_total": 42531,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Are the sharp, unpredictable emergent abilities of LLMs a property of scale or an artefact of the metric chosen by the researcher?",
+ "hypothesis": "Emergent abilities appear because of nonlinear or discontinuous metrics (and too little test data to resolve small models), not because of fundamental changes in model behaviour with scale.",
+ "contributions": [
+  "A simple mathematical model of how nonlinear/discontinuous metrics turn smooth per-token error into apparent emergence",
+  "Three predictions tested on the InstructGPT/GPT-3 family",
+  "Two predictions tested in a meta-analysis of BIG-Bench claims",
+  "Metric-induced emergent abilities in vision tasks across diverse architectures"
+ ],
+ "method": {
+  "summary": "Analytic model: per-token cross-entropy falls as a power law, so accuracy over L tokens is exp(-(N/c)^alpha)^L, sharp on a linear-log plot, while token edit distance is near-linear. Tested by rescoring fixed GPT-3 family outputs on 2-shot arithmetic, by meta-analysing published BIG-Bench results (incl. LaMDA Brier score), and by training small vision models and redefining accuracy as all-K-correct.",
+  "task": "Metric analysis of claimed emergent abilities (arithmetic with GPT-3 family, BIG-Bench meta-analysis, vision classification/reconstruction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "InstructGPT/GPT-3 arithmetic outputs",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "collected via OpenAI API; 2-shot 2-integer 2-digit multiplication and 2-shot 2-integer 4-digit addition",
+    "preprocessing": "Fig 4 uses additional generated test data to raise resolution; number of test items not stated"
+   },
+   {
+    "name": "BIG-Bench published results",
+    "role": "eval",
+    "size": "39 preferred metrics; >=220 tasks, ~40 metrics per task, ~10 model families (~10^6 triplets, Discussion)",
+    "split": null,
+    "source": "Srivastava et al. 2022; hand annotations of emergence by Wei 2022 ('137 emergent abilities')",
+    "preprocessing": "emergence score (Eq. 1) computed per task-metric-model family"
+   },
+   {
+    "name": "CIFAR100",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "Omniglot",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Lake et al. 2015",
+    "preprocessing": "images embedded by convolutional layers; sequences of image-label pairs, length L in [1,5]"
+   },
+   {
+    "name": "MNIST",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "LeCun 1998",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "InstructGPT/GPT-3 family",
+    "role": "evaluated",
+    "params": "350M, 1.3B, 6.7B, 175B",
+    "architecture": "GPT-3",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "availability": "4 models available via OpenAI API as of 2023-03-15"
+    }
+   },
+   {
+    "name": "LaMDA family",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "outputs taken from BIG-Bench; no sizes stated"
+    }
+   },
+   {
+    "name": "Shallow nonlinear autoencoder family",
+    "role": "proposed",
+    "params": "about 10^4 to 10^6 (read from Fig 7)",
+    "architecture": "single hidden layer nonlinear autoencoder, varying bottleneck units",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Autoregressive causal Transformer family (Omniglot)",
+    "role": "proposed",
+    "params": "about 10^6 (read from Fig 8)",
+    "architecture": "decoder-only transformer with conv image embedding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LeNet family (MNIST)",
+    "role": "proposed",
+    "params": "about 10^4 to 10^5 (read from Fig 10)",
+    "architecture": "convolutional network",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: reconstruction MSE (autoencoder) and classification (LeNet, Omniglot transformer); not stated",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "only the vision models are trained; no training hyperparameters are given in the paper"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.0 and 1.0 (Fig 3 legend, read from figure)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "2-shot for both arithmetic tasks",
+   "retrieval": null,
+   "parameters": {
+    "target_string_length": "1 to 5 digits (read from Fig 3/4 legends)",
+    "reconstruction_threshold_c": "0.003 and 0.004 (Fig 7 legend)",
+    "omniglot_sequence_length_L": "1 to 5",
+    "mnist_K": "1 to 5 (text); Fig 10 legend shows 6, 8, 10 for some curves"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy (exact string match)",
+     "definition": "1 if no additions, no deletions and all L tokens match the target, else 0",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Token edit distance",
+     "definition": "Num substitutions + additions + deletions to turn target into output; plotted negated",
+     "unit": "tokens",
+     "higher_is_better": false
+    },
+    {
+     "name": "Multiple choice grade",
+     "definition": "1 if highest probability mass on correct option, else 0",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Brier score",
+     "definition": "for a binary outcome, mean squared error between outcome and predicted probability mass",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Emergence score",
+     "definition": "sign(argmax y - argmin y)(max y - min y)/sqrt(Median((y_i-y_{i-1})^2)), from Srivastava et al.",
+     "unit": "unitless",
+     "higher_is_better": null
+    },
+    {
+     "name": "Reconstruction_c",
+     "definition": "mean over test data of indicator that squared reconstruction error < c",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Published emergent-ability curves (Wei 2022; Ganguli 2022; Srivastava 2022)"
+   ],
+   "protocol": "Fixed model outputs rescored under different metrics; no seeds, confidence intervals or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.InstructGPT/GPT-3 family.params",
+    "quote": "As of 2023-03-15, 4 models with 350M, 1.3B, 6.7B, 175B parameters are available via the OpenAI API.",
+    "where": "Sec 3 footnote 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Over 92% of claimed BIG-Bench emergent abilities (Wei hand annotations) appear under just two metrics, Multiple Choice Grade and Exact String Match.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of annotated emergent abilities",
+   "value": ">92",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hand-annotated task-metric-model family triplets from Wei 2022 on BIG-Bench; 4 of 39 preferred metrics show any annotated emergence",
+   "quote": "2 metrics account for > 92% of claimed emergent abilities (Fig. 5C): Multiple Choice Grade and Exact String Match.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Under the automatic emergence score, at most 5 of 39 preferred BIG-Bench metrics show emergence for any task-model family pair.",
+   "kind": "measured",
+   "source": null,
+   "metric": "metrics showing emergence",
+   "value": "5",
+   "unit": "metrics of 39",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Emergence score (Eq. 1) over all BIG-Bench tasks",
+   "quote": "of the 39 preferred metrics in BIG-Bench, at most 5 display emergence (Fig. 5A)",
+   "table": null,
+   "note": "Hand annotation gives 4/39 metrics instead (Fig 5B). The >92% figure belongs to the hand-annotated set, not to the emergence-score set.",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Hand-annotated emergence appears under only 4 of 39 metrics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "metrics with annotated emergence",
+   "value": "4",
+   "unit": "metrics of 39",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wei hand-annotated triplets",
+   "quote": "revealed emergent abilities appear with 4/39 metrics (Fig. 5B)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "On InstructGPT/GPT-3 arithmetic, switching from Accuracy to Token Edit Distance on the same fixed outputs turns sharp emergence into smooth improvement with scale.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2-shot 2-digit x 2-digit multiplication and 4-digit + 4-digit addition; 350M to 175B; target length 1 to 5; temperature 0 and 1",
+   "quote": "if one changes from nonlinear Accuracy to linear Token Edit Distance while keeping the models' outputs fixed, the family's performance smoothly, continuously",
+   "table": null,
+   "note": "Qualitative, read from figure; no numeric scores given.",
+   "where": "Sec 3, Fig 3"
+  },
+  {
+   "claim": "With more test data, even the smallest GPT-3 models score above chance on Accuracy and accuracy falls roughly geometrically with target length.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same arithmetic tasks, extra generated test data (count not stated)",
+   "quote": "all models in the InstructGPT/GPT-3 family achieve above-chance accuracy (Fig. 4)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3, Fig 4"
+  },
+  {
+   "claim": "LaMDA emergent abilities seen under Multiple Choice Grade vanish under Brier Score on the same tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LaMDA outputs from BIG-Bench; tasks chosen because LaMDA shows emergence under Multiple Choice Grade; number of tasks not stated",
+   "quote": "LaMDA's emergent abilities on the discontinuous Multiple Choice Grade disappeared when we changed the metric to the continuous Brier Score (Fig. 6).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Metric choice induces apparent emergence in vision models: shallow autoencoders (CIFAR100, Reconstruction_c), Omniglot causal transformers and LeNet on MNIST (all-K-correct accuracy).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Smoothly improving base metric (MSE, per-item accuracy) redefined as thresholded or all-correct",
+   "quote": "the autoencoder family exhibits a sharp and seemingly unpredictable image reconstruction ability (Fig. 7C)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, App B"
+  },
+  {
+   "claim": "The paper estimates about 10^6 task-metric-model family triplets in BIG-Bench, so some apparent emergence by chance is likely.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "1e6",
+   "unit": "triplets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BIG-Bench: >=220 tasks, ~40 metrics per task, ~10 model families; an order-of-magnitude estimate, no test run",
+   "quote": "for a total of ∼106 task-metric-model family triplets",
+   "table": null,
+   "note": "Text extraction renders 10^6 as '106'. No multiple-comparison correction was actually computed.",
+   "where": "Sec 7"
+  },
+  {
+   "claim": "Authors state they do not claim LLMs cannot show emergent abilities.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion",
+   "quote": "nothing in this paper should be interpreted as claiming that large language models cannot display emergent abilities",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  }
+ ],
+ "limits": [
+  "Authors concede the independence-of-tokens approximation is false and per-token error is assumed constant (Sec 2 fn 1; App A).",
+  "Only the GPT-3 family (4 sizes) is analysed from raw outputs; other families (PaLM, LaMDA etc.) only via published numbers.",
+  "Paper says it does not show LLMs cannot have emergent abilities; it says previously claimed ones 'might likely be a mirage'.",
+  "Number of test items, tasks for LaMDA, and all vision training hyperparameters are not stated; no seeds, intervals or significance tests.",
+  "Vision demonstrations show metrics can create emergence, not that LLM emergence is only metric-induced.",
+  "Arithmetic and the 350M to 175B range are narrow; later work and models after 2023 not covered."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "emergent abilities of LLMs",
+   "definition": "abilities that are not present in smaller-scale models but are present in large-scale models; thus they cannot be predicted by simply extrapolating the performance improvements on smaller-scale models (quoting Wei et al.)",
+   "where": "Sec 1"
+  },
+  {
+   "term": "resolution",
+   "definition": "The smallest interval measurable by a scientific instrument; the resolving power. Here set by 1/test dataset size (1/NL for per-token error).",
+   "where": "Sec 2, App A.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Emergent abilities of large language models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2206.07682",
+   "relation": "contradicts",
+   "note": "definition and claims of emergence being tested",
+   "quote": null
+  },
+  {
+   "work": "Beyond the imitation game (BIG-Bench; Srivastava et al.)",
+   "year": 2022,
+   "arxiv": "2206.04615",
+   "relation": "uses-data",
+   "note": "benchmark, emergence score; authors say they convert its discussion into testable predictions",
+   "quote": null
+  },
+  {
+   "work": "Predictability and surprise in large generative models (Ganguli et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "claimed emergence at arithmetic and MMLU",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "GPT-3 family where emergence was first claimed",
+   "quote": null
+  },
+  {
+   "work": "Aligning language models to follow instructions (Lowe and Leike)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "InstructGPT models",
+   "quote": null
+  },
+  {
+   "work": "LaMDA (Thoppilan et al.)",
+   "year": 2022,
+   "arxiv": "2201.08239",
+   "relation": "evaluates",
+   "note": "outputs via BIG-Bench",
+   "quote": null
+  },
+  {
+   "work": "Broken neural scaling laws (Caballero et al.)",
+   "year": 2022,
+   "arxiv": "2210.14891",
+   "relation": "contradicts",
+   "note": "they treat emergence as real via piecewise power law",
+   "quote": null
+  },
+  {
+   "work": "The quantization model of neural scaling (Michaud et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "emergence may be real under strong data assumptions",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws (Kaplan; Hoffmann; Henighan and others)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "uses-method",
+   "note": "power-law loss assumption",
+   "quote": null
+  },
+  {
+   "work": "Wei, 137 emergent abilities of large language models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "hand-annotated triplets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Emergent abilities of large language models are created by the researcher's chosen metrics, not unpredictable changes in model behavior with scale.",
+   "page": 3,
+   "why": "Six panels show one smooth loss curve yielding sharp or smooth curves depending on metric"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Claimed emergent abilities evaporate upon changing the metric.",
+   "page": 5,
+   "why": "Same GPT-3 outputs under Accuracy (sharp) and Token Edit Distance (smooth)"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Emergent abilities appear only for specific metrics, not task-model families.",
+   "page": 7,
+   "why": "Counts of metrics showing emergence in BIG-Bench"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2",
+   "snippet": "Accuracy(N) ≈ p_N(single token correct)^(num. of tokens) = exp(-(N/c)^alpha)^L ; Token Edit Distance(N) ≈ L(1 - exp(-(N/c)^alpha))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Pdf text is two-column figure-axis noise; exponents like 10^6 are rendered as '106' and math is partly garbled.",
+  "No embedded instructions found.",
+  "Paper gives no training hyperparameters, test-set sizes or code link."
+ ]
+}

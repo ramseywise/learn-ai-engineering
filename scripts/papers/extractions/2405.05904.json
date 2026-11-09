@@ -1,0 +1,141 @@
+{
+ "schema": 1,
+ "key": "2405.05904",
+ "pdf": "generative-ai/05-RL/sources/gekhman-2024-does-fine-tuning-llms-new.pdf",
+ "bib": {
+  "title": "Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?",
+  "authors": ["Zorik Gekhman", "Gal Yona", "Roee Aharoni", "Matan Eyal", "Amir Feder", "Roi Reichart", "Jonathan Herzig"],
+  "first_author": "Gekhman",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2405.05904",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 81280, "chars_total": 81280, "engine": "pymupdf", "skipped": "Reference list (lines ~1001-1350) skimmed only. The PDF is arXiv v3 (1 Oct 2024) and prints no venue; EMNLP 2024 comes from the repo's references, not from the PDF."},
+ "type": "empirical",
+ "question": "Does fine-tuning an LLM on examples that introduce facts it did not learn in pre-training make it hallucinate more about facts it already knows?",
+ "hypothesis": "A common conjecture (Schulman 2023 and others) that exposure to new knowledge in fine-tuning encourages hallucination; the paper tests it and does not state a prediction of its own.",
+ "contributions": [
+  "SliCK, a four-category taxonomy (HighlyKnown, MaybeKnown, WeaklyKnown, Unknown) of facts relative to a model's knowledge, built from sampled PCorrect",
+  "A controlled closed-book QA study varying the Unknown share of a fixed-size fine-tuning set",
+  "Findings: Unknown examples are fit slowly, fitting them lowers accuracy roughly linearly, and MaybeKnown examples matter most"
+ ],
+ "method": {
+  "summary": "Annotate every ENTITYQUESTIONS train example as HighlyKnown, MaybeKnown, WeaklyKnown or Unknown for PaLM 2-S using 10 random 4-shot prompts (1 greedy and 16 T=0.5 samples each). Full fine-tune PaLM 2-S for 50 epochs on fixed-size (6142) datasets with X% Unknown, evaluate every epoch, and compare early-stop with convergence.",
+  "task": "closed-book question answering on (subject, relation, object) triplets turned into questions",
+  "trains": true,
+  "datasets": [
+   {"name": "ENTITYQUESTIONS (Sciavolino et al., 2021)", "role": "both", "size": "81700 annotated train examples over 12 relations (Table 4); fine-tuning set |D| = 6142; in-distribution test 10481 (Table 5); OOD test 5848 over 7 relations (Table 6)", "split": "original train/dev/test splits; train sub-sampled to build D variants", "source": "Wikidata triplets converted to QA pairs", "preprocessing": "12 relations randomly sampled for train/dev/test; 5 of the 12 reserved relations dropped for similarity to train relations, leaving 7 OOD relations; examples with more than 1 correct answer removed (4.2% of train, 3.9% of test); subject/object overlap between train and test removed (2.1% of train removed)."}
+  ],
+  "models": [
+   {"name": "PaLM 2-S base (Anil et al., 2023)", "role": "base", "params": null, "architecture": "pre-trained base LLM, not instruction-tuned", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "S is the middle of five sizes (XXS, XS, S, M, L); parameter count not given"}}
+  ],
+  "training": {
+   "objective": "supervised fine-tuning on (question, answer) pairs; prompt format 'Answer the following question.\\n<question>'",
+   "optimizer": null,
+   "lr": "1e-5 (also tried 1e-4 and 1e-6, 'consistently supported our findings')",
+   "lr_schedule": "inferred: fixed (constant) learning rate, paper says 'a fixed learning rate'",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "50 for every variant; evaluated on dev every epoch; EARLY_STOP = epoch of max dev accuracy (5-10 epochs); CONVERGENCE = epoch 50 (100% train accuracy)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.05",
+   "regularisation": null,
+   "hardware": null,
+   "compute": "Not given in GPU-hours. Annotation alone took 170 inference steps per example, more than 15M inference steps for the full dataset.",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"regime": "full fine-tuning, all parameters updated", "variants": "X% Unknown with the rest Known, fixed |D|=6142, relation distribution kept constant; single-category variants D_HighlyKnown, D_MaybeKnown, D_WeaklyKnown, D_Unknown and D_Natural; D_Known ablations with Unknown filtered out; D_IDK relabels Unknown answers as 'I don't know'"}
+  },
+  "inference": {
+   "decoding": "greedy for evaluation (inferred: exact-match test accuracy); annotation uses 1 greedy (T=0) plus 16 samples at T=0.5 per prompt",
+   "temperature": "0.5 for sampled annotation answers",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Annotation: Nex=10 random 4-shot prompts x (1 greedy + Nsample=16 sampled) per example. Fine-tuning: no seeds or repeated runs stated.",
+   "prompting": "4-shot with exemplars from the dev split, same relation as the question (Q:/A: format)",
+   "retrieval": null,
+   "parameters": {"Nex": "10", "Nsample": "16", "k_shot": "4", "sampling_top_k": "40", "sample_temperature": "0.5"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Exact match accuracy", "definition": "fraction of test questions whose predicted answer exactly matches the gold answer; used as a proxy for hallucination w.r.t. pre-existing knowledge because train and test are disjoint", "unit": "%", "higher_is_better": true},
+    {"name": "Accuracy on answered questions and % answered", "definition": "for the 'I don't know' variant, accuracy on test questions where the model did not abstain, and the share it answered", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["fine-tuning on D with the Known categories only (D_Known)", "D_Natural", "P(True) (Kadavath et al., 2022) as an alternative Unknown detector"],
+   "protocol": "Single PaLM 2-S, one run per variant. Table 2 significance: test set shuffled into 100 subsets, paired-sample t-test at p<0.05 and p<0.01. Linear model (Eq. 1) fitted on (Accuracy, N_Kn, N_Unk) collected after each epoch from all D variants."
+  },
+  "availability": {"code": null, "weights": null, "data": "ENTITYQUESTIONS is public; the SliCK annotations are not stated as released"},
+  "prompts": [
+   {"purpose": "4-shot PaLM 2-S annotation prompt for PCorrect", "text": "Q: What kind of work does Nicolas Roeg do?\nA: film director\nQ: What kind of work does Crystal Geoffré do?\nA: actor\nQ: What kind of work does Maurice Blondel do?\nA: philosopher\nQ: What kind of work does Javier de Burgos do?\nA: politician\nQ: What kind of work does Ron Konopka do?\nA:", "where": "Appendix C"},
+   {"purpose": "fine-tuning/test input format", "text": "Answer the following question.\nWhat kind of work does Ron Konopka do?", "where": "Appendix E"},
+   {"purpose": "P(True) comparison prompt", "text": "Question: Where is Paris located?\nProposed Answer: France\nIs the proposed answer:\n(A) True\n(B) False\nThe proposed answer is:", "where": "Appendix K"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "We use learning rate of 1e-5, a batch size of 128, and a dropout rate of 0.05.", "where": "Appendix E"}
+  ]
+ },
+ "results": [
+  {"claim": "Test accuracy is linearly predicted by the number of Known and Unknown fine-tuning examples the model fits; fitting Unknown hurts and fitting Known helps by a similar amount.", "kind": "measured", "source": null, "metric": "beta_unk (linear model coefficient)", "value": "-8.3", "unit": "accuracy points per unit fraction of |D| fit", "baseline_value": null, "n": null, "setup": "PaLM 2-S, ENTITYQUESTIONS in-distribution test, points collected after each epoch from all D variants; Eq. 1 valid only for N_kn<=|D|, N_unk<=|D|. beta_0=36.9, beta_kn=7.3, R2=0.86.", "quote": null, "table": "Table 1, row In-distribution, column beta_unk", "note": "Text prints the symbol as beta_ukn in one place.", "where": "Table 1, Sec 4.4"},
+  {"claim": "Same linear model on the out-of-distribution relations has smaller coefficients and a better fit.", "kind": "measured", "source": null, "metric": "R2", "value": "0.95", "unit": null, "baseline_value": null, "n": null, "setup": "7 OOD relations unseen in fine-tuning; beta_0=36.2, beta_kn=3.2, beta_unk=-3.0.", "quote": null, "table": "Table 1, row Out-of-distribution, column R2", "note": null, "where": "Table 1, Sec 4.5"},
+  {"claim": "Unknown examples are fit much more slowly than Known ones; at the best dev point the model has fit most Known but few Unknown examples.", "kind": "measured", "source": null, "metric": "train accuracy vs epoch", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "50% Known / 50% Unknown D, PaLM 2-S. Only read from Fig 1, no text number.", "quote": "The best development performance is obtained when the LLM fits the majority of the Known training examples but only few of the Unknown ones.", "table": null, "note": null, "where": "Fig 1, Sec 4.3"},
+  {"claim": "With early stopping, removing Unknown examples changes almost nothing, but at convergence they are very harmful and the gap grows with the Unknown share.", "kind": "measured", "source": null, "metric": "test accuracy, D vs D_Known", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fixed |D|=6142, X% Unknown, EARLY_STOP (5-10 epochs) vs CONVERGENCE (50 epochs). Numbers only in Fig 3.", "quote": "Conversely, the CONVERGENCE results show that with longer training, Unknown examples are actually very harmful.", "table": null, "note": null, "where": "Sec 4.2, Fig 3b"},
+  {"claim": "Re-labelling Unknown fine-tuning answers as 'I don't know' keeps accuracy on answered questions at 61.8 at both early stop and convergence, at the cost of answering fewer questions.", "kind": "measured", "source": null, "metric": "accuracy on answered questions", "value": "61.8", "unit": "%", "baseline_value": "43.0 (D, EARLY_STOP, 100% answered); 38.8 (D, CONVERGENCE)", "n": null, "setup": "50% Known / 50% Unknown variant only. % answered for D_IDK was 58.7 at EARLY_STOP and 55.6 at CONVERGENCE; D answers 100%.", "quote": "Specifically, the accuracy for DIDK re-mains 61.8 for both EARLY_STOP and CONVERGENCE, with a small decrease on the number of willingly answered questions (58.7 →55.6).", "table": null, "note": "The 61.8 is accuracy on the answered subset, not on all test questions, so it is not directly comparable with D's 43.0 over 100% answered.", "where": "Sec 7, Table 3"},
+  {"claim": "Fine-tuning only on HighlyKnown examples is not best; MaybeKnown examples give the best overall accuracy and the best MaybeKnown-test accuracy.", "kind": "measured", "source": null, "metric": "test accuracy, EARLY_STOP, Full", "value": "43.6", "unit": "%", "baseline_value": "40.5 (D_HighlyKnown)", "n": null, "setup": "Single-category variants, |D|=6142. D_MaybeKnown 69.9 vs D_HighlyKnown 60.1 on MaybeKnown test examples; HighlyKnown test 98.4 vs 98.7. D_Natural 43.5.", "quote": "Compared to DHighlyKnown, DMaybeKnown enhances MD’s performance on MaybeKnown (60.1→69.9), without compromising performance on HighlyKnown (98.7 →98.4).", "table": "Table 2, row D_MaybeKnown, column EARLY_STOP Full", "note": null, "where": "Sec 5, Table 2"},
+  {"claim": "Training the Unknown-only variant to convergence collapses overall accuracy, with large losses on facts the model already knew.", "kind": "measured", "source": null, "metric": "test accuracy, Full", "value": "25.8", "unit": "%", "baseline_value": "37.5 (EARLY_STOP)", "n": null, "setup": "D_Unknown, CONVERGENCE vs EARLY_STOP; on HighlyKnown test examples 95.6 falls to 55.8. D_WeaklyKnown falls 39.2 to 35.4.", "quote": "Specifically, at CONVERGENCE, DWeaklyKnown and DUnknown expe-rience significant performance drops compared to EARLY_STOP (39.2 →35.4 and 37.5 →25.8).", "table": null, "note": null, "where": "Sec 5, Table 2"},
+  {"claim": "SliCK Unknown test examples really are unknown: accuracy after fine-tuning on them is tiny.", "kind": "measured", "source": null, "metric": "post-fine-tuning accuracy on Unknown test subset", "value": "3.2", "unit": "% (at most)", "baseline_value": null, "n": null, "setup": "Table 2, Unknown column, all variants.", "quote": "In Table 2 we can see that the accuracy on Unknown is extremely low (3.2% or less), which is a strong indicator that most of the Unknown examples are actually unknown to M.", "table": null, "note": null, "where": "Sec 6"},
+  {"claim": "Category mix of ENTITYQUESTIONS for PaLM 2-S: 36% Unknown, 24% HighlyKnown.", "kind": "measured", "source": null, "metric": "share of train examples", "value": "36", "unit": "% Unknown", "baseline_value": null, "n": 81700, "setup": "12 relations, PaLM 2-S, 10 prompts x (1 greedy + 16 samples).", "quote": "In ENTITYQUESTIONS we have 24% HighlyKnown, 23% MaybeKnown, 17%, WeaklyKnown, and 36% Unknown.", "table": null, "note": null, "where": "Sec 4, footnote 8, Table 4"},
+  {"claim": "The out-of-distribution accuracy drop from Unknown examples is smaller than in-distribution but follows the same trend.", "kind": "measured", "source": null, "metric": "max accuracy drop", "value": "6", "unit": "points", "baseline_value": "14 (in-distribution)", "n": null, "setup": "OOD test of 7 relations; Fig 8 vs Fig 3.", "quote": "We no-tice that similar trends, just with a smaller overall magnitude of the performance drop, up to 6 points drop compared to up to 14 for in-distribution.", "table": null, "note": null, "where": "Appendix I"},
+  {"claim": "Using fewer than 10 few-shot prompts to estimate PCorrect labels Unknown examples that later get higher accuracy, and P(True) thresholding is worse than SliCK.", "kind": "measured", "source": null, "metric": "preliminary comparison (Fig 5)", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Accuracy after fine-tuning with D_Natural on test examples classed Unknown. The authors call it preliminary.", "quote": "Lastly, the blue line shows that using samples from mul-tiple few-shot prompts to approximate PCorrect is crucial, as using Nex < 10 leads to higher test accuracy on SliCK Unknown examples.", "table": null, "note": null, "where": "Sec 6, Fig 5, footnote 13"},
+  {"claim": "In 100 inspected exact-match failures of the pre-trained model, 90 were truly wrong answers.", "kind": "measured", "source": null, "metric": "wrong-answer share among EM=False", "value": "90", "unit": "%", "baseline_value": null, "n": 100, "setup": "50 greedy plus 50 T=0.5 predictions; 6% paraphrase, 2% higher granularity, 2% lower granularity.", "quote": "This analysis suggest that in 90% of the cases where EM is False, the predicted answer is indeed incorrect.", "table": null, "note": null, "where": "Appendix C, Table 7"}
+ ],
+ "limits": [
+  "Single LLM (PaLM 2-S); authors say replication on more models is very compute-heavy.",
+  "Closed-book short-answer QA only; filtering Unknown examples is not validated for long-form generation.",
+  "No mix of other task types added to fine-tuning, so it does not match typical instruction tuning.",
+  "Full fine-tuning only; LoRA and continual pretraining untested. Findings on offline preference optimisation such as DPO left for future work.",
+  "No seeds, repeated runs or error bars for the fine-tuning runs; significance tests only split the test set.",
+  "Accuracy drop is used as a proxy for hallucination and cannot separate forgetting from hallucination (footnote 17).",
+  "SliCK is an approximation; at most about 3% of Unknown examples may actually be known.",
+  "The 'I don't know' result is one setting (50% Unknown); the P(True) comparison is preliminary.",
+  "The linear model is valid only in a bounded region (N_kn <= |D|, N_unk <= |D|).",
+  "The optimizer, warmup, hardware, sequence length and precision are not given, and no code or weights are stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "SliCK", "definition": "Sampling-based Categorization of Knowledge", "where": "Sec 3"},
+  {"term": "Unknown", "definition": "PCorrect(q,a;M,T>=0)=0: the model never predicts the correct answer", "where": "Fig 2"},
+  {"term": "HighlyKnown", "definition": "Greedy decoding always predicts the correct answer", "where": "Fig 2"},
+  {"term": "MaybeKnown", "definition": "Greedy decoding sometimes (but not always) predicts the correct answer", "where": "Fig 2"},
+  {"term": "WeaklyKnown", "definition": "Greedy decoding never predicts the correct answer, whereas temperature sampling with T>0 sometimes does", "where": "Fig 2"}
+ ],
+ "lineage": [
+  {"work": "ENTITYQUESTIONS (Sciavolino et al., 2021)", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "closed-book QA data", "quote": null},
+  {"work": "PaLM 2 technical report (Anil et al., 2023)", "year": 2023, "arxiv": "2305.10403", "relation": "evaluates", "note": "PaLM 2-S base model", "quote": null},
+  {"work": "Language models (mostly) know what they know (Kadavath et al., 2022)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "P(True) and P(IK) compared with SliCK", "quote": null},
+  {"work": "LIMA: less is more for alignment (Zhou et al., 2023)", "year": 2023, "arxiv": "2305.11206", "relation": "related", "note": "Superficial Alignment Hypothesis; paper argues fine-tuning learns more than style", "quote": null},
+  {"work": "R-Tuning / Zhang et al., 2023", "year": 2023, "arxiv": null, "relation": "related", "note": "abstention training helps accuracy on answered questions", "quote": null},
+  {"work": "Ren et al., 2024", "year": 2024, "arxiv": null, "relation": "related", "note": "similar study with multiple-choice QA, short runs, only 100% known vs 100% unknown; aligns with these results", "quote": null},
+  {"work": "Schulman 2023; Huang et al. 2023; Gao 2021; Goldberg 2023; Gudibande et al. 2023", "year": 2023, "arxiv": null, "relation": "related", "note": "source of the conjecture tested", "quote": null},
+  {"work": "Biderman et al. 2024, LoRA learns less and forgets less", "year": 2024, "arxiv": null, "relation": "related", "note": "suggested future direction for PEFT", "quote": null},
+  {"work": "Llama 3 herd of models (Dubey et al., 2024)", "year": 2024, "arxiv": "2407.21783", "relation": "related", "note": "said to apply these insights in instruction tuning", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Train and development accuracies as a function of the fine-tuning duration, when fine-tuning on 50% Known and 50% Unknown examples.", "page": 1, "why": "Shows Unknown examples fit slowly and dev accuracy peaking before they are fit"},
+  {"figure": "Fig 2", "caption": "Formal definitions of the SliCK knowledge categories based on PCorrect, with real examples.", "page": 3, "why": "Compact definition of the four categories"},
+  {"figure": "Fig 3", "caption": "Test performance as a function of the % of Unknown examples in D; (b) ablation with Unknown filtered out.", "page": 4, "why": "Main result: early stop vs convergence and D vs D_Known"}
+ ],
+ "code": [
+  {"where": "Eq. 1, Sec 4.4", "snippet": "Accuracy = β0 + βkn · Nkn/|D| + βunk · Nunk/|D|", "verbatim": true}
+ ],
+ "problems": [
+  "The PDF prints no venue (arXiv v3, 1 Oct 2024); EMNLP 2024 is not confirmed by the text.",
+  "Fig 3 and Fig 1 values are not in the text, so they are not recorded as numbers.",
+  "The lineage entries for Zhang 2023 and Ren 2024 are given by author and year only; the reference list was skimmed, not read in full."
+ ]
+}

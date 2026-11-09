@@ -1,0 +1,709 @@
+{
+ "schema": 1,
+ "key": "2505.02387",
+ "pdf": "generative-ai/05-RL/sources/chen-2025-rm-r1.pdf",
+ "bib": {
+  "title": "RM-R1: Reward Modeling as Reasoning",
+  "authors": [
+   "Xiusi Chen",
+   "Gaotang Li",
+   "Ziqi Wang",
+   "Bowen Jin",
+   "Cheng Qian",
+   "Yu Wang",
+   "Hongru Wang",
+   "Yu Zhang",
+   "Denghui Zhang",
+   "Tong Zhang",
+   "Hanghang Tong",
+   "Heng Ji"
+  ],
+  "first_author": "Chen",
+  "year": 2026,
+  "venue": "ICLR 2026 (arXiv v4, 6 Mar 2026)",
+  "arxiv": "2505.02387",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 98809,
+  "chars_total": 98809,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can reward modeling be cast as a reasoning task, and what training recipe makes a generative reward model reason well enough to beat scalar and larger generative RMs?",
+ "hypothesis": "Integrating long reasoning chains into reward modeling significantly improves RM interpretability and performance.",
+ "contributions": [
+  "Show reasoning abilities are crucial for reward models and formulate reward modeling as a reasoning process.",
+  "A distillation + RL training recipe producing RM-R1 models (7B to 32B) that beat larger models by up to 4.9% on average.",
+  "A systematic empirical study of training recipes for reasoning reward models."
+ ],
+ "method": {
+  "summary": "Generative pairwise reward model trained in two stages: SFT on ~8.7K long reasoning traces (Claude-3.7-Sonnet, corrected by o3) with a Chain-of-Rubrics format, then GRPO with a +1/-1 correctness reward on 64K preference pairs. Reasoning-distilled bases (DeepSeek-R1-Distill-Qwen) skip distillation and get RLVR on full data.",
+  "task": "pairwise preference judgment (generative reward modeling)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Skywork Reward Preference 80K (cleaned, magpie_ultra removed)",
+    "role": "train",
+    "size": "Table 5 sources: magpile_pro_llama3.1 29682, offset_bias 8504, helpsteer2 7221, wildguard 6709, magpile_pro 2030",
+    "split": null,
+    "source": "Liu et al. 2024; magpie_ultra (~30%) dropped for spurious correlations",
+    "preprocessing": "exclude all magpie_ultra"
+   },
+   {
+    "name": "Code-Preference-Pairs",
+    "role": "train",
+    "size": "8K subsample",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Math-DPO-10K",
+    "role": "train",
+    "size": "10000 (full)",
+    "split": null,
+    "source": "Lai et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "Distillation subset",
+    "role": "train",
+    "size": "8.7k (~12% of training data, 'slightly fewer than 9K')",
+    "split": null,
+    "source": "traces from Claude-3.7-Sonnet then OpenAI o3 for incorrect ones",
+    "preprocessing": "~25% of Claude traces incorrect; o3 given prompt, wrong trace and correct answer"
+   },
+   {
+    "name": "RewardBench",
+    "role": "eval",
+    "size": "358 chat, 456 chat-hard, 740 reasoning, 1431 safety",
+    "split": null,
+    "source": "Lambert et al. 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "RM-Bench",
+    "role": "eval",
+    "size": "129 chat, 441 safety, 529 math, 228 code; 3 prompts of varying difficulty each",
+    "split": null,
+    "source": "Liu et al. 2025a",
+    "preprocessing": null
+   },
+   {
+    "name": "RMB",
+    "role": "eval",
+    "size": "25,845 instances, 49 scenarios (37 helpfulness, 12 harmlessness)",
+    "split": null,
+    "source": "Zhou et al. 2025",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen-2.5-Instruct 7B/14B/32B",
+    "role": "base",
+    "params": "7B, 14B, 32B",
+    "architecture": "decoder-only (Qwen2.5)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max input 4,096 tokens, max response 8,192 tokens in RL",
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1-Distill-Qwen 7B/14B/32B",
+    "role": "base",
+    "params": "7B, 14B, 32B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "RLVR directly on full data, no distillation stage"
+    }
+   },
+   {
+    "name": "RM-R1",
+    "role": "proposed",
+    "params": "7B-32B",
+    "architecture": "generative RM with Chain-of-Rubrics",
+    "init_from": "Qwen-2.5-Instruct or DeepSeek-R1-Distill-Qwen",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude-3.7-Sonnet",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "first-pass reasoning traces"
+    }
+   },
+   {
+    "name": "OpenAI o3",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "role": "corrects incorrect traces"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Stage 1: NLL on rationale+label (Eq 6), 1 epoch. Stage 2: GRPO (Eq 7, 9) with reward +1/-1 correctness (Eq 8), KL to pre-RL checkpoint",
+   "optimizer": null,
+   "lr": "Distillation 5e-6 / 3e-6 / 2e-6 (7B/14B/32B). RLVR Instruct: 1e-6 / 7e-7 / 5e-7; reasoning models: 1e-6 / 1e-6 / 8e-7",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "Distillation 128 (micro-batch 1). RL: training batch 1024, mini-batch 128",
+   "steps": null,
+   "epochs": "distillation: 1 epoch",
+   "tokens": null,
+   "seq_len": "RL: max input 4,096, max response 8,192 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL coefficient 1e-3, clip ratio 0.2",
+   "hardware": "8 H100 GPUs per node; 1, 2, 4 nodes for 7B, 14B, 32B",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "frameworks": "VERL (GRPO), OpenRLHF SFTTrainer (distillation)",
+    "distill_memory": "gradient checkpointing, FlashAttention, Adam offloading",
+    "rl_infra": "FSDP; vLLM rollout with tensor parallel 4, GPU memory utilization 0.4",
+    "group_size": "7 candidate responses per prompt",
+    "data_counts": "Instruct: 8.7k distill + 64k RLVR; DeepSeek-Distilled: full data RLVR",
+    "figure_read": "Fig 5 shows ~60-70 RL steps; read from Fig 5, not stated in text"
+   }
+  },
+  "inference": {
+   "decoding": "sampling in RL rollouts",
+   "temperature": "1.0 (RL rollout default)",
+   "top_p": "1.0 (RL rollout default)",
+   "max_tokens": "8,192 response (RL); 512 to 8192 budgets studied in Sec 4.2.2",
+   "samples": "7 rollouts per prompt in RL; evaluation sampling settings not stated",
+   "prompting": "Chain-of-Rubrics system prompt (Fig 3) for instruct models; user prompt (Fig 6) for reasoning models",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pairwise accuracy",
+     "definition": "fraction of pairs where predicted preferred response equals label; RewardBench overall, RM-Bench Avg, RMB overall (BoN + pairwise, helpfulness + harmlessness)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Average",
+     "definition": "mean of RewardBench, RM-Bench, RMB scores",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ScalarRMs (INF-ORM-Llama3.1-70B, Skywork-Reward, Nemotron-4-340B-Reward, ArmoRM, InternLM2, Eurus, SteerLM)",
+    "GenRMs (GPT-4o-0806, Claude-3-5-sonnet, Gemini-1.5-pro, Llama3.1-70B-Instruct, Skywork-Critic)",
+    "ReasRMs (JudgeLRM, DeepSeek-GRM, DeepSeek-PairRM, Self-taught-evaluator-llama3.1-70B)"
+   ],
+   "protocol": "Baseline numbers reproduced when checkpoints/prompts are open, else taken from tech reports or leaderboards. No seeds, variance or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/RM-R1-UIUC/RM-R1",
+   "weights": "stated public (footnote 1)",
+   "data": "stated public (footnote 1)"
+  },
+  "prompts": [
+   {
+    "purpose": "CoR rollout system prompt for instruct models",
+    "text": "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client’s question displayed below. First, classify the task into one of two categories: <type> Reasoning </type> or <type> Chat </type>. [Reasoning: solve yourself in <solution>, evaluate in <eval> with <quote_A>/<summary_A>/<quote_B>/<summary_B>, end with <answer>[[A]]</answer> or <answer>[[B]]</answer>. Chat: generate weighted <rubric> with <justify>, compare in <eval>, end with <answer>.] (abridged; full text in Fig 3)",
+    "where": "Fig 3, p5"
+   },
+   {
+    "purpose": "User prompt for DeepSeek-distilled reasoning models",
+    "text": "Please act as an impartial judge and evaluate the quality of the responses provided by two AI Chatbots to the Client question displayed below. ... [Pairwise Input Content] ... Output your final verdict at last by strictly following this format: ’<answer>[[A]]</answer>’ if Chatbot A is better, or ’<answer>[[B]]</answer>’ if Chatbot B is better.",
+    "where": "Fig 6, App C"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Instruct models: 1e−6, 7e−7, and 5e−7 for 7B, 14B, and 32B models, respectively.",
+    "where": "App G"
+   },
+   {
+    "field": "datasets[Distillation subset].size",
+    "quote": "For Instruct models, we use 8.7k data for distillation and 64k for RLVR.",
+    "where": "App G"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RM-R1-DeepSeek-Distilled-Qwen-14B averages 79.6 over RewardBench/RM-Bench/RMB, above INF-ORM-Llama3.1-70B (78.8) and GPT-4o-0806 (77.7)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average of RewardBench, RM-Bench, RMB",
+   "value": "79.6",
+   "unit": "%",
+   "baseline_value": "78.8 (INF-ORM-Llama3.1-70B); 77.7 (GPT-4o-0806)",
+   "n": null,
+   "setup": "14B reasoning-distilled base, RLVR on full data; Table 1 (RMB reported as percent)",
+   "quote": null,
+   "table": "Table 1, row RM-R1-DeepSeek-Distilled-Qwen-14B, column Average",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RM-R1-Qwen-Instruct-14B averages 77.8, which is below INF-ORM-Llama3.1-70B (78.8) and about equal to GPT-4o (77.7); only the Distilled-14B variant beats all baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average of three benchmarks",
+   "value": "77.8",
+   "unit": "%",
+   "baseline_value": "78.8 (INF-ORM-Llama3.1-70B)",
+   "n": null,
+   "setup": "Qwen-2.5-Instruct-14B base, distill + GRPO; Table 1",
+   "quote": null,
+   "table": "Table 1, row RM-R1-Qwen-Instruct-14B, column Average",
+   "note": "Text says 'our RM-R1-DeepSeek-Distilled-Qwen-14B model surpasses all previous leading RMs'; the Instruct-14B model does not on this average.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "RM-R1-Qwen-Instruct-32B averages 81.2, ahead of the best baseline INF-ORM-Llama3.1-70B (78.8)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average of three benchmarks",
+   "value": "81.2",
+   "unit": "%",
+   "baseline_value": "78.8",
+   "n": null,
+   "setup": "Qwen-2.5-Instruct-32B base; Table 1",
+   "quote": null,
+   "table": "Table 1, row RM-R1-Qwen-Instruct-32B, column Average",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RM-R1-DeepSeek-Distilled-Qwen-32B averages 81.5, the best overall in Table 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average of three benchmarks",
+   "value": "81.5",
+   "unit": "%",
+   "baseline_value": "78.8",
+   "n": null,
+   "setup": "DeepSeek-R1-Distill-Qwen-32B base, RLVR on full data; Table 1",
+   "quote": null,
+   "table": "Table 1, row RM-R1-DeepSeek-Distilled-Qwen-32B, column Average",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On 32B RewardBench, RL alone (cold-start RL) reaches 89.5 average versus 91.4 for the full recipe (distill + RL + rubrics + query categorisation)",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench average",
+   "value": "91.4",
+   "unit": "%",
+   "baseline_value": "89.5 (Instruct + Cold Start RL); 85.8 (Instruct original)",
+   "n": null,
+   "setup": "Qwen-2.5-Instruct-32B base, trained per Sec 2 (distill ~8.7K then GRPO), RewardBench, accuracy %; ablation Table 2",
+   "quote": null,
+   "table": "Table 2, row RM-R1, column Average",
+   "note": "Cold-start RL uses format+answer reward (Eq 11) with a prompt with no structured reasoning guidance; full-recipe RewardBench 91.4 also in Table 6 and Table 1.",
+   "where": "Table 2, Sec 4.1"
+  },
+  {
+   "claim": "Cold-start RL on 32B Instruct lifts RewardBench average from 85.8 to 89.5 but the paper says RL alone is insufficient",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench average",
+   "value": "89.5",
+   "unit": "%",
+   "baseline_value": "85.8",
+   "n": null,
+   "setup": "Qwen-2.5-Instruct-32B base, trained per Sec 2 (distill ~8.7K then GRPO), RewardBench, accuracy %",
+   "quote": "RL training alone is insufficient.",
+   "table": "Table 2, row Instruct + Cold Start RL, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adding rubrics, then query categorisation, then distillation raises 32B RewardBench average step by step: 90.1, 90.8, 91.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench average",
+   "value": "91.4",
+   "unit": "%",
+   "baseline_value": "90.1; 90.8",
+   "n": null,
+   "setup": "Qwen-2.5-Instruct-32B base, trained per Sec 2 (distill ~8.7K then GRPO), RewardBench, accuracy %",
+   "quote": null,
+   "table": "Table 2, rows Rubrics / Rubrics+QC / RM-R1, column Average",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Equal 9K data: distillation checkpoint (reasoning) beats answer-only SFT by 2.6 average points (79.2 vs 76.6)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average of three benchmarks",
+   "value": "79.2",
+   "unit": "%",
+   "baseline_value": "76.6 (Instruct + SFT on 9k)",
+   "n": null,
+   "setup": "Qwen-2.5-Instruct-32B inferred; 9K distillation data only; Table 3",
+   "quote": null,
+   "table": "Table 3, row Instruct + Distilled *, column Avg.",
+   "note": "Gap 2.6 computed by extractor from table cells. Table 3 does not name the model size; the RM-R1 row equals the 32B Instruct row of Table 1 (91.4/79.1/73.0/81.2).",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Full data: RM-R1 (distill + RL) beats answer-only SFT by 3.8 average points (81.2 vs 77.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average of three benchmarks",
+   "value": "81.2",
+   "unit": "%",
+   "baseline_value": "77.4 (Instruct + SFT); 77.8 (Instruct + Distilled + SFT)",
+   "n": null,
+   "setup": "Full training data; Table 3",
+   "quote": "Under fair comparisons (i.e., training on exactly the same amount of data), reasoning-based models consistently outperform their SFT-only counterparts.",
+   "table": "Table 3, row RM-R1 *, column Avg.",
+   "note": "Gap 3.8 computed by extractor. Biggest per-benchmark gap is RMB: 73.0 vs 65.9.",
+   "where": "Sec 4.3, Table 3"
+  },
+  {
+   "claim": "Distillation set is slightly fewer than 9K examples (about 12% of training data); the Instruct models use 8.7k for distillation and 64k for RLVR",
+   "kind": "measured",
+   "source": null,
+   "metric": "Distillation set size",
+   "value": "8.7k",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instruct-based RM-R1 models",
+   "quote": "For Instruct models, we use 8.7k data for distillation and 64k for RLVR.",
+   "table": null,
+   "note": "Appendix D says 'slightly fewer than 9K'; Table 3 labels it '9k'. Table 5 sources sum to 72146 (extractor sum).",
+   "where": "Appendix G, D"
+  },
+  {
+   "claim": "Reasoning traces: Claude-3.7-Sonnet first, about 25% incorrect, then OpenAI o3 regenerates the incorrect ones given the correct answer",
+   "kind": "measured",
+   "source": null,
+   "metric": "Share of Claude traces incorrect",
+   "value": "25%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Distillation data generation, mostly harder chat tasks",
+   "quote": "prompt to query Claude-3.7-Sonnet, generating initial reasoning traces.",
+   "table": null,
+   "note": "Quote for teacher; the 25% is in the following line of the appendix: 'approximately 25% of these traces are incorrect, primarily on harder chat tasks'.",
+   "where": "Appendix D"
+  },
+  {
+   "claim": "RL reward is correctness only: +1 if the extracted verdict matches the label, -1 otherwise; format reward tried and gave no significant difference",
+   "kind": "measured",
+   "source": null,
+   "metric": "RL reward",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GRPO on RM-R1, Eq 8",
+   "quote": "on the correctness-based component, in line with prior works (Shao et al., 2024; Li et al., 2025).",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3.2"
+  },
+  {
+   "claim": "RM-R1-DeepSeek-Distilled-Qwen-32B reaches 91.8 math and 74.1 code on RM-Bench vs previous best 73 and 63",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM-Bench math / code accuracy",
+   "value": "91.8 / 74.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RM-Bench",
+   "quote": "It achieves 91.8% accuracy in math and 74.1% in code, outperforming the previous best models (73%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "RM-Bench Avg: DeepSeek-Distilled-32B 83.9 and Instruct-32B 79.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM-Bench Avg",
+   "value": "83.9",
+   "unit": "%",
+   "baseline_value": "75.2 (Gemini-1.5-pro best baseline in Table 7)",
+   "n": null,
+   "setup": "Table 1 / Table 7",
+   "quote": null,
+   "table": "Table 1, row RM-R1-DeepSeek-Distilled-Qwen-32B, column RM-Bench",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "RewardBench overall: Instruct-32B 91.4, Distilled-32B 90.9, Instruct-14B 88.2, below INF-ORM-Llama3.1-70B 95.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench overall",
+   "value": "91.4",
+   "unit": "%",
+   "baseline_value": "95.1 (INF-ORM-Llama3.1-70B)",
+   "n": null,
+   "setup": "Table 6",
+   "quote": null,
+   "table": "Table 6, row RM-R1-Qwen-Instruct-32B, column Overall",
+   "note": "On RewardBench alone RM-R1 does not lead; the lead is on the three-benchmark average and on RM-Bench/RMB.",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Gains from reasoning training grow with model size and with inference token budget (512 to 8192 tokens)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Scaling trend",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen-2.5-Instruct 7B/14B/32B; budget study on DeepSeek-R1-Distill-Qwen-14B",
+   "quote": "We observe a clear improvement trend as the inference budget increases.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 4"
+  },
+  {
+   "claim": "Cold-start RL training becomes unstable near the end (sharp reward drop); warm-start RL after distillation is smooth",
+   "kind": "measured",
+   "source": null,
+   "metric": "Training dynamics",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen-2.5-14B-Instruct",
+   "quote": "The reward curve rises smoothly and consistently throughout training,",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, Fig 5"
+  }
+ ],
+ "limits": [
+  "Authors concede long CoT outputs raise inference latency (App J); they argue it can be hidden by overlapping rollout and reward computation.",
+  "No seeds, variance or significance tests reported; evaluation decoding settings not stated.",
+  "Table 3 does not name the model size; the RM-R1 row matches the 32B Instruct row.",
+  "Instruct-14B average (77.8) is below INF-ORM-70B (78.8); the headline claim holds only for the Distilled-14B and the 32B models. Abstract 'up to 4.9%' is not tied to a specific cell.",
+  "RewardBench alone: best scalar INF-ORM-70B (95.1) beats all RM-R1 models (max 91.4).",
+  "Distillation relies on proprietary teachers (Claude-3.7-Sonnet, o3); the traces are teacher-selected using the gold label, so they are rationalisations.",
+  "Lemma 1/Prop 1 (App K) is a stylised argument for why RL beats SFT, not a measurement."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ReasRM",
+   "definition": "Reasoning Reward Model: reward modeling formulated as a reasoning task with long coherent reasoning chains before judging",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Chain-of-Rubrics (CoR)",
+   "definition": "model classifies the sample as Chat or Reasoning; for chat it writes weighted rubrics with justification, for reasoning it solves the problem first, then evaluates the responses",
+   "where": "Sec 2.3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "uses-method",
+   "note": "RLVR and GRPO; distilled Qwen models used as bases",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath (GRPO)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "uses-method",
+   "note": "GRPO optimiser",
+   "quote": null
+  },
+  {
+   "work": "SFT memorizes, RL generalizes (Chu et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "motivation for adding RL after distillation",
+   "quote": null
+  },
+  {
+   "work": "Skywork-Reward",
+   "year": 2024,
+   "arxiv": "2410.18451",
+   "relation": "uses-data",
+   "note": "training preference data and baseline",
+   "quote": null
+  },
+  {
+   "work": "Step-DPO / Math-DPO-10K",
+   "year": 2024,
+   "arxiv": "2406.18629",
+   "relation": "uses-data",
+   "note": "math preferences",
+   "quote": null
+  },
+  {
+   "work": "RewardBench",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "RM-Bench",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "RMB",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-GRM (Inference-time scaling for generalist reward modeling)",
+   "year": 2025,
+   "arxiv": "2504.02495",
+   "relation": "baseline",
+   "note": "closest ReasRM; numbers from its tech report",
+   "quote": null
+  },
+  {
+   "work": "JudgeLRM",
+   "year": 2025,
+   "arxiv": "2504.00050",
+   "relation": "baseline",
+   "note": "ReasRM baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-taught evaluators",
+   "year": 2024,
+   "arxiv": "2408.02666",
+   "relation": "baseline",
+   "note": "70B ReasRM baseline",
+   "quote": null
+  },
+  {
+   "work": "Generative Verifiers (Zhang et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "GenRM framing",
+   "quote": null
+  },
+  {
+   "work": "Ouyang et al. InstructGPT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RLHF background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Training pipeline of RM-R1: distillation then RL",
+   "page": 3,
+   "why": "Shows scalar vs generative vs reasoning RM and the two-stage recipe at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The system prompt used for RM-R1 rollout",
+   "page": 5,
+   "why": "The Chain-of-Rubrics prompt needed to reproduce"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Ablation study of the design choices for Reasoning Training on RewardBench",
+   "page": 7,
+   "why": "Isolates RL-only vs rubrics vs categorisation vs distillation"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comparison of reasoning-based training versus SFT across benchmarks",
+   "page": 8,
+   "why": "Equal-data comparison with answer-only SFT"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "RL training dynamics: cold start vs warm start",
+   "page": 9,
+   "why": "Cold-start instability vs smooth warm-start"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 8",
+   "snippet": "R(x, j | y_a, y_b) = 1 if l_hat = l, -1 otherwise (l_hat parsed from between <answer> and </answer>)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 11 (cold-start ablation)",
+   "snippet": "R = R_answer + R_format, each in {0,1}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 7 prints JudgeLRM Normal as 766.2 (typo).",
+  "Table 8 uses 0-1 scale; Table 1 uses percent for RMB.",
+  "Distillation size printed as 8.7k (App G), 'slightly fewer than 9K' (App D) and '9k' (Table 3).",
+  "No embedded instructions found in the PDF."
+ ]
+}

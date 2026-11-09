@@ -1,19 +1,237 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2306.17563",
  "pdf": "generative-ai/02-rag-retrieval/sources/qin-2023-large-language-models-effective-text.pdf",
  "bib": {
   "title": "Large Language Models are Effective Text Rankers with Pairwise Ranking Prompting",
-  "first_author": "Zhen Qin",
+  "authors": ["Zhen Qin", "Rolf Jagerman", "Kai Hui", "Honglei Zhuang", "Junru Wu", "Le Yan", "Jiaming Shen", "Tianqi Liu", "Jialu Liu", "Donald Metzler", "Xuanhui Wang", "Michael Bendersky"],
+  "first_author": "Qin",
   "year": "2023",
-  "venue": null,
+  "venue": "preprint",
   "arxiv": "2306.17563",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 58332,
+  "chars_total": 58332,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. PDF is arXiv v2, 28 Mar 2024; no venue printed."
  },
- "legacy_report": "SOURCE: \"Large Language Models are Effective Text Rankers with Pairwise Ranking Prompting\", Zhen Qin, Rolf Jagerman, Kai Hui, Honglei Zhuang, Junru Wu, Le Yan, Jiaming Shen, Tianqi Liu, Jialu Liu, Donald Metzler, Xuanhui Wang, Michael Bendersky (Google Research). The PDF is arXiv:2306.17563v2 [cs.IR], dated 28 Mar 2024. The extraction names no venue, so I record it as a preprint. The filename says 2023 (the v1 date). I did not confirm a published venue from the text.\n\nCOVERAGE: 58,319 of 58,319 chars read. That covers the main text, Tables 1-8, the limitations, appendices A-E and the references (skimmed). No extraction faults. The figures are only partly visible as text (Figures 1-3). I did not run the figure script.\n\nCLAIMS (ranked)\n- claim: Pairwise Ranking Prompting (PRP) with a 20B open model matches or beats much larger blackbox LLM rerankers and is competitive with supervised rerankers on TREC-DL.\n  number: FLAN-UL2 20B PRP-Sliding-10 reaches NDCG@1 78.29 / NDCG@10 72.65 on DL2019 and 85.80 / 70.46 on DL2020. RankGPT gpt-4 reaches 82.56 / 75.59 on DL2019 and 78.40 / 70.56 on DL2020. monoT5 3B (supervised) reaches 71.83 NDCG@10 on DL2019.\n  setup: Rerank the BM25 top 100 passages for each query. TREC-DL2019 has 43 queries and DL2020 has 54, both on the MS MARCO v1 corpus of 8.8M passages. All PRP runs are unsupervised, with no fine-tuning.\n  quote: \"PRP variants based on FLAN-UL2 with 20B parameters can achieve best results on all metrics on TREC-DL2020, and are only second to the blackbox, commercial gpt-4 based solution on NDCG@5 and NDCG@10 on TREC-DL2019, which has an estimated 50X larger model size.\"\n  where: Section 4.3 and Table 2, about chars 17-21k\n- claim: PRP beats the other unsupervised LLM rerankers by a wide margin. The comparison is made on the same models, so it is fair.\n  number: Over 10% on all metrics against RankGPT with text-davinci-003 (175B). On FLAN-UL2 20B, DL2020 NDCG@10 is 70.68 for PRP-Allpair against 65.39 for relevance generation (RG) and 60.02 for UPR.\n  setup: Same as the claim above.\n  quote: \"Our best methods out-perform RankGPT based on text-davinci-003 with 175B parameters by over 10% on all ranking metrics, and are competitive to supervised methods on all ranking metrics.\"\n  where: Section 4.3\n- claim: One prompt template works across seven BEIR datasets. PRP-Sliding-10 on FLAN-UL2 slightly beats the supervised RankT5 on average.\n  number: Average NDCG@10 is 53.55 for PRP-Sliding-10 FLAN-UL2, 53.34 for RankT5 3B, 51.33 for RankGPT gpt-3.5-turbo and 45.23 for BM25. PRP-Sliding-10 beats RankT5 on 5 of 7 datasets and beats RankGPT on all 7.\n  setup: BEIR Covid, Touche, DBPedia, SciFact, Signal, News and Robust04, reranking BM25 top 100. The same prompt template is used for all datasets.\n  quote: \"PRP-Sliding-10 with FLAN-UL2 can slightly outperform the state-of-the-art RankT5 ranker on average, and outperform RankT5 on 5 out of 7 datasets.\"\n  where: Section 5.3 and Table 3\n- claim: Listwise prompting is fragile and sensitive to input order. PRP is far more robust.\n  number: RankGPT gpt-3.5-turbo falls from NDCG@10 65.80 to 32.77 when the BM25 order is inverted. PRP-Allpair falls from 72.42 to 72.40.\n  setup: TREC-DL2019. The pair order is swapped and the LLM is queried twice per pair as a debiasing step.\n  quote: \"PRP-Allpair FLAN-UL2-20B Inverse BM25 74.42 74.48 72.40\"\n  where: Table 4\n- claim: Listwise prompts on a moderate open model produced almost no usable output.\n  number: none\n  setup: The Sun et al. (2023b) listwise prompt run on FLAN-UL2 20B. The failure patterns they list are missing, rejection, repetition and inconsistency.\n  quote: \"we tried the same prompt from (Sun et al., 2023b) on the FLAN-UL2 model with 20B parameters, and found very few of the outputs to be usable.\"\n  where: Section 2.2\n- claim: Pointwise rerankers need calibrated probabilities and a scoring API, and listwise rerankers work only through a generation API. PRP supports both.\n  number: Table 1 call counts are O(N) pointwise, O(N) listwise, and O(N²), O(N log N) or O(N) pairwise.\n  setup: N is the number of documents ranked per query.\n  quote: \"Pairwise O(N 2), O(N log N ), O(N ) Yes Yes No\"\n  where: Table 1\n- claim: Generation mode and scoring mode give nearly identical results, and malformed outputs are rare.\n  number: About 0.02% of predictions do not follow the format. On FLAN-UL2 DL2019, NDCG@10 is 72.42 in scoring mode and 72.37 in generation mode.\n  setup: PRP-Allpair on FLAN-T5-XL, FLAN-T5-XXL and FLAN-UL2.\n  quote: \"We found that there are only about 0.02% predictions that do not follow the format, which is neglectable and in stark contrast to the the listwise approaches.\"\n  where: Section 6 and Table 5\n- claim: Sliding window behaves like bubble sort. One backward pass fixes NDCG@1 and more passes improve the deeper metrics. A forward pass is poor.\n  number: FLAN-UL2 on DL2019, NDCG@10 is 57.58 after 1 backward pass, 64.60 after 3 and 72.65 after 10. One forward pass gives 54.10.\n  setup: TREC-DL2019, FLAN-UL2 20B. DL2020 shows the same pattern (Table 7).\n  quote: \"Strong NDCG@1 can already be achieved with one backward pass. As we conduct more passes, other Top-K ranking metrics get better.\"\n  where: Appendix A, Tables 6-7\n- claim: The efficiency trade-off between variants.\n  number: PRP-Allpair makes O(N²) calls and is order-insensitive. PRP-Sorting uses heapsort at O(N log N). PRP-Sliding-K makes K passes at O(N) each.\n  setup: Allpair gives each document 1 point per win and 0.5 per tie, and ties fall back to the initial (BM25) ranking.\n  quote: \"The clear drawback is its costly O(N 2) calls to LLM APIs, where N is the number of documents to be ranked for each query.\"\n  where: Section 3.2-3.4\n- claim: PRP on a commercial model improves further.\n  number: PRP-Allpair with text-bison reaches NDCG@10 73.81 on DL19 and 71.66 on DL20.\n  setup: Google text-bison, said to be comparable to gpt-3.5-turbo.\n  quote: \"PRP-Allpair text-bison 73.81 71.66\"\n  where: Appendix B, Table 8\n- claim: Smaller PRP models still work.\n  number: FLAN-T5-XL 3B PRP-Allpair reaches 69.75 NDCG@10 on DL2019.\n  setup: Same TREC-DL setup.\n  quote: \"Results on FLAN-T5-XL and FLAN-T5-XXL are also competitive, showing that PRP generalizes to smaller LLMs due to the significant simplicity of the pairwise ranking comparisons.\"\n  where: Section 4.3\n\nLIMITS\n- GPT models were not tested by the authors. GPT numbers come from other papers.\n- The ranking methods are empirical. Pairwise comparisons are not guaranteed to be transitive, and noisy-sorting theory is left for future work.\n- Only relevance-style ranking was tested. Non-standard tasks such as ArguAna counter-arguments are untested.\n- Data leakage is not ruled out. FLAN has an MS MARCO QA task. The authors avoid the word \"zero-shot\".\n- Efficiency is the open cost. Allpair is O(N²). Sliding-K depends on input order, and the paper shows \"surprisingly good results\" only for K=10.\n- Every experiment reranks BM25 top 100, not a dense or hybrid first stage. There is no latency or cost measurement in the text.\n- Dated: the models are FLAN-T5/UL2 and the baselines are 2023 GPT-3.5/GPT-4. The authors leave stronger LLMs such as GPT-4 as future work.\n- Distilling LLM rankers into servable models is named as future work.\n- The GPT-4 figure 75.59/70.56 is RankGPT's, from Sun et al. 2023b. Sun et al.'s GPT-4 variant that reranked gpt-3.5-turbo output was excluded from BEIR as an ensemble.\n\nBUILDS ON\n- Pointwise: relevance generation (Liang et al., 2022) and query generation (Sachan et al., 2022; Drozdov et al., 2023).\n- Listwise: Sun et al. (2023b), RankGPT, and Ma et al. (2023), LRL.\n- Supervised baselines: monoBERT (Nogueira and Cho, 2019), monoT5 (Nogueira et al., 2020), RankT5 (Zhuang et al., 2023), TART (Asai et al., 2023).\n- Benchmarks and tools: BM25 via Pyserini (Lin et al., 2021), BEIR (Thakur et al., 2021), FLAN (Wei et al., 2021; Chung et al., 2022), UL2 (Tay et al., 2022a).\n- Related work names HyDE (Gao et al., 2022) as an auxiliary use of LLMs, not a direct ranker.\n- Sorting and win-ratio theory: Shah and Wainwright (2018). The authors call pairwise comparison a classic idea.\n\nCODE: only the prompt template (Appendix E.1, and Figure 2).\nGiven a query {query}, which of the following two passages is more relevant to the query?\nPassage A: {document1}\nPassage B: {document2}\nOutput Passage A or Passage B:\nScoring (Eq. 2): s_i = 1·Σ_{j≠i} I[d_i>d_j] + 0.5·Σ_{j≠i} I[d_i=d_j]. A pair counts as a win only if both order-swapped prompts agree.\n\nFIGURES\n- Figure 1: pointwise relevance generation versus listwise permutation prompts. It shows what PRP replaces.\n- Figure 2: the pairwise prompt, with generation mode (\"Passage A\") and scoring mode (log-likelihoods -0.0012 and -6.9116). Page 3. It is the clearest single picture of the method.\n- Figure 3: one backward sliding-window pass (bubble-sort style). Page 4.\n- I did not run the caption script. These are taken from the extracted text.\n\nPROBLEMS\n- No embedded instructions found.\n- The extraction does not state a publication venue.\n- The paper does not mention chunking, query parsing, cross-encoder latency or cost. It supports only the reranking section.\n- The target note's sources list does not include arXiv:2306.17563. The note's reranking table row \"LLM pointwise, pairwise or listwise\" (Raieli & Iuculano) is where this paper would be cited. The paper supports that row's \"best quality, highest cost\" only partly, because it shows no cost numbers and it shows PRP-Sliding reduces calls.\n- The note's claim that LLM scoring is \"never first stage\" is not tested here. The paper covers reranking only.\n- I read the target note (/Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/notes/05-chunking-query-parsing-and-reranking.md) and did not edit anything."
+ "type": "empirical",
+ "question": "Can off-the-shelf moderate-sized open-source LLMs rank documents competitively with fine-tuned rankers and giant blackbox LLMs if the prompt is reduced to a pairwise comparison?",
+ "hypothesis": "Pointwise and listwise ranking prompts are too hard for off-the-shelf LLMs; a pairwise comparison is simpler, needs no calibration, and should work much better.",
+ "contributions": [
+  "First published demonstration of pairwise ranking prompting (PRP) effectiveness for ranking with LLMs, with state-of-the-art performance on a wide range of datasets using simple prompting and scoring.",
+  "Results use moderate-sized open-source LLMs, compared with solutions using blackbox, commercial, larger models.",
+  "Study of several efficiency improvements (Allpair, Sorting, Sliding window) with promising empirical performance."
+ ],
+ "method": {
+  "summary": "A pairwise prompt asks the LLM which of two passages is more relevant to a query. Each pair is queried in both orders; consistent answers give a local order, inconsistent ones a tie. Three aggregations are used: all-pairs win counting (O(N^2)), heapsort with the LLM as comparator (O(N log N)), and K bubble-sort-like sliding passes (O(N) each). Reranks BM25 top-100 with no fine-tuning.",
+  "task": "Zero-shot passage reranking (TREC-DL 2019/2020, BEIR)",
+  "trains": false,
+  "datasets": [
+   {"name": "TREC-DL2019", "role": "eval", "size": "43 queries", "split": "test set of 2019 competition", "source": "MS MARCO v1 passage corpus, 8.8 million passages; dense human relevance annotations", "preprocessing": "Rerank top 100 passages retrieved by BM25 (Pyserini, Lin et al. 2021) per query"},
+   {"name": "TREC-DL2020", "role": "eval", "size": "54 queries", "split": "test set of 2020 competition", "source": "MS MARCO v1 passage corpus, 8.8 million passages", "preprocessing": "Rerank top 100 BM25 passages"},
+   {"name": "BEIR (Covid, Touche, DBPedia, SciFact, Signal, News, Robust04)", "role": "eval", "size": null, "split": "test sets", "source": "Thakur et al. 2021", "preprocessing": "Rerank the same BM25 top-100 passages; NFCorpus excluded because BM25 numbers in Sun et al. do not match public consensus; same prompt template as TREC"}
+  ],
+  "models": [
+   {"name": "FLAN-T5-XL", "role": "proposed", "params": "3B", "architecture": "encoder-decoder (T5)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "used off the shelf, no fine-tuning"}},
+   {"name": "FLAN-T5-XXL", "role": "proposed", "params": "11B", "architecture": "encoder-decoder (T5)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "text says 11B; abstract/intro text elsewhere refers to 13B for FLAN-T5 in the introduction"}},
+   {"name": "FLAN-UL2", "role": "proposed", "params": "20B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "text-bison (Google, blackbox)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "Appendix B, PRP-Allpair only, on TREC-DL; 'should be comparable to gpt-3.5-turbo'"}},
+   {"name": "monoBERT", "role": "baseline", "params": "340M", "architecture": "BERT-large cross-encoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training": "supervised on MS MARCO"}},
+   {"name": "monoT5", "role": "baseline", "params": "220M and 3B", "architecture": "T5 seq2seq, pointwise ranking loss", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RankT5", "role": "baseline", "params": "3B", "architecture": "T5, listwise ranking loss", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "TART-Rerank", "role": "baseline", "params": "3B", "architecture": "T5", "init_from": "FLAN-T5-XL", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training": "instruction-tuned on 37 datasets, over 5 million instances (BEIR only)"}},
+   {"name": "RankGPT (gpt-3, text-davinci-003, gpt-3.5-turbo, gpt-4)", "role": "baseline", "params": "175B / 175B / 154B* / 1T*", "architecture": "blackbox GPT, listwise sliding window", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers copied from Sun et al. 2023b; *sizes are public estimates"}},
+   {"name": "LRL", "role": "baseline", "params": "175B", "architecture": "text-davinci-003 listwise", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers from Ma et al. 2023, DL2019/2020 NDCG@10 only"}},
+   {"name": "UPR and Relevance Generation (RG)", "role": "baseline", "params": "11B (FLAN-T5-XXL), 20B (FLAN-UL2)", "architecture": "pointwise query-generation (UPR) and relevance generation (RG)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "run by the authors on the same FLAN models"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Main results use scoring mode: log-likelihood of target text 'Passage A' / 'Passage B' given the prompt; generation mode compared in Table 5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Each pair queried twice (both orders). Single run per method; no seeds or variance reported.",
+   "prompting": "Zero-shot, single pairwise template, identical for all 9 datasets; no demonstrations",
+   "retrieval": "BM25 top-100 per query as initial ranking; BM25 order resolves ties, prediction conflicts and failures",
+   "parameters": {
+    "PRP-Sliding-K": "K=10 passes in main results; passes run backward (from lowest BM25 rank) with stride 1; ablation 1/2/3/10 backward and 1 forward",
+    "PRP-Allpair score": "s_i = 1*sum_{j!=i} I[d_i>d_j] + 0.5*sum_{j!=i} I[d_i=d_j]; ties fall back to initial ranking",
+    "PRP-Sorting": "Heapsort, O(N log N), comparator = PRP unit",
+    "consistency rule": "d1>d2 or d2>d1 only if both orderings agree, else d1=d2"
+   },
+   "other": {
+    "complexity": "Allpair O(N^2) calls (parallelisable), Sorting O(N log N), Sliding O(N) per pass",
+    "hardware": null,
+    "latency_or_cost": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {"name": "NDCG@1, NDCG@5, NDCG@10", "definition": "Normalised discounted cumulative gain at cut-off k on the reranked top 100", "unit": "% (x100)", "higher_is_better": true},
+    {"name": "Average NDCG@10 over 7 BEIR datasets", "definition": "Mean of per-dataset NDCG@10", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["BM25", "monoBERT", "monoT5 220M/3B", "RankT5 3B", "TART-Rerank 3B", "UPR", "RG", "RankGPT", "LRL"],
+   "protocol": "Single run per configuration; no significance tests or variance. LLM baselines from other papers are copied (RankGPT, LRL); all unsupervised LLM methods use BM25 order to resolve conflicts."
+  },
+  "availability": {
+   "code": null,
+   "weights": "FLAN-T5 and FLAN-UL2 are open; text-bison is blackbox",
+   "data": "Plans to release pairwise inference results (JSON with ids, text, label, retrieval rank and score, prompt, generated text, score) on 9 datasets and 3 open models; not released at time of the paper ('plan to release')"
+  },
+  "prompts": [
+   {"purpose": "Pairwise ranking prompt (all datasets)", "text": "Given a query {query}, which of the following two passages is more relevant to the query?\nPassage A: {document1}\nPassage B: {document2}\nOutput Passage A or Passage B:", "where": "Appendix E.1"},
+   {"purpose": "Pointwise relevance generation (baseline, Fig 1a)", "text": "Passage: {passage}\nQuery: {query}\nDoes the passage answer the query?", "where": "Fig 1"},
+   {"purpose": "Query generation (UPR baseline)", "text": "Please write a question based on this passage. Passage: {{passage}} Question:", "where": "Section 2.1"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters.PRP-Sliding-K", "quote": "PRP-Sliding-10", "where": "Table 2/3 rows"},
+   {"field": "models.FLAN-T5-XXL.params", "quote": "13B parameters", "where": "Introduction says FLAN-T5 models with 3B and 13B, while Section 4.2 and tables say 11B"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "PRP-Sliding-10 with FLAN-UL2 20B reaches NDCG@1 78.29 and NDCG@10 72.65 on TREC-DL2019, against gpt-4 RankGPT NDCG@10 75.59.",
+   "kind": "measured", "source": null, "metric": "NDCG@10", "value": "72.65", "unit": "%", "baseline_value": "75.59", "n": "43 queries",
+   "setup": "TREC-DL2019, rerank BM25 top-100, FLAN-UL2 20B, scoring mode, PRP-Sliding-10; baseline RankGPT gpt-4 numbers from Sun et al. 2023b",
+   "quote": null, "table": "Table 2, row PRP-Sliding-10 FLAN-UL2, column TREC-DL2019 NDCG@10 (72.65); RankGPT gpt-4 75.59", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "On TREC-DL2020 PRP-Sliding-10 FLAN-UL2 gets NDCG@1 85.80, above gpt-4 RankGPT 78.40 and RankT5 3B 80.86.",
+   "kind": "measured", "source": null, "metric": "NDCG@1", "value": "85.80", "unit": "%", "baseline_value": "78.40", "n": "54 queries",
+   "setup": "TREC-DL2020, BM25 top-100, FLAN-UL2 20B",
+   "quote": null, "table": "Table 2, row PRP-Sliding-10 FLAN-UL2, column TREC-DL2020 NDCG@1 (85.80); RankGPT gpt-4 78.40; RankT5 80.86", "note": "Text says best on all DL2020 metrics, but PRP-Allpair FLAN-UL2 NDCG@10 70.68 vs gpt-4 70.56 and Sliding 70.46: Sliding-10 NDCG@10 70.46 is below gpt-4 70.56; the best-on-all claim applies to the PRP variant family.", "where": "Table 2"
+  },
+  {
+   "claim": "PRP-Allpair FLAN-UL2 gets DL2020 NDCG@10 70.68 vs gpt-4 RankGPT 70.56.",
+   "kind": "measured", "source": null, "metric": "NDCG@10", "value": "70.68", "unit": "%", "baseline_value": "70.56", "n": "54 queries",
+   "setup": "TREC-DL2020, BM25 top-100",
+   "quote": null, "table": "Table 2, row PRP-Allpair FLAN-UL2, column TREC-DL2020 NDCG@10", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "PRP-Sliding-10 FLAN-UL2 gets average BEIR NDCG@10 53.55, above RankGPT gpt-3.5-turbo 51.33 and RankT5 3B 53.34.",
+   "kind": "measured", "source": null, "metric": "Avg NDCG@10 over 7 BEIR datasets", "value": "53.55", "unit": "%", "baseline_value": "51.33", "n": "7 datasets",
+   "setup": "BEIR Covid, Touche, DBPedia, SciFact, Signal, News, Robust04; BM25 top-100; same prompt as TREC",
+   "quote": null, "table": "Table 3, row PRP-Sliding-10 FLAN-UL2, column Avg (53.55); RankGPT gpt-3.5-turbo 51.33; RankT5 53.34", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "PRP-Allpair FLAN-UL2 gets BEIR average NDCG@10 52.78.",
+   "kind": "measured", "source": null, "metric": "Avg NDCG@10", "value": "52.78", "unit": "%", "baseline_value": null, "n": "7 datasets",
+   "setup": "BEIR, BM25 top-100, FLAN-UL2",
+   "quote": null, "table": "Table 3, row PRP-Allpair FLAN-UL2, column Avg", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "PRP-Sliding-10 FLAN-UL2 outperforms RankT5 on 5 of 7 BEIR datasets and slightly on average; RankT5 stays far ahead on Touche for Allpair variants (37.62 vs 29.71).",
+   "kind": "measured", "source": null, "metric": "datasets won vs RankT5", "value": "5 of 7", "unit": "datasets", "baseline_value": null, "n": "7 datasets",
+   "setup": "BEIR, FLAN-UL2 PRP-Sliding-10 vs RankT5 3B",
+   "quote": "outperform RankT5 on 5 out of 7 datasets", "table": null, "note": null, "where": "Section 5.3"
+  },
+  {
+   "claim": "A 3B model suffices: PRP-Allpair FLAN-T5-XL gets BEIR avg 51.33, equal to RankGPT gpt-3.5-turbo (51.33), and DL2019 NDCG@10 69.75.",
+   "kind": "measured", "source": null, "metric": "Avg NDCG@10", "value": "51.33", "unit": "%", "baseline_value": "51.33", "n": "7 datasets",
+   "setup": "BEIR, FLAN-T5-XL 3B, PRP-Allpair",
+   "quote": null, "table": "Table 3, row PRP-Allpair FLAN-T5-XL, column Avg", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Input order sensitivity: RankGPT gpt-3.5-turbo NDCG@10 drops from 65.80 to 32.77 when BM25 order is inverted, while PRP-Allpair FLAN-UL2 stays at 72.42 vs 72.40.",
+   "kind": "measured", "source": null, "metric": "NDCG@10 inverted order", "value": "72.40", "unit": "%", "baseline_value": "32.77", "n": "43 queries",
+   "setup": "TREC-DL2019, initial order inverted BM25",
+   "quote": null, "table": "Table 4, rows PRP-Allpair FLAN-UL2-20B Inverse BM25 (72.40) and RankGPT gpt-3.5-turbo Inverse BM25 (32.77)", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "PRP-Sliding-10 is less robust to order than Allpair: NDCG@10 falls from 72.65 to 64.84 with inverted order; Sliding-1 falls from 57.58 to 26.04.",
+   "kind": "measured", "source": null, "metric": "NDCG@10 inverted order", "value": "64.84", "unit": "%", "baseline_value": "72.65", "n": "43 queries",
+   "setup": "TREC-DL2019, FLAN-UL2 20B, inverse BM25 initial order",
+   "quote": null, "table": "Table 4, row PRP-Sliding-10 FLAN-UL2-20B Inverse BM25 (64.84); Sliding-1 26.04", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "Only about 0.02% of generation-mode PRP predictions fail the desired format, and scoring vs generation mode give near-identical results.",
+   "kind": "measured", "source": null, "metric": "format failure rate", "value": "0.02", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "PRP-Allpair, generation mode, FLAN-T5-XL/XXL and FLAN-UL2, TREC-DL",
+   "quote": "only about 0.02% predictions that do not follow the desired format", "table": null, "note": "Quote spans a line break in the cached text; rendered as printed: 'We found that there are only about 0.02% predictions that do not follow the desired format'.", "where": "Section 6"
+  },
+  {
+   "claim": "Generation mode with FLAN-UL2 Allpair matches scoring: DL2019 NDCG@10 72.37 vs 72.42.",
+   "kind": "measured", "source": null, "metric": "NDCG@10", "value": "72.37", "unit": "%", "baseline_value": "72.42", "n": "43 queries",
+   "setup": "TREC-DL2019, FLAN-UL2, PRP-Allpair, generation mode vs scoring mode",
+   "quote": null, "table": "Table 5, row PRP-Allpair FLAN-UL2 Generation, column TREC-DL2019 NDCG@10", "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "Sliding window behaves like bubble sort: one backward pass already gives NDCG@1 78.29 on DL2019, and more passes lift NDCG@10 from 57.58 (1 pass) to 72.65 (10 passes); one forward pass gives only 54.10.",
+   "kind": "measured", "source": null, "metric": "NDCG@10", "value": "57.58", "unit": "%", "baseline_value": "72.65", "n": "43 queries",
+   "setup": "TREC-DL2019, FLAN-UL2 20B; backward passes 1, 2, 3, 10 give 57.58, 61.52, 64.60, 72.65",
+   "quote": null, "table": "Table 6, rows 1 Backward (57.58), 2 Backward (61.52), 3 Backward (64.60), 10 Backward (72.65), 1 Forward (54.10), column NDCG@10", "note": null, "where": "Appendix A, Table 6"
+  },
+  {
+   "claim": "Commercial text-bison with PRP-Allpair reaches DL2019 NDCG@10 73.81 and DL2020 71.66, slightly above FLAN-UL2 (72.42, 70.68).",
+   "kind": "measured", "source": null, "metric": "NDCG@10", "value": "73.81", "unit": "%", "baseline_value": "72.42", "n": "43 queries",
+   "setup": "PRP-Allpair on TREC-DL2019, text-bison",
+   "quote": null, "table": "Table 8, row PRP-Allpair text-bison, column NDCG@10 DL19 (73.81); DL20 71.66", "note": null, "where": "Appendix B, Table 8"
+  },
+  {
+   "claim": "Abstract claims PRP beats the blackbox ChatGPT solution by 4.2% on average BEIR NDCG@10.",
+   "kind": "claim", "source": null, "metric": "relative gain over ChatGPT RankGPT", "value": "4.2", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "BEIR average NDCG@10, PRP FLAN-UL2 vs RankGPT gpt-3.5-turbo",
+   "quote": "outperforms the blackbox commercial ChatGPT solution by 4.2%", "table": null, "note": "Table 3 averages: 53.55 vs 51.33 is 2.22 points (4.3% relative); the 4.2% is not defined as absolute or relative in the text.", "where": "Abstract"
+  },
+  {
+   "claim": "Listwise prompt from Sun et al. on FLAN-UL2 20B gives very few usable outputs; listwise failure modes are missing, rejection, repetition, inconsistency.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "FLAN-UL2 20B with RankGPT listwise prompt; no rate reported",
+   "quote": "found very few of the outputs to be usable", "table": null, "note": null, "where": "Section 2.2"
+  }
+ ],
+ "limits": [
+  "No GPT models are run by the authors; GPT numbers are copied from other papers (Limitations).",
+  "Focus is empirical; PRP-Sorting does not guarantee transitivity and theoretically grounded noisy-sorting methods are left for future work.",
+  "Possible data leakage cannot be excluded: FLAN has an MS MARCO question-answering task; blackbox LLM training data is unknown (Appendix C). Authors avoid the word 'zero-shot'.",
+  "Only relevance-style ranking tested; non-standard ranking such as ArguAna counter-arguments untested (Appendix C).",
+  "PRP-Allpair is O(N^2) calls; cost, latency and wall-clock are never reported. Sliding-K depends on input order (Table 4).",
+  "No seeds, variance, or significance tests; temperature and hardware not stated; code not released at time of writing (only 'plan to release' data).",
+  "Only BM25 top-100 reranking tested; PRP-Sliding-10 needs at most 10 passes so only the top-10 is reliably sorted.",
+  "Comparisons are against baseline numbers from other papers whose GPT versions are now dated; gpt-4 result used as reference."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Pairwise Ranking Prompting (PRP)", "definition": "Prompt with the query and a pair of documents for the LLM to say which is more relevant", "where": "Section 1, 3.1"},
+  {"term": "PRP-Allpair", "definition": "Enumerates all pairs and aggregates a win-count score per document; O(N^2) calls", "where": "Section 3.2"},
+  {"term": "PRP-Sorting", "definition": "Uses LLM pairwise preferences as the comparator for Heapsort; O(N log N)", "where": "Section 3.3"},
+  {"term": "PRP-Sliding-K", "definition": "K passes of bubble-sort-like compare-and-swap with stride 1 from bottom of list; O(N) per pass", "where": "Section 3.4"}
+ ],
+ "lineage": [
+  {"work": "Is ChatGPT Good at Search? Investigating Large Language Models as Re-ranking Agent (RankGPT)", "year": 2023, "arxiv": "2304.09542", "relation": "baseline", "note": "Listwise sliding-window method; GPT-4 is the previous state of the art; numbers copied", "quote": null},
+  {"work": "Zero-shot listwise document reranking with a large language model (LRL)", "year": 2023, "arxiv": "2305.02156", "relation": "baseline", "note": "Parallel listwise approach", "quote": null},
+  {"work": "Improving passage retrieval with zero-shot question generation (UPR)", "year": 2022, "arxiv": "2204.07496", "relation": "baseline", "note": "Pointwise query generation", "quote": null},
+  {"work": "Holistic evaluation of language models (relevance generation)", "year": 2022, "arxiv": "2211.09110", "relation": "baseline", "note": "Pointwise relevance generation (RG)", "quote": null},
+  {"work": "RankT5", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Strongest supervised reranker; also source of K-pass top-K argument", "quote": null},
+  {"work": "monoT5 (Nogueira et al. 2020), monoBERT (Nogueira and Cho 2019)", "year": 2020, "arxiv": "1901.04085", "relation": "baseline", "note": "Supervised cross-encoders trained on MS MARCO", "quote": null},
+  {"work": "TART (Asai et al. 2023)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Instruction-tuned reranker, BEIR only", "quote": null},
+  {"work": "Scaling instruction-finetuned language models (FLAN-T5)", "year": 2022, "arxiv": "2210.11416", "relation": "evaluates", "note": "FLAN-T5-XL/XXL", "quote": null},
+  {"work": "Unifying language learning paradigms (UL2)", "year": 2022, "arxiv": "2205.05131", "relation": "evaluates", "note": "FLAN-UL2 20B", "quote": null},
+  {"work": "BEIR", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "Seven datasets", "quote": null},
+  {"work": "TREC-DL 2019/2020 on MS MARCO v1", "year": null, "arxiv": null, "relation": "uses-data", "note": "BM25 candidates via Pyserini (Lin et al. 2021)", "quote": null},
+  {"work": "Promptagator (Dai et al. 2022)", "year": 2022, "arxiv": "2209.11755", "relation": "related", "note": "Excluded from BEIR comparison: per-task prompts, different retriever", "quote": null},
+  {"work": "Simple, robust and optimal ranking from pairwise comparisons (Shah and Wainwright 2018)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "Win-ratio theory behind Allpair", "quote": null},
+  {"work": "HyDE (Gao et al. 2022), Query2doc, query expansion by prompting", "year": 2022, "arxiv": "2212.10496", "relation": "related", "note": "LLMs as auxiliary tools for retrieval, not direct ranking", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Two existing prompting methods for ranking: (a) the pointwise relevance generation approach and (b) the listwise permutation approach.", "page": 2, "why": "Shows the two baseline prompt formats PRP replaces."},
+  {"figure": "Fig 2", "caption": "An illustration of pairwise ranking prompting. The scores in scoring mode represent the log-likelihood of the model generating the target text given the prompt.", "page": 3, "why": "Shows generation mode vs scoring mode with the same prompt."},
+  {"figure": "Fig 3", "caption": "An illustration of one pass of our sliding window approach. Starting from right to left, we compare each document pair and swap it if the LLM output disagrees with the initial ranking. K such passes will ensure a high-performing top-K ranking.", "page": 4, "why": "Shows the bubble-sort-like pass faster than prose."},
+  {"figure": "Table 1", "caption": "Comparison of pointwise, listwise, and pairwise approaches.", "page": 4, "why": "Compares API calls, generation vs scoring API support and calibration needs."}
+ ],
+ "code": [
+  {"where": "Equation 2, Section 3.2", "snippet": "s_i = 1 * sum_{j != i} I[d_i > d_j] + 0.5 * sum_{j != i} I[d_i = d_j]", "verbatim": false},
+  {"where": "Appendix E.1", "snippet": "Given a query {query}, which of the following two passages is more relevant to the query?\nPassage A: {document1}\nPassage B: {document2}\nOutput Passage A or Passage B:", "verbatim": true}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "The Introduction text refers to FLAN-T5 models of 3B and 13B, while Section 4.2 and the tables say 11B for FLAN-T5-XXL.",
+  "Section 3.1 points to Appendix F for the template, but the template is in Appendix E; Figure 2 caption points to Appendix E.",
+  "Table 2 and Table 3 columns come from flattened PDF text; row-to-column mapping was inferred from the order of values."
+ ]
 }

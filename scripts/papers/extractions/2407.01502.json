@@ -1,0 +1,686 @@
+{
+ "schema": 1,
+ "key": "2407.01502",
+ "pdf": "generative-ai/08-eval/sources/kapoor-2024-ai-agents-that-matter.pdf",
+ "bib": {
+  "title": "AI Agents That Matter",
+  "authors": [
+   "Sayash Kapoor",
+   "Benedikt Stroebl",
+   "Zachary S. Siegel",
+   "Nitya Nadgir",
+   "Arvind Narayanan"
+  ],
+  "first_author": "Kapoor",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2407.01502",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 115612,
+  "chars_total": 115612,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "What shortcomings in current agent benchmarks and evaluation practice make agents look better than they are or hinder real-world usefulness?",
+ "hypothesis": "Accuracy-only, cost-blind benchmarking without holdouts or standardisation leads to needlessly complex agents and mistaken conclusions about what drives gains.",
+ "contributions": [
+  "AI agent evaluations must be cost-controlled (Sec 2)",
+  "Jointly optimizing accuracy and cost yields better agent design (Sec 3)",
+  "Model and downstream developers have distinct benchmarking needs (Sec 4)",
+  "Agent benchmarks enable shortcuts; holdouts by generality level (Sec 5)",
+  "Agent evaluations lack standardization and reproducibility (Sec 6)"
+ ],
+ "method": {
+  "summary": "Re-evaluates HumanEval agents (LDB, LATS, Reflexion) against simple retry, warming and escalation baselines on accuracy and dollar cost; adds Optuna-based joint cost-accuracy optimisation to DSPy on HotPotQA; case-studies NovelQA, WebArena and a 17-benchmark holdout survey.",
+  "task": "Agent evaluation methodology (code generation, multi-hop QA, long-document QA, web tasks)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "HumanEval (LDB-modified, example tests for all 164 tasks)",
+    "role": "eval",
+    "size": "164 problems",
+    "split": "all",
+    "source": "Chen et al. 2021; LDB version",
+    "preprocessing": null
+   },
+   {
+    "name": "HotPotQA",
+    "role": "both",
+    "size": "100 train samples for optimisation (50/50 candidate/validation for random search and joint), 200 eval samples",
+    "split": "random, fixed seed",
+    "source": "Yang et al.; Wikipedia 2017 dump via ColBERTv2",
+    "preprocessing": null
+   },
+   {
+    "name": "NovelQA multiple-choice subset",
+    "role": "eval",
+    "size": "88 novels, about 2,300 questions",
+    "split": "all",
+    "source": "Wang et al. 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "WebArena",
+    "role": "eval",
+    "size": "812 tasks",
+    "split": "all",
+    "source": "Zhou et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-4-turbo-2024-04-09",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "price": "$10 input / $30 output per 1M tokens, April 2024"
+    }
+   },
+   {
+    "name": "gpt-3.5-turbo-0125",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "price": "$0.5 / $1.5 per 1M tokens"
+    }
+   },
+   {
+    "name": "Llama-3-70B (meta-llama/Llama-3-70b-chat-hf via Together.ai)",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "price": "$0.9 / $0.9 per 1M tokens, May 2024"
+    }
+   },
+   {
+    "name": "Llama-3 8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "first rung of escalation"
+    }
+   },
+   {
+    "name": "gpt-4-0613 and gpt-3.5-turbo-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "price": "gpt-4-0613 $30 / $60 per 1M tokens"
+    }
+   },
+   {
+    "name": "ColBERTv2",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-embedding-3-large",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Retry: temperature 0, up to 5 trials until example tests pass. Warming: temperature 0 first trial, 0.3 for trials 2-3, 0.5 for trials 4-5. Escalation: llama-3-8b-chat-hf, gpt-3.5-turbo-0125, llama-3-70b-chat-hf, gpt-4-turbo-2024-04-09 in order, temperature 0",
+   "temperature": "see decoding; LDB 0; LATS 0.8 generation, 0.2 reflections/tests; Reflexion 0 generation, 0.2 tests/reflections",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 runs per agent on HumanEval and HotPotQA, mean reported with min/max; NovelQA single run",
+   "prompting": "Zero-shot LDB prompt plus example tests; NovelQA original prompt with retrieved snippets",
+   "retrieval": "HotPotQA: ColBERTv2, 2 hops, 2 passages. NovelQA RAG: 10 chunks of 1000 characters, text-embedding-3-large",
+   "parameters": {
+    "LDB": "max iterations 10, temperature 0",
+    "LATS": "max iterations 8, expansion factor 3, max internal tests 6 (GPT-3.5) or 4 (GPT-4)",
+    "Reflexion": "max iterations 2, expansion factor 3",
+    "DSPy": "max 8 demonstrations, random search 16 candidate programs",
+    "Optuna": "16 trials; module temperatures from 0.0, 0.2, 0.4, 0.6; searched temperature, number of few-shot examples, example selection, formatting instructions"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "HumanEval: solution passes the true tests; HotPotQA: all ground-truth documents retrieved; NovelQA: multiple-choice accuracy",
+     "unit": "% or fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Total cost",
+     "definition": "Dollar cost of API calls at stated provider prices; HotPotQA splits variable cost (per 100 inferences) and fixed optimisation cost",
+     "unit": "USD",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Zero-shot GPT-3.5 and GPT-4",
+    "LDB",
+    "LATS",
+    "Reflexion"
+   ],
+   "protocol": "Pareto frontier constrained convex; 95% CIs by Student's t over 5 runs (HotPotQA); min/max across runs elsewhere"
+  },
+  "availability": {
+   "code": "https://github.com/benediktstroebl/agent-evals (MIT)",
+   "weights": null,
+   "data": "Public benchmarks; web app at benediktstroebl.github.io/agent-eval-webapp"
+  },
+  "prompts": [
+   {
+    "purpose": "NovelQA RAG prompt",
+    "text": "You are a literature professor. I will provide you with snippets from a novel along with a question and corresponding choices pertaining to it. Please thoroughly analyze the content to accurately respond to the question. Relevant snippets from the novel: <context> Question: <question> Only respond with the index of the correct answer (e.g., choose between A, B, C, and D). Your output should not contain anything else.",
+    "where": "Listing 1, Appendix D"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "LATS costs over 50 times more than the warming baseline for similar accuracy on HumanEval",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "over 50 times",
+   "unit": "x cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, 164 problems, LDB-modified version with example tests for all tasks; gpt-4-turbo-2024-04-09 / gpt-3.5-turbo-0125; mean of 5 runs; prices April 2024",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "Reflexion and LDB cost over 50% more than the warming strategy, and LATS over 50 times more"
+  },
+  {
+   "claim": "Escalation baseline improves accuracy over LDB (GPT-3.5) while costing less than half",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "less than half",
+   "unit": "cost ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, 164 problems, LDB-modified version with example tests for all tasks; gpt-4-turbo-2024-04-09 / gpt-3.5-turbo-0125; mean of 5 runs; prices April 2024",
+   "note": null,
+   "where": "Sec 2.3",
+   "quote": "the escalation strategy strictly improves accuracy while costing less than half of LDB (GPT-3.5)"
+  },
+  {
+   "claim": "Warming (GPT-4) mean accuracy and total cost on HumanEval",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 93.2,
+   "unit": "% accuracy (cost $2.45)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, 164 problems, LDB-modified version with example tests for all tasks; gpt-4-turbo-2024-04-09 / gpt-3.5-turbo-0125; mean of 5 runs; prices April 2024",
+   "note": "Range 92.1-93.9",
+   "where": "Table A1",
+   "table": "Table A1, row Warming (GPT-4), columns Accuracy 93.2 and Total Cost 2.45"
+  },
+  {
+   "claim": "LATS (GPT-4) mean accuracy and cost on HumanEval",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88.0,
+   "unit": "% accuracy (cost $134.50)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, 164 problems, LDB-modified version with example tests for all tasks; gpt-4-turbo-2024-04-09 / gpt-3.5-turbo-0125; mean of 5 runs; prices April 2024",
+   "note": null,
+   "where": "Table A1",
+   "table": "Table A1, row LATS (GPT-4), columns Accuracy 88.0 and Total Cost 134.50"
+  },
+  {
+   "claim": "LDB (GPT-4) mean accuracy and cost, an unreported configuration",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 93.3,
+   "unit": "% accuracy (cost $6.36)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, 164 problems, LDB-modified version with example tests for all tasks; gpt-4-turbo-2024-04-09 / gpt-3.5-turbo-0125; mean of 5 runs; prices April 2024",
+   "note": null,
+   "where": "Table A1",
+   "table": "Table A1, row LDB (GPT-4)*, columns Accuracy 93.3 and Total Cost 6.36"
+  },
+  {
+   "claim": "Escalation baseline accuracy and cost",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 85.0,
+   "unit": "% accuracy (cost $0.27)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, 164 problems, LDB-modified version with example tests for all tasks; gpt-4-turbo-2024-04-09 / gpt-3.5-turbo-0125; mean of 5 runs; prices April 2024",
+   "note": null,
+   "where": "Table A1",
+   "table": "Table A1, row Escalation, columns Accuracy 85.0 and Total Cost 0.27"
+  },
+  {
+   "claim": "Robustness: with June 2023 GPT versions, simple baselines still match complex agents at far lower cost (Warming GPT-4 90.6% at $3.88 vs LATS GPT-4 83.5% at $360.02)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 90.6,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, gpt-4-0613 and gpt-3.5-turbo-0613, mean of 5 runs",
+   "note": null,
+   "where": "Table A2",
+   "table": "Table A2, row Warming (GPT-4), column Accuracy 90.6; LATS (GPT-4) 83.5, 360.02"
+  },
+  {
+   "claim": "Joint optimization lowers variable cost 53% for GPT-3.5 at similar accuracy on HotPotQA",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 53,
+   "unit": "% lower variable cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DSPy multi-hop QA on HotPotQA, 100 train samples for optimisation, 200 eval samples, mean of 5 runs, GPT-3.5",
+   "note": "Table A3: joint optimization 0.509 acc, variable cost 0.174 vs 0.376 (random search) and 0.384 (few-shot) per 100 inferences",
+   "where": "Sec 3.2",
+   "quote": "for GPT-3.5, joint optimization leads to 53% lower variable cost with similar accuracy compared to both default DSPy implementations"
+  },
+  {
+   "claim": "Joint optimization lowers cost 41% for Llama-3-70B while maintaining accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 41,
+   "unit": "% lower cost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same HotPotQA setup, Llama-3-70B",
+   "note": "Table A3: joint 0.601 acc at 0.374 vs few-shot 0.622 at 0.661",
+   "where": "Sec 3.2",
+   "quote": "Similarly, for Llama-3-70B, it leads to a 41% lower cost while maintaining accuracy."
+  },
+  {
+   "claim": "Break-even: joint-optimised agents become cheaper in total cost than default DSPy after about 1,350 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1350,
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotPotQA, fixed optimisation cost vs variable cost",
+   "note": "Fig A6 caption gives 1332 (Llama-3-70B) and 1275 (GPT-3.5) inferences",
+   "where": "Sec 3.2",
+   "quote": "after 1,350 tasks"
+  },
+  {
+   "claim": "On NovelQA, RAG is roughly as accurate as long context but costs over 20x less per real-world use; the benchmark's protocol makes RAG look only 2x cheaper",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 21.86,
+   "unit": "cost ratio long-context/RAG",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NovelQA multiple-choice subset, GPT-4, RAG with text-embedding-3-large, 10 chunks of 1000 characters; single run; May 2024 prices",
+   "note": "Text: 'RAG costing more than 20 times less'; 'RAG costs half as much (a tenfold overestimate)'",
+   "where": "Sec 4.1, Table A5",
+   "table": "Table A5, row Cost Ratio (Long-Context/RAG), 21.86; accuracy 67.89 vs 67.81; total cost $52.80 vs $99.80"
+  },
+  {
+   "claim": "Of 17 surveyed agent benchmarks, 7 have no holdout and no plan for one; only 5 of 10 with holdouts are at the appropriate generality level",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7/17",
+   "unit": "benchmarks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Survey of 17 agent benchmarks (Table A4)",
+   "note": null,
+   "where": "Table A4",
+   "quote": "7/17 benchmarks do not include holdout sets for evaluating agents’ performance and do not indicate plans to do so"
+  },
+  {
+   "claim": "Appropriate holdouts by generality level: 1/1 distribution-specific, 3/6 task-specific, 1/8 domain-general, 0/2 fully general",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1 / 8",
+   "unit": "domain-general benchmarks with appropriate holdout",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Domain-general, column Num. benchmarks with appropriate holdouts"
+  },
+  {
+   "claim": "STeP tops WebArena with 35.8% but hardcodes policies for specific tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 35.8,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, 812 tasks",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "It has an accuracy of 35.8%, more than double the accuracy of the top-performing baseline agent introduced in the WebArena paper"
+  },
+  {
+   "claim": "Incomplete test cases in LATS evaluation inflated accuracy by about 3%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, mean over five runs",
+   "note": null,
+   "where": "App E.1",
+   "quote": "In our analysis, this was responsible for a 3% difference in accuracy (mean across five runs)"
+  },
+  {
+   "claim": "LDB paper reports GPT-4 baseline at 75.0% but reproduction gives 89.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 89.6,
+   "unit": "% accuracy",
+   "baseline_value": 75.0,
+   "n": null,
+   "setup": "HumanEval, 164 tasks, mean of 5 runs",
+   "note": null,
+   "where": "Table A7",
+   "table": "Table A7, row GPT-4, columns Reported 75.0 and Reproduced 89.6"
+  },
+  {
+   "claim": "Reddit rate limits affected 30/129 Reddit tasks in STeP's WebArena evaluation, and failed tasks were logged as successes",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "30/129",
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena Reddit subset",
+   "note": null,
+   "where": "Table A6",
+   "quote": "This affected 30/129 tasks of the Reddit subset."
+  },
+  {
+   "claim": "Evaluating SWE-Agent on all SWE-bench could cost over USD 8,000 per run at the $4 per task cap",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 8000,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench, over 2,000 tasks",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "Evaluating SWE-Agent on the entire benchmark could cost over USD 8,000 for a single evaluation run."
+  },
+  {
+   "claim": "Simple human feedback raised GPT-4 from 0% to over 86% on hard programming problems",
+   "kind": "reported",
+   "source": "Shi et al. [43]",
+   "metric": null,
+   "value": 86,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Shi et al. [43]",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "Shi et al. [43] find that simple feedback increases the performance of GPT-4 from 0% to over 86% on challenging programming problems"
+  },
+  {
+   "claim": "AlphaCode accuracy rises from near 0% zero-shot to over 15% with 1,000 retries and over 30% with a million",
+   "kind": "reported",
+   "source": "Li et al. [27]",
+   "metric": null,
+   "value": 30,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlphaCode, top-10 answers",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "of AlphaCode increases from close to 0% zero-shot to over 15% with 1,000 retries and over 30% with a million retries"
+  },
+  {
+   "claim": "Mixtral 8x7B cost twice Llama 2 13B on Anyscale in June 2024 though active-parameter proxy suggests parity",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "twice",
+   "unit": "cost ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Anyscale prices June 2024",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "Mixtral 8x7B costs twice as much as Llama 2 13B on compute provider Anyscale"
+  }
+ ],
+ "limits": [
+  "Cost models change with provider pricing; mitigated by a web app for repricing",
+  "Does not cover all task environments or agent types; programming and one QA benchmark carry the empirical weight",
+  "Environmental, annotation-labour and maintenance costs not analysed",
+  "System 2 approaches may still help on harder tasks such as SWE-bench",
+  "NovelQA run once, no error bars",
+  "Joint optimisation is a simple starting point; error bars exclude optimisation variability",
+  "Generality level of each benchmark was the authors' best guess"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "LDB (Zhong et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HumanEval agent re-evaluated; reported 75.0% GPT-4 baseline not reproduced",
+   "quote": null
+  },
+  {
+   "work": "LATS (Zhou et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HumanEval agent; costs 50x warming",
+   "quote": null
+  },
+  {
+   "work": "Reflexion (Shinn et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HumanEval agent; dropped 3 problems",
+   "quote": null
+  },
+  {
+   "work": "DSPy (Khattab et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "modified for joint optimisation with Optuna",
+   "quote": null
+  },
+  {
+   "work": "Optuna (Akiba et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multi-objective parameter search",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Chen et al.)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "coding benchmark",
+   "quote": null
+  },
+  {
+   "work": "HotPotQA (Yang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "multi-hop QA",
+   "quote": null
+  },
+  {
+   "work": "NovelQA (Wang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "long-context benchmark case study",
+   "quote": null
+  },
+  {
+   "work": "WebArena (Zhou et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "web agent benchmark; no holdout; Reddit rate limits",
+   "quote": null
+  },
+  {
+   "work": "STeP (Sodhi et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "hardcoded policies; logged failures as success",
+   "quote": null
+  },
+  {
+   "work": "SWE-Agent / SWE-bench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cost cap $4 per task",
+   "quote": null
+  },
+  {
+   "work": "Baleen (Khattab et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multi-hop QA design simplified in DSPy",
+   "quote": null
+  },
+  {
+   "work": "Chen et al., Are More LLM Calls All You Need?",
+   "year": 2024,
+   "arxiv": "2403.02419",
+   "relation": "related",
+   "note": "retrying improves accuracy",
+   "quote": null
+  },
+  {
+   "work": "HELM and LM Evaluation Harness",
+   "year": 2024,
+   "arxiv": "2405.14782",
+   "relation": "related",
+   "note": "model-evaluation standardisation, insufficient for agents",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our simple baselines offer Pareto improvements over SOTA agents.",
+   "page": 4,
+   "why": "Accuracy vs cost for HumanEval agents shows complex agents dominated"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Joint optimization maintains accuracy while significantly reducing cost.",
+   "page": 6,
+   "why": "HotPotQA cost-accuracy for five DSPy designs"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Appropriate holdouts based on level of generality.",
+   "page": 8,
+   "why": "Maps generality level to required holdout"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Table A1 first rows (LATS) begin before the cached excerpt header."
+ ]
+}

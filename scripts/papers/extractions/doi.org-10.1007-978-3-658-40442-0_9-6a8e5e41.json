@@ -1,0 +1,410 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1007/978-3-658-40442-0_9",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/labaca-castro-2023-generative-adversarial-nets.pdf",
+ "bib": {
+  "title": "Generative Adversarial Nets",
+  "authors": [
+   "Ian J. Goodfellow",
+   "Jean Pouget-Abadie",
+   "Mehdi Mirza",
+   "Bing Xu",
+   "David Warde-Farley",
+   "Sherjil Ozair",
+   "Aaron Courville",
+   "Yoshua Bengio"
+  ],
+  "first_author": "Goodfellow",
+  "year": 2014,
+  "venue": "preprint",
+  "arxiv": "1406.2661",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 29016,
+  "chars_total": 29016,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a generative model be trained without Markov chains or approximate inference by pitting it against a discriminator in a minimax game?",
+ "hypothesis": "Training G to fool D recovers the data distribution (p_g = p_data, D = 1/2) when both have enough capacity, and works in practice with multilayer perceptrons trained by backprop.",
+ "contributions": [
+  "A new framework for estimating generative models via an adversarial process, with G and D trained simultaneously",
+  "Theoretical result: unique solution with G recovering the data distribution and D equal to 1/2 everywhere",
+  "Practical instantiation with multilayer perceptrons trained by backpropagation, no Markov chains or unrolled inference",
+  "Qualitative and quantitative evaluation on MNIST, TFD and CIFAR-10"
+ ],
+ "method": {
+  "summary": "G maps noise z to data space through an MLP and D is an MLP outputting a scalar probability of data origin. They alternate k=1 D step and one G step with minibatch SGD with momentum, and the G objective is switched to maximise log D(G(z)). Evaluated by Gaussian Parzen-window log-likelihood and sample visualisation.",
+  "task": "unconditional image generation (MNIST, TFD, CIFAR-10)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": "validation set used to cross-validate Parzen sigma; test set log-likelihood reported",
+    "source": "LeCun et al. 1998",
+    "preprocessing": "real-valued (not binary) version"
+   },
+   {
+    "name": "Toronto Face Database (TFD)",
+    "role": "both",
+    "size": null,
+    "split": "per-fold; sigma cross-validated on validation set of each fold",
+    "source": "Susskind et al. 2010",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky and Hinton 2009",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Generator G (MLP)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "multilayer perceptron, mixture of rectifier linear and sigmoid activations; noise input only to bottommost layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "CIFAR-10 variant": "\"deconvolutional\" generator (Fig 2d)"
+    }
+   },
+   {
+    "name": "Discriminator D (MLP)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "multilayer perceptron with maxout activations, dropout in training",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "CIFAR-10 variant": "convolutional discriminator (Fig 2d)"
+    }
+   },
+   {
+    "name": "DBN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "deep belief network",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Stacked CAE",
+    "role": "baseline",
+    "params": null,
+    "architecture": "stacked contractive autoencoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Deep GSN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "deep generative stochastic network",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "minimax V(G,D)=E_x[log D(x)]+E_z[log(1-D(G(z)))]; in practice G maximises log D(G(z)) to avoid saturation",
+   "optimizer": "minibatch SGD with momentum",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "m (minibatch size not stated)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "applied in D; rate not stated",
+   "regularisation": "dropout on D",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "k": "k = 1 discriminator step per generator step",
+    "code": "hyperparameters stated to be in the released code, not in the paper"
+   }
+  },
+  "inference": {
+   "decoding": "forward pass of G on z sampled from prior p_z",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated for Parzen fit; Fig 2 samples are fair random draws, not cherry-picked",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Parzen window log-likelihood",
+     "definition": "Fit Gaussian Parzen window to samples from G, report mean log-likelihood of test data under it; sigma by cross validation on validation set",
+     "unit": "log-likelihood (nats, unit not printed)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DBN",
+    "Stacked CAE",
+    "Deep GSN"
+   ],
+   "protocol": "MNIST: standard error of the mean across test examples. TFD: standard error across folds, sigma chosen per fold on validation set. Authors note the estimator has high variance and does poorly in high dimensions."
+  },
+  "availability": {
+   "code": "http://www.github.com/goodfeli/adversarial (code and hyperparameters)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.k",
+    "quote": "We used k = 1, the least expensive option, in our experiments.",
+    "where": "Algorithm 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adversarial nets get the highest Parzen log-likelihood on MNIST among compared models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Parzen log-likelihood",
+   "value": "225 ± 2",
+   "unit": "log-likelihood",
+   "baseline_value": "214 ± 1.1 (Deep GSN)",
+   "n": null,
+   "setup": "MNIST real-valued, test set, Gaussian Parzen window on samples, sigma cross-validated",
+   "quote": null,
+   "table": "Table 1, row Adversarial nets, column MNIST",
+   "note": "Baseline values are from cited papers",
+   "where": "Table 1"
+  },
+  {
+   "claim": "On TFD adversarial nets beat DBN and Deep GSN but not Stacked CAE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Parzen log-likelihood",
+   "value": "2057 ± 26",
+   "unit": "log-likelihood",
+   "baseline_value": "2110 ± 50 (Stacked CAE)",
+   "n": null,
+   "setup": "TFD, standard error across folds, sigma cross-validated per fold",
+   "quote": null,
+   "table": "Table 1, row Adversarial nets, column TFD",
+   "note": "DBN 1909 ± 66, Deep GSN 1890 ± 29",
+   "where": "Table 1"
+  },
+  {
+   "claim": "At the optimum the virtual training criterion equals -log 4 and p_g = p_data, with C(G) = -log 4 + 2 JSD.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Non-parametric limit, infinite capacity, D optimal for each G",
+   "quote": "The global minimum of the virtual training criterion C(G) is achieved if and only if pg = pdata. At that point, C(G) achieves the value −log 4.",
+   "table": null,
+   "note": "theoretical result (Theorem 1), not an experiment",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Optimal discriminator for fixed G is p_data/(p_data+p_g).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Proposition 1, G fixed",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, Eq 2"
+  },
+  {
+   "claim": "Authors only claim samples are competitive, not better, and the likelihood estimator is high variance.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figs 2 and 3",
+   "quote": "While we make no claim that these samples are better than samples generated by existing methods, we believe that these samples are at least competitive with the better generative models in the literature",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "No explicit representation of p_g(x).",
+  "D must be synchronised with G; training G too much without updating D causes the 'Helvetica scenario' (mode collapse).",
+  "Parzen estimate has high variance and does not work well in high dimensions; authors say better evaluation is needed.",
+  "Convergence proof holds only in the non-parametric setting; MLP parameterisation introduces multiple critical points without guarantees.",
+  "Paper does not state network sizes, learning rates, batch size, epochs or hardware (deferred to released code).",
+  "Stacked CAE beats it on TFD."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Helvetica scenario",
+   "definition": "G collapses too many values of z to the same value of x to have enough diversity to model p_data",
+   "where": "Sec 6"
+  },
+  {
+   "term": "adversarial nets",
+   "definition": "the special case where the generative and discriminative models are both multilayer perceptrons",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep generative stochastic networks trainable by backprop (Bengio et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Deep GSN baseline in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Better mixing via deep representations (Bengio et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DBN and Stacked CAE baselines",
+   "quote": null
+  },
+  {
+   "work": "Noise-contrastive estimation (Gutmann and Hyvarinen)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "related",
+   "note": "also uses a discriminative criterion, but with a fixed noise distribution",
+   "quote": null
+  },
+  {
+   "work": "Maxout networks (Goodfellow et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "D uses maxout activations",
+   "quote": null
+  },
+  {
+   "work": "Dropout (Hinton et al.)",
+   "year": 2012,
+   "arxiv": "1207.0580",
+   "relation": "uses-method",
+   "note": "applied in D",
+   "quote": null
+  },
+  {
+   "work": "Auto-encoding variational Bayes (Kingma and Welling)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "another generator trained by backprop",
+   "quote": null
+  },
+  {
+   "work": "MNIST; Toronto Face Database; CIFAR-10",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Generative adversarial nets are trained by simultaneously updating the discriminative distribution (D) so that it discriminates between samples from the data generating distribution from those of the generative distribution (G).",
+   "page": 3,
+   "why": "1D picture of D, p_data and p_g converging to D=1/2"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Visualization of samples from the model; rightmost column shows nearest training example. a) MNIST b) TFD c) CIFAR-10 (fully connected) d) CIFAR-10 (convolutional D, deconvolutional G)",
+   "page": 6,
+   "why": "Shows samples are not memorised"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Digits obtained by linearly interpolating between coordinates in z space of the full model.",
+   "page": 7,
+   "why": "Smooth latent interpolation"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Challenges in generative modeling across deep directed, undirected, autoencoder and adversarial models.",
+   "page": 7,
+   "why": "Compact comparison of training, inference, sampling, p(x) and design"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "min_G max_D V(D,G) = E_x~pdata[log D(x)] + E_z~pz[log(1 - D(G(z)))]",
+   "verbatim": false
+  },
+  {
+   "where": "Algorithm 1",
+   "snippet": "for k steps: sample m noise, m data; ascend grad_theta_d (1/m) sum [log D(x_i) + log(1 - D(G(z_i)))]. Then sample m noise; descend grad_theta_g (1/m) sum log(1 - D(G(z_i)))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The PDF is the original arXiv 1406.2661v1 paper, not the 2023 Labaca-Castro book chapter its filename and DOI key name; the extraction records the paper's content with arXiv metadata.",
+  "Section numbering in extracted text is off (section 6 heading missing); Fig 1 and Table 2 text is partly garbled.",
+  "No embedded instructions found."
+ ]
+}

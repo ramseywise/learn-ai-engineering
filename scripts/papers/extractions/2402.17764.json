@@ -1,0 +1,510 @@
+{
+ "schema": 1,
+ "key": "2402.17764",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ma-2024-era-1-bit-llms.pdf",
+ "bib": {
+  "title": "The Era of 1-bit LLMs: All Large Language Models are in 1.58 Bits",
+  "authors": [
+   "Shuming Ma",
+   "Hongyu Wang",
+   "Lingxiao Ma",
+   "Lei Wang",
+   "Wenhui Wang",
+   "Shaohan Huang",
+   "Li Dong",
+   "Ruiping Wang",
+   "Jilong Xue",
+   "Furu Wei"
+  ],
+  "first_author": "Ma",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2402.17764",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 23611,
+  "chars_total": 23611,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM trained from scratch with ternary {-1,0,1} weights match FP16 Transformers in quality while cutting latency, memory, throughput and energy cost?",
+ "hypothesis": "Ternary weights with explicit zero (feature filtering) give a stronger 1-bit model that matches full precision from 3B.",
+ "contributions": [
+  "BitNet b1.58: ternary-weight 1-bit LLM variant with absmean quantization",
+  "Matches FP16 LLaMA from 3B in perplexity and end tasks",
+  "New scaling law/recipe and call for 1-bit hardware"
+ ],
+ "method": {
+  "summary": "Transformer with nn.Linear replaced by BitLinear, trained from scratch with 1.58-bit weights (absmean quantization) and 8-bit activations, LLaMA-alike components. Compared to reproduced FP16 LLaMA at 700M-3.9B on 100B tokens, cost measured at up to 70B.",
+  "task": "language model pretraining and zero-shot evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RedPajama",
+    "role": "pretrain",
+    "size": "100B tokens",
+    "split": null,
+    "source": "Together Computer 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "StableLM-3B data recipe",
+    "role": "pretrain",
+    "size": "2T tokens",
+    "split": null,
+    "source": "StableLM 3B 4E1T",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiText2, C4",
+    "role": "eval",
+    "size": null,
+    "split": "validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ARC-e, ARC-c, HellaSwag, BoolQ, OpenbookQA, PIQA, Winogrande",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "lm-evaluation-harness",
+    "preprocessing": null
+   },
+   {
+    "name": "SciQ, LAMBADA (2T comparison)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BitNet b1.58",
+    "role": "proposed",
+    "params": "700M, 1.3B, 3B, 3.9B (quality); 7B, 13B, 70B (cost)",
+    "architecture": "LLaMA-alike: RMSNorm, SwiGLU, rotary embedding, no biases; BitLinear",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "weights": "ternary {-1,0,1}",
+     "activations": "8-bit, per-token scaling to [-Qb,Qb]",
+     "embedding": "full precision"
+    }
+   },
+   {
+    "name": "LLaMA LLM (reproduced)",
+    "role": "baseline",
+    "params": "700M, 1.3B, 3B, 7B-70B",
+    "architecture": "FP16 LLaMA",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "StableLM-3B",
+    "role": "baseline",
+    "params": "3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers taken from its technical report"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": "100B (RedPajama); 2T for the 3B comparison",
+   "seq_len": null,
+   "precision": "1.58-bit weights, 8-bit activations",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "quantization": "absmean: W~ = RoundClip(W/(gamma+eps),-1,1), gamma = mean |W_ij|"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot via lm-evaluation-harness",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "latency": "time per output token, FasterTransformer, 2-bit Ladder kernel",
+    "throughput_setup": "2x A100 80GB, pipeline parallelism, seq len 512",
+    "energy": "arithmetic-op energy model, 7nm, 512 tokens end-to-end"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "validation PPL on WikiText2 and C4",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "Zero-shot accuracy",
+     "definition": "lm-evaluation-harness; acc and acc_norm averaged where both exist",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Latency",
+     "definition": "time per output token",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "Memory",
+     "definition": "runtime GPU memory",
+     "unit": "GB",
+     "higher_is_better": false
+    },
+    {
+     "name": "Throughput",
+     "definition": "tokens/s at max batch",
+     "unit": "tokens/s",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "reproduced FP16 LLaMA LLM",
+    "StableLM-3B"
+   ],
+   "protocol": "single runs; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "RedPajama public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BitNet b1.58 3B matches LLaMA 3B perplexity while 2.71x faster and 3.55x less memory",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup / memory reduction",
+   "value": "2.71x / 3.55x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained on RedPajama 100B tokens, FP16 LLaMA reproduced baseline, FasterTransformer, 2-bit Ladder kernel; 3B",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "while being 2.71 times faster and using 3.55 times less GPU memory"
+  },
+  {
+   "claim": "3B BitNet b1.58 perplexity vs LLaMA 3B",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": "9.91",
+   "unit": "PPL",
+   "baseline_value": "10.04",
+   "n": null,
+   "setup": "Pretrained on RedPajama 100B tokens, FP16 LLaMA reproduced baseline, FasterTransformer, 2-bit Ladder kernel; WikiText2/C4 validation",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BitNet b1.58 3B, column PPL"
+  },
+  {
+   "claim": "3.9B BitNet b1.58 is 2.4x faster, 3.32x less memory, better than LLaMA 3B",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "2.4",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretrained on RedPajama 100B tokens, FP16 LLaMA reproduced baseline, FasterTransformer, 2-bit Ladder kernel",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "is 2.4 times faster, consumes 3.32 times less memory"
+  },
+  {
+   "claim": "At 700M BitNet b1.58 is worse in perplexity than LLaMA",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": "12.87",
+   "unit": "PPL",
+   "baseline_value": "12.33",
+   "n": null,
+   "setup": "Pretrained on RedPajama 100B tokens, FP16 LLaMA reproduced baseline, FasterTransformer, 2-bit Ladder kernel",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BitNet b1.58 700M, column PPL"
+  },
+  {
+   "claim": "Average zero-shot accuracy at 3B: BitNet 50.2 vs LLaMA 49.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy",
+   "value": "50.2",
+   "unit": "%",
+   "baseline_value": "49.7",
+   "n": null,
+   "setup": "Pretrained on RedPajama 100B tokens, FP16 LLaMA reproduced baseline, FasterTransformer, 2-bit Ladder kernel; 7 tasks",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BitNet b1.58 3B, column Avg."
+  },
+  {
+   "claim": "Average zero-shot accuracy at 3.9B",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg accuracy",
+   "value": "51.2",
+   "unit": "%",
+   "baseline_value": "49.7",
+   "n": null,
+   "setup": "Pretrained on RedPajama 100B tokens, FP16 LLaMA reproduced baseline, FasterTransformer, 2-bit Ladder kernel; vs LLaMA 3B",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BitNet b1.58 3.9B, column Avg."
+  },
+  {
+   "claim": "70B BitNet b1.58 decoding is 4.1x faster than LLaMA 70B",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency speedup",
+   "value": "4.1",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Decoding latency, 2-bit kernel",
+   "note": null,
+   "where": "Sec 3 Memory and Latency",
+   "quote": "BitNet b1.58 70B is 4.1 times faster than the LLaMA LLM baseline"
+  },
+  {
+   "claim": "70B memory reduction 7.16x (Fig 2 label)",
+   "kind": "measured",
+   "source": null,
+   "metric": "memory reduction",
+   "value": "7.16",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Read from Fig 2 right panel, 70B",
+   "note": "Value read from figure labels",
+   "where": "Fig 2",
+   "table": "Figure 2, memory panel, 70B label 7.16x"
+  },
+  {
+   "claim": "Arithmetic energy for matmul saved on 7nm",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy reduction",
+   "value": "71.4",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Energy model of Horowitz 2014 and Zhang 2022, 7nm; estimate not measurement",
+   "note": null,
+   "where": "Sec 3 Energy",
+   "quote": "BitNet b1.58 saves 71.4 times arithmetic operations energy consumption for matrix multiplication on 7nm chips"
+  },
+  {
+   "claim": "End-to-end energy at 70B, 512 tokens, 41.2x less (Fig 3)",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy reduction",
+   "value": "41.2",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Read from Fig 3 right, 512 tokens, 70B",
+   "note": "Read from figure labels; 1.3B 18.6x, 3B 21.7x, 7B 29.1x, 13B 32.9x",
+   "where": "Fig 3",
+   "table": "Figure 3, right panel, 70B label 41.2x"
+  },
+  {
+   "claim": "70B BitNet supports 11x batch size",
+   "kind": "measured",
+   "source": null,
+   "metric": "max batch size",
+   "value": "176",
+   "unit": "sequences",
+   "baseline_value": "16",
+   "n": null,
+   "setup": "Two 80GB A100, pipeline parallelism, seq len 512, batch increased to memory limit",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BitNet b1.58, column Max Batch Size"
+  },
+  {
+   "claim": "70B throughput 2977 tokens/s vs 333",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": "2977",
+   "unit": "tokens/s",
+   "baseline_value": "333",
+   "n": null,
+   "setup": "Same as above",
+   "note": "Text says 8.9x higher throughput",
+   "where": "Table 3",
+   "table": "Table 3, row BitNet b1.58, column Throughput (tokens/s)"
+  },
+  {
+   "claim": "2T-token BitNet b1.58 3B beats StableLM-3B on average of five tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg zero-shot accuracy",
+   "value": "74.34",
+   "unit": "%",
+   "baseline_value": "73.22",
+   "n": null,
+   "setup": "2T tokens, StableLM-3B data recipe; StableLM numbers from its tech report",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row BitNet b1.58 3B, column Avg."
+  },
+  {
+   "claim": "Equivalence: 13B BitNet more efficient than 3B FP16; 30B than 7B; 70B than 13B",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inferred from Fig 2 and 3",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "13B BitNet b1.58 is more efficient, in terms of latency, memory usage and energy consump-"
+  }
+ ],
+ "limits": [
+  "No training hyperparameters, layer counts, optimizer, lr, hardware or compute stated: not reproducible from the paper",
+  "Quality shown only at 700M-3.9B; 700M and 1.3B are worse than FP16; 7B-70B only cost-measured, not trained for quality",
+  "Energy is a modelled arithmetic estimate, not measured",
+  "Speed measured with 2-bit kernel on GPU, not true ternary hardware",
+  "No code or weights released; KV cache 4-bit and MoE claims are future work",
+  "Comparison base is the authors' reproduced LLaMA; StableLM numbers copied from its report"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "BitNet b1.58",
+   "definition": "1-bit LLM variant where every parameter is ternary {-1, 0, 1}, 1.58 bits",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BitNet: Scaling 1-bit transformers",
+   "year": 2023,
+   "arxiv": "2310.11453",
+   "relation": "extends",
+   "note": "original 1-bit BitNet with added zero value",
+   "quote": null
+  },
+  {
+   "work": "LLaMA / Llama 2",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "baseline",
+   "note": "architecture and reproduced FP16 baseline",
+   "quote": null
+  },
+  {
+   "work": "StableLM 3B 4E1T",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "2T-token comparison and data recipe",
+   "quote": null
+  },
+  {
+   "work": "RedPajama",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Ladder",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "2-bit kernel",
+   "quote": null
+  },
+  {
+   "work": "GPTQ/OPTQ, AWQ, QuIP, SmoothQuant",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "post-training quantization, called sub-optimal",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Decoding latency (Left) and memory consumption (Right) of BitNet b1.58 varying the model size.",
+   "page": 4,
+   "why": "speedup grows with size"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Energy consumption of BitNet b1.58 compared to LLaMA LLM at 7nm process nodes.",
+   "page": 5,
+   "why": "energy gap grows with size"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-3",
+   "snippet": "W~ = RoundClip(W/(gamma+eps), -1, 1); RoundClip(x,a,b)=max(a,min(b,round(x))); gamma = (1/nm) sum_ij |W_ij|",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions. Text-layer figure labels only; Fig 2/3 values read from labels."
+ ]
+}

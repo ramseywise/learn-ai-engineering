@@ -195,7 +195,7 @@ Read the refusal messages as part of the tool. "Try again" gives the model nothi
 
 ## Sandbox limits: what each layer stops
 
-The tools above act on files the agent chooses, and running tests executes code the agent wrote. Those two facts need different limits, and confusing them is the most common mistake in this area. A file-tool check is a promise about the tool. A process limit is a promise about what code can do.
+The tools above act on files the agent chooses, and running tests executes code the agent wrote. Those two facts need different limits, and confusing them is the most common mistake in this area. A file-tool check is a promise about the tool. A process limit is a promise about what code can do. The general treatment of sandbox layers is [AIE 03/04 — execution boundaries](../../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md), and how much autonomy to grant is [foundations 07 — guardrails and autonomy](../../03-agentic-foundations/notes/07-guardrails-and-autonomy.md). This section only shows what each layer stops in the lab.
 
 The first layer is confinement of the file tools. Resolve the path, including symlinks, and refuse anything outside the workspace. A string check for `..` is not enough, because a link inside the repo can point anywhere.
 
@@ -308,7 +308,7 @@ An agent loop has several ways to end, and only one should count as success. In 
 
 Budgets matter for a reason beyond cost. SWE-agent's runs succeed fast and fail slow: successful runs had a median cost of $1.21 and 12 steps, while unsuccessful ones averaged $2.52 and 21 steps, and 93.0% of resolved issues were submitted before the budget ran out compared with 69.0% of runs overall (Yang et al.). A tight step budget therefore costs fewer solved issues than its size suggests, since time spent past a certain point is mostly time spent failing.
 
-A loop can also spin without progress: the same failing call, repeated. OpenDev hashes the tool name and arguments over a sliding window, injects a warning at three repeats, and then pauses for approval if the repeating continues, on the reasoning that a model can ignore injected text but cannot get past a halt in execution (Bui). One refinement is needed for coding. Re-running the tests after an edit is the whole method, so the fingerprint has to include the state of the files.
+A loop can also spin without progress: the same failing call, repeated. OpenDev hashes the tool name and arguments over a sliding window, injects a warning at three repeats, and then pauses for approval if the repeating continues, on the reasoning that a model can ignore injected text but cannot get past a halt in execution (Bui). One refinement is needed for coding. Re-running the tests after an edit is the whole method, so the fingerprint has to include the state of the files. The general rules for retries, repeat detection and termination are in [AIE 03/05b — recovery and termination](../../../ai-engineering/03-harness-engineering/notes/05b-recovery-and-termination.md) and [AIE 04/09 — failure modes and guardrails](../../../ai-engineering/04-loop-engineering/notes/09-failure-modes-and-guardrails.md).
 
 ```python
 import hashlib
@@ -357,7 +357,7 @@ run_tests  tree=v1  HALT
 
 ## Visible tests can be gamed by accident
 
-A green suite is necessary and not sufficient. SWE-bench handles this by construction: each instance comes from a real GitHub issue, the agent sees the issue, and its patch is scored on tests from the fix that it never saw (Jimenez et al., [SWE-bench](https://arxiv.org/abs/2310.06770), ICLR 2024). SWE-agent's failure analysis of 248 Lite failures, labelled by GPT-4o and checked at 87% agreement against hand labels, shows why that matters. Incorrect implementations (39.9%) and overly specific ones (12.1%) together make up 52.0% of failures, ahead of failing to recover from an edit (23.4%) and failing to find the place to edit (12.9%). Most failures, in other words, are patches that exist and are wrong.
+A green suite is necessary and not sufficient. Why a loop needs a check the agent cannot see is the subject of [AIE 03/05 — verification loops](../../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) and [AIE 04/03 — the scorekeeper](../../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md); here is the coding case. SWE-bench handles this by construction: each instance comes from a real GitHub issue, the agent sees the issue, and its patch is scored on tests from the fix that it never saw (Jimenez et al., [SWE-bench](https://arxiv.org/abs/2310.06770), ICLR 2024). SWE-agent's failure analysis of 248 Lite failures, labelled by GPT-4o and checked at 87% agreement against hand labels, shows why that matters. Incorrect implementations (39.9%) and overly specific ones (12.1%) together make up 52.0% of failures, ahead of failing to recover from an edit (23.4%) and failing to find the place to edit (12.9%). Most failures, in other words, are patches that exist and are wrong.
 
 The lab reproduces the overly specific case. The `overfit` script special-cases the visible test's one input. The visible suite goes green, `finish` accepts it, and only the held-out tests catch it:
 

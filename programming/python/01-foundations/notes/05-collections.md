@@ -22,7 +22,7 @@ xs.sort()         # sorts in place and returns None
 ys = sorted(xs)   # returns a new list
 ```
 
-**Aliasing.** `b = a` makes `b` a second name for the *same* list, so appending through `b` changes `a`. Copy explicitly with `a.copy()`, `a[:]` or `list(a)`. The same trap appears when you pass a list to a function: the function can mutate the caller's list.
+**Aliasing.** `b = a` makes `b` a second name for the *same* list, so appending through `b` changes `a`. Copy explicitly with `a.copy()`, `a[:]` or `list(a)`. The same trap appears when you pass a list to a function: the function can mutate the caller's list. [Python 03 · 01](../../03-language-for-engineers/notes/01-data-model-and-idioms.md) explains names versus objects.
 
 ## Dictionaries
 
@@ -66,7 +66,7 @@ Tuples are immutable and hashable, so they can be dict keys (`{(lat, lon): city}
 ## Sorting with a key
 
 ```python
-top = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[:10]
+top = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[:10]   # lambda: a one-line unnamed function
 # Ties broken alphabetically: sort by (-count, word)
 top = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:10]
 ```
@@ -78,3 +78,7 @@ Python compares tuples element by element, which makes multi-key sorts one-liner
 ## Exercises
 
 [`practice/exercises/05_collections.py`](../practice/exercises/05_collections.py): word counts, top-N with ties, grouping, and the aliasing trap.
+
+## Next
+
+[Informatics 01 — Regular expressions](../../02-informatics/notes/01-regular-expressions.md): pulling structure out of text.

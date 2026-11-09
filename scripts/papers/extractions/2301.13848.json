@@ -1,19 +1,749 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2301.13848",
  "pdf": "generative-ai/08-eval/sources/zhang-2023-benchmarking-large-language-models-news.pdf",
  "bib": {
   "title": "Benchmarking Large Language Models for News Summarization",
-  "first_author": "Tianyi Zhang",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Tianyi Zhang",
+   "Faisal Ladhak",
+   "Esin Durmus",
+   "Percy Liang",
+   "Kathleen McKeown",
+   "Tatsunori B. Hashimoto"
+  ],
+  "first_author": "Zhang",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2301.13848",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 55009,
+  "chars_total": 55009,
+  "engine": "pymupdf",
+  "skipped": "none; references skimmed; no appendix exists"
  },
- "legacy_report": "SOURCE: \"Benchmarking Large Language Models for News Summarization\", Tianyi Zhang*, Faisal Ladhak*, Esin Durmus, Percy Liang, Kathleen McKeown, Tatsunori B. Hashimoto. Preprint: the only venue mark printed is \"arXiv:2301.13848v1 [cs.CL] 31 Jan 2023\". Affiliations as printed (typos theirs): Zhang \"Stanford Univeristy\", Ladhak \"Columbia Univeristy\" (equal contribution).\n\nCOVERAGE: 14 of 14 pages, 55,326 of 55,326 chars. Body is p1-10, references p11-14 (skimmed). There is no appendix.\n\nThe note path you gave, `generative-ai/08-eval/notes/02-metrics-and-graders.md`, does not exist. `notes/` has `02-defining-correct.md` and `04-graders.md`, so I read without a note.\n\nTwo things you asked for are not in this version:\n- **Summary-level correlations:** none are reported. Only system-level Kendall's tau (Table 3).\n- **A correlation number with freelance references:** none is given. Section 4.3 and Figure 6 are scatter plots and prose only.\n\nCLAIMS\n\n1. Human evaluation design (p3-4)\n- Ten LLMs plus fine-tuned Pegasus and BRIO plus the existing references; \"18 model settings and two datasets\" (p2).\n- 100 articles from each of the CNN/DM and XSUM validation sets.\n- Zero-shot covers only the six OpenAI models; all ten are run five-shot. Temperature 0.3.\n- MTurk, three annotators per summary, scores averaged.\n- quote (p4): \"Coherence and relevance ratings are collected on a 1 to 5 Likert scale while faithfulness ratings are collected in binary ratings\". Fluency is omitted.\n- No inter-annotator agreement is reported for this MTurk study.\n\n2. References rate below most systems (Table 2, p4)\n- quote: \"Existing references - 0.84 3 .20 3 .94 0 .37 4 .13 3 .00\" (CNN/DM faithfulness, coherence, relevance, then XSUM).\n- Zero-shot Instruct Davinci on the same axes: 0.99 / 4.15 / 4.60 and 0.97 / 4.41 / 4.28.\n- Five-shot prompting with XSUM references hurts: \"the faithfulness score of Instruct Davinci drops from 0.97 to 0.77\" (p5).\n\n3. Metric correlation tracks reference quality (Table 3, p6; system-level Kendall's tau, original references)\n\n| Metric | CNN/DM faith. | CNN/DM coh. | CNN/DM rel. | XSUM faith. | XSUM coh. | XSUM rel. |\n|---|---|---|---|---|---|---|\n| Rouge-L | 0.54 | 0.48 | 0.72 | -0.27 | 0.71 | 0.30 |\n| METEOR | 0.58 | 0.37 | 0.66 | -0.22 | 0.68 | 0.38 |\n| BertScore | 0.54 | 0.47 | 0.70 | -0.23 | 0.70 | 0.30 |\n| BARTScore | 0.56 | 0.34 | 0.65 | -0.22 | 0.70 | 0.35 |\n| BLEURT | 0.56 | 0.62 | 0.81 | -0.08 | 0.67 | 0.41 |\n\n- quote (p6): \"reference-based metrics correlate better with human judgments on the aspects for which reference summaries also have better scores (e.g. CNN/DM relevance, XSUM coherence)\".\n- Rouge-L still ranks fine-tuned models above LLMs on CNN/DM. Among LLMs only, \"a larger than 0.05 Rouge-L difference usually translates to improved human evaluation\" (p6).\n- With freelance references on XSUM faithfulness, the result is qualitative: \"which leads to a much more positive correlation\" (p9).\n\n4. Freelance writers (p6-9)\n- Six Upwork writers, 50 articles per dataset, three writers per article, about 50 words, $4 per article.\n- MTurk check on 100 summaries (Table 4, p7): \"Freelance Writer 0.93 4.39 4.26\", Instruct Davinci 0.98 / 4.26 / 4.40, references 0.64 / 3.59 / 3.45.\n- Extractiveness (p8): \"coverage and density for Instruct Davinci generated summaries are 0.92 and 12.1 whereas those for the writers written summaries are 0.81 and 2.07\".\n- Blinded pairwise comparison: six Upwork annotators, the same 100 pairs each. Overall preference is 50.4% writers against 49.6% Instruct Davinci (Figure 5).\n- Agreement (p9): informativeness \"Krippendorff's alpha is 0.32\"; overall preference \"Krippendorff's alpha is 0.07\".\n- Individual annotators range from 43.0% to 56.9% preferring the writers.\n\n5. Instruction tuning, not size (p1, p4)\n- quote (p1): \"even a 350M parameter instruction-tuned GPT-3 can perform on par with the 175B parameter GPT-3.\"\n- Zero-shot CNN/DM: GPT-3 175B scores 0.76 / 2.65 / 3.50; Ada Instruct 350M scores 0.88 / 4.02 / 4.26.\n\nLIMITS\n- News only, English, two datasets, 100 articles each; the paired comparison is 100 pairs and six raters.\n- The cut-and-paste analysis covers ten summary pairs.\n- Size and instruction tuning are compared only within OpenAI models, whose training details are \"inferred by us based on the API naming scheme\" (p3).\n- The authors concede fine-tuned models may be underestimated because of poor training data.\n- No LLM-as-judge and no reference-free metrics are tested.\n- Dated: the models are 2022 vintage.\n\nBUILDS ON\n- Fabbri et al. (2020), SummEval: the annotation guidelines.\n- Maynez et al. (2020): XSUM unfaithfulness.\n- Freitag et al. (2020): reference quality in machine translation.\n- Goyal et al. (2022): GPT-3 news summarization.\n- Jing and McKeown (2000): cut-and-paste operations.\n- Grusky et al. (2018): coverage and density.\n- Liu et al. (2022a): length as a confound.\n\nCODE: none. The prompt is on p3: \"Article: [article]. Summarize the article in three sentences. Summary:\".\n\nFIGURES: Figure 6, p10, \"System-level Rouge-L vs. annotating rating of faithfulness\", XSUM references on the left and freelance references on the right. It shows the same metric flipping from a negative to a positive relationship when only the references change.\n\nPROBLEMS\n- The extraction is clean and contains no embedded instructions.\n- Section 3.3 says \"six popular automatic metrics\" but lists and tabulates five.\n- The p5 text cites \"Table 3\" where Table 2 is meant.\n- Table 4 says its Instruct Davinci and reference rows are averaged from Table 2, but the simple means do not match (reference faithfulness would be 0.605, not 0.64). The basis for those rows is unclear, so quote them as printed.\n- The informativeness figure is 51.1% in the text and 51.2% in Figure 5.\n- The 350M GPT-3 five-shot XSUM row is blank because the model produced empty outputs.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/zhang-2023-benchmarking-large-language-models-news.pdf"
+ "type": "empirical",
+ "question": "What drives LLM zero-shot news summarization quality, and are LLM summaries comparable to those of human writers once reference quality is controlled?",
+ "hypothesis": "Instruction tuning rather than model scale explains zero-shot summarization; poor references depress metric correlation and few-shot/fine-tuning results.",
+ "contributions": [
+  "Identify instruction tuning, not scale, as key to LLM summarization",
+  "Show XSUM references are judged worse than best LLM summaries",
+  "Collect freelance-writer summaries and show best LLM is rated comparable; release them and evaluation data"
+ ],
+ "method": {
+  "summary": "Human (MTurk) evaluation of 10 LLMs, 2 fine-tuned models and existing references on 100 CNN/DM and 100 XSUM articles; then freelance writer summaries on 50+50 articles and a 6-annotator pairwise comparison against Instruct Davinci; metric correlations at system level.",
+  "task": "news summarization evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "CNN/DM",
+    "role": "eval",
+    "size": "100 validation articles (human eval); 50 articles re-annotated by freelancers",
+    "split": "validation",
+    "source": "Hermann et al. 2015",
+    "preprocessing": "five 5-shot demos sampled from train, 50-150 GPT-2 tokens"
+   },
+   {
+    "name": "XSUM",
+    "role": "eval",
+    "size": "100 validation articles (human eval); 50 articles re-annotated by freelancers",
+    "split": "validation",
+    "source": "Narayan et al. 2018",
+    "preprocessing": "demos hand-picked from train; freelancers got full articles, not preprocessed version"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 davinci v1",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 curie v1",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 ada v1",
+    "role": "evaluated",
+    "params": "350M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "generated empty outputs, omitted from human evaluation"
+    }
+   },
+   {
+    "name": "InstructGPT davinci v2",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT curie v1",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT ada v1",
+    "role": "evaluated",
+    "params": "350M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OPT",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GLM",
+    "role": "evaluated",
+    "params": "130B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Cohere xlarge v20220609",
+    "role": "evaluated",
+    "params": "52.4B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Anthropic-LM v4-s3",
+    "role": "evaluated",
+    "params": "52B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Pegasus",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "decoding": "beam 5"
+    }
+   },
+   {
+    "name": "BRIO",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "decoding": "beam 5"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "0.3",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one summary per article per model setting; no seeds stated",
+   "prompting": "zero-shot and five-shot (five train examples); CNN/DM 'summarize in three sentences', XSUM 'one sentence'; zero-shot only for 3 GPT-3 and 3 instruct GPT-3 models; Section 4 prompt asks 25 words to get ~50 word summaries",
+   "retrieval": null,
+   "parameters": {
+    "fewshot_k": "5",
+    "finetuned_beam": "5"
+   },
+   "other": {
+    "api_naming_note": "instruction-tuning details of instruct GPT-3 inferred from API names"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Faithfulness",
+     "definition": "binary rating per Fabbri et al. 2020 guidelines, mean of 3 annotators",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Coherence",
+     "definition": "1-5 Likert, mean of 3 annotators",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Relevance",
+     "definition": "1-5 Likert, mean of 3 annotators",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Kendall tau (system-level)",
+     "definition": "rank correlation of metric vs human score over systems; Rouge-L, METEOR, BertScore, BARTScore, BLEURT",
+     "unit": "tau",
+     "higher_is_better": true
+    },
+    {
+     "name": "Coverage / density",
+     "definition": "Grusky et al. 2018: % summary words in article / average length of copied spans",
+     "unit": "ratio / words",
+     "higher_is_better": null
+    },
+    {
+     "name": "Krippendorff alpha",
+     "definition": "agreement of pairwise preference annotators",
+     "unit": "alpha",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Pegasus",
+    "BRIO",
+    "existing references",
+    "freelance writers"
+   ],
+   "protocol": "MTurk 3 annotators per summary, $15/hr; significance tests marked in Table 2 (test not named); Section 4: 6 Upwork writers, $4/article, 3 writers per article, 6 annotators judging the same 100 pairs; fluency omitted"
+  },
+  "availability": {
+   "code": "https://github.com/Tiiiger/benchmark_llm_summarization",
+   "weights": null,
+   "data": "freelance summaries and evaluation data released at same URL"
+  },
+  "prompts": [
+   {
+    "purpose": "CNN/DM zero-/few-shot summary",
+    "text": "Article: [article]. Summarize the article in three sentences. Summary:",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "XSUM summary",
+    "text": "summarize in one sentence",
+    "where": "Sec 3.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Instruct Davinci zero-shot faithfulness on XSUM",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "0.97",
+   "unit": "mean binary score",
+   "baseline_value": "0.37 (existing XSUM references)",
+   "n": null,
+   "setup": "CNN/DM or XSUM, 100 validation articles each, MTurk human ratings (3 annotators averaged), faithfulness binary 0-1; zero-shot, temperature 0.3, prompt 'summarize in one sentence'",
+   "note": null,
+   "where": "Table 2, p4",
+   "table": "Table 2, row Davinci Instruct v2 (175B*) zero-shot, column XSUM Faithfulness"
+  },
+  {
+   "claim": "Existing XSUM reference summaries have faithfulness 0.37",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "0.37",
+   "unit": "mean binary score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM or XSUM, 100 validation articles each, MTurk human ratings (3 annotators averaged), faithfulness binary 0-1",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Existing references, column XSUM Faithfulness"
+  },
+  {
+   "claim": "Existing CNN/DM references have faithfulness 0.84, coherence 3.20, relevance 3.94, below most systems",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "0.84",
+   "unit": "mean binary score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM or XSUM, 100 validation articles each, MTurk human ratings (3 annotators averaged), faithfulness binary 0-1",
+   "note": "Table 2 existing references on CNN/DM: 0.84 / 3.20 / 3.94; zero-shot Instruct Davinci 0.99 / 4.15 / 4.60",
+   "where": "Table 2",
+   "table": "Table 2, row Existing references, column CNN/DM Faithfulness"
+  },
+  {
+   "claim": "Zero-shot Instruct Davinci CNN/DM faithfulness 0.99",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "0.99",
+   "unit": "mean binary score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM or XSUM, 100 validation articles each, MTurk human ratings (3 annotators averaged), faithfulness binary 0-1; zero-shot",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Davinci Instruct v2 (175B*) zero-shot, column CNN/DM Faithfulness"
+  },
+  {
+   "claim": "Five-shot prompting with XSUM references lowers Instruct Davinci faithfulness from 0.97 to 0.77",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "0.77",
+   "unit": "mean binary score",
+   "baseline_value": "0.97",
+   "n": null,
+   "setup": "XSUM, Instruct Davinci 175B, five-shot with training-set reference summaries vs zero-shot 0.97",
+   "note": null,
+   "where": "Sec 3.2, p5",
+   "quote": "the faithfulness score of Instruct Davinci drops from 0.97 to 0.77"
+  },
+  {
+   "claim": "Instruct Davinci beats fine-tuned Pegasus on CNN/DM coherence",
+   "kind": "measured",
+   "source": null,
+   "metric": "coherence",
+   "value": "4.15",
+   "unit": "Likert 1-5",
+   "baseline_value": "3.93",
+   "n": null,
+   "setup": "CNN/DM, zero-shot Instruct Davinci vs Pegasus (3.93)",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "Instruct Davinci achieves higher coherence and\nrelevance scores (4.15 vs. 3.93 and 4.60 vs. 4.40)"
+  },
+  {
+   "claim": "Instruct Davinci beats Pegasus on XSUM faithfulness",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "0.97",
+   "unit": "mean binary score",
+   "baseline_value": "0.57",
+   "n": null,
+   "setup": "XSUM, zero-shot Instruct Davinci vs Pegasus 0.57",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "0.97 vs. 0.57 and 4.28 vs. 3.85"
+  },
+  {
+   "claim": "Instruction tuning, not scale: 350M Instruct Ada beats 175B GPT-3 zero-shot on CNN/DM coherence",
+   "kind": "measured",
+   "source": null,
+   "metric": "coherence",
+   "value": "4.02",
+   "unit": "Likert 1-5",
+   "baseline_value": "2.65",
+   "n": null,
+   "setup": "CNN/DM zero-shot, Ada Instruct v1 (350M*) vs GPT-3 (175B) 2.65",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Ada Instruct v1 (350M*) and GPT-3 (175B) zero-shot, column CNN/DM Coherence"
+  },
+  {
+   "claim": "ROUGE-L system-level Kendall tau with relevance on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau",
+   "value": "0.72",
+   "unit": "Kendall tau",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, 18 system settings, original references, system-level",
+   "note": null,
+   "where": "Sec 3.3, Table 3",
+   "quote": "Rouge-L has a 0.72 Kendall’s tau correlation co-\nefﬁcient with relevance"
+  },
+  {
+   "claim": "ROUGE-L tau with faithfulness on CNN/DM",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau",
+   "value": "0.54",
+   "unit": "Kendall tau",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, system-level, original references",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Rouge-L, column CNN/DailyMail Faithfulness"
+  },
+  {
+   "claim": "ROUGE-L tau with faithfulness on XSUM is negative",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau",
+   "value": "-0.27",
+   "unit": "Kendall tau",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSUM, system-level, original references",
+   "note": "All five metrics negative on XSUM faithfulness: METEOR -0.22, BertScore -0.23, BARTScore -0.22, BLEURT -0.08. XSUM coherence tau is positive (0.67-0.71).",
+   "where": "Table 3",
+   "table": "Table 3, row Rouge-L, column XSUM Faithfulness"
+  },
+  {
+   "claim": "BLEURT highest CNN/DM relevance tau",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau",
+   "value": "0.81",
+   "unit": "Kendall tau",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, system-level",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BLEURT, column CNN/DailyMail Relevance"
+  },
+  {
+   "claim": "Rouge-L difference larger than 0.05 usually means better human evaluation when comparing only LLMs",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rouge-L gap",
+   "value": "0.05",
+   "unit": "Rouge-L",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM, within LLM group, read from Fig 3",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "a larger than 0.05 Rouge-L difference\nusually translates to improved human evaluation"
+  },
+  {
+   "claim": "Freelance writer summaries rated much higher than references (MTurk quality check)",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": "0.93",
+   "unit": "mean binary score",
+   "baseline_value": "0.64",
+   "n": null,
+   "setup": "100 random freelance summaries, MTurk, faithfulness; coherence 4.39, relevance 4.26; references 0.64 / 3.59 / 3.45 (averaged over both datasets)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Freelance Writer, column Faithfulness"
+  },
+  {
+   "claim": "Overall preference writers vs Instruct Davinci, aggregate",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall preference",
+   "value": "50.4%",
+   "unit": "share of pairwise judgements",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 summary pairs, 6 annotators, blinded pairwise, 50 CNN/DM + 50 XSUM articles; Fig 5 labels which side is which only by layout",
+   "note": "Figure 5 text extraction does not say which percentage belongs to writers; text says annotators 'equally prefer'. Krippendorff alpha 0.07.",
+   "where": "Fig 5, Sec 4.2",
+   "quote": "50.4%\n49.6%"
+  },
+  {
+   "claim": "Inter-annotator agreement on overall preference is very low",
+   "kind": "measured",
+   "source": null,
+   "metric": "Krippendorff alpha",
+   "value": "0.07",
+   "unit": "Krippendorff alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 annotators, 100 pairs",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Krippendorff’s alpha is 0.07"
+  },
+  {
+   "claim": "Inter-annotator agreement on informativeness is moderate",
+   "kind": "measured",
+   "source": null,
+   "metric": "Krippendorff alpha",
+   "value": "0.32",
+   "unit": "Krippendorff alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 annotators, 100 pairs",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Krippendorff’s alpha is 0.32"
+  },
+  {
+   "claim": "Abstractive style rated more informative only 51.1% of the time",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "51.1%",
+   "unit": "share",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 annotators, 100 pairs",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "only 51.1%\nof the time"
+  },
+  {
+   "claim": "Instruct Davinci summaries are far more extractive: density 12.1 vs 2.07 for writers",
+   "kind": "measured",
+   "source": null,
+   "metric": "density",
+   "value": "12.1",
+   "unit": "density (avg length of copied spans)",
+   "baseline_value": "2.07",
+   "n": null,
+   "setup": "50 words average, coverage 0.92 vs 0.81",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "are 0.92 and 12.1 whereas those for the writers\nwritten summaries are 0.81 and 2.07"
+  },
+  {
+   "claim": "Individual annotator preference varies; annotator 1 prefers Instruct Davinci 57% despite writing abstractively",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "57%",
+   "unit": "share",
+   "baseline_value": null,
+   "n": null,
+   "setup": "annotator 1, overall preference",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "annotator 1 prefers Instruct Davinci\n57% of the time"
+  },
+  {
+   "claim": "ROUGE-L vs faithfulness on XSUM correlates much better when computed against freelance summaries",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSUM, system-level, Fig 6 scatter only, no coefficient given",
+   "note": "No number printed; only a plot.",
+   "where": "Sec 4.3, Fig 6"
+  },
+  {
+   "claim": "Instruction tuning, not model size, is the key to zero-shot summarization",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ten LLMs, CNN/DM and XSUM, human evaluation",
+   "note": null,
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "No summary-level correlations; system-level only with ~18 points",
+  "No inter-annotator agreement reported for MTurk ratings",
+  "Freelance-reference correlation shown only as plot (Rouge-L, XSUM faithfulness)",
+  "News single-document only; authors say benchmark may be at its limit",
+  "Instruction-tuning details of GPT-3 variants inferred from API names",
+  "Table 2 significance test not named; sample size 100 per dataset",
+  "Section 3.2 text refers to differences 'overstated in Table 3' (likely Table 2)",
+  "Models dated (2022 GPT-3 API, OPT, GLM, Cohere, Anthropic-LM)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "coverage",
+   "definition": "percentage of words in the summary that are also present in the article",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "density",
+   "definition": "average length of the continuous text spans in the summary that are copied from the article",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SummEval (Fabbri et al.)",
+   "year": 2020,
+   "arxiv": "2007.12626",
+   "relation": "uses-method",
+   "note": "annotation guidelines and metric correlation comparison",
+   "quote": null
+  },
+  {
+   "work": "News summarization and evaluation in the era of GPT-3 (Goyal et al.)",
+   "year": 2022,
+   "arxiv": "2209.12356",
+   "relation": "extends",
+   "note": "consistent with finding",
+   "quote": null
+  },
+  {
+   "work": "Revisiting the gold standard (Liu et al.)",
+   "year": 2022,
+   "arxiv": "2212.07981",
+   "relation": "related",
+   "note": "length confound; fine-grained units",
+   "quote": null
+  },
+  {
+   "work": "CNN/DM",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Hermann et al.",
+   "quote": null
+  },
+  {
+   "work": "XSUM",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Narayan et al.",
+   "quote": null
+  },
+  {
+   "work": "Pegasus",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Zhang et al.",
+   "quote": null
+  },
+  {
+   "work": "BRIO",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Liu et al.",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "evaluates",
+   "note": "instruction-tuned GPT-3",
+   "quote": null
+  },
+  {
+   "work": "Maynez et al.",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "XSUM references unfaithful",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Selected annotator ratings of summary coherence on a 1 to 5 Likert scale.",
+   "page": 1,
+   "why": "shows references below LLMs"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "System-level Rouge-L vs. annotating rating of faithfulness (XSUM refs vs freelance refs).",
+   "page": 10,
+   "why": "shows reference quality flips correlation sign"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Writers vs Instruct Davinci pairwise preference per annotator.",
+   "page": 8,
+   "why": "shows annotator variability"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No appendix; PDF is arXiv v1",
+  "Text cites 'six popular automatic metrics' but lists five",
+  "Fig 5 percentages not attributable to sides from text extraction"
+ ]
 }

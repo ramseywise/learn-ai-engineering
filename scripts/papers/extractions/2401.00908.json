@@ -1,0 +1,673 @@
+{
+ "schema": 1,
+ "key": "2401.00908",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/wang-2023-docllm.pdf",
+ "bib": {
+  "title": "DocLLM: A Layout-Aware Generative Language Model for Multimodal Document Understanding",
+  "authors": [
+   "Dongsheng Wang",
+   "Natraj Raman",
+   "Mathieu Sibue",
+   "Zhiqiang Ma",
+   "Petr Babkin",
+   "Simerjot Kaur",
+   "Yulong Pei",
+   "Armineh Nourbakhsh",
+   "Xiaomo Liu"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2401.00908",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 64150,
+  "chars_total": 64150,
+  "engine": "pymupdf",
+  "skipped": "none; references skimmed"
+ },
+ "type": "empirical",
+ "question": "Can a text LLM be extended with only OCR bounding-box information, no image encoder, to understand visually rich documents?",
+ "hypothesis": "Treating spatial layout as a separate modality via disentangled attention, plus block infilling pretraining, suffices for document intelligence tasks.",
+ "contributions": [
+  "A light-weight extension to LLMs designed for understanding visual documents.",
+  "A disentangled spatial attention mechanism that captures cross-alignment between text and layout modalities.",
+  "An infilling pre-training objective tailored to address irregular layouts effectively.",
+  "An instruction-tuning dataset specially curated towards visual document intelligence tasks.",
+  "Comprehensive experiments and valuable insights into the model behavior."
+ ],
+ "method": {
+  "summary": "Falcon-1B and Llama2-7B are extended with disentangled text/spatial attention over OCR bounding boxes, pretrained with block infilling on 3.8B tokens of CDIP and DocBank, then instruction-tuned on 16 DocAI datasets (VQA, NLI, KIE, CLS). Evaluated in same-dataset (SDDS) and held-out-dataset (STDD) settings.",
+  "task": "document VQA, NLI, key information extraction, document classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "IIT-CDIP Test Collection 1.0 + DocBank",
+    "role": "pretrain",
+    "size": "5,592,245 docs, 16,792,962 pages, 3,865,913,752 tokens (CDIP 5,092,636 docs/16,293,353 pages/3,637,551,478 tokens; DocBank 499,609 docs/228,362,274 tokens)",
+    "split": "one epoch",
+    "source": "CDIP: 1990s tobacco litigation documents; DocBank: layout analysis benchmark",
+    "preprocessing": "OCR text with bounding boxes; OCR blocks used for block-level masking only during pretraining"
+   },
+   {
+    "name": "Instruction-tuning mix (16 datasets: DocVQA, WTQ, VisualMRC, DUDE, BizDocs, TabFact, KLC, CORD, FUNSD, DeepForm, PWC, SROIE, VRDU ad-buy, RVL-CDIP)",
+    "role": "both",
+    "size": "635,883 train / 96,919 test (VQA 145,090/24,347; NLI 104,360/12,720; KIE 236,806/38,039; CLS 149,627/21,813)",
+    "split": "unseen test split, or dev when no test; VRDU ad-buy random train-test split",
+    "source": "public datasets; BizDocs is internal, due to be released",
+    "preprocessing": "templated prompts; MCQ choices flattened into copies in train only; KIE test keeps extraction template only; CLS test keeps MCQ only; RVL-CDIP downsampled in train"
+   },
+   {
+    "name": "STDD held-out: DocVQA, KLC, BizDocs",
+    "role": "eval",
+    "size": "null",
+    "split": "tuned on 11 of 16 datasets, tested on 3 held-out (5 dataset-task settings)",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DocLLM-1B",
+    "role": "proposed",
+    "params": "1B",
+    "architecture": "causal decoder with disentangled spatial attention",
+    "init_from": "Falcon-1B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1536,
+    "heads": 16,
+    "context": "1,024",
+    "other": {}
+   },
+   {
+    "name": "DocLLM-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "causal decoder with disentangled spatial attention",
+    "init_from": "Llama2-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 36,
+    "hidden": 4096,
+    "heads": 32,
+    "context": "1,024",
+    "other": {
+     "note": "stated 36 layers although Llama2-7B has 32; as printed"
+    }
+   },
+   {
+    "name": "GPT-4+OCR (zero-shot)",
+    "role": "baseline",
+    "params": "~1T",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama2+OCR (zero-shot)",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "mPLUG-DocOwl",
+    "role": "baseline",
+    "params": "~7B (text+vision)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UReader",
+    "role": "baseline",
+    "params": "~7B (text+vision)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Pretrain: autoregressive block infilling (cross-entropy L_IF over masked OCR blocks, replaced by [M], conditioned with [S], output ends with [E]); instruction tuning: supervised on templated prompts",
+   "optimizer": "Adam (1B: betas 0.9,0.96, eps 1e-5; 7B: betas 0.9,0.95, eps 1e-6)",
+   "lr": "1B: 2e-4 pretrain / 1e-4 instruct; 7B: 3e-4 pretrain / 1e-4 instruct",
+   "lr_schedule": "cosine",
+   "warmup": "1000 steps pretrain, 500 steps instruct-tune",
+   "batch_size": "1B: 2; 7B: 5 (Table 4; per-device vs global not stated)",
+   "steps": null,
+   "epochs": "pretrain 1 epoch; instruct-tune 10 epochs (1B), 3 epochs (7B)",
+   "tokens": "3,865,913,752 pretraining tokens x 1 epoch",
+   "seq_len": "1,024",
+   "precision": "bfloat16 (Table 4); '16-bit mixed precision' in text",
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "7B: 8x 24GB A10g, FSDP via accelerate; 1B: single 24GB A10g",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lambda": "lambda_ss=1, lambda_st=0, lambda_ts=0 for all Sec 4 experiments",
+    "spatial_encoding": "bounding boxes (left, top, right, bottom) encoded to hidden vectors S, reused across layers, per-layer Ws,q Ws,k projections; encoder of boxes not specified in detail"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Instruction templates (Table 1) with {document} = OCR text plus bounding boxes; baselines are zero-shot with OCR text only; zero-shot prompts refined by three prompt engineers, five rounds each, best of three groups taken, plus post-processing",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ANLS",
+     "definition": "Average Normalized Levenshtein Similarity, for VQA (DocVQA, DUDE, BizDocs)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "CIDEr",
+     "definition": "for VisualMRC",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "WTQ, NLI, CLS",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "KIE datasets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "NTP accuracy",
+     "definition": "out-of-sample next-token prediction accuracy at pretraining, ablations only",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4+OCR ZS",
+    "Llama2+OCR ZS",
+    "mPLUG-DocOwl",
+    "UReader"
+   ],
+   "protocol": "Single run; no seeds or significance tests stated. SDDS and STDD settings; ablations on 100,000 pretraining chunks, 1,000 unseen documents."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "BizDocs 'due to be released publicly'; others public"
+  },
+  "prompts": [
+   {
+    "purpose": "KIE extraction",
+    "text": "{document} What is the value for the \"{key}\"?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "VQA",
+    "text": "{document} {question}",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "NLI",
+    "text": "{document} \"{statement}\", Yes or No?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "KIE MCQ",
+    "text": "{document} What is \"{value}\" in the document? Possible choices: {choices}.",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "KIE internal classification",
+    "text": "{document} What is \"{value}\" in the document?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "CLS MCQ",
+    "text": "{document} What type of document is this? Possible choices: {choices}.",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "CLS internal classification",
+    "text": "{document} What type of document is this?",
+    "where": "Table 1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Batch size 2 5",
+    "where": "Table 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DocLLM-7B outperforms equivalent models on 14 of 16 datasets in SDDS (GPT-4 excluded).",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won",
+   "value": "14/16",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SDDS: test/dev split of the 16 instruction-tuning datasets; baselines Llama2+OCR ZS, mPLUG-DocOwl, UReader (SDDS), GPT-4+OCR ZS.",
+   "note": "Abstract says 'outperforms SotA LLMs on 14 out of 16 datasets'; Sec 4.3 says it excels in 12 of 16 when GPT-4 is included.",
+   "where": "Sec 4.3",
+   "quote": "Among equivalent models (excluding GPT4), our model outperforms in 14 out of 16 datasets."
+  },
+  {
+   "claim": "Including GPT-4, DocLLM-7B is best on 12 of 16 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "datasets won",
+   "value": "12/16",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SDDS, Table 5.",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "we observe that DocLLM-7B excels in 12 out of 16 datasets"
+  },
+  {
+   "claim": "DocLLM-7B on DocVQA (ANLS) vs GPT-4+OCR zero-shot: GPT-4 is higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 69.5,
+   "unit": "ANLS",
+   "baseline_value": 82.8,
+   "n": null,
+   "setup": "SDDS, DocLLM-7B instruction-tuned, GPT-4 ZS with OCR text.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row DocVQA, columns GPT-4+OCR / DocLLM-7B"
+  },
+  {
+   "claim": "DocLLM-7B on KLC (KIE F1) far exceeds GPT-4+OCR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 60.3,
+   "unit": "F1",
+   "baseline_value": 45.9,
+   "n": null,
+   "setup": "SDDS.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row KLC, column DocLLM-7B"
+  },
+  {
+   "claim": "DocLLM-7B on DeepForm F1 vs GPT-4+OCR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 75.7,
+   "unit": "F1",
+   "baseline_value": 42.1,
+   "n": null,
+   "setup": "SDDS.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row DeepForm, column DocLLM-7B"
+  },
+  {
+   "claim": "DocLLM-7B on VRDU ad-buy F1 vs GPT-4+OCR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 88.8,
+   "unit": "F1",
+   "baseline_value": 43.7,
+   "n": null,
+   "setup": "SDDS.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row VRDU a.-b., column DocLLM-7B"
+  },
+  {
+   "claim": "DocLLM-7B on RVL-CDIP classification accuracy vs GPT-4+OCR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.8,
+   "unit": "%",
+   "baseline_value": 68.2,
+   "n": null,
+   "setup": "SDDS.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RVL-CDIP, column DocLLM-7B"
+  },
+  {
+   "claim": "DocLLM-7B on TabFact (NLI) is below GPT-4 and UReader.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 66.4,
+   "unit": "%",
+   "baseline_value": 77.1,
+   "n": null,
+   "setup": "SDDS.",
+   "note": "UReader 67.6, mPLUG-DocOwl 60.2, Llama2 48.2",
+   "where": "Table 5",
+   "table": "Table 5, row TabFact, column DocLLM-7B"
+  },
+  {
+   "claim": "DocLLM-1B is close to DocLLM-7B on KIE/CLS (e.g. RVL-CDIP 90.9 vs 91.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 90.9,
+   "unit": "%",
+   "baseline_value": 91.8,
+   "n": null,
+   "setup": "SDDS.",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RVL-CDIP, column DocLLM-1B"
+  },
+  {
+   "claim": "DocLLM-7B on held-out KLC (STDD) F1, vs Llama2+OCR ZS 27.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 49.9,
+   "unit": "F1",
+   "baseline_value": 27.8,
+   "n": null,
+   "setup": "STDD: instruction-tuned on 11 of 16 datasets, tested on held-out DocVQA, KLC, BizDocs.",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row DocLLM-7B, column KLC KIE"
+  },
+  {
+   "claim": "DocLLM-7B on held-out DocVQA (STDD) ANLS vs Llama2+OCR ZS 47.4; GPT-4 82.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ANLS",
+   "value": 63.4,
+   "unit": "ANLS",
+   "baseline_value": 47.4,
+   "n": null,
+   "setup": "STDD.",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row DocLLM-7B, column DocVQA VQA"
+  },
+  {
+   "claim": "Held-out BizDocs classification accuracy of DocLLM-7B is below Llama2 ZS-level gap and well below GPT-4; authors call it notably lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 31.1,
+   "unit": "%",
+   "baseline_value": 40.9,
+   "n": null,
+   "setup": "STDD; only one classification dataset in training.",
+   "note": "Llama2+OCR ZS = 40.9, GPT-4+OCR ZS = 84.9, so DocLLM-7B is below both.",
+   "where": "Table 6",
+   "table": "Table 6, row DocLLM-7B, column BizDocs CLS"
+  },
+  {
+   "claim": "Intro claims 15% to 61% improvement over Llama2-7B in four of five unseen datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "STDD held-out datasets.",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "result in a performance improvement ranging from 15% to 61% for the Llama2-7B model in four out of five previously unseen datasets"
+  },
+  {
+   "claim": "Ablation: text-only attention gives lowest NTP accuracy; spatial-to-spatial only (lambda_ss=1) plus T2T is highest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NTP accuracy",
+   "value": 39.12,
+   "unit": "%",
+   "baseline_value": 35.43,
+   "n": null,
+   "setup": "Pre-training subset: 100,000 chunks, 1,000 unseen test documents, NTP out-of-sample accuracy.",
+   "note": "T2T only = 35.43; all four = 39.02",
+   "where": "Table 7",
+   "table": "Table 7, row S2S + T2T"
+  },
+  {
+   "claim": "Ablation: block infilling + spatial beats causal learning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NTP accuracy",
+   "value": 39.1,
+   "unit": "%",
+   "baseline_value": 32.6,
+   "n": null,
+   "setup": "Same ablation setup, Table 8.",
+   "note": "Causal + Spatial = 36.2; so spatial adds 3.6 points, infilling a further 2.9",
+   "where": "Table 8",
+   "table": "Table 8, row Block Infilling + Spatial"
+  },
+  {
+   "claim": "Causal decoder is marginally better than prefix decoder, so causal is used.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figure 4, five attention configurations.",
+   "note": "Numbers only in Fig 4, not in text.",
+   "where": "Sec 5",
+   "quote": "with the causal decoder having a slight edge over the prefix"
+  },
+  {
+   "claim": "Higher weight decay (0.1 vs 0.01), higher instruction-tuning lr (1e-4 vs 5e-5) and cosine scheduler tend to help.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Informal internal experience; authors acknowledge absence of robust validation.",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "we observe that a higher weight decay (e.g., 0.1 versus 0.01) generally improves performance"
+  }
+ ],
+ "limits": [
+  "No vision: OCR quality bounds performance; OCR engines/layout parsers not compared (future work).",
+  "STDD only three held-out datasets because of instruction-tuning cost; CLS generalises poorly (single classification training dataset).",
+  "GPT-4 beats DocLLM on VQA.",
+  "Training insights (weight decay, lr, scheduler) given without robust validation.",
+  "7B instruct-tuned only 3 epochs vs 10 for 1B due to compute; context 1,024 only.",
+  "Baselines are zero-shot with OCR text only; DocLLM is instruction-tuned, so comparison is not like-for-like; no seeds or variance.",
+  "Ablations use NTP accuracy on a small pretraining subset, not downstream metrics.",
+  "Instruction-tuning data crowdsourced instructions/preferences left to future work; BizDocs internal."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SDDS",
+   "definition": "Same Datasets, Different Splits",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "STDD",
+   "definition": "Same Tasks, Different Datasets",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeBERTa (disentangled attention)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "disentangled attention idea",
+   "quote": null
+  },
+  {
+   "work": "GLM autoregressive blank infilling",
+   "year": 2021,
+   "arxiv": "2103.10360",
+   "relation": "uses-method",
+   "note": "block infilling objective",
+   "quote": null
+  },
+  {
+   "work": "Fill-in-the-middle (Bavarian et al.)",
+   "year": 2022,
+   "arxiv": "2207.14255",
+   "relation": "related",
+   "note": "FIM",
+   "quote": null
+  },
+  {
+   "work": "LayoutLM",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "additive spatial embeddings",
+   "quote": null
+  },
+  {
+   "work": "UDOP",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concatenated spatial embeddings; excluded as needs task-specific fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "mPLUG-DocOwl",
+   "year": 2023,
+   "arxiv": "2307.02499",
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "UReader",
+   "year": 2023,
+   "arxiv": "2310.05126",
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "extends",
+   "note": "7B backbone and baseline",
+   "quote": null
+  },
+  {
+   "work": "Falcon / RefinedWeb",
+   "year": 2023,
+   "arxiv": "2306.01116",
+   "relation": "extends",
+   "note": "1B backbone",
+   "quote": null
+  },
+  {
+   "work": "GPT-4",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero-shot with OCR",
+   "quote": null
+  },
+  {
+   "work": "IIT-CDIP, DocBank",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "DocLLM model architecture with disentangled spatial attention and infilling objective.",
+   "page": 4,
+   "why": "shows the [M]/[S]/[E] infilling construction and cross-modal attention"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Performance comparison in the SDDS setting against other multimodal and non-multimodal LLMs",
+   "page": 9,
+   "why": "main results over 16 datasets"
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Ablation study on disentangled spatial attention.",
+   "page": 10,
+   "why": "which attention terms matter"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "A_ij = Q^t_i K^t_j^T + \u03bb_ts Q^t_i K^s_j^T + \u03bb_st Q^s_i K^t_j^T + \u03bb_ss Q^s_i K^s_j^T",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Eq 4 / text refer to '\u03bb hyperparameter in Eq 6' in ablation; likely Eq 4 (as printed).",
+  "Abstract/intro say 14 of 16 and generalises to 4 of 5 unseen; Sec 4.3 says 12 of 16 including GPT-4; Table 6 has three datasets but five dataset-task settings.",
+  "DocLLM-7B stated as 36 layers though Llama2-7B has 32 (as printed).",
+  "Table 5 PWC DocLLM-7B printed 29.06.",
+  "No embedded instructions found."
+ ]
+}

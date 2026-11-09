@@ -1,19 +1,531 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2309.11495",
  "pdf": "generative-ai/08-eval/sources/dhuliawala-2023-chain-verification-reduces-hallucination-large.pdf",
  "bib": {
   "title": "Chain-of-Verification Reduces Hallucination in Large Language Models",
-  "first_author": "Shehzaad Dhuliawala",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Shehzaad Dhuliawala",
+   "Mojtaba Komeili",
+   "Jing Xu",
+   "Roberta Raileanu",
+   "Xian Li",
+   "Asli Celikyilmaz",
+   "Jason Weston"
+  ],
+  "first_author": "Dhuliawala",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2309.11495",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 50586,
+  "chars_total": 50586,
+  "engine": "pymupdf",
+  "skipped": "Fig 4-8 are ChatGPT screenshots (images); captions only"
  },
- "legacy_report": "SOURCE: \"Chain-of-Verification Reduces Hallucination in Large Language Models\", Dhuliawala, Komeili, Xu, Raileanu, Li, Celikyilmaz, Weston (Meta AI; ETH Zurich). Preprint: the only venue mark on the PDF is \"arXiv:2309.11495v2 [cs.CL] 25 Sep 2023\". 2023.\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/dhuliawala-2023-chain-verification-reduces-hallucination-large.pdf\n\nCOVERAGE: 19 of 19 pages, 51,241 of 51,241 chars. Body pp1-9, references pp10-12 (skimmed for origins), appendices pp13-19 (Fig 3, prompt templates Tables 5-9, ChatGPT screenshots). The screenshots in Figs 4-8 are images, so only their captions were read.\n\nCLAIMS (ranked)\n\n- claim: A model answers short, isolated verification questions far more accurately than it states the same facts inside a long answer.\n  number: ~17% vs ~70%\n  setup: Wikidata list task, Llama 65B few-shot, 56 questions\n  quote: \"only ∼17% of the Llama few-shot baseline answer entities are correct in list-based questions. However, when querying each individual entity via a verification question, we find ∼70% are correctly answered.\"\n  where: p9\n\n- claim: Explicit per-fact cross-checking (factor+revise) gives the best longform factuality.\n  number: FActScore 55.9 (few-shot) → 60.8 (joint) → 63.7 (factored) → 71.4 (factor+revise); average facts 16.6 → 12.3\n  setup: biography generation (Min et al. 2023 benchmark), Llama 65B, greedy decoding, FActScore computed automatically by \"Instruct-Llama\" with retrieval; n not stated\n  quote: \"FACTSCORE increases 28% (55.9 → 71.4) from the few-shot baseline, with again only a relatively small reduction in average number of facts provided (16.6 → 12.3).\"\n  where: p8, Table 3 p7\n\n- claim: Answering verification questions without the draft in context beats answering them jointly.\n  number: Wikidata precision 0.17 baseline, 0.29 joint, 0.36 two-step, 0.32 factored; Wiki-Category 0.12 / 0.15 / 0.21 / 0.22\n  setup: Llama 65B; 56 Wikidata questions (~600 gold entities each) and 55 QUEST questions (~8 answers each); micro-averaged precision\n  quote: \"more than doubles the precision from the Llama 65B few-shot baseline for the Wikidata task (from 0.17 to 0.36) ... (negatives: 2.95 → 0.68) ... (positives: 0.59 → 0.38).\"\n  where: p7, Table 1 p6\n\n- claim: Open questions beat yes/no questions, and model-written questions beat templated ones.\n  number: factored precision 0.16 rule-based, 0.19 yes/no, 0.22 general; joint 0.13 / 0.15 / 0.15\n  setup: Wiki-Category task only, Llama 65B\n  quote: \"Rule-based questions 0.13 0.16 ... yes/no questions 0.15 0.19 general questions 0.15 0.22\"\n  where: Table 4, p8\n\n- claim: Yes/no verification invites agreement (acquiescence), though the evidence for this is anecdotal.\n  number: none\n  setup: ChatGPT screenshots only\n  quote: \"the model tends to agree with facts in a yes/no question format whether they are right or wrong.\"\n  where: p9; Fig 8 p19\n\n- claim: Closed-book QA improves modestly.\n  number: F1 0.39 → 0.46 (joint) → 0.48 (factored); precision 0.40 → 0.50, recall 0.38 → 0.46\n  setup: MultiSpanQA, 418 factoid questions, answers up to 3 tokens per item, Llama 65B\n  quote: \"We observe a 23% improvement in F1 over the few-shot baseline (0.39 → 0.48)\"\n  where: p7, Table 2\n\n- claim: Chain-of-thought and instruction tuning did not help on these tasks.\n  number: Llama 2 70B Chat FActScore 41.3 zero-shot, 41.1 CoT; Wikidata precision 0.12 vs 0.08\n  setup: zero-shot, with NER post-processing on list tasks\n  quote: \"Standard chain-of-thought (CoT) prompting also fails to improve the results for these tasks.\"\n  where: p8\n\n- claim: CoVe on Llama 65B outscores the retrieval-based PerplexityAI overall, but not on very rare facts.\n  number: 71.4 vs 61.6 (ChatGPT 58.7, InstructGPT 41.1; these three are taken from prior work)\n  quote: \"PerplexityAI still outperforms CoVe for very rare facts where retrieval is essential\"\n  where: p8, Fig 2 p7\n\nLIMITS\n- Conceded by the authors: hallucinations are reduced, not removed; only \"directly stated factual inaccuracies\" are addressed, not reasoning errors or opinions; extra token cost; the gain is capped by what the model knows; no retrieval or tools tested.\n- Not shown:\n  - CoVe is a generation-time correction method, not a judge or evaluator. It never measures verification accuracy against human labels, so using it to support judge design is an inference.\n  - Precision gains cost recall of correct items: Wikidata positives fall 0.59 → 0.38 (about a third) and biography facts 16.6 → 12.3. The paper calls this \"relatively small\".\n  - No confidence intervals, significance tests or seeds, on small test sets (56, 55, 418; biography n unstated).\n  - One base model (Llama 65B). The baseline and CoVe use different few-shot prompts.\n  - Two-step is reported only for the list tasks, and factor+revise only for biographies.\n  - The yes/no ablation is on one task, where the joint variant shows no difference (0.15 vs 0.15).\n  - The \"~70%\" figure has no table behind it.\n  - FActScore is itself an automated LLM-plus-retrieval metric.\n  - Cost and latency are not measured.\n- Dated: Llama 65B, Llama 2 and 2023 ChatGPT. No evidence for current models.\n\nBUILDS ON\n- Radhakrishnan et al. (2023), factored decomposition; the \"factored\" name is adopted from it.\n- Min et al. (2023), FActScore and the biography benchmark.\n- Cohen et al. (2023), LM vs LM cross-examination.\n- Manakul et al. (2023), SelfCheckGPT.\n- Wei et al. (2022), chain-of-thought.\n- Madaan et al. (2023), Self-Refine; Press et al. (2022).\n- Zhang et al. (2023), hallucination snowballing.\n- Holtzman et al. (2019), repetition.\n- Li et al. (2022), MultiSpanQA; Malaviya et al. (2023), QUEST.\n\nCODE (prompt template, Table 9, p16, verbatim)\n```\nContext: <Original Fact>.\nFrom another source,\n<output of execute verification step: Q + A>\nResponse: CONSISTENT. <Consistent fact>\n...\nResponse: INCONSISTENT.\n...\nResponse: PARTIALLY CONSISTENT. <Consistent part>\n```\nTable 8 (p15) notes the model \"is told that this information comes from 'another source'\".\n\nFIGURES\n- Figure 1, p2: \"Chain-of-Verification (CoVe) method...\" It shows the four steps on one query (politicians born in New York), where the draft lists Hillary Clinton and the isolated question \"Where was Hillary Clinton born?\" returns Chicago. It conveys both decomposition and the reason for hiding the draft faster than prose does. Figure 3 (p13) is the alternative if the per-claim tick/cross check is wanted for the grounding note.\n\nPROBLEMS\n- Extraction is clean, with no embedded instructions.\n- Minor artefacts: small-caps render as \"C OVE\" / \"F ACTSCORE\", and Figure 2's axis labels are interleaved into the p7 text.\n- Figure 2's per-rarity values are plot-only and not extractable, so none are reported.\n- \"28%\" and \"23%\" are relative improvements as printed, not percentage points."
+ "type": "empirical",
+ "question": "Can a language model reduce its own factual hallucinations by drafting an answer, planning and answering verification questions, and revising?",
+ "hypothesis": "Verification questions answered independently of the baseline response are more accurate and avoid repeating its hallucinations, so factored variants beat joint.",
+ "contributions": [
+  "CoVe: draft, plan verifications, execute verifications, final verified response, all with the same LLM",
+  "Joint, 2-step, factored and factor+revise verification execution variants",
+  "Experiments on Wikidata lists, Wiki-Category lists, MultiSpanQA and longform biographies"
+ ],
+ "method": {
+  "summary": "Llama 65B is prompted few-shot through four steps (baseline, plan verification questions, answer them, revise) with no tools. Variants differ in whether verification answers can see the baseline response. Compared against few-shot baseline and Llama 2 70B Chat zero-shot/CoT.",
+  "task": "hallucination reduction: list QA, closed-book QA, longform biography generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Wikidata list questions",
+    "role": "eval",
+    "size": "56 test questions, ~600 gold entities each",
+    "split": "test",
+    "source": "Wikidata API; 'Who are some [Profession]s who were born in [City]?'",
+    "preprocessing": "automatically generated"
+   },
+   {
+    "name": "Wiki-Category list (QUEST)",
+    "role": "eval",
+    "size": "55 test questions, ~8 answers each",
+    "split": "test",
+    "source": "QUEST (Malaviya et al., 2023); 'Name some' prepended to category names",
+    "preprocessing": "only examples without logical operations"
+   },
+   {
+    "name": "MultiSpanQA (closed book)",
+    "role": "eval",
+    "size": "418 questions",
+    "split": "test",
+    "source": "Li et al., 2022; questions from Natural Questions",
+    "preprocessing": "factoid subset, up to 3 tokens per item, no supporting documents"
+   },
+   {
+    "name": "Longform biographies",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Min et al. (2023) FACTSCORE benchmark",
+    "preprocessing": "prompt 'Tell me a bio of <entity>'"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama 65B",
+    "role": "proposed",
+    "params": "65B",
+    "architecture": "decoder-only, not instruction tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "base LLM for CoVe and few-shot baseline"
+    }
+   },
+   {
+    "name": "Llama 2 70B Chat",
+    "role": "baseline",
+    "params": "70B",
+    "architecture": "instruction tuned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT, ChatGPT, PerplexityAI",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers reported from Min et al. (2023)"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy for all models",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one greedy generation per question; no seeds or runs reported",
+   "prompting": "3 few-shot examples per task for each step; Llama 2 Chat zero-shot, or zero-shot CoT with 'Let's think step by step', plus 'List only the answers separated by a comma' and off-the-shelf NER post-processing for list tasks",
+   "retrieval": "none in CoVe (no tool use); only FACTSCORE evaluator uses retrieval",
+   "parameters": {
+    "verification_variants": "joint, 2-step, factored, factor+revise",
+    "biography_passage_split": "biography split into passages (sentences) for planning and revision due to context length"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Precision (micro-averaged), Pos., Neg.",
+     "definition": "precision of entities vs gold list; avg number of positive and negative entities",
+     "unit": "fraction / count",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1, Prec., Rec.",
+     "definition": "MultiSpanQA span-level scores",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "FACTSCORE",
+     "definition": "Min et al. (2023) retrieval-augmented fact-check, Instruct-Llama (Retrieve->LM + NP)",
+     "unit": "0-100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama 65B few-shot",
+    "Llama 2 70B Chat zero-shot",
+    "Llama 2 70B Chat CoT",
+    "InstructGPT",
+    "ChatGPT",
+    "PerplexityAI"
+   ],
+   "protocol": "automatic metrics, single run, no significance tests or seeds reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Generate baseline (few-shot)",
+    "text": "Q: Tell me a bio of <person>\nA: <bio of person>\n(x3 examples) Q: Tell me a bio of <person>\nA:",
+    "where": "Table 5, p14"
+   },
+   {
+    "purpose": "Plan verifications",
+    "text": "Context: Q: Tell me a bio of <person>.\nA: <passage about person>\nResponse:\n<fact in passage>, Verification Question\n(x3 examples, then final Context/Response)",
+    "where": "Table 6, p14"
+   },
+   {
+    "purpose": "Execute verifications",
+    "text": "Q: Verification Question\nA: Answer\n(x3 examples) Q: Verification Question\nA:",
+    "where": "Table 7, p15"
+   },
+   {
+    "purpose": "Final verified response",
+    "text": "Context: <Original Passage>.\nFrom another source,\n<output of execute verification step: Q + A>\nResponse: <revised and consistent Passage>",
+    "where": "Table 8, p15"
+   },
+   {
+    "purpose": "Factor+revise cross-check",
+    "text": "Context: <Original Fact>.\nFrom another source,\n<output of execute verification step: Q + A>\nResponse: CONSISTENT. <Consistent fact> | INCONSISTENT. | PARTIALLY CONSISTENT. <Consistent part>",
+    "where": "Table 9, p16"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CoVe (factor+revise) raises FACTSCORE on longform biographies from the few-shot baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": "71.4",
+   "unit": "FACTSCORE (0-100)",
+   "baseline_value": "55.9",
+   "n": null,
+   "setup": "Llama 65B, greedy, few-shot, 'Tell me a bio of <entity>', FACTSCORE via Instruct-Llama retrieval+NP",
+   "note": null,
+   "where": "Sec 4.3, p7",
+   "quote": "FACTSCORE increases 28% (55.9 → 71.4) from the few-shot baseline"
+  },
+  {
+   "claim": "Factored CoVe beats joint CoVe on longform FACTSCORE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": "63.7",
+   "unit": "FACTSCORE",
+   "baseline_value": "60.8",
+   "n": null,
+   "setup": "Llama 65B biographies",
+   "note": null,
+   "where": "Sec 4.3, p8",
+   "quote": "improvement from 60.8 →63.7 in FACTSCORE in longform generation"
+  },
+  {
+   "claim": "Explicit cross-check (factor+revise) adds a large gain over factored.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": "71.4",
+   "unit": "FACTSCORE",
+   "baseline_value": "63.7",
+   "n": null,
+   "setup": "Llama 65B biographies",
+   "note": null,
+   "where": "Sec 4.3, p8",
+   "quote": "We see large gains in the FACTSCORE metric from this further explicit reasoning from 63.7 (factored) →71.4 (factor+revise)."
+  },
+  {
+   "claim": "CoVe roughly halves-plus the list precision on Wikidata, mainly by removing hallucinated entities.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Precision (micro-avg)",
+   "value": "0.36",
+   "unit": "precision",
+   "baseline_value": "0.17",
+   "n": null,
+   "setup": "Wikidata 56 list questions, Llama 65B few-shot baseline vs CoVe two-step",
+   "note": null,
+   "where": "Sec 4.3, p7",
+   "quote": "more than doubles the precision from the Llama 65B few-shot baseline for the Wikidata task (from 0.17 to 0.36)"
+  },
+  {
+   "claim": "Negative (hallucinated) entities per question drop sharply under CoVe two-step on Wikidata.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg negatives",
+   "value": "0.68",
+   "unit": "entities per question",
+   "baseline_value": "2.95",
+   "n": null,
+   "setup": "Wikidata, Llama 65B",
+   "note": "Positives fall 0.59 to 0.38.",
+   "where": "Sec 4.3, p7",
+   "quote": "(negatives: 2.95 →0.68)"
+  },
+  {
+   "claim": "CoVe improves closed-book MultiSpanQA F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "0.48",
+   "unit": "F1",
+   "baseline_value": "0.39",
+   "n": null,
+   "setup": "MultiSpanQA closed book, 418 test questions, Llama 65B CoVe factored",
+   "note": null,
+   "where": "Sec 4.3, p7",
+   "quote": "We observe a 23% improvement in F1 over the few-shot baseline (0.39 →0.48)"
+  },
+  {
+   "claim": "Verification questions asked in isolation are answered correctly far more often than the same facts appear correct in the baseline list.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction correct",
+   "value": "~70%",
+   "unit": "%",
+   "baseline_value": "~17%",
+   "n": null,
+   "setup": "Wikidata list task, Llama 65B few-shot baseline",
+   "note": null,
+   "where": "Sec 4.3, p9",
+   "quote": "only ∼17% of the Llama few-shot baseline answer entities are correct in list-based questions. However, when querying each individual entity via a verification question, we find ∼70% are correctly answered."
+  },
+  {
+   "claim": "CoVe-lifted Llama 65B beats ChatGPT and PerplexityAI on FACTSCORE overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": "71.4",
+   "unit": "FACTSCORE",
+   "baseline_value": "58.7 (ChatGPT), 61.6 (PerplexityAI)",
+   "n": null,
+   "setup": "Biographies; ChatGPT, InstructGPT, PerplexityAI numbers reported from Min et al. (2023)",
+   "note": null,
+   "where": "Sec 4.3, p8",
+   "quote": "applying CoVe to the baseline Llama 65B lifts its performance above both ChatGPT and PerplexityAI, as well as outperforming InstructGPT.",
+   "table": "Table 3, rows ChatGPT, PerplexityAI, Llama 65B CoVe (factor+revise), column FACTSCORE"
+  },
+  {
+   "claim": "PerplexityAI (retrieval) still wins on very rare facts.",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2 biographies by rarity",
+   "note": null,
+   "where": "Sec 4.3, p8; Fig 2"
+  },
+  {
+   "claim": "Instruction-tuned Llama 2 70B Chat zero-shot is worse than the few-shot Llama 65B baseline; CoT does not help.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": "41.3",
+   "unit": "FACTSCORE",
+   "baseline_value": "55.9",
+   "n": null,
+   "setup": "Biographies, Llama 2 70B Chat zero-shot vs Llama 65B few-shot",
+   "note": "CoT row scores 41.1.",
+   "where": "Table 3",
+   "table": "Table 3, row Llama 2 70B Chat Zero-shot, column FACTSCORE"
+  },
+  {
+   "claim": "Clipping Llama 2 70B Chat output to 10 sentences barely changes FACTSCORE, so fewer facts does not explain the gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FACTSCORE",
+   "value": "42.7",
+   "unit": "FACTSCORE",
+   "baseline_value": "41.3",
+   "n": null,
+   "setup": "Llama 2 70B Chat biographies, clipped to 10 sentences",
+   "note": null,
+   "where": "Sec 4.3, p8",
+   "quote": "clipping to 10 sentences increased its score from 41.3 →42.7"
+  },
+  {
+   "claim": "LLM-generated general verification questions with factored execution beat rule-based yes/no templates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Precision",
+   "value": "0.22",
+   "unit": "precision",
+   "baseline_value": "0.16",
+   "n": null,
+   "setup": "Wiki-Category (QUEST, 55 questions), factored execution; rule-based questions baseline",
+   "note": "Joint execution: rule-based 0.13, yes/no 0.15, general 0.15; factored yes/no 0.19.",
+   "where": "Table 4",
+   "table": "Table 4, row general questions, column CoVe (factored) Prec."
+  },
+  {
+   "claim": "CoVe two-step/factored raise Wiki-Category precision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Precision",
+   "value": "0.22",
+   "unit": "precision",
+   "baseline_value": "0.12",
+   "n": null,
+   "setup": "Wiki-Category list, Llama 65B, factored vs few-shot",
+   "note": "Two-step 0.21, joint 0.15.",
+   "where": "Table 1",
+   "table": "Table 1, row Llama 65B CoVe (factored), column Wiki-Category Prec."
+  },
+  {
+   "claim": "Standard CoT hurts list precision for Llama 2 70B Chat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Precision",
+   "value": "0.08",
+   "unit": "precision",
+   "baseline_value": "0.12",
+   "n": null,
+   "setup": "Wikidata, Llama 2 70B Chat CoT vs zero-shot",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Llama 2 70B Chat CoT, column Wikidata Prec."
+  }
+ ],
+ "limits": [
+  "CoVe does not remove hallucinations completely.",
+  "Only directly stated factual inaccuracies addressed; not incorrect reasoning steps or opinions.",
+  "Extra computational cost from more generated tokens and many prompts (factored).",
+  "Upper bound limited by what the model knows; no tool use or retrieval explored.",
+  "No temperature, seeds, variance or significance tests reported; code not released in the paper.",
+  "FACTSCORE evaluator is itself an LLM+retrieval judge; biography dataset size not stated.",
+  "Models compared to are old (Llama 65B, Llama 2, 2023)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Factored CoVe",
+   "definition": "answer all verification questions independently as separate prompts that do not contain the original baseline response",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "Factor+Revise",
+   "definition": "an extra cross-check prompt per question that explicitly detects inconsistency between baseline and verification answer",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "FACTSCORE (Min et al.)",
+   "year": 2023,
+   "arxiv": "2305.14251",
+   "relation": "uses-method",
+   "note": "longform factuality metric and biography benchmark",
+   "quote": null
+  },
+  {
+   "work": "Llama (Touvron et al., 2023a)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base LLM",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al., 2023b)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "chat zero-shot and CoT",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought (Wei et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reasoning-before-answer line of work",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine (Madaan et al.)",
+   "year": 2023,
+   "arxiv": "2303.17651",
+   "relation": "related",
+   "note": "self-critique",
+   "quote": null
+  },
+  {
+   "work": "Question decomposition (Radhakrishnan et al.)",
+   "year": 2023,
+   "arxiv": "2307.11768",
+   "relation": "related",
+   "note": "factored naming",
+   "quote": null
+  },
+  {
+   "work": "QUEST (Malaviya et al.)",
+   "year": 2023,
+   "arxiv": "2305.11694",
+   "relation": "uses-data",
+   "note": "Wiki-Category list",
+   "quote": null
+  },
+  {
+   "work": "MultiSpanQA (Li et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "closed-book QA",
+   "quote": null
+  },
+  {
+   "work": "LM vs LM (Cohen et al.)",
+   "year": 2023,
+   "arxiv": "2305.13281",
+   "relation": "related",
+   "note": "cross-examination consistency",
+   "quote": null
+  },
+  {
+   "work": "SelfCheckGPT (Manakul et al.)",
+   "year": 2023,
+   "arxiv": "2303.08896",
+   "relation": "related",
+   "note": "sampling-based detection",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Chain-of-Verification (CoVe) method...",
+   "page": 2,
+   "why": "shows the four steps on the politicians-born-in-NY example"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "FACTSCORE performance distribution across head, torso and tail facts...",
+   "page": 7,
+   "why": "shows gains across fact rarity and PerplexityAI lead on rare facts"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "For longform generation, the CoVe Factor + Revise method is the most effective...",
+   "page": 13,
+   "why": "shows the cross-check step"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures 4-8 are screenshots, captions only.",
+  "Biography dataset size and temperature not stated."
+ ]
 }

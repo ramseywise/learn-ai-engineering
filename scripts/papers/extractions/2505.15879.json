@@ -1,0 +1,726 @@
+{
+ "schema": 1,
+ "key": "2505.15879",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/fan-2025-grit.pdf",
+ "bib": {
+  "title": "GRIT: Teaching MLLMs to Think with Images",
+  "authors": [
+   "Yue Fan",
+   "Xuehai He",
+   "Diji Yang",
+   "Kaizhi Zheng",
+   "Ching-Chen Kuo",
+   "Yuting Zheng",
+   "Sravana Jyothi Narayanaraju",
+   "Xinze Guan",
+   "Xin Eric Wang"
+  ],
+  "first_author": "Fan",
+  "year": 2025,
+  "venue": "NeurIPS 2025 (39th Conference on Neural Information Processing Systems)",
+  "arxiv": "2505.15879",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 55954,
+  "chars_total": 55954,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an MLLM be taught by reinforcement learning to interleave natural-language reasoning with explicit bounding boxes (thinking with images) without reasoning-chain or box annotations?",
+ "hypothesis": "Rewarding answer accuracy and output format alone (no box or chain labels) is enough for an MLLM to unify its separate grounding and reasoning abilities in one generated trace.",
+ "contributions": [
+  "GRIT, a grounded reasoning paradigm where chains interleave natural language with bounding box coordinates",
+  "GRPO-GR, an RL algorithm with format, counting and GPT-aided answer rewards needing only image-question-answer triplets",
+  "Evaluations showing Qwen2.5-VL and InternVL3 unify grounding and reasoning"
+ ],
+ "method": {
+  "summary": "GRPO-GR fine-tunes Qwen2.5-VL-3B and InternVL3-2B on 20 image-question-answer triplets, with rewards for think/rethink token format, presence of at least one regex-valid box, optional box-count match, and GPT-4o-judged answer correctness. No pixels of the cropped boxes are re-fed; the model reuses its own understanding of coordinates.",
+  "task": "visual question answering with grounded chain-of-thought via RL (GRPO)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Training set (VSR + TallyQA)",
+    "role": "train",
+    "size": "20 image-query-answer triplets (also 500 and 7,000 variants for the scaling study)",
+    "split": "10 VSR + 10 TallyQA; TallyQA counts uniformly 0 to 4",
+    "source": "VSR (Liu et al. 2023), TallyQA (Acharya et al. 2019)",
+    "preprocessing": "Ablation uses 20 VSR and no counting reward"
+   },
+   {
+    "name": "VSR eval",
+    "role": "eval",
+    "size": "288",
+    "split": "from the VSR subset of Visual CoT benchmark, ambiguous answers filtered manually",
+    "source": "VSR",
+    "preprocessing": "boxes manually refined"
+   },
+   {
+    "name": "TallyQA eval",
+    "role": "eval",
+    "size": "491",
+    "split": "uniform over target counts 0 to 9",
+    "source": "TallyQA",
+    "preprocessing": "original box annotations"
+   },
+   {
+    "name": "GQA eval",
+    "role": "eval",
+    "size": "509",
+    "split": "Visual CoT GQA subset, manually filtered",
+    "source": "GQA",
+    "preprocessing": "boxes manually refined"
+   },
+   {
+    "name": "MathVista-mini",
+    "role": "eval",
+    "size": "1000",
+    "split": "TestMini",
+    "source": "MathVista",
+    "preprocessing": null
+   },
+   {
+    "name": "MME subset",
+    "role": "eval",
+    "size": "240",
+    "split": "counting, position, existence subsets",
+    "source": "MME",
+    "preprocessing": null
+   },
+   {
+    "name": "OVDEval position subset",
+    "role": "eval",
+    "size": "2164",
+    "split": "position subset, single-target detection",
+    "source": "OVDEval",
+    "preprocessing": "simplified to single-target object detection"
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-VL-3B",
+    "role": "base",
+    "params": "3B",
+    "architecture": "MLLM",
+    "init_from": "pre-trained Qwen2.5-VL-3B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InternVL3-2B",
+    "role": "base",
+    "params": "2B",
+    "architecture": "MLLM",
+    "init_from": "pre-trained InternVL-3 2B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "answer reward, eval judge, cross-modal correlation judge"
+    }
+   }
+  ],
+  "training": {
+   "objective": "GRPO-GR: group-normalised advantage A_i=(r_i-mean)/(std+delta), delta=1e-8; clipped GRPO objective with KL penalty to reference policy; reward r = r_format + optional r_count + r_ans",
+   "optimizer": "AdamW",
+   "lr": "2x10 e-6 (printed '2×10 e-6')",
+   "lr_schedule": "cosine",
+   "warmup": null,
+   "batch_size": "128 (total)",
+   "steps": "200",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty beta (value not stated); clip epsilon (value not stated)",
+   "hardware": "8x NVIDIA A100 80GB, DeepSpeed ZeRO-2",
+   "compute": "inferred: about 96 A100-hours per model, from 8 GPUs x 12 hours",
+   "wall_clock": "approximately 12 hours per model",
+   "seeds": null,
+   "other": {
+    "group_size": "4 candidate traces per input",
+    "r_format": "s_st (0.5 for think pair + 0.5 for rethink pair) + s_bf (0.5 if at least one regex-matched integer quadruplet)",
+    "r_count": "0.5 if number of boxes equals ground-truth count (TallyQA samples only)",
+    "r_ans": "s_GPT (binary, GPT-4o) + 0.1 * s_BLEU (BLEU-1)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "fixed prompt suffix appended in training and inference (also used for the CoT baseline); see prompts",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "attention_study": "100 random GQA samples, first 50 generated tokens"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GPT-as-judge answer accuracy (ACC)",
+     "definition": "score from 0 to 1 given by GPT-4o comparing predicted and ground-truth answer",
+     "unit": "percent (as printed in Table 1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Grounding IoU (GIoU)",
+     "definition": "IoU between union of all generated boxes and union of ground-truth boxes",
+     "unit": "IoU 0 to 1 (InternVL OVDEval cells printed 55.1/56.0)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Vision-Language Reasoning Cross-Modal Correlation",
+     "definition": "GPT-4o picks which of two images (generated boxes vs equal number of random boxes) matches the masked reasoning text; mean and std over 3 repeats",
+     "unit": "fraction/percent (Fig 4 only)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Direct query (zero-shot)",
+    "Chain-of-Thought with same prompt suffix",
+    "One-shot ICL with a fixed exemplar trace",
+    "Few-shot SFT on same demonstrations"
+   ],
+   "protocol": "Single training run per configuration; no seeds or significance tests reported; GPT-4o judge for accuracy; human baseline of 20 hand-written grounded chains for correlation metric."
+  },
+  "availability": {
+   "code": "stated 'All code, data, and checkpoints will be released'; project page https://grounded-reasoning.github.io",
+   "weights": "promised",
+   "data": "promised"
+  },
+  "prompts": [
+   {
+    "purpose": "Grounded reasoning suffix for training and inference",
+    "text": "First, think between <think> and </think> while output necessary coordinates needed to answer the question in JSON with key ’bbox_2d’. Then, based on the thinking contents and coordinates, rethink between <rethink> </rethink> and then answer the question after <answer>.",
+    "where": "Fig 7, App D"
+   },
+   {
+    "purpose": "GPT-4o answer judge and answer reward",
+    "text": "You are responsible for proofreading the answers, you need to give a score to the model’s answer by referring to the standard answer, based on the given question. The full score is 1 point and the minimum score is 0 points. Please output the score in the json form \"{score: <score>}\". The evaluation criteria require that the closer the model’s answer is to the standard answer, the higher the score.\nQuestion: {$question}\nStandard answer: {$answer}\nModel’s answer: {$predicted_content}",
+    "where": "Fig 8, App D"
+   },
+   {
+    "purpose": "Cross-modal correlation judge",
+    "text": "Please decide which image has the bounding boxes that match the following description: {$grounded_reasoning_masked}\nReply with exactly \"Image 0\" or \"Image 1\".",
+    "where": "Fig 9, App D"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "with a learning rate of 2×10 e-6",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GRIT on Qwen2.5-VL-3B reaches 72.9 judge accuracy on VSR (seen dataset), vs 49.5 for direct query and 59.7 for few-shot SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "72.9",
+   "unit": "ACC",
+   "baseline_value": "49.5 (direct query)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column VSR ACC"
+  },
+  {
+   "claim": "GRIT on Qwen2.5-VL-3B gets 47.8 on TallyQA vs 40.8 direct and 44.5 few-shot SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "47.8",
+   "unit": "ACC",
+   "baseline_value": "40.8 (direct query)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column TallyQA ACC"
+  },
+  {
+   "claim": "On GQA (out of domain) Qwen GRIT scores 62.8, slightly below few-shot SFT at 64.6 and above direct at 55.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "62.8",
+   "unit": "ACC",
+   "baseline_value": "55.4 (direct query); 64.6 (few-shot SFT)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": "Few-shot SFT beats GRIT here; the text says GRIT wins 'overall'.",
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column GQA ACC"
+  },
+  {
+   "claim": "On MathVista-mini Qwen GRIT scores 59.8 vs 58.5 direct and 45.0 few-shot SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "59.8",
+   "unit": "ACC",
+   "baseline_value": "58.5 (direct query)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column MathVista ACC"
+  },
+  {
+   "claim": "On MME subsets Qwen GRIT scores 89.3 vs 88.9 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "89.3",
+   "unit": "ACC",
+   "baseline_value": "88.9 (direct query)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column MME ACC"
+  },
+  {
+   "claim": "Zero-shot chain-of-thought with the grounded prompt hurts Qwen2.5-VL-3B badly on VSR (37.5 vs 49.5 direct).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "37.5",
+   "unit": "ACC",
+   "baseline_value": "49.5 (direct query)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, untrained, grounded-reasoning prompt suffix",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B Chain-of-Thought, column VSR ACC"
+  },
+  {
+   "claim": "Grounding IoU on VSR for Qwen GRIT is 0.325 vs 0.216 few-shot SFT and 0.000 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "grounding IoU",
+   "value": "0.325",
+   "unit": "GIoU",
+   "baseline_value": "0.216 (few-shot SFT)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column VSR GIoU"
+  },
+  {
+   "claim": "Grounding IoU on TallyQA for Qwen GRIT is 0.447.",
+   "kind": "measured",
+   "source": null,
+   "metric": "grounding IoU",
+   "value": "0.447",
+   "unit": "GIoU",
+   "baseline_value": "0.284 (few-shot SFT)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column TallyQA GIoU"
+  },
+  {
+   "claim": "OVDEval GIoU for Qwen GRIT is 0.398 vs 0.389 zero-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "grounding IoU",
+   "value": "0.398",
+   "unit": "GIoU",
+   "baseline_value": "0.389 (direct query)",
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, GRIT trained on 20 image-question-answer triplets (10 VSR + 10 TallyQA), 200 steps; GPT-4o judge accuracy",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-VL 3B GRIT, column OVDEval GIoU"
+  },
+  {
+   "claim": "GRIT on InternVL3-2B lifts VSR accuracy to 64.9 from 52.9 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "64.9",
+   "unit": "ACC",
+   "baseline_value": "52.9 (direct query)",
+   "n": null,
+   "setup": "InternVL3-2B, GRIT with 20 samples",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row InternVL3 2B GRIT, column VSR ACC"
+  },
+  {
+   "claim": "InternVL3-2B TallyQA accuracy rises to 44.2 from 15.5 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "44.2",
+   "unit": "ACC",
+   "baseline_value": "15.5 (direct query)",
+   "n": null,
+   "setup": "InternVL3-2B, GRIT with 20 samples",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row InternVL3 2B GRIT, column TallyQA ACC"
+  },
+  {
+   "claim": "InternVL3-2B GQA accuracy rises to 63.2 from 29.4 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "63.2",
+   "unit": "ACC",
+   "baseline_value": "29.4 (direct query)",
+   "n": null,
+   "setup": "InternVL3-2B, GRIT with 20 samples",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row InternVL3 2B GRIT, column GQA ACC"
+  },
+  {
+   "claim": "InternVL3-2B MME accuracy is 82.0 with GRIT vs 40.0 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "82.0",
+   "unit": "ACC",
+   "baseline_value": "40.0 (direct query)",
+   "n": null,
+   "setup": "InternVL3-2B, GRIT with 20 samples",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row InternVL3 2B GRIT, column MME ACC"
+  },
+  {
+   "claim": "InternVL3-2B OVDEval grounding is 56.0 with GRIT vs 55.1 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "grounding IoU",
+   "value": "56.0",
+   "unit": "GIoU",
+   "baseline_value": "55.1 (direct query)",
+   "n": null,
+   "setup": "InternVL3-2B, GRIT with 20 samples",
+   "note": "InternVL OVDEval cells (55.1, 56.0) are on a different scale from the Qwen rows (0.389, 0.398); the paper does not explain this, likely percent vs fraction.",
+   "where": "Table 1",
+   "table": "Table 1, row InternVL3 2B GRIT, column OVDEval GIoU"
+  },
+  {
+   "claim": "Ablation: removing counting data and counting reward (20 VSR only) lowers out-of-domain accuracy from 64.4 to 60.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-as-judge ACC",
+   "value": "60.0",
+   "unit": "ACC",
+   "baseline_value": "64.4 (GRIT)",
+   "n": null,
+   "setup": "InternVL-3 2B; GRIT = 10 VSR + 10 TallyQA with counting reward; ablation = 20 VSR, no counting reward",
+   "note": null,
+   "where": "Appendix C, Table 3",
+   "table": "Table 3, row GRIT w/o counting data & reward, column Out-of-domain ACC"
+  },
+  {
+   "claim": "Same ablation lowers out-of-domain grounding IoU from 0.437 to 0.378.",
+   "kind": "measured",
+   "source": null,
+   "metric": "grounding IoU",
+   "value": "0.378",
+   "unit": "GIoU",
+   "baseline_value": "0.437 (GRIT)",
+   "n": null,
+   "setup": "As above",
+   "note": "In-domain ACC rose slightly in the ablation (53.8 vs 51.8).",
+   "where": "Table 3",
+   "table": "Table 3, row GRIT w/o counting data & reward, column Out-of-domain GIoU"
+  },
+  {
+   "claim": "Scaling training data (20, 500, 7,000 triplets) generally raises accuracy, more for in-domain than out-of-domain, with diminishing returns.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-VL-3B, VSR+TallyQA mix; read from Fig 6 only, no numbers in text",
+   "note": null,
+   "where": "Sec 4.4, Fig 6"
+  },
+  {
+   "claim": "Models trained with GRIT outperform zero-shot ICL and few-shot SFT on the cross-modal correlation metric but remain below 20 human-written chains.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o picks the image with the true vs random boxes, 3 repeats; values only in Fig 4",
+   "note": null,
+   "where": "Sec 4.3, Fig 4"
+  },
+  {
+   "claim": "Removing generated bounding boxes from the pre-rethink segment lowers average attention to image tokens in the following rethink text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-VL GRIT, 100 random GQA samples, first 50 generated tokens; Fig 5 only",
+   "note": null,
+   "where": "Sec 4.3, Fig 5"
+  }
+ ],
+ "limits": [
+  "Only small models (3B, 2B) tested because of limited resources; no full-scale scaling.",
+  "Out-of-domain gains grow slowly with more data; authors say data diversity matters more than volume.",
+  "Gap remains to human-written grounded chains on the cross-modal correlation metric.",
+  "Few-shot SFT beats GRIT on Qwen GQA accuracy (64.6 vs 62.8).",
+  "No seeds, variance or significance tests; KL beta, clip epsilon, decoding settings, max length not stated.",
+  "Accuracy and the correlation metric rely on GPT-4o as judge; test sets are small curated samples with manual box refinement.",
+  "Models do not always follow the JSON box format; rewards use regex only and do not check box correctness, so boxes may be off (App E example).",
+  "Counting data and reward matter: ablation lowers out-of-domain results."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "grounded reasoning paradigm",
+   "definition": "the model generates a reasoning chain that freely mixes natural-language text and bounding-box coordinates, with no extra pixel input after the boxes",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "GRPO-GR",
+   "definition": "GRPO for Grounded Reasoning, RL with format, counting and GPT-aided answer rewards",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeekMath (GRPO)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "extends",
+   "note": "GRPO algorithm base",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "related",
+   "note": "RL-trained reasoning models",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5-VL",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model; cited as Qwen2.5 technical report 2412.15115 and Qwen-VL 2308.12966",
+   "quote": null
+  },
+  {
+   "work": "InternVL3",
+   "year": 2025,
+   "arxiv": "2504.10479",
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "VLM-R1",
+   "year": 2025,
+   "arxiv": "2504.07615",
+   "relation": "related",
+   "note": "RL for referring expressions, box-only outputs",
+   "quote": null
+  },
+  {
+   "work": "Vision-R1",
+   "year": 2025,
+   "arxiv": "2503.06749",
+   "relation": "related",
+   "note": "RL for multimodal reasoning",
+   "quote": null
+  },
+  {
+   "work": "R1-OneVision",
+   "year": 2025,
+   "arxiv": "2503.10615",
+   "relation": "related",
+   "note": "RL visual reasoning",
+   "quote": null
+  },
+  {
+   "work": "Visual CoT (VisCoT)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "VSR and GQA eval subsets taken from Visual CoT benchmark; also related annotated-chain work",
+   "quote": null
+  },
+  {
+   "work": "VSR",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and eval",
+   "quote": null
+  },
+  {
+   "work": "TallyQA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and eval",
+   "quote": null
+  },
+  {
+   "work": "GQA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "MME",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "MathVista",
+   "year": 2023,
+   "arxiv": "2310.02255",
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "OVDEval",
+   "year": 2023,
+   "arxiv": "2308.13177",
+   "relation": "uses-data",
+   "note": "eval",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "Set-of-Mark prompting",
+   "year": 2023,
+   "arxiv": "2310.11441",
+   "relation": "uses-method",
+   "note": "basis for cross-modal correlation judging",
+   "quote": null
+  },
+  {
+   "work": "Does RL really incentivize reasoning capacity beyond the base model?",
+   "year": 2025,
+   "arxiv": "2504.13837",
+   "relation": "related",
+   "note": "cited to interpret diminishing returns",
+   "quote": null
+  },
+  {
+   "work": "CogCoM",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "needs dense box+rationale annotations",
+   "quote": null
+  },
+  {
+   "work": "UV-CoT",
+   "year": 2025,
+   "arxiv": "2504.18397",
+   "relation": "related",
+   "note": "self-generated boxes, separate phases",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of reasoning with pure natural language and our grounded reasoning that mixes explicit bounding boxes for image regions with a chain of natural language thoughts.",
+   "page": 1,
+   "why": "shows the egg-counting example where boxes make the count checkable"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Model update via GRPO-GR.",
+   "page": 5,
+   "why": "shows the reward pipeline"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Model's average attention for image tokens during the generation of rethink segments.",
+   "page": 8,
+   "why": "evidence that boxes raise later attention to the image"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Effect of scaling training data on model performance.",
+   "page": 9,
+   "why": "20/500/7,000 sample scaling, values not in text"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "A_i = (r_i - mean{r_1..r_N}) / (std{r_1..r_N} + delta)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 flattened by text extraction; column mapping inferred from the 9 values per row (VSR ACC/GIoU, TallyQA ACC/GIoU, GQA ACC/GIoU, MathVista ACC, MME ACC, OVDEval GIoU).",
+  "Section 'Cross-modal correlation' says six testing sets but lists five.",
+  "Fig 4 and Fig 6 values are only in plots, not recorded."
+ ]
+}

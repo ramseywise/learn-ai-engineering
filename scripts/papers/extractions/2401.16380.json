@@ -1,0 +1,640 @@
+{
+ "schema": 1,
+ "key": "2401.16380",
+ "pdf": "generative-ai/05-RL/sources/maini-2024-rephrasing-web.pdf",
+ "bib": {
+  "title": "Rephrasing the Web: A Recipe for Compute and Data-Efficient Language Modeling",
+  "authors": [
+   "Pratyush Maini",
+   "Skyler Seto",
+   "He Bai",
+   "David Grangier",
+   "Yizhe Zhang",
+   "Navdeep Jaitly"
+  ],
+  "first_author": "Maini",
+  "year": 2024,
+  "venue": "preprint (arXiv:2401.16380v1 [cs.CL], 29 Jan 2024; PDF does not print a venue)",
+  "arxiv": "2401.16380",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 102088,
+  "chars_total": 102088,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Table 7 and Fig 12-13 values not in text (plots / ratio list)."
+ },
+ "type": "empirical",
+ "question": "Can rephrasing noisy web documents with an off-the-shelf instruction-tuned LLM, and pre-training on a mix of real and rephrased text, make LLM pre-training cheaper in compute and data?",
+ "hypothesis": "Rephrased synthetic data has higher utility than real data alone because it adds style diversity matching downstream evaluation and is higher quality than web scrapes; synthetic data cannot add new knowledge, only speed up learning.",
+ "contributions": [
+  "WRAP: rephrase web documents in specific styles with a frozen instruction-tuned model and pre-train on a 1:1 real/synthetic mix",
+  "~3x pre-training speed-up on C4, Pile perplexity and 13-task zero-shot gains",
+  "Analysis of rephrase style, combination of styles, rephraser quality, augmentation baselines, and leakage"
+ ],
+ "method": {
+  "summary": "A frozen Mistral-7B instruction-tuned model rewrites C4 paragraphs (max 300 tokens each) into Medium (Wikipedia-like) and Q/A styles; decoder-only GPT-style models (128M, 350M, 1.3B) are pre-trained from scratch on a 1:1 mix of real C4 and synthetic rephrases, and compared on Pile perplexity (21 domains) and 13 zero-shot tasks against real-data-only baselines.",
+  "task": "next-token pre-training of decoder-only LMs on real plus synthetic rephrased web text",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "about 170B tokens full; half C4 about 85B",
+    "split": "Half C4 (85B) and Full C4 (170B) real-token budgets; 35B real subset for 150B-token runs",
+    "source": "Colossal Clean Crawled Corpus, derived from CommonCrawl",
+    "preprocessing": "rephrased with Mistral-7B; paraphrases cleaned with NLTK sentence split to drop lead-in phrases such as 'Here's a paraphrase'; residual error rate under 0.1% by manual inspection (App. B)"
+   },
+   {
+    "name": "RefinedWeb",
+    "role": "pretrain",
+    "size": "160B and 320B tokens",
+    "split": "first 3050 files for 300B-token run; first 1650 files for multi-epoch",
+    "source": "Penedo et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "The Pile (validation, 21 sub-domains)",
+    "role": "eval",
+    "size": "first 10,000 documents per domain, split into pieces of max 1024 tokens",
+    "split": "validation",
+    "source": "Gao et al. 2020",
+    "preprocessing": "Europarl excluded in one place (20 subsets in App. A.2; 21 stated in main text)"
+   },
+   {
+    "name": "13 zero-shot tasks (LM Evaluation Harness)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "General: ARC-E, BoolQ, Winogrande, PIQA, HellaSwag, TruthfulQA, OBQA, LogiQA-2; Specialized: ARC-C, SciQ, PubMedQA, MathQA, MMLU",
+    "preprocessing": "harness git commit 89618bf8, batch size 32"
+   }
+  ],
+  "models": [
+   {
+    "name": "Mistral-7B instruction-tuned (rephraser)",
+    "role": "teacher",
+    "params": "7B",
+    "architecture": "frozen instruction-tuned LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also tried": "Qwen-1.8B-chat, Vicuna-13B-chat-v1.3, fine-tuned T5-base (1 epoch on Vicuna rephrase pairs)",
+     "throughput": "3M tokens per hour on a single A100 with vLLM"
+    }
+   },
+   {
+    "name": "WRAP XL",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": "decoder-only transformer (GPT-2-XL)",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 2048,
+    "heads": 16,
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "WRAP medium",
+    "role": "proposed",
+    "params": "350M",
+    "architecture": "decoder-only transformer (GPT-2-medium)",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "WRAP small",
+    "role": "proposed",
+    "params": "128M",
+    "architecture": "decoder-only transformer",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "Pythia-1.4B",
+    "role": "baseline",
+    "params": "1.4B",
+    "architecture": "trained on the Pile (300B)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TinyLlama",
+    "role": "baseline",
+    "params": null,
+    "architecture": "trained 3 epochs on 1T tokens of SlimPajama and StarCoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "inconsistency": "text says 1 Trillion tokens (3 epochs) in Sec 5.2 and '3 Trillion tokens' in Sec 7.1"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy (language modeling) over C4 union synthetic rephrases",
+   "optimizer": "Adam, beta1=0.9, beta2=0.999",
+   "lr": "max 3e-4 (128M, 350M), 2e-4 (1.3B); min 1e-5",
+   "lr_schedule": "cosine",
+   "warmup": "1% of total steps",
+   "batch_size": "1 million tokens",
+   "steps": "300k for XL models unless otherwise specified (150B-token runs halve the steps)",
+   "epochs": null,
+   "tokens": "300B (main 1.3B); 150B (1.3B ablations); 75B (350M); 30B (345M rephraser ablation); 15B (350M augmentation); 3B (128M style)",
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": "none",
+   "regularisation": "gradient clipping norm 1.0",
+   "hardware": "64 A100 at 0.5M tokens/s (Sec 7.1); NVIDIA Megatron-LM",
+   "compute": "300B tokens about 256 GPU days, about 6k GPU hours; generating 85B synthetic tokens about 25K GPU hours",
+   "wall_clock": null,
+   "seeds": "WRAP results in Tables 1-2 averaged over 3 runs; Table 12 single seed 1234",
+   "other": {
+    "mixing": "real and synthetic sampled 1:1",
+    "real tokens": "'Real Tok.' counts web tokens only, since one document can be rephrased several times"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "each rephrased example max 300 tokens",
+   "samples": "one rephrase per document inferred from 1:1 ratio",
+   "prompting": "chat template 'A chat between a curious user and an artificial intelligence assistant...' then USER instruction per style (App. G)",
+   "retrieval": null,
+   "parameters": {
+    "styles": "Easy, Medium, Hard, Q/A",
+    "real:synthetic": "1:1; combined-style variants 1:1 (two C4 copies) and 1:2 (one C4)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pile perplexity",
+     "definition": "macro token-level perplexity P=exp(min(20, L/T)); weighted average over domains by Table 7 ratios",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "zero-shot accuracy",
+     "definition": "LM Evaluation Harness, 8 General Understanding and 5 Specialized Knowledge tasks, averaged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "few-shot leaderboard (App. F)",
+     "definition": "ARC-C 25-shot, HellaSwag 10, MMLU 5, TruthfulQA 5, Winogrande 5, GSM8k 5",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Half C4 (85B)",
+    "Full C4 (170B)",
+    "RefinedWeb 160B and 320B",
+    "Pythia-1.4B-Pile (300B)",
+    "TinyLlama (1T)",
+    "synonym replacement and random deletion (NL-Augmenter)"
+   ],
+   "protocol": "Pile perplexity on first 10k docs per domain; zero-shot via harness; WRAP zero-shot averaged over 3 runs; no significance test; C4-validation perplexity deliberately not used."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Medium style",
+    "text": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. USER: For the following paragraph give me a diverse paraphrase of the same in high quality English language as in sentences on Wikipedia:",
+    "where": "App. G"
+   },
+   {
+    "purpose": "Q/A style",
+    "text": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. USER: Convert the following paragraph into a conversational format with multiple tags of \"Question:\" followed by \"Answer:\":",
+    "where": "App. G"
+   },
+   {
+    "purpose": "Easy style",
+    "text": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. USER: For the following paragraph give me a paraphrase of the same using a very small vocabulary and extremely simple sentences that a toddler will understand:",
+    "where": "App. G"
+   },
+   {
+    "purpose": "Hard style",
+    "text": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. USER: For the following paragraph give me a paraphrase of the same using very terse and abstruse language that only an erudite scholar will understand. Replace simple words and phrases with rare and complex ones:",
+    "where": "App. G"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.WRAP XL.layers",
+    "quote": "24 layers, 16 attention heads, and a hidden dimension size of 2048",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "WRAP on C4 speeds up pre-training about 3x (abstract); Fig 1a shows ~3x faster to equal average zero-shot accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3,
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B GPT models, WRAP-85B vs C4-85B/C4-170B/RW-300B, avg zero-shot accuracy vs tokens seen",
+   "quote": "First, we show that using WRAP on the C4 dataset, which is naturally noisy, speeds up pre-training by ∼3×.",
+   "table": null,
+   "note": null,
+   "where": "Abstract, Fig 1a"
+  },
+  {
+   "claim": "At equal compute, WRAP improves Pile perplexity by more than 10% on average and zero-shot accuracy across 13 tasks by more than 2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10,
+   "unit": "% perplexity (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "C4, mixed real+synthetic; Pile sub-domains; 13 zero-shot tasks",
+   "quote": "At the same pre-training compute budget, it improves perplexity by more than 10% on average",
+   "table": null,
+   "note": "Introduction and Data Complexity paragraph state about 50% perplexity reduction on the Pile instead (different comparison: vs real data alone).",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Average Pile perplexity falls about 50% versus models trained on real data alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50,
+   "unit": "% perplexity reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B, Pile 21 domains, C4+QA rephrases",
+   "quote": "Overall, on an average of multiple subsets of the Pile, our models improve perplexity by 50% over models trained on real data alone.",
+   "table": null,
+   "note": "Abstract says 'more than 10%' at equal compute; Fig 2 compares C4+QA-85B with C4-85B and C4-170B.",
+   "where": "Sec 4 Data Complexity"
+  },
+  {
+   "claim": "Synthetic+C4 (85B real tokens) averages 49.4% on General Understanding vs 47.4% for Half C4 (85B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 49.4,
+   "unit": "% avg accuracy",
+   "baseline_value": 47.4,
+   "n": null,
+   "setup": "~1.3B, 85B real tokens, WRAP averaged over 3 runs; style not named in Table 1 (Fig 2 and Table 12 use C4+QA)",
+   "quote": "models trained on synthetic data combined with the C4 dataset (Synthetic+C4) exhibit an overall higher average performance of 49.4% as compared to those trained solely on the real C4 dataset with a 85B token split, which scored an average of 47.4%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Table 1"
+  },
+  {
+   "claim": "On Specialized Knowledge tasks WRAP gives no new knowledge: Synthetic+C4 (85B) avg 45.5 vs Full C4 (170B) 43.5, comparable to Pythia and TinyLlama (45.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "~1.3B, Table 2",
+   "quote": "The key message from the results in Table 2 is that synthetic data can not impart ‘new knowledge’.",
+   "table": "Table 2, rows Synthetic+C4 (85B) and TinyLlama (1T), column Avg (45.5 and 45.6)",
+   "note": null,
+   "where": "Sec 5.2, Table 2"
+  },
+  {
+   "claim": "TruthfulQA is the largest single gain: Synthetic (85B) scores 44.0%, and adding C4 drops it to 40.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 44.0,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~1.3B, Table 1",
+   "quote": "with the Synthetic (85B) model scoring 44.0%",
+   "table": null,
+   "note": "Text says 40.5%, Table 1 prints 40.6 for Synthetic+C4; text says 'by 4%'.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Dropping real C4 (synthetic only) raises Pile perplexity on many domains, notably PhilPapers and Gutenberg; only shown in Fig 3, no numbers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B, 150B tokens, 35B real subset; Med-35B and QA-35B vs C4+Med/QA-35B",
+   "quote": "On domains such as Philpapers and Gutenberg, we observe that dropping real C4 text from the pre-training data, and training on synthetic documents alone drops performance significantly (increase in perplexity).",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1 RQ1, Fig 3"
+  },
+  {
+   "claim": "Synthetic-only vs with real zero-shot, General avg: Med 45.8 vs Med+C4 46.7; QA 48.2 vs QA+C4 48.4. Specialized avg: Med 42.7 vs Med+C4 40.8 (reversed); QA 43.8 vs QA+C4 45.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B, 150B tokens, 35B real tokens",
+   "quote": "adding real data helps improve model performance when pre-training on ‘Medium’ or ‘Wikipedia-style’ paraphrases.",
+   "table": "Table 3 (General) and Table 4 (Specialized), rows Med-35B, Med+C4-35B, QA-35B, QA+C4-35B, column Avg",
+   "note": null,
+   "where": "Tables 3-4"
+  },
+  {
+   "claim": "Combining Medium and Q/A styles does not beat Q/A+C4 on zero-shot (General avg 47.5 and 48.0 vs 48.4) but slightly improves average Pile perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B, 150B tokens, Combined-1:1-35B and 1:2-35B",
+   "quote": "Overall, we note that there is a small improvement on the average perplexity on the Pile by combining multiple styles.",
+   "table": "Table 6, rows Combined-1:1-35B, Combined-1:2-35B, column Avg",
+   "note": null,
+   "where": "Sec 6.1 RQ2"
+  },
+  {
+   "claim": "Rephraser quality: Qwen-1.8B and Mistral-7B rephrases give lower perplexity than Vicuna-13B; fine-tuned T5-base is significantly worse but still beats real C4 alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "345M model, 30B tokens, same prompt",
+   "quote": "We find that pre-training on data generated by smaller re-phrase models like Qwen-1.8B and Mistral-7B achieve lower perplexity than Vicuna 13B (Figure 5).",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2 RQ3"
+  },
+  {
+   "claim": "Synonym replacement and random deletion augmentations are significantly worse than real+rephrased data.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "350M, 15B tokens, pool about 1.5B tokens (about 10 repeats)",
+   "quote": "the models trained on augmented data perform significantly worse than those trained on combinations of real and synthetic data.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2 RQ4, Fig 6"
+  },
+  {
+   "claim": "An oracle choosing the best synthetic style per Pile domain would improve perplexity by 16%; no single style is best.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 16,
+   "unit": "% perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "128M, 3B tokens, Vicuna-v1.3 rephrases",
+   "quote": "an oracle that selects the best synthetic style across all domains will improve perplexity by 16%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2 RQ5, Fig 7"
+  },
+  {
+   "claim": "Generating 85B synthetic tokens with Mistral-7B costs about 25K GPU hours; training one 1.3B model on 300B tokens is about 6k GPU hours; a 13B model about 30K.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 25000,
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "vLLM on A100, 3M tokens/hour; 64 A100 at 0.5M tokens/s",
+   "quote": "Generating 85B tokens (as in our work) accounts for about 25K GPU hours.",
+   "table": null,
+   "note": null,
+   "where": "Sec 7.1"
+  },
+  {
+   "claim": "At 350M/75B tokens, adding QA rephrases lifts General avg 42.7 (C4-75B) -> 44.1 (QA+C4-18B) and Specialized avg 38.2 (C4-60B) -> 41.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "350M, 75B tokens",
+   "quote": "We also show an increase of 1.5% across general understanding language tasks, and roughly 3% on specialized knowledge tasks",
+   "table": "Table 9 row QA+C4-18B Avg 44.1; Table 8 row QA+C4-15B Avg 41.0",
+   "note": null,
+   "where": "App E.1"
+  },
+  {
+   "claim": "Few-shot leaderboard avg: QA+C4-85B (300K) 37.2 and QA+C4-100B (350K) 37.5 vs C4 35.5, Falcon-RW 37.1, Pythia-1.4b 35.0; single seed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B, OpenLLM leaderboard shots, seed 1234",
+   "quote": "Evaluation is done on a single seed (1234).",
+   "table": "Table 12, column Avg",
+   "note": null,
+   "where": "App F, Table 12"
+  }
+ ],
+ "limits": [
+  "Cost of generation still large and needs strong LMs (Sec 8)",
+  "Enforcing diversity in generated data is unresolved; content diversity of paraphrase models not assessed (Sec 7.2)",
+  "Rephrases cannot add new knowledge (Sec 5.2, 8)",
+  "Only C4 rephrased; models 128M-1.3B; no post-training or larger scale; larger models may benefit from training longer (Sec 7.1)",
+  "Perplexity evaluated on Pile, not C4, because mixed training costs under 1 perplexity on C4 validation",
+  "Medium vs QA vs other styles mostly shown as plots (Fig 3-7); per-domain numbers not in text",
+  "Which style the headline 'Synthetic' rows use is not stated in Tables 1-2; Fig 2 and Table 12 indicate QA",
+  "WRAP zero-shot averaged over 3 runs but baselines' seeds not stated; no significance tests",
+  "No code or data release stated in text"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "WRAP",
+   "definition": "Web Rephrase Augmented Pre-training: an off-the-shelf instruction-tuned model prompted to paraphrase web documents in specific styles to jointly pre-train on real and synthetic rephrases",
+   "where": "Abstract"
+  },
+  {
+   "term": "Real Tok.",
+   "definition": "number of tokens of web data available for pre-training, used as comparison metric because one document can be rephrased many times",
+   "where": "Sec 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Textbooks Are All You Need (Gunasekar et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "WRAP avoids generating from scratch: smaller rephraser, uses web diversity",
+   "quote": null
+  },
+  {
+   "work": "C4 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "rephrased corpus",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B (Jiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "rephraser",
+   "quote": null
+  },
+  {
+   "work": "RefinedWeb (Penedo et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "trained own models on 160B/320B tokens",
+   "quote": null
+  },
+  {
+   "work": "Chinchilla (Hoffmann et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "scaling-law motivation",
+   "quote": null
+  },
+  {
+   "work": "Muennighoff et al. data-constrained scaling",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "repeating more than 4 epochs diminishing returns",
+   "quote": null
+  },
+  {
+   "work": "Shumailov et al. (model collapse)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited as harm of synthetic data; WRAP not tested for it",
+   "quote": null
+  },
+  {
+   "work": "TinyLlama (Zhang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "1T-token model compared",
+   "quote": null
+  },
+  {
+   "work": "Pythia-1.4B",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Pile-trained",
+   "quote": null
+  },
+  {
+   "work": "The Pile (Gao et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "perplexity evaluation",
+   "quote": null
+  },
+  {
+   "work": "LM Evaluation Harness (Gao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "zero-shot tasks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) WRAP Recipe ... (b) Zero-shot performance of GPT 1.3B models ... (c) Weighted average perplexity over 21 sub-domains of the Pile",
+   "page": 2,
+   "why": "shows the 3x speed-up and perplexity gap at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Importance of Real Data: perplexity on the Pile, C4 with synthetic vs synthetic only",
+   "page": 8,
+   "why": "shows synthetic-only perplexity degradation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix D, Eq. 3",
+   "snippet": "P = exp(min(20, L/T))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Section map missed some headings; whole text read.",
+  "Table 7 and per-domain perplexities exist only in figures, not in text.",
+  "Pile domain count inconsistent: 21 in main text, 20 in App A.2/E.2.",
+  "Fig 13 caption says 350M/75B though plotted models are 1.3B/150B (C4-150B, C4-35B).",
+  "TinyLlama described as 1T tokens (Sec 5.2) and 3T (Sec 7.1)."
+ ]
+}

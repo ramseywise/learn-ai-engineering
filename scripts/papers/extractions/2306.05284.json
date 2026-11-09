@@ -1,0 +1,214 @@
+{
+ "schema": 1,
+ "key": "2306.05284",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/copet-2023-simple-controllable-music-generation.pdf",
+ "bib": {
+  "title": "Simple and Controllable Music Generation",
+  "authors": ["Jade Copet", "Felix Kreuk", "Itai Gat", "Tal Remez", "David Kant", "Gabriel Synnaeve", "Yossi Adi", "Alexandre Défossez"],
+  "first_author": "Copet",
+  "year": 2023,
+  "venue": "37th Conference on Neural Information Processing Systems (NeurIPS 2023)",
+  "arxiv": "2306.05284",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 62734,
+  "chars_total": 62734,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only. Figure 2b (memorization curves) has no numbers in the text, so none recorded."
+ },
+ "type": "empirical",
+ "question": "Can a single-stage autoregressive transformer over EnCodec tokens, using codebook interleaving patterns, generate high-quality text- and melody-conditioned music without cascaded models?",
+ "hypothesis": "Inexact parallel or delayed prediction of RVQ codebooks can approach the quality of full flattening at a fraction of the autoregressive steps.",
+ "contributions": [
+  "A simple and efficient model to generate high quality music at 32 kHz, a single-stage LM with an efficient codebook interleaving strategy.",
+  "A single model for both text and melody-conditioned generation, coherent with the melody and faithful to the text.",
+  "Extensive objective and human evaluations on the key design choices."
+ ],
+ "method": {
+  "summary": "MusicGen is a decoder-only transformer with cross-attention to a T5 text encoding, trained over four-codebook EnCodec tokens at 50 Hz. Codebook interleaving patterns (delay, parallel, flattening, coarse first, partial variants) set how many autoregressive steps a clip takes. Melody conditioning uses a quantized chromagram; stereo is added by fine-tuning with 8 codebooks.",
+  "task": "text-to-music and melody-conditioned music generation",
+  "trains": true,
+  "datasets": [
+   {"name": "Licensed music training set", "role": "train", "size": "20K hours", "split": null, "source": "internal 10K high-quality tracks plus ShutterStock (25K) and Pond5 (365K) instrument-only tracks; licensed", "preprocessing": "32 kHz, text description plus genre/BPM/tags metadata, downmixed to mono unless stated; 30-second random crops"},
+   {"name": "MusicCaps", "role": "eval", "size": "5.5K samples of 10 s; 1K genre-balanced subset", "split": "objective metrics on unbalanced set, qualitative samples from balanced set", "source": "Agostinelli et al. 2023", "preprocessing": null},
+   {"name": "In-domain held-out set", "role": "eval", "size": "528 music tracks", "split": "no artist overlap with train; ablations use 1K samples of 30 s; melody eval uses 1000 random files", "source": "internal", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "EnCodec (tokenizer)", "role": "base", "params": null, "architecture": "non-causal convolutional autoencoder, 5 layers, RVQ", "init_from": null, "tokenizer": "EnCodec 32 kHz mono, stride 640", "vocab": "codebook size 2048", "layers": "5", "hidden": "64 initial, doubling at each layer", "heads": null, "context": null, "other": {"frame_rate": "50 Hz", "quantizers": "4", "training": "one-second segments cropped at random"}},
+   {"name": "MusicGen 300M", "role": "proposed", "params": "300M", "architecture": "autoregressive transformer decoder, pre-norm, causal self-attention, cross-attention to conditioning, ReLU FFN D to 4D", "init_from": null, "tokenizer": "EnCodec", "vocab": null, "layers": "24", "hidden": "1024", "heads": "16", "context": "inferred: 1500 autoregressive steps for 30 s with delay pattern", "other": {"gpus": "32", "source": "Table 5"}},
+   {"name": "MusicGen 1.5B", "role": "proposed", "params": "1.5B", "architecture": "same", "init_from": null, "tokenizer": "EnCodec", "vocab": null, "layers": "48", "hidden": "1536", "heads": "24", "context": null, "other": {"gpus": "64", "source": "Table 5"}},
+   {"name": "MusicGen 3.3B", "role": "proposed", "params": "3.3B", "architecture": "same", "init_from": null, "tokenizer": "EnCodec", "vocab": null, "layers": "48", "hidden": "2048", "heads": "32", "context": null, "other": {"gpus": "96", "source": "Table 5"}},
+   {"name": "MusicGen stereo", "role": "proposed", "params": "1.5B", "architecture": "same, 8 codebooks (2 x 4)", "init_from": "pre-trained monophonic MusicGen", "tokenizer": "EnCodec applied independently to left and right", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"finetune": "200K batches on stereo version of same dataset"}},
+   {"name": "Riffusion", "role": "baseline", "params": null, "architecture": "Stable Diffusion fine-tuned on spectrograms", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"version": "riffusion-model-v1, run May 10 2023"}},
+   {"name": "Mousai", "role": "baseline", "params": null, "architecture": "latent diffusion", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "retrained on the same dataset with the authors' open implementation"}},
+   {"name": "MusicLM", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "public API (instrument-only) for human study; FAD copied from original paper"}},
+   {"name": "Noise2Music", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "FAD only, copied from original paper"}}
+  ],
+  "training": {
+   "objective": "next-token prediction over interleaved EnCodec codebook tokens, conditioned on text (T5 encoder, cross-attention) and optionally melody",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.95, gradient clipping 1.0; D-Adaptation step sizes for the 300M model only",
+   "lr": null,
+   "lr_schedule": "cosine",
+   "warmup": "4000 steps",
+   "batch_size": "192 examples",
+   "steps": "1M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "30-second audio crops",
+   "precision": "mixed precision, float16 (bfloat16 was unstable)",
+   "weight_decay": "0.1 (decoupled)",
+   "dropout": "text description dropout 0.5 after condition merging; word dropout 0.3",
+   "regularisation": "EMA decay 0.99; condition-merging probability 0.25; condition dropped with probability 0.2 for classifier-free guidance",
+   "hardware": "32, 64, 96 GPUs for the 300M, 1.5B, 3.3B models; GPU type not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"flash_attention": "xFormers memory-efficient attention", "ablation_text_runs": "300M models for 500K steps (Table A.2)"}
+  },
+  "inference": {
+   "decoding": "top-k sampling, k = 250",
+   "temperature": "1.0",
+   "top_p": null,
+   "max_tokens": "inferred: 1500 steps for 30 s with delay pattern at 50 Hz",
+   "samples": "not stated per item; ablations use 1K samples of 30 s; human study uses 40 samples; at least 5 raters per sample",
+   "prompting": "text description; delay codebook pattern; melody as chromagram prefix",
+   "retrieval": null,
+   "parameters": {"classifier_free_guidance_scale": "3.0", "memorization_test_decoding": "greedy, 250 tokens (5 s) continuation"},
+   "other": {"chromagram": "window 2^14, hop 2^12, argmax per time step; Demucs removes drums and bass first"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "FADvgg", "definition": "Frechet Audio Distance with VGGish, official TensorFlow implementation", "unit": "distance", "higher_is_better": false},
+    {"name": "KL", "definition": "KL divergence of AudioSet classifier label probabilities between original and generated", "unit": "nats", "higher_is_better": false},
+    {"name": "CLAPscr", "definition": "CLAP score between track description and generated audio", "unit": "cosine", "higher_is_better": true},
+    {"name": "OVL", "definition": "human overall quality, 1 to 100, MTurk with CrowdMOS filtering", "unit": "points (1-100)", "higher_is_better": true},
+    {"name": "REL", "definition": "human relevance to text, 1 to 100", "unit": "points (1-100)", "higher_is_better": true},
+    {"name": "chroma cosine similarity (SIM)", "definition": "average cosine similarity between frames at same time steps of quantized chroma of reference and generated", "unit": "cosine", "higher_is_better": true},
+    {"name": "MEL", "definition": "human rating of melody match to reference, 1 to 100", "unit": "points (1-100)", "higher_is_better": true}
+   ],
+   "baselines": ["Riffusion", "Mousai", "MusicLM", "Noise2Music"],
+   "protocol": "Mean and CI95. Samples normalised to -14 dB LUFS. Raters excluded if they did not listen fully or rated reference below 85. 40 instrument-only MusicCaps samples for MusicLM comparison. No seeds or repeated runs stated; FAD has no interval."
+  },
+  "availability": {"code": "github.com/facebookresearch/audiocraft", "weights": "github.com/facebookresearch/audiocraft", "data": "not released; licensed"},
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.decoding", "quote": "we employ top-k sampling [Fan et al., 2018] with keeping the top 250 tokens and a temperature of 1.0", "where": "3.1"},
+   {"field": "ablation setup", "quote": "All ablations are performed using 1K samples of 30 seconds, randomly sampled from the held-out evaluation set.", "where": "4.4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Flattening all four codebooks (6000 steps) gives the best FAD among interleaving patterns.",
+   "kind": "measured", "source": null, "metric": "FADvgg", "value": "0.86", "unit": "FAD", "baseline_value": null, "n": "1K samples of 30 s",
+   "setup": "300M model, in-domain held-out set, 30-second sequences, T5 text conditioning",
+   "quote": null, "table": "Table 4, row Flattening, column FADvgg", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "The delay pattern reaches nearly the same FAD in 1500 steps.",
+   "kind": "measured", "source": null, "metric": "FADvgg", "value": "0.96", "unit": "FAD", "baseline_value": "0.86 (flattening, 6000 steps)", "n": "1K samples of 30 s",
+   "setup": "300M model, in-domain held-out set, 30-second sequences",
+   "quote": null, "table": "Table 4, row Delay, column FADvgg", "note": "Delay pattern needs K-1 extra steps in principle; Fig A.1 caption excludes the last step for simplicity.", "where": "Table 4"
+  },
+  {
+   "claim": "Predicting all four codebooks in parallel (1500 steps) degrades FAD sharply and lowers human overall quality.",
+   "kind": "measured", "source": null, "metric": "FADvgg", "value": "2.58", "unit": "FAD", "baseline_value": "0.96 (delay)", "n": "1K samples of 30 s",
+   "setup": "300M model, in-domain held-out set, 30-second sequences; OVL 72.21 vs 79.69 for delay, REL 80.30 vs 79.67",
+   "quote": null, "table": "Table 4, row Parallel, column FADvgg", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "Other patterns: partial delay 1.51 (1500 steps), partial flattening 1.32 (3000), coarse first 1.98 (3000).",
+   "kind": "measured", "source": null, "metric": "FADvgg", "value": "1.98", "unit": "FAD", "baseline_value": null, "n": "1K samples of 30 s",
+   "setup": "300M model, in-domain held-out set; value shown is coarse first (3000 steps)",
+   "quote": null, "table": "Table 4, row Coarse first, column FADvgg", "note": "Partial delay 1.51, partial flattening 1.32 are in the same table.", "where": "Table 4"
+  },
+  {
+   "claim": "The authors conclude flattening improves generation but delay reaches similar performance at a fraction of the cost.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Table 4 ablation, 300M model",
+   "quote": "While flattening improves generation, it comes at a high computational cost and similar performance can be reached for a fraction of this cost using a simple delay approach.", "table": null, "note": null, "where": "4.4"
+  },
+  {
+   "claim": "MusicGen 3.3B scores highest human overall quality on MusicCaps against baselines.",
+   "kind": "measured", "source": null, "metric": "OVL", "value": "84.81", "unit": "points (1-100)", "baseline_value": "80.51 (MusicLM)", "n": "40 instrument-only samples, >=5 raters each",
+   "setup": "MusicCaps, text only, 3.3B model; MusicLM via public API",
+   "quote": null, "table": "Table 1, row MUSICGEN w.o melody (3.3B), column OVL.", "note": "Intro says 84.8 vs 80.5.", "where": "Table 1"
+  },
+  {
+   "claim": "Noise2Music has the best FAD on MusicCaps; MusicGen 300M text-only is 3.1, and FAD gets worse with model size on MusicCaps.",
+   "kind": "measured", "source": null, "metric": "FADvgg", "value": "3.1", "unit": "FAD", "baseline_value": "2.1 (Noise2Music, reported), 4.0 (MusicLM, reported)", "n": null,
+   "setup": "MusicCaps; 300M text-only; 1.5B is 3.4 and 3.3B is 3.8",
+   "quote": null, "table": "Table 1, row MUSICGEN w.o melody (300M), column FADvgg", "note": "Authors suspect noisy MusicCaps samples make FAD worsen once quality passes a threshold.", "where": "Table 1, 4.1"
+  },
+  {
+   "claim": "Scaling the model improves perplexity monotonically, but human overall quality peaks at 1.5B.",
+   "kind": "measured", "source": null, "metric": "PPL", "value": "46.1", "unit": "perplexity", "baseline_value": "56.1 (300M)", "n": null,
+   "setup": "In-domain test set; 3.3B model; OVL 78.3 / 81.9 / 79.2 for 300M / 1.5B / 3.3B",
+   "quote": null, "table": "Table 5, row 3.3B, column PPL", "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "Chroma conditioning raises chroma similarity from 0.10 to 0.66.",
+   "kind": "measured", "source": null, "metric": "SIM", "value": "0.66", "unit": "cosine", "baseline_value": "0.10", "n": "1000 files; 40 samples of 10 s for human MEL",
+   "setup": "1.5B model, in-domain test set, train Text+Chroma and test Text+Chroma",
+   "quote": null, "table": "Table 2, row Text+Chroma / Text+Chroma, column SIM.", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Stereo partial delay is rated highest for overall quality.",
+   "kind": "measured", "source": null, "metric": "OVL", "value": "86.73", "unit": "points (1-100)", "baseline_value": "84.95 (mono delay)", "n": null,
+   "setup": "1.5B text-only model fine-tuned 200K batches; MusicCaps",
+   "quote": null, "table": "Table 3, row Stereo Partial Delay (stereo), column OVL.", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "DAC at 86 Hz costs 40% more inference runtime than EnCodec at 50 Hz for the same audio.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Tokenizer comparison, Appendix A.2",
+   "quote": "thus reducing by 40% the inference runtime for producing the same audio", "table": null, "note": "Stated as a claim, no timing table.", "where": "A.2"
+  },
+  {
+   "claim": "D-Adaptation helped the 300M model but worsened 1.5B and 3.3B convergence.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Appendix A.2, Fig A.4",
+   "quote": "we observed improved convergence for the 300M parameter model, although for larger models, e.g. 1.5B and 3.3B, we observed the automated rule led to deteriorated performance", "table": null, "note": null, "where": "A.2"
+  }
+ ],
+ "limits": [
+  "Authors: no fine-grained control over adherence to conditioning beyond classifier-free guidance.",
+  "Authors: audio-conditioning data augmentation needs further research.",
+  "Training data skews western and Dance/EDM; oversampling other genres gave a worse model.",
+  "FAD on MusicCaps is not correlated with human ratings for the best models; authors suspect noisy MusicCaps samples.",
+  "Ablations are single runs with no seeds or FAD intervals stated; ablations use 300M only.",
+  "MusicLM and Noise2Music numbers are copied, not rerun; MusicLM human study used an instrument-only API model on 40 samples.",
+  "Training data is not released; learning rate value not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "codebook interleaving pattern", "definition": "A partition of (time step, codebook) pairs into sequence steps; all positions in one step are predicted in parallel conditional on earlier steps", "where": "2.2"},
+  {"term": "delay pattern", "definition": "Ps = {(s - k + 1, k) : k in 1..K, s - k >= 0}; codebook k is shifted by k-1 steps", "where": "2.2, eq. 6"}
+ ],
+ "lineage": [
+  {"work": "EnCodec (Défossez et al. 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "audio tokenizer", "quote": null},
+  {"work": "Kharitonov et al. 2022 (delay approach for speech streams)", "year": 2022, "arxiv": null, "relation": "extends", "note": "delay pattern source", "quote": null},
+  {"work": "Kreuk et al. 2022 (AudioGen)", "year": 2022, "arxiv": null, "relation": "extends", "note": "text conditioning, classifier-free guidance, human study setup", "quote": null},
+  {"work": "MusicLM (Agostinelli et al. 2023)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "flattening pattern and MusicCaps source", "quote": null},
+  {"work": "Noise2Music (Huang et al. 2023b)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "FAD copied", "quote": null},
+  {"work": "Mousai (Schneider et al. 2023)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "retrained", "quote": null},
+  {"work": "Riffusion (Forsgren and Martiros)", "year": null, "arxiv": null, "relation": "baseline", "note": "open model", "quote": null},
+  {"work": "D-Adaptation (Defazio and Mishchenko 2023)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "step-size rule", "quote": null},
+  {"work": "Descript Audio Codec (Kumar et al. 2023)", "year": 2023, "arxiv": "2306.06546", "relation": "evaluates", "note": "alternative tokenizer", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Codebook interleaving patterns presented in Section 2.2.", "page": 2, "why": "Shows steps per pattern for flattening, delay, parallel, coarse first"},
+  {"figure": "Table 4", "caption": "Codebook patterns. We compare different codebook interleaving patterns on 30-seconds, audio sequences.", "page": 9, "why": "Steps against FAD, OVL and REL in one place"},
+  {"figure": "Fig 2", "caption": "Stereo codebooks (left) and memorization results (right)", "page": 8, "why": "Stereo patterns and memorization curves"}
+ ],
+ "code": [
+  {"where": "2.2, eq. 6", "snippet": "Ps = {(s - k + 1, k) : k in {1, ..., K}, s - k >= 0}", "verbatim": false}
+ ],
+ "problems": [
+  "Table 4 caption says 'partial flattening' similar to delay; text uses K=4 and says Table 1 reports the delay pattern.",
+  "Memorization results are only in Fig 2b (curves), not extracted.",
+  "No embedded instructions found."
+ ]
+}

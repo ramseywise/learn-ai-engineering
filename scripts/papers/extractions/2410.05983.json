@@ -1,19 +1,809 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2410.05983",
  "pdf": "generative-ai/02-rag-retrieval/sources/jin-2024-long-context-llms-meet-rag.pdf",
  "bib": {
   "title": "Long-Context LLMs Meet RAG: Overcoming Challenges for Long Inputs in RAG",
-  "first_author": "Bowen Jin",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Bowen Jin",
+   "Jinsung Yoon",
+   "Jiawei Han",
+   "Sercan Ö. Arık"
+  ],
+  "first_author": "Jin",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2410.05983",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 97398,
+  "chars_total": 97398,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Long-Context LLMs Meet RAG: Overcoming Challenges for Long Inputs in RAG\", Bowen Jin, Jinsung Yoon, Jiawei Han, Sercan O. Arik (Google Cloud AI Research, UIUC). arXiv:2410.05983v1, 8 Oct 2024. Preprint (no venue printed).\n\nCOVERAGE: Read all 96,978 chars (every page, main text, appendices A-N, case studies, tables). The reference list and the long qualitative case-study passages (Appendix D, I) were skimmed. Figure data is plotted only, so curve values are NOT in the text and are not quoted. Only Tables 11 and 12 and the recall numbers are numeric. The paper has no dedicated limitations section. The only concessions are in-line (see LIMITS).\n\nCLAIMS (ranked)\n- claim: With a strong retriever (e5), RAG accuracy rises and then falls or plateaus as retrieved passages grow (inverted U). With weak BM25 it mostly keeps rising or dips slightly. The effect is more pronounced with the higher-recall retriever.\n  number: none given as accuracy; Recall@40 NQ e5 0.90 vs BM25 0.73; PopQA 0.85 vs 0.57\n  setup: NQ (also PopQA, App. B.1); retrievers e5, BM25; LLMs Gemma-7B-Chat, Gemma-2-9B-Chat, Mistral-Nemo-12B-Instruct, Gemini-1.5-Pro; k varied from 1 up to each model's token limit (Fig 1 axis to ~10^3).\n  quote: \"Strong Retriever (e5): Across all LLMs, increasing the number of retrieved passages initially improves performance, but then leads to a sharp decline or plateau.\" and \"Recall@40 is 0.90 with e5 and 0.73 with BM25\"\n  where: p4, Fig 1, Sec 3.1; p15 Fig 9 (\"Recall@40 is 0.85 with e5 and 0.57 with BM25\")\n- claim: RAG accuracy always sits below retrieval recall, so the presence of the gold passage does not guarantee a correct answer. Hard negatives mislead the model.\n  number: none (curves only)\n  setup: Gemma-2-9B-Chat, e5 and BM25, NQ, k 0-40 (Fig 2)\n  quote: \"the overall accuracy of the RAG system falls below the recall across all retrieval sizes. This indicates that even when relevant information is present in the retrieved context, the LLM may fail to generate the correct answer.\"\n  where: p5, Sec 3.2\n- claim: Precision@k is an inadequate predictor. e5 has higher precision than BM25 yet degrades more as k grows. The kind of irrelevant passage matters, not only how many.\n  number: none\n  setup: as above\n  quote: \"despite exhibiting higher precision, the e5 retriever leads to a more pronounced performance degradation as the number of retrieved passages increases compared to BM25.\"\n  where: p5\n- claim: Controlled hard-negative test: one gold passage plus N negatives. Accuracy falls as N rises, and negatives from stronger retrievers hurt more (e5 > contriever > BM25 > random). Gemini-1.5-Pro resists random negatives but not hard ones on NQ.\n  number: none (curves)\n  setup: NQ (PopQA in App. B.2); Gemma2-9B-Chat, Mistral-Nemo-12B-Instruct, Gemini-1.5-Pro; 5-40 negatives; negatives are top-ranked passages that do not contain the answer (Alg. 1); gold plus negatives shuffled.\n  quote: \"LLMs struggle more with hard negatives from stronger retrievers (e.g., e5) compared to those from weaker retrievers (e.g., BM25) or random sampling.\"\n  where: p6, Sec 3.3, Fig 3; App. C (Alg 1); App. D case study\n- claim: Needle-in-a-haystack and RULER use random negatives, so they under-measure the RAG difficulty. Evaluations need retriever-specific hard negatives.\n  number: none\n  quote: \"such benchmarks may not adequately capture the challenges posed by hard negatives, which are prevalent in real-world RAG applications.\"\n  where: p6-7, Sec 3.3 insights\n- claim: Training-free retrieval reordering (best passages at the start and end, weakest in the middle) gives negligible gain at small k and consistent gain at large k.\n  number: none (curves)\n  setup: e5 and BM25; Gemma-2-9B-Chat (k up to 40) and Mistral-Nemo-12B-Instruct (k up to 200); NQ and PopQA (Fig 4). Order is [I, d1, d3, ..., d4, d2, q], where d_i is ranked by retriever score.\n  quote: \"retrieval reordering yields negligible improvements with smaller retrieval sets, but significantly and consistently outperforms the original ordering when the number of retrieved passages is large.\"\n  where: p7-8, Sec 4, Eq 1, Alg 2 (App. E)\n- claim: Fine-tuning on RAG-formatted data with 40 retrieved passages (RAG FT) beats the chat model with RAG and plain QA fine-tuning (Direct FT, no retrieval) on 9 unseen datasets. Its curve is flatter as k grows.\n  number: none for the gain (curves only). Training: 50k mixed examples (12.5k each NQ, WoW, FEVER, MMLU).\n  setup: Gemma-2-9B-Base, Mistral-Nemo-12B-Base, Gemini-1.0-Pro; e5 top-40; test on TriviaQA, PopQA, HotpotQA, 2Wiki, WebQuestions, Bamboogle, ASQA, T-REx, zsRE. Gemma and Mistral use lr 1e-6, cosine, 4 epochs, batch 64, 8 H100 (axolotl). Gemini uses the default Cloud tuning API, 1 epoch.\n  quote: \"RAG FT consistently outperforms the chat model w. RAG and the Direct FT model across all evaluated datasets.\"\n  where: p8-9, Sec 5.1, Fig 5; App. G (Tables 3-6)\n- claim: Adding an intermediate reasoning step (identify relevant docs, then answer) gives a further gain over implicit RAG FT.\n  number: none (curves)\n  setup: Gemma-2-9B, Gemini-1.0-Pro (Mistral in App. K); same training mix; reasoning labels generated by Gemini-1.5-Pro; evaluation on 1000 random queries per dataset; max generation 256 tokens (32 for implicit).\n  quote: \"The LLM fine-tuned with explicit intermediate reasoning consistently outperforms training with implicit RAG data.\"\n  where: p9-10, Sec 5.2, Fig 6; App. H (Tables 7-10 prompts)\n- claim: Data-centric findings. (a) A mixed training distribution generalizes better than any single source. (b) Mixing retrievers in training (BM25 + e5) is best on seen and unseen retrievers (Contriever, BGE). (c) Training at maximum context length (40 passages) gives the best result across inference k.\n  number: 50k samples per distribution; 5 context configurations\n  setup: Gemma-2-9B-Base, 8192-token max, about 40 passages. (a) test on HotpotQA; (b) test on NQ; (c) test on NQ. Configurations: fixed 10 (25%), 20 (50%), 40 (100%), dynamic 0-40, dynamic 20-40.\n  quote: \"fine-tuning with the maximum number of retrieved passages (100% max) consistently yields the best performance across various retrieval sizes during inference.\"\n  where: p11-12, Sec 6, Fig 7\n- claim: Retriever similarity governs transfer. BM25-trained models generalize better to Contriever, e5-trained better to BGE.\n  number: none\n  quote: \"an LLM trained with BM25 generalizes better to Contriever, while an LLM trained with e5 generalizes better to BGE.\"\n  where: p11, Sec 6; App. A, Fig 8 (NQ ranking e5 > bge > contriever > BM25)\n- claim: More RAG-tuning data helps. Average accuracy on NQ rises with the training set size.\n  number: 5k 0.5805; 20k 0.5806; 50k 0.6017; 200k 0.6176\n  setup: Gemma-2-9B-Base, mixed NQ/WoW/FEVER/MMLU data, evaluated on NQ (the table's row label reads \"Number of Retrieval Passages\", apparently a mislabel)\n  quote: \"Avg. 0.5805 0.5806 0.6017 0.6176\"\n  where: p32, App. M, Table 11\n- claim: Mixing RAG-specific data into general SFT improves RAG accuracy and leaves general ability roughly intact. MT-Bench drops a little, from 5.8969 to 5.6031.\n  number: NQ 0.5687 -> 0.6033; TriviaQA 0.7155 -> 0.7481; MT-Bench 5.8969 -> 5.6031 (base model: 2.3125 / 0.2105 / 0.4940)\n  setup: Gemma-2-9B; Ultrachat 200k alone vs plus 50k RAG data\n  quote: \"NQ 0.2105 0.5687 0.6033\" and \"MT-Bench 2.3125 5.8969 5.6031\" (Table 12 rows)\n  where: p32, App. N, Table 12\n\nLIMITS\n- The authors state the hard-negative study is synthetic: it \"isolates the impact of hard negatives by holding the golden passage constant and intentionally excluding scenarios with multiple golden passages, which are common in real-world RAG systems.\"\n- Reasoning results use 1000 sampled queries per dataset (compute for Gemma; API credit limit for Gemini). There are no confidence intervals or seed variance.\n- Nearly all gains are shown as curves, with no numeric tables. Some metrics are not defined in the extraction (the paper says \"RAG Accuracy\").\n- Models are Gemma, Mistral-Nemo and Gemini 1.0/1.5 (2024). The retrieval corpus is the 2018 Wikipedia dump (21M chunks of under 100 words), and the retrievers are e5, BM25, Contriever and BGE. Newer long-context models may behave differently.\n- The reasoning labels come from Gemini-1.5-Pro, which is a stronger-teacher confound.\n- Future work named: automated position optimisation and multi-step reasoning chains.\n- The paper does not compare against reranking or compression. Its handling of the \"lost-in-the-middle\" ordering is assumed, not measured per position.\n\nBUILDS ON\n- Liu et al. 2024, \"Lost in the middle\" (basis for reordering).\n- Cuconasu et al. 2024, \"The power of noise\" (hard negatives).\n- Hsieh et al. 2024a (RULER); Kamradt 2023 (needle-in-a-haystack).\n- Hsieh et al. 2024b, \"Found in the middle\".\n- Shi et al. 2023 (distraction by irrelevant context).\n- Tuning for RAG: Yoran et al. 2024 (RetRobust); Lin et al. 2024 (RA-DIT); Asai et al. 2024 (Self-RAG); Zhang et al. 2024 (RAFT); Yu et al. 2024 (RankRAG); Wei et al. 2024 (InstructRAG).\n- Wei et al. 2022 (chain of thought) for the reasoning step.\n- Long context vs RAG: Xu et al. 2023; Li et al. 2024; Lee et al. 2024.\n- Karpukhin et al. 2020 (corpus and DPR); Wang et al. 2022 (e5); Izacard et al. 2021 (Contriever); Chen et al. 2024 (BGE); Robertson et al. 2009 (BM25).\n\nCODE (verbatim, p8 Eq 1 and Alg 2, p21):\nOrder(d_i) = (i+1)/2 if i is odd; (k+1) - i/2 if i is even\nAlg 2: \"if mod(i, 2) = 1 then Order(d_i) <- (i+1)/2 ... else Order(d_i) <- k+1-i/2 ... Place d_i at position Order(d_i) in S. Construct input sequence [I, S[1], ..., S[k], q]\"\nPrompt (Table 4, NQ): \"Answer the question based on the given document. Only give me the answer and do not output any other words. The following are given documents. {reference}\"\nReasoning prompt (Table 7): \"Please first provide an analysis with clear reasoning details of which documents are relevant to answer the question. Then output a concise answer to the question based on the analysis.\"\n\nFIGURES (captions via text only, figures.py not run)\n- Fig 1 (p4): accuracy vs # retrieved passages, 4 LLMs, e5 vs BM25 on NQ. This is the inverted-U figure.\n- Fig 2 (p5): accuracy vs recall and precision, Gemma-2-9B-Chat. Shows accuracy below recall.\n- Fig 3 (p6): hard-negative difficulty by retriever source. Shows the ordering e5 > contriever > BM25 > random.\n- Fig 4 (p8): reordering vs original order, 8 configurations. Shows the gap opening at large k.\n- Fig 5/6 (p9-10): RAG FT, and RAG FT with intermediate reasoning, vs the chat model.\n- Fig 7 (p11): training data mix, retriever mix and training context length.\n\nPROBLEMS: None blocking. The text extraction scrambled the plot axes (axis ticks only), so exact curve values are unreadable and were not quoted. The Table 11 row label is likely mislabelled. No embedded instructions were found. Several fine-tuned numbers the note might want (for example \"X points gain from reordering\") are NOT in the text, and I did not fill them in from memory."
+ "type": "empirical",
+ "question": "Does giving a long-context LLM more retrieved passages in RAG keep improving answers, and if not, how can the loss from retrieved hard negatives be reduced?",
+ "hypothesis": "More retrieved passages raise recall and might improve performance, but retrieved hard negatives can mislead long-context LLMs so quality first rises then falls.",
+ "contributions": [
+  "Systematic analysis of long-context RAG, specifically the impact of retrieved hard negatives on performance",
+  "Three methods for robust RAG: training-free retrieval reordering, implicit fine-tuning for robustness to hard negatives, explicit fine-tuning with intermediate reasoning for relevance identification",
+  "Comprehensive study of RAG-specific LLM tuning: data distribution, retriever, training context length"
+ ],
+ "method": {
+  "summary": "Varies the number of retrieved passages (up to hundreds, within each model's token limit) for four long-context LLMs on NQ and PopQA with e5 and BM25, isolates hard negatives with a one-gold-passage synthetic setup, then tests retrieval reordering (training-free), RAG fine-tuning on top-40 passages (implicit), and fine-tuning with a Gemini-1.5-pro-generated reasoning paragraph before the answer.",
+  "task": "retrieval-augmented question answering, slot filling and long-form QA over a 2018 Wikipedia corpus",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Natural Questions (NQ)",
+    "role": "both",
+    "size": "12,500 training instances (Table 1); used for retrieval-size analysis (test size not stated)",
+    "split": "training mix and NQ test for Sec 3, 4, 6",
+    "source": "Kwiatkowski et al., 2019",
+    "preprocessing": "top-40 passages retrieved with e5 per example for fine-tuning samples"
+   },
+   {
+    "name": "Wizard of Wikipedia",
+    "role": "train",
+    "size": "12,500",
+    "split": "train mix",
+    "source": "long-form",
+    "preprocessing": null
+   },
+   {
+    "name": "FEVER",
+    "role": "train",
+    "size": "12,500",
+    "split": "train mix",
+    "source": "true/false",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "train",
+    "size": "12,500",
+    "split": "train mix",
+    "source": "close-set",
+    "preprocessing": null
+   },
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": "11,313",
+    "split": "test",
+    "source": "QA",
+    "preprocessing": null
+   },
+   {
+    "name": "PopQA",
+    "role": "eval",
+    "size": "14,267",
+    "split": "test",
+    "source": "QA",
+    "preprocessing": null
+   },
+   {
+    "name": "WebQuestions",
+    "role": "eval",
+    "size": "2,032",
+    "split": "test",
+    "source": "QA",
+    "preprocessing": null
+   },
+   {
+    "name": "HotpotQA",
+    "role": "eval",
+    "size": "7,405",
+    "split": "test",
+    "source": "multi-hop QA",
+    "preprocessing": null
+   },
+   {
+    "name": "2WikiMultiHopQA",
+    "role": "eval",
+    "size": "12,576",
+    "split": "test",
+    "source": "multi-hop QA",
+    "preprocessing": null
+   },
+   {
+    "name": "Bamboogle",
+    "role": "eval",
+    "size": "125",
+    "split": "test",
+    "source": "multi-hop QA",
+    "preprocessing": null
+   },
+   {
+    "name": "ASQA",
+    "role": "eval",
+    "size": "948",
+    "split": "test",
+    "source": "long-form QA",
+    "preprocessing": null
+   },
+   {
+    "name": "T-REx",
+    "role": "eval",
+    "size": "5,000",
+    "split": "test",
+    "source": "slot filling",
+    "preprocessing": null
+   },
+   {
+    "name": "Zero-shot RE (zsRE)",
+    "role": "eval",
+    "size": "3,724",
+    "split": "test",
+    "source": "slot filling",
+    "preprocessing": null
+   },
+   {
+    "name": "Retrieval corpus: 2018 Wikipedia dump",
+    "role": "eval",
+    "size": "21M text chunks",
+    "split": null,
+    "source": "Karpukhin et al. (2020) chunking",
+    "preprocessing": "split by section, long sections split into equal chunks of fewer than 100 words"
+   },
+   {
+    "name": "Ultrachat 200k",
+    "role": "train",
+    "size": "200k",
+    "split": "general SFT data in Appendix N",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Gemma-7B-Chat",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma-2-9B-Chat",
+    "role": "evaluated",
+    "params": "9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192 tokens (about 40 passages) per Sec 6, stated for the Base model",
+    "other": {}
+   },
+   {
+    "name": "Mistral-Nemo-12B-Instruct",
+    "role": "evaluated",
+    "params": "12B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "retrieval sizes up to about 200 passages in Fig 4"
+    }
+   },
+   {
+    "name": "Gemini-1.5-Pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemma-2-9B-Base",
+    "role": "base",
+    "params": "9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192 tokens",
+    "other": {}
+   },
+   {
+    "name": "Mistral-Nemo-12B-Base",
+    "role": "base",
+    "params": "12B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini-1.0-Pro",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "tuned via Google Cloud Tuning API, default settings, 1 epoch"
+    }
+   },
+   {
+    "name": "Gemini-1.5-pro (reasoning-label generator)",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "e5",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Wang et al. 2022; main retriever for fine-tuning data"
+    }
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": "sparse lexical",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BGE",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning: generate answer a from [I, d1..dk, q]; with reasoning, generate [r, a]",
+   "optimizer": null,
+   "lr": "1e-6 peak (Gemma-2-9B-Base, Mistral-Nemo-12B-Base); Gemini-1.0-Pro default",
+   "lr_schedule": "cosine",
+   "warmup": "5%",
+   "batch_size": "64 (open models); Gemini default",
+   "steps": null,
+   "epochs": "4 (open models); 1 (Gemini-1.0-Pro)",
+   "tokens": null,
+   "seq_len": "inferred: up to 8192 tokens for Gemma-2 with 40 passages (Sec 6)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 H100 GPUs (open models)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "codebase": "axolotl (open models), Google Cloud Tuning API (Gemini-1.0-Pro)",
+    "flash_attention": "False for Gemma-2-9B-Base, True for Mistral-Nemo-12B-Base",
+    "chat_template": "Gemma-2-9B-Chat / Mistral-Nemo-12B-Instruct template used when tuning the base models",
+    "training_data_main": "50k samples: 12.5k each of NQ, WoW, FEVER, MMLU, top-40 passages retrieved with e5",
+    "reasoning_variant": "same hyperparameters as implicit RAG FT (Appendix H.1)",
+    "direct_ft_baseline": "SFT on question-answer pairs without retrieved context, evaluated without retrieval"
+   }
+  },
+  "inference": {
+   "decoding": "top-p sampling",
+   "temperature": null,
+   "top_p": "1",
+   "max_tokens": "32 generated tokens (implicit RAG eval); 256 (reasoning eval)",
+   "samples": "inferred: one run per configuration; seeds not stated. Reasoning and Gemini-1.0-Pro evaluations use 1000 randomly sampled queries per dataset.",
+   "prompting": "instruction + documents + 'Question: {question}. Answer:' (Tables 4-10); passages placed before the query",
+   "retrieval": "top-k from 2018 Wikipedia (21M chunks); k varied 1 up to hundreds (limited by each model's token limit); fine-tuning uses top-40",
+   "parameters": {
+    "reordering": "Order(d_i)=(i+1)/2 for odd i, (k+1)-i/2 for even i; highest scores at start and end",
+    "hard_negative_study": "one golden passage plus K-1 negatives not containing the answer, from e5/Contriever/BM25/random, shuffled, K up to 40",
+    "training_context_variants": "fixed 10, 20 or 40 passages; dynamic 0-40; dynamic 20-40"
+   },
+   "other": {
+    "serving": "Gemma-2 via huggingface pipeline; Gemini via Google Cloud Inference API; others via vLLM"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "RAG Accuracy",
+     "definition": "not defined in the text (answer-accuracy; matching rule not stated)",
+     "unit": "fraction 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@k",
+     "definition": "presence of relevant passages within the top-k retrieved passages",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision@k",
+     "definition": "proportion of relevant passages among the top-k",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench",
+     "definition": "general capability score (scale not stated)",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Chat model with retrieval (Gemma-2-9B-Chat, Mistral-Nemo-12B-Instruct, Gemini-1.0-Pro w. RAG)",
+    "Direct FT without RAG (no retrieved context)",
+    "original passage order (for reordering)",
+    "RAG FT without intermediate reasoning"
+   ],
+   "protocol": "Accuracy curves vs number of retrieved passages; no seeds, confidence intervals or significance tests reported; most results only as plots."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "inferred: public datasets listed; training mix and reasoning labels not stated as released"
+  },
+  "prompts": [
+   {
+    "purpose": "NQ training instruction (implicit)",
+    "text": "Answer the question based on the given document.\nOnly give me the answer and do not output any other words.\nThe following are given documents.\n{reference}",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "reasoning-tuning instruction (NQ)",
+    "text": "Answer the question based on the given documents.\nPlease first provide an analysis with clear reasoning details of which documents are relevant to answer the question.\nThen output a concise answer to the question based on the analysis.\nThe following are given documents.\n{reference}",
+    "where": "Table 7"
+   },
+   {
+    "purpose": "Gemini-1.5-pro reasoning label generation (NQ)",
+    "text": "Read the following documents relevant to the given question: {question}\n{reference}\nPlease identify documents that are useful to answer the given question: {question},\nand explain how the contents lead to the answer: {answers}.\nIf none of the documents is aligned with the answer,\nin that case, you have to explain the answer only based on your own knowledge,\nwithout referring to the provided information.\nNote that the question may be compositional and require intermediate analysis to deduce the final answer.\nMake sure your response is grounded and provides clear reasoning details followed by a concise conclusion.",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "evaluation answer template (all test sets)",
+    "text": "Question: {question}. Answer:",
+    "where": "Appendix G.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.max_tokens",
+    "quote": "the maximum number of generated token is set to be 32",
+    "where": "Appendix G.2"
+   },
+   {
+    "field": "training.epochs",
+    "quote": "Gemini-1.0-Pro default default default 1 default default",
+    "where": "Table 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "With a strong retriever (e5), RAG accuracy on NQ rises then falls or plateaus as retrieved passages increase; with BM25 it rises or dips slightly.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, four LLMs (Gemma-7B-Chat, Gemma-2-9B-Chat, Mistral-Nemo-12B-Instruct, Gemini-1.5-Pro), e5 vs BM25, plotted curves only",
+   "quote": "increasing the number of retrieved passages initially improves performance, but then leads to a sharp decline or plateau.",
+   "table": null,
+   "note": "Accuracy values only in Fig 1; not in text",
+   "where": "Sec 3.1, Fig 1, p4"
+  },
+  {
+   "claim": "e5 Recall@40 on NQ is 0.90 versus 0.73 for BM25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@40",
+   "value": 0.9,
+   "unit": "fraction",
+   "baseline_value": 0.73,
+   "n": null,
+   "setup": "NQ, 2018 Wikipedia corpus, e5 vs BM25",
+   "quote": "Recall@40 is 0.90 with e5 and 0.73 with BM25",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, p4"
+  },
+  {
+   "claim": "On PopQA, Recall@40 is 0.85 with e5 and 0.57 with BM25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@40",
+   "value": 0.85,
+   "unit": "fraction",
+   "baseline_value": 0.57,
+   "n": null,
+   "setup": "PopQA, e5 vs BM25",
+   "quote": "Recall@40 is 0.85 with e5 and 0.57 with BM25",
+   "table": null,
+   "note": null,
+   "where": "Fig 9 caption, App B.1"
+  },
+  {
+   "claim": "RAG accuracy stays below retrieval recall at every retrieval size, so relevant text present does not guarantee a correct answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma-2-9B-Chat, NQ, e5 and BM25, k up to 40 (Fig 2)",
+   "quote": "RAG accuracy consistently falls below retrieval recall for both retrievers",
+   "table": null,
+   "note": null,
+   "where": "Fig 2 caption, p5"
+  },
+  {
+   "claim": "Hard negatives from stronger retrievers hurt LLMs more than those from weaker retrievers or random sampling.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "one golden passage plus varying hard negatives (e5, Contriever, BM25, random), NQ and PopQA, Gemma2-9B-Chat, Mistral-12B-Instruct, Gemini-1.5-Pro; synthetic, excludes multiple-golden cases",
+   "quote": "LLMs struggle more with hard negatives from stronger retrievers (e.g., e5)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Fig 3, p6"
+  },
+  {
+   "claim": "Gemini-1.5-Pro is robust to random negatives but susceptible to hard negatives.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3d, NQ, one golden passage plus negatives",
+   "quote": "While Gemini-1.5-Pro demonstrates robustness to random negatives, it remains susceptible to the influence of hard negatives.",
+   "table": null,
+   "note": "App B.2 for PopQA says all LLMs are robust to random negatives",
+   "where": "Sec 3.3, p6"
+  },
+  {
+   "claim": "Retrieval reordering gives negligible gains at small k and significant, consistent gains over original order at large k.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma-2-9B-Chat (k up to 40) and Mistral-Nemo-12B-Instruct (k up to 200), e5 and BM25, NQ and PopQA, plotted curves",
+   "quote": "retrieval reordering yields negligible improvements with smaller retrieval sets, but significantly and consistently outperforms the original ordering when the number of retrieved passages is large.",
+   "table": null,
+   "note": "No numeric gains in text; no significance test reported",
+   "where": "Sec 4, Fig 4, p7-8"
+  },
+  {
+   "claim": "RAG fine-tuning on top-40 passages beats the chat model with RAG and, in most cases, direct fine-tuning, on nine unseen datasets, with flatter curves as k grows.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 9,
+   "setup": "Gemma-2-9B-Base, Mistral-Nemo-12B-Base, Gemini-1.0-Pro tuned on 50k NQ/WoW/FEVER/MMLU mix; Direct FT evaluated without retrieval; plotted curves",
+   "quote": "RAG FT consistently outperforms the chat model w. RAG and the Direct FT model across all evaluated datasets.",
+   "table": null,
+   "note": "Text also says 'In most cases, RAG FT demonstrates superior performance compared to Direct FT'",
+   "where": "Sec 5.1, Fig 5, p8-9"
+  },
+  {
+   "claim": "Adding an intermediate reasoning step (identify relevant documents, then answer) improves over implicit RAG fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "Gemma-2-9B-Base and Gemini-1.0-Pro (Mistral in App K); 1000 randomly sampled queries per dataset; reasoning labels from Gemini-1.5-pro",
+   "quote": "The LLM fine-tuned with explicit intermediate reasoning consistently outperforms training with implicit RAG data.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Fig 6, p10"
+  },
+  {
+   "claim": "Mixed training data (NQ, WoW, FEVER, MMLU) generalises better than any single source.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50000,
+   "unit": "training samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma-2-9B-Base, 50k samples per distribution (12.5k each in the mix), tested on HotpotQA, plotted",
+   "quote": "We train LLMs on five different data distributions, each with 50k samples",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Fig 7a, p11"
+  },
+  {
+   "claim": "Fine-tuning with a mix of BM25 and e5 retrieved passages gave the best accuracy for both seen and unseen retrievers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, Gemma-2-9B-Base, evaluated with BM25, e5, Contriever, BGE",
+   "quote": "Fine-tuning with the data corresponding to a mix of retrievers consistently yields the best performance across both seen and unseen retrievers during inference.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Fig 7b, p11"
+  },
+  {
+   "claim": "Training with the maximum number of passages (40, about 8192 tokens) gave the best accuracy across inference retrieval sizes.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 40,
+   "unit": "passages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gemma-2-9B-Base, NQ; five configurations: fixed 10/20/40, dynamic 0-40, dynamic 20-40",
+   "quote": "fine-tuning with the maximum number of retrieved passages (100% max) consistently yields the best performance across various retrieval sizes",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Fig 7c, p12"
+  },
+  {
+   "claim": "NQ RAG accuracy averaged over k=10..40 rises from 0.5805 (5k samples) to 0.6176 (200k samples).",
+   "kind": "measured",
+   "source": null,
+   "metric": "RAG accuracy (avg over k)",
+   "value": 0.6176,
+   "unit": "fraction",
+   "baseline_value": 0.5805,
+   "n": null,
+   "setup": "Gemma-2-9B-Base tuned on 5k, 20k, 50k, 200k mixed samples, evaluated on NQ",
+   "quote": null,
+   "table": "Table 11, row Avg., column 200k (5k: 0.5805; 20k: 0.5806; 50k: 0.6017)",
+   "note": "Averages are presumably over k=10,20,30,40",
+   "where": "App M, Table 11"
+  },
+  {
+   "claim": "Adding 50k RAG data to Ultrachat 200k SFT raises NQ accuracy from 0.5687 to 0.6033 and TriviaQA from 0.7155 to 0.7481, while MT-Bench moves from 5.8969 to 5.6031.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NQ accuracy",
+   "value": 0.6033,
+   "unit": "fraction",
+   "baseline_value": 0.5687,
+   "n": null,
+   "setup": "Gemma-2-9B, SFT only vs SFT + RAG-FT; base model NQ 0.2105",
+   "quote": null,
+   "table": "Table 12, row NQ, column SFT + RAG-FT (SFT only 0.5687; TriviaQA 0.7481 vs 0.7155; MT-Bench 5.6031 vs 5.8969)",
+   "note": "Text says general capability is 'maintained' although MT-Bench dropped by about 0.29",
+   "where": "App N, Table 12"
+  }
+ ],
+ "limits": [
+  "Most results are plotted curves only; the text gives almost no accuracy numbers, so magnitudes are read-off only.",
+  "No limitations section; no seeds, variance or significance tests reported.",
+  "'RAG accuracy' is never defined (matching rule not stated).",
+  "Hard-negative study is synthetic: one golden passage, multi-golden cases excluded (authors concede).",
+  "Gemini-1.0-Pro and reasoning evaluations use only 1000 sampled queries per dataset (API credit and compute limits).",
+  "Optimizer, precision, weight decay, seq length and temperature not stated; code and weights not released in the text.",
+  "Models (Gemma-2, Mistral-Nemo, Gemini 1.x) and the 8192-token limit have dated.",
+  "Authors list future work: automated position optimisation and multi-step reasoning chains."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "hard negatives",
+   "definition": "retrieved passages with high retrieval score that lack the ground-truth answer",
+   "where": "Sec 1, App D"
+  },
+  {
+   "term": "retrieval reordering",
+   "definition": "placing higher-scored passages at the beginning and end of the input, [I, d1, d3, ..., d4, d2, q]",
+   "where": "Sec 4, Eq 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lost in the middle (Liu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "motivates retrieval reordering",
+   "quote": null
+  },
+  {
+   "work": "Retrieval meets long context LLMs (Xu et al.)",
+   "year": 2023,
+   "arxiv": "2310.03025",
+   "relation": "contradicts",
+   "note": "paper says more passages do not consistently help, contrary to Xu et al. and Li et al.",
+   "quote": "Contrary to the suggestions of previous work (Li et al., 2024; Xu et al., 2023)"
+  },
+  {
+   "work": "Retrieval augmented generation or long-context LLMs? (Li et al.)",
+   "year": 2024,
+   "arxiv": "2407.16833",
+   "relation": "contradicts",
+   "note": "as above",
+   "quote": null
+  },
+  {
+   "work": "The power of noise (Cuconasu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hard negatives vs random",
+   "quote": null
+  },
+  {
+   "work": "RetRobust (Yoran et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RAG tuning with 1 passage",
+   "quote": null
+  },
+  {
+   "work": "RA-DIT / Self-RAG / RAFT / RankRAG / InstructRAG",
+   "year": 2024,
+   "arxiv": "2407.02485",
+   "relation": "related",
+   "note": "RAG tuning with fewer than 10 passages",
+   "quote": null
+  },
+  {
+   "work": "Dense passage retrieval (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "uses-data",
+   "note": "2018 Wikipedia chunking",
+   "quote": null
+  },
+  {
+   "work": "e5 (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2212.03533",
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "Gemma-2 / Mistral-Nemo / Gemini 1.5",
+   "year": 2024,
+   "arxiv": "2408.00118",
+   "relation": "evaluates",
+   "note": "LLMs studied",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Impact of retrieved context size on RAG performance with 4 different LLMs on NQ.",
+   "page": 4,
+   "why": "inverted-U for e5, flatter for BM25"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Evaluating the impact of hard negatives on long-context LLMs.",
+   "page": 6,
+   "why": "shows e5 negatives hurt more than BM25 or random"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Evaluating the effectiveness of retrieval reordering in various RAG configurations.",
+   "page": 7,
+   "why": "gain grows with k"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Generalization ability of LLMs fine-tuned with RAG-specific data (RAG FT).",
+   "page": 9,
+   "why": "nine datasets, three models"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Data distribution, retriever and training context length analyses.",
+   "page": 11,
+   "why": "the three data-centric findings"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1 / Algorithm 2, p7, p21",
+   "snippet": "Order(d_i) = (i+1)/2 if mod(i,2)=1; (k+1) - i/2 if mod(i,2)=0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equation 1 and Algorithm 2 are garbled in the text cache (fractions split across lines); the even-case formula is recorded in reconstructed form.",
+  "Figures give no numbers in text; no embedded instructions found."
+ ]
 }

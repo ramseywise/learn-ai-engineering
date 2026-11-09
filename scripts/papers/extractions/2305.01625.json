@@ -1,19 +1,568 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2305.01625",
  "pdf": "ai-engineering/02-context-engineering/sources/bertsch-2023-unlimiformer.pdf",
  "bib": {
   "title": "Unlimiformer: Long-Range Transformers with Unlimited Length Input",
-  "first_author": "Amanda Bertsch",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Amanda Bertsch",
+   "Uri Alon",
+   "Graham Neubig",
+   "Matthew R. Gormley"
+  ],
+  "first_author": "Bertsch",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
   "arxiv": "2305.01625",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 81163,
+  "chars_total": 81163,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Appendix F sample outputs (Brothers Karamazov summaries) skimmed, not analysed"
  },
- "legacy_report": "SOURCE: \"Unlimiformer: Long-Range Transformers with Unlimited Length Input\", Amanda Bertsch, Uri Alon, Graham Neubig, Matthew R. Gormley (CMU). NeurIPS 2023 (37th Conference), arXiv:2305.01625v3, 30 Oct 2023.\n\nCOVERAGE: All 22 pages, 81,166 chars extracted, read in full: body, Tables 1-9, appendices A-G, the sample outputs and the related-work appendix. References were skimmed. Text extraction is clean. I did not pull figure captions with the script. Figure content is only as described in the text.\n\nCLAIMS (ranked)\n- Core mechanism: cross-attention is offloaded to a kNN index over the encoder hidden states of all input tokens. Each decoder head in each layer retrieves its own top-k keys, and the kNN dot-product scores serve as the attention scores.\n  number: none\n  setup: wraps any pretrained encoder-decoder (BART-base, PRIMERA). Code also supports LLaMA-2.\n  quote: \"offloads the cross-attention computation to a single k-nearest-neighbor (kNN) index, while the returned kNN distances are the attention dot-product scores\"\n  where: Abstract, p.1\n\n- Top-k retrieval approximates full attention. Top-k keys cover more than 99% of attention mass.\n  number: >99%\n  setup: \"preliminary experiments\", with no table or detail given. A weakly supported claim.\n  quote: \"we found that the top-k attention keys cover more than 99% of the attention mass, and thus attending only to the top-k keys is an accurate approximation of the full, exact, attention.\"\n  where: Sec 1, p.2\n\n- Reformulation: (h_d Wq)(h_e Wk)^T = (h_d Wq Wk^T) h_e^T. So one index of encoder states h_e serves all heads and layers. The naive approach needs 2×L×H indexes, which is why Memorizing Transformers used only one layer.\n  number: 2 × L × H indexes versus 1\n  setup: BART encoder-decoder\n  quote: \"instead of constructing 2 × L × H indexes and retrieving from all indexes during each decoding step, we construct a single index from he and retrieve from it by just projecting the decoder hidden states to per-head per-layer hdWqW ⊤k .\"\n  where: Sec 2.3, p.4\n\n- Index memory: one vector per input token.\n  number: 2 GB per 1M tokens\n  setup: 16-bit floats, hidden size 1024\n  quote: \"Using 16-bit floats and hidden states of size 1024, this requires only 2GB of memory for 1,000,000 input tokens.\"\n  where: Sec 2.3, p.4\n\n- Encoding: overlapping chunks, keeping only the middle half of each chunk's vectors. The index is built with Faiss, using dot-product similarity.\n  number: middle half\n  setup: following SLED (Ivgi et al. 2022)\n  quote: \"We keep only the middle half of the encoded vectors from each chunk, to ensure that the encodings have sufficient context on both sides.\"\n  where: Sec 2.1, p.3\n\n- No-training gains (test-time injection). Using Unlimiformer only at test time improves BART-base and PRIMERA, while SLED without training hurts.\n  number: +1.8 ROUGE-1 (BART), +1 to +1.4 (PRIMERA)\n  setup: GovReport and SummScreen, BART-base 139M, PRIMERA 447M. Inputs average 9.6k and 9.0k tokens.\n  quote: \"applying Unlimiformer on an existing checkpoint without any training (+test Unlimiformer) improves BARTbase by, for example, 1.8 ROUGE-1 points on both datasets, and improves PRIMERA by 1-1.4 ROUGE-1 points. In contrast, without additional training, SLED decreases performance.\"\n  where: Sec 5.1, p.6. Table 3: BART GovReport 48.7 to 49.7 R1, SummScreen 29.7 to 30.9.\n\n- Cheap training tricks. Early stopping with Unlimiformer on validation gives +3.3 R1 on GovReport (48.7 to 51.0). Chunked training plus test-time Unlimiformer gives +7.2 R1 and +3 BERTScore.\n  number: +3.3, +7.2 R1\n  setup: BART-base, GovReport. Training cost equal to standard finetuning.\n  quote: \"Train chunked does not provide benefits on its own; however injecting Unlimiformer applied at test time results in the most significant gains: 7.2 ROUGE-1 and 3 BERTScore points improvements, while training is as computationally cheap as standard finetuning.\"\n  where: Sec 5.1, p.6. Table 3: Train chunked 46.2, then 53.4 with Unlimiformer. Standard finetuning is 48.7.\n\n- Beats long-range baselines with long-range training. Table 4, alternating training, test set:\n  number: GovReport R1 56.6 (Unlimiformer) vs 55.2 (Memorizing Transformers) vs 54.7 (SLED) vs 48.7 (standard BART). SummScreen R1 34.7 vs 32.7 vs 32.7. PRIMERA GovReport 57.4 vs 55.1 standard finetuning.\n  setup: BART-base, batch size 1, inputs truncated to 16k in training\n  quote: \"Unlimiformer outperforms the SLED and Memorizing Transformers baselines when using the same base model.\"\n  where: Sec 5.1, p.7; Table 4, p.7\n  Also: \"Unlimiformer+BARTbase performs better than the base PRIMERA across all metrics and datasets\", even though PRIMERA is larger. Unlimiformer also improves PRIMERA when applied on top of it.\n\n- BookSum (avg ~143k tokens, max over 500k). ROUGE is flat or worse, but entity recall doubles.\n  number: EntMent 10.0 to 21.9 (BART, test-time only). PRIMERA 11.6 to 25.5 (retrieval training).\n  setup: BookSum-Book setting, 436 examples. Table 5: BART standard R1 36.4, +test Unlimiformer R1 35.5.\n  quote: \"even adding Unlimiformer only at test time without costly training (Early stop w/ Unlimiformer) doubles the entity recall compared to the base model. Further, Unlimiformer improves EntMent in the base PRIMERA from 11.6 to 25.5 in Unlimiformer+PRIMERA.\"\n  where: Sec 5.2, p.8; Table 5, p.7\n  Caveat on the metric: truncated-to-1024 BART looks competitive on ROUGE and BERTScore despite hallucination. \"This is strongly counterintuitive for book summarization\", \"BERTScore does not strongly distinguish between any of the BookSum models.\" Appendix F's qualitative example shows the truncated output hallucinating.\n\n- Long input is actually used (BookSum). EntMent rises almost monotonically with max input size. Retrieved token positions are uniform across the book, with a slight bump in the first 10%. Median retrieved location is 49.73% to 49.87% through the document.\n  number: 43.5% (test-time only) to 64.5% (alternating training) of tokens retrieved at least once\n  setup: BookSum test set\n  quote: \"The average number of input embeddings retrieved at least once varied by method, from 43.5% of all tokens for the test-time-only Unlimiformer to 64.5% of all tokens for the alternating-training model\"\n  where: Sec 6, p.9; Fig 3, 5\n\n- Negative result: no gain when the input is already pre-ranked. On WikiSum, with paragraphs ranked by TF-IDF, Unlimiformer did not beat the first 1024 tokens of the sorted input. Retrieval or selection upstream makes long-context unnecessary.\n  number: none\n  setup: scraped WikiSum subset: 10k train, 2k eval, inputs under 1457 words removed\n  quote: \"Unlimiformer did not improve over a baseline that uses only the first 1024 tokens of this sorted input, suggesting that the full input is not necessary to produce the summary on this dataset\"\n  where: Sec 6, p.8; App B\n\n- Cost: inference time grows sublinearly with input length. Memory is constant in the number of layers using it.\n  number: Unlimiformer inference 4.48 ± 0.56 times baseline GPU-time. Memory 1.61 GB (normal) versus 7.33 GB (1 layer) versus 7.35 GB (all 6 layers).\n  setup: BookSum, avg 112,885 tokens encoded, single 48GB A6000. Baseline encodes 1024 tokens.\n  quote: \"Unlimiformer inference 4.48 ± 0.56\"\n  where: Table 7, p.16; Table 8, p.16. Training cost relative to baseline: retrieval 1.89, random-encoded 2.87, chunked 1.02.\n\n- Other tasks (Table 6, BART-base, alternating training). Improves 3 of 4 tasks.\n  number: QASPER F1 22.0 to 27.5. NarrativeQA F1 15.5 to 18.5. ContractNLI EM 77.5 to 77.7. QMSum R2 8.7 to 8.0 and RL 20.8 to 19.9 (worse).\n  setup: validation split of SCROLLS\n  quote: \"On three of the four datasets, applying Unlimiformer improves over the base model.\"\n  where: Sec 6, p.9\n\n- Versus other methods: the closest is Memorizing Transformers (Wu 2022). It is parametric, applies retrieval to one layer, and was reimplemented by the authors as a single-layer approximation. SLED attends to all tokens and is limited to about 16k tokens on one GPU.\n  number: ~16k tokens (SLED limit)\n  quote: \"This in practice limits SLED to only about 16k token-long inputs on a single GPU\"\n  where: Sec 7, p.10\n\n- Related-work criticism of prune-then-summarize pipelines: they suffer cascading errors.\n  quote: \"these methods all suffer from cascading errors: if the initial trimming or chunk summarization steps remove important information, there is no way to recover that information in the downstream summary.\"\n  where: App G, p.21. Contrast: Unlimiformer retrieves from a single input document, not an external corpus (kNN-LM, RETRO).\n\nLIMITS\n- Authors concede:\n  - English-only evaluation.\n  - Retrieval quality depends on key quality.\n  - Training input length is capped by GPU memory (16k tokens used).\n  - A CPU-offloaded index has higher latency.\n  - A GPU index worked for over 500k tokens, but only on GPUs no larger than 48GB.\n  - Faiss GPU does not support retrieving more than 2048 neighbors, so CPU indices are needed for models with larger context windows.\n- Not shown:\n  - The 99% attention-mass figure is preliminary and unreported.\n  - Memorizing Transformers is an approximation, not the original.\n  - Base models are small and old: BART-base 139M and PRIMERA.\n  - Only summarization, with a few QA and NLI tasks.\n  - No head-to-head with modern long-context LLMs or standard RAG over chunks.\n  - The decoder-only claim is untested in the paper. The text says it \"could also be applied\" to decoder-only models. LLaMA-2 support is only mentioned as code.\n  - BookSum gains rest on the EntMent proxy, with no human evaluation.\n  - Single runs: \"We train one model per setting.\"\n  - Dated: 2023 encoder-decoder focus.\n- Retrieval granularity is per token hidden state per head, not chunk or passage retrieval. This is a different design from document-level RAG. It is retrieval inside the attention layer.\n\nBUILDS ON: Memorizing Transformers (Wu et al. 2022, kNN index of previously encoded inputs). SLED (Ivgi et al. 2022, chunked encoding with fusion-in-decoder). Fusion-in-Decoder (Izacard and Grave 2021). kNN-LM (Khandelwal et al. 2019). Faiss (Johnson et al. 2019). BART (Lewis et al. 2020). Longformer/LED (Beltagy et al. 2020). PRIMERA (Xiao et al. 2022). Transformer (Vaswani et al. 2017). Also contrasts with RETRO (Borgeaud et al. 2022), Drozdov et al. 2022, and Alon et al. 2022.\n\nCODE: none in the paper. Code is at https://github.com/abertsch72/unlimiformer. The key formula is Eq. 2: QK^T = (h_d Wq Wk^T) h_e^T.\n\nFIGURES (not extracted via script; from in-text captions)\n- Fig 1 (p.2): dataset input lengths against 1024, 4096 and 16384-token windows. The longest inputs are over 34 times Longformer's window.\n- Fig 2 (p.2): diagram of chunked encoding, indexing and per-head kNN in cross-attention.\n- Fig 3 (p.8): entity recall rises with max datastore size. Fig 4 (p.8): inference cost sublinear in input size.\n- Fig 5 (p.9): retrieved positions roughly uniform across the document.\n\nPROBLEMS: No embedded instructions found. Figure axis text is garbled in the extraction but harmless. Table 2's input-length distribution column came through only as min/max numbers. The title page says the ground-truth venue is NeurIPS 2023."
+ "type": "empirical",
+ "question": "Can a pretrained encoder-decoder transformer accept inputs of unbounded length, without new weights, by offloading cross-attention to a kNN index over all input tokens?",
+ "hypothesis": "Letting every cross-attention head retrieve its own top-k keys from the whole input improves long-input generation over truncation, with or without extra training.",
+ "contributions": [
+  "Unlimiformer: wraps any pretrained encoder-decoder and offloads cross-attention to a single kNN index, each head in each decoder layer retrieving its top-k keys",
+  "An attention reformulation (h_d W_q W_k^T) h_e^T that allows one index for all heads and layers",
+  "Training variants (test-only, early stop, chunked, random-encoded, retrieval, alternating) evaluated on GovReport, SummScreen, BookSum"
+ ],
+ "method": {
+  "summary": "Long inputs are encoded in overlapping chunks by the frozen encoder, keeping the middle half of each chunk's vectors, and indexed in Faiss with dot-product similarity. At each decoding step every cross-attention head queries the index with the reformulated query h_d W_q W_k^T and attends only to its top-k hidden states, k equal to the model context window. Evaluated at test time only and with several training regimes on BART-base and PRIMERA.",
+  "task": "long-document and book summarization (also QA, NLI, query-based summarization)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GovReport (SCROLLS)",
+    "role": "both",
+    "size": "19,402 examples; avg 9,616 input tokens, 597 output",
+    "split": "SCROLLS splits; test results in Tables 3-4, validation in Table 9",
+    "source": "Huang et al. 2021 via Shaham et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "SummScreen (SCROLLS)",
+    "role": "both",
+    "size": "4,348 examples; avg 8,987 input tokens, 137 output",
+    "split": "SCROLLS splits",
+    "source": "Chen et al. 2022 via SCROLLS",
+    "preprocessing": null
+   },
+   {
+    "name": "BookSum-Book",
+    "role": "both",
+    "size": "436 examples; avg 143,301 input tokens, 1294 output; max about 642k tokens",
+    "split": "not stated",
+    "source": "Krysciński et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiSum (rescraped)",
+    "role": "both",
+    "size": "10,000 train, 1,000 validation, 1,000 test, randomly sampled",
+    "split": "original train/val/test split respected",
+    "source": "Liu et al. 2018, rescraped",
+    "preprocessing": "inputs shorter than 1457 words removed (40th percentile of citation size in original); input paragraphs ranked by TF-IDF"
+   },
+   {
+    "name": "QASPER, Contract NLI, QMSum, NarrativeQA",
+    "role": "eval",
+    "size": "not stated",
+    "split": "SCROLLS validation split",
+    "source": "Dasigi 2021; Koreeda & Manning 2021; Zhong 2021; Kocisky 2018",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BART-base",
+    "role": "base",
+    "params": "139M",
+    "architecture": "encoder-decoder transformer",
+    "init_from": "pretrained BART (Lewis et al. 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "inferred: 6 decoder layers (Table 8 lists up to 6 (all))",
+    "hidden": "inferred: 1024 hidden used in memory example (Sec 2.3); BART-base hidden not stated",
+    "heads": null,
+    "context": "1024 tokens",
+    "other": {}
+   },
+   {
+    "name": "PRIMERA",
+    "role": "base",
+    "params": "447M",
+    "architecture": "Longformer-Encoder-Decoder (LED-large), pretrained for multi-document summarization",
+    "init_from": "Xiao et al. 2022",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {}
+   },
+   {
+    "name": "SLED",
+    "role": "baseline",
+    "params": null,
+    "architecture": "fusion-in-decoder over chunked encoding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k",
+    "other": {}
+   },
+   {
+    "name": "Memorizing Transformers (approximation)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "kNN attention in a single decoder layer, gate g set to 1",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "authors approximated it because the public implementation is not officially supported"
+    }
+   }
+  ],
+  "training": {
+   "objective": "standard seq2seq finetuning",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "1 for the computationally expensive methods",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "truncate longest inputs, generally to 16k tokens, for long-range methods; 1024 for low-cost methods",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "random-encoded batches alternated with retrieval batches act as regularisation",
+   "hardware": "single 48-GB A6000 (32 GB RAM, 16 CPUs for timing)",
+   "compute": "total did not exceed approximately 116 days on one 48-GB A6000",
+   "wall_clock": "SLED and retrieval training for GovReport about 10 days",
+   "seeds": "one model per setting (single run)",
+   "other": {
+    "hyperparameters": "'using the hyperparameter settings from SLED (Ivgi et al., 2022) and early stopping'; values not restated",
+    "variants": "+test Unlimiformer; +early stop w/ Unlimiformer; Train chunked (non-overlapping 1024-token chunks as separate examples); Random-encoded; Retrieval; Alternating"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; timing averaged over 3 runs",
+   "prompting": null,
+   "retrieval": "kNN (Faiss) over encoder last-layer hidden states of the single input, dot-product similarity; top-k per head per layer with k equal to context window (1024 for BART); overlapping chunks, middle half of each chunk's vectors kept; GPU index used for inputs over 500k tokens on 48 GB GPUs, CPU index otherwise slower",
+   "parameters": {
+    "k": "equal to model context window size (stated Sec 2.3)",
+    "overlap": "overlap size not stated"
+   },
+   "other": {
+    "faiss_gpu_limit": "Faiss GPU index does not support retrieving more than 2048 neighbours, so CPU index needed for windows over 2048"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE 1/2/L",
+     "definition": "n-gram overlap (Lin 2004)",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "BERTScore F1",
+     "definition": "vanilla limited to 512 tokens; facebook/bart-large-mnli (1024) used for GovReport and ScriptSumm; BookSum Longformer-large-4096 variant tried and rejected as non-discriminative",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Entity Mention Recall (EntMent)",
+     "definition": "recall of unique gold-summary named entities (SpaCy en_core_web_lg) in candidate",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Standard finetuning (truncated)",
+    "SLED",
+    "Memorizing Transformers (approximated)",
+    "PRIMERA",
+    "Hierarchical (Krysciński et al. 2021)"
+   ],
+   "protocol": "single run per setting, no significance tests; early stopping on validation"
+  },
+  "availability": {
+   "code": "https://github.com/abertsch72/unlimiformer",
+   "weights": "stated: models publicly available",
+   "data": "WikiSum training subset and scraping code released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Adding Unlimiformer at test time only to a standard-finetuned BART-base raises GovReport ROUGE-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 49.7,
+   "unit": "ROUGE-1",
+   "baseline_value": 48.7,
+   "n": null,
+   "setup": "BART-base (139M), GovReport test, ROUGE-1, single trained model per setting; truncated-input finetuning, Unlimiformer injected at inference only",
+   "where": "Table 3, p6",
+   "note": null,
+   "table": "Table 3, rows BARTbase Standard finetuning vs +test Unlimiformer, GovReport ROUGE-1"
+  },
+  {
+   "claim": "Alternating-trained Unlimiformer on BART-base beats SLED and Memorizing Transformers on GovReport.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 56.6,
+   "unit": "ROUGE-1",
+   "baseline_value": 54.7,
+   "n": null,
+   "setup": "BART-base, GovReport test, long-range (16k-truncated, batch size 1) training, alternating training strategy; ROUGE-1",
+   "where": "Table 4, p7",
+   "note": null,
+   "table": "Table 4, row BARTbase Unlimiformer (this work), GovReport ROUGE-1; SLED 54.7; Memorizing transformers 55.2; Standard finetuning 48.7"
+  },
+  {
+   "claim": "On BookSum, test-time Unlimiformer on BART-base lowers ROUGE-1 slightly relative to truncating to the first 1024 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 35.5,
+   "unit": "ROUGE-1",
+   "baseline_value": 36.4,
+   "n": null,
+   "setup": "BART-base, BookSum-Book test, avg input about 143k tokens; truncation baseline vs +test Unlimiformer",
+   "where": "Table 5, p7",
+   "note": "ROUGE-2 7.7 vs 7.6 and ROUGE-L 15.4 vs 15.3 are marginally higher with Unlimiformer; only ROUGE-1 is lower.",
+   "table": "Table 5, rows BARTbase Standard finetuning vs +test Unlimiformer, ROUGE 1"
+  },
+  {
+   "claim": "Test-time Unlimiformer roughly doubles entity mention recall on BookSum for BART-base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Entity Mention Recall",
+   "value": 21.9,
+   "unit": "EntMent (%)",
+   "baseline_value": 10.0,
+   "n": null,
+   "setup": "BART-base, BookSum-Book test; EntMent = fraction of unique gold entities (SpaCy en_core_web_lg) mentioned in candidate",
+   "where": "Sec 5.2, Table 5, p8",
+   "note": "Text names the 'Early stop w/ Unlimiformer' row; Table 5 gives 21.9 for both +test and +early stop rows of BART-base.",
+   "quote": "even adding Unlimiformer only at test time without costly training (Early stop w/ Unlimiformer) doubles the entity recall compared to the base model"
+  },
+  {
+   "claim": "PRIMERA entity recall on BookSum rises from 11.6 to 25.5 with retrieval-trained Unlimiformer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Entity Mention Recall",
+   "value": 25.5,
+   "unit": "EntMent (%)",
+   "baseline_value": 11.6,
+   "n": null,
+   "setup": "PRIMERA (447M), BookSum-Book test",
+   "where": "Sec 5.2, p8",
+   "note": null,
+   "quote": "Further, Unlimiformer improves EntMent in the base PRIMERA from 11.6 to 25.5 in Unlimiformer+PRIMERA."
+  },
+  {
+   "claim": "Unlimiformer attends to the top-k keys, which cover more than 99% of attention mass in preliminary experiments.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 99,
+   "unit": "% attention mass",
+   "baseline_value": null,
+   "n": null,
+   "setup": "preliminary experiments, no setup given (model, dataset not stated)",
+   "where": "Sec 1, p2",
+   "note": "Preliminary result; no table or setup reported.",
+   "quote": "we found that the top-k attention keys cover more than 99% of the attention mass"
+  },
+  {
+   "claim": "Index memory is one vector per input token: 2GB for 1,000,000 tokens at 16-bit, hidden size 1024.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "GB per 1M tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16-bit floats, hidden size 1024, single index shared across all heads and layers",
+   "where": "Sec 2.3, p4",
+   "note": null,
+   "quote": "Using 16-bit floats and hidden states of size 1024, this requires only 2GB of memory for 1,000,000 input tokens."
+  },
+  {
+   "claim": "Chunked training plus test-time Unlimiformer gives the largest low-cost GovReport gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7.2,
+   "unit": "ROUGE-1 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BART-base, GovReport test, training cost same as standard finetuning (Train chunked +test Unlimiformer: 53.4 vs 46.2 for Train chunked alone)",
+   "where": "Sec 5.1, p6",
+   "note": "Gain is measured against the Train chunked row (46.2), not against standard finetuning (48.7).",
+   "quote": "results in the most significant gains: 7.2 ROUGE-1 and 3\nBERTScore points improvements"
+  },
+  {
+   "claim": "Retrieval training costs about 1.9x and random-encoded training about 2.9x the GPU-time of baseline training per epoch; Unlimiformer inference costs about 4.5x.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4.48,
+   "unit": "x baseline inference GPU-time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookSum, single 48 GB A6000, 32 GB RAM, 16 CPUs, mean of 3 runs",
+   "where": "Table 7, p16",
+   "note": null,
+   "table": "Table 7, row Unlimiformer inference, column Relative GPU-time (1.89 retrieval training, 2.87 random-encoded training)"
+  },
+  {
+   "claim": "GPU memory with Unlimiformer is constant in the number of layers it is applied to (about 7.3 GB for BART) versus 1.61 GB for normal inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7.35,
+   "unit": "GB",
+   "baseline_value": 1.61,
+   "n": null,
+   "setup": "BART, BookSum inputs, some over 500,000 tokens",
+   "where": "Table 8, p16",
+   "note": null,
+   "table": "Table 8, row 6 (all), column Memory consumption (GB)"
+  },
+  {
+   "claim": "On WikiSum, where paragraphs were ranked by TF-IDF, Unlimiformer did not beat the first 1024 tokens of the sorted input.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiSum rescraped subset (10,000 train, 1,000 val, 1,000 test), BART-base; no numbers given in text",
+   "where": "Sec 6, p8",
+   "note": "Authors also note possible pretraining contamination of the baseline (BART saw Wikipedia).",
+   "quote": "Unlimiformer did not improve over a baseline that uses only the first 1024 tokens of this\nsorted input"
+  },
+  {
+   "claim": "Retrieved keys are spread across the whole BookSum input; median retrieved location is about 50% of the way through.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookSum test, all models",
+   "where": "Sec 6, p9",
+   "note": null,
+   "quote": "for all models, the median location of a retrieved\nkey was between 49.73% and 49.87% of the way\nthrough the input document"
+  },
+  {
+   "claim": "Only 43.5% to 64.5% of input tokens are retrieved at least once on BookSum.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 64.5,
+   "unit": "% of tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookSum test; 43.5% for test-time-only, 64.5% for alternating-training model",
+   "where": "Sec 6, p9",
+   "note": null,
+   "quote": "from 43.5% of all tokens for the test-time-only Unlimiformer to 64.5% of all tokens for the alternating-\ntraining model"
+  },
+  {
+   "claim": "On QASPER, Unlimiformer improves BART-base F1 from 22.0 to 27.5; on NarrativeQA from 15.5 to 18.5; Contract NLI and QMSum are about flat.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 27.5,
+   "unit": "F1",
+   "baseline_value": 22.0,
+   "n": null,
+   "setup": "BART-base with alternating training, SCROLLS validation splits",
+   "where": "Table 6, p9",
+   "note": null,
+   "table": "Table 6, rows BARTbase Standard finetuning vs Unlimiformer, column QASPER F1 (NarrativeQA 15.5 to 18.5; Contract NLI EM 77.5 to 77.7; QMSum ROUGE-2 8.7 to 8.0)"
+  },
+  {
+   "claim": "Total compute for the paper did not exceed about 116 days on one 48-GB A6000; SLED and retrieval training on GovReport took about 10 days each.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 116,
+   "unit": "A6000 GPU-days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all experiments",
+   "where": "App D, p15",
+   "note": null,
+   "quote": "did not exceed approximately 116\ndays of time on a single 48-GB A6000"
+  },
+  {
+   "claim": "Inference time grows sublinearly with input length, though encoding the full input makes Unlimiformer inference costlier than truncation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BookSum, wall-clock per example, Fig 4 (values read from figure only)",
+   "where": "Sec 6, p9",
+   "note": null,
+   "quote": "the total GPU-time required increases sublinearly\nwith input length"
+  }
+ ],
+ "limits": [
+  "English-only datasets",
+  "Training input length bounded by GPU memory (truncated to about 16k tokens at training)",
+  "CPU-offloaded index gives higher test-time latency; GPU index worked to over 500k tokens only on 48GB GPUs",
+  "BookSum ROUGE and BERTScore barely separate truncated baseline from Unlimiformer; EntMent used as proxy, hallucination judged by manual inspection of one example",
+  "Single run per setting, no variance or significance reported",
+  "Encoder-decoder models up to 447M only; LLaMA-2 support mentioned but not evaluated",
+  "No comparison against chunk-level RAG or retrieve-then-summarise pipelines",
+  "WikiSum rescraped, possible pretraining contamination"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Entity Mention Recall (EntMent)",
+   "definition": "the fraction of gold entities mentioned in the candidate summary",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Memorizing Transformers",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closest work; kNN index per head per layer in one decoder layer with learned gate; Unlimiformer is non-parametric and uses one index",
+   "quote": null
+  },
+  {
+   "work": "SLED (Ivgi et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "chunked encoding approach reused; decoder attends to all tokens",
+   "quote": null
+  },
+  {
+   "work": "PRIMERA (Xiao et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "BART (Lewis et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "Longformer (Beltagy et al.)",
+   "year": 2020,
+   "arxiv": "2004.05150",
+   "relation": "related",
+   "note": "long-range baseline family",
+   "quote": null
+  },
+  {
+   "work": "Faiss (Johnson et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "kNN index library",
+   "quote": null
+  },
+  {
+   "work": "SCROLLS (Shaham et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "GovReport, SummScreen, validation sets of other tasks",
+   "quote": null
+  },
+  {
+   "work": "BookSum (Krysciński et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "book-level summarization",
+   "quote": null
+  },
+  {
+   "work": "Fusion-in-Decoder (Izacard and Grave)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "basis of SLED",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A given LM's encoder's maximum input length is 2 tokens. A 6-token input is encoded in chunks and indexed...",
+   "page": 2,
+   "why": "Shows chunked encoding, index and per-head top-k retrieval"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "As the maximum datastore size increases, the entity recall generally increases.",
+   "page": 8,
+   "why": "Shows the long input is actually used"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "As the maximum datastore size increases, the inference cost increases sublinearly.",
+   "page": 8,
+   "why": "Cost scaling"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3, Eq 2",
+   "snippet": "QK^T = (h_d W_q)(h_e W_k)^T = (h_d W_q W_k^T) h_e^T",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of tables is flattened to one cell per line; values read by position",
+  "No embedded instructions found"
+ ]
 }

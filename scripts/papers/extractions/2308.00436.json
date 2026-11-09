@@ -1,19 +1,602 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2308.00436",
  "pdf": "ai-engineering/01-prompt-engineering/sources/miao-2023-selfcheck.pdf",
  "bib": {
   "title": "SelfCheck: Using LLMs to Zero-Shot Check Their Own Step-by-Step Reasoning",
-  "first_author": "Ning Miao",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Ning Miao",
+   "Yee Whye Teh",
+   "Tom Rainforth"
+  ],
+  "first_author": "Miao",
+  "year": 2023,
+  "venue": "preprint (arXiv:2308.00436v3 [cs.AI], 5 Oct 2023; no conference name printed on the PDF)",
   "arxiv": "2308.00436",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 52633,
+  "chars_total": 52633,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"SelfCheck: Using LLMs to Zero-Shot Check Their Own Step-by-Step Reasoning\", Ning Miao, Yee Whye Teh, Tom Rainforth (Oxford Statistics). The PDF is arXiv:2308.00436v3, 5 Oct 2023. The PDF names no venue. I recall it as an ICLR 2024 paper, but the PDF does not say so, so treat that as unverified. Call it a preprint.\n\nCOVERAGE: 52,636 chars across 15 pages. I read all of the body, the appendices (A: worked example, B: one-shot exemplar) and the references. The Appendix B exemplar was only skimmed after its first lines. The first extraction was truncated, so I re-extracted the middle sections.\n\nThe grep of 03-core-techniques.md for \"selfcheck\" or \"miao\" returned nothing. The note does not cite this paper yet.\n\nCLAIMS (ranked)\n1. Claim: Asking an LLM to check its own work directly almost always returns \"correct\", so it carries no signal.\n number: more than 90% deemed correct (Ling et al.). Direct whole-chain verification gives FP and TP of 100% on MATH and 98% on GSM8K. Global check verification accuracy is 55.0% against 50.0% random.\n setup: GPT-3.5. The 98% and 100% figures are quoted from Ling et al. (2023). The 55.0% comes from the authors' own MathQA ablation, 100 questions.\n quote: \"it almost invariably declares that the original answer is correct, with Ling et al. (2023) finding answers checked in this way are deemed correct more than 90% of the time regardless of whether they actually are.\"\n quote: \"its verification accuracy (55.0%) is only marginally above random guess (50.0%).\"\n where: p3 (section 3); p4 (section 4.2); p9 (section 5.2)\n\n2. Claim: SelfCheck splits each step check into four separate LLM calls, using separate calls with no shared context. The four stages are target extraction, information collection, step regeneration (the model redoes the step without seeing the original), and result comparison (supports, contradicts, or not related). The design aims to decorrelate the checker's errors from the generator's.\n number: none\n setup: the same prompts are used across GPT-3.5 and GPT-4 and across all three datasets. Prompts were devised using a small number of MathQA training samples.\n quote: \"the different LLM queries are made independently, rather than keeping the queries and answers from previous stages in context. Thus, for example, when the LLM is called to carry out the step regeneration, it does not have access to the original generation.\"\n where: p4\n\n3. Claim: Weighted voting with SelfCheck confidence beats plain majority voting on all three datasets with GPT-3.5, with 2 solutions per question.\n number: ΔAcc +2.8±0.9 on GSM8K, +5.4±1.1 on MathQA, +2.2±0.7 on MATH*. Accuracy goes from 71.7 to 74.3 (GSM8K), 59.2 to 64.6 (MathQA) and 35.8 to 38.0 (MATH*).\n setup: Table 1, 2 candidate solutions per question. GSM8K and MathQA use the full test sets. MATH* is the subset from Ling et al. 2023. The authors state that gains concentrate where exactly one of the two solutions is correct.\n quote: \"GPT-3.5 GPT-3.5 16.8 23.0 60.2 71.7 74.3 2.8 ±0.9\" (GSM8K row); \"GPT-3.5 GPT-3.5 27.6 26.4 46.0 59.2 64.6 5.4 ±1.1\" (MathQA row); \"GPT-3.5 GPT-3.5 52.6 23.2 24.2 35.8 38.0 2.2 ±0.7\" (MATH row)\n where: p7, Table 1\n\n4. Claim: With GPT-4 as generator, gains are mixed: negligible on GSM8K, positive on MathQA and MATH. A weaker GPT-3.5 checker on GPT-4 outputs beats a GPT-4 checker on the easier sets and loses on MATH. The authors attribute this to decorrelated errors between different models.\n number: GPT-4 checks GPT-4: -0.2±0.2 (GSM8K), +2.6±0.4 (MathQA), +3.4±0.6 (MATH). GPT-3.5 checks GPT-4: +1.0±0.3, +3.0±0.4, +1.0±0.8.\n setup: 500 random questions per dataset and only 2 solutions each. Decorrelation is the authors' hypothesis (\"likely because\"), not tested.\n quote: \"using GPT-3.5 to check GPT-4 generated answers yields surprisingly good results, actually outperforming checking with GPT-4 on the simpler GSM8K and MathQA tasks. This is likely because using different LLMs helps to further decorrelate the errors of the generator and the checker\"\n where: p7, Table 1\n\n5. Claim: Raising the confidence threshold filters out wrong solutions, so a higher share of the solutions that pass are correct. The cost is that more correct solutions are rejected.\n number: precision of passing solutions rises from 67.5% to 76.5% (GSM8K), 59.4% to 82.2% (MathQA), and 34.6% to 50.8% (MATH). The intro claims it cuts the incorrect-solution proportion by 9%, 22.8% and 16.2%.\n setup: GPT-3.5 generator and checker, 10 solutions per question. Thresholds t are 0.3, 0.6 and 0.9 in Figure 3.\n quote: \"the proportions of real correct solutions in predicted correct solutions (Real + in Pred +) increase for GSM8K (67.5% →76.5%), MathQA (59.4%→82.2%) and MATH (34.6%→50.8%).\"\n where: p8, Figure 3; p2 (intro)\n\n6. Claim: Decomposing the check beats the alternatives. Verification accuracy is the mean of TPR and TNR.\n number: SelfCheck 66.7%, Global Check 55.0%, Single stage Check 57.2%, Error Check (0-shot) 63.1%, Error Check (1-shot) 64.2%.\n setup: MathQA, GPT-3.5, 100 random test questions only. The ablations are small and have no error bars.\n quote: \"SelfCheck 66.7% Global Check 55.0% Single stage Check 57.2% Error Check (0-shot) 63.1% Error Check (1-shot) 64.2%\"\n where: p9, Table 2\n\n7. Claim: Spending the compute on more samples instead of checking saturates. Majority voting never exceeds its n=9 accuracy, while SelfCheck keeps rising with ensemble size.\n number: ensemble sizes 1 to 50. The values are read from a plot only, so there are no exact numbers.\n setup: MathQA, 100 questions, GPT-3.5\n quote: \"this effect saturates for larger solution ensembles, with the accuracy of majority voting never going above that achieved when n = 9, thereby never reaching the performance we already achieved by SelfCheck for the smaller ensemble.\"\n where: p8, Figure 5\n\n8. Claim: Step scores combine into a confidence w. The weight is 2*Sigmoid(-λ_{-1}*#contradict - λ_0*#unrelated), with λ_{-1}=1 and λ_0=0.3. Successful checks are deliberately not counted, because shorter chains are preferred.\n number: λ_{-1}=1, λ_0=0.3\n setup: fixed, not tuned per dataset\n quote: \"we fix λ−1 = 1 and λ0 = 0 .3 in our experiments.\"\n where: p5\n\n9. Claim: Weighted voting beats the two few-shot verification baselines (Deductive Verification and Self-Verification) in relative gain over majority voting, even though those use exemplars. The figures give no numbers.\n number: none (plot only)\n setup: GPT-3.5, comparison to the baselines' own reported settings\n quote: \"we can see that SelfCheck achieves higher relative performance gains than both in their reported settings.\"\n where: p7, Figure 2 caption\n\nLIMITS\n- The authors tested only math: GSM8K, MathQA and MATH. They claim it is \"directly applicable to other question-answering problems with nominal changes to our prompts\" but show no evidence.\n- Models are GPT-3.5 (gpt-3.5-0301) and GPT-4 (gpt-4-0613). The paper itself is from 2023, so these models are long dated.\n- The GPT-4 experiments are small: 500 questions, 2 solutions each. MATH is a subset. All ablations use 100 MathQA questions.\n- Budget limits are acknowledged. There is no formal limitations section.\n- SelfCheck is costly: each step needs about 4 LLM calls, per solution. The paper does not report cost or latency.\n- Gains are small, a few points, and zero for GPT-4 self-checking on GSM8K.\n- Filtering by threshold rejects some correct solutions.\n- No comparison against trained verifiers or process reward models (Lightman et al.), which are called \"tangential\".\n- DV and SV numbers are quoted from other papers with different generators, so they are not directly comparable.\n\nBUILDS ON\n- Chain-of-thought (Wei et al. 2022)\n- Self-consistency / majority voting (Wang et al. 2022)\n- Self-Verification (Weng et al. 2022)\n- Deductive Verification (Ling et al. 2023)\n- Verifiers (Cobbe et al. 2021)\n- Process supervision (Lightman et al. 2023)\n- Li et al. 2022 (step classifier)\n- Faithful-CoT (Lyu et al. 2023)\n- External-knowledge checking (Peng et al. 2023)\n\nCODE (verbatim prompts)\n- Target extraction (p4): \"The following is a part of the solution to the problem [Question]: [Step 0,..., Step i]. What specific action does the step [Step i] take? Please give a brief answer using a single sentence and do not copy the steps.\"\n- Regeneration (p5): \"Please try to achieve the target with the information from the problem or previous steps.\"\n- Comparison (p5): \"Compare the key points from both solutions step by step and then check whether Solution 1 'supports', 'contradicts' or 'is not directly related to' the conclusion in Solution 2. Pay special attention to the difference in numbers.\"\n- Naive global check (the baseline that fails, p9): \"Carefully check whether the solution is correct step by step. End your response with your conclusion that starts with \"Correct\", \"Wrong\" or \"Not Sure\".\"\n- Integration (p5): w = 2*Sigmoid(-λ_{-1}*Σ1[r_i=-1] - λ_0*Σ1[r_i=0])\n- Appendix A (pp12-14) is a full worked example. The regenerated step gives centre (3,0), radius 3. The original step claims (3/2,0), radius 3/2, so the check returns \"contradicts\".\n\nFIGURES\n- Fig 1 (p3): the four-stage check on Step 5 of the circle problem. This is the best single visual for the technique.\n- Fig 2 (p7): SelfCheck vs majority voting accuracy against number of solutions, with DV and SV gaps.\n- Fig 3 (p8): precision of passing solutions against threshold.\n- Fig 4 (p8): ROC curves.\n- Fig 5 (p8): saturation of majority voting up to 50 solutions.\n- Fig 6 (p9): ablation variants against number of solutions.\n- Table 1 and Table 2 are the main data tables.\n\nPROBLEMS: None found. No embedded instructions. Math in the appendix text is garbled (fractions, repeated characters). The figure axis values are not extractable beyond what is quoted. I did not run the figures script. The note 03-core-techniques.md has no existing SelfCheck reference, so this would be a new citation rather than a \"sharpens\"."
+ "type": "empirical",
+ "question": "Can an LLM recognise errors in its own step-by-step reasoning zero-shot, without exemplars, training or external resources, and can that improve final-answer accuracy?",
+ "hypothesis": "Decomposing step checking into target extraction, information collection, regeneration and comparison, which exploits generation over checking and decorrelates errors, will beat direct checking.",
+ "contributions": [
+  "SelfCheck: a zero-shot step-by-step checker using a regenerate-and-compare scheme",
+  "Confidence-weighted voting over multiple solutions that raises final accuracy over majority voting on GSM8K, MathQA and MATH",
+  "Ablations of global vs step, single vs multi-stage, error-check vs regenerate-and-compare"
+ ],
+ "method": {
+  "summary": "For each step of a CoT solution, four separate LLM calls extract the step target, select the relevant earlier information, regenerate the step from that, and compare regeneration with the original (support/contradict/not related). Step results (+1/0/-1) are combined into a confidence w in [0,1] by a sigmoid formula, used as the vote weight over several sampled solutions.",
+  "task": "math word problem solving with step-level self-verification and weighted voting",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319 test samples",
+    "split": "whole test set",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MathQA",
+    "role": "eval",
+    "size": "2985 test samples",
+    "split": "whole test set; 5 answer options per problem",
+    "source": "Amini et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH*",
+    "role": "eval",
+    "size": "subset of the 5000-problem MATH test set; subset size not stated",
+    "split": "subset taken from Ling et al. (2023) (MATH_np.json)",
+    "source": "Hendrycks et al. 2021; subset from github.com/lz1oceani/verify_cot",
+    "preprocessing": null
+   },
+   {
+    "name": "GPT-4 subsets",
+    "role": "eval",
+    "size": "500 randomly sampled questions per dataset",
+    "split": "random sample",
+    "source": "as above",
+    "preprocessing": null
+   },
+   {
+    "name": "Ablation subset",
+    "role": "eval",
+    "size": "100 random MathQA test questions",
+    "split": "random",
+    "source": "MathQA",
+    "preprocessing": null
+   },
+   {
+    "name": "MathQA training samples",
+    "role": "dev",
+    "size": "a small number (count not stated)",
+    "split": "used while devising prompts",
+    "source": "MathQA",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5 (gpt-3.5-0301)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generator and checker, main focus"
+    }
+   },
+   {
+    "name": "GPT-4 (gpt-4-0613)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generator and checker; also GPT-4 generator with GPT-3.5 checker"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "2 solutions per question in Table 1; 1 to 10 in Fig 2 (GPT-3.5); up to 50 in Fig 5 (MathQA 100-question subset); GPT-4 runs use 2 instead of 10. Number of runs or seeds not stated.",
+   "prompting": "Zero-shot; same prompts for all datasets and both LLMs, with each stage a separate independent LLM call. Generator prompt asks for 'Step :' blocks separated by blank lines and ends with 'So the answer is ...'.",
+   "retrieval": null,
+   "parameters": {
+    "lambda_-1": "1",
+    "lambda_0": "0.3",
+    "integration": "w = 2*Sigmoid(-lambda_-1 * #(r=-1) - lambda_0 * #(r=0)); successful checks not counted",
+    "step_score": "+1 support, 0 not related, -1 contradict; regex on last line for 'support'/'contradict'",
+    "classification_threshold": "t, solution is correct if w >= t (varied in Fig 3/4)"
+   },
+   "other": {
+    "optional_stage": "variable definition extraction (Appendix A) feeds variable definitions to regeneration",
+    "information_ids": "extracted from free-text LLM output by regular expression"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "final answer accuracy",
+     "definition": "accuracy of the answer chosen by weighted vote (SelfCheck) or majority vote",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "DeltaAcc",
+     "definition": "SelfCheck accuracy minus majority-voting accuracy with standard error",
+     "unit": "% points",
+     "higher_is_better": true
+    },
+    {
+     "name": "verification accuracy",
+     "definition": "average of true positive and true negative rates for classifying a single solution as correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Majority voting (self-consistency, Wang et al. 2022)",
+    "Deductive Verification and Self-Verification, quoted from earlier work, not directly comparable (need exemplars)",
+    "Ablation variants: global check, single-stage check, error check 0-shot and 1-shot"
+   ],
+   "protocol": "Standard errors on accuracy differences; no significance test named. Faithful-CoT omitted since Ling et al. found it lowers accuracy; finetuned verifiers not compared."
+  },
+  "availability": {
+   "code": "https://github.com/NingMiao/SelfCheck",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "target extraction",
+    "text": "The following is a part of the solution to the problem [Question]: [Step 0,..., Step i]. What specific action does the step [Step i] take? Please give a brief answer using a single sentence and do not copy the steps.",
+    "where": "Section 3.1, p4"
+   },
+   {
+    "purpose": "information collection",
+    "text": "This is a math question: [Question]. The following is information extracted from the question:\nInformation 0: [Information 0]\n...\nThe following are the first a few steps in a solution to the problem:\nStep 0: [Step 0]\n...\nStep i-1: [Step i-1]\nWhich previous steps or information does the next step [Step i] directly follow from?",
+    "where": "Section 3.1, p5"
+   },
+   {
+    "purpose": "step regeneration",
+    "text": "We are in the process of solving a math problem. We have some information from the problem:\nInformation 0: [Information I0]\n...\nThe following are some previous steps:\nStep 0: [Step S0]\n...\nThe target for the next step is:\n[Target]\nPlease try to achieve the target with the information from the problem or previous steps.",
+    "where": "Section 3.1, p5"
+   },
+   {
+    "purpose": "result comparison",
+    "text": "The following are 2 solutions to a math problem.\nSolution 1: [Regeneration output]\nSolution 2: [Step i]\nCompare the key points from both solutions step by step and then check whether Solution 1 'supports', 'contradicts' or 'is not directly related to' the conclusion in Solution 2. Pay special attention to the difference in numbers.",
+    "where": "Section 3.1, p5"
+   },
+   {
+    "purpose": "global check ablation",
+    "text": "The following is a question and a solution to it from a student. Carefully check whether the solution is correct step by step. End your response with your conclusion that starts with \"Correct\", \"Wrong\" or \"Not Sure\".\nQuestion: [Question]\nSolution: [Step 0, Step 1,..., Step n]",
+    "where": "Section 5.2, p9"
+   },
+   {
+    "purpose": "single-stage step check ablation",
+    "text": "The following is a question and the first a few steps in its solution.\nQuestion: [Question]\nSolution: [Step 0, Step 1,..., Step i-1]\nCheck the correctness of the next step: [Step i]\nPlease consider the information it relies on and check step by step. Please end your response with your conclusion that starts with \"Correct\", \"Wrong\" or \"Not Sure\".",
+    "where": "Section 5.2, p9"
+   },
+   {
+    "purpose": "error-check ablation (0-shot)",
+    "text": "Given the following information:\nInformation 0: [Information I0]\n...\nStep 0: [Step S0]\n...\nCheck the correctness of the next step [Step i]\nPlease check for grounding errors, reasoning errors and calculation errors step by step. Please end your response with your conclusion that starts with \"Correct\", \"Wrong\" or \"Not Sure\".",
+    "where": "Section 5.2, p9"
+   },
+   {
+    "purpose": "generator",
+    "text": "Solve the following problem step by step. Please start each step with \"Step :\" and split sentences in each step with \"\\n\\n\". Please finish you response with \"So the answer is ...\".\nProblem: [Question]",
+    "where": "Appendix A"
+   },
+   {
+    "purpose": "variable definition extraction (optional)",
+    "text": "The following is the solution to a math question: Question: [Question] Solution: [steps] Are there variables in the solution? If so, please list the definition of variable in the form of \"1. variable is defined as...\".",
+    "where": "Appendix A"
+   },
+   {
+    "purpose": "one-shot error check exemplar",
+    "text": "Alice apples/oranges/bananas grounding, reasoning and calculation check exemplar from Ling et al. (2023)",
+    "where": "Appendix B (abbreviated here, see PDF)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "we randomly sample 500 questions from\neach dataset to form the test sets and generate 2 (instead of 10) answers to each question",
+    "where": "Section 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SelfCheck weighted voting beats majority voting on GSM8K with GPT-3.5 and two solutions per question",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "74.3",
+   "unit": "% accuracy",
+   "baseline_value": "71.7",
+   "n": null,
+   "setup": "GPT-3.5 generator and checker, 2 candidate solutions per question, weighted vote vs majority vote (MV). GSM8K; Table 1 does not state the test-set size for the GPT-3.5 rows (text says GSM8K evaluated on the whole test set, 1319).",
+   "note": "74.3-71.7 = 2.6 but the table prints 2.8±0.9 (rounding of unrounded accuracies, presumably).",
+   "where": "Table 1, p7",
+   "table": "Table 1, row GSM8K GPT-3.5/GPT-3.5, column Acc(SelfCheck, %); MV 71.7; DeltaAcc 2.8±0.9"
+  },
+  {
+   "claim": "Delta over majority voting on GSM8K, GPT-3.5 checking GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "DeltaAcc",
+   "value": "2.8±0.9",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5 generator and checker, 2 candidate solutions per question, weighted vote vs majority vote (MV). GSM8K",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, row GSM8K GPT-3.5/GPT-3.5, column ∆Acc (%)"
+  },
+  {
+   "claim": "SelfCheck weighted voting beats majority voting on MathQA with GPT-3.5 and two solutions",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "64.6",
+   "unit": "% accuracy",
+   "baseline_value": "59.2",
+   "n": null,
+   "setup": "GPT-3.5 generator and checker, 2 candidate solutions per question, weighted vote vs majority vote (MV). MathQA (whole test set 2985 per text)",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, row MathQA GPT-3.5/GPT-3.5, column Acc(SelfCheck, %); MV 59.2; ∆Acc 5.4±1.1"
+  },
+  {
+   "claim": "Delta over majority voting on MathQA, GPT-3.5 checking GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "DeltaAcc",
+   "value": "5.4±1.1",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5 generator and checker, 2 candidate solutions per question, weighted vote vs majority vote (MV). MathQA",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, row MathQA GPT-3.5/GPT-3.5, column ∆Acc (%)"
+  },
+  {
+   "claim": "SelfCheck weighted voting beats majority voting on MATH* with GPT-3.5 and two solutions",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "38.0",
+   "unit": "% accuracy",
+   "baseline_value": "35.8",
+   "n": null,
+   "setup": "GPT-3.5 generator and checker, 2 candidate solutions per question, weighted vote vs majority vote (MV). MATH* = subset of MATH test set taken from Ling et al. (2023), not the full 5000",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, row MATH* GPT-3.5/GPT-3.5, column Acc(SelfCheck, %); MV 35.8; ∆Acc 2.2±0.7"
+  },
+  {
+   "claim": "Delta over majority voting on MATH*, GPT-3.5 checking GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "DeltaAcc",
+   "value": "2.2±0.7",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5 generator and checker, 2 candidate solutions per question, weighted vote vs majority vote (MV). MATH*",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, row MATH* GPT-3.5/GPT-3.5, column ∆Acc (%)"
+  },
+  {
+   "claim": "With GPT-4 as generator and GPT-4 as checker, SelfCheck gains on MathQA and MATH* but not on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.2±0.2 (GSM8K); 2.6±0.4 (MathQA); 3.4±0.6 (MATH*)",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": "500 questions per dataset",
+   "setup": "GPT-4 (gpt-4-0613) generates and checks; 500 randomly sampled questions per dataset; 2 solutions per question",
+   "note": null,
+   "where": "Table 1, p7",
+   "table": "Table 1, rows GPT-4/GPT-4, column ∆Acc (%): GSM8K -0.2±0.2, MathQA 2.6±0.4, MATH* 3.4±0.6"
+  },
+  {
+   "claim": "GPT-3.5 checking GPT-4 generations gains more than GPT-4 checking on GSM8K and MathQA, less on MATH*",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.0±0.3 (GSM8K); 3.0±0.4 (MathQA); 1.0±0.8 (MATH*)",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": "500 questions per dataset",
+   "setup": "GPT-4 generator, GPT-3.5 checker; 500 sampled questions per dataset; 2 solutions per question",
+   "note": null,
+   "where": "Table 1, p7",
+   "quote": "actually outperforming checking with GPT-4 on the simpler GSM8K and MathQA tasks",
+   "table": "Table 1, rows GPT-4/GPT-3.5, column ∆Acc (%): GSM8K 1.0±0.3, MathQA 3.0±0.4, MATH* 1.0±0.8"
+  },
+  {
+   "claim": "Whole-chain (global) check has verification accuracy barely above chance on MathQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "verification accuracy",
+   "value": "55.0",
+   "unit": "% (mean of TPR and TNR)",
+   "baseline_value": "SelfCheck 66.7",
+   "n": "100 questions",
+   "setup": "MathQA, GPT-3.5, global check prompt over the whole solution; ablation run on a random subset of 100 MathQA test questions (Section 5). Chance is 50.0%.",
+   "note": null,
+   "where": "Section 5.2, p9; Table 2 row Global Check",
+   "quote": "its verification accuracy (55.0%) is only marginally above random guess (50.0%)"
+  },
+  {
+   "claim": "SelfCheck verification accuracy on MathQA ablation set",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "66.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "100 questions",
+   "setup": "MathQA, GPT-3.5, 100-question subset; average of TPR and TNR",
+   "note": null,
+   "where": "Table 2, p9",
+   "table": "Table 2, row SelfCheck, column Accuracy (%)"
+  },
+  {
+   "claim": "Other variants of verification accuracy: single stage 57.2, error check 0-shot 63.1, error check 1-shot 64.2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "57.2 / 63.1 / 64.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "100 questions",
+   "setup": "MathQA, GPT-3.5, 100-question subset",
+   "note": null,
+   "where": "Table 2, p9",
+   "table": "Table 2, rows Single stage Check, Error Check (0-shot), Error Check (1-shot), column Accuracy (%)"
+  },
+  {
+   "claim": "Directly asking the LLM to check an answer deems it correct more than 90% of the time regardless of truth; the claim is attributed to Ling et al. (2023), not measured here",
+   "kind": "reported",
+   "source": "Ling et al. 2023, Deductive verification of chain-of-thought reasoning",
+   "metric": null,
+   "value": "90",
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Direct LLM self-checking of answers; finding of Ling et al. (2023) (Deductive Verification), cited in Section 3",
+   "note": "The paper's own related observation: direct whole-chain prompting gives FP and TP both 100% on MATH and 98% on GSM8K 'as observed by Ling et al. (2023)'.",
+   "where": "Section 3, p3",
+   "quote": "with Ling et al. (2023) finding answers checked in this way are deemed correct more than 90% of the time regardless of whether they actually are"
+  },
+  {
+   "claim": "Majority voting accuracy saturates with larger ensembles; SelfCheck keeps improving",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MathQA 100-question subset, GPT-3.5, up to 50 solutions per question (Fig 5). Majority voting never exceeds its n=9 accuracy, below what SelfCheck gets with the smaller ensemble.",
+   "note": null,
+   "where": "Section 5.1, p8",
+   "quote": "with the accuracy of majority voting never going above that achieved when n = 9"
+  },
+  {
+   "claim": "Raising threshold t raises precision of predicted-correct solutions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "67.5->76.5 (GSM8K); 59.4->82.2 (MathQA); 34.6->50.8 (MATH*)",
+   "unit": "% real correct among predicted correct",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5, 10 solutions per question presumably (not stated); threshold t from low to high",
+   "note": "Quote line break normalised; setup of sample count not stated.",
+   "where": "Fig 3 caption, p8",
+   "quote": "GSM8K (67.5%→76.5%),\nMathQA (59.4%→82.2%) and MATH (34.6%→50.8%)"
+  },
+  {
+   "claim": "Filtering low-confidence solutions decreases the proportion of incorrect solutions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9%, 22.8%, 16.2%",
+   "unit": "% (GSM8K, MathQA, MATH)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Introduction claim; threshold and sample setup not given in text",
+   "note": null,
+   "where": "Section 1, p2",
+   "quote": "decreases the proportion of incorrect solutions by 9%, 22.8%, and 16.2% on the three\ndatasets respectively"
+  },
+  {
+   "claim": "GPT-4 with CoT answers only 42.5% of MATH problems",
+   "kind": "reported",
+   "source": "Bubeck et al. 2023; Hendrycks et al. 2021",
+   "metric": null,
+   "value": "42.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 CoT on MATH",
+   "note": null,
+   "where": "Section 1, p1",
+   "quote": "GPT-4 with CoT prompting only correctly answers 42.5% of problems in the MATH dataset"
+  }
+ ],
+ "limits": [
+  "Only math reasoning (GSM8K, MathQA, MATH); generality to other domains is asserted, not tested.",
+  "MATH evaluated on a subset (MATH*) from Ling et al., size not stated, due to limited resources.",
+  "GPT-4 experiments use only 500 questions per dataset and 2 solutions; GPT-4 checker gives -0.2±0.2 on GSM8K (no gain).",
+  "Ablations use only 100 MathQA questions, so verification accuracies (66.7 vs 55.0 etc.) carry large uncertainty; no error bars given.",
+  "No decoding settings (temperature, top_p, max tokens) are stated; closed OpenAI models of 2023, snapshots since retired.",
+  "Comparisons to DV and SV are against gaps quoted from other papers with different generators, so not directly comparable. The text names them inconsistently: Fig 2 caption says DV is Weng et al. (2022) and SV is Ling et al. (2023); Section 4 says SV is Ling et al. and DV is Weng et al.; the related-work section says SV is Weng and DV is Ling.",
+  "Cost of checking (multiple LLM calls per step) is not quantified.",
+  "Prompts were devised with a few MathQA training samples, so MathQA is not fully held out for prompt design."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SelfCheck",
+   "definition": "general-purpose, zero-shot, checking schema for self-identifying errors in LLM CoT reasoning",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Checks CoT solutions",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Majority voting baseline",
+   "quote": null
+  },
+  {
+   "work": "Deductive verification of chain-of-thought reasoning (Ling et al.)",
+   "year": 2023,
+   "arxiv": "2306.03872",
+   "relation": "baseline",
+   "note": "Few-shot step verifier; source of MATH subset, 90% always-correct finding and exemplar",
+   "quote": null
+  },
+  {
+   "work": "Large language models are reasoners with self-verification (Weng et al.)",
+   "year": 2022,
+   "arxiv": "2212.09561",
+   "relation": "baseline",
+   "note": "Backward-prediction verification",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "GSM8K; finetuned verifier",
+   "quote": null
+  },
+  {
+   "work": "MathQA (Amini et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Dataset",
+   "quote": null
+  },
+  {
+   "work": "MATH (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Dataset",
+   "quote": null
+  },
+  {
+   "work": "Let's verify step by step (Lightman et al.)",
+   "year": 2023,
+   "arxiv": "2305.20050",
+   "relation": "related",
+   "note": "Finetuned process verifier, not compared",
+   "quote": null
+  },
+  {
+   "work": "Faithful chain-of-thought reasoning (Lyu et al.)",
+   "year": 2023,
+   "arxiv": "2301.13379",
+   "relation": "related",
+   "note": "Omitted since it lowers accuracy per Ling et al.",
+   "quote": null
+  },
+  {
+   "work": "GPT-3.5 and GPT-4",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "Generator and checker models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Example of using SelfCheck, focusing on the checking of a particular step (Step 5).",
+   "page": 3,
+   "why": "Shows the four-stage pipeline on one step"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Accuracies of SelfCheck and majority voting for different numbers of generated solutions per question with GPT-3.5; lower plots show gaps vs majority voting.",
+   "page": 7,
+   "why": "Gain vs number of solutions on three datasets"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "SelfCheck significantly increases final answer accuracies with both GPT-3.5 and GPT-4, even with only 2 candidate solutions per question.",
+   "page": 7,
+   "why": "Main results with generator/checker combinations"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Verification accuracies for variants of SelfCheck on MathQA with GPT-3.5.",
+   "page": 9,
+   "why": "Ablation of global, single-stage and error-check variants"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Section 3.2",
+   "snippet": "w = phi([r0..rn]) = 2 * Sigmoid( -lambda_{-1} * sum_i 1[r_i=-1] - lambda_0 * sum_i 1[r_i=0] ), lambda_{-1}=1, lambda_0=0.3",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF has no conference header; venue recorded as preprint (arXiv v3, 5 Oct 2023).",
+  "Table 1 GPT-3.5 rows: test-set sizes not stated beside the table; prose implies full GSM8K/MathQA sets and a MATH subset.",
+  "DV/SV attributions are inconsistent: related work (SV=Weng, DV=Ling) vs Fig 2 caption and Section 4 (DV=Weng, SV=Ling).",
+  "No embedded instructions found."
+ ]
 }

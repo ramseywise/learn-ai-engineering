@@ -1,0 +1,534 @@
+{
+ "schema": 1,
+ "key": "2301.03728",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/aghajanyan-2023-scaling-laws-generative-mixed-modal.pdf",
+ "bib": {
+  "title": "SCALING LAWS FOR GENERATIVE MIXED-MODAL LANGUAGE MODELS",
+  "authors": [
+   "Armen Aghajanyan",
+   "Lili Yu",
+   "Alexis Conneau",
+   "Wei-Ning Hsu",
+   "Karen Hambardzumyan",
+   "Susan Zhang",
+   "Stephen Roller",
+   "Naman Goyal",
+   "Omer Levy",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Aghajanyan",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.03728",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 56383,
+  "chars_total": 56383,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How do loss, model size and data size scale for generative models over tokens from several modalities, and when does competition between modalities turn into synergy?",
+ "hypothesis": "Adding an additive interaction term (competition or synergy) to the Chinchilla uni-modal scaling law predicts the scale at which two modalities stop competing.",
+ "contributions": [
+  "We develop neural scaling laws for mixed-modalities models that include text, speech, images, code, and their numerous couplings.",
+  "We discover a set of scaling laws describing the competition between arbitrary modalities.",
+  "We provide a simple recipe for selecting hyper-parameters in a multi-modal setting when optimal uni-modal hyper-parameters are known.",
+  "We uncover correlations between the scaling laws parameters we propose and various training phenomena, including training stability, optimal batch size, and coordinate ascent-like behavior in the optimization process across different modalities."
+ ],
+ "method": {
+  "summary": "Decoder-only causally-masked transformers (8M to 30B) are trained on tokenised text, image, image-text, speech, speech-text, code and molecule data, one epoch each. Chinchilla-form laws are fit per modality and per pair (50% of tokens each) with an added interaction term, then used to predict the compute-optimal point where Speech|Text stops competing, which is tested with a 30B run.",
+  "task": "next-token (causally masked) pretraining on mixed-modal token sequences; scaling-law fitting",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Text",
+    "role": "pretrain",
+    "size": "180B tokens",
+    "split": "uni-modal runs use 5B, 10B and 100B tokens",
+    "source": "same data as OPT",
+    "preprocessing": "no explicit language filtering"
+   },
+   {
+    "name": "Image",
+    "role": "pretrain",
+    "size": "614 billion tokens (600 million images)",
+    "split": null,
+    "source": "custom subset of Schuhmann et al. (2022) plus custom image-text set scraped from Common Crawl",
+    "preprocessing": "Make-A-Scene tokenizer, 1024 tokens per image from 8192 vocab; NSFW and watermarked images removed; no captions"
+   },
+   {
+    "name": "Image-Text",
+    "role": "pretrain",
+    "size": "690 Billion tokens",
+    "split": null,
+    "source": "Image dataset with captions",
+    "preprocessing": null
+   },
+   {
+    "name": "Speech",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "custom web-mined unlabeled podcasts/news plus LibriSpeech, CommonVoice, VoxPopuli, Spotify Podcast, People's Speech",
+    "preprocessing": "music and sensitive speech removed; LangID to keep English only; HuBERT units, K-means codebook 2000"
+   },
+   {
+    "name": "Speech-Text",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "ASR and TTS data from Multilingual LibriSpeech and VoxPopuli",
+    "preprocessing": null
+   },
+   {
+    "name": "Code",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "InCoder data",
+    "preprocessing": null
+   },
+   {
+    "name": "Molecules",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "SMILES from Zinc dataset prepared by Chilingaryan et al. (2022)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OPT/GPT-3-style decoder-only family 8M-6.7B",
+    "role": "proposed",
+    "params": "8M, 125M, 350M, 760M, 1.3B, 2.7B, 6.7B",
+    "architecture": "decoder-only transformer, pre-norm, ReLU, learned positional encodings, causal masked objective",
+    "init_from": "normal mean 0 std 0.006 truncated at two std (Megatron-LM variant)",
+    "tokenizer": "unified BPE trained on 10 million sentences sampled across datasets; image and speech tokens one token each; digit splitting",
+    "vocab": "inferred: 2^16 (text printed as 'vocab size of 216', superscript lost)",
+    "layers": "4 (8M), 12, 24, 24, 24, 32, 32 (6.7B)",
+    "hidden": "128, 768, 1024, 1536, 2048, 2560, 4096",
+    "heads": "2, 12, 16, 16, 32, 32, 32",
+    "context": "2048",
+    "other": {
+     "d_head": "64, 64, 64, 96, 64, 80, 128 (Table 2)",
+     "uni_and_bi_modal_max": "6.7B"
+    }
+   },
+   {
+    "name": "30B model",
+    "role": "proposed",
+    "params": "30B",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48",
+    "hidden": "7168",
+    "heads": "56",
+    "context": "2048",
+    "other": {
+     "d_head": "128",
+     "lr": "1.00E-04",
+     "batch": "1M"
+    }
+   },
+   {
+    "name": "HuBERT BASE (speech tokenizer)",
+    "role": "base",
+    "params": null,
+    "architecture": "conv encoder + 12 layer transformer, dim 768, FFN 3072, 12 heads",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "pretraining": "32 GPUs, three iterations, 400K updates each, 221K hours unlabeled speech in eight languages",
+     "compression": "50Hz, codebook 2000, about 117-120x compression"
+    }
+   }
+  ],
+  "training": {
+   "objective": "causal masked objective (CM3, Aghajanyan et al. 2022); causal LM ablation in A.2 gives near-identical fit parameters",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98; gradient clipping max norm 1.0",
+   "lr": "peak per size (Table 2): 8M 1.00E-03, 125M 6.00E-04, 350M 3.00E-04, 760M 2.50E-04, 1.3B 2.00E-04, 2.7B 1.60E-04, 6.7B 1.20E-04, 30B 1.00E-04",
+   "lr_schedule": "polynomial decay (MetaSeq), end LR 10% of peak",
+   "warmup": "500 updates",
+   "batch_size": "1M tokens (Table 2); batch-size study 0.5M(text only), 1M, 2M, 4M, 8M over 5B tokens",
+   "steps": "inferred: about 100000 updates at 100B tokens (Fig 1 axis)",
+   "epochs": "1 (single epoch, each document once)",
+   "tokens": "uni-modal and bi-modal grid 5B, 10B, 100B; 30B Speech|Text run 50B tokens",
+   "seq_len": "2048",
+   "precision": "bf16",
+   "weight_decay": "0.1",
+   "dropout": "0.1 throughout, none on embeddings",
+   "regularisation": "restart policy: if training perplexity does not decrease after 500 million tokens, restart with LR reduced by factor 0.8",
+   "hardware": "cluster of 768 80GB A100 GPUs; most experiments 64 GPUs at a time",
+   "compute": null,
+   "wall_clock": "all experiments within a two-month time frame",
+   "seeds": null,
+   "other": {
+    "framework": "metaseq, PyTorch, fairscale FSDP, Megatron-LM tensor parallelism",
+    "tracking": "Aim",
+    "num_experiments": "over 250",
+    "bi_modal_pairs": "Image-Text|Code, Image-Text|Speech-Text, Image-Text|Text, Speech|Text, Code|Text, Molecule|Code, Speech|Code",
+    "bi_modal_mix": "each sub-dataset contributes 50% of tokens",
+    "hyperparameters": "same as uni-modal runs for bi-modal"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity (PPL)",
+     "definition": "standard perplexity on held-out data per modality; scaling laws fit to loss",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "PPL ratio (competition barrier)",
+     "definition": "0.5*(L(N,Text)+L(N,Speech)) / L(N,[Speech,Text]); below 1 means synergy",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "R-FID / Accuracy@1 (image tokenizer)",
+     "definition": "FID of reconstructed ImageNet validation images; ImageNet classifier accuracy on reconstructions",
+     "unit": "FID; %",
+     "higher_is_better": null
+    },
+    {
+     "name": "WER (speech tokenizer)",
+     "definition": "word error rate of pretrained ASR on original vs HuBERT-reconstructed audio",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "independent uni-modal models on the same per-modality tokens (0.5*[L(N,Di)+L(N,Dj)])"
+   ],
+   "protocol": "Fit seven parameters per modality by minimising Huber(delta=0.03) of LSE residuals with L-BFGS over a grid of initialisations, following Hoffmann et al. (2022); Huber delta higher than Chinchilla's. Fit on 8M-6.7B, tested at 30B. No seeds or error bars reported."
+  },
+  "availability": {
+   "code": "metaseq codebase named (https://github.com/facebookresearch/metaseq); scaling-law fitting code not stated",
+   "weights": null,
+   "data": "custom speech and image-text data; not released as stated"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.vocab",
+    "quote": "We do an additional digit splitting for a vocab size of 216 (Sennrich et al., 2016).",
+    "where": "4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "For Speech|Text the scaling law predicts the compute-optimal model size that breaks the competition barrier.",
+   "kind": "measured",
+   "source": null,
+   "metric": "predicted N",
+   "value": "28.35B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Speech|Text bi-modal law fit on 8M-6.7B models, 5B/10B/100B tokens, 50/50 token mix; minimise 6ND subject to C=A/N^alpha+B/(|Di|+|Dj|)^beta",
+   "quote": "the predicted compute optimal parameters are N = 28.35B and",
+   "table": null,
+   "note": null,
+   "where": "5.2.2"
+  },
+  {
+   "claim": "Predicted compute-optimal token count for the Speech|Text competition barrier.",
+   "kind": "measured",
+   "source": null,
+   "metric": "predicted D",
+   "value": "45.12B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same Speech|Text fit and 6ND compute approximation (Kaplan et al.)",
+   "quote": "D = 45.12B",
+   "table": null,
+   "note": null,
+   "where": "5.2.2"
+  },
+  {
+   "claim": "The 30B Speech|Text model, trained on 50B tokens (slightly above the predicted data), crossed the competition barrier, as predicted.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL ratio < 1",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 3,
+   "setup": "350M, 2.7B and 30B models each trained on Speech, Text or Speech|Text; ratio plotted per update in Fig 5; single run per size, final ratio not given numerically",
+   "quote": "As we see, the prediction does hold, and we achieve a model that crosses",
+   "table": null,
+   "note": "Crossing is shown only in Fig 5; no numeric ratio in text. Further scaling is said likely to improve synergy.",
+   "where": "5.2.2, Fig 5"
+  },
+  {
+   "claim": "The 30B test used the closest OPT architecture and 50B tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "50B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30B parameters, Speech|Text",
+   "quote": "which is the 30B parameterization and 50B tokens",
+   "table": null,
+   "note": "Abstract and intro say 30B model, 45B token regime for the prediction; the run itself is 50B.",
+   "where": "5.2.2"
+  },
+  {
+   "claim": "Uni-modal Text law fit: E=2.42, alpha=0.18, beta=0.22; Code has the largest alpha (0.37) with Molecules, Image has the smallest (0.13).",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha (Text)",
+   "value": "0.18",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Equation 2 fit on 8M-6.7B, 5B/10B/100B tokens, OPT text corpus",
+   "quote": null,
+   "table": "Table 1, row alpha, column Text (0.18); row E column Text (2.42); row beta column Text (0.22)",
+   "note": "Authors say Text coefficients are similar to Chinchilla but on a different dataset.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Over 250 experiments on seven modalities with model sizes 8M to 30B, trained on 5-100B tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "experiments",
+   "value": "250",
+   "unit": "experiments",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole study",
+   "quote": "we conducted over 250 experiments using seven different",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Causal masked and causal objectives give near identical scaling-law parameters on Speech and Text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "alpha Speech (CM3 vs causal)",
+   "value": "0.31 vs 0.30",
+   "unit": null,
+   "baseline_value": "0.30",
+   "n": null,
+   "setup": "Speech and Text datasets only, same training",
+   "quote": null,
+   "table": "Table 3, rows Speech (CM3) and Speech (Causal), column alpha",
+   "note": null,
+   "where": "A.2"
+  },
+  {
+   "claim": "Phenomenon 3: optimal batch size for a pair correlates with beta_ij; no correlation with alpha_ij.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "batch sizes 1M-8M over 5B tokens on a subset of models and couplings; correlation shown in Fig 8, no coefficient reported",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "6, Fig 8"
+  },
+  {
+   "claim": "Phenomena 1, 2, 4: intermittent coordinate-ascent-like training (flat per-modality perplexity) falls with model size and correlates with alpha_ij; gradient-norm spikes correlate with log(N)/alpha_ij; no correlation with beta_ij.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "uni- and bi-modal runs up to 6.7B; shown in Figs 6, 7, 9 with linear fit, no coefficients printed",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "6"
+  },
+  {
+   "claim": "Image tokenizer: VQGANMAS256 reconstructs ImageNet validation with R-FID 0.87 and accuracy 79.83 (-1.82).",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-FID",
+   "value": "0.87",
+   "unit": "R-FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256x256 px, spatial reduction 8, vocab 8192, 1024 tokens",
+   "quote": null,
+   "table": "Table 4, row VQGANMAS256, column R-FID",
+   "note": null,
+   "where": "A.3.1"
+  },
+  {
+   "claim": "Own HuBERT speech tokenizer degrades LJSpeech WER by only 0.3 versus 0.94 for public HuBERT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": "2.34",
+   "unit": "WER",
+   "baseline_value": "2.04",
+   "n": null,
+   "setup": "LJSpeech, pretrained ASR on original (2.04) vs reconstructed audio",
+   "quote": null,
+   "table": "Table 5, row HuBERT ours, column LJSpeech",
+   "note": "Text says compression is 'roughly 117' in A.3.2 and 'about 120' in 4.2.",
+   "where": "A.3.2"
+  }
+ ],
+ "limits": [
+  "Fitted laws cover only seven pairs of modalities chosen for variety; the authors say an exhaustive sweep was infeasible for computational reasons.",
+  "Fits use models up to 6.7B; only one extrapolation test (30B Speech|Text, 50B tokens), one run per size, no seeds or error bars.",
+  "Single epoch of training only; all results are perplexity, no downstream task evaluation.",
+  "Emergent-phenomenon correlations are shown in figures with no coefficients and are called potentially worthy of study in future work.",
+  "Dataset sizes for Speech, Speech-Text, Code, Molecules not stated; the Huber delta had to be raised for generalisation to held-out data.",
+  "Competition and synergy are defined at a 50/50 token mix; other mixes not studied.",
+  "Text law coefficients differ from Chinchilla because a different dataset is used."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "competition barrier",
+   "definition": "when both sides of the inequality are equal (C_ij equals the competition terms in function approximation and optimisation)",
+   "where": "5.2.2"
+  },
+  {
+   "term": "synergy",
+   "definition": "two modalities performing better than two individual models trained on the same number of per-modality tokens; formally C_ij > A_ij/N^alpha_ij + B_ij/(|Di|+|Dj|)^beta_ij",
+   "where": "5.2.2"
+  },
+  {
+   "term": "modality competition",
+   "definition": "the empirical phenomena of two modalities performing worse than if we trained two individual models on the same number of per-modality tokens",
+   "where": "5.2.2"
+  },
+  {
+   "term": "sigma-membership",
+   "definition": "empirical modality definition by perplexity of one dataset under another's model; sigma=3 gives seven modalities",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Training Compute-Optimal Large Language Models (Hoffmann et al.)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "extends",
+   "note": "Chinchilla parameterisation and fitting procedure",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "uses-method",
+   "note": "6ND compute approximation",
+   "quote": null
+  },
+  {
+   "work": "CM3: A causal masked multimodal model of the internet (Aghajanyan et al.)",
+   "year": 2022,
+   "arxiv": "2201.07520",
+   "relation": "uses-method",
+   "note": "causal masked objective",
+   "quote": null
+  },
+  {
+   "work": "OPT (Zhang et al.)",
+   "year": 2022,
+   "arxiv": "2205.01068",
+   "relation": "uses-data",
+   "note": "architectures and text corpus",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for autoregressive generative modeling (Henighan et al.)",
+   "year": 2020,
+   "arxiv": "2010.14701",
+   "relation": "extends",
+   "note": "prior multi-modality scaling pairs",
+   "quote": null
+  },
+  {
+   "work": "InCoder (Fried et al.)",
+   "year": 2022,
+   "arxiv": "2204.05999",
+   "relation": "uses-data",
+   "note": "code data",
+   "quote": null
+  },
+  {
+   "work": "HuBERT (Hsu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "speech tokenizer",
+   "quote": null
+  },
+  {
+   "work": "Make-A-Scene (Gafni et al.)",
+   "year": 2022,
+   "arxiv": "2203.13131",
+   "relation": "uses-method",
+   "note": "image tokenizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Bi-modal scaling law extrapolation and the predicted competition barrier for a subset of our bi-modal experiments.",
+   "page": 8,
+   "why": "shows where each pair crosses from competition to synergy in N and tokens"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Ratio of mean uni-modal to Speech|Text perplexity through training; below 1 breaks the competition barrier.",
+   "page": 9,
+   "why": "the 30B validation of the prediction"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4",
+   "snippet": "L(N, Di, Dj) = [L(N,Di)+L(N,Dj)]/2 - C_ij + A_ij/N^alpha_ij + B_ij/(|Di|+|Dj|)^beta_ij",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The PDF prints no venue (arXiv v1, 10 Jan 2023); 'ICML 2023' in the repo reference row is not in the PDF text.",
+  "Some superscripts lost in text extraction (vocab size '216', Figure cross-references in Section 6 say Figure 6 where Figure 8/9 are meant).",
+  "No embedded instructions found."
+ ]
+}

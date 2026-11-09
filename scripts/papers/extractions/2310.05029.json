@@ -1,19 +1,589 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.05029",
  "pdf": "ai-engineering/02-context-engineering/sources/chen-2023-walking-down-memory-maze.pdf",
  "bib": {
   "title": "Walking Down the Memory Maze: Beyond Context Limit through Interactive Reading",
-  "first_author": "Howard Chen",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Howard Chen",
+   "Ramakanth Pasunuru",
+   "Jason Weston",
+   "Asli Celikyilmaz"
+  ],
+  "first_author": "Chen",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2310.05029",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 48510,
+  "chars_total": 48510,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
  },
- "legacy_report": "SOURCE: Walking Down the Memory Maze: Beyond Context Limit through Interactive Reading (MemWalker). Howard Chen (Princeton; work done during internship at Meta AI), Ramakanth Pasunuru, Jason Weston, Asli Celikyilmaz (Meta AI). arXiv:2310.05029v1 [cs.CL], 8 Oct 2023. Preprint (no venue printed).\n\nCOVERAGE: All 15 pages, 48,564 chars, read in full (main text, limitations, references skimmed, appendix A.1/A.2 prompts and the extra trajectory). Extraction clean. Figures 2-5 are bar charts, so I got only their numbers from the extracted text.\n\nCLAIMS (ranked)\n- claim: MemWalker builds a tree of recursive summaries (query-independent, precomputable), then the LLM navigates it by zero-shot prompting and can revert to the parent. This is hierarchical summarisation used as navigable memory, not as a replacement context.\n  number: none\n  setup: Stable Beluga 2 (70B LLaMA-2, 4,096-token context), no finetuning. Segments of 1000/1000/1200 tokens, max children per node 8/5/8 (QuALITY/SummScreenFD/GovReport).\n  quote: \"The LLM then subsequently summarizes each segment into a textual summary node. These summary nodes are progressively further summarized into higher-level summary nodes, thus building a tree structure\"\n  where: p.2; Sec 3 p.3; Sec 4.2 p.6\n\n- claim: On the Long subsets, MemWalker beats every baseline (recurrence, retrieval, full-context truncation, MPT-13B 8k, LongChat-13B 16k) on all three tasks.\n  number: Long accuracy 73.6 / 64.5 / 60.4 (QuALITY / SummScreenFD / GovReport)\n  setup: Same Stable Beluga 2 with a 4,096 limit for all baselines. QuALITY 187 examples, SummScreenFD 306, GovReport 101. SummScreenFD and GovReport questions are LLM-generated (\"who\" questions from reference summaries, checked by a human). Long = over 8k / 6k / 12k tokens.\n  quote: \"MEMWALKER 67.4 / 73.6 67.3 / 64.5 59.4 / 60.4\" (Table 2; columns Orig. / Long)\n  where: Table 2, p.6\n\n- claim: Recurrence (rolling summary carried forward) is the weakest baseline, which the authors attribute to loss of query-relevant information after several steps.\n  number: Recurrence Orig./Long: 51.3/56.0, 47.7/45.4, 35.6/33.8\n  setup: Segments of 2,500 tokens, summary max 500 tokens, same Stable Beluga 2.\n  quote: \"Recurrence 51.3 / 56.0 47.7 / 45.4 35.6 / 33.8\" and \"This shows the limitation of recurrence, where relevant information to the query is lost after several steps.\"\n  where: Table 2 p.6; Sec 5 p.6; Sec 4.3 p.6\n\n- claim: On the full (Original) datasets MemWalker does not always win. Full-context keep-right beats it on QuALITY (70.1 vs 67.4), and keep-left ties it on GovReport (59.4 vs 59.4, though keep-left drops to 56.3 on Long). The authors cite positional bias in the data. The benefit appears only when the text is much longer than the window.\n  number: Orig.: keep-right 70.1 vs MemWalker 67.4 on QuALITY\n  setup: Same as above. Figure 2 splits each dataset into two equal-size length buckets (0-8000 / 8000+, 0-6000 / 6000+, 0-12000 / 12000+).\n  quote: \"MEMWALKER is not advantageous over Full Context (with truncation left or right) baselines when the text length is short, but outperforms both types of truncation for all tasks for longer sequences.\"\n  where: Fig 2 and text, p.7\n\n- claim: Retrieval (Contriever) is also beaten, in particular on QuALITY.\n  number: Retrieval Orig./Long on QuALITY 63.1/64.8, vs MemWalker 67.4/73.6\n  setup: Contriever picks top segments to fill the 4,096 window.\n  quote: \"Retrieval 63.1 / 64.8 63.7 / 62.2 54.0 / 52.1\"\n  where: Table 2 p.6\n\n- claim: Navigation needs a strong reasoning model. Asking for reasoning helps Stable Beluga 2 but hurts the weaker models, whose invalid-action rates are high. The authors say errors compound otherwise.\n  number: Stable Beluga 2 with reasoning 67.4/67.3/59.4 vs 66.8/64.1/52.5 without. LLaMA-2-Chat 13B with reasoning 39.6/20.9/15.8 vs 48.1/25.8/21.8 without. 13B valid-action rate 73.2/75.5/69.0%.\n  setup: Accuracy in Orig. setting. Reasoning ablation removes the \"First provide reasoning\" line from the prompt.\n  quote: \"Stable Beluga 2 (70B) 67.4 / 92.5 67.3 / 95.1 59.4 / 97.0 / w/o reasoning 66.8 / 100.0 64.1 / 90.5 52.5 / 98.2\"\n  where: Table 3, p.7\n\n- claim: Working memory (carrying content from visited nodes into the leaf prompt) matters, so a summary-only view loses context.\n  number: 5-13% accuracy drop without it. Figure 3 with vs without: 67.4 vs 62.5 (QuALITY), 67.3 vs 61.4 (SummScreenFD), 59.4 vs 46.5 (GovReport). The pairing of numbers to bars is my reading of the extracted figure text, not stated in prose.\n  setup: Working memory is truncated to fit the window. The authors did not try summarising it as it grows.\n  quote: \"We find a significant performance degradation without working memory across all tasks, with a 5–13% drop in accuracy, showing the importance of this component.\"\n  where: Fig 3 and text p.8; footnote p.5\n\n- claim: The navigator recovers from wrong turns by reverting.\n  number: Stray ratio 15.0 / 18.6 / 18.8%. Recovery rate 70.0 / 59.6 / 79.0%.\n  setup: Stray = path containing a revert. Recovery = stray paths that end correct.\n  quote: \"executes a revert navigation action (and hence changes path) for around 15% − 20% of examples, but of those examples can recover and get those examples correct 70% of the time for QuALITY, ∼ 60% for SummScreenFD, and ∼ 80% for GovReport.\"\n  where: Table 4 and text p.8\n\n- claim: Only part of the text is read, counting tree-node summaries.\n  number: 63%-69% of the text on average over all paths, 59%-64% on successful paths\n  setup: Percentage of tokens processed relative to the original example, including tree-node content.\n  quote: \"between only 63%-69% of the text on average needs to be read to answer the question including the content of the tree nodes. Among successful paths, the reading required further reduces to 59% - 64%.\"\n  where: Fig 4 and text p.8-9\n\n- claim: Summarisation trade-off. Summarising larger segments and allowing more children per parent generally helps, but the gain plateaus as the children count grows. The authors state the tension as fidelity loss vs tree depth, and as flatter trees vs a harder choice at each node.\n  number: none stated in prose. Fig 5 sweeps max nodes 2, 4, 8, 16 with 500- vs 1000-token segments.\n  setup: QuALITY only.\n  quote: \"summarizing larger segments compresses more information into a node to reduce the depth of the tree, but risks losing fidelity of the content.\"\n  where: Sec 5 p.9, Fig 5\n\n- claim: Tree-building prompts are short and could be reused. Leaf: summarise \"comprehensively into a fluent passage\". Non-leaf: \"Compress each summary into a much shorter summary.\" Concatenated child summaries are re-summarised only if they exceed the length cap.\n  number: none\n  setup: Appendix A.1, Table 5.\n  quote: \"[TEXT OF SEGMNET]. Summarize the above text comprehensively into a fluent passage.\" / \"[SUMMARIES]. Compress each summary into a much shorter summary.\"\n  where: Table 5, p.14\n\nLIMITS\n- The authors concede three limits. (1) Tree construction may not scale to extremely long sequences. (2) The method works only with a strong, instruction-tuned model, which they say needs to be over 70B. (3) It is zero-shot only, with no finetuning on successful paths.\n- Quote: \"MEMWALKER only works when the LLM exhibits a strong enough reasoning capability, which according to our experiments is required to be large (over 70B) and instruction-tuned.\"\n- Not shown: any cost or latency figure for building the tree. Summary fidelity is not measured directly (no check of what the summaries drop). There is one model family. The test sets are small (101 to 306 examples), with no variance or confidence intervals reported. Two of the three QA sets are synthetic \"who\" questions.\n- Dated: the base model has a 4k window, and the baselines are 2023 models. Whether the advantage holds against today's long-context models is not tested.\n- Position bias is conceded as an explanation for where full-context truncation wins.\n\nBUILDS ON\n- Recurrence and summarisation carried across segments: Xu et al., 2022, which is the recurrence baseline implementation.\n- Recursive tree summarisation of books: Wu et al., 2021, which did not use the tree for memory navigation.\n- Retrieval: Contriever (Izacard et al., 2022), Lewis et al., 2020, Izacard & Grave, 2020, Chen et al., 2017.\n- Agent-style reading: WebGPT (Nakano et al., 2021), WebShop (Yao et al., 2022), PEARL (Sun et al., 2023), Self-Notes (Lanchantin et al., 2023), Re3 (Yang et al., 2022), RecurrentGPT (Zhou et al., 2023).\n- Lost-in-the-middle positional bias: Liu et al., 2023.\n- Context extension: Press et al., 2022, and Chen et al., 2023 (positional interpolation).\n- SCROLLS benchmark: Shaham et al., 2022.\n\nCODE: No code. The Table 5 prompts (p.14) are the reusable artefact: construction leaf, construction non-leaf, triage and leaf. The triage prompt asks for \"Reasoning: ... Action: 0 / 1 / 2\" and the leaf prompt asks for \"Action: -2 or -1\" (-2 answers, -1 reverts). If the output cannot be parsed three times in a row, navigation ends with \"no answer\" (p.5).\n\nFIGURES\n- Fig 1 (p.2): the two-stage procedure, a tree of summ nodes over segments, with the revert arrow. It is the quickest way to see the structure.\n- Table 1 (p.4): a worked QuALITY trajectory showing revert and working memory.\n- Fig 2 (p.7): accuracy by length bucket. It shows the crossover where MemWalker starts to win, once the text is much longer than the window.\n- Fig 3 (p.8): working-memory ablation.\n- Fig 4 (p.8): percentage of the text read.\n- Fig 5 (p.9): the segment-size and children-count trade-off.\nI did not run the figures script, because the captions were already in the extraction.\n\nPROBLEMS: No embedded instructions found. Figure data came out as unlabeled number runs, so the bar-to-condition pairings for Fig 3 and Fig 4 are inferred from text order. Fig 3 is consistent with the prose (\"5-13%\" drop). For Fig 4 I only used the prose range. No claim here is directly about compaction of an agent's own conversation. It is about summary trees over a fixed document, so mapping it to note 05 is the caller's judgement."
+ "type": "empirical",
+ "question": "Can an LLM with a fixed context window read long text beyond its limit by navigating a tree of summaries as an interactive agent?",
+ "hypothesis": "Treating the LLM as an interactive agent navigating a summary tree beats long-context windows, recurrence and retrieval on long inputs.",
+ "contributions": [
+  "MemWalker: two-stage method (memory tree construction, navigation) via zero-shot iterative prompting",
+  "Outperforms recurrence, retrieval and full-context baselines on long-text QA, plus analysis of reasoning, working memory and error recovery"
+ ],
+ "method": {
+  "summary": "Long text is split into segments, each summarised into leaf nodes, which are recursively summarised into a tree. At query time the LLM starts at the root, reasons over child summaries, picks a child or reverts to the parent, and answers at a leaf, carrying working memory from visited nodes.",
+  "task": "long-context question answering",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "QuALITY (SCROLLS)",
+    "role": "eval",
+    "size": "187 examples",
+    "split": "subset; Long = >8,000 tokens",
+    "source": "Pang et al. 2022, Project Gutenberg stories",
+    "preprocessing": null
+   },
+   {
+    "name": "SummScreenFD (SCROLLS)",
+    "role": "eval",
+    "size": "306 examples",
+    "split": "Long = >6,000 tokens",
+    "source": "Chen et al. 2022",
+    "preprocessing": "Repurposed: 'who' question generated from ground-truth summary with Stable Beluga 2, answers checked by a human expert"
+   },
+   {
+    "name": "GovReport (SCROLLS)",
+    "role": "eval",
+    "size": "101 examples",
+    "split": "Long = >12,000 tokens",
+    "source": "Huang et al. 2021",
+    "preprocessing": "Repurposed to QA the same way as SummScreenFD"
+   }
+  ],
+  "models": [
+   {
+    "name": "Stable Beluga 2",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "instruction-tuned LLaMA-2",
+    "init_from": "LLaMA-2 70B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096 tokens",
+    "other": {
+     "note": "base LLM for most experiments; finetuning does not overlap evaluation tasks"
+    }
+   },
+   {
+    "name": "LLaMA 2 Chat 13B / 70B",
+    "role": "evaluated",
+    "params": "13B / 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MPT 13B (8k)",
+    "role": "baseline",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8k",
+    "other": {}
+   },
+   {
+    "name": "LongChat 13B (16k)",
+    "role": "baseline",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k",
+    "other": {}
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "top-p sampling for tree construction and for navigation reasoning/action",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Zero-shot, no fine-tuning or few-shot examples; triage prompt at non-leaf nodes, leaf prompt at leaves; unparsable output regenerated, three consecutive failures return 'no answer'",
+   "retrieval": "Baseline only: Contriever, top segments concatenated until context full",
+   "parameters": {
+    "max children per node (max_t M_t)": "8 / 5 / 8 (QuALITY / SummScreenFD / GovReport)",
+    "segment size |c|": "1000 / 1000 / 1200 (same order)",
+    "recurrence baseline": "2,500-token segments, 500-token max summary",
+    "working memory": "content of visited nodes, truncated to fit the context window"
+   },
+   "other": {
+    "fig5 sweep": "QuALITY, max children 2/4/8/16, 500 vs 1000-token segments (read from Fig 5)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "test accuracy on each task",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "valid action",
+     "definition": "percent of generated actions that are a valid navigation action",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "stray ratio",
+     "definition": "percentage of paths that contain the revert action",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "recovery rate",
+     "definition": "percentage of stray paths that recover and answer correctly",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Full context keep left / keep right (4,096 tokens)",
+    "Recurrence (summary carried forward)",
+    "Retrieval (Contriever)",
+    "MPT 13B (8k)",
+    "LongChat 13B (16k)"
+   ],
+   "protocol": "Single reported number per cell; no seeds, variance or significance test stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": "Stable Beluga 2 on Hugging Face (public)",
+   "data": "SCROLLS public; repurposed SummScreenFD/GovReport QA sets not stated as released"
+  },
+  "prompts": [
+   {
+    "purpose": "memory tree construction, leaf",
+    "text": "[TEXT OF SEGMNET]. Summarize the above text comprehensively into a fluent passage.",
+    "where": "Table 5"
+   },
+   {
+    "purpose": "memory tree construction, non-leaf",
+    "text": "[SUMMARIES]. Compress each summary into a much shorter summary.",
+    "where": "Table 5"
+   },
+   {
+    "purpose": "navigation triage",
+    "text": "The following passage(s) are the summaries of the different parts of a story.\nTo answer the question: [QUERY]\nWhich of the following summary is MOST LIKELY to contain information about the answer?\nFirst provide reasoning to compare the summaries before you make the decision.\nSummary 0: [CHILD SUMM NODE 0]\nSummary 1: [CHILD SUMM NODE 1]\n...\nSummary N: [CHILD SUMM NODE N]\nRelpy with the passage number as your action.\nYou MUST choose one summary number and you should reply with the following format:\n###################################\nReasoning: ...\nAction: 0 / 1 / 2, ...\n###################################",
+    "where": "Table 5"
+   },
+   {
+    "purpose": "navigation leaf",
+    "text": "Read the text in triple quotes and answer a question:\nStory background information: [WORKING MEMORY]\nMain text: [TEXT OF SEGMNET]\n[QUERY]\n[OPTIONS]\nIf the answer CANNOT be inferred from the text above, reply with action -1. (Table 1/6 versions)\nIf the answer CAN be inferred from the text above, reply with action -2, and also provide your reasoning, and the final answer.\nYou are ONLY allowed to reply with action -2 or -1.\nYour should reply with the following format:\n###################################\nReasoning: ...\nAction: -2 or -1\nAnswer: ...\n###################################",
+    "where": "Table 5 (the -1 line appears in Tables 1 and 6, absent from Table 5 text)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "We set the maximum number of nodes\nmaxt Mt = 8, 5, 8 and segment size |c| = 1000, 1000, 1200 for QuALITY, SummScreenFD, and\nGovReport respectively.",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MemWalker Long-subset accuracy on QuALITY beats all baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.6",
+   "unit": "%",
+   "baseline_value": "64.8 (Retrieval and Full Context keep-left); 72.5 keep-right",
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; QuALITY Long subset (>8,000 tokens)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MEMWALKER, column QuALITY Long"
+  },
+  {
+   "claim": "MemWalker Long-subset accuracy on SummScreenFD",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "64.5",
+   "unit": "%",
+   "baseline_value": "63.5 MPT 13B (8k); 63.1 keep-right",
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; SummScreenFD Long (>6,000 tokens)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MEMWALKER, column SummScreenFD Long"
+  },
+  {
+   "claim": "MemWalker Long-subset accuracy on GovReport",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "60.4",
+   "unit": "%",
+   "baseline_value": "56.3 keep-left",
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; GovReport Long (>12,000 tokens)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MEMWALKER, column GovReport Long"
+  },
+  {
+   "claim": "Recurrence baseline Long accuracy (QuALITY / SummScreenFD / GovReport)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "56.0 / 45.4 / 33.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; summarisation recurrence, 2,500-token segments, 500-token max summary",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Recurrence, Long columns"
+  },
+  {
+   "claim": "Contriever retrieval baseline Long accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "64.8 / 62.2 / 52.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; Contriever segments concatenated to fill context",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Retrieval, Long columns"
+  },
+  {
+   "claim": "On the original (full) QuALITY set, keep-right truncation beats MemWalker",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "70.1",
+   "unit": "%",
+   "baseline_value": "67.4 MemWalker",
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; QuALITY Orig.",
+   "note": null,
+   "where": "Table 2",
+   "quote": "MEMWALKER achieves\nhigher performance in the Original setting against the Full Context baselines except for the keep\nright variant on QuALITY and the keep left variant on GovReport",
+   "table": "Table 2, row Full Context (keep right), column QuALITY Orig."
+  },
+  {
+   "claim": "On original GovReport MemWalker ties keep-left truncation",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "59.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; GovReport Orig.",
+   "note": "Full Context (keep left) also prints 59.4; the text says keep-left is better, the table shows a tie.",
+   "where": "Table 2",
+   "table": "Table 2, row MEMWALKER, column GovReport Orig."
+  },
+  {
+   "claim": "Removing working memory drops accuracy 5-13%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": "5-13",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; ablation on three tasks",
+   "note": "Fig 3 bars read from text: with WM 67.4/67.3/59.4, without 62.5/61.4/46.5 (read from Fig 3). Paper says '%', differences are points.",
+   "where": "Sec 5, Fig 3",
+   "quote": "We find a significant performance degradation without working memory across all tasks, with a\n5–13% drop in accuracy"
+  },
+  {
+   "claim": "Stray ratio on QuALITY / SummScreenFD / GovReport",
+   "kind": "measured",
+   "source": null,
+   "metric": "stray ratio",
+   "value": "15.0 / 18.6 / 18.8",
+   "unit": "% of paths with a revert",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, column Stray Ratio"
+  },
+  {
+   "claim": "Recovery rate of stray paths",
+   "kind": "measured",
+   "source": null,
+   "metric": "recovery rate",
+   "value": "70.0 / 59.6 / 79.0",
+   "unit": "% of stray paths ending correct",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, column Recovery Rate"
+  },
+  {
+   "claim": "Share of text read on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens processed / original",
+   "value": "63%-69%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; includes tree node content",
+   "note": "Fig 4 labels read: all paths 63.1/68.1/63.1; successful 63.8/59.9/58.8 (read from Fig 4, order assumed by dataset). Text says 59%-64% for successful paths.",
+   "where": "Sec 5, Fig 4",
+   "quote": "We find that between only 63%-69% of the text on average needs to\n8"
+  },
+  {
+   "claim": "Reasoning justification helps Stable Beluga 2 on all tasks, hurts 13B",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.4 / 67.3 / 59.4 with reasoning vs 66.8 / 64.1 / 52.5 without",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows Stable Beluga 2 (70B) and w/o reasoning"
+  },
+  {
+   "claim": "LLaMA 2 Chat 13B with reasoning is much worse than without",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "39.6 / 20.9 / 15.8 vs 48.1 / 25.8 / 21.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 2 Chat 13B, QuALITY/SummScreenFD/GovReport",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows LLaMA 2 Chat (13B) and w/o reasoning"
+  },
+  {
+   "claim": "LLaMA 2 Chat 70B also does better without reasoning",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "52.0 / 55.6 / 41.6 vs 59.9 / 58.5 / 42.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 2 Chat 70B",
+   "note": "Paper's text claims only weaker (13B) models are hurt; the 70B Llama-2-Chat rows also drop with reasoning.",
+   "where": "Table 3",
+   "table": "Table 3, rows LLaMA 2 Chat (70B) and w/o reasoning"
+  },
+  {
+   "claim": "Open long-context models on Long subsets",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "MPT 13B (8k) 47.3/63.5/43.8; LongChat 13B (16k) 48.4/61.1/52.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same tasks, own context windows",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows MPT 13B (8k), LongChat 13B (16k), Long columns"
+  },
+  {
+   "claim": "Benefit appears only once text is much longer than the 4,096 window",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stable Beluga 2 (70B), 4,096-token window, zero-shot, SCROLLS-derived tasks; context-length buckets of equal size",
+   "note": null,
+   "where": "Sec 5, Fig 2",
+   "quote": "The benefit of interactive reading emerges\nafter the text length is suitably large"
+  },
+  {
+   "claim": "Larger segments and more children per node generally help on QuALITY, plateauing",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "QuALITY, 500 vs 1000-token segments, max children 2/4/8/16 (read from Fig 5)",
+   "note": null,
+   "where": "Sec 5, Fig 5",
+   "quote": "However, the performance plateaus as the maximum number of nodes\nincreases"
+  }
+ ],
+ "limits": [
+  "Tree construction may not scale to extremely long sequences (authors).",
+  "Needs a strong reasoning LLM, over 70B and instruction-tuned; 13B models failed (authors).",
+  "Zero-shot only, no fine-tuning (authors).",
+  "Tree-building cost (calls, tokens, time) not reported; top-p, temperature and max tokens not stated; single run per cell with no variance.",
+  "Long-subset sizes not stated (Fig 2 says buckets of equal size); SummScreenFD/GovReport QA sets are synthetic, generated by Stable Beluga 2, which is also the evaluated model.",
+  "Working memory is truncated, not summarised (footnote)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "stray ratio",
+   "definition": "percentage of paths that contain the revert action",
+   "where": "Table 4"
+  },
+  {
+   "term": "recovery rate",
+   "definition": "percentage of stray paths that recover and answer the query correctly",
+   "where": "Table 4"
+  },
+  {
+   "term": "working memory",
+   "definition": "empty or contents of previously visited nodes added to the context during navigation",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Beyond goldfish memory: Long-term open-domain conversation (Xu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Recurrence-by-summarisation baseline",
+   "quote": null
+  },
+  {
+   "work": "Unsupervised dense information retrieval with contrastive learning (Contriever)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Retrieval baseline",
+   "quote": null
+  },
+  {
+   "work": "Recursively summarizing books with human feedback (Wu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recursive summary tree, not used for navigation",
+   "quote": null
+  },
+  {
+   "work": "SCROLLS (Shaham et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "QuALITY, SummScreenFD, GovReport",
+   "quote": null
+  },
+  {
+   "work": "Stable Beluga 2 / Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Base LLM",
+   "quote": null
+  },
+  {
+   "work": "LongChat; MPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Open long-context models",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Positional bias motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The two-stage procedure of MEMWALKER",
+   "page": 2,
+   "why": "Shows tree build and navigate with revert"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Example trajectory from the QuALITY dataset",
+   "page": 4,
+   "why": "Shows triage and leaf prompts, revert action"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Performance breakdown by context length",
+   "page": 7,
+   "why": "Shows gain only on longer texts"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "With vs without working memory",
+   "page": 8,
+   "why": "Ablation bars"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Memory construction trade-off on QuALITY",
+   "page": 9,
+   "why": "Segment size vs max children"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures 2-5 are bar charts; values come from extracted labels only. Fig 4 label-to-bar mapping assumed."
+ ]
 }

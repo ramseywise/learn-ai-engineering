@@ -1,0 +1,386 @@
+{
+ "schema": 1,
+ "key": "2309.17421",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/yang-2023-dawn-lmms.pdf",
+ "bib": {
+  "title": "The Dawn of LMMs: Preliminary Explorations with GPT-4V(ision)",
+  "authors": [
+   "Zhengyuan Yang",
+   "Linjie Li",
+   "Kevin Lin",
+   "Jianfeng Wang",
+   "Chung-Ching Lin",
+   "Zicheng Liu",
+   "Lijuan Wang"
+  ],
+  "first_author": "Yang",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2309.17421",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 358495,
+  "chars_total": 358495,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What can GPT-4V do, which inputs and prompting modes does it support, and which application scenarios does it open up?",
+ "hypothesis": null,
+ "contributions": [
+  "Qualitative probing of GPT-4V's supported inputs and working modes, and effective ways to prompt it",
+  "Samples across many domains and tasks, including visual referring prompting, applications, text-to-image evaluation and LMM agents",
+  "Discussion of emerging application scenarios and future research directions"
+ ],
+ "method": {
+  "summary": "Hand-curated qualitative samples are given to an early version of GPT-4V through the interface, and the outputs are inspected by the authors. Nothing is trained and no benchmark is scored.",
+  "task": "qualitative capability probing of a large multimodal model",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Hand-curated qualitative samples",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Images not accessible online or timestamped after April 2023; some counterfactual examples from [78], science QA from [85], chest X-rays from MIMIC [60]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4V(ision) (early version)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Instruct Pix2Pix, SDXL, DeepFloyd IF, Midjourney V5.1, ReCo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "text-to-image or editing generators whose outputs GPT-4V rates or helps prompt",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Mostly one response per item; self-consistency demo uses 4 samples with majority vote (Fig 124)",
+   "prompting": "Zero-shot, constrained JSON, persona plus explicit success request, zero-shot CoT, 1-shot and 2-shot interleaved image-text, visual pointers drawn on pixels",
+   "retrieval": "Bing Image Search plugin and catalog-image retrieval in demos",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [],
+   "baselines": [],
+   "protocol": "Human inspection of single samples; radiology outputs reviewed by a medical professional. No metric, no repeated runs."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Counting, best variant",
+    "text": "You are an expert in counting things in the image. Let's count the number of apples in the image below row by row to be sure we have the right answer.",
+    "where": "Sec 3.1, Fig 4"
+   },
+   {
+    "purpose": "Alignment scoring of generated images",
+    "text": "What is happening in the image? From a scale of 1 to 10, rate the similarity between the image and the text prompt ’a parrot driving a car’.",
+    "where": "Sec 9.6, Fig 84 (text); Fig 84 panels print 'From scale 1 to 10, decide how similar the image is to the text prompt'"
+   },
+   {
+    "purpose": "Image-edit prompt generation",
+    "text": "I want to make this image look like graphic novel cover. The prompt should be a single sentence in less than 15 words with descriptive words. For example: \"have it look like a graphic novel\". Based on the above prompt examples and the original image, help me to write a better prompt to an image editing model.",
+    "where": "Sec 9.6"
+   },
+   {
+    "purpose": "Editing prompt revision",
+    "text": "Tell me how I should change my prompt to make the edited image better.",
+    "where": "Fig 87"
+   },
+   {
+    "purpose": "Self-reflection on generated image",
+    "text": "The generated image is not perfect. Write key reasons on how to further improve the image to better follow the user imagined IDEA of the scene.",
+    "where": "Fig 123"
+   },
+   {
+    "purpose": "GUI agent role prompt",
+    "text": "Imagine that you are a robot operating a computer. Like how humans operate the computer, you can move the mouse, click an icon with the mouse, or type some texts with the keyboard.",
+    "where": "Fig 92"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4V misreads a speed meter zero-shot; predictions of 22, 30 and 40 mph against a human reading of about 9 mph.",
+   "kind": "measured",
+   "source": null,
+   "metric": "predicted speed (human reading ~9 mph)",
+   "value": "22/30/40 mph",
+   "unit": "mph",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, zero-shot, screenshot of speed meter (Fig 8), several prompt variants, qualitative.",
+   "quote": "The predictions it generates (22/30/40 mph) deviate significantly from the actual human",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4, Fig 8"
+  },
+  {
+   "claim": "With two in-context examples (one similar, one dissimilar) GPT-4V reads the speed meter as about 9 mph; 1-shot with either example fails.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed reading",
+   "value": "around 9 mph",
+   "unit": "mph",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, 2-shot interleaved image-text examples, Fig 10; Figs 9a/9b 1-shot fail.",
+   "quote": "GPT-4V successfully predicts the speed reading as “around 9",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4, Fig 10"
+  },
+  {
+   "claim": "Counting apples: the plain prompt gives 12, row-by-row gives 11 with row errors, an expanded step prompt gives 15, and the persona plus explicit-success prompt gives the correct row counts and total of 11.",
+   "kind": "measured",
+   "source": null,
+   "metric": "apple count (wrong vs correct)",
+   "value": "15 vs. 11",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, one apple image, five prompt variants (Fig 4); correct count is 11.",
+   "quote": "the final answer\ndeviates even more from the correct answer (15 vs. 11)",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1, Fig 4"
+  },
+  {
+   "claim": "Direct helmet-counting prompt: GPT-4V answers 8 persons wearing helmets when 3 of the 8 are not wearing them, so no violation is flagged.",
+   "kind": "measured",
+   "source": null,
+   "metric": "helmet count",
+   "value": "8 persons wearing helmets (truth: 5)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, PPE image of 8 people, direct count prompt (Fig 73a).",
+   "quote": "“8 persons wearing helmets,” which matches the",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.1, Fig 73a"
+  },
+  {
+   "claim": "With a person detector and per-person crops fed back, GPT-4V summarises 5 wearing helmets and 3 not.",
+   "kind": "measured",
+   "source": null,
+   "metric": "helmets worn",
+   "value": "5 of 8",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V with detected person crops (Fig 73b), 8 people.",
+   "quote": "Summary: Out of 8 people, 5 are wearing helmets and 3 are not wearing helmets.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.1, Fig 73b"
+  },
+  {
+   "claim": "GPT-4V as a prompt-image alignment judge: scores 1 for an irrelevant image and 9 for the best match, and rates three RL-Diffusion refinement steps 4, 8, 9 in line with their improvement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4V alignment score (1-10)",
+   "value": "4 -> 8 -> 9",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, 1-10 similarity prompt, text prompt 'a parrot driving a car', Fig 84; qualitative.",
+   "quote": "The ratings assigned by GPT-4V to these three images (4 →8\n→9) align with the refinement process.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.6, Fig 84"
+  },
+  {
+   "claim": "GPT-4V reads rendered cake text via OCR and compares it with the required text 'Azure Research'.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V on images from DeepFloyd IF, Midjourney V5.1, SDXL and ReCo, Fig 85; qualitative.",
+   "quote": null,
+   "table": null,
+   "note": "No number; quote lacks one.",
+   "where": "Sec 9.6, Fig 85"
+  },
+  {
+   "claim": "Self-consistency: four sampled boat counts (4, 4, 4, 6) with a majority vote return 4 boats.",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority-vote count",
+   "value": "4 boats",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, one image, prompt 'Count the number of boats...', 4 samples, majority vote (Fig 124).",
+   "quote": "There are 4 boats in the image.",
+   "table": null,
+   "note": "Samples 1-3 say 4 (sample 1 text partly cut), sample 4 says 6.",
+   "where": "Sec 10.4, Fig 124"
+  },
+  {
+   "claim": "Given a multi-page technical report, GPT-4V describes the idea but misses details such as the 1196+665=1861 example count and HOG features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size the model missed",
+   "value": "1196+665=1861",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, multi-page report input (Fig 40).",
+   "quote": "1196+665=1861 examples",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.6, Fig 40"
+  },
+  {
+   "claim": "Chest CT case: GPT-4V placed a nodule on the wrong side and hallucinated measurements.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4V, Chest CT and Brain MRI examples (Fig 77), qualitative.",
+   "quote": null,
+   "table": null,
+   "note": "No number.",
+   "where": "Sec 9.3, Fig 77"
+  }
+ ],
+ "limits": [
+  "Qualitative, hand-picked samples; no metrics, baselines, repeated runs or error rates, so no capability rate follows.",
+  "Early GPT-4V version, closed model; no parameters, decoding settings or access details given, so rerunning depends on the API of the day.",
+  "Authors say the presentation may not be exhaustive and defer GPT model weaknesses to [99,100,24].",
+  "Failures reported: speed-meter and line-plot reading, helmet counting, medical hallucinations, license-plate occlusion.",
+  "Future directions named: interleaved image-text generation, video, audio and sensor inputs, learning from web and physical environments."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Visual referring prompting",
+   "definition": "editing pixels of the input image, such as arrows, circles and boxes, to indicate the task of interest instead of conventional text prompts",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GPT-4 technical report / GPT-4V system card",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "The model studied is OpenAI's GPT-4V",
+   "quote": null
+  },
+  {
+   "work": "Large language models are human-level prompt engineers",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Source of the 'work this out step by step to be sure' prompt idea [156]",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Fig 124, majority vote over samples [130]",
+   "quote": null
+  },
+  {
+   "work": "RL-Diffusion",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Compared with its LLaVA-based feedback for image generation [18]",
+   "quote": null
+  },
+  {
+   "work": "MIMIC chest X-rays",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Radiology examples [60]",
+   "quote": null
+  },
+  {
+   "work": "Multimodal chain-of-thought reasoning in language models",
+   "year": 2023,
+   "arxiv": "2302.00923",
+   "relation": "related",
+   "note": "Reference [151]",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Condition on good performance to improve counting.",
+   "page": 14,
+   "why": "Shows the five apple-counting prompts and their answers side by side."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Different modes of visual pointing in multimodal interaction.",
+   "page": 16,
+   "why": "Shows the pointer types."
+  },
+  {
+   "figure": "Fig 84-85",
+   "caption": "GPT-4V scoring prompt-image alignment of generated images.",
+   "page": 113,
+   "why": "Shows scores 1 to 10 against generated images."
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 36",
+   "snippet": "num1 = input(\"Enter first number: \")\nnum2 = input(\"Enter second number: \")\nif num1 > num2:\n    print(num1)\nelse:\n    print(num2)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 85 and Fig 124 values were located by text search; the prompt in Sec 9.6 prose differs slightly from the panel text in Fig 84.",
+  "The PDF is a long report with figure-heavy text; some panels read out of order."
+ ]
+}

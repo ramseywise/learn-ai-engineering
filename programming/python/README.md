@@ -40,7 +40,7 @@
 | 05 | [Type hints and dataclasses](03-language-for-engineers/notes/05-types-and-dataclasses.md) | Type signatures, use Protocols, frozen dataclasses, Pydantic at boundaries | [py](03-language-for-engineers/practice/exercises/05_types.py) |
 | 06 | [Modules, packaging and tooling](03-language-for-engineers/notes/06-modules-packaging-tooling.md) | Lay out a package with `pyproject.toml`; use uv, ruff and pytest | [package](03-language-for-engineers/practice/exercises/06_tooling/) |
 | 07 | [Concurrency](03-language-for-engineers/notes/07-concurrency.md) | Choose threads vs asyncio vs processes, limit concurrency, add timeouts | [py](03-language-for-engineers/practice/exercises/07_concurrency.py) |
-| 08 | [Objects, inheritance and the MRO](03-language-for-engineers/notes/08-objects-inheritance-and-mro.md) | Choose classmethods and staticmethods, predict the MRO, use `super()`, descriptors and `__init_subclass__`, and avoid metaclasses | in-note Try it |
+| 08 | [Objects, inheritance and the MRO](03-language-for-engineers/notes/08-objects-inheritance-and-mro.md) | Choose classmethods and staticmethods, predict the MRO, use `super()`, descriptors and `__init_subclass__`, and avoid metaclasses | [py](03-language-for-engineers/practice/exercises/08_objects_mro.py) |
 | 09 | [Memory and the runtime](03-language-for-engineers/notes/09-memory-and-the-runtime.md) | Reason about refcounting and the GC, find a leak with `tracemalloc`, weigh `__slots__`, read bytecode with `dis` | in-note Try it |
 
 Worked answers are in each module's `practice/solutions/`. Try each exercise before you open them.
@@ -61,6 +61,7 @@ chapter notebooks and the earlier Michigan and Wesleyan coursework.
 | Chapter | Why |
 |---|---|
 | None in other subjects | The entry point of the course |
+| [SQL 04 Joins](../sql/notes/04-joins.md) and [SQL 07 upsert](../sql/notes/07-modeling-and-ddl.md#upsert) | Needed for [02 · 05 databases](02-informatics/notes/05-databases.md) only |
 
 **Feeds into**
 
@@ -69,7 +70,7 @@ chapter notebooks and the earlier Michigan and Wesleyan coursework.
 | [DA 01 Python for data analysis](../../data-analytics/01-python-for-data-analysis/README.md) | Pandas starts where this track ends |
 | [SQL 09 SQL from Python](../sql/notes/09-sql-from-python.md) | Parameters, DuckDB and pandas, from the Python side of [databases](02-informatics/notes/05-databases.md) |
 | [TypeScript](../typescript/README.md) | Starts after 03; its [async](../typescript/notes/06-async.md) note leans on [concurrency](03-language-for-engineers/notes/07-concurrency.md) |
-| [Computer science foundations](../computer-science/README.md) | Cost and memory arguments made on Python's own objects |
+| [Computer science foundations](../computer-science/README.md) | Read after 03: cost and memory arguments made on Python's own objects |
 | [Software design](../software-design/README.md) | Refactoring and patterns written in Python |
 
 ---
@@ -102,7 +103,7 @@ python/
 │       ├── exercises/            01_…05_.py, stubs with the asserts at the bottom
 │       └── solutions/            same names, worked
 ├── 02-informatics/               same shape, notes and exercises 01–05
-└── 03-language-for-engineers/    same shape, notes 01–07; 06_tooling/ is a uv package (pyproject.toml, src/, tests/)
+└── 03-language-for-engineers/    same shape, notes 01–09; 06_tooling/ is a uv package (pyproject.toml, src/, tests/); 09 has no practice file
 ```
 
 ---
@@ -129,7 +130,7 @@ bash check.sh solutions                   # every worked answer must pass
 Every exercise file is a set of functions (or classes) whose docstrings start with `Q1.`, `Q2.` …
 and whose bodies are `raise NotImplementedError`. The bottom of each file is a block of `assert`s
 under `if __name__ == "__main__":`. Run the file: it stops at the first unsolved question, and it
-prints `all good` once everything passes. Exercises run offline. The HTTP exercise starts its own
+prints `all good` once everything passes. Note 03 · 08 has one (`08_objects_mro.py`, from its Try it); 03 · 09 keeps its Try it in the note because the results depend on the machine. Exercises run offline. The HTTP exercise starts its own
 local server, and the concurrency exercise simulates the network with sleeps.
 
 ---
@@ -165,5 +166,7 @@ Everything else: [references.md](../references.md).
 | [uv](https://docs.astral.sh/uv/), [Ruff](https://docs.astral.sh/ruff/), [pytest](https://docs.pytest.org/), [Pydantic](https://docs.pydantic.dev/) docs | MIT / Apache-2.0 | 03 · 05–06 |
 | Wes McKinney, *Python for Data Analysis*, 2nd ed. | Code and data MIT | The next pillar, [data-analytics 01](../../data-analytics/01-python-for-data-analysis/README.md) |
 | Luciano Ramalho, *Fluent Python* | Proprietary | Further reading for 03, link only |
+| Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), ch. 10 | Proprietary | One-sentence examples in 03 · 01, 04 and 05; the longer treatment is in [software design](../software-design/README.md) |
+| Iusztin and Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 2 | Proprietary | Tooling comparison in 03 · 06 |
 
 Timed and interview-style Python problems are in [`programming/drills/`](../drills/README.md).

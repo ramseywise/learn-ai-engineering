@@ -1,19 +1,544 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2403.10131",
  "pdf": "generative-ai/02-rag-retrieval/sources/zhang-2024-raft.pdf",
  "bib": {
   "title": "RAFT: Adapting Language Model to Domain Specific RAG",
-  "first_author": "Tianjun Zhang",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Tianjun Zhang",
+   "Shishir G. Patil",
+   "Naman Jain",
+   "Sheng Shen",
+   "Matei Zaharia",
+   "Ion Stoica",
+   "Joseph E. Gonzalez"
+  ],
+  "first_author": "Zhang",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2403.10131",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 41441,
+  "chars_total": 41441,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"RAFT: Adapting Language Model to Domain Specific RAG\", Tianjun Zhang, Shishir G. Patil, Naman Jain, Sheng Shen, Matei Zaharia, Ion Stoica, Joseph E. Gonzalez (UC Berkeley). arXiv 2403.10131v2, 5 Jun 2024. Header reads \"Preprint, Under Review\" (no venue in the PDF). Code: github.com/ShishirPatil/gorilla.\n\nCOVERAGE: all 41,482 chars read (every page, references included). No appendices. Extraction is clean. Figure 5 and 6 plots have no numeric data in the text (axes only).\n\nCLAIMS\n1. RAFT (LLaMA2-7B) beats the baselines on 4 of 5 datasets and ties on a fifth.\n number: Table 1 below\n setup: LLaMA2-7B-chat base; RAFT trained on 1 golden doc + 4 distractors; GPT-3.5 + RAG for reference. The metric is not named in the text; the paper only says \"accuracy\" in the figure axes.\n quote: \"RAFT (LLaMA2-7B) 73.30 35.28 74.00 84.95 86.86\"\n where: p.5, Table 1\n Table 1 (PubMed / HotPot / HuggingFace / Torch Hub / TensorFlow):\n - GPT-3.5 + RAG: 71.60 / 41.5 / 29.08 / 60.21 / 65.59\n - LLaMA2-7B: 56.5 / 0.54 / 0.22 / 0 / 0\n - LLaMA2-7B + RAG: 58.8 / 0.03 / 26.43 / 08.60 / 43.06\n - DSF: 59.7 / 6.38 / 61.06 / 84.94 / 86.56\n - DSF + RAG: 71.6 / 4.41 / 42.59 / 82.80 / 60.29\n - RAFT: 73.30 / 35.28 / 74.00 / 84.95 / 86.86\n Caveats from the table: GPT-3.5 + RAG scores higher on HotPot (41.5 vs 35.28). RAFT's margins over DSF on Torch Hub and TensorFlow are 0.01 and 0.30 points. On PubMed, RAFT beats DSF + RAG by 1.7 points.\n\n2. Adding RAG to a domain-finetuned model does not reliably help. The authors suggest the model was never trained to process context.\n number: DSF vs DSF + RAG: HotPot 6.38 to 4.41; HuggingFace 61.06 to 42.59; Torch Hub 84.94 to 82.80; TensorFlow 86.56 to 60.29; PubMed 59.7 to 71.6 (the only gain)\n quote: \"introducing RAG to a domain-specifically fine-tuned (DSF) model doesn't invariably lead to better outcomes. This might indicate that the model lacks training in context processing and extracting useful information from it.\"\n where: p.6, Sec 4.1\n\n3. Stated gains. Over base Llama-2: \"The gain can be as big as 35.25% on Hotpot QA and 76.35% on Torch Hub evaluation.\" Over DSF: \"30.87% on Hotpot and 31.41% on HuggingFace\".\n setup: the base is probably LLaMA2-7B + RAG. Check against Table 1: 35.28 - 0.03 = 35.25, and 84.95 - 8.60 = 76.35. These are absolute points, though the text writes \"%\". For the DSF comparison, 35.28 - 4.41 = 30.87 (HotPot) and 74.00 - 42.59 = 31.41 (HuggingFace), so those are against DSF + RAG, not plain DSF.\n quote: \"RAFT does much better on the tasks like Hotpot and HuggingFace datasets (30.87% on Hotpot and 31.41% on HuggingFace).\"\n where: p.6, Sec 4.1\n\n4. Chain-of-thought answers with verbatim quotes help (ablation).\n number: Table 2 (PubMed / HotpotQA / HuggingFace / Torch Hub / TensorFlow). RAFT w/o CoT: 68.30 / 25.62 / 59.07 / 86.56 / 83.21. RAFT: 73.30 / 35.28 / 74.00 / 84.95 / 86.86. Torch Hub is worse with CoT (84.95 vs 86.56).\n quote: \"With a gains of 9.66% and 14.93% in the Hotpot QA and HuggingFace datasets respectively.\"\n setup: CoT answers generated with GPT-4-1106; the answer cites the source passage between ##begin_quote## and ##end_quote##. Gorilla APIBench answers already include reasoning.\n where: p.7, Table 2; p.6, Sec 4.2\n\n5. Train with some examples where the golden document is absent (fraction P kept with the golden doc). The paper reports P = 80% as helpful, but its optimum varies by dataset.\n number: \"P% ranging from 40%, 60%, and 100%\" across NQ, TQA, HotpotQA (the text does not map each value to a dataset). Fig. 5 shows no numeric data in the text.\n setup: 1 golden + 4 distractors at train and test.\n quote: \"incorporating a portion of the training data without the golden document in the context (P = 80%) appears to enhance the model's performance on RAG tasks.\"\n where: p.7-8, Sec 4.4, Fig. 5\n Note: the P = 80% in the text and the 40/60/100% optima do not agree. This is an inconsistency inside the paper.\n\n6. Training with distractors makes the model robust to a varying number of test-time docs. Training on the golden doc alone does worse.\n number: optimal training setup differs by dataset: NQ D*+3D (text) vs \"4 documents\" (Fig. 6 caption); Trivia QA 3 docs; HotPot QA D*+1D (text) vs \"2\" (caption). The authors still use 1 golden + 4 distractors throughout. Fig. 6 plots only NQ and HotPot (the caption mentions three domains).\n quote: \"finetuning with only the golden document frequently results in inferior performance compared to configurations that include a greater number of distractor documents.\"\n setup: trained with varying distractors; evaluated with top-3 retrieved docs, and with top-k from 2 to 10 for Fig. 6.\n where: p.8-9, Sec 5.1, Fig. 6\n\n7. Method: for a fraction P of questions the training example is Q + D* + distractors; for the remaining 1-P it is Q + distractors only. Both are labelled with a CoT answer A*. This is supervised fine-tuning, and RAFT is independent of the retriever.\n quote: \"P % of data: Q + D∗ + D1 + D2 + . . . + Dk → A∗ (1 − P) % of data: Q + D1 + D2 + . . . + Dk → A∗\"\n where: p.4, Sec 3\n\n8. The authors' stated reason for the no-golden-doc fraction is memorization, and the motivation for distractors is distraction in top-k.\n quote: \"By removing the golden documents in some instances, we are compelling the model to memorize answers instead of deriving them from the context.\"\n where: p.4, Sec 3. Citing Shi et al. 2023a (irrelevant context distraction): \"top-k RAG is frequently employed at test time to ensure high recall\" (p.8).\n\n9. Qualitative HotPot example: DSF answers \"The Family Man\" (a film) where the question asks for a screenwriter; RAFT answers \"David Weissman\".\n where: p.7, Fig. 4\n\nLIMITS\n- Scope is in-domain only: the test uses the same document set as training. The authors contrast this with other work: \"our paper studies a slightly opposite scenario where we only care about testing the LLM on the same set of documents.\" Out-of-domain transfer is not shown.\n- Only LLaMA2-7B was finetuned; no other model sizes or families.\n- Metrics are not defined in the text. No variance, seeds or confidence intervals. The NQ and TQA numbers appear only in plots.\n- Table 1 omits NQ and TQA, though the datasets section lists them.\n- PubMed gains are small; the authors attribute this to yes/no questions.\n- Baselines: DSF and RAG numbers are likely tied to a particular prompt style. The authors say Llama-7B \"performs poorly due to its answering style not aligning with the ground truth\", so a share of the gain is style alignment, not reading ability.\n- The text-versus-caption inconsistencies in claims 5 and 6 are unresolved.\n- Dated: 2024, LLaMA-2 era. The authors do not test long-context models.\n\nBUILDS ON: Lewis et al. 2020 (RAG); Wei et al. 2022 (chain of thought); Patil et al. 2023 (Gorilla, APIBench); Shi et al. 2023a (LLMs easily distracted by irrelevant context); Liu et al. 2023 (Lost in the middle); Weston and Sukhbaatar 2023 (System 2 Attention); related fine-tuning-for-RAG work: RA-DIT (Lin et al. 2023), InstructRetro (Wang et al. 2023), Xu et al. 2023 (Retrieval meets long context), ChatQA (Liu et al. 2024); Atlas (Izacard et al. 2023), RETRO (Borgeaud et al. 2022), kNN-LM, REPLUG, Self-RAG (Asai et al. 2023). Datasets: HotpotQA (Yang et al. 2018), PubMedQA (Jin et al. 2019), NQ (Kwiatkowski et al. 2019), TriviaQA (Joshi et al. 2017). Self-Instruct (Wang et al. 2022) is cited for \"practice QA\"; LIMA (Zhou et al. 2023) for SFT alignment.\n\nCODE: none in the paper. Prompt in Fig. 3 (p.5), verbatim: \"Instruction: Given the question, context and answer above, provide a logical reasoning for that answer. Please use the format of: ##Reason: {reason} ##Answer: {answer}.\" The answer format is \"##Reason: ... ##begin_quote## ... ##end_quote## ... ##Answer: Delhi\".\n\nFIGURES\n- Fig. 1 (p.2): closed-book vs open-book vs RAFT, the exam analogy. Fastest way to explain the motivation.\n- Fig. 2 (p.3): RAFT overview, golden plus distractor docs in training, standard top-k at test.\n- Fig. 3 (p.5): CoT generation prompt and example with quote markers.\n- Fig. 4 (p.7): RAFT vs DSF qualitative example.\n- Fig. 5 (p.8): accuracy vs P% golden for NQ, TQA, HoPo.\n- Fig. 6 (p.9): accuracy vs top-k test docs for each number of training distractors.\nI did not run the figure-caption script; these are taken from the extracted text.\n\nPROBLEMS: No embedded instructions found. The Fig. 3 caption does not match its content: it describes a self-critique prompt, but the figure shows a CoT generation prompt. A stray \"[0/1879]\" appears in the HotPot question text. The plot values in Fig. 5 and 6 could not be extracted. The paper's text and captions conflict on the best number of training distractors (claim 6) and on the best P (claim 5)."
+ "type": "empirical",
+ "question": "How do we adapt pre-trained LLMs for Retrieval Augmented Generation in specialized domains?",
+ "hypothesis": "Fine-tuning with a mix of golden and distractor documents plus chain-of-thought answers that quote the source teaches the model to read in-domain context and ignore distractors, beating plain domain fine-tuning and RAG-only prompting.",
+ "contributions": [
+  "RAFT training recipe: question + golden doc + distractors, with CoT answers citing verbatim quotes",
+  "Ablations on CoT, fraction P of examples with golden doc, and number of train/test distractors"
+ ],
+ "method": {
+  "summary": "Fine-tune LLaMA2-7B-chat on questions paired with one golden document and four distractors for P fraction of examples (distractors only for the rest), with chain-of-thought answers generated by GPT-4-1106 that quote the golden document. Test with top-k retrieved documents in the standard RAG setting and compare to base, RAG and domain-specific fine-tuning baselines.",
+  "task": "domain-specific open-book question answering (RAG)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PubMedQA",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Jin et al. 2019 (Dernoncourt & Lee 2017 also cited)",
+    "preprocessing": null
+   },
+   {
+    "name": "HotpotQA",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Yang et al. 2018",
+    "preprocessing": "golden document may be more than one document; CoT answers generated"
+   },
+   {
+    "name": "HuggingFace Hub / Torch Hub / TensorFlow Hub (Gorilla APIBench)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Patil et al. 2023",
+    "preprocessing": "APIBench answers already include reasoning"
+   },
+   {
+    "name": "Natural Questions, TriviaQA",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Kwiatkowski 2019; Joshi 2017",
+    "preprocessing": "used in Fig 5 and Fig 6 only"
+   }
+  ],
+  "models": [
+   {
+    "name": "RAFT (LLaMA2-7B)",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only transformer (LLaMA-2)",
+    "init_from": "inferred: LLaMA2-7B-chat from the baseline description",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-7B-chat",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 + RAG",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "reference only"
+    }
+   },
+   {
+    "name": "GPT-4-1106",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generates CoT answers for training"
+    }
+   }
+  ],
+  "training": {
+   "objective": "standard supervised fine-tuning to generate CoT answer (reason with ##begin_quote## ##end_quote## citations, then ##Answer) from question + documents",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "golden_docs_per_example": "1 (HotpotQA may use more)",
+    "distractors_per_example": "4",
+    "P": "fraction of examples keeping golden doc; Sec 4.4 text says P=80% helps; optimal 40%, 60% or 100% by dataset; P used for Table 1 not stated",
+    "training_set_size": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Baselines: LLaMA2-7B-chat 0-shot with instructions; with RAG reference documents appended; DSF 0-shot; DSF + RAG. Retriever-independent.",
+   "retrieval": "Table 1 test format: golden document with four distractors (Sec 4.4); Fig 6 uses top-3 retrieved docs, varying top-k 2 to 10. Retriever not named.",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "not defined in text; axes say Final Accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LLaMA2-7B-chat 0-shot",
+    "LLaMA2-7B-chat + RAG",
+    "DSF",
+    "DSF + RAG",
+    "GPT-3.5 + RAG"
+   ],
+   "protocol": "single numbers in tables, no seeds, no variance, no significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/ShishirPatil/gorilla",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Generate CoT reasoning for training answers",
+    "text": "Instruction: Given the question, context and answer above, provide a logical reasoning for that answer. Please use the format of: ##Reason: {reason} ##Answer: {answer}.",
+    "where": "Fig 3, p.5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.retrieval",
+    "quote": "we include four distractor documents alongside the golden document, and at test time, we maintain this format by providing the golden document with four distractors.",
+    "where": "Sec 4.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RAFT beats DSF + RAG on HotpotQA by a wide margin",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (unnamed)",
+   "value": "35.28",
+   "unit": "%",
+   "baseline_value": "4.41",
+   "n": null,
+   "setup": "LLaMA2-7B-chat base fine-tuned with RAFT (1 golden + 4 distractor docs, CoT answers with quotes); test with RAG; metric not named in text (figures say Final Accuracy); no seeds or variance reported.",
+   "where": "Table 1, p.5",
+   "note": null,
+   "table": "Table 1, row RAFT (LLaMA2-7B), column HotPot (35.28) vs row DSF + RAG (4.41)"
+  },
+  {
+   "claim": "RAFT improves HuggingFace over DSF + RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (unnamed)",
+   "value": "74.00",
+   "unit": "%",
+   "baseline_value": "42.59",
+   "n": null,
+   "setup": "LLaMA2-7B-chat base fine-tuned with RAFT (1 golden + 4 distractor docs, CoT answers with quotes); test with RAG; metric not named in text (figures say Final Accuracy); no seeds or variance reported.",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row RAFT (LLaMA2-7B), column HuggingFace (74.00) vs row DSF + RAG (42.59)"
+  },
+  {
+   "claim": "RAFT on PubMed vs DSF + RAG (binary yes/no, small gain)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (unnamed)",
+   "value": "73.30",
+   "unit": "%",
+   "baseline_value": "71.6",
+   "n": null,
+   "setup": "LLaMA2-7B-chat base fine-tuned with RAFT (1 golden + 4 distractor docs, CoT answers with quotes); test with RAG; metric not named in text (figures say Final Accuracy); no seeds or variance reported.",
+   "where": "Table 1",
+   "note": "Authors: no significant gain on PubMed since binary yes/no.",
+   "table": "Table 1, row RAFT (LLaMA2-7B), column PubMed (73.30) vs row DSF + RAG (71.6)"
+  },
+  {
+   "claim": "On Torch Hub and TensorFlow, RAFT is essentially tied with DSF (no RAG)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (unnamed)",
+   "value": "84.95",
+   "unit": "%",
+   "baseline_value": "84.94",
+   "n": null,
+   "setup": "LLaMA2-7B-chat base fine-tuned with RAFT (1 golden + 4 distractor docs, CoT answers with quotes); test with RAG; metric not named in text (figures say Final Accuracy); no seeds or variance reported.",
+   "where": "Table 1",
+   "note": "Margins 0.01 (Torch Hub) and 0.30 (TensorFlow); text says 'consistently and significantly outperforms' without significance test.",
+   "table": "Table 1, row RAFT (LLaMA2-7B), columns Torch Hub (84.95), TensorFlow (86.86) vs row DSF (84.94, 86.56)"
+  },
+  {
+   "claim": "GPT-3.5 + RAG beats RAFT on HotpotQA (41.5 vs 35.28), though the text says RAFT shows significant advantages over GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (unnamed)",
+   "value": "41.5",
+   "unit": "%",
+   "baseline_value": "35.28",
+   "n": null,
+   "setup": "LLaMA2-7B-chat base fine-tuned with RAFT (1 golden + 4 distractor docs, CoT answers with quotes); test with RAG; metric not named in text (figures say Final Accuracy); no seeds or variance reported.",
+   "where": "Table 1, p.5",
+   "note": "Contradiction between table and Sec 4.1 prose.",
+   "table": "Table 1, row GPT-3.5 + RAG, column HotPot (41.5)"
+  },
+  {
+   "claim": "Adding RAG to a domain-finetuned model does not reliably help; authors attribute this to no training on context",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DSF vs DSF + RAG, Table 1: HotPot 6.38 to 4.41, HuggingFace 61.06 to 42.59, Torch Hub 84.94 to 82.80, TensorFlow 86.56 to 60.29, PubMed 59.7 to 71.6.",
+   "where": "Sec 4.1, p.6",
+   "note": null,
+   "quote": "introducing RAG to a domain-specifically fine-tuned (DSF) model doesn’t invariably lead to better outcomes."
+  },
+  {
+   "claim": "Stated gain over base Llama-2 on HotpotQA",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "35.25",
+   "unit": "% (absolute points)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RAFT vs LLaMA2-7B + RAG, Table 1.",
+   "where": "Sec 4.1",
+   "note": "Matches 35.28-0.03 and 84.95-8.60: absolute points, not relative.",
+   "quote": "The gain can be as big as 35.25% on Hotpot QA and 76.35% on Torch Hub evaluation."
+  },
+  {
+   "claim": "Stated gain over DSF on HuggingFace",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "31.41",
+   "unit": "% (absolute points)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RAFT vs DSF + RAG per arithmetic on Table 1 (35.28-4.41, 74.00-42.59), though the text says compared with DSF.",
+   "where": "Sec 4.1",
+   "note": "Text says DSF; arithmetic matches DSF + RAG.",
+   "quote": "(30.87% on Hotpot and 31.41% on HuggingFace)"
+  },
+  {
+   "claim": "Chain-of-thought answers improve HotpotQA in the ablation",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9.66",
+   "unit": "% (absolute points)",
+   "baseline_value": "25.62",
+   "n": null,
+   "setup": "RAFT vs RAFT without CoT, Table 2 (HotpotQA 35.28 vs 25.62; HuggingFace 74.00 vs 59.07).",
+   "where": "Table 2, p.7",
+   "note": "CoT does not help everywhere: Torch Hub 86.56 (w.o. CoT) vs 84.95 (RAFT).",
+   "quote": "With a gains of 9.66% and 14.93% in the Hotpot QA and HuggingFace datasets respectively."
+  },
+  {
+   "claim": "Including some training examples without the golden document helps in-domain RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80",
+   "unit": "% P",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ, TriviaQA, HotpotQA; Fig 5 (values only plotted, not tabulated).",
+   "where": "Sec 4.4, p.7-8",
+   "note": "Inconsistent: Sec 4.4 text says P=80% but then says optimal P varies across datasets as 40%, 60% and 100%.",
+   "quote": "incorporating a portion of the training data without the golden document in the context (P = 80%) appears to enhance the model’s performance on RAG tasks."
+  },
+  {
+   "claim": "Training with distractor docs makes the model robust to the number of test-time documents; golden-only training is poor",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6, test with top-3 docs / varying top-k from 2 to 10; Llama-2-7B variants.",
+   "where": "Fig 6 caption, Sec 5.1",
+   "note": "Text says D*+3D best for NQ and D*+1D for HotpotQA, inconsistent with caption; paper then fixes 1 golden + 4 distractors.",
+   "quote": "we find that training with 4 documents leads to optimal performance, and this changes to 3 and 2 for for Trivia QA and HotPot QA respectively."
+  },
+  {
+   "claim": "Qualitative case: DSF answers with a film name where RAFT gives the screenwriter",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotpotQA single example, Fig 4.",
+   "where": "Fig 4, p.7",
+   "note": null,
+   "quote": "DSF: The Family Man ✗"
+  }
+ ],
+ "limits": [
+  "No hyperparameters, dataset sizes, hardware or seeds are given; no appendix.",
+  "Setting is the same documents at train and test (in-domain); the authors say other fine-tuning-for-RAG works test on different domains.",
+  "Metric is never defined; no variance or significance tests.",
+  "Internal inconsistencies: P=80% vs 40/60/100%; best distractor count in text vs Fig 6 caption; GPT-3.5 beats RAFT on HotpotQA yet text claims advantage.",
+  "Fig 3 caption describes a self-critique prompt but the figure shows CoT generation.",
+  "Torch Hub, TensorFlow, PubMed gains over DSF are tiny or none; PubMed is binary yes/no."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "golden document",
+   "definition": "the documents from which the answer to the question can be deduced",
+   "where": "Sec 3"
+  },
+  {
+   "term": "distractor document",
+   "definition": "documents that do not contain answer-relevant information",
+   "where": "Sec 3"
+  },
+  {
+   "term": "DSF",
+   "definition": "Domain-Specific Finetuning: standard supervised fine-tuning without documents in context",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Gorilla / APIBench",
+   "year": 2023,
+   "arxiv": "2305.15334",
+   "relation": "uses-data",
+   "note": "HuggingFace, Torch Hub, TensorFlow Hub datasets",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": "1809.09600",
+   "relation": "uses-data",
+   "note": "multi-hop QA",
+   "quote": null
+  },
+  {
+   "work": "PubMedQA",
+   "year": 2019,
+   "arxiv": "1909.06146",
+   "relation": "uses-data",
+   "note": "biomedical QA",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Fig 5/6",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA",
+   "year": 2017,
+   "arxiv": "1705.03551",
+   "relation": "uses-data",
+   "note": "Fig 5/6",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT-style answers",
+   "quote": null
+  },
+  {
+   "work": "RA-DIT",
+   "year": 2023,
+   "arxiv": "2310.01352",
+   "relation": "related",
+   "note": "fine-tuning for RAG",
+   "quote": null
+  },
+  {
+   "work": "InstructRetro",
+   "year": 2023,
+   "arxiv": "2310.07713",
+   "relation": "related",
+   "note": "fine-tuning for RAG",
+   "quote": null
+  },
+  {
+   "work": "ChatQA",
+   "year": 2024,
+   "arxiv": "2401.10225",
+   "relation": "related",
+   "note": "fine-tuning for RAG",
+   "quote": null
+  },
+  {
+   "work": "Large language models can be easily distracted by irrelevant context",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates distractors",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle",
+   "year": 2023,
+   "arxiv": "2307.03172",
+   "relation": "related",
+   "note": "motivates distractors",
+   "quote": null
+  },
+  {
+   "work": "Atlas / RETRO / kNN-LM / REPLUG",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "retrieval-augmented LMs",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 / GPT-3.5",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base and reference models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of our RAFT method.",
+   "page": 4,
+   "why": "shows the training-data mixture of golden and distractor docs"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "RAFT prompt ... GenerateExplanation step",
+   "page": 5,
+   "why": "CoT answer format with quotes"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "How many golden documents to involve?",
+   "page": 8,
+   "why": "P sweep, no numeric data in text"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Test-Time Documents Varying",
+   "page": 9,
+   "why": "robustness to top-k"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No appendices; figure plots have axes only, no numbers in the text."
+ ]
 }

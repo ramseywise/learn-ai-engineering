@@ -1,19 +1,543 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2406.18518",
  "pdf": "generative-ai/03-agentic-foundations/sources/liu-2024-apigen.pdf",
  "bib": {
-  "title": "APIGen: Automated Pipeline for Generating Verifiable and Diverse Function-Calling Datasets",
-  "first_author": "Zuxin Liu",
-  "year": "2024",
-  "venue": null,
+  "title": "APIGen: Automated PIpeline for Generating Verifiable and Diverse Function-Calling Datasets",
+  "authors": [
+   "Zuxin Liu",
+   "Thai Hoang",
+   "Jianguo Zhang",
+   "Ming Zhu",
+   "Tian Lan",
+   "Shirley Kokane",
+   "Juntao Tan",
+   "Weiran Yao",
+   "Zhiwei Liu",
+   "Yihao Feng",
+   "Rithesh Murthy",
+   "Liangwei Yang",
+   "Silvio Savarese",
+   "Juan Carlos Niebles",
+   "Huan Wang",
+   "Shelby Heinecke",
+   "Caiming Xiong"
+  ],
+  "first_author": "Liu",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2406.18518",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 61410,
+  "chars_total": 61410,
+  "engine": "pymupdf",
+  "skipped": "Figures 1-5 are images and were not viewed; only captions read. Fig 5 values are not in the text."
  },
- "legacy_report": "SOURCE: APIGen: Automated PIpeline for Generating Verifiable and Diverse Function-Calling Datasets. Zuxin Liu, Thai Hoang, Jianguo Zhang, ... Caiming Xiong (Salesforce AI Research). arXiv:2406.18518v1, preprint (\"Preprint.\" printed), 2024-06-26.\n\nCOVERAGE: All 20 of 20 pages read (62,092 chars extracted). Body, Table 1, Table 2, appendices A.2-B.3 read. The references block (roughly chars 42,500-47,000) was only skimmed in part. Figures 1-5 are images and were not viewed. Text extraction was clean, apart from spaced-out JSON in the appendix.\n\nCLAIMS\n- Claim: APIGen is a three-stage verification pipeline (format, execution, semantic) for synthetic function-calling data. Its key insight is that function-call answers can be executed, unlike free chat data.\n  number: none (3 stages)\n  setup: single-turn calls only. Backends are Python functions (run in a subprocess) and REST APIs. The semantic stage is an LLM judge.\n  quote: \"function-calling answers can be directly executed via their corresponding APIs. This enables checking if the output API and parameters' formats are correct, if the generated API calls are executable, and if execution results match the query's intent\"\n  where: Sec 3.2, p4\n- Claim: xLAM-7B(FC), trained on APIGen data, ranked 6th on BFCL, ahead of GPT-4o (FC) and GPT-4-turbo (FC).\n  number: 85.65 overall, vs 82.94 for GPT-4o-2024-05-13 (FC) and 82.88 for GPT-4-turbo-2024-04-09 (FC). Rank 1 was GPT-4-0125-Preview (Prompt) at 88.\n  setup: DeepSeek-Coder-7B-instruct-v1.5 fine-tuned with the xLAM/AgentOhana pipeline. BFCL snapshot as of 06/15/2024, about 2,000 test cases. The leaderboard has since moved.\n  quote: \"6 85.65 xLAM-7B (FC) 80.55 96 90 87.5 90.59 90 86 77.5 80.42\"\n  where: Table 2, p8\n- Claim: xLAM-1B(FC) ranked 24th and beat GPT-3.5-Turbo-0125 and Claude-3 Haiku.\n  number: 74.41 vs 63.88 (GPT-3.5-Turbo-0125 FC) and 74.29 (Claude-3-Haiku, Prompt mode)\n  setup: DeepSeek-Coder-1.3B-instruct, same pipeline and snapshot. The Haiku margin is only 0.12. The text lists Haiku among models xLAM-1B \"outperforms\", but Haiku was tested in prompt mode.\n  quote: \"24 74.41 xLAM-1B (FC) 75.09 80.5 76.5 63 79.41 80 78 62.5 72.08\"\n  where: Table 2, p8\n- Claim: Generator strength drives the pass rate. The weaker open models produced mostly unexecutable calls. The authors say weaker generators need strict verification.\n  number: pass rate 34.42% (DeepSeek-Coder-33B), 38.46% (Mixtral-8x7B), 65.96% (Mixtral-8x22B), 84.15% (DeepSeek-V2-Chat 236B)\n  setup: target 40,000 generations per model, temperature 0.7, sampled APIs, seeds and prompts. In every model except DeepSeek-V2-Chat, execution failures are the largest rejection bucket.\n  quote: \"DeepSeek-Coder-33B-Inst 13,769 4,311 15,496 6,424 34.42%\"\n  where: Table 1, p7\n- Claim: Format and execution checks reject most bad data. These failures include hallucinated functions or parameters, wrong types and missing required parameters.\n  number: none beyond Table 1\n  setup: the same runs as Table 1.\n  quote: \"The first two stages, format checker and execution checker, typically filter out the majority of low-quality data.\"\n  where: Sec 4.2, p6-7\n- Claim: Ablation. Adding back the data rejected at the execution and semantic stages lowers BFCL performance, and the drop is larger for the smaller model.\n  number: none in text (shown in Fig 5 only; the values were not extracted)\n  setup: xLAM-1B and xLAM-7B, BFCL.\n  quote: \"using these filtered datasets for training harms the final performance, with a more significant impact on the smaller model\"\n  where: Sec 5.2, p9\n- Claim: Human check of the released data found about 95% good.\n  number: 28 of 600 had minor issues (about 95.3% good, as the paper says)\n  setup: 3 human evaluators on 600 samples from the released set. The criteria were parameter accuracy and the number of calls.\n  quote: \"only 28 out of the 600 inspected samples have minor issues\"\n  where: App A.3, p15-16. Note the paper says \"approximately 95.3%\", but 572/600 is 95.33%.\n- Claim: The released dataset is 60k entries over 3,673 executable APIs in 21 categories, with parallel and parallel-multiple query styles that the authors call rare in public data.\n  number: 60,000 entries; 3,539 REST APIs (cleaned from ToolBench's 16,464) plus 134 Python functions = 3,673\n  setup: the entries come from Mixtral-8x22B and DeepSeek-V2-Chat only. The four query styles are simple, multiple, parallel and parallel multiple.\n  quote: \"After cleaning, we obtain 3,539 executable REST APIs with good documentation.\" and \"We collected 134 well-documented Python functions\"\n  where: Sec 4.1, p6\n- Claim: Relevance-detection data was added for training. In these examples the tool is irrelevant or a required argument is missing, and the correct output is an empty tool call.\n  number: 8,000 data points\n  setup: built by randomly dropping the tools that the answer calls, or dropping required parameters. Appendix B.3.\n  quote: \"We create 8,000 such data points from the collected dataset by 1) randomly discarding some tools that will be called in the answer or 2) randomly dropping some required parameters\"\n  where: App B.3, p19\n- Claim: Training setup.\n  number: lr 5e-6, 4 epochs, AdamW, 8x A100 40GB, cutoff 2048\n  setup: details in B.3\n  quote: \"a learning rate of 5 × 10−6, four epochs, and use of the AdamW optimizer\"\n  where: App B.3, p20\n\nLIMITS\n- The authors concede the framework covers only REST APIs and Python functions, and only single-turn function calling. They list multi-turn interaction as future work.\n- Evaluation is on BFCL alone, as of 06/15/2024. The ranking is dated, and the paper has no ablation of the three checkers beyond execution and semantic.\n- The semantic checker is an LLM and its error rate is not measured separately. Only the 600-sample human check bounds quality.\n- The ablation values are in Fig 5 and were not extracted.\n- Comparisons mix FC and Prompt modes.\n- The paper does not compare against ReAct loops or multi-step tool use.\n\nBUILDS ON: Berkeley Function-Calling Leaderboard (Yan et al. 2024) for query styles and the eval; ToolBench/ToolLLM (Qin et al. 2023) for the 16,464 RapidAPI APIs and the StableToolBench server; AgentOhana/xLAM (Zhang et al. 2024) for the training pipeline; chain-of-thought (Wei et al.) for the \"thought\" field; LIMA-style quality-over-quantity argument (ref [36]); Toolformer, Gorilla, NexusRaven and Gorilla OpenFunctions-v2 as related work.\n\nCODE: Training prompt output format (App B.3, p19-20): `{\"tool_calls\": [{\"name\": \"func_name1\", \"arguments\": {\"argument1\": \"value1\"}}]}`, with an empty list when no tool fits or a parameter is missing. Semantic checker output (App B.2, p18): `{\"thought\": \"...\", \"pass\": \"yes\" or \"no\"}`. Dataset record shape (A.2): query, tools[{name, description, parameters{type, description, required}}], answers[{name, arguments}].\n\nFIGURES: Fig 1 (p2) function-calling agent workflow. Fig 2 (p3) the pipeline: samplers -> generator -> format -> execution -> semantic checkers, with passing data fed back into the seed set. Fig 5 (p9) the ablation of adding back the filtered data. Figures were not viewed.\n\nNOTE FOR TARGET NOTE (02-tool-use-and-react.md): the note's Gorilla/ToolLLM paragraph (the \"field tried two fixes in 2023\" passage) is the natural place for an APIGen row. The paper adds a third lever, training data verified by execution. It also matches the note's rule \"Validate arguments before the tool runs\" and \"Return descriptive errors\", because the Stage 2 executor returns fine-grained error types. The paper's relevance-detection training (refusing when the tool is missing or an argument is absent) is not in the note.\n\nPROBLEMS: No embedded instructions found in the PDF. Fig 5 values and the Fig 4 category counts were not captured as text. The Table 2 rows 34-42 are elided (\"...\") in the source."
+ "type": "empirical",
+ "question": "How can verifiable, diverse function-calling training data be synthesised at scale, and does training on it make small models competitive on function calling?",
+ "hypothesis": "Execution-based and semantic verification of generated function calls yields higher-quality data than unfiltered generation, so small models trained on it can match much larger ones.",
+ "contributions": [
+  "APIGen, a function-calling data generation pipeline featuring verifiability, scalability, and diversity",
+  "Two function-calling models, 1.3B and 6.7B, trained on APIGen data; the 6.7B ranks 6th on BFCL and the 1.3B outperforms GPT-3.5-Turbo",
+  "A released synthetic dataset of 60,000 verified entries"
+ ],
+ "method": {
+  "summary": "An LLM generates query-answer pairs (answers are JSON function calls) from sampled APIs, seed examples and prompt templates. Each pair passes a format checker, an execution checker (real execution) and an LLM semantic checker. DeepSeek-Coder 1.3B and 7B are fine-tuned on the verified data plus 8,000 relevance-detection points and evaluated on BFCL.",
+  "task": "synthetic data generation for function calling; supervised fine-tuning of function-calling models",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "APIGen API library (from ToolBench / RapidAPI)",
+    "role": "pretrain",
+    "size": "3,673 executable APIs in 21 categories (3,539 REST APIs after cleaning from 16,464 in 49 categories, plus 134 Python functions)",
+    "split": null,
+    "source": "ToolBench; accessibility tested via StableToolBench server",
+    "preprocessing": "Removed APIs with badly parsed docs or no required/optional parameters; dropped APIs that errored or timed out; regenerated noisy docstrings; merged overlapping categories into 21"
+   },
+   {
+    "name": "APIGen generated dataset (xlam-function-calling-60k)",
+    "role": "train",
+    "size": "approximately 60,000 verified entries (from Mixtral-8x22B-Inst and DeepSeek-V2-Chat); query styles simple, multiple, parallel, parallel multiple",
+    "split": null,
+    "source": "Generated by APIGen; CC BY 4.0; Hugging Face Salesforce/xlam-function-calling-60k",
+    "preprocessing": "Passed format, execution and semantic checks"
+   },
+   {
+    "name": "Relevance-detection data",
+    "role": "train",
+    "size": "8,000 data points",
+    "split": null,
+    "source": "Derived from the collected dataset by randomly discarding tools called in the answer or dropping required parameters, then relabelling the answer as an empty tool call or a short explanation",
+    "preprocessing": null
+   },
+   {
+    "name": "Berkeley Function-Calling Benchmark (BFCL)",
+    "role": "eval",
+    "size": "2,000 testing cases",
+    "split": null,
+    "source": "Yan et al. 2024; Java, JavaScript, Python",
+    "preprocessing": null
+   },
+   {
+    "name": "Human evaluation sample",
+    "role": "eval",
+    "size": "600 samples from the released dataset, 3 evaluators",
+    "split": null,
+    "source": "released dataset",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeek-Coder-1.3B-instruct",
+    "role": "base",
+    "params": "1.3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "result": "xLAM-1B (FC)"
+    }
+   },
+   {
+    "name": "DeepSeek-Coder-7B-instruct-v1.5",
+    "role": "base",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "result": "xLAM-7B (FC); the paper also writes 6.7B",
+     "base_bfcl_rank": "45th"
+    }
+   },
+   {
+    "name": "xLAM-1B (FC)",
+    "role": "proposed",
+    "params": "1.3B",
+    "architecture": null,
+    "init_from": "DeepSeek-Coder-1.3B-instruct",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "xLAM-7B (FC)",
+    "role": "proposed",
+    "params": "7B (6.7B in the contributions)",
+    "architecture": null,
+    "init_from": "DeepSeek-Coder-7B-instruct-v1.5",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-V2-Chat",
+    "role": "teacher",
+    "params": "236B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "data generator"
+    }
+   },
+   {
+    "name": "Mixtral-8x22B-Inst",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "data generator"
+    }
+   },
+   {
+    "name": "DeepSeek-Coder-33B-Inst and Mixtral-8x7B-Inst",
+    "role": "teacher",
+    "params": "33B; 8x7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "data generators, outputs not released"
+    }
+   },
+   {
+    "name": "Semantic checker LLM",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "identity of the checker LLM not stated"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning to predict tool calls in JSON given query and tools (xLAM pipeline from AgentOhana)",
+   "optimizer": "AdamW",
+   "lr": "5e-6",
+   "lr_schedule": "cosine",
+   "warmup": "50 steps",
+   "batch_size": "6 per device, 2 gradient accumulation steps (effective 96 on 8 GPUs, inferred)",
+   "steps": null,
+   "epochs": "4",
+   "tokens": null,
+   "seq_len": "2048 (cutoff length)",
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x NVIDIA A100 40GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "mixture": "verified APIGen data plus 8,000 relevance-detection points; exact training-set size not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.7 for data generation (all generator models)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Generation target 40,000 data points per generator model; BFCL evaluation runs not stated",
+   "prompting": "Generator prompt with {examples}, {number}, {func_name}, {func_desc}, {format_inst}; several queries per call ('batching'); 'thought' field as CoT",
+   "retrieval": null,
+   "parameters": {
+    "generator_target_per_model": "40,000",
+    "semantic_checker_criteria": "5 criteria (alignment and args, right function chosen, call count, errors in results, relevance of results)",
+    "example_and_API_count": "randomly chosen from a predefined range (range not given)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BFCL overall accuracy",
+     "definition": "weighted average over AST (simple, multiple, parallel, parallel multiple), executable (same four) and relevance detection categories",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass rate (data)",
+     "definition": "verified / 40,000 generated, after format, execution and semantic checks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human-evaluated quality",
+     "definition": "share of 600 sampled entries without issues, judged by 3 evaluators",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-4 series",
+    "Claude-3 series",
+    "Gemini-1.5",
+    "Llama-3-70B",
+    "Mixtral",
+    "Gorilla-OpenFunctions-v2",
+    "Command R+",
+    "DBRX",
+    "base DeepSeek-Coder models",
+    "ablation with filtered-out data added back"
+   ],
+   "protocol": "BFCL leaderboard snapshot as of 06/15/2024; no seeds, runs or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": "planned release on Hugging Face after legal approval",
+   "data": "https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k (CC BY 4.0)"
+  },
+  "prompts": [
+   {
+    "purpose": "Generator prompt (parallel function calling)",
+    "text": "You are a data labeler. The responsibility for you is to generate a set of diverse queries and corresponding answers for the given functions in JSON format. ... Based on these examples and the above instructions, generate {number} diverse query and answer pairs for the functions `{func_name}`. The detailed functions description is as follows: {func_desc} {format_inst} Now please generate {number} diverse query and answer pairs following the above format.",
+    "where": "Appendix B.1 (abridged here; full text on pp.16-17)"
+   },
+   {
+    "purpose": "Semantic checker",
+    "text": "As a data quality evaluator, you must assess the alignment between a user query, corresponding function calls, and their execution results. ... Do not pass if: 1. The function call does not align with the query's objective, or the input arguments appear incorrect. 2. ... 5. The execution results contain errors or reflect that the function calls were not executed successfully. ... Provide your reasoning in the thought section and decide if the data passes (answer yes or no).",
+    "where": "Appendix B.2 (abridged)"
+   },
+   {
+    "purpose": "Training prompt",
+    "text": "[BEGIN OF TASK INSTRUCTION] You are an expert in composing functions. You are given a question and a set of possible functions. Based on the question, you will need to make one or more function/tool calls to achieve the purpose. If none of the function can be used, point it out and refuse to answer. If the given question lacks the parameters required by the function, also point it out. [END OF TASK INSTRUCTION] [BEGIN OF AVAILABLE TOOLS] {func_desc} [END OF AVAILABLE TOOLS] ... [BEGIN OF QUERY] User Query: {query} [END OF QUERY]",
+    "where": "Appendix B.3 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "a per-device batch size of six, two gradient accumulation steps",
+    "where": "Appendix B.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "xLAM-7B (FC) ranks 6th overall on BFCL, above GPT-4o and GPT-4-turbo FC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BFCL overall accuracy",
+   "value": "85.65",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BFCL leaderboard as of 06/15/2024, DeepSeek-Coder-7B-instruct-v1.5 fine-tuned on APIGen data",
+   "quote": null,
+   "table": "Table 2, row xLAM-7B (FC), column Overall Accuracy",
+   "note": "Text/contributions say 6.7B model; Table 2 names it xLAM-7B.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "xLAM-1B (FC) ranks 24th on BFCL, ahead of GPT-3.5-Turbo-0125 and Claude-3 Haiku.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BFCL overall accuracy",
+   "value": "74.41",
+   "unit": "%",
+   "baseline_value": "63.88 (GPT-3.5-Turbo-0125 FC)",
+   "n": null,
+   "setup": "BFCL as of 06/15/2024, DeepSeek-Coder-1.3B fine-tuned on APIGen data",
+   "quote": null,
+   "table": "Table 2, row xLAM-1B (FC), column Overall Accuracy",
+   "note": "Haiku (Prompt) is 74.29.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Pass rate through all three verification stages rises with generator strength, from 34.42% to 84.15%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "data pass rate",
+   "value": "84.15",
+   "unit": "%",
+   "baseline_value": "34.42 (DeepSeek-Coder-33B-Inst)",
+   "n": 40000,
+   "setup": "40,000 targeted data points per generator, temperature 0.7, DeepSeek-V2-Chat (236B)",
+   "quote": null,
+   "table": "Table 1, row DeepSeek-V2-Chat (236B), column Pass Rate",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Mixtral-8x22B-Inst verified 26,384 data points with pass rate 65.96%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "data pass rate",
+   "value": "65.96",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 40000,
+   "setup": "Same as Table 1",
+   "quote": null,
+   "table": "Table 1, row Mixtral-8x22B-Inst, column Pass Rate",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Human check of 600 released samples found 28 with minor issues, about 95.3% high quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human-judged quality",
+   "value": "95.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 600,
+   "setup": "3 evaluators, released dataset, criteria parameter accuracy and call count",
+   "quote": "only 28 out of the 600 inspected samples have minor issues",
+   "table": null,
+   "note": "(600-28)/600 = 95.33%; no inter-annotator agreement reported.",
+   "where": "Appendix A.3"
+  },
+  {
+   "claim": "Adding data rejected by the execution and semantic checkers back into training lowers BFCL performance, more for the smaller model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation in Fig 5; values only in the figure, not the text",
+   "quote": null,
+   "table": null,
+   "note": "Qualitative; numbers not in text.",
+   "where": "Sec 5.2, Fig 5"
+  },
+  {
+   "claim": "The base DeepSeek-Coder-v1.5 only ranks 45th on the BFCL leaderboard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BFCL rank",
+   "value": "45",
+   "unit": "rank",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BFCL 06/15/2024, Prompt mode",
+   "quote": "only ranks 45th on the leaderboard",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  }
+ ],
+ "limits": [
+  "Only REST APIs and Python functions are covered.",
+  "Only single-turn function calling is implemented; multi-turn left to future work.",
+  "Ablation shown only as a figure; no seeds, runs or confidence intervals; one benchmark (BFCL) at one leaderboard date.",
+  "Semantic checker model and sampling ranges not specified; code not released; model weights pending legal approval.",
+  "Human evaluation has 3 raters with no agreement stat; leaderboard ranks from 2024 have dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "parallel function calling",
+   "definition": "asking the agent to produce multiple concurrent function calls in a single response",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Format / Execution / Semantic checker",
+   "definition": "three hierarchical verification stages: JSON and argument validity, actual execution against backend, LLM judgement of alignment with the query",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AgentOhana",
+   "year": 2024,
+   "arxiv": "2402.15506",
+   "relation": "uses-method",
+   "note": "xLAM training pipeline",
+   "quote": null
+  },
+  {
+   "work": "ToolBench / ToolLLM",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of REST APIs",
+   "quote": null
+  },
+  {
+   "work": "StableToolBench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "API accessibility testing server",
+   "quote": null
+  },
+  {
+   "work": "Berkeley Function Calling Leaderboard",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmark and source of query-style categories",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-Coder",
+   "year": 2024,
+   "arxiv": "2401.14196",
+   "relation": "uses-method",
+   "note": "base models",
+   "quote": null
+  },
+  {
+   "work": "LIMA",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates small high-quality data",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "'thought' field in generator output",
+   "quote": null
+  },
+  {
+   "work": "Gorilla OpenFunctions-v2, NexusRaven, Toolformer, ToolAlpaca, API-Bank, AgentInstruct",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior tool-use models/datasets, said to lack rigorous verification",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of the post-process filters.",
+   "page": 3,
+   "why": "Shows the sampler, generator, three-stage checker loop with seed feedback"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance comparison of using different stage's datasets from APIGen.",
+   "page": 9,
+   "why": "Ablation of filtered data; the only place the numbers appear"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "JSON data format examples.",
+   "page": 4,
+   "why": "Unified API and call format"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Fig 5 values unreadable as text.",
+  "Spaced-out JSON in the appendix text."
+ ]
 }

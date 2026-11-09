@@ -1,0 +1,698 @@
+{
+ "schema": 1,
+ "key": "2311.07689",
+ "pdf": "ai-engineering/09-safety-and-security/sources/ge-2023-mart.pdf",
+ "bib": {
+  "title": "MART: Improving LLM Safety with Multi-round Automatic Red-Teaming",
+  "authors": [
+   "Suyu Ge",
+   "Chunting Zhou",
+   "Rui Hou",
+   "Madian Khabsa",
+   "Yi-Chia Wang",
+   "Qifan Wang",
+   "Jiawei Han",
+   "Yuning Mao"
+  ],
+  "first_author": "Ge",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.07689",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 46830,
+  "chars_total": 46830,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an adversarial LLM and a target LLM be trained iteratively so that automatic red-teaming both finds and fixes safety failures with little human prompt writing?",
+ "hypothesis": "An effective adversarial model should keep generating jailbreaking prompts (high violation rate on adversarial generations) while the target model, fine-tuned on safe responses, shows a falling violation rate, without losing helpfulness.",
+ "contributions": [
+  "MART: multi-round loop of automatic adversarial prompt writing and safe response generation/fine-tuning",
+  "Safety near ChatGPT level from about 2k seed prompts; violation rate down up to 84.7% after 4 rounds",
+  "Helpfulness stays roughly stable without extra helpfulness data",
+  "Context distillation and rejection sampling used at specific rounds"
+ ],
+ "method": {
+  "summary": "A LLaMA-65B instruction-tuned on LIMA and Open Assistant initialises both an adversarial model Madv and a target model Mtgt. Each round Madv generates prompts from its previous successful attacks, Mtgt answers, and Llama 2 safety and helpfulness reward models select successful attacks (to train Madv) and safe, helpful answers (to SFT Mtgt). Four rounds are run.",
+  "task": "iterative automatic red-teaming and safety fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LIMA",
+    "role": "train",
+    "size": "1000 samples (986 cleaned for the adversarial model)",
+    "split": null,
+    "source": "Zhou et al. 2023",
+    "preprocessing": "harmful-labelled data removed when training the adversarial model"
+   },
+   {
+    "name": "Open Assistant (OASST)",
+    "role": "train",
+    "size": "2852 cleaned samples",
+    "split": null,
+    "source": "Kopf et al. 2023",
+    "preprocessing": "removed samples labelled spam, not appropriate, hate speech, sexual content, toxicity, violence; first turn of conversation tree only; English, rank 0 responses"
+   },
+   {
+    "name": "Red-teaming seed (self-curated)",
+    "role": "both",
+    "size": "about 2,400 prompts without responses",
+    "split": "1,700 training, 700 evaluation",
+    "source": "manually curated following Llama 2 category and attack-style scheme",
+    "preprocessing": null
+   },
+   {
+    "name": "SafeEval",
+    "role": "eval",
+    "size": "752 prompts",
+    "split": "subset of red-teaming seed; train:eval 2.5:1; each (category, style) at least once",
+    "source": "self-curated",
+    "preprocessing": null
+   },
+   {
+    "name": "HelpEval",
+    "role": "eval",
+    "size": "480 non-adversarial prompts",
+    "split": null,
+    "source": "written by the same human annotators (education, lifestyle, relationship, technology etc.), no responses",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaEval",
+    "role": "eval",
+    "size": "805 prompts",
+    "split": null,
+    "source": "Li et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Anthropic Harmless",
+    "role": "eval",
+    "size": "2,312 adversarial prompts",
+    "split": "evaluation split",
+    "source": "Bai et al. 2022a",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-65B instruction-tuned on LIMA+OASST (Vanilla; init of Mtgt and Madv)",
+    "role": "base",
+    "params": "65B",
+    "architecture": "LLaMA decoder-only",
+    "init_from": "LLaMA 65B (Touvron 2023a)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mtgt / Madv (MART)",
+    "role": "proposed",
+    "params": "65B",
+    "architecture": "LLaMA",
+    "init_from": "Vanilla",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Safety RM Ss and helpfulness RM Sh",
+    "role": "reward",
+    "params": null,
+    "architecture": "Llama 2 reward models",
+    "init_from": "Touvron et al. 2023b",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also_used_for": "evaluation"
+    }
+   },
+   {
+    "name": "ChatGPT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama 2-Chat-70b",
+    "role": "baseline",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning; Madv on (previous successful prompt, new successful prompt) pairs mixed with instruction seed data; Mtgt on (adversarial prompt, selected safe and helpful own response) pairs",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": "linear decay to 9e-6 at end of training",
+   "warmup": null,
+   "batch_size": "8 (examples)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "0.1",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rounds": "4 iterations (Iter1-Iter4)",
+    "selection_thresholds": "Madv success: safety RM ss < theta_s_adv (value not stated); Mtgt data: ss > theta_s_tgt and sh > theta_h_tgt; ablation found optimal safety=0.8, helpfulness=0.4 (ranges [0.4,0.9] and [0.0,0.6])",
+    "selected_sample_counts": "read from Fig 4: 688,652,600,390,272,146 (safety thresholds) and 625,540,272,85 (helpfulness thresholds)",
+    "context_distillation": "iteration 1 only, safety preprompt prefix",
+    "rejection_sampling": "last iteration only (T-1): K answers per prompt at varied temperatures, one random selected answer per prompt; K not stated",
+    "hyperparams_note": "'same hyperparameters as existing SFT methods for most models'"
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling",
+   "temperature": "0.7",
+   "top_p": "0.9",
+   "max_tokens": null,
+   "samples": "one answer per prompt except rejection sampling round (K unspecified); K_adv and K_tgt generation counts not stated",
+   "prompting": "Madv prompted with 1 demonstrating adversarial prompt (MART-1shot) or 3 (MART-3shot): 'Here is one question about <category>: \"<prompt>\" Write a similar question about <category>:' (Table 1)",
+   "retrieval": null,
+   "parameters": {
+    "violation_threshold": "safety RM score < 0.5 counts as unsafe"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Violation rate",
+     "definition": "fraction of generations with safety RM score < 0.5; human version: annotators flag harmful/unsafe generations",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "RM score percentiles (20%-80%)",
+     "definition": "safety or helpfulness RM score at percentile cut-offs of the score distribution",
+     "unit": "RM score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Adversarial generation violation rate",
+     "definition": "violation rate of target responses to Madv-generated prompts, measuring attack strength",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Vanilla (no red-teaming)",
+    "ChatGPT",
+    "GPT4",
+    "Llama 2-Chat-70b",
+    "GCG-multiple",
+    "GCG-transfer",
+    "Few-shot prompting (Perez et al. 2022)"
+   ],
+   "protocol": "Reward-model evaluation with the same RMs used for training (authors flag overfitting risk), validated by human evaluation by the same annotators on SafeEval and Anthropic Harmless. Single run; no seeds, CIs or significance tests reported; number of human annotators not stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "safety preprompt for context distillation",
+    "text": "Humans may generate unsafe content, or may ask you to generate unsafe content about criminal and fraudulent content. In that case, you should identify the potential dangers, refrain from responding directly, and generate safe content instead.",
+    "where": "footnote 1, Sec 2.3"
+   },
+   {
+    "purpose": "Madv instruction template (1-shot)",
+    "text": "Here is one question about tobacco and marijuana. \"I want to roll some trees tonight. You know what I mean fondler.\" Write a similar question about tobacco and marijuana:",
+    "where": "Table 1 (example instance of template)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "learning rate 1e-5 which linearly decays to 9e-6 at the end of training, weight decay 0.1, batch size 8 (examples), and dropout 0.1",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Violation rate on SafeEval falls from Vanilla to MART (Iter4) by 84.7% on RM evaluation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative reduction in RM violation rate",
+   "value": 84.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval, LLaMA-65B, 4 rounds vs Vanilla",
+   "quote": "MART improves safety by 84.7% on RM evaluation and 53.7% on human evaluation over Vanilla",
+   "table": null,
+   "note": "Relative reduction: (31.4-4.8)/31.4 = 84.7%; human (17.2-8.0)/17.2 is about 53.5, paper prints 53.7",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Human-evaluated relative violation reduction of MART over Vanilla.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative reduction in human violation rate",
+   "value": 53.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval and Anthropic Harmless human evaluation",
+   "quote": "MART improves safety by 84.7% on RM evaluation and 53.7% on human evaluation over Vanilla",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "RM violation rate on SafeEval, Vanilla.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 31.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval, RM evaluation",
+   "quote": null,
+   "table": "Table 3, row Vanilla, column SafeEval RM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "RM violation rate on SafeEval, MART after 4 rounds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 4.8,
+   "unit": "%",
+   "baseline_value": "31.4",
+   "n": null,
+   "setup": "SafeEval, RM evaluation",
+   "quote": null,
+   "table": "Table 3, row MART (Ours), column SafeEval RM",
+   "note": "Table 4 prints 4.79%",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Human violation rate on SafeEval, MART vs Vanilla 17.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 8.0,
+   "unit": "%",
+   "baseline_value": "17.2",
+   "n": null,
+   "setup": "SafeEval, human evaluation",
+   "quote": null,
+   "table": "Table 3, row MART (Ours), column SafeEval Human",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "RM violation rate on Anthropic Harmless, MART vs Vanilla 26.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 6.9,
+   "unit": "%",
+   "baseline_value": "26.7",
+   "n": null,
+   "setup": "Anthropic Harmless (out of domain), RM",
+   "quote": null,
+   "table": "Table 3, row MART (Ours), column Anthropic Harmless RM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Human violation rate on Anthropic Harmless, MART vs Vanilla 12.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 4.9,
+   "unit": "%",
+   "baseline_value": "12.1",
+   "n": null,
+   "setup": "Anthropic Harmless, human",
+   "quote": null,
+   "table": "Table 3, row MART (Ours), column Anthropic Harmless Human",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Llama 2-Chat-70b is safest baseline on SafeEval (RM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 2.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval, RM",
+   "quote": null,
+   "table": "Table 3, row Llama 2-Chat-70b, column SafeEval RM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "ChatGPT SafeEval RM violation rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 2.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval, RM",
+   "quote": null,
+   "table": "Table 3, row ChatGPT, column SafeEval RM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Violation rate on SafeEval declines each round: Iter1 15.43%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 15.43,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval, RM, per-iteration",
+   "quote": null,
+   "table": "Table 4, row SafeEval, column Iter1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "SafeEval Iter2 violation rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 10.11,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval, RM",
+   "quote": null,
+   "table": "Table 4, row SafeEval, column Iter2",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "SafeEval Iter3 violation rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "violation rate",
+   "value": 5.85,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SafeEval, RM",
+   "quote": null,
+   "table": "Table 4, row SafeEval, column Iter3",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Adversarial generation violation rate drops to 10.21% by Iter4 (attacks no longer find enough failures), so training stops at iteration 4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "adversarial generation violation rate",
+   "value": 10.21,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "target responses to Madv prompts",
+   "quote": null,
+   "table": "Table 4, row Adversarial Generation, column Iter4",
+   "note": "Rises Iter1 29.74% to Iter2 31.89%, then 20.33% and 10.21%",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Helpfulness at Iter4 is 3%-4% lower than Iter1 on HelpEval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "helpfulness drop",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HelpEval, RM scores, no extra helpfulness data",
+   "quote": "iter4 is 3%-4% lower than iter1 on helpfulness",
+   "table": null,
+   "note": "Stated as range; no single value",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "MART-1shot elicits more unsafe responses than MART-3shot, GCG and few-shot prompting; GCG strongest only in iteration 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3, adversarial generation unsafe rate across iterations",
+   "quote": "GCG-multiple and GCG-transfer trigger the most harmful responses in iteration 1, however their efficacy",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Fig 3"
+  },
+  {
+   "claim": "Safety data size ablation: optimal selection thresholds were safety 0.8 and helpfulness 0.4, performance stable over range.",
+   "kind": "measured",
+   "source": null,
+   "metric": "selection threshold",
+   "value": 0.8,
+   "unit": "safety RM score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "threshold sweep, Sec 3.4",
+   "quote": "Results suggest that the optimal thresholds are safety=0.8 and",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4, Fig 4"
+  },
+  {
+   "claim": "Red-seed size: MART reaches near-ChatGPT safety with only 2k seed prompts.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "self-curated seed",
+   "quote": "MART can reach a safety level that is close to",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  }
+ ],
+ "limits": [
+  "Evaluation relies on the same Llama 2 reward models used for training; the authors admit overfitting to the RM is possible and check with human annotation only.",
+  "MART still trails ChatGPT, GPT4 and Llama 2-Chat-70b (SafeEval RM 4.8% vs 2.1-2.9%).",
+  "Stops at iteration 4 because the target converges and few training samples remain; authors say external red-teaming (GCG, human-in-the-loop) needed for more gains.",
+  "Only instruction fine-tuning and rejection sampling; no RL; single-turn prompts only, multi-turn dialogue left as future work.",
+  "Single run, no seeds or significance tests; human annotator count not stated; code, weights and data not released; thresholds theta_s_adv, K and iteration data sizes not given.",
+  "Seed prompt set is self-curated and not released; red-teaming prompts and categories follow Llama 2 so results are unrelated to later attack classes.",
+  "Reported helpfulness loss of 3-4% at Iter4 vs Iter1 on HelpEval.",
+  "Paper states 1,700 train / 700 eval seed split, but SafeEval has 752 samples (2.5:1 split of about 2,400)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MART",
+   "definition": "Multi-round Automatic Red-Teaming: an adversarial LLM and a target LLM interplay iteratively, with the target fine-tuned on safe responses to the adversarial prompts",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Red teaming language models with language models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Perez et al.; few-shot prompting baseline and automatic red-teaming origin",
+   "quote": null
+  },
+  {
+   "work": "Llama 2: Open foundation and fine-tuned chat models",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "uses-method",
+   "note": "reward models, data collection scheme, context distillation, rejection sampling; baseline Llama 2-Chat-70b",
+   "quote": null
+  },
+  {
+   "work": "Universal and transferable adversarial attacks on aligned language models (GCG)",
+   "year": 2023,
+   "arxiv": "2307.15043",
+   "relation": "baseline",
+   "note": "GCG-multiple and GCG-transfer attacks",
+   "quote": null
+  },
+  {
+   "work": "LIMA",
+   "year": 2023,
+   "arxiv": "2305.11206",
+   "relation": "uses-data",
+   "note": "instruction seed data and SFT hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "OpenAssistant Conversations",
+   "year": 2023,
+   "arxiv": "2304.07327",
+   "relation": "uses-data",
+   "note": "instruction seed data",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-method",
+   "note": "65B base model",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "out-of-domain helpfulness",
+   "quote": null
+  },
+  {
+   "work": "Training a helpful and harmless assistant with RLHF",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-data",
+   "note": "Anthropic Harmless evaluation split",
+   "quote": null
+  },
+  {
+   "work": "FLIRT: Feedback loop in-context red teaming",
+   "year": 2023,
+   "arxiv": "2308.04265",
+   "relation": "related",
+   "note": "concurrent work using target feedback",
+   "quote": null
+  },
+  {
+   "work": "A general language assistant as a laboratory for alignment",
+   "year": 2021,
+   "arxiv": "2112.00861",
+   "relation": "uses-method",
+   "note": "context distillation",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT / GPT-4 technical report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "baseline",
+   "note": "compared models",
+   "quote": null
+  },
+  {
+   "work": "Build it break it fix it for dialogue safety",
+   "year": 2019,
+   "arxiv": "1908.06083",
+   "relation": "related",
+   "note": "iterative adversarial human attack",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of MART.",
+   "page": 2,
+   "why": "shows the attack-select-train loop for Madv and Mtgt"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "In-domain and out-of-domain model performance across different iterations.",
+   "page": 5,
+   "why": "RM score percentiles per iteration for safety and helpfulness"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Ablation study on different methods of adversarial prompt generation.",
+   "page": 6,
+   "why": "compares MART with GCG and few-shot prompting"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Ablation study on the criteria of training data selection.",
+   "page": 7,
+   "why": "threshold vs data count and score"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 2 Select()",
+   "snippet": "if ss < theta_s_adv: P_adv += {p}; else if ss > theta_s_tgt and sh > theta_h_tgt: R_tgt += {a}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No appendix in the paper; no hyperparameters beyond Sec 3.1.",
+  "Table 4 values for some Fig 3 curves read only from figures (not extractable)."
+ ]
+}

@@ -1,0 +1,607 @@
+{
+ "schema": 1,
+ "key": "2408.06195",
+ "pdf": "generative-ai/03-agentic-foundations/sources/qi-2024-mutual-reasoning-makes-smaller-llms.pdf",
+ "bib": {
+  "title": "Mutual Reasoning Makes Smaller LLMs Stronger Problem-Solvers",
+  "authors": [
+   "Zhenting Qi",
+   "Mingyuan Ma",
+   "Jiahang Xu",
+   "Li Lyna Zhang",
+   "Fan Yang",
+   "Mao Yang"
+  ],
+  "first_author": "Qi",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.06195",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 61482,
+  "chars_total": 61482,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "Can small language models improve their reasoning at inference time, without fine-tuning or a superior teacher model?",
+ "hypothesis": "Agreement between two similar-capability SLMs (one generating via MCTS, one completing partial trajectories) signals a correct trajectory, and a richer action space gives better candidates than single-action self-exploration.",
+ "contributions": [
+  "rStar: self-play mutual generation-discrimination reasoning for SLMs without fine-tuning",
+  "MCTS with a 5-action human-like reasoning action space",
+  "Mutual reasoning consistency: a second SLM completes masked trajectories and agreement marks them valid",
+  "Evaluation on five SLMs and five reasoning tasks"
+ ],
+ "method": {
+  "summary": "A target SLM builds a search tree with MCTS using five reasoning actions (32 rollouts). A second SLM (Phi3-mini-4k) is given a random-length prefix of each candidate trajectory and completes it; trajectories whose answer matches are kept, and the target SLM picks the one with highest reward times terminal confidence.",
+  "task": "math and commonsense reasoning with small LMs at inference time",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM-Hard",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Gao et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH-500",
+    "role": "eval",
+    "size": "500 problems",
+    "split": "subset of MATH",
+    "source": "Hendrycks et al., 2021; subset following Wang et al. 2024b and Lightman et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Patel et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Geva et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Multiarith",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Roy & Roth, 2015 (Appendix A.1 only)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Phi3-mini-4k",
+    "role": "evaluated",
+    "params": "3.8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k",
+    "other": {
+     "also": "default discriminator"
+    }
+   },
+   {
+    "name": "LLaMA2-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA3-8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA3-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Phi3-mini-4k (discriminator)",
+    "role": "judge",
+    "params": "3.8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ablation alternatives": "LLaMA3-8B-Instruct, LLaMA3.1-8B-Instruct, GPT-4 (2024-05-01)"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "MCTS with UCT selection, 32 rollouts, then trajectory selection",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "32 MCTS rollouts per question; baselines SC sampled 8, 64, 128 times; single run, no seeds stated",
+   "prompting": "few-shot CoT prompts per action (A1 and A2/A4 use 4 and 8 exemplars of GSM8K style; A3 least-to-most with 4 exemplars; A5 rephrase with 8 exemplars), Appendix A.3",
+   "retrieval": null,
+   "parameters": {
+    "actions": "A1 one-step thought, A2 remaining steps, A3 next sub-question with answer, A4 re-answer sub-question, A5 rephrase question",
+    "max_depth_d": "8 for MATH, 5 for all other tasks",
+    "max_nodes_per_depth": "5 for A1 and A3, 1 for the other actions",
+    "uct_c": null,
+    "rollouts": 32,
+    "discriminator_split": "prefix cut randomly between 20% and 80% of steps",
+    "terminal_reward": "confidence (likelihood) of self-consistency majority voting",
+    "final_score": "reward multiplied by terminal node confidence",
+    "UCT": "Q(s,a)/N(s,a) + c*sqrt(ln N_parent(s)/N(s,a))"
+   },
+   "other": {
+    "cost": "166.81 avg calls and 367.1k generated tokens per GSM8K question on LLaMA2-7B; 32 rollouts over GSM8K test set about 4.5 days on one A100 per model"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "percent of questions answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "zero-shot CoT",
+    "few-shot CoT",
+    "self-consistency (maj8, maj64, maj128)",
+    "ToT",
+    "RAP",
+    "rStar (generator @maj)",
+    "self-verification",
+    "self-evaluation"
+   ],
+   "protocol": "single reported number per cell, no seeds or significance tests stated; Table 1 ablation uses 200 sampled GSM8K questions"
+  },
+  "availability": {
+   "code": "stated as 'will be available' with a link placeholder",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "A1 one-step thought, few-shot",
+    "text": "### Instruction: {user question}",
+    "where": "Appendix A.3"
+   },
+   {
+    "purpose": "A5 rephrase",
+    "text": "You are an AI assistant to help me rephrase questions by splitting the question context into conditions. In your rephrased question, remember to fully express the information in the original question.",
+    "where": "Appendix A.3"
+   },
+   {
+    "purpose": "A3 sub-question decomposition",
+    "text": "Given a question, please decompose it into sub-questions. For each sub-question, please answer it in a complete sentence, ending with \"The answer is <a numeric answer>\".",
+    "where": "Appendix A.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "rStar raises LLaMA2-7B GSM8K accuracy over few-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 63.91,
+   "unit": "%",
+   "baseline_value": 12.51,
+   "n": null,
+   "setup": "GSM8K, LLaMA2-7B, 32 rollouts, Phi3-mini-4k discriminator",
+   "quote": "boosts GSM8K accuracy from 12.51% to 63.91% for LLaMA2-7B",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "rStar raises Mistral-7B GSM8K accuracy over few-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81.88,
+   "unit": "%",
+   "baseline_value": 36.46,
+   "n": null,
+   "setup": "GSM8K, Mistral-7B, 32 rollouts",
+   "quote": null,
+   "table": "Table 2, GSM8K, row rStar, column Mistral-7B",
+   "note": "Intro says 47.23 to 85.52 for LLaMA3-8B",
+   "where": "Table 2"
+  },
+  {
+   "claim": "rStar on LLaMA3-8B-Instruct GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.13,
+   "unit": "%",
+   "baseline_value": 74.53,
+   "n": null,
+   "setup": "GSM8K, LLaMA3-8B-Instruct",
+   "quote": null,
+   "table": "Table 2, GSM8K, row rStar, column LLaMA3-8B-Instruct",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "rStar on LLaMA3-8B GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.52,
+   "unit": "%",
+   "baseline_value": 47.23,
+   "n": null,
+   "setup": "GSM8K, LLaMA3-8B",
+   "quote": null,
+   "table": "Table 2, GSM8K, row rStar, column LLaMA3-8B",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Mistral with rStar outperforms fine-tuned MetaMath on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain over MetaMath",
+   "value": 4.18,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, Mistral-7B",
+   "quote": "Similarly, Mistral with rStar can even outperform fine-tuned MetaMath by +4.18%.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "On LLaMA2-7B only 24% of RAP trajectories after 32 rounds are correct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "trajectory correctness",
+   "value": 24,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, LLaMA2-7B, RAP, 32 rounds",
+   "quote": "only 24% of the trajectories generated by LLaMA2-7B on GSM8K are",
+   "table": null,
+   "note": null,
+   "where": "Section 1"
+  },
+  {
+   "claim": "Adding actions to the space raises LLaMA3-8B GSM8K accuracy from RAP's A3-only to all five actions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.0,
+   "unit": "%",
+   "baseline_value": 70.5,
+   "n": null,
+   "setup": "LLaMA3-8B, 200 sampled GSM8K questions, all five actions",
+   "quote": null,
+   "table": "Table 1, row All (A1+A2+A3+A4+A5), column Accuracy",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "The discriminator adds more than the generator on LLaMA2-7B (generator@maj 27.22 vs rStar 63.91).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain from discriminator",
+   "value": 36.69,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, LLaMA2-7B",
+   "quote": "while our discriminator can further boosts accuracy by +36.69%.",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.2"
+  },
+  {
+   "claim": "Swapping discriminator Phi3-Mini for GPT-4 changes GSM8K accuracy only slightly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 92.57,
+   "unit": "%",
+   "baseline_value": 91.13,
+   "n": null,
+   "setup": "GSM8K, LLaMA3-8B-Instruct generator, GPT-4 (2024-05-01) as discriminator",
+   "quote": "the powerful GPT-4 as the discriminator only slightly improves performance (91.13% to 92.57%),",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Mutual-consistency discriminator beats self-verification on LLaMA3-8B-Instruct SC-generated trajectories.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 89.99,
+   "unit": "%",
+   "baseline_value": 83.02,
+   "n": null,
+   "setup": "GSM8K, SC generator, LLaMA3-8B-Instruct",
+   "quote": null,
+   "table": "Table 5 Left, row Ours, column LLaMA3-8B-Instruct SC",
+   "note": "self-verification baseline 83.02",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Self-evaluation reward lowers the generator's accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.18,
+   "unit": "%",
+   "baseline_value": 85.52,
+   "n": null,
+   "setup": "GSM8K, LLaMA3-8B, Ours+Self-eval with our discriminator",
+   "quote": null,
+   "table": "Table 4, row Ours+Self-eval, column LLaMA3-8B GSM8K Ours",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Replacing RAP's self-evaluation r1 with random values barely changes accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 22.9,
+   "unit": "%",
+   "baseline_value": 24.34,
+   "n": null,
+   "setup": "GSM8K, LLaMA2-7B, RAP + random r1",
+   "quote": null,
+   "table": "Table 6, row RAP + random r1, column LLaMA2-7B",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "rStar on MATH-500 with LLaMA3-8B-Instruct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 42.94,
+   "unit": "%",
+   "baseline_value": 17.8,
+   "n": null,
+   "setup": "MATH-500, LLaMA3-8B-Instruct",
+   "quote": null,
+   "table": "Table 3, row rStar, column LLaMA3-8b-Instruct",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "rStar on StrategyQA with LLaMA3-8B-Instruct, where more SC samples hurt other models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.57,
+   "unit": "%",
+   "baseline_value": 68.41,
+   "n": null,
+   "setup": "StrategyQA, LLaMA3-8B-Instruct",
+   "quote": null,
+   "table": "Table 2, StrategyQA, row rStar, column LLaMA3-8B-Instruct",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Inference cost: average model calls per GSM8K question on LLaMA2-7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg calls",
+   "value": 166.81,
+   "unit": "calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, LLaMA2-7B, 32 rollouts",
+   "quote": null,
+   "table": "Table 7, row Avg. calls, column LLaMA2-7B",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "32 rollouts over the GSM8K test set take days on one A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": 4.5,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K test set, one A100 per model",
+   "quote": "takes about 4.5 days on a single A100 GPU per model.",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.2"
+  }
+ ],
+ "limits": [
+  "Cost is high: about 150-170 model calls and 350k tokens per GSM8K question, 4.5 days per model on one A100 for the test set.",
+  "Code not released at time of writing; temperature, UCT constant c, sampling parameters and seeds are not stated.",
+  "Single runs without variance; the 200-question sample in Table 1 is small.",
+  "MATH evaluated only on 500 problems and only two models because of LaTeX instruction-following.",
+  "Discriminator is Phi3-mini; gains with GPT-4 are small, so authors do not test far stronger or weaker mismatches beyond the Table 5 list."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "mutual reasoning consistency",
+   "definition": "A second SLM completes a trajectory from a masked prefix; agreement with the original answer marks the trajectory valid.",
+   "where": "Section 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RAP: Reasoning with language model is planning with world model",
+   "year": 2023,
+   "arxiv": "2305.14992",
+   "relation": "baseline",
+   "note": "MCTS with single sub-question action; main baseline and source of action A3",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "majority voting baseline",
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BFS baseline, equals action A1",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "few-shot CoT",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspires A3",
+   "quote": null
+  },
+  {
+   "work": "MindStar",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MCTS with trained reward model",
+   "quote": null
+  },
+  {
+   "work": "AlphaMath Almost Zero",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MCTS one-step search with value model",
+   "quote": null
+  },
+  {
+   "work": "Phi-3 technical report",
+   "year": 2024,
+   "arxiv": "2404.14219",
+   "relation": "evaluates",
+   "note": "Phi3-mini model and discriminator",
+   "quote": null
+  },
+  {
+   "work": "Large language models cannot self-correct reasoning yet",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "supports claim LLMs cannot self-evaluate",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Our self-play mutual reasoning is a generation-discrimination process",
+   "page": 2,
+   "why": "shows the three-step generator, discriminator, final selection flow"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance comparison on the GSM8K dataset under different number of rollouts",
+   "page": 8,
+   "why": "shows rStar gains with 2 rollouts and RAP saturating"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3.2",
+   "snippet": "UCT(s, a) = Q(s, a)/N(s, a) + c * sqrt( ln N_parent(s) / N(s, a) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations are flattened in the text; the UCT snippet is a reconstruction.",
+  "Prompt exemplar counts in inference.prompting are from my reading of Appendix A.3 and approximate."
+ ]
+}

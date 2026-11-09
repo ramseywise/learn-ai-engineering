@@ -10,7 +10,7 @@
 
 Eval engineering is the discipline of measuring non-deterministic AI systems: defining what "correct" means, building tasks that represent real use, choosing graders you can trust, running them repeatedly, reading the results with error bars, and wiring them into CI, releases and production monitoring.
 
-It's a peer layer, not a QA step. Every other layer makes claims ("this prompt is better", "this harness is more reliable"), and this is where they get checked. Each layer keeps its own chapter on *what* to measure ([01/09](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md), [02/12](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md), [03/05](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md), [04/03](../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md)). This topic owns *how*: the shared machinery.
+It's a peer layer, not a QA step. Every other layer makes claims ("this prompt is better", "this harness is more reliable"), and this is where they get checked. Each layer keeps its own chapter on *what* to measure ([01/08](../../ai-engineering/01-prompt-engineering/notes/08-evaluating-prompts.md), [02/12](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md), [03/05](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md), [04/03](../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md)). This topic owns *how*: the shared machinery.
 
 **Inherits the weaknesses of:** all the layers it measures, plus its own. It can only grade what the harness exposes (no traces, no trajectory evals), and an eval is only as good as its tasks, its graders and its sample size.
 
@@ -52,7 +52,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - Include **negative and boundary cases**, or "does it more often" looks like an improvement.
 - A gate scores only rows that are **eligible** for it. Version the dataset; keep a held-out split.
 
-**Graders** ([04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), [05b](notes/05b-pairwise-ranking-elo-and-bradley-terry.md), [15](notes/15-calibration-against-human-labels.md))
+**Graders** ([04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), optional [05b](notes/05b-pairwise-ranking-elo-and-bradley-terry.md), [15](notes/15-calibration-against-human-labels.md))
 - **Code first.** A judge only where code can't check it.
 - **One judge, one criterion, binary verdict**, critique before verdict, a `CANNOT_GRADE` escape.
 - **An uncalibrated judge never gates a release.** Calibrate against 100–200 human labels; report TPR and TNR.
@@ -77,8 +77,8 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ## Where to start
 
-- **Lecture deck:** [slides/eval-engineering.pptx](slides/eval-engineering.pptx) — the notes as a 5-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=generative-ai/08-eval`).
-- **New to evals:** chapters [01](notes/01-what-an-eval-is.md)–05 in order. **01–05 can be read right after [01-prompt-engineering](../../ai-engineering/01-prompt-engineering/README.md)**; they don't need the harness or loop layers.
+- **Lecture deck:** [slides/eval-engineering.pptx](slides/eval-engineering.pptx) — the notes as a 6-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=generative-ai/08-eval`).
+- **New to evals:** chapters [01](notes/01-what-an-eval-is.md)–05 in order. **01, 02, 04 and 05 can be read right after [01-prompt-engineering](../../ai-engineering/01-prompt-engineering/README.md)**; they don't need the harness or loop layers. Note 03 uses RAG vocabulary (index, retriever, grounding), so read [GA 02 RAG and retrieval](../02-rag-retrieval/README.md) first or skip its eligibility section.
 - **Evaluating an agent now:** [02](notes/02-defining-correct.md#find-failure-modes-by-reading-error-analysis), [06](notes/06-evaluating-agents.md), [08](notes/08-tracing-and-observability.md).
 - **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md), and the [case study](notes/13-case-study-support-agent.md).
 - **A number moved and you don't know why:** [09](notes/09-reading-results.md), then [12](notes/12-failure-modes.md#the-debug-order).
@@ -106,7 +106,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 | Chapter | Why |
 |---|---|
-| [AIE 01/09 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | Evals for prompts |
+| [AIE 01/08 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/08-evaluating-prompts.md) | Evals for prompts |
 | [AIE 02/12 Evaluating context](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | Evals for context |
 | [AIE 03/05 Verification loops](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) | Graders and CI in the harness |
 | [AIE 04/03 The scorekeeper](../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md) | Scoring a loop's passes |
@@ -125,14 +125,14 @@ An eval suite with a CI gate: 24 cases, three graders, a stored baseline, paired
 
 Note 14 has its own script, [practice/judge_checks_and_critiques.py](practice/judge_checks_and_critiques.py). It tests the procedure on GA 06's rule judges and measures no real model. Its cue and edit tests need your own model. Run it with `cd practice && uv run judge_checks_and_critiques.py`.
 
-Note 15 and the multi-turn section of note 06 share [practice/conversation_scoring_lab.py](practice/conversation_scoring_lab.py): κ and weighted κ on skewed labels, abstaining when a question was never asked, shrunken per-vertical calibration, whole-conversation against mean-of-turns scoring, and a paired per-vertical regression gate. Its transcripts are generated and its scorers are stubs, so it measures no real model. Run it with `cd practice && uv run conversation_scoring_lab.py`.
+Note 15 and the multi-turn section of note [06c](notes/06c-agent-suites-and-environment-hygiene.md) share [practice/conversation_scoring_lab.py](practice/conversation_scoring_lab.py): κ and weighted κ on skewed labels, abstaining when a question was never asked, shrunken per-vertical calibration, whole-conversation against mean-of-turns scoring, and a paired per-vertical regression gate. Its transcripts are generated and its scorers are stubs, so it measures no real model. Run it with `cd practice && uv run conversation_scoring_lab.py`.
 
 ## Layout
 
 ```
 08-eval/
 ├── README.md                     ← you are here: summary, rules of thumb, chapter index
-├── notes/                        ← chapters 01–14, read in order; figures and code inline
+├── notes/                        ← chapters 01–15 (plus 03b, 05b, 06b, 06c), read in order; figures and code inline
 ├── slides/                       ← lecture deck (deck.yaml → eval-engineering.pptx)
 ├── practice/                     ← the lab, in TypeScript and Python
 ├── sources/                      ← papers filed for this pillar
@@ -152,7 +152,7 @@ Note 15 and the multi-turn section of note 06 share [practice/conversation_scori
 
 4. [Graders](notes/04-graders.md) — code, model and human graders; layering; the grader interface; grader states; combining scores; binary vs. scales.
 5. [LLM as judge](notes/05-llm-as-judge.md) — judge shapes, prompt structure, decomposition, known biases, judge cost.
-   - 5b. [Pairwise ranking: Elo and Bradley–Terry](notes/05b-pairwise-ranking-elo-and-bradley-terry.md) — pairwise ranking with Elo and Bradley–Terry, the Arena caveats.
+   - 5b. (optional) [Pairwise ranking: Elo and Bradley–Terry](notes/05b-pairwise-ranking-elo-and-bradley-terry.md) — pairwise ranking with Elo and Bradley–Terry, the Arena caveats.
 
 Read straight after 05:
 
@@ -183,7 +183,7 @@ Read straight after 05:
 
 ### Course code
 
-DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents), with the data and helpers they need). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06](notes/06b-components-trials-and-cost.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
+DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents), with the data and helpers they need). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06b](notes/06b-components-trials-and-cost.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
 
 Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05b](notes/05b-pairwise-ranking-elo-and-bradley-terry.md#worked-example-online-elo-vs-a-bradleyterry-fit). The full runnable lab is upstream at [ai-agent-book/chapter7/elo-leaderboard](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/elo-leaderboard): run `pip install -r requirements.txt && python quickstart.py`, offline, with no API key.
 

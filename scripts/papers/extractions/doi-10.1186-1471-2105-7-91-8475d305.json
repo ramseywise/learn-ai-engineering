@@ -1,19 +1,498 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "doi:10.1186/1471-2105-7-91",
  "pdf": "data-science/sources/varma-2006-bias-error-estimation-when-using.pdf",
  "bib": {
   "title": "Bias in error estimation when using cross-validation for model selection",
-  "first_author": "Sudhir Varma",
-  "year": "2006",
-  "venue": "BMC Bioinformatics",
+  "authors": [
+   "Sudhir Varma",
+   "Richard Simon"
+  ],
+  "first_author": "Varma",
+  "year": 2006,
+  "venue": "BMC Bioinformatics 7:91",
   "arxiv": null,
   "doi": "10.1186/1471-2105-7-91"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 33692,
+  "chars_total": 33692,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Bias in error estimation when using cross-validation for model selection\", Sudhir Varma and Richard Simon (NCI Biometric Research Branch), BMC Bioinformatics 7:91, published 23 Feb 2006 (peer reviewed, open access).\nCOVERAGE: 33657 of 33657 chars read, all 8 pages including references. Equations and some symbols came out garbled (eqs 1-8, delta, gamma), so I did not use them. Tables and figure text are readable. No embedded instructions found.\n\nCLAIMS (ranked)\n- claim: On pure-noise data, the CV error of a CV-tuned classifier is far too optimistic, while its true error is 50%.\n  number: Mean CV estimate 37.8% (shrunken centroids) and 41.7% (SVM) vs true error 50.0%; bias -12.2% and -8.3%.\n  setup: \"Null\" synthetic data, at least 1000 datasets, each 40 samples (20 per class) with 6000 N(0,1) features and no class difference. True error measured on 20000 independent samples. Shrunken centroids used 10-fold CV to tune delta over 0.01-1. SVM used LOOCV to tune C (2^-5 to 2^15) and gamma (2^-15 to 2^3) on a grid, after picking the top 3 features by t-statistic inside each fold.\n  quote: \"Even though the mean true error is 50% (i.e. equal to randomly choosing the classes), the CV error estimate on the training set averages 37.8% for the optimized Shrunken Centroid classifier and 41.7% for the optimized SVM classifier.\"\n  where: p.6; Table 1, p.5\n\n- claim: A sizeable share of null datasets look good (error below 30%) purely through tuning on the CV error.\n  number: Below 30% on 18.5% of datasets (shrunken centroids); 38% for SVM in the abstract.\n  setup: Same null simulation as above.\n  quote: \"the CV error estimate for the Shrunken Centroid with the optimal parameters was less than 30% on 18.5% of simulated training data-sets. For SVM with optimal parameters the estimated error rate was less than 30% on 38% of \"null\" data-sets.\"\n  where: abstract, p.1\n  note: Table 1 gives 22.2% for SVM in the \"training error<30%\" column, which contradicts the abstract's 38%. The paper does not explain this. Cite 18.5% for shrunken centroids and flag the SVM figure as inconsistent.\n\n- claim: The bias is not only a mean shift. It is large in a meaningful fraction of runs.\n  number: Bias above 20% in 22.2% (shrunken centroids) and 25.3% (SVM) of datasets.\n  setup: Same null simulation, from Table 1.\n  quote: \"On more than one-fifth of the random training datasets, the bias is more than 20% for the classifiers.\"\n  where: p.6; Table 1 on p.5\n\n- claim: Nested CV removes most of the bias. It is slightly pessimistic because each inner model trains on 39 samples, not 40.\n  number: Shrunken centroids on null data: nested estimate 54.2% vs true 50.0%. SVM on non-null data: nested estimate 35.3% vs true 32.0%.\n  setup: Outer leave-one-out over 40 samples. The inner loop reruns the whole tuning wrapper on the remaining 39 samples (10-fold CV for shrunken centroids, LOOCV for SVM). Non-null data has 10 of 6000 genes with a mean difference of 1. The same 40-sample, 20000-test-sample setup as above.\n  quote: \"The mean nested CV error estimate is a slight overestimate of the true error (54.2% compared to 50.0%), since the classifier used in each nested CV iteration is based on 39 samples, while the classifier used on the test set is trained on 40 samples.\" and \"We obtain a mean nested CV error estimate of 35.3% compared to the true error of 32.0%.\"\n  where: p.6\n\n- claim: The rule is that every training step, including tuning and feature selection, must be repeated inside each CV loop.\n  number: none\n  setup: General argument, backed by the simulations.\n  quote: \"Proper use of CV for estimating true error of a classifier developed using a well defined algorithm requires that all steps of the algorithm, including classifier parameter tuning, be repeated in each CV loop.\"\n  where: abstract, p.1\n\n- claim: The bias comes from the variance of the CV estimates across parameter values, so it applies to any resampling scheme. It grows with the number of candidates K.\n  number: none (the formula is garbled in the extraction)\n  setup: Toy argument. The parameter takes K discrete values with identical true error E, and the resampling estimate is median unbiased. The text says the chance that the minimum estimate falls below E rises with K.\n  quote: \"Since the bias is caused by the variability in the estimates of prediction error for different values of the tuning parameters it is a general phenomenon.\"\n  where: p.7\n\n- claim: Total bias is the inherent bias plus the parameter-selection bias. Selection bias is always negative (optimistic). Low-variance resampling lowers it but may carry more inherent bias.\n  number: none\n  setup: Conceptual discussion. It names .632 bootstrap and bootstrap CV as lower-variance methods.\n  quote: \"The parameter selection bias, on the other hand, is always negative.\" and \"If the inherent bias is positive, the parameter selection bias will subtract from it and possibly bring the error estimate closer to the true error.\"\n  where: p.7\n\n- claim: Alternatives to nested CV are a large independent validation set, or leaving out samples not used in tuning. Nested CV works if the outer left-out portion is small.\n  number: none\n  setup: Closing paragraph.\n  quote: \"If the number of samples left out at each step of the outer loop is not too large, this gives an almost unbiased estimate of the true error.\"\n  where: p.7\n\n- claim: Tuning on the test set is a separate error. The shrunken-centroid authors picked delta using the test error as well.\n  number: none\n  setup: Critique of Tibshirani et al.\n  quote: \"Thus the test set is used in the selection of the classifier parameters, which is problematic.\"\n  where: p.4\n\n- claim: Two older leakage mistakes are named. One is selecting features on all the data before CV (Simon 2003, Ambroise and McLachlan 2002, Reunanen 2003). The other is tuning parameters outside the CV loop.\n  number: none\n  quote: \"One way is to use all of the training data to choose the genes that discriminate between the two classes and only change the classifier parameters inside the CV loop.\"\n  where: p.2\n\nLIMITS\n- Synthetic Gaussian data only: n=40, p=6000, which is the microarray regime. The setup is not like typical tabular ML with n much larger than p.\n- Only two classifiers were tested. The SVM was simplified: t-statistic top-3 feature selection instead of RFE, a fixed Gaussian kernel, and a grid search instead of a genetic algorithm. The authors say this \"may potentially reduce the amount of bias obtained\".\n- Nested CV on shrunken centroids was only shown on null data. Nested CV on the SVM was only shown on non-null data. The abstract claims both were tested on both, but the results text does not show that.\n- Nested CV is only slightly pessimistic (+4.2 and +3.3 points). The paper gives no cost analysis. Nested CV costs roughly the inner-loop count times more.\n- The paper does not give the number of parameter values, a bias-vs-grid-size curve, or any comparison with repeated CV or bootstrap beyond a mention.\n- The Table 1 and abstract mismatch (38% vs 22.2%) is unexplained.\n- The paper's own LOOCV outer-loop description conflicts with the \"10-fold\" label on the Fig 3 caption (it says \"nested within a LOOCV loop\"). The shrunken centroids inner loop was 10-fold.\n\nBUILDS ON: Duda, Hart and Stork 2001 (CV definition); Simon et al. 2003, Ambroise and McLachlan 2002, Reunanen 2003 (feature-selection bias); Tibshirani et al. 2002 (shrunken centroids); Peng et al. 2003 (GA/RFE SVM); Vapnik 1998; Chang and Lin (LIBSVM); Izuka et al. 2003 (earlier nested-style use); Efron and Tibshirani 1997 (.632+); Fu, Carroll and Wang 2005; Molinaro, Simon and Pfeiffer 2005 (comparison of resampling methods).\n\nCODE: none in the paper (the simulation was in MATLAB 6.5, with no code given).\n\nFIGURES (captions from the text extraction, not the figure tool)\n- Fig 1, p.4: histogram of 10-fold CV error vs true error for optimized shrunken centroids. The CV estimates sit left of the true-error spike at 50%. This is the quickest picture of the bias.\n- Fig 2, p.6: the same for the SVM with LOOCV.\n- Fig 3, p.6: nested CV error vs true error for shrunken centroids on null data. The distributions overlap.\n- Fig 4, p.7: nested LOOCV error vs true error for the SVM on non-null data.\n\nPROBLEMS: Equations and Greek symbols were garbled in the extraction. pypdf printed font warnings (fontTools missing) that did not affect the text. I did not check the target note beyond its first lines, so the comparison with existing note content is left to the caller. Nothing else is missing."
+ "type": "empirical",
+ "question": "Is the cross-validation error estimate of a classifier whose parameters were tuned by minimising CV error an unbiased estimate of its true error on independent data?",
+ "hypothesis": "Tuning parameters by minimising CV error is training done outside the CV loop, so the minimum CV error may be a biased estimate of true error, and nesting the tuning inside an outer CV loop should remove the bias.",
+ "contributions": [
+  "Show by simulation on null data that the minimum CV error of an optimised Shrunken Centroids and SVM classifier is substantially optimistically biased",
+  "Show that nested CV gives an almost unbiased estimate for null and non-null data",
+  "Explain the bias as parameter selection bias that adds to the inherent resampling bias"
+ ],
+ "method": {
+  "summary": "Simulated Gaussian two-class microarray-like datasets. For Shrunken Centroids (10-fold CV over delta) and a simplified SVM (LOOCV over a C, gamma grid) the parameter minimising CV error was chosen, the CV error at that optimum was compared with the true error on 20000 independent samples, and then with a nested CV estimate in which the whole tuning procedure is repeated in each outer fold.",
+  "task": "error estimation for tuned binary classifiers (model selection vs. performance estimation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic null data",
+    "role": "both",
+    "size": "at least 1000 datasets per simulation, each 40 samples (20 per class) x 6000 features; test set 20000 samples",
+    "split": "40 training samples per dataset; 20000 independent test samples from the same distribution",
+    "source": "simulated; both classes mean-zero unit-variance multivariate Normal",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic non-null data",
+    "role": "both",
+    "size": "40 training samples x 6000 features, 20000 test samples",
+    "split": "as above",
+    "source": "simulated; 10 of 6000 genes have mean 1 in class 2, rest mean 0, unit variance",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Shrunken Centroids (Tibshirani et al.)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "nearest centroid with centroids shrunk toward overall centroid by delta",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "delta grid": "0.01 to 1",
+     "tie rule": "larger delta chosen if two have the same CV error",
+     "implementation": "MATLAB 6.5"
+    }
+   },
+   {
+    "name": "Gaussian-kernel SVM with t-statistic feature selection (simplified from Peng et al.)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "SVM, Gaussian kernel, top 3 features by absolute two-sample t-statistic chosen inside each fold",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "C grid": "2^-5 to 2^15",
+     "gamma grid": "2^-15 to 2^3",
+     "library": "LIBSVM (Chang and Lin)",
+     "simplification": "RFE replaced by t-statistic top 3; genetic algorithm replaced by fixed Gaussian kernel grid search"
+    }
+   }
+  ],
+  "training": {
+   "objective": "classifier trained on all 40 samples with the CV-optimal parameter (delta* or C*,gamma*)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "classical models; no gradient training details; random seeds not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "at least 1000 simulated 40-sample datasets per simulation; one 20000-sample test set per dataset for true error",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "nested CV outer loop": "leave-one-out over 40 samples",
+    "nested CV inner loop": "10-fold CV for Shrunken Centroids on the 39 remaining samples; LOOCV grid search for SVM",
+    "inner folds for SVM nested": "inferred: LOOCV on 39 samples, from 'exactly the same procedure' and Fig 4 title 'nested LOOCV'"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CV error estimate",
+     "definition": "average error over left-out samples at the parameter minimising CV error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "True error",
+     "definition": "mean error of the classifier trained on all 40 samples on 20000 independent samples",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Bias",
+     "definition": "CV error estimate minus true error (Table 1 mean bias is negative when the estimate is optimistic)",
+     "unit": "percentage points",
+     "higher_is_better": null
+    },
+    {
+     "name": "Nested CV error estimate",
+     "definition": "outer leave-one-out; tuning repeated on the other 39 samples in each fold",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "non-nested CV error at the optimum",
+    "independent test-set error"
+   ],
+   "protocol": "Empirical distributions over simulated datasets (Figs 1-4); no significance tests; no confidence intervals or seeds reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "simulated; generating distribution described in text"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics bias",
+    "quote": "Mean bias",
+    "where": "Table 1 header (column definitions are garbled in extraction)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Optimised Shrunken Centroids on null data: mean 10-fold CV error is far below the true 50%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean CV error",
+   "value": "37.8",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets; 10-fold CV over delta",
+   "quote": "the CV error estimate on the train- ing set averages 37.8% for the optimized Shrunken Cen- troid classifier",
+   "table": null,
+   "note": null,
+   "where": "Results p5-6; Table 1"
+  },
+  {
+   "claim": "Optimised SVM on null data: mean LOOCV error is far below the true 50%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean CV error",
+   "value": "41.7",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets; LOOCV over C,gamma grid, top 3 t-stat features",
+   "quote": null,
+   "table": "Table 1, row SVM on \"null\" data, column Mean CV error estimate for optimized classifier",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "True error of both optimised classifiers on null data is chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean true error",
+   "value": "50.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets",
+   "quote": null,
+   "table": "Table 1, column Mean true error of optimized classifier (both rows)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Shrunken Centroids CV estimate under 30% on 18.5% of null datasets despite no class difference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of datasets with CV error <30%",
+   "value": "18.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets",
+   "quote": "less than 30% on 18.5% of simulated",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "SVM CV estimate under 30% on 38% of null datasets (abstract).",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of datasets with CV error <30%",
+   "value": "38",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets",
+   "quote": "38% of \"null\" data-sets",
+   "table": null,
+   "note": "Table 1 gives 22.2% for SVM in the column that matches this for Shrunken Centroids (18.5%); the abstract and the table disagree and the column header is garbled.",
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "Mean bias of the non-nested estimate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean bias (Shrunken Centroids)",
+   "value": "-12.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets",
+   "quote": null,
+   "table": "Table 1, column Mean bias, rows Shrunken centroids -12.2%, SVM -8.3%",
+   "note": "SVM mean bias -8.3%",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Bias exceeds 20% on more than one fifth of null datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of datasets with bias >20%",
+   "value": "22.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets",
+   "quote": "On more than one-fifth of the random training",
+   "table": null,
+   "note": "Table 1 gives 22.2% (Shrunken Centroids) and 25.3% (SVM); the text says more than one-fifth.",
+   "where": "Results p6; Table 1"
+  },
+  {
+   "claim": "Nested CV for Shrunken Centroids on null data gives a mean estimate close to true error, slightly pessimistic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean nested CV error",
+   "value": "54.2",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": null,
+   "setup": "Synthetic 'null' data: 40 samples (20+20), 6000 features, no true class difference; true error from 20000 independent test samples; at least 1000 datasets; outer LOOCV, inner 10-fold",
+   "quote": "(54.2% compared to 50.0%)",
+   "table": null,
+   "note": "Overestimate attributed to 39 vs 40 training samples.",
+   "where": "Results p6"
+  },
+  {
+   "claim": "Nested CV for SVM on non-null data (10 of 6000 genes shifted by 1) is close to true error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean nested CV error",
+   "value": "35.3",
+   "unit": "%",
+   "baseline_value": "32.0",
+   "n": null,
+   "setup": "Non-null data, 40 train / 20000 test; nested LOOCV",
+   "quote": "mean nested CV error estimate of 35.3%",
+   "table": null,
+   "note": "The text breaks the line 'com-pared to the true error of 32.0%'.",
+   "where": "Results p6"
+  },
+  {
+   "claim": "Parameter selection bias is always negative; inherent resampling bias can be either sign; total bias is their sum.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argument, no data",
+   "quote": "The parameter selection bias, on the other hand, is always negative.",
+   "table": null,
+   "note": null,
+   "where": "Conclusion p7"
+  }
+ ],
+ "limits": [
+  "Only two classifiers, one data generator (Gaussian, 40 samples, 6000 features), two-class problems.",
+  "SVM search simplified (fixed Gaussian kernel, 3 t-statistic features) and authors concede this may reduce the bias observed.",
+  "Nested CV uses 39 rather than 40 samples inside the loop, giving a small pessimistic bias.",
+  "No variance of the nested estimate, no confidence intervals, no seeds, no code released.",
+  "Non-null nested CV tested for SVM; the null nested case is shown for Shrunken Centroids only; the nested non-null Shrunken Centroids result is claimed in the abstract without a figure in the text.",
+  "Argument that the bias is general across resampling schemes is intuitive (Eq. 8), not tested for other CV schemes or bootstrap."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "classifier training algorithm",
+   "definition": "takes a set of samples and does feature selection and classifier training and returns a single, well defined classifier",
+   "where": "Background p2"
+  },
+  {
+   "term": "parameter selection bias",
+   "definition": "additional bias, always negative, from variance of resampled error estimates when a parameter is chosen to minimise them",
+   "where": "Conclusion p7"
+  },
+  {
+   "term": "inherent bias",
+   "definition": "bias of a resampling estimator even without parameter selection, e.g. over-estimation from training on a subset",
+   "where": "Conclusion p7"
+  },
+  {
+   "term": "nested CV",
+   "definition": "two CV loops: the inner loop is part of the wrapper algorithm that tunes parameters, the outer loop computes the estimate of true error",
+   "where": "Background p3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Tibshirani et al., Diagnosis of multiple cancer types by shrunken centroids",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Shrunken Centroids; authors used the test set to pick delta",
+   "quote": null
+  },
+  {
+   "work": "Peng et al., Molecular classification of cancer types ... genetic algorithms and SVM",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "SVM wrapper with LOOCV-tuned kernel parameters; simplified here",
+   "quote": null
+  },
+  {
+   "work": "Simon et al., Pitfalls in the use of DNA microarray data",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "selection bias from feature selection outside the CV loop",
+   "quote": null
+  },
+  {
+   "work": "Ambroise and McLachlan, Selection bias in gene extraction",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same principle for feature selection",
+   "quote": null
+  },
+  {
+   "work": "Reunanen, Overfitting in making comparisons between variable selection methods",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "selection overfitting",
+   "quote": null
+  },
+  {
+   "work": "Izuka et al., hepatocellular carcinoma microarray, Lancet",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "earlier nested-loop use",
+   "quote": null
+  },
+  {
+   "work": "Chang and Lin, LIBSVM",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SVM implementation",
+   "quote": null
+  },
+  {
+   "work": "Efron and Tibshirani, .632+ bootstrap",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "related",
+   "note": "lower variance, larger inherent bias",
+   "quote": null
+  },
+  {
+   "work": "Fu, Carroll, Wang, Bootstrap CV",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "lower variance resampling",
+   "quote": null
+  },
+  {
+   "work": "Molinaro, Simon, Pfeiffer, Prediction error estimation",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "resampling comparison",
+   "quote": null
+  },
+  {
+   "work": "Vapnik, Statistical learning theory (Theorem 10.8)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LOOCV almost unbiased",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Distribution of the CV error estimate and the true error for optimized Shrunken Centroids.",
+   "page": 4,
+   "why": "Histograms show CV error shifted well below 50% true error"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Distribution of the CV error estimate and the true error for optimized Support Vector Machine.",
+   "page": 6,
+   "why": "Same for SVM"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Distribution of the nested CV error estimate and true error for optimized Shrunken Centroids nested within a LOOCV loop.",
+   "page": 6,
+   "why": "Nested estimate centred on true error"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Distribution of the nested CV error estimate and true error for optimized SVM nested within a LOOCV loop.",
+   "page": 7,
+   "why": "Nested estimate close to true error on non-null data"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results.",
+   "page": 5,
+   "why": "Summary of bias on null data"
+  }
+ ],
+ "code": [
+  {
+   "where": "p7 Eq. 8",
+   "snippet": "Pr(min {e1, ..., eK} < E) = 1 - (1/2)^K  [inferred from garbled text: 'Pr(min {e2, ..., ek} <E) = 1 - ... K']",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 column headers are garbled across lines; column assignment inferred from order.",
+  "Abstract says SVM CV error <30% on 38% of null datasets; Table 1 gives 22.2% in the matching column.",
+  "Eq. 8 right-hand side lost in extraction (only '1 - ... K' remains); reconstructed from median-unbiased argument.",
+  "Several equations (1-6) are garbled in the text cache.",
+  "No embedded instructions found."
+ ]
 }

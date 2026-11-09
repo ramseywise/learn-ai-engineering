@@ -1,19 +1,586 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2312.02724",
  "pdf": "generative-ai/02-rag-retrieval/sources/pradeep-2023-rankzephyr.pdf",
  "bib": {
   "title": "RankZephyr: Effective and Robust Zero-Shot Listwise Reranking is a Breeze!",
-  "first_author": "Ronak Pradeep",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Ronak Pradeep",
+   "Sahel Sharifymoghaddam",
+   "Jimmy Lin"
+  ],
+  "first_author": "Pradeep",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2312.02724",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 58436,
+  "chars_total": 58436,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"RankZephyr: Effective and Robust Zero-Shot Listwise Reranking is a Breeze!\", Ronak Pradeep, Sahel Sharifymoghaddam, Jimmy Lin (Waterloo), arXiv:2312.02724v1 [cs.IR], preprint, 5 Dec 2023.\n\nCOVERAGE: 58,476 of 58,476 chars read (all of it, including references). The paper has no appendix and no Limitations section; limits are stated inline in Sections 5 and 6. Figures were not extracted. Only the Fig 1 prompt text appears in the extraction.\n\nCLAIMS (ranked)\n- Claim: A 7B open model (Zephyr-beta, distilled from RankGPT4) matches or beats RankGPT4 as a listwise reranker on in-domain TREC DL19/DL20 (SPLADE++ ED top-100).\n  number: nDCG@10 DL19 0.7816 vs 0.7464, DL20 0.8159 vs 0.7076; with 3 passes, 0.7855 / 0.8255\n  setup: MS MARCO v1; SPLADE++ ED top-100; sliding window 20/stride 10; RankGPT4 averaged over 3 runs.\n  quote: \"(4) RankGPT4 SPLADE++ ED 100 0.7464 0.7076 0.7721 0.7175 0.5327 0.8792 ... (7) RankZephyr SPLADE++ ED 100 0.7816 0.8159 0.7598 0.6692 0.5060 0.8535 (8) RankZephyrρ SPLADE++ ED 100 0.7855 0.8255 0.7688 0.6628 0.5107 0.8566\"\n  where: Table 1, ~char 15,000\n- Claim: Out of domain, RankZephyr trails RankGPT4 when reranking strong SPLADE++ candidates. The authors say more work is needed.\n  number: DL22 0.6692 vs 0.7175; NEWS 0.5060 vs 0.5327; COVID 0.8535 vs 0.8792 (Table 1)\n  setup: same as above; MS MARCO v2 (DL21, DL22) and BEIR NEWS and COVID were never seen in training.\n  quote: \"However, on these datasets, our models still underperform their RankGPT4 teacher when rerank-ing SPLADE++ ED output.\"\n  where: Section 5\n  Their two guesses: the 4096-token training context versus GPT-4's 8192, and 2-4 points lower Judged@10.\n- Claim: With weak BM25 candidates, RankZephyrρ beats RankGPT4 on 3 of 4 out-of-domain sets. It loses on COVID, which they attribute to GPT-4's scientific knowledge.\n  number: DL21 0.7114 vs 0.7073; DL22 0.5164 vs 0.5078; NEWS 0.5333 vs 0.5069; COVID 0.8377 vs 0.8471\n  setup: BM25 top-100, nDCG@10\n  quote: \"(3) RankGPT4 BM25 100 0.7073 0.5078 0.5069 0.8471 ... (5) RankZephyrρ BM25 100 0.7114 0.5164 0.5333 0.8377\"\n  where: Table 6\n- Claim: Progressive reranking (feeding each pass's output into the next, 3 passes) generally helps a little. It is not uniform: DL22 and COVID were mixed.\n  number: DL19 0.7816 -> 0.7855; DL20 0.8159 -> 0.8255 (Table 1)\n  setup: \"RankZephyrρ\" = same model reranking the list 3 times, taken from RankVicuna's finding of up to 3 passes.\n  quote: \"progressive reranking, shown in row (8), generally improves effectiveness compared to the single-pass counterpart, row (7)\"\n  where: Section 5\n- Claim: A better first stage gives better reranking, with diminishing returns. BM25 gains are large and SPLADE++ gains are small. A first stage with higher MAP@100 (RepLLaMA) did not give better reranked results than SPLADE++ ED.\n  number: BM25 +45%-55%; SPLADE++ +7%-20%\n  setup: DL19/DL20, nDCG@10 and MAP@100 and other metrics, top-100 candidates.\n  quote: \"while reranking the top 100 BM25 candidates with RankZephyr results in a 45%–55% im-provement in effectiveness across various metrics, the improvement is more modest with SPLADE++ ED, ranging from 7%–20% for the same metrics.\"\n  where: Section 6.3\n  BM25 alone is 0.5058 / 0.4796 nDCG@10 (Table 5). RankZephyr over BM25 top-100 gives 0.7420 / 0.7086.\n- Claim: Reranking top-100 beats top-20 in most cases (the pool matters), but not always.\n  number: BM25 DL19 0.6489 (top-20) vs 0.7420 (top-100); on DL19 with dense retrievers, top-20 was better, e.g. RepLLaMA 0.7848 vs 0.7660\n  setup: Table 5, RankZephyr\n  quote: \"exceptions are noted in the DL19 dataset with dense retrievers, where rerank-ing the top 20 yields better nDCG@10 scores than reranking the top 100. This is partially attributable to the 3% difference in the percentage of the top 10 results judged.\"\n  where: Section 6.3\n- Claim: Robustness to input order. RankGPT3.5 degrades heavily when the candidate list is shuffled. RankZephyr barely does.\n  number: RankGPT3.5 SPLADE++ DL19 0.7504 -> 0.6028 shuffled. RankZephyr SPLADE++ DL19 0.7816 -> 0.7670, DL20 0.8159 -> 0.7910.\n  setup: top-100, six shuffled orderings, 99% CIs.\n  quote: \"(1d) RankGPT3.5 Shuf. SPLADE++ ED 100 0.6028 ±0.007 ... (2d) RankZephyr Shuf. SPLADE++ ED 100 0.7670 ±0.011\"\n  where: Table 7, Section 6.4\n- Claim: Training on variable window sizes (p ≤ 20 passages, 3 random subsets of each 20) makes malformed outputs vanish at small windows. Fixed-20 training breaks at window 10.\n  number: window 10/5 OK rate 38.74% (fixed training) vs 100.00% (variable); RankGPT4 at 20/10 is 95.11% OK\n  setup: BM25 top-100, sliding window x/y\n  quote: \"(2b) RankZephyr × 10/5 38.74% 0.98% 12.05% 48.24%\" and \"(3b) RankZephyr ✓ 10/5 100.00% 0.00% 0.00% 0.00%\"\n  where: Table 3\n  RankGPT4 failures are mostly refusals to rank. RankZephyr output is deterministic.\n- Claim: A larger window helps most when first-stage candidates are weak. Listwise can promote several buried relevant documents at once, and pairwise can't.\n  number: BM25 DL19 variable-trained, window 2/1: 0.5836; 10/5: 0.7015; 20/10: 0.7420\n  setup: Table 4 (nDCG@10)\n  quote: \"listwise methods, with larger context windows, excel at concurrently promoting several poorly ranked relevant documents into higher positions.\"\n  where: Section 6.2\n- Claim: On the uncontaminated NovelEval-2306, RankZephyr beats RankGPT4 on nDCG@1 but not on nDCG@5 or nDCG@10.\n  number: nDCG@1 0.9286 vs 0.8571; nDCG@10 0.8934 vs 0.9045\n  setup: 21 queries, Google Search top-20, single window with no progressive pass, graded 0-2.\n  quote: \"(4) RankGPT4 0.8571 0.8749 0.9045 (5) RankZephyr 0.9286 0.8615 0.8934\"\n  where: Table 8\n  The authors say this suggests RankZephyr is a good alternative in a RAG setting where only the top candidate is used. The sample is very small.\n- Claim: Training recipe. Stage 1 is distillation from RankGPT3.5 on 100K MS MARCO queries (BM25 top-20). Stage 2 is RankGPT4 on 5K random queries with ADA2 orderings. Stage 2 takes about a tenth of the effort. The cost of full GPT-4 data is estimated at over $10K.\n  number: 3 epochs, batch size 64, learning rate 5e-6, about 40 hours on 8x RTX A6000\n  quote: \"Due to the prohibitive cost of generating high-quality RankGPT4 training data for the entire set of 100K queries, estimated at over $10K USD, we limited our experimentation to a subset of no more than 5K queries.\"\n  where: Sections 3.2-3.3\n- Claim: Training-data ablations (DL19/DL20 nDCG@10, Table 2). ADA2 input orderings beat BM25 orderings on DL20. Discriminative query sampling is marginally worse than random. Combining both gives no gain. The authors conclude that a general query distribution matters more than covering tail queries.\n  number: 3a BM25 DL20 0.7503 vs 4a ADA2 DL20 0.7762\n  quote: \"exposing the model to a general distribution of queries and teacher reorderings is important.\"\n  where: Section 6.1\n- Claim: RankZephyr beats the pointwise fine-tuned RankLLaMA-13B without human labels.\n  number: DL19 0.7816 vs 0.7567; DL20 0.8159 vs 0.7748\n  quote: \"RankZephyr improves over the highly effective pointwise RankLLaMA-13B, despite not requir-ing human labels and having only 7B parameters\"\n  where: Section 5, Table 1 row 3\n  Note this compares different first stages (RepLLaMA vs SPLADE++). Reranking the RepLLaMA candidate set also still wins (Table 5 row 3c).\n- Claim: Judgment pools. These listwise runs were not in the TREC pools, so the reported scores are lower bounds.\n  number: Judged@10 0.942 (DL19), 0.983 (DL20)\n  quote: \"the nDCG@10 scores reported here represent a lower bound of what such a run would score if part of the judgment pool.\"\n  where: Section 5\n- Claim: Inference recipe. Window 20, stride 10, over the top 100, with no extra model-specific tuning. The prompt replaces \"[n]\" inside passages with \"(n)\" so it doesn't confuse the identifier format. Output format is \"[4] > [2]\".\n  quote: \"we maintained the same parameters as RankGPT (window size of 20, stride of 10)\"\n  where: Section 3.4\n\nLIMITS\n- Authors concede the out-of-domain gap to RankGPT4 on strong first stages. They also note the 4096 context limit and lower Judged@10.\n- Only English. All tests are passage ranking: MS MARCO v1/v2, two BEIR sets, and NovelEval with 21 queries. There is no latency or cost measurement of sliding-window reranking and no comparison with cross-encoders (monoT5 appears only on NovelEval).\n- Teacher and baseline are gpt-3.5-turbo and gpt-4 (2023). These models are dated.\n- RankGPT results are averaged over 3 or 6 runs because they are non-deterministic.\n- The RepLLaMA vs SPLADE reranking anomaly is only partly explained (\"likely additional factors\").\n- Progressive reranking costs 3x the inference calls. The paper does not report this cost.\n\nBUILDS ON\n- RankGPT (Sun et al., 2023): prompt, sliding window, NovelEval\n- RankVicuna (Pradeep et al., 2023b): two-stage distillation, data augmentation by shuffling, progressive reranking, malformed-output taxonomy\n- LRL (Ma et al., 2023b)\n- Zephyr-beta (Tunstall et al., 2023), on Mistral (Jiang et al., 2023)\n- NEFTune (Jain et al., 2023)\n- RankLLaMA/RepLLaMA (Ma et al., 2023a)\n- Permutation Self-Consistency (Tang et al., 2023)\n- monoBERT (Nogueira and Cho, 2019)\n- duoBERT (Nogueira et al., 2019), duoT5 (Pradeep et al., 2021b)\n- Pointwise/pairwise/listwise lineage: Gao et al., 2021; Zhuang et al., 2022\n- Multi-stage design: Matveeva et al., 2006; Cambazoglu et al., 2010; Wang et al., 2011\n- Data: MS MARCO (Bajaj et al., 2016), BEIR (Thakur et al., 2021), TREC DL 2019-2022\n\nCODE\nPrompt (Figure 1, p. 3):\n<|system|> You are RankLLM, an intelligent assistant that can rank passages based on their relevancy to the query.\n<|user|> I will provide you with {num} passages, each indicated by a numerical identifier []. Rank the passages based on their relevance to the search query: {query}. [1] {passage 1} ... Search Query: {query}. Rank the {num} passages above based on their relevance to the search query. All the passages should be included and listed using identifiers, in descending order of relevance. The output format should be [] > [], e.g., [4] > [2]. Only respond with the ranking results, do not say any word or explain.\n<|assistant|> [9] > [4] > [20] > ... > [13]\nCode repository: https://github.com/castorini/rank_llm\n\nFIGURES: Fig 1 only (the prompt, above). It explains the output format faster than prose. The captions script was not run.\n\nPROBLEMS: None serious. Table text is flattened, and column headers in Tables 1 and 2 are interleaved. I matched columns by order against the row values. The text refers to a \"row (9)\" in Table 1 that doesn't exist (it likely means row 8). Table 3 RankGPT4 \"Repetition\" reads \"0.19\" with no % sign. No embedded instructions found.\n\nSource file: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/02-rag-retrieval/sources/pradeep-2023-rankzephyr.pdf"
+ "type": "empirical",
+ "question": "Can a 7B open-source LLM distilled from RankGPT3.5 and RankGPT4 match or beat RankGPT4 as a zero-shot listwise reranker, and which training and inference choices matter?",
+ "hypothesis": "An open 7B model can close the gap with proprietary RankGPT4 given strategic distillation choices (teacher, hard-negative source, variable windows, shuffled inputs).",
+ "contributions": [
+  "RankZephyr, an open-source 7B listwise reranker (Zephyr-beta) matching or occasionally exceeding RankGPT4",
+  "Progressive reranking (RankZephyr-rho, three passes)",
+  "Ablations on teacher, query selection, ADA2 vs BM25 training orderings, variable window sizes, first-stage retriever, shuffled input",
+  "NovelEval evaluation on uncontaminated queries",
+  "Code and checkpoints released"
+ ],
+ "method": {
+  "summary": "Zephyr-beta 7B is fine-tuned in two stages with instruction distillation of listwise permutations: first on RankGPT3.5 reorderings of BM25 top-20 for 100K MS MARCO queries, then on RankGPT4 reorderings of ADA2 top-20 for 5K random queries with random sub-window augmentation. Inference slides a window of 20 stride 10 over the top 100 candidates, optionally three times.",
+  "task": "zero-shot listwise passage reranking",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MS MARCO v1 training queries (RankGPT3.5 lists from Sun et al. 2023)",
+    "role": "train",
+    "size": "100K queries, top 20 BM25 passages each",
+    "split": null,
+    "source": "MS MARCO v1; lists provided by Sun et al. (2023)",
+    "preprocessing": "malformed generations removed; shuffled input orders added alongside original BM25 orderings"
+   },
+   {
+    "name": "RankGPT4 teacher data",
+    "role": "train",
+    "size": "no more than 5K queries (full model uses 5K random; ablations 1K or 2K)",
+    "split": "random or discriminative query selection",
+    "source": "queries from the 100K set",
+    "preprocessing": "ADA2 top-20 orderings as input; 3 random subsets of p<=20 passages sampled per list for variable windows"
+   },
+   {
+    "name": "TREC DL19, DL20 (MS MARCO v1 passage, ~8.8M passages)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Craswell et al.",
+    "preprocessing": "[n] in passages replaced by (n); ftfy fix_text applied"
+   },
+   {
+    "name": "TREC DL21, DL22 (MS MARCO v2 passage, ~138M passages)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Craswell et al.",
+    "preprocessing": null
+   },
+   {
+    "name": "BEIR NEWS and COVID",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Thakur et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "NovelEval-2306",
+    "role": "eval",
+    "size": "21 questions, four domains, top 20 Google Search candidates judged 0-2",
+    "split": null,
+    "source": "Sun et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RankZephyr",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "Zephyr-beta (Mistral-based) decoder-only",
+    "init_from": "Zephyr-beta (Tunstall et al. 2023), built on Mistral 7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096",
+    "other": {}
+   },
+   {
+    "name": "RankGPT3.5 / gpt-3.5-turbo",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096",
+    "other": {}
+   },
+   {
+    "name": "RankGPT4 / gpt-4",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192",
+    "other": {
+     "note": "described as rumored to be over two orders of magnitude larger"
+    }
+   },
+   {
+    "name": "RankVicuna",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": "Vicuna (LLaMA variant)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RankLLaMA-13B (pointwise) over RepLLaMA",
+    "role": "baseline",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "monoT5 (3B)",
+    "role": "baseline",
+    "params": "3B",
+    "architecture": "T5 pointwise",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "instruction fine-tuning (distillation of teacher permutation outputs)",
+   "optimizer": null,
+   "lr": "5x10^-6 (stage 1; stage 2 not stated)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "effective batch size of 64",
+   "steps": null,
+   "epochs": "three epochs (stage 1); stage 2 not stated",
+   "tokens": null,
+   "seq_len": "4096 context",
+   "precision": "bfloat16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "noisy embeddings (NEFTune, Jain et al. 2023)",
+   "hardware": "eight NVIDIA RTX A6000 GPUs",
+   "compute": null,
+   "wall_clock": "approximately 40 hours (stage 1); stage 2 about a tenth of the effort",
+   "seeds": null,
+   "other": {
+    "library": "axolotl",
+    "stage2": "started from stage-1 model; epochs, lr, batch size not stated"
+   }
+  },
+  "inference": {
+   "decoding": "deterministic (same input gives same output); decoding settings not given",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "RankZephyr one run; RankGPT3.5 averaged over six runs, RankGPT4 over three; shuffle experiments six shuffled orderings with 99% CI",
+   "prompting": "zero-shot RankLLM listwise prompt (Fig 1), no few-shot",
+   "retrieval": "first stage BM25, SPLADE++ ED, RepLLaMA or ADA2; top 100 (or 20); sliding window 20 stride 10",
+   "parameters": {
+    "window": "20",
+    "stride": "10",
+    "progressive_passes": "3 for RankZephyr-rho"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "nDCG@10",
+     "definition": "normalized discounted cumulative gain at cutoff 10",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "MAP@100",
+     "definition": "mean average precision at cutoff 100",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Judged@10",
+     "definition": "share of top 10 with relevance judgments",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BM25",
+    "ADA2",
+    "SPLADE++ ED",
+    "RepLLaMA",
+    "RankLLaMA-13B",
+    "RankGPT3.5",
+    "RankGPT4",
+    "RankGPT4 PSC (Tang et al. 2023)",
+    "RankVicuna",
+    "monoT5 3B"
+   ],
+   "protocol": "no significance tests except 99% CI in Table 7; GPT models averaged over repeated runs because non-deterministic"
+  },
+  "availability": {
+   "code": "https://github.com/castorini/rank_llm",
+   "weights": "model checkpoints stated as shared; no URL given",
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "RankZephyr listwise reranking prompt",
+    "text": "<|system|> You are RankLLM, an intelligent assistant that can rank passages based on their relevancy to the query. <|user|> I will provide you with {num} passages, each indicated by a numerical identifier []. Rank the passages based on their relevance to the search query: {query}. [1] {passage 1} [2] {passage 2} ... [{num}] {passage {num}} Search Query: {query}. Rank the {num} passages above based on their relevance to the search query. All the passages should be included and listed using identifiers, in descending order of relevance. The output format should be [] > [], e.g., [4] > [2]. Only respond with the ranking results, do not say any word or explain. <|assistant|>",
+    "where": "Figure 1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RankZephyr beats its RankGPT4 teacher on DL19 reranking SPLADE++ ED top 100",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.7816",
+   "unit": "nDCG@10",
+   "baseline_value": "0.7464 (RankGPT4)",
+   "n": null,
+   "setup": "MS MARCO v1 DL19/DL20, SPLADE++ ED top-100 candidates, sliding window 20/stride 10, full RankZephyr (Zephyr-beta 7B, GPT3.5 then GPT4 distillation); RankGPT4 (gpt-4) averaged over 3 runs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (7) RankZephyr, column DL19"
+  },
+  {
+   "claim": "RankZephyr beats RankGPT4 on DL20 reranking SPLADE++ ED top 100",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.8159",
+   "unit": "nDCG@10",
+   "baseline_value": "0.7076 (RankGPT4)",
+   "n": null,
+   "setup": "MS MARCO v1 DL19/DL20, SPLADE++ ED top-100 candidates, sliding window 20/stride 10, full RankZephyr (Zephyr-beta 7B, GPT3.5 then GPT4 distillation); RankGPT4 (gpt-4) averaged over 3 runs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (7) RankZephyr, column DL20"
+  },
+  {
+   "claim": "Three progressive passes (RankZephyr-rho) give the best DL19 and DL20 scores",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.7855 / 0.8255",
+   "unit": "nDCG@10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS MARCO v1 DL19/DL20, SPLADE++ ED top-100 candidates, sliding window 20/stride 10, full RankZephyr (Zephyr-beta 7B, GPT3.5 then GPT4 distillation); RankGPT4 (gpt-4) averaged over 3 runs; three sequential sliding passes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (8) RankZephyr-rho, columns DL19, DL20"
+  },
+  {
+   "claim": "On DL22 (MS MARCO v2) RankZephyr trails RankGPT4 when reranking SPLADE++ ED top 100",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.6692",
+   "unit": "nDCG@10",
+   "baseline_value": "0.7175 (RankGPT4)",
+   "n": null,
+   "setup": "MS MARCO v2 DL22, SPLADE++ ED top-100, window 20/10, out of domain",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (7) RankZephyr, column DL22"
+  },
+  {
+   "claim": "On DL21 it also trails RankGPT4 with SPLADE++ ED",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.7598",
+   "unit": "nDCG@10",
+   "baseline_value": "0.7721 (RankGPT4)",
+   "n": null,
+   "setup": "MS MARCO v2 DL21, SPLADE++ ED top-100",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row (7), column DL21"
+  },
+  {
+   "claim": "With BM25 as first stage (lower-quality candidates) RankZephyr beats RankGPT4 on DL22",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.5146",
+   "unit": "nDCG@10",
+   "baseline_value": "0.5078 (RankGPT4)",
+   "n": null,
+   "setup": "MS MARCO v2 DL22, BM25 top-100, window 20/10",
+   "note": "Authors: rho beats RankGPT4 in three of four tasks with BM25; DL21 and COVID RankGPT4 higher for plain RankZephyr",
+   "where": "Table 6",
+   "table": "Table 6, row (4) RankZephyr, column DL22"
+  },
+  {
+   "claim": "Shuffled SPLADE++ ED input costs RankZephyr 0.0146 nDCG@10 on DL19 (0.7816 to 0.7670) but RankGPT3.5 0.1476 (0.7504 to 0.6028)",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.7670",
+   "unit": "nDCG@10",
+   "baseline_value": "0.7816 unshuffled",
+   "n": null,
+   "setup": "DL19, SPLADE++ ED top-100, mean over six shuffled orderings with 99% CI; RankGPT3.5 = gpt-3.5-turbo; deltas are our arithmetic from the table",
+   "note": "With BM25 as first stage the drop is 0.7420 to 0.7378 (RankZephyr) and 0.6855 to 0.6158 (RankGPT3.5), i.e. 0.004 vs 0.070",
+   "where": "Table 7",
+   "table": "Table 7, row (2d) Shuf. SPLADE++ ED, column DL19 nDCG@10"
+  },
+  {
+   "claim": "Shuffled SPLADE++ ED, RankGPT3.5 DL19",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "0.6028",
+   "unit": "nDCG@10",
+   "baseline_value": "0.7504 unshuffled",
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row (1d) RankGPT3.5 Shuf. SPLADE++ ED, column DL19 nDCG@10"
+  },
+  {
+   "claim": "On NovelEval-2306 RankZephyr has the best nDCG@1",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@1",
+   "value": "0.9286",
+   "unit": "nDCG@10",
+   "baseline_value": "0.8571 (RankGPT4)",
+   "n": null,
+   "setup": "NovelEval-2306: 21 queries, Google Search top 20, single window, no progressive reranking",
+   "note": "RankGPT4 is higher on nDCG@5 (0.8749 vs 0.8615) and nDCG@10 (0.9045 vs 0.8934)",
+   "where": "Table 8",
+   "table": "Table 8, row (5) RankZephyr, column nDCG@1"
+  },
+  {
+   "claim": "Variable-window training makes RankZephyr emit well-formed output at window 2/1 and 10/5",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of OK responses",
+   "value": "100.00%",
+   "unit": "%",
+   "baseline_value": "95.11% (RankGPT4 20/10)",
+   "n": null,
+   "setup": "BM25 top-100, single run (deterministic); RankGPT4 averaged over three runs",
+   "note": "Fixed-window model at 10/5 gives 38.74% OK",
+   "where": "Table 3",
+   "table": "Table 3, rows (3a),(3b), column OK"
+  },
+  {
+   "claim": "A better first stage gives better reranking; gains shrink on stronger candidates (BM25 +45%-55% vs SPLADE++ ED +7%-20%)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "nDCG@10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DL19/DL20, RankZephyr top-100, Table 5",
+   "note": null,
+   "where": "Section 6.3",
+   "quote": "while reranking the top 100 BM25 candidates with RankZephyr results in a 45%–55% im- provement in effectiveness across various metrics, the improvement is more modest with SPLADE++ ED, ranging from 7%–20% for the same metrics."
+  },
+  {
+   "claim": "Teacher: GPT4 distillation on only 5K queries with ADA2 orderings was chosen; GPT4 data for 100K queries estimated over $10K",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "nDCG@10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cost estimate by authors",
+   "note": null,
+   "where": "Section 3.3",
+   "quote": "estimated at over $10K USD"
+  },
+  {
+   "claim": "Stage 1 training took about 40 hours on eight A6000 GPUs",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "nDCG@10",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zephyr-beta 7B, 100K queries, 3 epochs",
+   "note": null,
+   "where": "Section 3.2",
+   "quote": "approximately 40 hours"
+  }
+ ],
+ "limits": [
+  "Underperforms RankGPT4 out of domain (DL21, DL22, NEWS, COVID) when reranking SPLADE++ ED; authors say more work needed for a consistently better model",
+  "Authors suggest 4096 vs 8192 context and 2-4 points lower Judged@10 as plausible explanations",
+  "nDCG@10 for listwise runs is a lower bound because unjudged passages count as non-relevant (Judged@10 0.942 and 0.983 for DL19/DL20)",
+  "Teacher data limited to 5K GPT4 queries by cost",
+  "No latency, throughput or cost figures; English passage ranking only; NovelEval has only 21 queries",
+  "No separate Limitations section; no appendix",
+  "Stage-2 hyperparameters (lr, epochs, batch size) and optimizer not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prompt-decoder",
+   "definition": "LLM-based reranker operating zero-shot, contrasted with BERT-style cross-encoders",
+   "where": "Section 2"
+  },
+  {
+   "term": "RankZephyr-rho",
+   "definition": "RankZephyr with progressive reranking, three sequential sliding passes",
+   "where": "Section 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RankVicuna",
+   "year": 2023,
+   "arxiv": "2309.15088",
+   "relation": "extends",
+   "note": "recipe followed with Zephyr instead of Vicuna",
+   "quote": null
+  },
+  {
+   "work": "Is ChatGPT good at search? (RankGPT, NovelEval)",
+   "year": 2023,
+   "arxiv": "2304.09542",
+   "relation": "uses-method",
+   "note": "prompt, teacher, training queries, NovelEval",
+   "quote": null
+  },
+  {
+   "work": "Zephyr: Direct distillation of LM alignment",
+   "year": 2023,
+   "arxiv": "2310.16944",
+   "relation": "uses-method",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "Mistral 7B",
+   "year": 2023,
+   "arxiv": "2310.06825",
+   "relation": "related",
+   "note": "Zephyr base",
+   "quote": null
+  },
+  {
+   "work": "NEFTune",
+   "year": 2023,
+   "arxiv": "2310.05914",
+   "relation": "uses-method",
+   "note": "noisy embeddings in training",
+   "quote": null
+  },
+  {
+   "work": "Fine-tuning LLaMA for multi-stage text retrieval (RepLLaMA, RankLLaMA)",
+   "year": 2023,
+   "arxiv": "2310.08319",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Found in the middle: Permutation self-consistency",
+   "year": 2023,
+   "arxiv": "2310.07712",
+   "relation": "baseline",
+   "note": "RankGPT4 PSC row reported from it",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot listwise document reranking with a large language model (LRL)",
+   "year": 2023,
+   "arxiv": "2305.02156",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BEIR",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "NEWS, COVID",
+   "quote": null
+  },
+  {
+   "work": "MS MARCO / TREC DL 2019-2022",
+   "year": 2016,
+   "arxiv": "1611.09268",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Vector search with OpenAI embeddings: Lucene is all you need (ADA2)",
+   "year": 2023,
+   "arxiv": "2308.14963",
+   "relation": "uses-data",
+   "note": "ADA2 retriever",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "The reranking prompt and sample generation for RankZephyr.",
+   "page": 2,
+   "why": "shows exact prompt and output format"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "nDCG@10 on DL19-DL22, NEWS, COVID for different reranking pipelines",
+   "page": 4,
+   "why": "main result and the in/out-of-domain split"
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Shuffled-input robustness, RankGPT3.5 vs RankZephyr",
+   "page": 7,
+   "why": "robustness claim"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction lists table cells one per line; column assignment checked against Table 1 and Table 6 BM25 rows (consistent). Table 3 prints RankGPT4 repetition as '0.19' without % sign. Table 1 text mentions 'row (9)' that does not exist (should be row 8)."
+ ]
 }

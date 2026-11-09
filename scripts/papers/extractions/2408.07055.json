@@ -1,0 +1,536 @@
+{
+ "schema": 1,
+ "key": "2408.07055",
+ "pdf": "generative-ai/05-RL/sources/bai-2024-longwriter.pdf",
+ "bib": {
+  "title": "LONGWRITER: UNLEASHING 10,000+ WORD GENERATION FROM LONG CONTEXT LLMS",
+  "authors": [
+   "Yushi Bai",
+   "Jiajie Zhang",
+   "Xin Lv",
+   "Linzhi Zheng",
+   "Siqi Zhu",
+   "Lei Hou",
+   "Yuxiao Dong",
+   "Jie Tang",
+   "Juanzi Li"
+  ],
+  "first_author": "Bai",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.07055",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 59067,
+  "chars_total": 59067,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why do long-context LLMs fail to generate outputs beyond about 2,000 words, and can long-output SFT data fix it?",
+ "hypothesis": "The output length limit is due to the scarcity of long-output examples in SFT data ('one can only speak as long as one has read').",
+ "contributions": [
+  "Analysis of generation length limits (bounded by SFT output length)",
+  "AgentWrite plan-then-write pipeline for building long-output SFT data (LongWriter-6k)",
+  "Scaling output window to 10,000+ words; DPO further helps; LongBench-Write benchmark"
+ ],
+ "method": {
+  "summary": "Probe output length limits with LongWrite-Ruler, show SFT max output length caps generation, build LongWriter-6k with GPT-4o AgentWrite (plan then sequential paragraph writing), SFT GLM-4-9B and Llama-3.1-8B on it plus 180k general SFT, then DPO on LongWriter-9B. Evaluate on LongBench-Write with length score and GPT-4o quality score.",
+  "task": "long-form generation SFT and DPO",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LongWriter-6k",
+    "role": "train",
+    "size": "6,000 examples, outputs 2k-32k words",
+    "split": null,
+    "source": "3,000 instructions from GLM-4 SFT data (mostly Chinese) + 3,000 from WildChat-1M (mostly English), selected by GPT-4o; responses by AgentWrite with GPT-4o",
+    "preprocessing": "rule-based filtering of toxic and scraping instructions; ~0.2% removed (too short or too many plan steps); 'paragraph n' identifiers removed; >95% of selected instructions manually verified as needing thousands of words"
+   },
+   {
+    "name": "GLM-4 chat SFT subset",
+    "role": "train",
+    "size": "180k examples",
+    "split": null,
+    "source": "GLM-4 SFT data",
+    "preprocessing": "for pilot study filtered to max output 500/1000/2000 words (72/98/99.9% kept)"
+   },
+   {
+    "name": "GLM-4 chat DPO data",
+    "role": "train",
+    "size": "~50k entries plus 4k long-writing pairs",
+    "split": null,
+    "source": "GLM-4",
+    "preprocessing": "for each instruction sample 4 outputs from LongWriter-9B, score per Hou et al. 2024 plus length score Eq.1; best = chosen, random one of other three = rejected"
+   },
+   {
+    "name": "LongBench-Write",
+    "role": "eval",
+    "size": "120 prompts (60 zh, 60 en); lengths [0,500)=26, [500,2000)=36, [2000,4000)=31, [4000,20000)=27",
+    "split": null,
+    "source": "authors' collected user prompts; avg input 88, avg required output 2,772, median 1,550 words",
+    "preprocessing": null
+   },
+   {
+    "name": "LongWrite-Ruler",
+    "role": "eval",
+    "size": "8 instructions x L in {1000,2000,5000,10000,20000,30000} = 48 prompts",
+    "split": null,
+    "source": "authors",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GLM-4-9B",
+    "role": "base",
+    "params": "9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k tokens",
+    "other": {}
+   },
+   {
+    "name": "Llama-3.1-8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128k tokens",
+    "other": {}
+   },
+   {
+    "name": "LongWriter-9B-DPO",
+    "role": "proposed",
+    "params": "9B",
+    "architecture": null,
+    "init_from": "LongWriter-9B (SFT)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "128,000 tokens",
+    "other": {
+     "data generator": "AgentWrite",
+     "version": "gpt-4o-2024-05-13"
+    }
+   },
+   {
+    "name": "Claude 3.5 Sonnet, GPT-4 Turbo, GPT-4o mini, GLM-4-9B-chat, Llama-3.1-8B/70B-Instruct, Mistral-Large-Instruct, Suri-I-ORPO",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "SFT with token-averaged loss, packing training with loss weighting (Bai et al. 2024a); then DPO",
+   "optimizer": null,
+   "lr": "1e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8",
+   "steps": "SFT approx 2,500-3,000 steps; DPO 250 steps",
+   "epochs": "4 (SFT)",
+   "tokens": null,
+   "seq_len": "packing length 32k",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "1 node 8xH800 80G, DeepSpeed+ZeRO3+CPU offloading",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "dpo_hyperparameters": "follows Hou et al. 2024; lr, beta not stated",
+    "loss_averaging": "per token across batch, not per sequence"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.5",
+   "top_p": null,
+   "max_tokens": "32k (LongWrite-Ruler open models); 32,768 (LongBench-Write open models); API maximum for proprietary",
+   "samples": "one output per prompt; no seeds stated",
+   "prompting": "AgentWrite plan prompt then per-paragraph write prompt with prior text",
+   "retrieval": null,
+   "parameters": {
+    "AgentWrite paragraph length": "200-1000 words per paragraph",
+    "DPO samples per instruction": "4"
+   },
+   "other": {
+    "NLL test": "~100 outputs >8,192 tokens by 3 LongWriter models, using GLM-4-9B and Llama-3.1-8B"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Sl",
+     "definition": "100*max(0,1-(l'/l-1)/3) if l'>l; 100*max(0,1-(l/l'-1)/2) if l'<=l; words (chars for Chinese)",
+     "unit": "0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "Sq",
+     "definition": "GPT-4o judge mean over six dimensions (Relevance, Accuracy, Coherence, Clarity, Breadth and Depth, Reading Experience), 1-5 integers, length ignored",
+     "unit": "scaled 0-100",
+     "higher_is_better": true
+    },
+    {
+     "name": "S bar",
+     "definition": "mean of Sl and Sq",
+     "unit": "0-100",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "proprietary and open-source models in Table 3",
+    "Suri-I-ORPO"
+   ],
+   "protocol": "single run, GPT-4o judge (self-judging bias acknowledged), manual pairwise win/loss for GPT-4o and 3 LongWriter models"
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/LongWriter",
+   "weights": "https://github.com/THUDM/LongWriter",
+   "data": "https://github.com/THUDM/LongWriter"
+  },
+  "prompts": [
+   {
+    "purpose": "AgentWrite plan",
+    "text": "I need you to help me break down the following long-form writing instruction into multiple subtasks. Each subtask will guide the writing of one paragraph in the essay, and should include the main points and word count requirements for that paragraph. ... each subtask's paragraph should be no less than 200 words and no more than 1000 words. Do not output any other content.",
+    "where": "Sec 3.1 (abridged)"
+   },
+   {
+    "purpose": "AgentWrite write step",
+    "text": "You are an excellent writing assistant. I will give you an original writing instruction and my planned writing steps. I will also provide you with the text I have already written. ...",
+    "where": "Sec 3.2 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use a batch size of 8, a learning rate of 1e-5, and a packing length of 32k.",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Maximum output length of GLM-4-9B tracks the longest outputs in its SFT data (cap 500/1000/2000 words gives about 600/900/1,800 words).",
+   "kind": "measured",
+   "source": null,
+   "metric": "max output length",
+   "value": "600/900/1800",
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLM-4-9B base, 180k GLM-4 chat SFT data filtered to max output 500/1,000/2,000 words (72%/98%/99.9% of data); LongWriter-Ruler test.",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "reaching approximately 600, 900, and 1,800 words, respectively"
+  },
+  {
+   "claim": "All tested models (4 open, 4 proprietary) cap at about 2k words on LongWrite-Ruler.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max output length",
+   "value": "2000",
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 instructions x 6 lengths = 48 prompts, temperature 0.5.",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "the maximum output length of all models is around 2k words"
+  },
+  {
+   "claim": "AgentWrite extends GPT-4o output from 2k to about 20k words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max output length",
+   "value": "20000",
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongWrite-Ruler, GPT-4o with plan-then-write.",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "AgentWrite successfully extends the output length of GPT-4o from a maximum of 2k words to approximately 20k words"
+  },
+  {
+   "claim": "Length score Sl on [4k,20k) rises from 0 to 80.3 when LongWriter-6k is added to GLM-4-9B SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sl [4k,20k)",
+   "value": "80.3",
+   "unit": "score 0-100",
+   "baseline_value": "0",
+   "n": null,
+   "setup": "LongBench-Write 120 prompts; LongWriter-9B vs '-LongWriter-6k data' (general SFT only).",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows LongWriter-9B and -LongWriter-6k data, column [4k,20k) Sl"
+  },
+  {
+   "claim": "Overall quality Sq rises from 77.1 to 82.3 with LongWriter-6k data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sq overall",
+   "value": "82.3",
+   "unit": "score 1-5 scaled to 100",
+   "baseline_value": "77.1",
+   "n": null,
+   "setup": "LongBench-Write all 120 prompts, GPT-4o judge, GLM-4-9B.",
+   "note": "Text says +5%.",
+   "where": "Table 4",
+   "table": "Table 4, rows LongWriter-9B and -LongWriter-6k data, column Overall Sq"
+  },
+  {
+   "claim": "DPO raises overall score from 80.5 to 84.0 (Sl +4%, Sq +3%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall S",
+   "value": "84.0",
+   "unit": "score",
+   "baseline_value": "80.5",
+   "n": null,
+   "setup": "LongWriter-9B vs LongWriter-9B-DPO on LongBench-Write; DPO data = ~50k GLM-4 chat DPO + 4k long-writing pairs, 250 steps.",
+   "note": null,
+   "where": "Sec 4.3.1, Table 3",
+   "quote": "DPO significantly improves both Sl (+4%) and Sq (+3%) scores",
+   "table": "Table 3, rows LongWriter-9B and LongWriter-9B-DPO, column Overall S"
+  },
+  {
+   "claim": "Humans prefer DPO model over LongWriter-9B in 58% of cases; DPO model ties GPT-4o.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human win rate",
+   "value": "58",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual pairwise annotation on LongBench-Write outputs.",
+   "note": "Number of annotators not stated.",
+   "where": "Sec 4.3.1, Fig 9",
+   "quote": "humans prefer the DPO-trained model over LongWriter-9B in 58% of the cases"
+  },
+  {
+   "claim": "Plan-augmented SFT data does not significantly help: Sl slightly up, quality down.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall S",
+   "value": "81.4",
+   "unit": "score",
+   "baseline_value": "80.5",
+   "n": null,
+   "setup": "GLM-4-9B, plan prepended to LongWriter-6k outputs.",
+   "note": "Overall S 81.4 is above LongWriter-9B 80.5; Sl 80.9 vs 78.6, Sq 81.8 vs 82.3.",
+   "where": "Table 4",
+   "table": "Table 4, row w/ Plan-augmented data, columns Overall S, Sl, Sq"
+  },
+  {
+   "claim": "Instruction-backtranslation data (6k) fails to extend length or quality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Sl [4k,20k)",
+   "value": "0",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLM-4-9B, 6k pretraining texts 2k-32k words with GLM-4-Long instructions.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row w/ Backtranslation instr., column [4k,20k) Sl"
+  },
+  {
+   "claim": "Quality for outputs >=4k words: AgentWrite parallel hurts Coherence (-6%) vs sequential.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o with AgentWrite sequential vs parallel.",
+   "note": null,
+   "where": "Sec 3.3, Table 6",
+   "quote": "it impairs the output quality of AgentWrite, especially in terms of Coherence (-6%)"
+  },
+  {
+   "claim": "LongWriter-9B-DPO outscores all proprietary models in overall S.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall S",
+   "value": "84.0",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongBench-Write, temp 0.5; Claude 3.5 Sonnet 80.7, GPT-4o 78.6.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row LongWriter-9B-DPO, column Overall S"
+  },
+  {
+   "claim": "LongWriter models' maximum generation is between 10k and 20k words; fewer than 100 training samples exceed 20k words.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongWrite-Ruler on LongWriter models.",
+   "note": null,
+   "where": "Sec 4.3.1",
+   "quote": "there are less than 100 data points with output lengths of 20k words or greater"
+  },
+  {
+   "claim": "Over 1% of WildChat prompts request outputs above 2,000 words.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WildChat user logs.",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "over 1% of user prompts explicitly request outputs exceeding this limit"
+  }
+ ],
+ "limits": [
+  "Authors: LongWriter outputs max 10k-20k words; longer needs more long-output SFT data.",
+  "AgentWrite outputs occasionally contain minor repetitions and summarization.",
+  "GPT-4o is generator and judge (self-judging bias noted for GPT-4o row).",
+  "Single run, no seeds or variance; 120-prompt benchmark; DPO optimizer and beta not stated.",
+  "Human annotation details not given."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "AgentWrite",
+   "definition": "plan-then-write divide-and-conquer pipeline producing long outputs with off-the-shelf LLMs",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Direct Preference Optimization",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DPO for LongWriter-9B-DPO",
+   "quote": null
+  },
+  {
+   "work": "ChatGLM-RLHF",
+   "year": 2024,
+   "arxiv": "2404.00934",
+   "relation": "uses-method",
+   "note": "DPO recipe and scoring",
+   "quote": null
+  },
+  {
+   "work": "LongAlign",
+   "year": 2024,
+   "arxiv": "2401.18058",
+   "relation": "uses-method",
+   "note": "packing with loss weighting",
+   "quote": null
+  },
+  {
+   "work": "Suri",
+   "year": 2024,
+   "arxiv": "2406.19371",
+   "relation": "baseline",
+   "note": "only prior long-form aligned model",
+   "quote": null
+  },
+  {
+   "work": "WildChat",
+   "year": 2024,
+   "arxiv": "2405.01470",
+   "relation": "uses-data",
+   "note": "instructions",
+   "quote": null
+  },
+  {
+   "work": "Following length constraints in instructions",
+   "year": 2024,
+   "arxiv": "2406.17744",
+   "relation": "related",
+   "note": "DPO improves length following",
+   "quote": null
+  },
+  {
+   "work": "Self-alignment with instruction backtranslation",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ablation baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "LongWriter-Ruler test demonstrates a maximum output length limitation of approximately 2k words for all models tested.",
+   "page": 3,
+   "why": "shows universal 2k cap"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "LongWriter-Ruler test of GLM-4-9B trained on SFT datasets of different maximum output lengths.",
+   "page": 3,
+   "why": "causal evidence"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "AgentWrite plan-then-write pipeline.",
+   "page": 4,
+   "why": "pipeline"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue not printed in PDF ('Preprint'); ICLR 2025 cannot be confirmed from this text.",
+  "Table cells flattened by extraction; columns reconstructed from row order."
+ ]
+}

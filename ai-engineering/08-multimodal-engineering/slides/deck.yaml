@@ -1,4 +1,4 @@
-# Multimodal Engineering lecture deck. Covers notes 01-07.
+# Multimodal Engineering lecture deck. Covers notes 01-07, including 02b and 06b.
 # Build: make slides PILLAR=ai-engineering/08-multimodal-engineering STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: an invoice assistant that meets photos, PDFs, charts, phone calls and generated
@@ -40,7 +40,7 @@ parts:
           - {label: Patch encoder, sub: "ViT, as in CLIP", accent: "1E3A5F"}
           - {label: Connector, sub: "linear or MLP", accent: "1E3A5F"}
           - {label: Language model, sub: "tokens among words", accent: "0F7490"}
-        caption: "LLaVA-1.5 at 336x336 uses 576 image tokens. An A4 scan at 300 dpi would need more than seventy times as many patches."
+        caption: "LLaVA-1.5 at 336x336 uses 576 image tokens. An A4 scan at 300 dpi would need over seventy times as many."
         takeaway: Images cost context as text does, and cost grows with area.
         source: notes/01-image-input.md
         notes: >-
@@ -58,7 +58,7 @@ parts:
           - [Encoder size, "ViT-L to ViT-H, double the parameters", "usually under +1%"]
           - [Connector, "design, with visual tokens fixed", "comparatively little"]
         highlight: [0]
-        takeaway: "Read this as a ranking of levers for research models, not a forecast for your task."
+        takeaway: "Resolution moved the score more than encoder size, but treat it as a ranking of levers for research models, not a forecast for your task."
         source: notes/01-image-input.md
       - layout: code
         title: A downscale erases the difference between digits
@@ -137,7 +137,7 @@ parts:
           - {label: "Hard region?", sub: "tables, formulas", accent: "D4621A"}
           - {label: Validate, sub: "arithmetic and second route", accent: "0F7490"}
         caption: "OCR on a born-digital page costs time and can add errors the text layer did not have."
-        takeaway: Send only the hard pages to the expensive route.
+        takeaway: Send only pages with no text layer, tables or formulas, or a failed check to the expensive route.
         source: notes/02-document-understanding.md
       - layout: table
         title: The slow page sets your worker size
@@ -173,7 +173,7 @@ parts:
           - "**Misread digit** fails the total check"
           - "**Dropped row** fails the line item check"
           - "Both outputs were valid JSON"
-        takeaway: A failed check says something is wrong, then you retry with a crop, try a second route, or ask a person.
+        takeaway: "A failed check means something is wrong: retry with a crop, try a second route, or ask a person."
         source: notes/02-document-understanding.md
       - layout: compare
         title: Two scores, for two decisions
@@ -255,14 +255,14 @@ parts:
           - "**Arithmetic can't see** a vendor name or an IBAN"
           - "**Those fields** need their own checks, such as IBAN check digits or a supplier list"
           - "**Normalisation** is part of your metric, so write the rule down"
-        takeaway: Each field the arithmetic can't reach needs a check of its own.
+        takeaway: A vendor name or IBAN needs its own check, such as IBAN check digits or a supplier list.
         source: notes/02-document-understanding.md
         notes: >-
           These are first-attempt counts. No false alarms, and the two misses are the point, because both are
           fields no sum touches. The vendor's 1.000 is partly the scoring rule. OCR ran the words of the bold
           heading together on many scans, and only 0.542 were right character for character.
       - layout: image
-        title: Retrying before review kept the F1 at about 23 times less cost
+        title: "Retry before review: 23 times cheaper, same F1"
         recall: "When is a failed check worth the most, and why?"
         kicker: On assumed prices
         image: ../sources/images/docs-invoice-route-cost.png
@@ -270,7 +270,6 @@ parts:
         bullets:
           - "**Review alone:** 25.6% of documents, 0.383 per document"
           - "**Retry first:** 1.1% reviewed, 0.0167 per document"
-          - "**A vision model** this good pays for itself below about 1.43 per retried document"
         takeaway: People are the cost, so a failed check is worth most when it triggers another attempt first.
         source: notes/02-document-understanding.md
         notes: >-
@@ -282,7 +281,7 @@ parts:
           OCR, and the seconds vary with your machine.
 
       - layout: table
-        title: Labels, pixels and saving each outweighed 16× more data
+        title: Three silent faults outweighed 16× more training data
         recall: Before you label more data for a fine-tuned vision-language model, what should you check, and why?
         kicker: When prompts and routes fail
         lead: "SmolVLM-256M, LoRA, 200 steps on generated invoices, 3 seeds. Frozen scored **0.021**, and LoRA **0.933**."
@@ -294,7 +293,7 @@ parts:
           - ["Pixels", "512 → 1024 longest edge", "0.496 → 0.969", "Small print, about 3.4× memory"]
           - ["Saving", "Attached → merged into 4-bit", "0.910 → 0.000", "All 3 seeds, only a rounding warning"]
         highlight: [3]
-        takeaway: Read one batch's labels, look at the page as the model gets it, and score after every conversion before adding data.
+        takeaway: Before adding data, check the labels, the pixels the model sees, and the score after saving.
         source: notes/02b-fine-tuning-a-vision-language-model.md
         notes: >-
           Now a customer's scans must stay on their machines, with about 4 GB to spare, and the local OCR route misreads
@@ -369,7 +368,7 @@ parts:
           - {label: Late interaction, sub: "a few hundred pages", accent: "D4621A"}
           - {label: Page image, sub: "to the reader", accent: "0F7490"}
         caption: "Pooling at factor 3 cut vectors by 66.7% and kept 97.8% of performance on average, with the text-dense set a clear outlier."
-        takeaway: Recall at a few hundred is a much easier job than precision at five.
+        takeaway: Scanning every patch of every page is too costly, so narrow with a cheap first stage and rerank a few hundred pages with patches.
         source: notes/03-multimodal-rag.md
 
   - title: The customer who phones
@@ -436,7 +435,7 @@ parts:
           - "Stop playback and discard unspoken text"
           - "Flag the interruption so the model can see it"
           - "A small state machine can be regression tested"
-        takeaway: Otherwise the agent believes it read out a policy that the caller never heard.
+        takeaway: If history keeps unspoken text, the agent believes it read out a policy the caller never heard, so keep only what was played.
         source: notes/04-speech-and-voice-agents.md
       - layout: bullets
         title: WER can pass the worst possible error
@@ -449,12 +448,12 @@ parts:
           - "**Report per group** across accents, handsets and noise"
         aside:
           title: Clean audio flatters
-          body: "Conformer reached 2.1% WER on clean LibriSpeech, and Whisper an unremarkable 2.5. Whisper held up far better on CHiME-6 and TED talks. Your callers aren't reading books."
+          body: "Conformer: 2.1% WER on clean LibriSpeech; Whisper 2.5, but far better on CHiME-6 and TED talks."
         takeaway: Read back any value you will act on, and confirm it before calling the tool.
         source: notes/04-speech-and-voice-agents.md
 
   - title: The picture nobody can reproduce
-    summary: Undoing noise · Samplers · Other families · Controls · Provenance
+    summary: Undoing noise · Samplers · Other families · Controls · Provenance · Editing · Customizing
     notes: >-
       Marketing wants illustrations for the help pages. The same prompt gives a different image each time,
       and nobody can make the one they liked with a small change.
@@ -534,6 +533,66 @@ parts:
         takeaway: When someone later asks for a variation, it is too late to find out the record is incomplete.
         source: notes/06-generating-images-and-video.md
 
+      - layout: table
+        title: Mask, control image or img2img?
+        recall: "How do you choose between a mask, a control image and img2img to fix a generated image?"
+        kicker: Editing
+        lead: "Re-rolling the prompt changes everything. Change only what you mean to."
+        header: [Tool, Use when, Setting to start with]
+        widths: [2.4, 4, 3.6]
+        highlight: [0]
+        rows:
+          - [Mask (inpainting), One region is wrong, "Denoising **0.2 to 0.4**; inpaint area Whole picture"]
+          - [Control image, "Structure such as pose or layout must hold", Match the preprocessor to the ControlNet model]
+          - [img2img, Restyle while keeping the composition, Low denoising strength]
+        takeaway: Edit with a mask when one region changes, a control image to fix structure, and img2img to restyle.
+        source: notes/06b-editing-and-customizing-images.md
+        notes: >-
+          The invoice assistant's illustrator has a picture that is nearly right. Text-to-image controls style well
+          and composition badly. For inpainting, describe the whole image in the prompt but change the subject to what
+          should appear in the mask, and fix one artifact per pass. Above about 0.4 denoising, globally inconsistent
+          elements and hallucinations start to appear. The preprocessor and the ControlNet model must match each other,
+          and the model must match the base model's version. Segment Anything produces the masks from one to three
+          clicked points.
+      - layout: image
+        title: A ControlNet can't damage the model it steers
+        recall: "Why can't training a ControlNet damage the base model?"
+        kicker: Zhang et al., 2023
+        image: ../sources/images/zhang-controlnet-fig2.png
+        caption: "The original block is locked; a trainable copy receives the condition, through zero-initialised convolutions. Zhang et al. (2023), Fig. 2."
+        bullets:
+          - "Locks Stable Diffusion and trains a **copy** of its encoder on the map"
+          - "Zero convolutions start at zero, so step 0 leaves the base output unchanged"
+          - "Canny for detailed scenes, depth for layout, OpenPose for a pose"
+        takeaway: Zero-initialised connections leave the base model's output unchanged at step 0, so training the control copy can't damage it.
+        source: notes/06b-editing-and-customizing-images.md
+        notes: >-
+          The model ignores the map, then follows it abruptly, usually within 10K steps. Control weight acts like a
+          prompt weight for the map, and start and end control steps limit when it applies. Boxes are a lighter
+          control: GLIGEN uses the same freeze-and-add idea with a gated attention layer whose gate is initialised
+          to zero.
+      - layout: table
+        title: Customize a model only when prompting can't name the subject
+        recall: "What do you do before and after training a customized image model?"
+        lead: "DreamBooth is the book's most common method; raters preferred it to Textual Inversion 68% to 22%."
+        kicker: Customizing
+        header: [Method, What it trains, Output]
+        widths: [2.6, 5, 2.4]
+        highlight: [0]
+        rows:
+          - [DreamBooth, All U-Net weights on one subject bound to a rare token, "A full checkpoint (~2 GB at fp16 for SD 1.5)"]
+          - [Textual Inversion, "A new token embedding; the model is frozen", A few KB]
+          - [LoRA, Low-rank update matrices on the frozen attention weights, Tens to hundreds of MB]
+        takeaway: Try a reference image or a control image first, then train one concept per model and record the base and adapter hashes.
+        source: notes/06b-editing-and-customizing-images.md
+        notes: >-
+          Training a base model is out of reach, so customization starts from one. DreamBooth is the most common
+          method in the book, and in the paper's comparison raters preferred it to Textual Inversion 68% to 22%.
+          LoRA has since become the usual way to share a style or subject fine-tune. It learns a low-rank update that
+          can be merged back into the weights. Use a trigger token that means nothing and a class prompt for the prior
+          preservation images; the class noun matters more than the token. Record the base model hash, the adapter
+          hash, the trigger token, the class prompt and the training images.
+
   - title: The score that rewarded guessing
     summary: Shortcuts · Paired images · CircularEval · POPE · Scorecard
     notes: >-
@@ -585,6 +644,7 @@ parts:
         source: notes/07-evaluating-multimodal-systems.md
       - layout: table
         title: One scorecard, split by stage
+        lead: One row per stage of the system built in this lecture.
         recall: "What do separate scores per stage let a regression do?"
         kicker: Pulling it together
         header: [Stage, Measure, Test that keeps it honest]
@@ -629,6 +689,7 @@ parts:
         source: notes/07-evaluating-multimodal-systems.md
       - layout: bullets
         title: Where next
+        recall: "What do we take up after multimodal engineering?"
         kicker: Next
         bullets:
           - "**Safety and security:** images, documents and voices as attack channels, in pillar 09"

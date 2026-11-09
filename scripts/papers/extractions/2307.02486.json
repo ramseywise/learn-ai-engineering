@@ -1,0 +1,124 @@
+{
+ "schema": 1,
+ "key": "2307.02486",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ding-2023-longnet.pdf",
+ "bib": {"title": "LONGNET: Scaling Transformers to 1,000,000,000 Tokens", "authors": ["Jiayu Ding", "Shuming Ma", "Li Dong", "Xingxing Zhang", "Shaohan Huang", "Wenhui Wang", "Nanning Zheng", "Furu Wei"], "first_author": "Ding", "year": 2023, "venue": "preprint", "arxiv": "2307.02486", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 37634, "chars_total": 37634, "engine": "pymupdf", "skipped": "reference list skimmed only"},
+ "type": "empirical",
+ "question": "Can Transformer sequence length be scaled to 1 billion tokens by replacing quadratic attention with a linear-cost attention that stays expressive?",
+ "hypothesis": "Allocating attention that decays exponentially with token distance (dilated attention) gives linear cost and log token dependency without hurting short-sequence performance.",
+ "contributions": [
+  "Dilated attention: attentive field expands exponentially with distance; linear computation complexity and logarithmic dependency between tokens",
+  "Distributed training algorithm along the sequence dimension to scale to 1B tokens",
+  "Drop-in replacement for standard attention, compatible with existing Transformer optimizations",
+  "Language-modeling experiments showing strong results on long and short sequences"
+ ],
+ "method": {
+  "summary": "Replaces self-attention in a MAGNETO/XPOS decoder with dilated attention: the sequence is split into segments of length w, each sparsified with interval r, with several (w, r) pairs mixed by softmax-denominator weights. Sequence dimension is partitioned across GPUs with an all-gather of sparsified keys/values. Evaluated on code language modeling (The Stack) against a dense Transformer and Sparse Transformer.",
+  "task": "autoregressive language modeling (pretraining) on source code; runtime scaling benchmark",
+  "trains": true,
+  "datasets": [
+   {"name": "The Stack", "role": "pretrain", "size": null, "split": "test set (same for all models; size not stated)", "source": "Kocetkov et al. 2022, source code in over 300 programming languages", "preprocessing": "tiktoken tokenizer, cl100k_base encoding"}
+  ],
+  "models": [
+   {"name": "LONGNET 125M (Table 3 config)", "role": "proposed", "params": "125M", "architecture": "MAGNETO backbone with XPOS relative position encoding, attention replaced by dilated attention", "init_from": null, "tokenizer": "tiktoken cl100k_base", "vocab": null, "layers": "12", "hidden": "768", "heads": "12", "context": "trained at 8K, 16K, 32K (Table 2)", "other": {"ffn": "3072", "segment_lengths_w": "{2048, 4096, 8192, 16384, 32768}", "dilation_rates_r": "{1, 2, 4, 6, 12}"}},
+   {"name": "LONGNET 350M", "role": "proposed", "params": "350M", "architecture": "as above", "init_from": null, "tokenizer": null, "vocab": null, "layers": "24", "hidden": "1024", "heads": "16", "context": null, "other": {}},
+   {"name": "LONGNET 760M", "role": "proposed", "params": "760M", "architecture": "as above", "init_from": null, "tokenizer": null, "vocab": null, "layers": "24", "hidden": "1536", "heads": "16", "context": null, "other": {}},
+   {"name": "LONGNET 2.7B", "role": "proposed", "params": "2.7B", "architecture": "as above", "init_from": null, "tokenizer": null, "vocab": null, "layers": "32", "hidden": "2560", "heads": "32", "context": null, "other": {}},
+   {"name": "Transformer (dense)", "role": "baseline", "params": "inferred: same base config as LONGNET (12 layers, 768 hidden)", "architecture": "vanilla dense attention with FlashAttention", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "2K (only scaled to 32K)", "other": {}},
+   {"name": "Sparse Transformer", "role": "baseline", "params": null, "architecture": "fixed sparse pattern of Child et al. 2019, block size 2048, sparse ratio adjusted to match LONGNET flops", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "8K, 16K, 32K", "other": {}}
+  ],
+  "training": {
+   "objective": "inferred: next-token language modeling (perplexity/test loss reported)",
+   "optimizer": "Adam, beta (0.9, 0.98)",
+   "lr": "6e-4 (125M, 350M, 760M); 2e-4 (2.7B)",
+   "lr_schedule": "Polynomial decay",
+   "warmup": "750 steps",
+   "batch_size": "500K tokens (125M-760M); 4M (2.7B); 0.5M tokens per batch in Table 2 with batch reduced as length grows",
+   "steps": "300K",
+   "epochs": null,
+   "tokens": "2.7B model: 300B tokens; other sizes about 40B tokens",
+   "seq_len": "2K to 32K (Table 2)",
+   "precision": null,
+   "weight_decay": "0.01",
+   "dropout": "0.0",
+   "regularisation": "gradient clipping 2.0",
+   "hardware": null,
+   "compute": "estimated as total flops of matrix multiplication (Fig 6, 7a); no GPU hours given",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"codebase": "torchscale", "kernels": "custom FlashAttention kernels for sparse and dilated attention"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "runtime: average forward-propagation speed over 10 different runs",
+   "prompting": "long-context prompting test: prefix of 2K to 32K tokens, perplexity of fixed suffix",
+   "retrieval": null,
+   "parameters": {"length_extrapolation": "blockwise causal attention (BCA) when input exceeds trained length; absolute position encoding removed"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "perplexity", "definition": "test perplexity on The Stack at test lengths 2K, 8K, 32K", "unit": "PPL", "higher_is_better": false},
+    {"name": "test loss", "definition": "loss on mixed input lengths 1K to 32K vs flops", "unit": "loss", "higher_is_better": false},
+    {"name": "runtime", "definition": "forward-pass latency of attention with FlashAttention, up to 1B tokens", "unit": "ms", "higher_is_better": false}
+   ],
+   "baselines": ["Transformer (Vaswani et al. 2017)", "Sparse Transformer (Child et al. 2019)"],
+   "protocol": "Single runs; no seeds or significance tests reported. Tokens per batch held constant while length grows."
+  },
+  "availability": {"code": "https://aka.ms/LongNet", "weights": null, "data": "The Stack (public)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "models.LONGNET 125M.hidden", "quote": "which has a hidden dimension of 768, 12 attention heads, and 12 decoder layers", "where": "4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Dilated attention has linear computation complexity O(Nd) versus O(N^2 d) for vanilla attention.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Analytical derivation (Eq 16-18), geometric w and r", "quote": null, "table": null, "note": null, "where": "Table 1, Sec 2.4"},
+  {"claim": "Token dependency (maximum path length) is approximately logarithmic in sequence length.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Analytical, Eq 19-20", "quote": "This proves that the token dependency is approximate to O(log N).", "table": null, "note": null, "where": "Sec 2.4"},
+  {"claim": "Dilated attention keeps almost constant latency as sequence length grows to 1B tokens while vanilla attention latency rises quadratically.", "kind": "measured", "source": null, "metric": "runtime", "value": null, "unit": "ms", "baseline_value": null, "n": 10, "setup": "Forward pass, both with FlashAttention, 8K to 1B tokens, distributed over GPUs, up to 3 segment lengths (2,048, tokens per device, sequence length); average of 10 runs", "quote": "It shows that dilated attention can successfully scale up the sequence length with almost constant latency.", "table": null, "note": "Per-length values only in Fig 5; GPU count not stated", "where": "Sec 3.2, Fig 5"},
+  {"claim": "At test length 32K, LONGNET trained at 32K reaches perplexity 3.01 versus 3.64 for Sparse Transformer trained at 32K.", "kind": "measured", "source": null, "metric": "perplexity", "value": 3.01, "unit": "PPL", "baseline_value": 3.64, "n": 1, "setup": "125M-scale base config, The Stack, trained 300K steps at 0.5M tokens per batch, train length 32K, test length 32K", "quote": null, "table": "Table 2, row LONGNET (ours) Length 32K, column Github 32K", "note": "Sparse Transformer 3.64 from Table 2 row Sparse Transformer 32K", "where": "Table 2"},
+  {"claim": "Dense Transformer trained at 2K degrades badly when tested at 32K by extrapolation (11.29 PPL), against LONGNET trained at 32K (3.01).", "kind": "measured", "source": null, "metric": "perplexity", "value": 11.29, "unit": "PPL", "baseline_value": 3.01, "n": 1, "setup": "Test length 32K with blockwise causal attention for the 2K-trained dense Transformer", "quote": null, "table": "Table 2, row Transformer 2K, column Github 32K", "note": null, "where": "Table 2"},
+  {"claim": "At the shortest test length (2K), LONGNET trained at 8K matches the dense Transformer (4.23 vs 4.24 PPL).", "kind": "measured", "source": null, "metric": "perplexity", "value": 4.23, "unit": "PPL", "baseline_value": 4.24, "n": 1, "setup": "Test length 2K, LONGNET trained at 8K vs Transformer trained at 2K", "quote": null, "table": "Table 2, row LONGNET (ours) 8K, column Github 2K", "note": "Longer training length raises 2K perplexity: LONGNET 4.27 (16K), 4.37 (32K)", "where": "Table 2"},
+  {"claim": "LONGNET reaches lower test loss than dense Transformers with less compute across training lengths.", "kind": "measured", "source": null, "metric": "test PPL vs FLOPs", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Training lengths 2K to 32K, test lengths 1K-32K with BCA", "quote": "LONGNET outperforms dense Transformers with a lower perplexity and a significantly smaller amount of computation.", "table": null, "note": "Values only in Fig 6", "where": "Fig 6, Sec 4.3"},
+  {"claim": "LONGNET follows a power-law scaling curve from 125M to 2.7B parameters.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "125M, 350M, 760M (~40B tokens) and 2.7B (300B tokens)", "quote": "This implies that the dense Transformer is not a prerequisite for scaling the language models.", "table": null, "note": null, "where": "Sec 4.4, Fig 7a"},
+  {"claim": "Longer prompt context lowers suffix test loss.", "kind": "measured", "source": null, "metric": "test loss", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Prompt prefix length 2K to 32K, same suffix", "quote": "It shows that the test loss of LONGNET gradually decreases as the context window grows.", "table": null, "note": null, "where": "Sec 4.5, Fig 7b"},
+  {"claim": "Dilated attention cuts computation versus vanilla attention by a factor of N/w r^2.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Single (w, r) pattern", "quote": "Dilated attention can significantly reduce the computation cost by a factor of N", "table": null, "note": "Text extraction splits the formula N/(w) r^2", "where": "Sec 2.2"}
+ ],
+ "limits": [
+  "Only evaluated on code (The Stack) language modeling; no natural-language, downstream or retrieval benchmarks.",
+  "1B-token claim rests on a runtime benchmark (Fig 5), not a trained model; models were trained at up to 32K only.",
+  "Extrapolation at inference does not work when length is much larger than the model supports (authors).",
+  "Baseline dense Transformer only scaled to 32K for compute reasons; the Table 2 cells vary train and test length together.",
+  "No seeds, variance, hardware, GPU count or wall-clock stated; dataset size not stated.",
+  "Future work lists multimodal, BEiT pretraining and genomic data, so these are untested."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "dilated attention", "definition": "Splits (Q,K,V) into segments of length w and sparsifies each by selecting rows with interval r; attention is computed on the sparsified segments then scattered back.", "where": "Sec 2.2"},
+  {"term": "blockwise causal attention (BCA)", "definition": "Extrapolation method used at inference when input is longer than the maximum supported length.", "where": "Sec 4.2"}
+ ],
+ "lineage": [
+  {"work": "Attention is all you need (Vaswani et al.)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "Dense Transformer baseline", "quote": null},
+  {"work": "Generating long sequences with sparse transformers", "year": 2019, "arxiv": "1904.10509", "relation": "baseline", "note": "Fixed sparse pattern baseline", "quote": null},
+  {"work": "FlashAttention", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "Kernels customized for dilated and sparse attention", "quote": null},
+  {"work": "Foundation transformers (MAGNETO)", "year": 2022, "arxiv": "2210.06423", "relation": "extends", "note": "Backbone architecture", "quote": null},
+  {"work": "A length-extrapolatable transformer (XPOS, BCA)", "year": 2022, "arxiv": "2212.10554", "relation": "uses-method", "note": "Position encoding and blockwise causal attention", "quote": null},
+  {"work": "TorchScale", "year": 2022, "arxiv": "2211.13184", "relation": "uses-method", "note": "Codebase", "quote": null},
+  {"work": "The Stack", "year": 2022, "arxiv": "2211.15533", "relation": "uses-data", "note": "Pretraining data", "quote": null},
+  {"work": "Scaling laws for neural language models", "year": 2020, "arxiv": "2001.08361", "relation": "related", "note": "Scaling-law framing for Sec 4.3-4.4", "quote": null},
+  {"work": "Scaling transformer to 1M tokens and beyond with RMT", "year": 2023, "arxiv": "2304.11062", "relation": "related", "note": "Prior longest-length model", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Building blocks of dilated attention used in LONGNET.", "page": 4, "why": "Shows segment length and dilation rate patterns at a glance."},
+  {"figure": "Fig 5", "caption": "Runtime of our dilated attention and vanilla attention. Both are equipped with FlashAttention.", "page": 7, "why": "Near-constant versus quadratic latency up to 1B tokens."},
+  {"figure": "Fig 6", "caption": "Test perplexity of LONGNET and dense Transformers using different sequence lengths during training.", "page": 9, "why": "Compute versus perplexity for the two attentions."}
+ ],
+ "code": [
+  {"where": "Eq 16", "snippet": "FLOPs = 2N/w (w/r)^2 d = 2Nwd/r^2", "verbatim": false},
+  {"where": "Eq 9-10", "snippet": "O = sum_i alpha_i O|ri,wi ; alpha_i = s_i / sum_j s_j", "verbatim": false}
+ ],
+ "problems": ["Equations and table layout are garbled in the text extraction; Table 2 column headers read as Length, Batch, Github 2K/8K/32K (test lengths) inferred from layout.", "No embedded instructions found."]
+}

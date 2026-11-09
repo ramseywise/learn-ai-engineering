@@ -48,7 +48,7 @@ Anthropic's framing: system prompts must be calibrated to the **right altitude**
 | Brittle — breaks on any case not enumerated | Heuristics with clear signals | Under-specified — model invents its own interpretation |
 | "If the user says X, reply Y. If Z, reply W…" | "Prefer X when the signal is A; escalate when uncertain." | "Be helpful and use good judgment." |
 
-The low-altitude failure is more common in engineered systems, because each production bug tempts you to add one more rule. The result is a system prompt that reads like a decision tree, is unmaintainable, and still misses the next edge case. When you catch yourself adding a fourth conditional to a prompt, the fix is usually a **tool or a code-level control**, not a fifth conditional. See layer 5 below.
+The low-altitude failure is more common in engineered systems, because each production bug tempts you to add one more rule. The result is a system prompt that reads like a decision tree, is unmaintainable, and still misses the next edge case. When you catch yourself adding a fourth conditional to a prompt, the fix is usually a **tool or a code-level control**, not a fifth conditional. See layer 5 below. For a fixed-order job, such as verify identity before a refund, an ordered procedure is the right shape; [prompt 2b](../../01-prompt-engineering/notes/02b-document-types-formatting-and-templates.md#agent-system-prompts-procedures-not-rule-piles) says when.
 
 ---
 

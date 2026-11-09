@@ -1,0 +1,342 @@
+{
+ "schema": 1,
+ "key": "2309.14525",
+ "pdf": "generative-ai/05-RL/sources/sun-2023-aligning-large-multimodal-models-factually.pdf",
+ "bib": {
+  "title": "Aligning Large Multimodal Models with Factually Augmented RLHF",
+  "authors": ["Zhiqing Sun", "Sheng Shen", "Shengcao Cao", "Haotian Liu", "Chunyuan Li", "Yikang Shen", "Chuang Gan", "Liang-Yan Gui", "Yu-Xiong Wang", "Yiming Yang", "Kurt Keutzer", "Trevor Darrell"],
+  "first_author": "Sun",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2309.14525",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 79401,
+  "chars_total": 79401,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can RLHF, with a reward model that is given extra factual context, reduce hallucination in vision-language models trained on synthetic GPT-4 instruction data?",
+ "hypothesis": "A reward model that sees ground-truth image captions or multiple-choice answers is harder to hack than a vanilla reward model, so RLHF reduces hallucination without fresh human feedback.",
+ "contributions": [
+  "First adaptation of RLHF to multimodal alignment (LLaVA-RLHF), with hallucination-aware human preference collection (10K preferences for $3000).",
+  "Factually Augmented RLHF (Fact-RLHF): reward model conditioned on image captions / A-OKVQA rationales, plus symbolic correctness and length penalties.",
+  "LLaVA-SFT+: LLaVA instruction data enhanced with VQA-v2, A-OKVQA and Flickr30k.",
+  "MMHAL-BENCH: 96 adversarially filtered image-question pairs scored by GPT-4 with a focus on penalising hallucination."
+ ],
+ "method": {
+  "summary": "LLaVA (CLIP ViT-L/14 + Vicuna-v1.5, linear projection) is SFT'd on a mixture of 98k LLaVA conversations plus human-annotated VQA-v2, A-OKVQA and Flickr30k data (LLaVA-SFT+). A reward model initialised from SFT+ is trained on 10k human hallucination-focused preference pairs, optionally with factual information (COCO captions / A-OKVQA rationales) in its input, then PPO with a KL penalty, LoRA, symbolic correctness and length rewards trains the policy.",
+  "task": "multimodal RLHF for hallucination reduction; vision-language alignment",
+  "trains": true,
+  "datasets": [
+   {"name": "LLaVA synthetic instruction data", "role": "train", "size": "98k conversations for SFT after holding out 60k for preference modeling and RL (150k total)", "split": "98k SFT; 10k preference collection; 50k RL (first question of each conversation only)", "source": "GPT-4 generated (Liu et al., 2023a)", "preprocessing": "only first question of each conversation used for RL to avoid hallucinations in context"},
+   {"name": "VQA-v2 yes/no", "role": "train", "size": "83k for SFT; 10k subsampled for RL", "split": null, "source": "Goyal et al. 2017", "preprocessing": "converted to multi-round QA"},
+   {"name": "A-OKVQA", "role": "train", "size": "16k for SFT; 12k for RL", "split": null, "source": "Schwenk et al. 2022", "preprocessing": "multiple-choice, converted to multi-round QA"},
+   {"name": "Flickr30k", "role": "train", "size": "23k", "split": null, "source": "Young et al. 2014", "preprocessing": "converted to Spotting Captioning task"},
+   {"name": "Human preference data", "role": "train", "size": "10k pairs on held-out LLaVA data", "split": null, "source": "Amazon Mechanical Turk crowdworkers; last response re-sampled from SFT model at temperature 0.7; cost $3000", "preprocessing": null},
+   {"name": "MMHAL-BENCH", "role": "eval", "size": "96 image-question pairs, 8 question categories x 12 object topics", "split": "images from OpenImages validation and test sets", "source": "this paper; adversarially filtered against LLaVA-13Bx336", "preprocessing": null},
+   {"name": "LLaVA-Bench", "role": "eval", "size": null, "split": null, "source": "Liu et al. 2023a", "preprocessing": null},
+   {"name": "MMBench dev", "role": "eval", "size": "2,974 multiple-choice questions, 20 ability dimensions", "split": "dev", "source": "Liu et al. 2023b", "preprocessing": null},
+   {"name": "POPE", "role": "eval", "size": null, "split": null, "source": "Li et al. 2023d", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "LLaVA-SFT+-7b", "role": "base", "params": "7B", "architecture": "CLIP ViT-L/14 (256x256) + Vicuna-V1.5-7b, linear projection", "init_from": "LLaVA pre-trained linear projection checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"image_resolution": "256 x 256"}},
+   {"name": "LLaVA-SFT+-13b", "role": "base", "params": "13B", "architecture": "CLIP ViT-L/14 (336x336) + Vicuna-V1.5-13b, linear projection", "init_from": "LLaVA pre-trained linear projection checkpoint", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"image_resolution": "336 x 336"}},
+   {"name": "Reward model", "role": "reward", "params": "13B (LLaVA-SFT+-13b init) by default; 7b in ablation", "architecture": "LLaVA architecture, last-token embedding linearly projected to a scalar", "init_from": "LLaVA-SFT+", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Value model", "role": "proposed", "params": "same size as reward model", "architecture": null, "init_from": "reward model", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LLaVA-RLHF-7b / 13b", "role": "proposed", "params": "7B / 13B", "architecture": "policy initialised from LLaVA-SFT+", "init_from": "LLaVA-SFT+", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "both trained with a LLaVA-SFT+-13b initialized reward model unless stated"}},
+   {"name": "GPT-4 (text-only)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "MMHAL-BENCH and LLaVA-Bench judge"}}
+  ],
+  "training": {
+   "objective": "Reward model: pairwise cross-entropy L = -E log sigma(r(I,x,y_i) - r(I,x,y_{1-i})). Policy: PPO maximising r - beta * KL to initial policy, plus symbolic correctness and length rewards.",
+   "optimizer": null,
+   "lr": "peak 3 x 10^-5 with cosine decay (RL stage)",
+   "lr_schedule": "cosine decay",
+   "warmup": null,
+   "batch_size": "512 per PPO step: two epochs of gradient steps, each with 256 rollouts",
+   "steps": "around 500 PPO steps (4 complete rounds over held-out RL data)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "maximum response length 896 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "constant KL coefficient 0.1; gradient clipped at Euclidean norm 1; LoRA rank r=64 on attention and FFN modules for all RLHF fine-tuning",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "GAE": "lambda and gamma both 1",
+    "advantage": "normalised across the batch of rollouts per PPO step; value model initialised from reward model",
+    "length_penalty": "(response tokens / max response length 896) x coefficient; coefficient -10.0 general questions, -40.0 detailed description questions in LLaVA data, 2.5 complex reasoning questions in LLaVA data",
+    "correctness_reward": "0 for incorrect or irrelevant responses, 2 for correct responses",
+    "incomplete_response_penalty": "-8.0",
+    "PPO implementation": "follows Dubois et al. 2023 (AlpacaFarm), a variant of Ouyang et al. 2022; github.com/openai/lm-human-preferences",
+    "SFT_and_reward_model_hyperparameters": "not stated: SFT lr/epochs/batch and reward model lr/epochs/batch are absent"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.7 when re-sampling the last response for preference collection",
+   "top_p": null,
+   "max_tokens": "896 maximum response length (RL)",
+   "samples": null,
+   "prompting": "Fact-RLHF reward model input: Image, Factual Information [5 COCO IMAGE CAPTIONS / 3 A-OKVQA RATIONALS], User, Assistant, Augmented Reward Model score",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "LLaVA-Bench relative score", "definition": "GPT-4 compares VLM answers with text-only GPT-4 answers and rates; relative score vs GPT-4 text-only", "unit": "% relative", "higher_is_better": true},
+    {"name": "MMHAL-BENCH overall score", "definition": "GPT-4 rates each response 0-6 for informativeness and hallucination, averaged over 96 questions", "unit": "score 0-6", "higher_is_better": true},
+    {"name": "MMHAL-BENCH hallucination rate", "definition": "fraction of responses GPT-4 judges as hallucinating (Table 6; definition not separately spelled out)", "unit": "fraction", "higher_is_better": false},
+    {"name": "MMBench CircularEval accuracy", "definition": "multi-choice accuracy, ChatGPT matches predictions to choices", "unit": "%", "higher_is_better": true},
+    {"name": "POPE F1", "definition": "polling-based yes/no object existence F1", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["LLaVA", "VIGC", "LLaVA-SFT+", "Kosmos-2", "IDEFICS 9B/80B", "InstructBLIP 7B/13B", "Shikra", "MiniGPT-4", "OpenFlamingo", "LLaMA-Adapter", "Otter-I", "mPLUG-Owl"],
+   "protocol": "Single run per model as far as stated; no seeds, no variance. GPT-4 agrees with human judgments in 94% of cases on LLaVA-13Bx336 vs IDEFICS-80B hallucination decisions. Ablations on LLaVA-7B."
+  },
+  "availability": {
+   "code": "https://llava-rlhf.github.io",
+   "weights": "https://llava-rlhf.github.io",
+   "data": "https://llava-rlhf.github.io"
+  },
+  "prompts": [
+   {"purpose": "GPT-4 judge for MMHAL-BENCH", "text": "Please act as an impartial and objective judge and evaluate the quality of the response provided by a Large Multimodal Model (LMM) to the user question. ... Rating: 6, very informative with good analysis or reasoning, no hallucination ... Rating: 0, not informative, with hallucination. Template fields: Image Contents, Question, Standard Human-Generated Answer, LMM Response to Evaluate. (full text with five few-shot examples in Appendix G)", "where": "Appendix G, p. 24-26"},
+   {"purpose": "Crowdworker preference instruction", "text": "Question 1: Which response has fewer hallucinations in terms of the given image? Question 2: If you have selected a tie between Response 1 and Response 2 from the previous question, which response would be more helpful or less incorrect?", "where": "Table 2"}
+  ],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "We used a batch size of 512 for each PPO step. This comprised two epochs of gradient steps, each having 256 rollouts.", "where": "Appendix F"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fact-RLHF (7B policy, 13B reward model) gets 94.1 on LLaVA-Bench and 2.1 on MMHAL-BENCH, versus 1.8 on MMHAL for the vanilla RLHF row with the same data and 13b RM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMHAL-BENCH overall score",
+   "value": 2.1,
+   "unit": "score",
+   "baseline_value": 1.8,
+   "n": 96,
+   "setup": "Table 5 ablation, LLaVA-7B policy, 13b reward model, SFT data VQA+AOK+Flickr; baseline is RLHF row with 13b RM",
+   "quote": null,
+   "table": "Table 5, row Fact-RLHF 7b/13b, column MMHAL-B (2.1; 94.1 under LLaVA-B)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Plain RLHF improves LLaVA-Bench but underperforms on MMHAL-BENCH; authors attribute this to PPO exploiting the reward model with lengthier responses.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaVA-7B ablation, Table 5; authors' explanation is not tested directly",
+   "quote": "This can be attributed to the model’s tendency, during PPO, to manipulate the naive RLHF reward model by producing lengthier responses rather than ones that are less prone to hallucinations.",
+   "table": null,
+   "note": "In Table 5 the vanilla RLHF row with 13b RM and all SFT data scores 1.8 on MMHAL-B, equal to the SFT row with 7b RM, and the SFT-only row scores 1.8 as well.",
+   "where": "Sec 3.6"
+  },
+  {
+   "claim": "LLaVA-RLHF-13B reaches a 95.6 full-set LLaVA-Bench relative score and LLaVA-RLHF-7B 94.1, the latter about 94% of text-only GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LLaVA-Bench full-set relative score",
+   "value": 95.6,
+   "unit": "% of GPT-4 text-only",
+   "baseline_value": 85.2,
+   "n": null,
+   "setup": "LLaVA-13Bx336 policy; baseline is LLaVA-SFT+ 13Bx336",
+   "quote": null,
+   "table": "Table 3, row LLaVA-RLHF 13Bx336, column Full-Set",
+   "note": "Abstract says previous best methods reach 87% level; Table 3 best prior is VIGC 13B 86.8.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "LLaVA-RLHF scores 2.05 (7b) and 2.53 (13b) on MMHAL-BENCH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMHAL-BENCH overall score",
+   "value": 2.53,
+   "unit": "score",
+   "baseline_value": 2.43,
+   "n": 96,
+   "setup": "13B x336 policy, 13b reward model; baseline LLaVA-SFT+ 13Bx336",
+   "quote": "It attains scores of 2.05 (7b) and 2.53 (13b) on MMHAL-BENCH and improves LLaVA-SFT+ by over 10% on LLaVA-Bench.",
+   "table": null,
+   "note": "Table 5 gives Fact-RLHF 7b as 2.1 while Table 6 gives LLaVA-RLHF 7B as 2.05 (rounding).",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "MMHAL-BENCH hallucination rate is almost unchanged by RLHF relative to SFT+ at 13B (0.57 vs 0.55) and at 7B (0.68 vs 0.67).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMHAL-BENCH hallucination rate",
+   "value": 0.57,
+   "unit": "fraction",
+   "baseline_value": 0.55,
+   "n": 96,
+   "setup": "LLaVA-RLHF13B vs LLaVA-SFT+ 13Bx336; lower is better",
+   "quote": null,
+   "table": "Table 6, rows LLaVA-RLHF13B (0.57) and LLaVA-SFT+13BX336 (0.55), column Hallucination Rate",
+   "note": "The paper does not comment on this; the hallucination rate for Fact-RLHF 7b (Table 5 ablation) is not reported. Table 6 7B rows: LLaVA-RLHF 0.68, SFT+ 0.67, LLaVA 0.76.",
+   "where": "Table 6"
+  },
+  {
+   "claim": "RLHF effect on capability benchmarks is mixed: slight degradation at 7B on MMBench (51.4 vs 52.1), gain at 13B (60.1 vs 57.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMBench overall accuracy",
+   "value": 60.1,
+   "unit": "%",
+   "baseline_value": 57.5,
+   "n": null,
+   "setup": "13Bx336 models, MMBench dev, CircularEval",
+   "quote": "LLaVA-RLHF shows subtle degradations at the 7b scale, but the 13b LLaVA-RLHF improves over LLaVA-SFT+ by 3% on MMBench.",
+   "table": "Table 4, rows LLaVA-RLHF13Bx336 and LLaVA-SFT+13Bx336, column Overall",
+   "note": "Authors liken the 7B drop to the alignment tax.",
+   "where": "Sec 3.3, Table 4"
+  },
+  {
+   "claim": "LLaVA-SFT+ 7B gets 52.1% on MMBench and 82.7% F1 on POPE, up 13.4 and 6.7 points over LLaVA, using 280k fine-tuning examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMBench accuracy",
+   "value": 52.1,
+   "unit": "%",
+   "baseline_value": 38.7,
+   "n": null,
+   "setup": "7B models, SFT data mixture of LLaVA + VQA-v2 + A-OKVQA + Flickr30k",
+   "quote": "LLaVA-SFT+7B model exemplifies this with an impressive performance of 52.1% on MMBench and an 82.7% F1 score on POPE",
+   "table": null,
+   "note": "Text says 280k fine-tuning data for SFT+, while Table 4 lists 220k for SFT+ and 280k for RLHF.",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Hallucination-aware preference collection is cheap: 10K preferences cost $3000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotation cost",
+   "value": 3000,
+   "unit": "$",
+   "baseline_value": null,
+   "n": 10000,
+   "setup": "crowdworkers comparing two responses to image-based conversations",
+   "quote": "collecting 10K human preferences for image-based conversations with $3000",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Filtering LLaVA data with the Fact-RLHF reward model (dropping 70/50/30%) and fine-tuning gave LLaVA-Bench 81.2, 81.5, 81.8 with other benchmarks unchanged, so data filtering did not match RLHF.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LLaVA-Bench",
+   "value": 81.8,
+   "unit": "relative score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "preliminary tests, 30% filtered",
+   "quote": "yielding scores of 81.2, 81.5, and 81.8 on LLaVA-Bench",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.7"
+  },
+  {
+   "claim": "A-OKVQA data raises MMBench by 9.8 points and VQA-v2 raises POPE by about 6 points; Flickr30k helps LLaVA-Bench and MMHAL-BENCH.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMBench gain from A-OKVQA",
+   "value": 9.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaVA-7B SFT ablation, one dataset added at a time",
+   "quote": "boosting results by +9.8% on MMBench and a more modest +3.8% on POPE",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "GPT-4 judge agrees with human judgments in 94% of hallucination decisions between LLaVA-13Bx336 and IDEFICS-80B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "judge-human agreement",
+   "value": 94,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMHAL-BENCH, two models only; sample size not stated",
+   "quote": "GPT-4 agrees with human judgments in 94% of the cases.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Short or evasive responses can score high on MMHAL-BENCH, so authors advise using it together with LLaVA-Bench.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' limitation",
+   "quote": "short or evasive responses can inadvertently attain high scores on MMHAL-BENCH",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "Applying RLHF can dampen performance of small LMMs (7B MMBench 51.4 vs 52.1 SFT+); balancing alignment and capability is called unresolved.",
+  "MMHAL-BENCH can be gamed by short or evasive answers; authors advise also using LLaVA-Bench.",
+  "Only the fine-tuning phase is studied; misalignment in other modalities and pre-training is unexplored.",
+  "Optimal data mixture was not tuned (mixture rate unadjusted).",
+  "MMHAL-BENCH is only 96 questions, adversarially filtered against LLaVA-13Bx336, judged by text-only GPT-4 given captions and a reference answer; no variance or seeds reported.",
+  "Reward-model and SFT hyperparameters, hardware and compute are not stated.",
+  "Fact-RLHF needs captions or rationales at training time; the reward model is weak versus the high-capacity oracle models of earlier work (their words).",
+  "Claim that RLHF will not hurt larger models rests on an 'empirical scaling law' from two sizes."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Factually Augmented RLHF (Fact-RLHF)", "definition": "reward model has access to additional ground-truth information such as image captions or multiple-choice options to calibrate its judgment", "where": "Sec 2.4"},
+  {"term": "reward hacking", "definition": "achieving high scores from the reward model does not necessarily lead to improvement in human judgments", "where": "Sec 1"}
+ ],
+ "lineage": [
+  {"work": "LLaVA: Visual Instruction Tuning", "year": 2023, "arxiv": null, "relation": "extends", "note": "base architecture and instruction data (Liu et al. 2023a)", "quote": null},
+  {"work": "Training language models to follow instructions with human feedback (InstructGPT)", "year": 2022, "arxiv": "2203.02155", "relation": "uses-method", "note": "RLHF pipeline", "quote": null},
+  {"work": "Training a helpful and harmless assistant with RLHF (Bai et al. 2022a)", "year": 2022, "arxiv": "2204.05862", "relation": "uses-method", "note": "fresh-feedback remedy to reward hacking that Fact-RLHF avoids", "quote": null},
+  {"work": "AlpacaFarm (Dubois et al. 2023)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "PPO implementation, value from reward model, verbosity observation", "quote": null},
+  {"work": "Llama 2 (Touvron et al. 2023b)", "year": 2023, "arxiv": null, "relation": "related", "note": "iterative fresh human feedback", "quote": null},
+  {"work": "Sun et al. 2023a (SALMON)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "response length as auxiliary penalty", "quote": null},
+  {"work": "PPO (Schulman et al. 2017)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "RL algorithm", "quote": null},
+  {"work": "LoRA (Hu et al. 2021)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "fine-tuning in RLHF stage", "quote": null},
+  {"work": "VQA-v2, A-OKVQA, Flickr30k", "year": null, "arxiv": null, "relation": "uses-data", "note": "SFT+ and RL data", "quote": null},
+  {"work": "MMBench, POPE, LLaVA-Bench", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "benchmarks", "quote": null},
+  {"work": "InstructBLIP, IDEFICS, Kosmos-2, Shikra, VIGC, MiniGPT-4, Otter, OpenFlamingo", "year": 2023, "arxiv": null, "relation": "baseline", "note": "compared in Tables 3, 4, 6, 7", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Illustration of how hallucination may occur during the SFT phase of LMM training and how Factually Augmented RLHF alleviates the issue of limited capacity in the reward model which is initialized from the SFT model.", "page": 3, "why": "Shows where captions enter the reward model compared with vanilla RLHF."},
+  {"figure": "Table 5", "caption": "Ablation studies on methodologies (SFT, RLHF, and Fact-RLHF), data mixtures, and model sizes of the policy model and reward model.", "page": 10, "why": "Only place where RLHF vs Fact-RLHF vs SFT are compared at fixed size."},
+  {"figure": "Fig 2", "caption": "Detailed performance of different models on the eight categories in MMHAL-BENCH.", "page": 7, "why": "Per-category breakdown; numbers also in Table 6."}
+ ],
+ "code": [
+  {"where": "Eq. 1", "snippet": "L(r_theta) = -E[(I,x,y0,y1,i)~D_RM] log sigma(r_theta(I,x,y_i) - r_theta(I,x,y_{1-i}))", "verbatim": false},
+  {"where": "Eq. 2", "snippet": "L(pi_RL) = -E[(I,x)~D_RL, y~pi_RL] [ r_theta(I,x,y) - beta * D_KL(pi_RL(y|I,x) || pi_INIT(y|I,x)) ]", "verbatim": false}
+ ],
+ "problems": [
+  "PDF text is clean; tables are flattened one cell per line, so Table 5 and 6 columns were mapped by position.",
+  "No embedded instructions found.",
+  "Table 5 first RLHF row (7b/7b, no extra data) and its columns were read by position."
+ ]
+}

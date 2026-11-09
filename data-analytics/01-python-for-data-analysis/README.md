@@ -40,7 +40,7 @@ The notebook numbers come from their original course, so notebook 5 goes with ch
 
 | Chapter | Why |
 |---|---|
-| [Programming: Python](../../programming/README.md) | Assumes the Python track, then teaches pandas |
+| [Python track](../../programming/python/README.md) | Assumes modules 01 to 03, then teaches pandas |
 
 **Feeds into**
 

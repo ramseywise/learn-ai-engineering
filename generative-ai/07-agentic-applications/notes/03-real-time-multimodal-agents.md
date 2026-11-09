@@ -24,9 +24,9 @@ cleaned: 2026-11-01
 
 > When input streams in and output has a hard time budget, serial pipelines give way to end-to-end models and a fast/slow split: a quick model acts, a slow one checks.
 
-Presumes [03-agentic-foundations 01 — agent fundamentals](../../03-agentic-foundations/notes/01-agent-fundamentals.md). Source: Bojie Li, *AI Agents in Depth* (2026), [ch. 6](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0).
-
 Static image and document understanding is a solved part of normal agent work. This note covers the three settings where **real-time constraints** make multimodality hard: voice dialogue, GUI operation and robot control. Input arrives continuously and output has a strict time budget. All three are moving the same way: from **serial pipelines** toward **end-to-end models**, and toward a **fast/slow division of labor**. Image and video *generation* is out of scope. It is an ordinary tool call.
+
+This note presumes [03-agentic-foundations 01 — agent fundamentals](../../03-agentic-foundations/notes/01-agent-fundamentals.md). Source: Bojie Li, *AI Agents in Depth* (2026), [ch. 6](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0).
 
 ---
 
@@ -55,6 +55,8 @@ The framing comes from OpenAI's GPT-Live launch (2026). It matches the three gen
 | LLM first short segment | 100–300 ms | |
 | TTS first segment | 200–500 ms | |
 | **Total** | **≈ 0.95–2.3 s** | Above ~2 s, people get restless |
+
+This total is for a fully serial pipeline with no streaming, which is why it is over 2 s at the slow end. It is not the target to design to. The voice note in [AIE 08/04 — speech and voice agents](../../../ai-engineering/08-multimodal-engineering/notes/04-speech-and-voice-agents.md) is the authority on the budget: it plans for first audio within 800 ms at the 95th percentile, and on its placeholder numbers streaming takes a cascade from 2,680 ms to 940 ms, still over that target. Read the table here as the starting point that streaming has to shrink, and Li's "restless above 2 s" as a ceiling, not a goal.
 
 **Queueing makes it worse.** Total latency ≈ idle latency × 1/(1 − utilization). That is 2× at 50% load and 5× at 80%, which is why voice servers can't run hot. The arithmetic is short enough to run, and it shows what a capacity decision costs in the only unit a caller feels:
 

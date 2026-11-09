@@ -1,19 +1,549 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2502.21321",
  "pdf": "generative-ai/05-RL/sources/kumar-2025-llm-post-training.pdf",
  "bib": {
   "title": "LLM Post-Training: A Deep Dive into Reasoning Large Language Models",
-  "first_author": "Komal Kumar",
-  "year": "2025",
-  "venue": null,
+  "authors": [
+   "Komal Kumar",
+   "Tajamul Ashraf",
+   "Omkar Thawakar",
+   "Rao Muhammad Anwer",
+   "Hisham Cholakkal",
+   "Mubarak Shah",
+   "Ming-Hsuan Yang",
+   "Phillip H.S. Torr",
+   "Fahad Shahbaz Khan",
+   "Salman Khan"
+  ],
+  "first_author": "Kumar",
+  "year": 2025,
+  "venue": "preprint",
   "arxiv": "2502.21321",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 199317,
+  "chars_total": 201882,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about chars 127614 to end) skimmed for lineage only; figures are images and only captions were read."
  },
- "legacy_report": "SOURCE: \"LLM Post-Training: A Deep Dive into Reasoning Large Language Models\", Komal Kumar, Tajamul Ashraf, Omkar Thawakar, Rao Muhammad Anwer, Hisham Cholakkal, Mubarak Shah, Ming-Hsuan Yang, Phillip H.S. Torr, Fahad Shahbaz Khan, Salman Khan. arXiv:2502.21321v2 [cs.CL], 24 Mar 2025. Preprint (survey and tutorial).\n\nCOVERAGE: All 32 pages. I read 199,317 chars of body text with no sampling. Pages 1-23 are body (about 2,640 lines); pages 23-32 are the reference list, which I skimmed for origins only. The text extracted cleanly. Equations are partly mangled but readable.\n\nCLAIMS (ranked)\n- claim: LLM generation is framed as an MDP (state = tokens so far, action = next token, reward R(s,a)). RL optimises expected return, where MLE optimises likelihood on static data.\n  number: none\n  setup: background, Sec 2\n  quote: \"the state st represents the sequence of tokens generated so far, the action at is the next token, and a reward R(st,at) evaluates the quality of the output.\"\n  where: p3\n\n- claim: RL for LLMs differs from classic RL in four ways: a huge action space, sparse and delayed feedback, hard credit assignment, and several objectives at once.\n  number: none\n  setup: intro, p2\n  quote: \"Instead of a finite action set, LLMs select tokens from a vast vocabulary, and their evolving state comprises an ever-growing text sequence ... Feedback in language-based RL is also sparse [77], subjective, and delayed\"\n  where: p2\n\n- claim: The standard RLHF pipeline is SFT, then reward-model training on human preferences, then PPO against the reward model. The survey lists \"reward modeling and alignment\" as a fourth step.\n  number: none\n  setup: Sec 3 and 3.2.3\n  quote: \"Third, PPO is employed in the RLHF [58] pipeline by using human-provided preference scores (or rankings) to shape R and thereby guide the policy updates.\"\n  where: p5, p9\n\n- claim: Reward models are trained with a Bradley-Terry pairwise loss or a Plackett-Luce ranking loss. The reward model learns relative preferences, not calibrated scores.\n  number: none\n  setup: Sec 3.1\n  quote: \"The reward model learns relative preferences rather than absolute scores. This avoids the need for calibrated human ratings and focuses on pairwise comparisons.\"\n  where: p6, p8\n\n- claim: Outcome reward models (ORM) are simple but give a credit-assignment problem on long responses. Process reward models (PRM) score steps but need costlier annotation. The two can be combined.\n  number: none\n  setup: Sec 3.1.3-3.1.4\n  quote: \"For long-response tasks, outcome based reward can lead to credit assignment problem\" and \"Process rewards can be combined with outcome rewards for a strong multi-phase training signal.\"\n  where: p7\n\n- claim: PPO uses a clipped probability-ratio objective with GAE advantages from a learned value function. A KL penalty to the base model (-beta*KL) guards against reward hacking.\n  number: none\n  setup: Sec 3.2.2\n  quote: \"The KL term KL(π∥ρ) prevents over-optimization to the proxy reward r(x,y) (i.e., reward hacking).\"\n  where: p8-9\n\n- claim: GRPO drops the critic. It samples G outputs per question and normalises rewards within the group, (r - mean)/std, as the advantage. It keeps PPO-style clipping and a KL term to the reference model. It has an outcome mode (one reward for all tokens) and a process mode (sum of later step rewards).\n  number: none\n  setup: Sec 3.2.8, DeepSeekMath/R1 lineage\n  quote: \"GRPO ... removes the need for a separate value model (critic model) and instead estimates the baseline reward from a group of sampled LLM outputs. This significantly reduces memory usage and stabilizes policy learning.\"\n  where: p10-11\n\n- claim: DPO optimises a preference loss on log-probability ratios against a reference policy, with no reward model, critic or RL loop. The survey says it loses per-step credit assignment.\n  number: none\n  setup: Sec 3.2.6, Fig 3 compares PPO, GRPO and DPO\n  quote: \"This granularity is lost in DPO, which treats entire trajectories uniformly.\"\n  where: p9-10\n\n- claim: DeepSeek-R1-Zero is RL only, with no SFT. DeepSeek-R1 uses cold-start data, then reasoning RL with GRPO and rule-based rewards, then rejection sampling and SFT, then a second RL stage for alignment, then distillation to Qwen and Llama models of 1.5B to 70B.\n  number: ~800k mixed SFT samples; cold start \"thousands\" of samples\n  setup: Sec 3.3, taken from Guo et al. 2025\n  quote: \"DeepSeek-R1-Zero operates with a purely Reinforcement Learning approach, excluding any SFT.\" and \"(often around 800k samples)\"\n  where: p11-12\n\n- claim: Beam search beats best-of-N at low compute on hard questions. Best-of-N scales better on easy ones. Best-of-N can approach RLHF when the reward model is strong, but it is vulnerable to reward hacking if the proxy is imperfect.\n  number: none\n  setup: Sec 5.1-5.2, drawn from Snell et al. and Gao et al.\n  quote: \"Beam search (effective for harder questions) outperforms best-of-N sampling at low compute budgets, while best-of-N scales better for easier tasks.\"\n  where: p14-15\n\n- claim: Compute-optimal test-time scaling (Snell et al.) sorts prompts into five difficulty levels. Easy prompts get sequential revision, and hard prompts get parallel sampling or beam search. It matches best-of-N with about a quarter of the compute.\n  number: 4x less compute\n  setup: five difficulty bins; difficulty from oracle success rate or verifier score\n  quote: \"this method achieves four times lower compute usage than traditional best-of-N sampling while maintaining equivalent performance.\"\n  where: p15\n\n- claim: Test-time compute on a small model can match a much larger model on easy and intermediate problems. Pretraining stays better on the hardest tasks.\n  number: 14x larger model; 4x fewer FLOPs\n  setup: MATH-style benchmarks; limited inference tokens, self-improvement setting; cites Snell et al. [268]\n  quote: \"TTS achieves results comparable to a model 14 × larger on easy to intermediate tasks (e.g., MATH benchmarks), while reducing inference costs by 4 × fewer FLOPs in compute-intensive scenarios [268]. However, pretraining remains superior for the hardest tasks\"\n  where: p19\n\n- claim: Pure RL on LLMs is expensive and often loses to distillation. Distilled models often beat RL-trained ones at lower training cost.\n  number: none\n  setup: future-directions section\n  quote: \"Current RL methods for LLMs require prohibitive computational resources [352] while often underperforming knowledge distillation techniques [93].\"\n  where: p22\n\n- claim: Reward misgeneralisation and sparse terminal rewards are open problems in multi-step reasoning. The survey says DPO needs pairwise data and cannot use failure trajectories well.\n  number: none\n  setup: future-directions section\n  quote: \"Current RL approaches suffer from reward misgeneralization, where models over-optimize superficial proxy metrics rather than genuine reasoning quality.\"\n  where: p22\n\n- claim: Overthinking (excessively long reasoning chains) wastes compute. The survey proposes partial rollouts, length penalties and long-to-short distillation. The figure below has no stated setup and I could not verify it.\n  number: 22% wasted computation\n  setup: none given in text\n  quote: \"Overthinking Phenomenon: Analysis reveals 22% wasted computation is in reasoning chains exceeding optimal reasoning length.\"\n  where: p22\n\n- claim: Other survey figures come with no setup in the text, so treat them as weak. They are: PRM-guided tree search with online distillation reaching 4x efficiency and 94% on MATH; confidence estimators adding ~18% latency; catastrophic forgetting costing 29% of base capability during RL fine-tuning; MMLU correlating poorly (r=0.34) with real-world performance; and small models reaching o1-level accuracy in 32 rollouts with particle-based Monte Carlo (4-16x scaling efficiency; the citation is printed as \"[? ]\").\n  number: 94%, 18%, 29%, r=0.34, 32 rollouts, 4-16x\n  setup: unspecified in the survey\n  quote: \"maintaining 94% solution accuracy on MATH dataset.\" / \"the small models achieved o1 level accuracy in only 32 rollouts, a 4–16x improvement in scaling efficiency\" / \"catastrophic forgetting rresults in a degradation of 29% of base capabilities during RL fine-tuning [374]\" / \"MMLU scores correlating poorly (r = 0.34) with real-world performance [375]\"\n  where: p22-23\n\n- claim: Satori trains in two stages. Stage 1 is format tuning on 10K synthetic trajectories. Stage 2 is PPO self-improvement with a Restart and Explore strategy.\n  number: 10K trajectories\n  setup: Sec 5.12, citing Shen et al. [260]\n  quote: \"a large set of 10K synthetic trajectories generated by a multi-agent framework\"\n  where: p18\n\n- claim: Self-consistency samples several chain-of-thought paths and takes the majority answer. It needs no new training. Tree-of-Thoughts and Graph-of-Thoughts are search over thoughts.\n  number: none (example of 20 CoTs)\n  setup: Sec 5.4-5.7\n  quote: \"one might sample, e.g., 20 CoTs for a math problem and see what final answer appears most frequently\"\n  where: p15-17\n\n- claim: OREO is an offline RL method that uses sparse outcome rewards and a soft-Bellman value function. It enables value-guided beam search. TRPO uses a hard KL constraint and second-order optimisation, so PPO is preferred in practice.\n  number: none\n  setup: Sec 3.2.5 and 3.2.7\n  quote: \"In practice, PPO is preferred over TRPO due to its simplicity, ease of implementation, and comparable performance in large-scale applications like RLHF.\"\n  where: p9-10\n\n- claim: RLAIF replaces human labels with AI-generated preference labels. The survey calls it scalable but warns of echo-chamber bias.\n  number: none\n  setup: Sec 3.2.4 and 7\n  quote: \"Empirical studies indicate that RLAIF [95, 170] is a scalable and efficient alternative to RLHF\"\n  where: p9, p21\n\nLIMITS\n- The survey cites other work and runs no experiments of its own. Many numbers are attached to a citation and nothing else, with no model, dataset or scale stated.\n- The authors concede these open problems: reward hacking and misgeneralisation, credit assignment, catastrophic forgetting, human-feedback cost, how much test-time compute is enough, the overthinking phenomenon, and privacy.\n- The authors write \"Reasoning\" to mean \"statistical patterns in data rather than explicit logical inference.\"\n- It is dated early 2025. It covers R1, o1/o3 and Kimi K1.5 only at a high level. Later work on GRPO variants and RLVR (the later refinements of the method) is absent.\n- Table 1 (about 45 models with RL methods, size and TTS flags) has questionable rows, for example \"Zed 500B\", \"Supernova\", \"Phi-4 28B/70B/140B\" and \"Chinchilla RLHF, PPO\". Do not cite it.\n\nBUILDS ON: Ouyang 2022 (InstructGPT/RLHF); Schulman 2017 (PPO); Schulman 2017 (TRPO); Schulman 2018 (GAE); Rafailov 2023 (DPO); Shao 2024 (DeepSeekMath, GRPO); Guo 2025 (DeepSeek-R1); Lee 2023 (RLAIF); Bai 2022 (Constitutional AI); Snell 2024 (test-time compute); Gao 2023 (reward overoptimisation); Wei 2022 (CoT); Wang 2022 (self-consistency); Yao 2023 (ToT); Nakano 2021 (WebGPT); Ranzato 2016 (MIXER); SCST; Coulom 2006 (MCTS).\n\nCODE: none. The survey is math-only. The core formulas as printed are:\n- PPO: \"LPPO(θ) = Et[min(rt(θ)At, clip(rt(θ), 1−ϵ, 1+ϵ)At)]\" (p8)\n- GRPO advantage: \"¯ri = (ri − mean(r)) / std(r)\" (p10-11)\n- KL-penalised objective: \"J(π) = E[r(x,y) − β KL(π(·|x)∥ρ(·|x))]\" (p9)\n\nFIGURES\n- Fig 1 (p1): taxonomy of post-training into fine-tuning, RL and test-time scaling.\n- Fig 3 (p10): PPO vs GRPO vs DPO block comparison. It shows which approach needs a value model, a reference model or a group computation, and it is the fastest way to see the differences. The caption is \"Comparison of PPO [73], GRPO [59], and DPO [162].\"\n- Fig 5 (p14): test-time scaling taxonomy.\n- Fig 6 (p16): CoT, self-consistency, ToT and GoT compared.\n- Fig 7 (p21): yearly trend plots. They are bibliometric, so low value.\n- I did not run the figures script because the captions were in the text. I did not view the images.\n\nPROBLEMS\n- I found no embedded instructions in the PDF.\n- Citation errors:\n  - Ref [162] for DPO is actually Guo et al., \"Direct language model alignment from online AI feedback\"; the DPO paper is [57].\n  - REINFORCE is cited to [114], a bandit NMT paper, and [115], a garbled law-book entry.\n  - \"Policy Reward Modeling (PRM)\" on p7 is a naming slip for process reward model.\n- Section 3.2.1 \"ORPO\" is described as a Bradley-Terry odds loss with no SFT term, which is not the ORPO paper's formulation. Do not use it as a source on ORPO.\n- The DPO loss as printed is missing the log and the minus sign.\n- There is a cross-reference error: \"As described in Sec. 5.4, CoT format data...\" (p15).\n- Several extracted formulas have fractions broken across lines, but they are recoverable."
+ "type": "survey",
+ "question": "How do fine-tuning, reinforcement learning and test-time scaling fit together as post-training methods that improve reasoning, alignment and efficiency in LLMs?",
+ "hypothesis": null,
+ "contributions": [
+  "A comprehensive and systematic review of post-training methodologies for LLMs, covering fine-tuning, RL and scaling as integral components of model optimization.",
+  "A structured taxonomy of post-training techniques, with open challenges and future directions.",
+  "Practical guidance through key benchmarks, datasets and evaluation metrics."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Compute-optimal test-time scaling matches best-of-N with about four times less compute.",
+   "kind": "reported",
+   "source": "Snell et al. 2024 [83]",
+   "metric": "compute vs best-of-N",
+   "value": "4",
+   "unit": "x lower compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.3; prompts bucketed into five difficulty levels, oracle or verifier-predicted; sequential revision for easy, parallel/beam for hard",
+   "quote": "this method achieves four times lower compute usage than traditional best-of-N sampling while maintaining equivalent performance",
+   "table": null,
+   "note": null,
+   "where": "p15 Sec 5.3"
+  },
+  {
+   "claim": "A smaller model with test-time compute is said to match a 14x larger model on easy to intermediate tasks, with 4x fewer FLOPs.",
+   "kind": "reported",
+   "source": "Snell et al. [268]",
+   "metric": "model size equivalence",
+   "value": "14",
+   "unit": "x larger model",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.13; MATH-type benchmarks, limited inference tokens; pretraining still better on hardest tasks",
+   "quote": "TTS achieves results comparable to a model 14× larger on easy to in- termediate tasks (e.g., MATH benchmarks), while reducing inference costs by 4× fewer FLOPs in compute-intensive scenarios [268].",
+   "table": null,
+   "note": "Quote has line-break hyphenation 'in- termediate' as printed.",
+   "where": "p19 Sec 5.13"
+  },
+  {
+   "claim": "Beam search beats best-of-N at low compute budgets on harder questions, while best-of-N scales better on easier ones.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.2 callout, attributed implicitly to Snell et al.",
+   "quote": "Beam search (effective for harder questions) outperforms best-of-N sampling at low compute budgets, while best-of-N scales better for easier tasks.",
+   "table": null,
+   "note": null,
+   "where": "p14 Sec 5.2"
+  },
+  {
+   "claim": "Particle-based Monte Carlo inference-time scaling let small models reach o1-level accuracy in 32 rollouts.",
+   "kind": "reported",
+   "source": "citation printed as [?] in the text",
+   "metric": "rollouts to o1-level",
+   "value": "32",
+   "unit": "rollouts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 7; math reasoning tasks; claimed 4-16x scaling efficiency; source is an unresolved citation",
+   "quote": "the small models achieved o1 level accuracy in only 32 rollouts, a 4–16x improvement in scaling efficiency across various mathematical reasoning tasks",
+   "table": null,
+   "note": "Citation is printed '[? ]' so the source cannot be traced from the paper.",
+   "where": "p22 Sec 7"
+  },
+  {
+   "claim": "DeepSeek-R1 pipeline mixes rejection-sampled reasoning data with SFT data into a corpus of about 800k samples.",
+   "kind": "reported",
+   "source": "Guo et al. 2025 [40]",
+   "metric": "SFT corpus size",
+   "value": "800k",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.3.2; after RL converges, rejection sampling expands the training set",
+   "quote": "800k samples)",
+   "table": null,
+   "note": "Text is split across a page break: 'combined dataset of substantial size (often around' then '800k samples)'.",
+   "where": "p11-12 Sec 3.3.2"
+  },
+  {
+   "claim": "Satori format tuning uses 10K synthetic trajectories from a generator/critic/reward multi-agent framework before PPO-based self-improvement.",
+   "kind": "reported",
+   "source": "Shen et al. 2025 [260]",
+   "metric": "format-tuning trajectories",
+   "value": "10K",
+   "unit": "trajectories",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.12, Stage 1 of a two-stage recipe",
+   "quote": "a large set of 10K synthetic trajectories",
+   "table": null,
+   "note": null,
+   "where": "p18 Sec 5.12"
+  },
+  {
+   "claim": "DeepSeek-R1 distillation teaches Qwen and Llama students from 1.5B to 70B.",
+   "kind": "reported",
+   "source": "Guo et al. 2025 [40]",
+   "metric": "student size range",
+   "value": "1.5B to 70B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.3.5",
+   "quote": "ranging from 1.5B to 70B parameters",
+   "table": null,
+   "note": null,
+   "where": "p12 Sec 3.3.5"
+  },
+  {
+   "claim": "The survey states a PRM-guided tree search with online distillation gives 4x efficiency and 94% MATH accuracy, with no source or setup given.",
+   "kind": "claim",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": "94%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 7 callout; no model, baseline or citation given",
+   "quote": "maintaining 94% solution accuracy on MATH dataset",
+   "table": null,
+   "note": "Unsourced in the survey.",
+   "where": "p22 Sec 7"
+  },
+  {
+   "claim": "The survey asserts 22% of reasoning computation is wasted on over-long chains, 18% latency from confidence estimators, 29% capability loss during RL fine-tuning, and MMLU correlation r=0.34 with real-world performance; only the last two have a nearby citation.",
+   "kind": "claim",
+   "source": null,
+   "metric": "wasted computation",
+   "value": "22%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 7 callouts; no setup stated",
+   "quote": "22% wasted computation is in reasoning chains",
+   "table": null,
+   "note": "Other figures: 'approximately 18% latency overhead', 'degradation of 29% of base capabilities during RL fine-tuning [374]', 'MMLU scores correlating poorly (r = 0.34) with real-world performance [375]'.",
+   "where": "p22 Sec 7"
+  },
+  {
+   "claim": "RLHF is described as SFT, then reward model on human rankings, then PPO.",
+   "kind": "reported",
+   "source": "Ouyang et al. 2022 [58]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.2.3; the Sec 3 intro lists the same steps and adds a fourth, reward modeling and alignment",
+   "quote": "Third, PPO is employed in the RLHF [58] pipeline by using human-provided preference scores (or rankings) to shape R and thereby guide the policy up- dates.",
+   "table": null,
+   "note": null,
+   "where": "p9 Sec 3.2.3"
+  },
+  {
+   "claim": "GRPO removes the critic by using the group mean and std of rewards as baseline.",
+   "kind": "reported",
+   "source": "Shao et al. 2024 [59]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.2.8; G samples per question; outcome and process supervision variants",
+   "quote": "The primary contribution in GRPO is that it removes the need for a separate value model",
+   "table": null,
+   "note": null,
+   "where": "p10 Sec 3.2.8"
+  },
+  {
+   "claim": "Reward models learn relative preferences, trained with Bradley-Terry (pairwise) or Plackett-Luce (ranking) losses.",
+   "kind": "reported",
+   "source": "Bradley and Terry 1952 [164]; Plackett 1975 [165]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.1",
+   "quote": "The reward model learns relative preferences rather than absolute scores.",
+   "table": null,
+   "note": null,
+   "where": "p8 Sec 3.2 callout"
+  },
+  {
+   "claim": "The survey names RL as costlier than distillation: distilled models often beat RL-trained ones with less overhead.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 7 Efficient RL Training and Distillation; cites [352], [93] where [93] is a survey on LLM-generated text detection",
+   "quote": "distilled models frequently surpass RL-trained counterparts despite requiring less training overhead",
+   "table": null,
+   "note": "Citation [93] is titled 'A survey on llm-generated text detection', so it does not look like support.",
+   "where": "p22 Sec 7"
+  }
+ ],
+ "limits": [
+  "Survey with no experiments: every number is quoted from other work, and several (94% MATH, 22% wasted compute, 18% latency, 29% forgetting, r=0.34) have no traceable source or setup.",
+  "Citation errors: DPO is cited as [162] (Guo et al. 2024, online AI feedback) rather than Rafailov et al. [57] in Secs 3.2.6 and the Sec 3 intro; overthinking is cited to [373], a survey of personal LLM agents; one citation prints as [?].",
+  "Terminology slips: 'Policy Reward Modeling (PRM)' is used where Process Reward Model is meant (Sec 3.1.4 callout); ORPO is described by a pairwise odds loss that omits its reference-free SFT term; the DPO loss is printed without the negative log.",
+  "Table 1 lists DeepSeek-R1 as 240B-A22B and Chinchilla and Grok3 with RL methods that the original reports do not describe in that way, so Table 1 should not be used as a source for parameter counts or training recipes.",
+  "Fig 7 trend analysis gives no search protocol or paper counts; the corpus of 'all papers' is not defined.",
+  "Covers work up to early 2025 (v2, 24 Mar 2025); later RL-for-reasoning work (RLVR variants, DAPO and others) is absent."
+ ],
+ "practices": [
+  "Run LLM RL as SFT, then reward-model training on preferences, then policy-gradient fine-tuning with a KL penalty to the base model (Sec 3, 3.2.2).",
+  "Use a KL penalty beta*KL(pi||rho) during PPO to stop over-optimisation of the proxy reward (Sec 3.2.2).",
+  "Prefer GRPO when memory is tight: group-normalised rewards remove the critic (Sec 3.2.8).",
+  "Use process rewards for math, legal and code tasks where the path matters, outcome rewards for short answers; the two can be combined (Sec 3.1.3-3.1.4).",
+  "Refresh the reward model iteratively to counter reward hacking and drift (Sec 3.1.5).",
+  "Filter DPO training data by perplexity under the reference model, keeping responses under about the 95th percentile (Sec 3.2.6).",
+  "Seed RL with a small cold-start set of CoT examples, then rejection-sample and SFT, then a second RL stage for alignment, then distil (Sec 3.3).",
+  "Pick the test-time strategy by difficulty: beam search with PRM or revisions for hard prompts at low budget, best-of-N for easy ones (Sec 5.2-5.3).",
+  "Use PEFT (LoRA, QLoRA) with quantization for cheap fine-tuning on limited hardware (Sec 4.7).",
+  "Use test-time scaling when the base model is already competent and the budget is flexible; use pretraining for new capabilities (Sec 5.13)."
+ ],
+ "terms": [
+  {
+   "term": "Post-training",
+   "definition": "multiple rounds of fine-tuning and alignment after next-token pretraining that mitigate LLM limitations by refining behavior and aligning outputs with human intent",
+   "where": "p2 Sec 1"
+  },
+  {
+   "term": "Advantage function",
+   "definition": "A(s, a) = Q(s, a) - V(s): how much better or worse it is to take action a in state s compared to the baseline V(s)",
+   "where": "p4 Sec 2.1"
+  },
+  {
+   "term": "Outcome reward modeling",
+   "definition": "measures the end result, for example whether the final answer is correct",
+   "where": "p7 Sec 3.1.3"
+  },
+  {
+   "term": "Process reward modeling",
+   "definition": "assigns feedback at intermediate reasoning steps",
+   "where": "p7 Sec 3.1.4"
+  },
+  {
+   "term": "Explicit vs implicit reward modeling",
+   "definition": "explicit rewards come from rules, heuristics or human annotations; implicit rewards are inferred from interaction signals such as upvotes or click-through",
+   "where": "p6-7 Sec 3.1.1-3.1.2"
+  },
+  {
+   "term": "Best-of-N",
+   "definition": "generate N candidates and pick the best by a reward model or likelihood; an application of rejection sampling with N the only inference parameter",
+   "where": "p14 Sec 5.2"
+  },
+  {
+   "term": "Test-time scaling (TTS)",
+   "definition": "enhancing reasoning during inference, typically without model updates",
+   "where": "p14 Sec 5"
+  },
+  {
+   "term": "Self-consistency",
+   "definition": "sample diverse reasoning chains and choose the most consistent final answer by majority vote",
+   "where": "p15 Sec 5.5"
+  },
+  {
+   "term": "Compute-Optimal Scaling Strategy",
+   "definition": "categorise prompts into five difficulty levels and allocate sequential refinement or parallel search accordingly",
+   "where": "p15 Sec 5.3"
+  },
+  {
+   "term": "Reasoning (scope of this survey)",
+   "definition": "ability to generate logically coherent responses based on statistical patterns in data rather than explicit logical inference or symbolic manipulation",
+   "where": "p2 Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Training language models to follow instructions with human feedback (InstructGPT)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "RLHF reference pipeline [58]",
+   "quote": null
+  },
+  {
+   "work": "Proximal policy optimization algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "surveys",
+   "note": "PPO [73]",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMath (GRPO)",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "surveys",
+   "note": "GRPO [59]",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "surveys",
+   "note": "pure-RL and multi-stage pipeline, distillation [40]",
+   "quote": null
+  },
+  {
+   "work": "Direct preference optimization",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "DPO [57]; the DPO section cites [162] instead",
+   "quote": null
+  },
+  {
+   "work": "Direct language model alignment from online AI feedback",
+   "year": 2024,
+   "arxiv": "2402.04792",
+   "relation": "related",
+   "note": "cited as [162] for DPO",
+   "quote": null
+  },
+  {
+   "work": "Trust region policy optimization",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "TRPO [160]",
+   "quote": null
+  },
+  {
+   "work": "ORPO",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[168]",
+   "quote": null
+  },
+  {
+   "work": "Offline reinforcement learning for LLM multi-step reasoning (OREO)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[171]",
+   "quote": null
+  },
+  {
+   "work": "RLAIF",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[95]",
+   "quote": null
+  },
+  {
+   "work": "Constitutional AI",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "surveys",
+   "note": "[53]",
+   "quote": null
+  },
+  {
+   "work": "Scaling LLM test-time compute optimally can be more effective than scaling model parameters",
+   "year": 2024,
+   "arxiv": "2408.03314",
+   "relation": "surveys",
+   "note": "source of compute-optimal scaling numbers [83]",
+   "quote": null
+  },
+  {
+   "work": "Satori",
+   "year": 2025,
+   "arxiv": "2502.02508",
+   "relation": "surveys",
+   "note": "[260]",
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[84]",
+   "quote": null
+  },
+  {
+   "work": "Graph of Thoughts",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[247]",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[184]",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting elicits reasoning",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[8]",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[252]",
+   "quote": null
+  },
+  {
+   "work": "Sequence level training with recurrent neural networks (MIXER)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[116]",
+   "quote": null
+  },
+  {
+   "work": "Self-critical sequence training",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[117]",
+   "quote": null
+  },
+  {
+   "work": "WebGPT",
+   "year": 2021,
+   "arxiv": "2112.09332",
+   "relation": "surveys",
+   "note": "best-of-N with reward model [81]",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for reward model overoptimization",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "[82]",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A taxonomy of post-training approaches for LLMs, categorized into Fine-tuning, Reinforcement Learning, and Test-time Scaling methods.",
+   "page": 1,
+   "why": "Single map of the survey's three branches."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of PPO, GRPO, and DPO. We highlight policy models, reference models, rewards and optimization flows with corresponding loss functions.",
+   "page": 10,
+   "why": "Shows which of policy, reference, value and reward models each method needs."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "An overview of Test-time Scaling methods: parallel scaling, sequential scaling, and search-based methods.",
+   "page": 14,
+   "why": "Taxonomy of TTS methods."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Compares reasoning strategies in LLMs: Direct prompting, CoT, Self-Consistency, Multiple CoT, ToT and GoT.",
+   "page": 16,
+   "why": "Contrasts chain, vote, tree and graph reasoning structures."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "An overview of reinforcement learning-enhanced LLMs, with developer, parameters, RL methods, fine-tuning, architecture and TTS support.",
+   "page": 5,
+   "why": "Quick but error-prone lookup of which model used which post-training method."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comprehensive Overview of Reasoning, RL Alignment, and Multilingual Datasets.",
+   "page": 19,
+   "why": "Catalog of benchmark names, sizes and evaluation type."
+  }
+ ],
+ "code": [
+  {
+   "where": "p4 Sec 2.2 REINFORCE",
+   "snippet": "theta <- theta + alpha (G - b) sum_t grad log pi_theta(a_t | s_t)",
+   "verbatim": false
+  },
+  {
+   "where": "p10 Sec 3.2.8 GRPO advantage",
+   "snippet": "r_bar_i = (r_i - mean(r)) / std(r)",
+   "verbatim": false
+  },
+  {
+   "where": "p9 Sec 3.2.2 KL-penalised objective",
+   "snippet": "J(pi) = E_{(x,y)~D}[ r(x,y) - beta KL( pi(.|x) || rho(.|x) ) ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations are partly mangled in text extraction; code snippets are paraphrased linearisations, marked verbatim false.",
+  "No embedded instructions found.",
+  "Figure 7 panels are images with no extractable data."
+ ]
 }

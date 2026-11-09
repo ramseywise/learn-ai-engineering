@@ -1,19 +1,698 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2407.07071",
  "pdf": "generative-ai/08-eval/sources/chuang-2024-lookback-lens.pdf",
  "bib": {
   "title": "Lookback Lens: Detecting and Mitigating Contextual Hallucinations in Large Language Models Using Only Attention Maps",
-  "first_author": "Yung-Sung Chuang",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Yung-Sung Chuang",
+   "Linlu Qiu",
+   "Cheng-Yu Hsieh",
+   "Ranjay Krishna",
+   "Yoon Kim",
+   "James Glass"
+  ],
+  "first_author": "Chuang",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2407.07071",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 68472,
+  "chars_total": 68472,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
  },
- "legacy_report": "SOURCE: \"Lookback Lens: Detecting and Mitigating Contextual Hallucinations in Large Language Models Using Only Attention Maps\". Yung-Sung Chuang, Linlu Qiu, Cheng-Yu Hsieh, Ranjay Krishna, Yoon Kim, James Glass (MIT; University of Washington). No venue is printed on the PDF; the only stamp is \"arXiv:2407.07071v2 [cs.CL] 3 Oct 2024\", so treat it as a preprint, 2024. Code: github.com/voidism/Lookback-Lens.\n\nCOVERAGE: 18 of 18 pages, 69,043 of 69,043 chars. Body, limitations, all 14 tables and appendices A-D read in full; references (pp. 10-12) skimmed for origins. File: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/chuang-2024-lookback-lens.pdf\n\nCLAIMS (ranked)\n\n1. A logistic regression on per-head \"lookback ratios\" beats a hidden-state probe and NLI models at detecting contextual hallucination under cross-task transfer.\n   - number: predefined spans, AUROC 85.3 (QA to Sum.) and 82.0 (Sum. to QA); best hidden-state layer (28th) 83.6 / 84.7; SoTA NLI 76.6 (Sum.) / 58.6 (QA).\n   - setup: LLaMA-2-7B-Chat greedy outputs; 1,000 CNN/DM and 2,655 NQ examples; labels from GPT-4o; lookback ratio is attention on context divided by attention on context plus generated tokens, over 1,024 heads; single run.\n   - quote: \"Lookback Lens QA Sum. 98.3 91.2 85.3 88.3 87.1 66.1\" (Table 2, p4)\n   - Hidden states win one direction (84.7 vs 82.0), so \"slightly better\" is not uniform.\n\n2. In the realistic sliding-window setting (8-token chunks, no known spans) every detector is weak; Lookback Lens leads at about 66.\n   - number: 66.1 / 66.0, against hidden states 56.1-59.4, SoTA NLI 57.1 / 61.8 and the authors' own NLI 53.0 / 64.9.\n   - quote: \"Ours: Lookback Lens 66.1 66.0\" (Table 13, p18)\n\n3. Hidden-state probes overfit in-domain and collapse on transfer.\n   - quote: \"28th Layer QA Sum. 100.0 91.4 83.6 99.2 97.3 57.7\" (Table 2, p4). Columns are train / test / transfer AUROC, predefined spans then sliding window.\n\n4. Guided decoding raises XSum faithfulness, but only matches the off-the-shelf NLI model.\n   - number: 49.0 to 58.6, with SoTA NLI-guided at 59.0. This is 9.6 points, or 510 to 414 hallucinated examples (18.8% relative). NQ exact match 71.2 to 74.2.\n   - setup: sample 8 candidate chunks of 8 tokens and keep the highest-scored; classifier trained on CNN/DM only; 1,000 XSum test examples judged by GPT-4o.\n   - quote: \"Our decoding method significantly reduced the number of hallucinated examples from 510 to 414, resulting in an 18.8% reduction\" (p5); \"Ours 58.6 74.2 6.27 5.10\" (Table 3, p5)\n   - At chunk size 16, SoTA NLI is clearly ahead on XSum: 62.1 vs 57.7 (Table 6, p7).\n\n5. The NLI comparison is unequal in training data.\n   - quote: \"SoTA NLI is trained on roughly 731k annotated summarization examples, which is 700× larger compared to our 1k training set\" (p5)\n   - SoTA NLI is Vectara's hallucination_evaluation_model on DeBERTa-v3-base, 86M parameters. The authors' own DeBERTa NLI, trained on the same 1k-2.6k data, reached 44.1 on XSum, below greedy.\n\n6. The detector transfers from 7B to 13B through a linear head mapping, but with losses.\n   - number: predefined-span AUROC 73.5 / 78.2 for 7B to 13B, against 84.0 / 84.3 for 13B to 13B (Table 4, p6). XSum decoding 52.9 to 56.1, against SoTA NLI 59.6. Cross-task plus cross-model on NQ is 73.7, below greedy at 74.0.\n   - quote: \"7B → 13B 56.1 76.4 73.7\" (Table 5, p6)\n\n7. The GPT-4o labels were spot-checked by humans.\n   - number: 68 of 70 XSum judgments correct, 97.1% after MTurk majority vote; NQ 47 of 50, 94.0%.\n   - quote: \"47 out of 50 examples are correct, resulting in a 94.0% accuracy\" (p13)\n\n8. LLaMA-2-7B-Chat hallucinates about half the time on summarization even with the source in context.\n   - quote: \"CNN/DM 1000 49.6%\" and \"NQ 2655 67.8%\" correct (Table 1, p2)\n\n9. The signal is spread across heads and layers.\n   - number: top-10 heads give 71.2, top-100 give 82.8, all heads 85.3 (Table 7, p7); middle layers 13-20 are the most useful (Table 8).\n   - Some heads carry negative coefficients, meaning attending to the model's own output indicates factuality.\n\n10. Cost.\n   - quote: \"Each of the examples takes around 20-30 seconds for 7B model, 40-60 seconds for 13B model\" (p15)\n   - GPT-4o labelling cost about $12 for 1,000 CNN/DM examples (p13).\n\nLIMITS\n- Needs model internals: full attention maps for every layer and head during generation. It cannot be used on API-only models, and it scores text only as the generating model produces it. The authors chose self-generated text over teacher forcing (p13), and scoring another model's text is untested.\n- Authors concede (p9): it cannot fix an error if no sampled candidate is correct; multi-candidate sampling adds inference time; it needs about 1k-2k annotated examples.\n- \"All the scores in the paper are from a single run\" (p15): no variance or confidence intervals. Differences such as 58.6 vs 59.0 are not distinguishable.\n- Only LLaMA-2 7B and 13B chat, both dated. Contexts are short: NQ uses three documents with the gold one in the middle, generation capped at 256 tokens. No real RAG pipeline and no long context.\n- Labels and the XSum metric both come from GPT-4o, which was shown the ground-truth summary or answer. Human validation is 70 and 50 examples, and the validators saw GPT-4o's verdict.\n- Realistic chunk-level AUROC of about 66 is far from deployable. Detection is span or chunk level, not claim level.\n- MT-Bench (hallu.) is 50 questions, 6.08 to 6.27, with no significance test.\n\nBUILDS ON: Azaria and Mitchell (2023), hidden-state probing and the layer choice; Simhi et al. (2024), open-book vs closed-book hallucination; Yang and Klein (2021), FUDGE, and Dathathri et al. (2019), PPLM, for classifier-guided decoding; Liu et al. (2024), \"Lost in the middle\", for the NQ setup; He et al. (2021), DeBERTa-v3; Vectara (2023), NLI baseline; Chuang et al. (2024), DoLa; Maynez et al. (2020), on ROUGE and BERTScore correlating poorly with faithfulness.\n\nCODE: none printed. Classifier is `sklearn.linear_model.LogisticRegression` with defaults and `max_iter` 1000; head mapping is `sklearn.linear_model.LinearRegression` (pp. 15-17).\n\nFIGURES: one candidate, Figure 1, p2: \"An illustration of the Lookback Lens. We extract attention weights and calculate the lookback ratios for all layers and all heads. We train a linear classifier on the concatenated features to predict truthfulness of the generation.\" It shows the whole feature pipeline in one picture and makes the white-box requirement visible.\n\nPROBLEMS\n- Equations on p2 extract garbled (subscripts and superscripts flattened); the definition is recoverable from the prose.\n- Table 5's header is scrambled in extraction. I mapped the columns (CNN/DM to XSum, NQ-train to NQ, CNN/DM to NQ) from the body text; check against the PDF before citing the NQ cells.\n- Table 2 gives identical sliding-window values (99.2 / 97.4 / 58.3) for both 24th-layer rows; this may be a copy error in the paper.\n- Section 2.2 gives 97% for the 70-example pilot and Appendix B.2 gives 97.1%, and B.2 says the examples were XSum.\n- \"9.6%\" and \"3%\" in the paper are percentage points, not relative reductions.\n- Tables 9-12 are LLM-judge prompt templates (\"You will be provided with...\", \"Please act as an impartial judge...\"). I treated them as quoted data and did not follow them.\n- pypdf emitted one harmless float-parse warning."
+ "type": "empirical",
+ "question": "Can the ratio of attention on the provided context versus newly generated tokens detect, and help mitigate, contextual hallucinations?",
+ "hypothesis": "Contextual hallucinations are related to the extent to which an LLM attends to the provided context versus its own generations.",
+ "contributions": [
+  "Lookback ratio feature and a linear Lookback Lens detector",
+  "Cross-task and cross-model (7B to 13B) transfer without retraining",
+  "Lookback Lens Guided Decoding for mitigation"
+ ],
+ "method": {
+  "summary": "A logistic regression over per-head lookback ratios (attention on context / (context + newly generated)) detects contextual hallucinations in LLaMA-2-7B-Chat outputs, using GPT-4o labels. It is then used to pick the best of k sampled chunks during decoding, and transferred to 13B via a linear head mapping.",
+  "task": "contextual hallucination detection (summarization, QA) and classifier-guided decoding",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CNN/DM",
+    "role": "both",
+    "size": "1000 examples",
+    "split": "sampled from the testing set; two-fold validation for source-task scores",
+    "source": "abisee/cnn_dailymail, Apache-2.0",
+    "preprocessing": "LLaMA-2-7B-Chat greedy responses (max 256 tokens), annotated by GPT-4o for truthfulness and hallucinated spans"
+   },
+   {
+    "name": "Natural Questions (Liu et al. 2024 setup)",
+    "role": "both",
+    "size": "2655 examples",
+    "split": "testing set; two-fold validation",
+    "source": "nelson-liu/lost-in-the-middle, Apache-2.0",
+    "preprocessing": "3 documents per question, gold in the middle between two irrelevant ones"
+   },
+   {
+    "name": "NQ-train",
+    "role": "train",
+    "size": "2499 examples (called 2.5K)",
+    "split": "sampled from the training set",
+    "source": "facebookresearch/DPR positive documents",
+    "preprocessing": "annotated as the NQ test set"
+   },
+   {
+    "name": "XSum",
+    "role": "eval",
+    "size": "1000 examples",
+    "split": "sampled from testing set",
+    "source": "EdinburghNLP/XSum, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "MT-bench",
+    "role": "eval",
+    "size": "80 examples (50 general questions for the hallucination variant)",
+    "split": "second turn only; first turn from GPT-3.5 responses",
+    "source": "lm-sys/FastChat llm_judge, Apache-2.0",
+    "preprocessing": "math questions excluded for MT-Bench (hallu.)"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-2-7B-Chat",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 32,
+    "hidden": 4096,
+    "heads": "1024 attention heads total (32 per layer, inferred: 1,024 heads over 32 layers)",
+    "context": null,
+    "other": {
+     "hf_id": "meta-llama/Llama-2-7b-chat-hf"
+    }
+   },
+   {
+    "name": "LLaMA-2-13B-Chat",
+    "role": "base",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": "1600 attention heads total",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Lookback Lens",
+    "role": "proposed",
+    "params": "1024 coefficients + bias (1024-dim feature)",
+    "architecture": "logistic regression on averaged lookback ratios",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "vectara/hallucination_evaluation_model (SoTA NLI)",
+    "role": "baseline",
+    "params": "86M",
+    "architecture": "DeBERTa-v3-base fine-tuned on NLI and summarization data",
+    "init_from": "microsoft/deberta-v3-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "train_examples": "roughly 731k"
+    }
+   },
+   {
+    "name": "DeBERTa-v3-base NLI (our impl.)",
+    "role": "baseline",
+    "params": "86M",
+    "architecture": "encoder",
+    "init_from": "microsoft/deberta-v3-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "train": "fine-tuned on the same CNN/DM and NQ data as an NLI task"
+    }
+   },
+   {
+    "name": "GPT-4o (gpt-4o-2024-05-13)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (gpt-4-0613)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "MT-Bench original scoring"
+    }
+   }
+  ],
+  "training": {
+   "objective": "logistic regression, factual (1) vs hallucinated (0), on span-averaged lookback ratio",
+   "optimizer": "scikit-learn LogisticRegression, default hyperparameters (default L2 penalty), max_iter=1000",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "default L2 penalty",
+   "hardware": "CPU machine (classifier)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "single run; no seeds",
+   "other": {
+    "head_mapping": "sklearn LinearRegression (closed-form OLS) from 13B heads (1600) to 7B heads (1024), fit on averaged per-head lookback ratios of training examples; 13B run on 7B outputs",
+    "span_labels_predefined": "non-hallucinated = text before first hallucinated span, after last, or fully non-hallucinated responses; hallucinated spans = negatives",
+    "span_labels_sliding": "all chunks of size 8; label 0 if overlapping any hallucinated span",
+    "LLaMA weights": "frozen; no LLM training"
+   }
+  },
+  "inference": {
+   "decoding": "data generation: greedy; guided decoding: sample k candidate chunks, pick argmax of F(mean lookback ratio), repeat until EOS or max length",
+   "temperature": "0.9 (sampling)",
+   "top_p": "0.95",
+   "max_tokens": "256 tokens for dataset generation (Appendix A); guided-decoding max length not stated",
+   "samples": "8 candidates per chunk; all scores from a single run",
+   "prompting": "GPT-4o judge prompts (Tables 9-11); LLaMA prompt follows Liu et al. 2024 setup",
+   "retrieval": "NQ: 3 documents, gold in middle",
+   "parameters": {
+    "k_candidates": 8,
+    "chunk_size": "8 (ablation 4, 8, 16)",
+    "sliding_window": 8,
+    "time_per_example": "20-30 s (7B), 40-60 s (13B) with guided decoding",
+    "gpus": "NVIDIA A6000 48GB and V100 32GB"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AUROC",
+     "definition": "detection of hallucinated vs non-hallucinated spans/chunks; Train/Test averaged over two-fold validation, Transfer to target task",
+     "unit": "AUROC points",
+     "higher_is_better": true
+    },
+    {
+     "name": "XSum accuracy",
+     "definition": "average of binary GPT-4o judgments of faithfulness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "NQ best span exact match",
+     "definition": "following Kandpal et al. 2023; Mallen et al. 2023",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MT-Bench score",
+     "definition": "GPT-4 1-10 (ori.); GPT-4o faithfulness-to-chat-history 1-10 (hallu., 50 general questions)",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SoTA NLI (Vectara)",
+    "DeBERTa-v3-base NLI (own)",
+    "hidden states of LLaMA-2-7B-Chat layers 32, 28, 24 (also 20, concatenation, pooling in appendix)",
+    "attention block outputs",
+    "greedy decoding"
+   ],
+   "protocol": "single run; no confidence intervals or significance test; GPT-4o as judge, checked against humans on 70 XSum and 50 NQ examples"
+  },
+  "availability": {
+   "code": "github.com/voidism/Lookback-Lens",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-4o truthfulness and span annotation, summarization (CNN/DM, XSum)",
+    "text": "You will be provided with a document and a proposed summary. Your task is to determine if the proposed summary can be directly inferred from the document. If the summary contains any information not found in the document, it is considered false.",
+    "where": "Table 9 (abridged here; full text in the PDF)"
+   },
+   {
+    "purpose": "GPT-4o judge for MT-Bench hallucination",
+    "text": "Please act as an impartial judge and evaluate the faithfulness and consistency of the response provided by an AI assistant to the user question displayed below.",
+    "where": "Table 11 (abridged)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "We use all the default hyperparameters, such as L2 penalty, etc, but we change the max_iter to 1000 to ensure it is converged.",
+    "where": "Appendix C.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Predefined spans: Lookback Lens trained on QA transfers to summarization with AUROC 85.3, above the best hidden-state layer (28th, 83.6) and SoTA NLI (76.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 85.3,
+   "unit": "AUROC",
+   "baseline_value": "83.6 (28th-layer hidden states); 76.6 (SoTA NLI)",
+   "n": null,
+   "setup": "LLaMA-2-7B-Chat greedy outputs (max 256 tokens) on 1,000 CNN/DM and 2,655 NQ examples (3-document context, gold in middle), labels from GPT-4o; logistic regression on 1,024 lookback-ratio features; single run; AUROC; train QA, test Sum. (transfer)",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row Lookback Lens QA->Sum., column Transfer (predefined span); rows 28th Layer 83.6, SoTA NLI 76.6"
+  },
+  {
+   "claim": "Predefined spans, Sum. to QA: Lookback Lens 82.0, but the 28th-layer hidden-state probe scores higher (84.7); SoTA NLI 58.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 82.0,
+   "unit": "AUROC",
+   "baseline_value": "84.7 (28th-layer hidden states)",
+   "n": null,
+   "setup": "LLaMA-2-7B-Chat greedy outputs (max 256 tokens) on 1,000 CNN/DM and 2,655 NQ examples (3-document context, gold in middle), labels from GPT-4o; logistic regression on 1,024 lookback-ratio features; single run; AUROC; train Sum., test QA (transfer)",
+   "where": "Table 2",
+   "note": null,
+   "table": "Table 2, row Lookback Lens Sum.->QA, column Transfer (predefined span); 28th Layer Sum.->QA 84.7; SoTA NLI QA 58.6"
+  },
+  {
+   "claim": "Hidden-state probes fit the training task perfectly yet fall in transfer; 24th layer QA to Sum. is 100.0 train and 81.3 transfer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 81.3,
+   "unit": "AUROC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-2-7B-Chat greedy outputs (max 256 tokens) on 1,000 CNN/DM and 2,655 NQ examples (3-document context, gold in middle), labels from GPT-4o; logistic regression on 1,024 lookback-ratio features; single run; AUROC; 24th-layer hidden states, predefined spans",
+   "where": "Table 2",
+   "note": "Other layers' QA->Sum. transfer: 32nd 79.4, 28th 83.6. Text: hidden-state classifier 'tends to overfit the training sets during the two-fold validation'.",
+   "table": "Table 2, row 24th Layer QA->Sum., columns Train 100.0, Transfer 81.3"
+  },
+  {
+   "claim": "Sliding window of 8 tokens (no given spans): Lookback Lens transfer AUROC is only about 66, still above hidden states (56.1-59.4) and NLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 66.1,
+   "unit": "AUROC",
+   "baseline_value": "hidden states 56.1-59.4; SoTA NLI 57.1 (Sum.), 61.8 (QA); own NLI 53.0 (Sum.), 64.9 (QA)",
+   "n": null,
+   "setup": "LLaMA-2-7B-Chat greedy outputs (max 256 tokens) on 1,000 CNN/DM and 2,655 NQ examples (3-document context, gold in middle), labels from GPT-4o; logistic regression on 1,024 lookback-ratio features; single run; AUROC; sliding window = 8; QA->Sum. 66.1, Sum.->QA 66.0",
+   "where": "Table 2 / Table 13",
+   "note": "Own NLI Sum.->QA transfer is 64.9, just under the lens's 66.0.",
+   "table": "Table 2, row Lookback Lens QA->Sum., column Transfer (sliding window = 8); row Lookback Lens Sum.->QA 66.0"
+  },
+  {
+   "claim": "Appendix D.2 and D.3: concatenating four hidden-state layers, pooling all 32 layers, or using attention-block outputs does not close the gap (sliding window 8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUROC",
+   "value": 59.2,
+   "unit": "AUROC",
+   "baseline_value": "66.0 (Lookback Lens Sum.->NQ)",
+   "n": null,
+   "setup": "Hidden-state variants, sliding window 8, NQ->Sum. / Sum.->NQ; best variant values 58.8/59.2 (4 layers concatenated) vs lens 66.1/66.0",
+   "where": "Table 13, Table 14",
+   "note": null,
+   "table": "Table 13, row Concatenate above 4 layers, column Sum. ->NQ"
+  },
+  {
+   "claim": "Lookback Lens guided decoding raises XSum correct rate from 49.0 to 58.6 (reported as a 9.6% gain), on par with SoTA NLI guidance (59.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "XSum accuracy (GPT-4o)",
+   "value": 58.6,
+   "unit": "% correct (GPT-4o judged)",
+   "baseline_value": "49.0 greedy; 59.0 SoTA NLI-guided",
+   "n": null,
+   "setup": "Guided decoding: 8 candidate chunks of 8 tokens, classifier trained on CNN/DM only; XSum 1,000 test examples judged by GPT-4o; LLaMA-2-7B-Chat; single run; sampling temperature 0.9, top-p 0.95",
+   "where": "Table 3",
+   "note": "'9.6%' is percentage points (58.6 - 49.0).",
+   "quote": "Lookback Lens Guided Decoding can improve the performance on both in-domain task (XSum, by 9.6%)",
+   "table": "Table 3, row Ours, column XSum"
+  },
+  {
+   "claim": "Hallucinated XSum examples fell from 510 to 414, an 18.8% reduction.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 18.8,
+   "unit": "% reduction in hallucinated examples",
+   "baseline_value": "510 hallucinated at greedy",
+   "n": null,
+   "setup": "Guided decoding: 8 candidate chunks of 8 tokens, classifier trained on CNN/DM only; XSum 1,000 test examples judged by GPT-4o; LLaMA-2-7B-Chat; single run; sampling temperature 0.9, top-p 0.95",
+   "where": "Sec 3.3",
+   "note": null,
+   "quote": "Our decoding method significantly reduced the number of hallucinated examples from 510 to 414, resulting in an 18.8% reduction in the hallucinated examples."
+  },
+  {
+   "claim": "Hidden-state-guided and own-NLI-guided decoding trained on the same data do not improve XSum (28th layer 48.9, own NLI 44.1 vs greedy 49.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 48.9,
+   "unit": "% correct",
+   "baseline_value": "49.0 greedy",
+   "n": null,
+   "setup": "Guided decoding: 8 candidate chunks of 8 tokens, classifier trained on CNN/DM only; XSum 1,000 test examples judged by GPT-4o; LLaMA-2-7B-Chat; single run; sampling temperature 0.9, top-p 0.95",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row 28th layer, column XSum; row NLI (our impl.) 44.1"
+  },
+  {
+   "claim": "On NQ, guided decoding by Lookback Lens gives exact match 74.2 vs greedy 71.2 (cross-task); SoTA NLI also 74.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 74.2,
+   "unit": "best span exact match",
+   "baseline_value": "71.2 greedy",
+   "n": null,
+   "setup": "Guided decoding: 8 candidate chunks of 8 tokens, classifier trained on CNN/DM only; NQ 2,655 examples, best-span exact match; LLaMA-2-7B-Chat; single run; sampling temperature 0.9, top-p 0.95",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row Ours, column NQ"
+  },
+  {
+   "claim": "MT-Bench (hallucination, 50 general questions, GPT-4o judge): 6.27 vs 6.08 greedy; original MT-Bench score unchanged at 5.10.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.27,
+   "unit": "score 1-10",
+   "baseline_value": "6.08 / 5.10 greedy",
+   "n": null,
+   "setup": "Guided decoding: 8 candidate chunks of 8 tokens, classifier trained on CNN/DM only; MT-Bench second-turn, 50 general questions, GPT-4o (hallu.) / GPT-4 (ori.) judges; LLaMA-2-7B-Chat; single run; sampling temperature 0.9, top-p 0.95",
+   "where": "Table 3",
+   "note": null,
+   "table": "Table 3, row Ours, columns MT-Bench Hallu. 6.27, Ori. 5.10"
+  },
+  {
+   "claim": "Chunk size 16 on XSum: SoTA NLI-guided 62.1 beats Lookback Lens 57.7; Lookback Lens is best at chunk 8 (58.6) and 4 (53.2 vs SoTA NLI 57.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 57.7,
+   "unit": "% correct",
+   "baseline_value": "62.1 SoTA NLI",
+   "n": null,
+   "setup": "XSum, chunk size 16, 8 candidates; same as Table 3 setup",
+   "where": "Table 6",
+   "note": null,
+   "table": "Table 6, row Ours, column XSum chunk 16; row SoTA NLI 62.1"
+  },
+  {
+   "claim": "Cross-model: a lookback lens trained on LLaMA-2-7B-Chat and mapped by linear regression to LLaMA-2-13B-Chat reaches 73.5 / 78.2 AUROC (predefined spans), versus 84.0 / 84.3 when trained on 13B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 73.5,
+   "unit": "AUROC",
+   "baseline_value": "84.0 (13B->13B)",
+   "n": null,
+   "setup": "Predefined span, QA->Sum. 73.5, Sum.->QA 78.2 for 7B->13B; 84.0, 84.3 for 13B->13B; 1,024 7B heads vs 1,600 13B heads; 13B run on 7B outputs",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row Lookback Lens: Train 7B ->Test 13B, QA->Sum., Predefined Span"
+  },
+  {
+   "claim": "Cross-model sliding-window AUROC is 58.8 / 60.5 (7B->13B) against 60.4 / 60.8 (13B->13B).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 58.8,
+   "unit": "AUROC",
+   "baseline_value": "60.4",
+   "n": null,
+   "setup": "Sliding window 8, 7B->13B",
+   "where": "Table 4",
+   "note": null,
+   "table": "Table 4, row Lookback Lens: Train 7B ->Test 13B, QA->Sum., Sliding Window"
+  },
+  {
+   "claim": "Cross-model guided decoding on 13B: XSum 56.1 (7B lens) vs greedy 52.9; NQ 76.4 vs greedy 74.0; no significant gain for CNN/DM(7B) to NQ(13B) (73.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 56.1,
+   "unit": "% correct",
+   "baseline_value": "52.9 greedy; 57.9 13B->13B",
+   "n": null,
+   "setup": "LLaMA-2-13B-Chat, chunk size 8; XSum from CNN/DM-trained 7B lens; NQ from NQ-train (2,499 examples) 7B lens",
+   "where": "Table 5",
+   "note": null,
+   "table": "Table 5, row 7B ->13B, column CNN/DM->XSum; Greedy XSum 52.9"
+  },
+  {
+   "claim": "Head ablation: top-100 heads by coefficient magnitude recover most of the full 1,024-head performance (82.8 / 81.1 vs 85.3 / 82.0); top-10 gives 71.2 / 79.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 82.8,
+   "unit": "AUROC",
+   "baseline_value": "85.3 all heads",
+   "n": null,
+   "setup": "Predefined span, QA->Sum. and Sum.->QA",
+   "where": "Table 7",
+   "note": null,
+   "table": "Table 7, row Largest mag., column k=100 QA->Sum."
+  },
+  {
+   "claim": "Layer ablation: layers 13-16 and 17-20 are most useful (81.2 / 78.2 and 80.8 / 78.2) but no subset matches all 32 layers (85.3 / 82.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.2,
+   "unit": "AUROC",
+   "baseline_value": "85.3 all layers",
+   "n": null,
+   "setup": "Predefined span",
+   "where": "Table 8",
+   "note": null,
+   "table": "Table 8, row Layer 13-16, column QA->Sum."
+  },
+  {
+   "claim": "GPT-4o labels agreed with humans: 97.1% on 70 XSum examples (210 annotations) and 94.0% majority-vote on 50 NQ examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 97.1,
+   "unit": "% agreement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "70 XSum examples with 3 judgments each (2 more via MTurk); 50 NQ examples, 3 annotators each",
+   "where": "Appendix B.2",
+   "note": "Body says 97% on a pilot of 70 summarization examples. 70 + 50 = 120 examples checked in total (note's '120' is derived).",
+   "quote": "With a final accuracy of 97.1%"
+  },
+  {
+   "claim": "LLaMA-2-7B-Chat greedy outputs: CNN/DM 49.6% correct (1,000 ex.), NQ 67.8% correct (2,655 ex.), per GPT-4o.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 49.6,
+   "unit": "% correct",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o judged, LLaMA-2-7B-chat greedy",
+   "where": "Table 1",
+   "note": null,
+   "table": "Table 1, row CNN/DM, column Correct; NQ 67.8%"
+  },
+  {
+   "claim": "SoTA NLI baseline trained on roughly 731k annotated examples, about 700x the lens's 1k training set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 731,
+   "unit": "k examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vectara hallucination_evaluation_model, DeBERTa-v3-base 86M",
+   "where": "Sec 3.3",
+   "note": "Appendix C.1 says the 731k come from FEVER, Vitamin C and PAWS training sets plus NLI and summarization data; body calls them 'summarization examples'.",
+   "quote": "SoTA NLI is trained on roughly 731k annotated summarization examples, which is 700× larger compared to our 1k training set."
+  },
+  {
+   "claim": "GPT-4o annotation cost: about $8 per 1,000 XSum, $12 per 1,000 CNN/DM, $16 per 2,655 NQ.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 16,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o gpt-4o-2024-05-13",
+   "where": "Appendix B.1",
+   "note": null,
+   "quote": "2655 examples from NQ is around $16."
+  }
+ ],
+ "limits": [
+  "Guided decoding is bounded by the LLM's ability to sample a correct chunk among eight candidates.",
+  "Sampling multiple candidates raises inference time (20-30 s per example at 7B).",
+  "Needs 1k-2k annotated examples to train the classifier.",
+  "All scores are from a single run due to limited compute; no variance reported.",
+  "Labels come from GPT-4o, validated on 70 XSum and 50 NQ examples.",
+  "Needs attention maps, so only open-weight models; cross-model transfer shown only LLaMA-2 7B to 13B; cross-task plus cross-model decoding (CNN/DM to NQ on 13B) showed no significant gain.",
+  "Sliding-window detection (no given spans) is weak for every method (about 66 AUROC at best).",
+  "SoTA NLI baseline is trained on far more data (731k), so comparisons are not like-for-like."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "contextual hallucination",
+   "definition": "the model is provided with the correct facts in the input context but still fails to generate accurate outputs",
+   "where": "Sec 1"
+  },
+  {
+   "term": "lookback ratio",
+   "definition": "ratio of attention weights on the given context versus the newly generated tokens, per head: A(context)/(A(context)+A(new))",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Azaria and Mitchell 2023, The internal state of an LLM knows when it's lying",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "hidden-state probe layers 32/28/24/20",
+   "quote": null
+  },
+  {
+   "work": "Simhi et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closed-book vs open-book hallucination; detection and mitigation",
+   "quote": null
+  },
+  {
+   "work": "Vectara hallucination_evaluation_model",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SoTA NLI",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. 2024, Lost in the middle",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "NQ setup",
+   "quote": null
+  },
+  {
+   "work": "Yang and Klein 2021, FUDGE",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "classifier-guided generation",
+   "quote": null
+  },
+  {
+   "work": "LLaMA-2-7B-Chat / 13B-Chat (Touvron et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base models",
+   "quote": null
+  },
+  {
+   "work": "HaluEval (Li et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "considered and rejected: hallucinated/non-hallucinated examples come from different distributions",
+   "quote": null
+  },
+  {
+   "work": "MT-bench (Zheng et al. 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "decoding evaluation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An illustration of the Lookback Lens.",
+   "page": 2,
+   "why": "shows how lookback ratios from all layers/heads feed a linear classifier"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Lookback Lens Guided Decoding: sample multiple chunk candidates, compute lookback ratios from attention maps to be scored by Lookback Lens, and select the best candidate.",
+   "page": 4,
+   "why": "the decoding loop"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "AUROC of the classification tasks using predefined span segmentation and sliding window (size = 8) on NQ (QA) and CNN/DM (Sum.).",
+   "page": 4,
+   "why": "the main detection comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1",
+   "snippet": "LR_t^{l,h} = A_t^{l,h}(context) / (A_t^{l,h}(context) + A_t^{l,h}(new)); P(y=1|v) = sigmoid(w^T v + b); C* = argmax_{C_j} F(v_j)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells are extracted one per line; values were mapped to rows by reading order.",
+  "Abstract/Table 13 'Ours' numbers match Table 2 sliding-window transfer."
+ ]
 }

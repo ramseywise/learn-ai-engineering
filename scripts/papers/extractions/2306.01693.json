@@ -1,0 +1,855 @@
+{
+ "schema": 1,
+ "key": "2306.01693",
+ "pdf": "generative-ai/05-RL/sources/wu-2023-fine-grained-human-feedback-gives.pdf",
+ "bib": {
+  "title": "Fine-Grained Human Feedback Gives Better Rewards for Language Model Training",
+  "authors": [
+   "Zeqiu Wu",
+   "Yushi Hu",
+   "Weijia Shi",
+   "Nouha Dziri",
+   "Alane Suhr",
+   "Prithviraj Ammanabrolu",
+   "Noah A. Smith",
+   "Mari Ostendorf",
+   "Hannaneh Hajishirzi"
+  ],
+  "first_author": "Wu",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
+  "arxiv": "2306.01693",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 99825,
+  "chars_total": 99825,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; figure images (annotation interface, Fig 5-8) not visible in text"
+ },
+ "type": "empirical",
+ "question": "Can fine-grained human feedback (dense, per-error-type rewards) give better RL training signals for language models than holistic preference rewards?",
+ "hypothesis": "Dense rewards localised to segments, from separate reward models per error type, are a stronger and more sample-efficient training signal than a single sequence-level reward.",
+ "contributions": [
+  "FINE-GRAINED RLHF framework with rewards dense in segment density and multiple reward models per feedback type",
+  "QA-FEEDBACK dataset with fine-grained and preference human feedback",
+  "Experiments on detoxification and long-form QA with automatic and human evaluation, plus LM customization via reward weights",
+  "Release of data, feedback and code"
+ ],
+ "method": {
+  "summary": "PPO is run with a reward that sums K reward models, each scoring segments at its own density (sub-sentence, sentence, full sequence) with weights w_k plus a per-token KL penalty. Evaluated on detoxification (Perspective API reward, GPT-2 large) and long-form QA (T5-large with three Longformer-base reward models trained on span-level human feedback).",
+  "task": "detoxification (REALTOXICITYPROMPTS) and long-form QA (QA-FEEDBACK, built from ASQA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "REALTOXICITYPROMPTS",
+    "role": "both",
+    "size": "100K sentence-level prompts",
+    "split": "train/dev/test sizes not stated",
+    "source": "Gehman et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "QA-FEEDBACK (from ASQA)",
+    "role": "both",
+    "size": "3,853 train, 500 dev, 948 test examples",
+    "split": "train and dev from ASQA train; test from ASQA dev; 1K train examples used for SFT, feedback collected on remaining 2,853 train and 500 dev outputs",
+    "source": "ASQA with oracle knowledge contexts; passages mapped by BM25 to closest passage; fine-grained and preference feedback from 15 selected Amazon Mechanical Turk workers; released at FineGrainedRLHF.github.io",
+    "preprocessing": "Spans of C1 errors shorter than 5 words filtered for Rphi1 training; sentences via spaCy, sub-sentences split at comma or semicolon"
+   },
+   {
+    "name": "Rphi1 training data",
+    "role": "train",
+    "size": "7379 'has error' and 8059 'no error' sub-sentences",
+    "split": null,
+    "source": "derived",
+    "preprocessing": null
+   },
+   {
+    "name": "Rphi2 training data",
+    "role": "train",
+    "size": "1600 'has error' and 3411 'no error' sentences",
+    "split": null,
+    "source": "derived",
+    "preprocessing": null
+   },
+   {
+    "name": "Rphi3 training data",
+    "role": "train",
+    "size": "6821 bootstrapped pairs",
+    "split": null,
+    "source": "derived",
+    "preprocessing": "completeness score |S'∩S|/|S|; equal-score pairs dropped"
+   },
+   {
+    "name": "Preference RM training data",
+    "role": "train",
+    "size": "14981 pairs (ties dropped)",
+    "split": null,
+    "source": "4 samples per prompt, 6 pairs each",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 large policy (detox)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only",
+    "init_from": "GPT-2 large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "value model": "GPT-2 base"
+    }
+   },
+   {
+    "name": "T5-large policy (QA)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder",
+    "init_from": "T5-large SFT on 1K training examples (SFT)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "input limit 1024, output limit 200",
+    "other": {
+     "value model": "T5-base"
+    }
+   },
+   {
+    "name": "Rphi1/Rphi2 (relevance, factuality)",
+    "role": "reward",
+    "params": null,
+    "architecture": "Longformer-base encoder with 2-class token-level classification layer at [sep] tokens",
+    "init_from": "Longformer-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "reward": "+1 no error, -1 error"
+    }
+   },
+   {
+    "name": "Rphi3 (completeness) and preference RM",
+    "role": "reward",
+    "params": null,
+    "architecture": "Longformer-base with scalar head, pairwise loss",
+    "init_from": "Longformer-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Perspective API",
+    "role": "reward",
+    "params": null,
+    "architecture": "toxicity classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SFT-Full (T5-large)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder-decoder",
+    "init_from": "T5-large fine-tuned on gold human responses of all training examples",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "prompting": "task instruction plus one random QA example"
+    }
+   },
+   {
+    "name": "GeDi, DExperts",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "PPO clipped surrogate with GAE; reward r_t = sum_k sum_j 1(t=T_j^k) w_k R_k(x,y,j) - beta log(P_theta/P_init); value model with squared error; reward models: token classification (Rphi1, Rphi2), pairwise loss -log sigma(R(yp)-R(yl)) (Rphi3, preference RM)",
+   "optimizer": "Adam",
+   "lr": "peak 1e-5 for PPO (grid {5e-6,1e-5,2e-5}); RMs searched over {5e-6,1e-5,5e-5}, chosen values not stated",
+   "lr_schedule": "linear",
+   "warmup": "10 steps (detox PPO); 100 steps (QA PPO); RM warm-up ratio searched {0.1,0.2}",
+   "batch_size": "episodes per card: 64 (detox), 32 (QA); RMs: 24 (Rphi1, Rphi2), 12 per GPU (Rphi3, preference RM)",
+   "steps": null,
+   "epochs": "QA PPO about 5 epochs (80K episodes); RMs 50 epochs (Rphi1, Rphi2), 30 epochs (Rphi3, pref RM)",
+   "tokens": null,
+   "seq_len": "QA input 1024, output 200; detox generation length 48",
+   "precision": null,
+   "weight_decay": "RM search {0.001,0.01}, chosen not stated",
+   "dropout": null,
+   "regularisation": "KL penalty beta: detox holistic 0.3, sentence-level 0.1; QA Pref. RLHF 0.2, F.G. RLHF 0.3; lambda detox holistic 0.99, F.G. 0.95; QA Pref 0.99, F.G. 0.95",
+   "hardware": "2x 80G NVIDIA A100 for PPO; 1x A100 for Rphi1/Rphi2; 2x A100 for Rphi3 and pref RM",
+   "compute": "about 22 hours (detox), about 15 hours (QA) on 2x A100 80G; RMs 1h (Rphi1), 2h (Rphi2), 2h (Rphi3)",
+   "wall_clock": "22 h detox, 15 h QA",
+   "seeds": "3 independent runs, averaged; error bars are standard error across runs",
+   "other": {
+    "detox episodes": "200K",
+    "QA episodes": "80K",
+    "exploration frequency": "4 for all (grid {2,4,8})",
+    "reward weights QA": "w1=0.3 (relevance), w2=0.5 (factuality), w3=0.3 (completeness); grid search w1,w3 in [0.0,0.5] with w2=0.5",
+    "checkpoint selection": "lowest validation toxicity (detox); highest validation reward (QA)",
+    "PPO clip epsilon and gamma values": "not stated numerically"
+   }
+  },
+  "inference": {
+   "decoding": "detox: nucleus sampling p=0.9 (training and inference); QA: top-k k=20 sampling during RL exploration, greedy decoding at inference",
+   "temperature": "1.0 (detox); 0.7 (QA RL exploration)",
+   "top_p": "0.9 (detox)",
+   "max_tokens": "48 (detox generation); 200 output limit (QA)",
+   "samples": "detox: 4 samples per prompt, toxicity = max over 4; 3 training runs; QA human eval: each output sampled from the inference results of 3 runs",
+   "prompting": "ChatGPT: task instruction and one random QA example",
+   "retrieval": "oracle knowledge passages from ASQA given in the input",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Toxicity avg max",
+     "definition": "max Perspective score among 4 samples, averaged over prompts",
+     "unit": "score 0-1",
+     "higher_is_better": false
+    },
+    {
+     "name": "PPL",
+     "definition": "GPT-2 XL perplexity",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "dist-2/dist-3",
+     "definition": "n-gram diversity",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human error rate rel./fact.",
+     "definition": "% of sub-sentences (rel.) or sentences (fact.) with the error type; sub-sentences with only rel. error excluded from fact. rate",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Human pairwise comp.",
+     "definition": "win/tie/lose on information completeness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Rphi1, Rphi2",
+     "definition": "% of sub-sentences/sentences in test set predicted 'no error'",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Rphi3",
+     "definition": "averaged scalar output over test examples",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "RougeLSum",
+     "definition": "as used in ASQA",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-2",
+    "GeDi",
+    "DExperts",
+    "Hol. RLHF",
+    "SFT (1K)",
+    "SFT-Full",
+    "Preference RLHF",
+    "ChatGPT (one-shot)"
+   ],
+   "protocol": "Human evaluation on 200 randomly sampled QA-FEEDBACK test examples by the same AMT worker group; automatic scores averaged over 3 runs; no significance test reported"
+  },
+  "availability": {
+   "code": "https://FineGrainedRLHF.github.io",
+   "weights": null,
+   "data": "https://FineGrainedRLHF.github.io (data and collected human feedback)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "Human evaluation is run on 200 randomly sampled test set examples of QA-FEEDBACK",
+    "where": "Sec 4.3"
+   },
+   {
+    "field": "training.other.reward weights QA",
+    "quote": "w1 = 0.3, w2 = 0.5, w3 = 0.3",
+    "where": "Sec 4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-Grained RLHF was rated better than Preference RLHF in 30.5% of examples",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall quality win rate vs Pref. RLHF",
+   "value": "30.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged; human pairwise overall-quality comparison, 200 random test examples; remaining 45% ties",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "FINE-GRAINED RLHF was rated better than Preference RLHF in 30.5% of all examples and worse in 24.5% of examples"
+  },
+  {
+   "claim": "Fine-Grained RLHF worse than Preference RLHF in 24.5% of overall comparisons",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall quality loss rate",
+   "value": "24.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged; 200 test examples",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "worse in 24.5% of examples"
+  },
+  {
+   "claim": "Information completeness: win vs Pref. RLHF 19.5%, tie 71.0%, lose 9.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "comp. win rate vs Pref. RLHF",
+   "value": "19.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged; human, 200 examples",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Pref. RLHF, columns Win 19.5% Tie 71.0% Lose 9.5%"
+  },
+  {
+   "claim": "Information completeness: win vs SFT 23.0%, tie 65.5%, lose 11.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "comp. win rate vs SFT",
+   "value": "23.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SFT, columns Win 23.0% Tie 65.5% Lose 11.5%"
+  },
+  {
+   "claim": "Information completeness vs SFT-Full: win 22.0%, lose 17.0%",
+   "kind": "measured",
+   "source": null,
+   "metric": "comp. win rate vs SFT-Full",
+   "value": "22.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SFT-Full, columns Win 22.0% Tie 61.0% Lose 17.0%"
+  },
+  {
+   "claim": "Factuality reward-model score (% sentences predicted no error) on test: F.G. RLHF 0.816 vs Pref. RLHF 0.781, SFT 0.749, SFT-Full 0.756",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rphi2",
+   "value": "0.816",
+   "unit": "fraction",
+   "baseline_value": "0.781 (Pref. RLHF)",
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged; automatic evaluation by the same reward models used in training",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + F.G. RLHF, column Rphi2"
+  },
+  {
+   "claim": "Completeness reward Rphi3 on test: F.G. RLHF 0.139 vs Pref. RLHF 0.101, SFT -0.053",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rphi3",
+   "value": "0.139",
+   "unit": "score",
+   "baseline_value": "0.101 (Pref. RLHF)",
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + F.G. RLHF, column Rphi3"
+  },
+  {
+   "claim": "Relevance reward Rphi1: Pref. RLHF 0.482 is below SFT 0.513; F.G. RLHF equals SFT at 0.513",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rphi1",
+   "value": "0.482",
+   "unit": "fraction",
+   "baseline_value": "0.513 (SFT)",
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + Pref. RLHF, column Rphi1"
+  },
+  {
+   "claim": "RougeLSum is similar across systems: F.G. RLHF 49.93, Pref. RLHF 49.84, SFT 48.96, SFT-Full 49.63",
+   "kind": "measured",
+   "source": null,
+   "metric": "RougeLSum",
+   "value": "49.93",
+   "unit": "points",
+   "baseline_value": "48.96 (SFT)",
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + F.G. RLHF, column Rouge"
+  },
+  {
+   "claim": "Detoxification: F.G. RLHF attains avg max toxicity 0.081 vs Hol. RLHF 0.130, DExperts 0.136, GeDi 0.154, GPT-2 0.192",
+   "kind": "measured",
+   "source": null,
+   "metric": "toxicity avg max",
+   "value": "0.081",
+   "unit": "Perspective score (lower better)",
+   "baseline_value": "0.130 (Hol. RLHF)",
+   "n": null,
+   "setup": "REALTOXICITYPROMPTS test, GPT-2 large policy, max over 4 samples averaged over prompts, 3 runs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row F.G. RLHF, column Toxicity avg max"
+  },
+  {
+   "claim": "Detoxification fluency: F.G. RLHF PPL 9.77 vs Hol. RLHF 11.75, GPT-2 9.58",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-2 XL perplexity",
+   "value": "9.77",
+   "unit": "PPL",
+   "baseline_value": "11.75 (Hol. RLHF)",
+   "n": null,
+   "setup": "REALTOXICITYPROMPTS test, GPT-2 large",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row F.G. RLHF, column PPL"
+  },
+  {
+   "claim": "Dense sentence-level reward drops toxicity faster than holistic reward (sample efficiency)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "REALTOXICITYPROMPTS dev set curves vs training steps, Fig 2; no number given in text",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "FINE-GRAINED RLHF has the toxicity drop much faster while keeping a low-level perplexity."
+  },
+  {
+   "claim": "Weighting: w1 0.4/0.3/0.2 gives short/medium/long outputs with mean length 74.92/98.66/109.63",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg generation length (medium)",
+   "value": "98.66",
+   "unit": "len",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Long-form QA on QA-FEEDBACK test set (948 ex.), T5-large policy SFT on 1K ex., PPO, 3 runs averaged; w2=0.5, w3=0.3 fixed; len unit not defined in text (likely words)",
+   "note": "Short Rphi1 0.637, fact 0.760, comp -0.231; Long Rphi1 0.425, fact 0.860, comp 0.241; Rouge 48.99/49.93/48.72",
+   "where": "Table 4",
+   "table": "Table 4, rows Short/Medium/Long, column len"
+  },
+  {
+   "claim": "Higher relevance weight yields bigger rel. reward, smaller fact. and comp. rewards, shorter outputs",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 configs",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "We observe that a higher w1 leads to a bigger rel. reward, smaller fact. and comp. rewards, and shorter generated outputs."
+  },
+  {
+   "claim": "24 of 30 manually inspected examples follow the short/medium/long behavior pattern",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "24",
+   "unit": "of 30 examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "manual inspection of 30 random examples",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "24/30 examples follow the above rule."
+  },
+  {
+   "claim": "Removing Rphi1 makes outputs extremely long (179.31) with comp. reward 0.742",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg len",
+   "value": "179.31",
+   "unit": "len",
+   "baseline_value": "101.76 (full F.G. RLHF)",
+   "n": null,
+   "setup": "Dev set ablation, T5-large policy",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row w/o. Rphi1, columns Rphi3 0.742, len 179.31"
+  },
+  {
+   "claim": "Removing Rphi2 drops factuality reward to 0.640 (full model 0.825)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rphi2",
+   "value": "0.640",
+   "unit": "fraction",
+   "baseline_value": "0.825",
+   "n": null,
+   "setup": "Dev set ablation",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row w/o. Rphi2, column Rphi2"
+  },
+  {
+   "claim": "Removing Rphi3 gives concise outputs, len 93.92, comp. 0.123 vs 0.266",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rphi3",
+   "value": "0.123",
+   "unit": "score",
+   "baseline_value": "0.266",
+   "n": null,
+   "setup": "Dev set ablation",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row w/o. Rphi3, column Rphi3 0.123"
+  },
+  {
+   "claim": "Rphi1 accuracy 69.6, F1 68.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rphi1 accuracy",
+   "value": "69.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "model-generated sub-sentences from dev set",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "has a binary classification accuracy of 69.6, and an F1 score (for the “has error” class) of 68.5"
+  },
+  {
+   "claim": "Rphi2 accuracy 77.8, F1 67.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rphi2 accuracy",
+   "value": "77.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev set sentences",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "The fact. reward model Rϕ2 has an accuracy of 77.8 and an F1 score of 67.5."
+  },
+  {
+   "claim": "Completeness RM pairwise accuracy 70.9 vs preference RM 57.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise accuracy",
+   "value": "70.9",
+   "unit": "%",
+   "baseline_value": "57.2",
+   "n": null,
+   "setup": "dev set",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "The comp. reward model Rϕ3 has an accuracy of 70.9 in pairwise comparison. In contrast, the preference-based reward model only reaches an accuracy of 57.2."
+  },
+  {
+   "claim": "Annotation takes about 6 minutes per example for either feedback type; ASQA human response drafting 15 min",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6",
+   "unit": "minutes per example",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AMT workers, T5-large outputs",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "both annotation tasks of fine-grained and preference feedback for one question take a worker about 6 minutes to finish"
+  },
+  {
+   "claim": "Three reward models add roughly 1% training time over preference RLHF",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1",
+   "unit": "% training time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "QA, 3 RMs vs 1",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "we only observe very small relative additional cost (roughly 1% training time) compared to preference RLHF"
+  },
+  {
+   "claim": "ChatGPT one-shot RougeLSum 40.92 vs ours ~49.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "RougeLSum",
+   "value": "40.92",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one random in-context example, test set",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "ChatGPT achieves a RougeLSum score of 40.92 on the test set"
+  },
+  {
+   "claim": "Annotator agreement: 83% C1 sub-sentences, 92% C2 sentences, 85% C3",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement C1",
+   "value": "83",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "300 doubly annotated examples; C2 92%, C3 85%",
+   "note": null,
+   "where": "App C.3",
+   "quote": "reach an agreement for 83% of all sub-sentences) and whether a sentence contains C2 (92%)"
+  },
+  {
+   "claim": "Rewards compete: rel. reward rises over first 250 steps then falls while comp. reward does the opposite",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "250",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4 dev-set rewards, z-normalised",
+   "note": null,
+   "where": "Sec 4.6",
+   "quote": "The rel. reward increases rapidly in the first 250 steps and then starts decreasing"
+  },
+  {
+   "claim": "Pref. RLHF produces more irrelevance/repetition/incoherence errors than SFT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "human eval Fig 3, 200 test examples; no numbers in text",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "Preference RLHF, despite greatly reducing factual errors compared to the initial policy model SFT, generates even more irrelevance, repetition, andincoherence errors than SFT."
+  }
+ ],
+ "limits": [
+  "Extra compute: multiple Perspective API calls per output, or multiple reward models needing more compute time and GPU memory.",
+  "Defining feedback types and density per task needs non-trivial manual effort.",
+  "Annotation quality was carefully controlled; noisy feedback from end users in the wild is not studied.",
+  "Only T5-large and GPT-2 large policies tested; effect of reward and value model sizes left open.",
+  "Relevance and completeness rewards compete; weights must be tuned.",
+  "Reward models were trained on T5-large outputs and not used to evaluate ChatGPT.",
+  "Automatic scores for QA use the same reward models as training.",
+  "Human-written gold responses were shown to workers for comparability with SFT; authors say not required in practice.",
+  "Little or no improvement in irrelevance/repetition/incoherence errors (Sec 4.4)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Fine-grained reward",
+   "definition": "reward that is dense (given after each segment) and category-specific (one reward model per error type)",
+   "where": "Abstract, Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PPO (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "preference RLHF baseline, pairwise RM loss",
+   "quote": null
+  },
+  {
+   "work": "Is RL (not) for NLP (Ramamurthy et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MDP formulation, SFT init, sampling settings",
+   "quote": null
+  },
+  {
+   "work": "ASQA (Stelmakh et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "base of QA-FEEDBACK",
+   "quote": null
+  },
+  {
+   "work": "REALTOXICITYPROMPTS (Gehman et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "detox task",
+   "quote": null
+  },
+  {
+   "work": "GeDi (Krause et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "controlled generation",
+   "quote": null
+  },
+  {
+   "work": "DExperts (Liu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "controlled generation",
+   "quote": null
+  },
+  {
+   "work": "Longformer (Beltagy et al.)",
+   "year": 2020,
+   "arxiv": "2004.05150",
+   "relation": "uses-method",
+   "note": "reward model backbone",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "policy",
+   "quote": null
+  },
+  {
+   "work": "Glaese et al. (Sparrow)",
+   "year": 2022,
+   "arxiv": "2209.14375",
+   "relation": "related",
+   "note": "separate RMs per attribute but combined into a single reward",
+   "quote": null
+  },
+  {
+   "work": "Acute-eval (Li et al.)",
+   "year": 2019,
+   "arxiv": "1909.03087",
+   "relation": "uses-method",
+   "note": "motivates pairwise comparison for full-sequence RM",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of (a) RL with human preference and (b) FINE-GRAINED RLHF on long-form QA",
+   "page": 2,
+   "why": "shows span-level error types and per-segment rewards versus one scalar"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Dynamics of each type of reward during training (z-normalized)",
+   "page": 8,
+   "why": "shows relevance and completeness rewards competing"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "r_t = sum_{k=1..K} sum_{j=1..L_k} 1(t = T_j^k) w_k R_phi_k(x,y,j) - beta log( P_theta(a_t|s_t) / P_theta_init(a_t|s_t) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text is from PDF extraction; Fig 2, Fig 3 (human error-rate bars) values are not in text, so the human fact./rel. error rates are not recorded.",
+  "Body says 'PERPLEXITY API' once where Perspective is meant (Sec 3.1 typo).",
+  "Reward model train set is stated as 2.8K (Sec 4.3), 2,853 (App C.2) and 2,835 (App D).",
+  "Sec 3.1 says value model GPT-2-base; no params counts given anywhere.",
+  "No embedded instructions found."
+ ]
+}

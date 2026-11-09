@@ -1,0 +1,299 @@
+{
+ "schema": 1,
+ "key": "2404.02078",
+ "pdf": "generative-ai/05-RL/sources/yuan-2024-advancing-llm-reasoning-generalists-preference.pdf",
+ "bib": {
+  "title": "Advancing LLM Reasoning Generalists with Preference Trees",
+  "authors": ["Lifan Yuan", "Ganqu Cui", "Hanbin Wang", "Ning Ding", "Xingyao Wang", "Jia Deng", "Boji Shan", "Huimin Chen", "Ruobing Xie", "Yankai Lin", "Zhenghao Liu", "Bowen Zhou", "Hao Peng", "Zhiyuan Liu", "Maosong Sun"],
+  "first_author": "Yuan",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.02078",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 65384,
+  "chars_total": 65384,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only (lineage); all body, tables and appendices A-E read."
+ },
+ "type": "empirical",
+ "question": "How can high-quality tree-structured alignment data and a study of preference learning algorithms improve open LLMs' reasoning across math, code and logic?",
+ "hypothesis": "Reasoning performance after preference learning correlates with the absolute reward of chosen data; DPO, which optimises only relative reward margins, is less suited to reasoning than KTO and NCA.",
+ "contributions": [
+  "ULTRAINTERACT, a multi-turn reasoning alignment dataset with preference trees (86K instructions, 220K action pairs)",
+  "EURUS-7B and EURUS-70B LLMs with state-of-the-art open-source results on reasoning benchmarks",
+  "Analysis of preference learning for reasoning (DPO vs KTO vs NCA), leading to a new reward-modeling objective and EURUS-RM-7B"
+ ],
+ "method": {
+  "summary": "ULTRAINTERACT collects, for each hard reasoning instruction, a binary preference tree of correct/incorrect actions from actor models interacting with a Python interpreter and a GPT-4 critique. EURUS-7B/70B are SFT'd from Mistral-7B/CodeLLaMA-70B on correct actions plus general chat data, then preference-tuned with DPO, KTO or NCA. EURUS-RM-7B adds a reward term LDR to the Bradley-Terry loss to push chosen rewards up and rejected rewards down.",
+  "task": "reasoning alignment: SFT, preference optimisation and reward modeling for math, coding and logic",
+  "trains": true,
+  "datasets": [
+   {"name": "ULTRAINTERACT", "role": "train", "size": "85,918 instructions; 219,819 pairs; 286,979 correct answers", "split": "SFT uses all correct actions (287K), preference learning uses 220K multi-turn pairs, RM uses 220K plus 240K single-turn augmented pairs", "source": "12 datasets: GSM8K, MATH, MathQA, NumGLUE, TabMWP, CodeContest, TACO, WikiTableQuestions, Magicoder-Evol-Instruct, ReClor, HotpotQA, StrategyQA; problems GPT-3.5-Turbo fails; trees capped at 5 turns", "preprocessing": "8-gram exact-match decontamination against test sets of the same task; Exact Substring Matching for LeetCode; instances failing Python syntax check excluded"},
+   {"name": "UltraChat / ShareGPT / OpenOrca", "role": "train", "size": "7B SFT mix: 32K UltraChat, 30K ShareGPT, 50K OpenOrca; 70B mix: 63K UltraChat, 30K ShareGPT, 70K OpenOrca", "split": "added to SFT mixture", "source": "Ding et al. 2023; openchat sharegpt4; Lian et al. 2023", "preprocessing": null},
+   {"name": "UltraFeedback", "role": "train", "size": "340K pairs", "split": "all pairs, used in preference learning and reward modeling", "source": "Cui et al. 2023", "preprocessing": null},
+   {"name": "UltraSafety", "role": "train", "size": "3K (one pair per instruction)", "split": "reward modeling only", "source": "Guo et al. 2024b", "preprocessing": null},
+   {"name": "HumanEval, MBPP, LeetCode, GSM-Plus, MATH, TheoremQA, SVAMP, ASDiv, BBH, IFEval, MINT, MMLU, MT-Bench", "role": "eval", "size": null, "split": "test sets", "source": "cited benchmarks; all but MATH are OOD", "preprocessing": null},
+   {"name": "RewardBench (no prior sets), AutoJ, MT-Bench", "role": "eval", "size": null, "split": "RewardBench 'prior sets' split excluded", "source": "Lambert et al. 2024; Li et al. 2023a; Zheng et al. 2023", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "EURUS-7B-SFT", "role": "proposed", "params": "7B", "architecture": "decoder-only transformer", "init_from": "Mistral-7B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "EURUS-70B-SFT", "role": "proposed", "params": "70B", "architecture": "decoder-only transformer", "init_from": "CodeLLaMA-70B", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "EURUS-7B/70B + DPO, KTO, NCA", "role": "proposed", "params": "7B / 70B", "architecture": "decoder-only transformer", "init_from": "EURUS-SFT models", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "DPO on 70B fails, rewards go to -inf; no 70B DPO row"}},
+   {"name": "EURUS-RM-7B", "role": "reward", "params": "7B", "architecture": "EURUS-7B-SFT plus new linear layer", "init_from": "EURUS-7B-SFT", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-3.5 Turbo", "role": "teacher", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "actor model for correct actions; also GPT-4 Turbo escalated for hard problems"}},
+   {"name": "GPT-4", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "critique model given ground-truth answers"}},
+   {"name": "Mistral-7B-Instruct-v0.2, DeepSeek-Coder-33B-Instruct, Mixtral-8x7B-Instruct, DeepSeek-LLM-67B-Chat", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "one randomly sampled to produce each incorrect action; also Table 2 baselines"}}
+  ],
+  "training": {
+   "objective": "SFT on correct leaf actions; DPO / KTO / NCA for preference learning; RM loss L = L_BT + L_DR, L_BT = -log sigma(r(x,yc)-r(x,yr)), L_DR = -log sigma(r(x,yc)) - log sigma(-r(x,yr)), with L_DR applied only to ULTRAINTERACT instances (others use L_BT)",
+   "optimizer": null,
+   "lr": "SFT 2e-5; preference learning 5e-7; reward model 1e-5",
+   "lr_schedule": "cosine",
+   "warmup": "ratio 0.1 (all three stages)",
+   "batch_size": null,
+   "steps": null,
+   "epochs": "1 epoch for SFT, preference learning and RM",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "preference learning beta = 0.1; KTO lambda+/lambda- = 1.33",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "sft_note": "interaction history discarded; train only on correct leaf nodes of each tree",
+    "rm_pair_augmentation": "match each correct action with one incorrect action of other turns (NxN pairs for depth N); drop same-turn pairs; keep instructions with NxN <= 10; sample at most 9 pairs with each action used no more than 3 times; yields 240k single-turn pairs"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "reranking: N = 2, 4, 8, 16 responses per instruction from Mistral-7B-Instruct-v0.2; other eval samples not stated",
+   "prompting": "0-shot CoT except BBH (3-shot) and IFEval (no CoT); 5-shot MMLU; math: both textual and program-enhanced settings, best of the two reported",
+   "retrieval": null,
+   "parameters": {},
+   "other": {"data_construction_sampling": "sample 20 actions and keep a random correct one; repeat up to 3 times escalating to GPT-4 Turbo; else give ground-truth rationales and answers"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "pass@1", "definition": "single-turn accuracy on coding, math and BBH", "unit": "%", "higher_is_better": true},
+    {"name": "IFEval prompt-level loose score", "definition": "instruction following", "unit": "%", "higher_is_better": true},
+    {"name": "MINT success rate at Turn 5", "definition": "multi-turn coding and math (math split = MATH, TheoremQA, MMLU-math)", "unit": "%", "higher_is_better": true},
+    {"name": "RewardBench / AutoJ / MT-Bench RM accuracy", "definition": "reward model preference accuracy / agreement with human experts", "unit": "%", "higher_is_better": true},
+    {"name": "MT-Bench score", "definition": "conversation ability", "unit": "score out of 10", "higher_is_better": true}
+   ],
+   "baselines": ["Mistral-7B-Instruct-v0.2", "Zephyr-7B-beta", "OpenChat-3.5-1210", "Starling-LM-7B-alpha", "Mixtral-8x7B-Instruct", "DeepSeek-LLM-67B-Chat", "QWen1.5-72B-Chat", "Magicoder-S-DS-6.7B", "OpenCodeInterpreter", "DeepSeek-Coder-33B-Instruct", "CodeLLaMA-70B-Instruct", "MAmmoTH-7B-Mistral", "WizardMath-7B-v1.1", "OpenMath", "GPT-3.5 Turbo", "GPT-4", "PairRM", "Starling-RM-7B/34B", "UltraRM-13B"],
+   "protocol": "Single reported number per cell; no seeds, variance or significance tests. Contaminated numbers (TheoremQA for MAmmoTH, OpenChat, Starling-LM) struck through in Table 3. GPT-3.5/GPT-4 numbers from previous works. Most RM baseline results copied from Jiang et al. 2023b and Lambert et al. 2024."
+  },
+  "availability": {
+   "code": "https://github.com/OpenBMB/Eurus",
+   "weights": "EURUS checkpoints stated as public at the same URL",
+   "data": "ULTRAINTERACT stated as public at the same URL"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "We finetune base models for 1 epoch with a 2e-5 learning rate", "where": "Appendix B"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "EURUS-70B-NCA beats GPT-3.5 Turbo across 12 tests covering five tasks, with 33.3% pass@1 on LeetCode and 32.6% on TheoremQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 LeetCode",
+   "value": 33.3,
+   "unit": "%",
+   "baseline_value": "GPT-3.5 Turbo 23.3",
+   "n": null,
+   "setup": "EURUS-70B (CodeLLaMA-70B base), 0-shot CoT, LeetCode Contest, OOD",
+   "quote": "achieves a 33.3% pass@1 accuracy on LeetCode and 32.6% on TheoremQA",
+   "table": null,
+   "note": "Table 3 shows 33.3 for both EURUS-70B-SFT and +NCA on LeetCode; TheoremQA 32.6 is the NCA row (SFT 28.0).",
+   "where": "Abstract; Table 3"
+  },
+  {
+   "claim": "DPO on EURUS-7B-SFT lowers the Table 3 average (46.5 to 44.5) while KTO raises it to 48.8 and NCA to 48.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. over Table 3 columns",
+   "value": 44.5,
+   "unit": "points",
+   "baseline_value": "SFT 46.5",
+   "n": null,
+   "setup": "EURUS-7B-SFT + preference learning on ULTRAINTERACT (220K) + UltraFeedback (340K) pairs, beta 0.1, 1 epoch, lr 5e-7",
+   "quote": "Surprisingly, we observe that DPO hurts model performance on most benchmarks.",
+   "table": "Table 3, row EURUS-7B-SFT + DPO, column Avg.",
+   "note": "Row values: SFT 46.5, DPO 44.5, KTO 48.8, NCA 48.1.",
+   "where": "Table 3, Section 4.1"
+  },
+  {
+   "claim": "DPO training of the 70B model fails because rewards go to negative infinity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "EURUS-70B-SFT with DPO",
+   "quote": "DPO training of our 70B model fails since the rewards go down to −∞.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.1"
+  },
+  {
+   "claim": "Under DPO the chosen-data reward falls below zero while it keeps rising under KTO and NCA; final chosen reward ranks KTO > NCA > DPO and tracks downstream performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "final-step rewards (read from Fig 5)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "EURUS-7B preference learning reward curves; correlation is over three algorithms only, an observation not a causal test",
+   "quote": "the rewards of chosen data in the last training step follow the ranking order of KTO > NCA > DPO",
+   "table": null,
+   "note": "Fig 5 last-step values printed: DPO -1.26, KTO 0.4, NCA 0.16 (labels in figure).",
+   "where": "Figure 5, Section 6.1"
+  },
+  {
+   "claim": "EURUS-7B-SFT with KTO improves multi-turn math success at Turn 5 from 28.4 to 43.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MINT Math success at Turn 5",
+   "value": 43.6,
+   "unit": "%",
+   "baseline_value": "SFT 28.4",
+   "n": null,
+   "setup": "EURUS-7B, MINT math split",
+   "quote": null,
+   "table": "Table 3, row EURUS-7B-SFT + KTO, column Multi-Turn Math",
+   "note": "NCA 38.7, DPO 32.4. Authors credit multi-turn pairs in ULTRAINTERACT for the interaction gains.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "EURUS-RM-7B reaches RewardBench Avg 82.4, MT-Bench 72.9 and AutoJ Overall 64.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench Avg.",
+   "value": 82.4,
+   "unit": "%",
+   "baseline_value": "Starling-RM-34B 84.0",
+   "n": null,
+   "setup": "RewardBench without prior sets; UltraInteract+UltraFeedback+UltraSafety with L_BT+L_DR",
+   "quote": null,
+   "table": "Table 4, row EURUS-RM-7B, columns Reward Bench Avg. / AutoJ Overall / MT-Bench",
+   "note": "Best 7B RM; best on AutoJ and MT-Bench; beats all baselines on Chat-Hard (65.3).",
+   "where": "Table 4, Section 5.1"
+  },
+  {
+   "claim": "Removing L_DR lowers RM RewardBench Reasoning from 87.0 to 77.5 and Avg from 82.4 to 78.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RewardBench Reasoning",
+   "value": 77.5,
+   "unit": "%",
+   "baseline_value": "full 87.0",
+   "n": null,
+   "setup": "EURUS-RM-7B ablation w/o LDR",
+   "quote": null,
+   "table": "Table 4, row w/o LDR, column Reasoning",
+   "note": "Ablation also: w/o LBT Reasoning 84.2, Chat-Hard 58.5; w/o US Safety 67.7.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Reranking Mistral-7B-Instruct-v0.2 outputs with EURUS-RM-7B at N=16 gives 57.3% on GSM8K and 17.3% on MATH, vs Starling-RM-34B 56.5 and 7.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 after reranking, N=16",
+   "value": 17.3,
+   "unit": "%",
+   "baseline_value": "Starling-RM-34B 7.7 (MATH)",
+   "n": 16,
+   "setup": "Mistral-7B-Instruct-v0.2 responses, MATH, N=16 responses per instruction",
+   "quote": null,
+   "table": "Table 9, row EURUS-RM-7B, column MATH N=16",
+   "note": "Starling-RM-34B reranking drops below random-start MATH; self-consistency 16.8.",
+   "where": "Table 9; Figure 4"
+  },
+  {
+   "claim": "Ablating SFT data on EURUS-7B-SFT: ground-truth-answer data averages 44.0 and open-source-only 37.0 vs 53.6 for the full mix; ULTRAINTERACT-only drops IFEval to 17.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. over Coding/Math/BBH/IFEval",
+   "value": 53.6,
+   "unit": "points",
+   "baseline_value": "Open-source Only 37.0",
+   "n": null,
+   "setup": "EURUS-7B-SFT variants, same eval as Section 4",
+   "quote": null,
+   "table": "Table 5, row EURUS-7B-SFT, column Avg.",
+   "note": "ULTRAINTERACT Only avg 47.7; Table 10 gives per-dataset detail.",
+   "where": "Table 5, Table 10"
+  },
+  {
+   "claim": "EURUS-70B-KTO matches GPT-3.5 Turbo on MT-Bench (7.93 vs 7.94).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MT-Bench",
+   "value": 7.93,
+   "unit": "score",
+   "baseline_value": "GPT-3.5 Turbo 7.94",
+   "n": null,
+   "setup": "EURUS-70B-KTO",
+   "quote": null,
+   "table": "Table 8, row EURUS-70B-SFT + KTO, column MT-Bench",
+   "note": "Baseline MT-Bench numbers from the official leaderboard.",
+   "where": "Table 8, Appendix C"
+  }
+ ],
+ "limits": [
+  "Explanation that DPO fails because chosen reward falls is a correlational hypothesis from three algorithms and one model family; no controlled intervention besides the RM ablation.",
+  "DPO 70B run failed so the comparison exists only at 7B.",
+  "No seeds, variance, optimizer, batch size, sequence length, precision or hardware are stated; decoding settings are not given.",
+  "TheoremQA numbers for MAmmoTH, OpenChat and Starling-LM are contaminated and struck through.",
+  "Data relies on GPT-3.5 Turbo, GPT-4 and GPT-4 Turbo as actor and critique; Magicoder subset excluded from preference pairs because correctness is judged by GPT-4 Turbo.",
+  "Training only on ULTRAINTERACT harms instruction following (IFEval 17.4), so it must be mixed with general data.",
+  "Datasets are restricted to problems with ground truth, so the recipe does not cover open-ended tasks."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "preference tree", "definition": "A tree per instruction with the instruction as root and each action a node; a trajectory is a root-to-leaf path; correct nodes serve SFT and paired correct/incorrect nodes serve preference learning.", "where": "Section 2"},
+  {"term": "L_DR", "definition": "Additional reward-model term -log sigma(r(x,yc)) - log sigma(-r(x,yr)) that increases the reward of chosen and decreases that of rejected actions.", "where": "Section 3"}
+ ],
+ "lineage": [
+  {"work": "Mistral 7B", "year": 2023, "arxiv": "2310.06825", "relation": "extends", "note": "base model of EURUS-7B", "quote": null},
+  {"work": "Code Llama", "year": 2023, "arxiv": null, "relation": "extends", "note": "CodeLLaMA-70B base of EURUS-70B (Roziere et al., 2023)", "quote": null},
+  {"work": "Direct Preference Optimization", "year": 2023, "arxiv": "2305.18290", "relation": "evaluates", "note": "compared and found to hurt reasoning", "quote": null},
+  {"work": "KTO", "year": 2024, "arxiv": "2402.01306", "relation": "uses-method", "note": "preference-learning algorithm", "quote": null},
+  {"work": "Noise contrastive alignment (NCA)", "year": 2024, "arxiv": "2402.05369", "relation": "uses-method", "note": "preference-learning algorithm", "quote": null},
+  {"work": "UltraFeedback", "year": 2023, "arxiv": "2310.01377", "relation": "uses-data", "note": "340K pairs; pair sampling from different actor models follows it", "quote": null},
+  {"work": "Executable Code Actions Elicit Better LLM Agents (CodeAct)", "year": 2024, "arxiv": null, "relation": "extends", "note": "Wang et al. 2024; procedure resembles it with more diverse patterns", "quote": null},
+  {"work": "MINT", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "Wang et al. 2023b; multi-turn evaluation and hard-problem selection", "quote": null},
+  {"work": "Bradley-Terry model", "year": 1952, "arxiv": null, "relation": "extends", "note": "reward objective augmented with L_DR", "quote": null},
+  {"work": "RewardBench", "year": 2024, "arxiv": null, "relation": "evaluates", "note": "Lambert et al. 2024", "quote": null},
+  {"work": "Training a helpful and harmless assistant with RLHF (HH-RLHF)", "year": 2022, "arxiv": "2204.05862", "relation": "related", "note": "compares only the last turn; contrasted in Figure 2", "quote": null},
+  {"work": "Starling-7B", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Starling-RM-34B reranking baseline", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Left: CodeActInstruct and Code-Feedback; Middle: HH-RLHF; Right: ULTRAINTERACT. Each instruction in ULTRAINTERACT is constructed as a preference tree.", "page": 3, "why": "Shows tree structure of correct/incorrect actions vs flat single-turn pairs"},
+  {"figure": "Fig 5", "caption": "Reward patterns of EURUS-7B preference learning with DPO, KTO, and NCA.", "page": 8, "why": "Shows chosen reward going negative under DPO, central to the hypothesis"},
+  {"figure": "Fig 4", "caption": "Results on reranking Mistral-7B-Instruct-v0.2's responses.", "page": 8, "why": "Reranking scaling with N"}
+ ],
+ "code": [
+  {"where": "Section 3, reward modeling", "snippet": "L_ULTRAINTERACT = -log sigma(r(x,yc) - r(x,yr)) [L_BT] - log sigma(r(x,yc)) - log sigma(-r(x,yr)) [L_DR]", "verbatim": false}
+ ],
+ "problems": [
+  "Table cells are flattened to one value per line in the text; column mapping inferred from header order.",
+  "Text says the ablation in Section 6.2 'full results in Appendix E' and Section 5 refers to Table 10."
+ ]
+}

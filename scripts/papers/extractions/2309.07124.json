@@ -1,0 +1,566 @@
+{
+ "schema": 1,
+ "key": "2309.07124",
+ "pdf": "generative-ai/05-RL/sources/li-2023-rain.pdf",
+ "bib": {
+  "title": "RAIN: Your Language Models Can Align Themselves without Finetuning",
+  "authors": [
+   "Yuhui Li",
+   "Fangyun Wei",
+   "Jinjing Zhao",
+   "Chao Zhang",
+   "Hongyang Zhang"
+  ],
+  "first_author": "Li",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2309.07124",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 56786,
+  "chars_total": 56786,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can frozen, unaligned LLMs be aligned to human preferences at inference time, without finetuning or any alignment data?",
+ "hypothesis": "Following the superficial alignment hypothesis, selecting a sub-distribution of outputs should not need parameter updates, so self-evaluation plus rewind can align a frozen model.",
+ "contributions": [
+  "Rewindable Auto-regressive INference (RAIN): inference-time search with self-evaluation and rewind, no training, gradient computation or parameter updates, no extra data",
+  "Experiments on HH, AdvBench, TruthfulQA and IMDB across LLaMA, LLaMA-2, Vicuna, Alpaca, GPT-neo"
+ ],
+ "method": {
+  "summary": "RAIN searches a tree of token sets in an inner loop (PUCT-style forward selection, self-evaluation by the frozen model with a harmless/harmful prompt, similarity-based attribute update, rewind) and an outer loop that picks the next token set by normalised root-child visit counts. Evaluated with GPT-4 and human judges.",
+  "task": "inference-time alignment (harmlessness, truthfulness, sentiment)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Anthropic HH",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bai et al. 2022a",
+    "preprocessing": null
+   },
+   {
+    "name": "AdvBench (GCG suffixes)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zou et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "TruthfulQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Lin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "IMDB",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Maas et al. 2011",
+    "preprocessing": "initial tokens of a review used as prompt"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA 7B/13B/30B/65B",
+    "role": "evaluated",
+    "params": "7B-65B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-2-nonchat 7B/13B/70B",
+    "role": "evaluated",
+    "params": "7B-70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-2-chat 13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna 7B/13B/33B, Alpaca 7B, GPT-neo 1.3B/2.7B",
+    "role": "evaluated",
+    "params": "1.3B-33B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sentence-BERT",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "node embeddings for similarity update"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "RAIN tree search; next token set chosen by normalised visit counts of root children; search stops when score exceeds threshold V or max iterations T",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "q candidate token sets sampled per expansion; baseline repeated sampling uses 500 samples; number of runs/seeds not stated",
+   "prompting": "Self-evaluation prompt with A/B option swap (harmless/harmful label order swapped, scores averaged); score -1 harmful, +1 harmless",
+   "retrieval": null,
+   "parameters": {
+    "c": "2",
+    "gamma": "0.2",
+    "q": null,
+    "T": null,
+    "Tm": null,
+    "V": null,
+    "similarity threshold": null,
+    "embedding": "Sentence-BERT cosine similarity"
+   },
+   "other": {
+    "GCG settings": "lr 0.01, batch 512, top-k 256, temperature 1, 100 update steps",
+    "RLAIF baseline": "revisions=2; RLHF and RLAIF learning rates 3e-4 (SFT), 5e-4 (RM), 1.4e-5 (RL), warm-up and cosine decay"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "harmlessness rate",
+     "definition": "fraction of responses GPT-4 judges harmless",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "win rate",
+     "definition": "win/(win+loss) vs vanilla, GPT-4, order shuffled",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "attack success rate",
+     "definition": "as per Zou et al. 2023",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "True / Info / True+Info",
+     "definition": "two fine-tuned GPT-3 judges",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "time ratio",
+     "definition": "total RAIN time / vanilla time",
+     "unit": "x",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "vanilla auto-regressive",
+    "repeated cherry-pick sampling (500)",
+    "RLHF (SFT, SFT+RL)",
+    "RLAIF (SFT, SFT+RL)"
+   ],
+   "protocol": "GPT-4 judge; human eval by 10 annotators on LLaMA2 13B HH, shuffled; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/SafeAILab/RAIN",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "HH and AdvBench self-evaluation",
+    "text": "Determine if the assistant's response is harmful. The given conversation should be evaluated solely on its content.\n<Generated Text>\nOptions:\n(A) Assistant's response is harmless/harmful.\n(B) Assistant's response is harmful/harmless.",
+    "where": "App B.1"
+   },
+   {
+    "purpose": "TruthfulQA self-evaluation",
+    "text": "[INST] Consider the following question(Q) and answer(A). Determine if the answer is truthful. Answers that are inconsistent with objective facts or are subjectively speculated are considered dishonest.\n<Generated Text>\nIs the answer truthful? [\\INST]",
+    "where": "App B.2"
+   },
+   {
+    "purpose": "IMDB sentiment self-evaluation",
+    "text": "Consider the following movie reviews. Determine if the movie review is positive. If the reviewer likes the movie being reviewed, the review is positive.\n<Generated Text>\nOptions:\n(A) The movie review is positive/negative.\n(B) The movie review is negative/positive.\n(C) The movie review is neutral.",
+    "where": "App B.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RAIN raises LLaMA 30B harmlessness rate on HH from vanilla 82% to 97%, helpfulness maintained",
+   "kind": "measured",
+   "source": null,
+   "metric": "harmlessness rate",
+   "value": "97",
+   "unit": "%",
+   "baseline_value": "82",
+   "n": null,
+   "setup": "HH dataset, LLaMA 30B, GPT-4 judge, frozen model, no training",
+   "note": "Table 5 prints 82.2% and 97.0%; helpfulness shown only in Fig 2 (no numbers)",
+   "where": "Abstract; Table 5",
+   "quote": "RAIN improves the harmlessness rate of LLaMA 30B from 82% of vanilla inference to 97%, while maintaining the helpfulness rate"
+  },
+  {
+   "claim": "Repeated cherry-pick sampling (500 samples, chosen by the LLM itself) reaches only 88.1% on LLaMA 30B versus RAIN 97.0%",
+   "kind": "measured",
+   "source": null,
+   "metric": "harmlessness rate",
+   "value": "88.1",
+   "unit": "%",
+   "baseline_value": "82.2",
+   "n": null,
+   "setup": "HH, LLaMA 30B, GPT-4 judge, 500 samples picked by LLM self-evaluation",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LLaMA 30B, column Vanilla (Repeated)"
+  },
+  {
+   "claim": "On LLaMA 7B repeated sampling gives no gain (64.4% vs 64.4%); RAIN 69.3%",
+   "kind": "measured",
+   "source": null,
+   "metric": "harmlessness rate",
+   "value": "69.3",
+   "unit": "%",
+   "baseline_value": "64.4",
+   "n": null,
+   "setup": "HH, LLaMA 7B, GPT-4 judge",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LLaMA 7B, column RAIN (Ours)"
+  },
+  {
+   "claim": "LLaMA-2 7B: vanilla 81.2%, repeated 81.7%, RAIN 86.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": "harmlessness rate",
+   "value": "86.6",
+   "unit": "%",
+   "baseline_value": "81.2",
+   "n": null,
+   "setup": "HH, LLaMA-2 7B (non-chat), GPT-4 judge",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row LLaMA-2 7B, column RAIN (Ours)"
+  },
+  {
+   "claim": "RAIN costs about 4.36x vanilla decode time on LLaMA 30B",
+   "kind": "measured",
+   "source": null,
+   "metric": "time ratio",
+   "value": "4.36",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HH, time ratio = total RAIN time / vanilla time",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, column LLaMA 30B, row RAIN/Vanilla"
+  },
+  {
+   "claim": "Time ratio on LLaMA 65B and LLaMA-2 70B is 3.95x and 3.78x; overhead shrinks as model is safer",
+   "kind": "measured",
+   "source": null,
+   "metric": "time ratio",
+   "value": "3.78",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HH dataset",
+   "note": "LLaMA 65B 3.95x",
+   "where": "Table 7",
+   "table": "Table 7, column LLaMA-2 70B, row RAIN/Vanilla"
+  },
+  {
+   "claim": "Self-evaluation accuracy of harmfulness is 52% for LLaMA v1 7B and v2 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "self-eval accuracy",
+   "value": "52",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HH, accuracy judged by GPT-4",
+   "note": "v1 13B 60%, v1 30B 81%, v1 65B 84%, v2 13B 61%, v2 70B 98%",
+   "where": "Table 6",
+   "table": "Table 6, column v1 7B / v2 7B"
+  },
+  {
+   "claim": "Self-evaluation accuracy 81% at v1 30B, 98% at v2 70B",
+   "kind": "measured",
+   "source": null,
+   "metric": "self-eval accuracy",
+   "value": "98",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HH, accuracy judged by GPT-4",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, column v2 70B"
+  },
+  {
+   "claim": "Under GCG white-box attack, RAIN lowers Vicuna 33B attack success rate from 94% to 19%",
+   "kind": "measured",
+   "source": null,
+   "metric": "attack success rate",
+   "value": "19",
+   "unit": "%",
+   "baseline_value": "94",
+   "n": null,
+   "setup": "AdvBench, GCG (lr 0.01, batch 512, top-k 256, temp 1, 100 steps), Vicuna 33B",
+   "note": "Vicuna 7B 86->72, 13B 83->38; transfer 80->55, 79->32, 34->10. Authors do not claim robustness to adaptive attacks",
+   "where": "Table 1",
+   "table": "Table 1, row Vicuna 33B, column RAIN (white-box)"
+  },
+  {
+   "claim": "On TruthfulQA, RAIN raises LLaMA-2-chat 13B True+Info from 68.5% to 72.8%",
+   "kind": "measured",
+   "source": null,
+   "metric": "True+Info",
+   "value": "72.8",
+   "unit": "%",
+   "baseline_value": "68.5",
+   "n": null,
+   "setup": "TruthfulQA, LLaMA-2-chat 13B, two fine-tuned GPT-3 judges",
+   "note": "True 69.2->74.1; Info 98.8->98.6. Abstract says improvement of 5% for truthfulness",
+   "where": "Table 2",
+   "table": "Table 2, row RAIN, column True + Info"
+  },
+  {
+   "claim": "Positive-sentiment rate on IMDB rises from 62.1% to 82.1% for LLaMA 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "positive proportion",
+   "value": "82.1",
+   "unit": "%",
+   "baseline_value": "62.1",
+   "n": null,
+   "setup": "IMDB prompts, LLaMA 7B",
+   "note": "Alpaca 7B 72.5->94.4; Vicuna 7B 64.4->89.1",
+   "where": "Table 3",
+   "table": "Table 3, row RAIN, column LLaMA 7B"
+  },
+  {
+   "claim": "Ablation: removing similarity update, dynamic node addition, exploration raises ASR from 19% to 22%, 25%, 27%",
+   "kind": "measured",
+   "source": null,
+   "metric": "ASR (lower better)",
+   "value": "27",
+   "unit": "%",
+   "baseline_value": "19",
+   "n": null,
+   "setup": "LLaMA-2-chat 13B, GCG white-box on AdvBench; ablations cumulative",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row - Exploration encouragement, column ASR"
+  },
+  {
+   "claim": "Human evaluation: RAIN 96.6% vs vanilla 89.5% harmlessness; GPT-4 98.3% vs 91.1%",
+   "kind": "measured",
+   "source": null,
+   "metric": "harmlessness rate",
+   "value": "96.6",
+   "unit": "%",
+   "baseline_value": "89.5",
+   "n": null,
+   "setup": "LLaMA2 13B, HH, 10 human annotators",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row RAIN, column Human"
+  },
+  {
+   "claim": "RLHF/RLAIF comparison on LLaMA 30B: RAIN efficacy 'comparable, if not superior' (values in Fig 5 only, no numbers printed)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HH, LLaMA 30B; RLHF and RLAIF with SFT and SFT+RL; RLAIF revisions=2",
+   "note": null,
+   "where": "Sec 4.1, Fig 5",
+   "quote": "Compared to RLHF and RLAIF, which require additional data, the efficacy of RAIN is comparable, if not superior."
+  }
+ ],
+ "limits": [
+  "RAIN needs longer inference time (about 4x on HH); authors suggest generating data with RAIN then finetuning",
+  "Robustness only under static LLM-ATTACKS, not adaptive attacks",
+  "Dataset sizes, sample counts, seeds, T, Tm, V, q, threshold not stated",
+  "Judging is GPT-4 (human eval only on LLaMA2 13B HH); gains small or negative for small models (GPT-neo parity, helpfulness slightly reduced)",
+  "RLHF/RLAIF comparison reported only as a figure"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RAIN",
+   "definition": "Rewindable Auto-regressive INference: search and rewind operations for self-alignment of frozen LLMs in the inference phase",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Constitutional AI / RLAIF (Bai et al. 2022b; Lee et al. 2023)",
+   "year": 2022,
+   "arxiv": "2212.08073",
+   "relation": "related",
+   "note": "uses self-evaluation but to train a reward model; RAIN alters decoding",
+   "quote": null
+  },
+  {
+   "work": "Superficial alignment hypothesis (LIMA, Zhou et al. 2023)",
+   "year": 2023,
+   "arxiv": "2305.11206",
+   "relation": "extends",
+   "note": "motivation",
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts (Yao et al. 2023)",
+   "year": 2023,
+   "arxiv": "2305.10601",
+   "relation": "related",
+   "note": "lookahead/backtracking, differs in goal",
+   "quote": null
+  },
+  {
+   "work": "PUCT (Rosin 2011)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "forward selection rule",
+   "quote": null
+  },
+  {
+   "work": "Universal and transferable adversarial attacks (Zou et al. 2023)",
+   "year": 2023,
+   "arxiv": "2307.15043",
+   "relation": "uses-data",
+   "note": "AdvBench and GCG",
+   "quote": null
+  },
+  {
+   "work": "Anthropic HH (Bai et al. 2022a)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-data",
+   "note": "main eval",
+   "quote": null
+  },
+  {
+   "work": "RLHF and RLAIF baselines",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "trained on LLaMA 30B",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT (Reimers & Gurevych 2019)",
+   "year": 2019,
+   "arxiv": "1908.10084",
+   "relation": "uses-method",
+   "note": "embeddings",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A simplified explanation of RAIN.",
+   "page": 1,
+   "why": "shows generate, self-evaluate, rewind"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Schematic diagram of RAIN, exploitation and exploration in the token space.",
+   "page": 5,
+   "why": "inner/outer loop with v, n, p attributes"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Helpfulness vs. harmlessness rates on HH, LLaMA and LLaMA-2.",
+   "page": 3,
+   "why": "model-size trend"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Harmlessness rate of RLHF, RLAIF, and RAIN on LLaMA 30B.",
+   "page": 9,
+   "why": "only place baseline numbers appear"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "Y = argmax_{X_{i:j}} ( v(X_{i:j}; X_{1:i-1}) + c * u(X_{i:j}; X_{1:i-1}) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Paper prints no venue (arXiv v2, 9 Oct 2023); 'ICLR 2024' in notes is not in the text",
+  "Figure data (Fig 2, 5) not extractable as numbers"
+ ]
+}

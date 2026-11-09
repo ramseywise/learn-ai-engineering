@@ -1,19 +1,748 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2304.08467",
  "pdf": "ai-engineering/02-context-engineering/sources/mu-2023-learning-compress-prompts-gist-tokens.pdf",
  "bib": {
   "title": "Learning to Compress Prompts with Gist Tokens",
-  "first_author": "Jesse Mu",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Jesse Mu",
+   "Xiang Lisa Li",
+   "Noah Goodman"
+  ],
+  "first_author": "Mu",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
   "arxiv": "2304.08467",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 84830,
+  "chars_total": 84830,
+  "engine": "pymupdf",
+  "skipped": "References skimmed for lineage; Listing A.3 examples 1-10 read but not analysed beyond noting no new results"
  },
- "legacy_report": "SOURCE: \"Learning to Compress Prompts with Gist Tokens\", Jesse Mu, Xiang Lisa Li, Noah Goodman (Stanford University). NeurIPS 2023 (37th Conference on Neural Information Processing Systems); arXiv:2304.08467v3, 12 Feb 2024. Code/data/checkpoints: https://github.com/jayelm/gisting\n\nCOVERAGE: 26 of 26 pages; the extraction is 84,897 chars. I read chars 0-62,000 in full (main text, references, appendices A-F, Listing A.1/A.2, Tables A.1/A.2). From 62,000 to the end I read only the first ~9,000 chars (Examples 1-6 of Listing A.3) and skimmed the rest. That part is non-cherry-picked model-output examples, with no new results. Figures were not rendered; I used the captions and the text only.\n\nCLAIMS (ranked)\n1. Gisting trains an LM to compress a prompt into k \"gist\" tokens by changing only the attention mask. Tokens after the gist cannot attend to the prompt. Training costs nothing extra over standard instruction finetuning.\n number: none\n setup: single gist token g added to the vocabulary; input is (t, g1..gk, x). Decoder-only models mask out the lower-left corner of the causal mask. Encoder-decoder models also mask the encoder and the decoder cross-attention.\n quote: \"This allows a model to learn prompt compression and instruction following at the same time, with no additional training cost.\" Also: \"these masking changes are extremely simple and can be implemented in roughly 10 source lines of code.\"\n where: p.2 (Sec 1), p.4 (Sec 3)\n2. Up to 26x prompt compression with output quality close to the uncompressed positive control, on unseen tasks.\n number: 26x; win rates vs positive control are 48.6/50.8 (Seen), 49.7/46.2 (Unseen), 45.8/42.5 (Human OOD) for LLaMA-7B / FLAN-T5-XXL\n setup: single-gist-token models trained on Alpaca+ (130,321 examples; 104,664 unique tasks). ChatGPT-3.5 pairwise judge against the positive control, where 50% means parity. The 26x figure is on the Human split, whose average prompt is ~26 tokens.\n quote: \"On Unseen prompts within the Alpaca+ distribution, we again see competitive performance: 49.7% (LLaMA) and 46.2% (FLAN-T5) win rates against the positive controls. It is on the most challenging OOD Human split where we see slight drops in win rate to 45.8% (LLaMA) and 42.5% (FLAN-T5)\"\n where: p.5 (Sec 5), Table 1 p.6\n3. Table 1 (single gist token). ROUGE-L, Pos / Gist / TF-IDF / Neg.\n number: LLaMA-7B Seen 58.0 / 57.8 / 38.1 / 31.5; Unseen 48.1 / 46.6 / 34.0 / 31.4; Human 27.0 / 23.9 / 16.5 / 14.4. FLAN-T5-XXL Seen 50.6 / 48.9 / 32.0 / 25.5; Unseen 45.7 / 43.8 / 34.3 / 29.1; Human 23.9 / 21.7 / 13.5 / 12.4. ChatGPT win rate for LLaMA Human: Gist 45.8, TF-IDF 24.6, Neg 22.2.\n setup: as in claim 2. Positive control = standard instruction finetuning. Negative control = no access to the task. TF-IDF = one keyword subword per instruction.\n quote: \"LLaMA- Pos 58.0 (100) 50.0 (100) 48.1 (100) 50.0 (100) 27.0 (100) 50.0 (100) 7B Gist 57.8 (99.2) 48.6 (92.4) 46.6 (91.0) 49.7 (98.8) 23.9 (75.4) 45.8 (84.9)\"\n where: p.6\n4. Discrete compression (keep one keyword) is far worse than gisting. It is only marginally above the negative control.\n number: LLaMA Human ChatGPT 24.6% (TF-IDF) vs 22.2% (Neg) vs 45.8% (Gist)\n setup: TF-IDF keyword, first subword token only, same compression rate as 1 gist token\n quote: \"gist compression is vastly superior to discrete compression; the TF-IDF models in Table 1 only marginally outperform the negative control models across the board.\"\n where: p.5\n5. The number of gist tokens barely matters. One token is enough, and 10 can hurt.\n number: k in {1, 2, 5, 10}; compression factors up to 26x/13x/5x/3x on the Human split\n setup: both models, Figure 3\n quote: \"Models were generally insensitive to the number of gist tokens k: compressing prompts into a single token prefix did not substantially underperform larger prefixes. In fact, having too many gist tokens hurts performance in some cases (e.g. LLaMA-7B, 10 gist tokens), perhaps because the increased capacity enables overfitting to the training distribution.\"\n where: p.5\n6. Efficiency: 40% FLOPs saving and 4-7% wall-time saving versus no caching. Gain over plain KV-cache of the instruction is small.\n number: LLaMA CUDA time 23.4 ms (None) / 22.1 (Instruction cache) / 21.8 (Gist), saving 6.8% vs None and 1.0% vs Instruction. GFLOPs 915 / 553 / 552: 40% vs None, 0.11% vs Instruction. FLAN-T5 31.0 -> 29.7 ms (4.2%), 716 -> 427 GFLOPs (40%).\n setup: single forward pass (one decode step, one input token), PyTorch 2.0, 1xA100, averaged over the 252 Human instructions. Average KV cache length is 26 for instruction caching and 1 for gist.\n quote: \"Gist caching improves significantly over unoptimized models, with 40% FLOPs savings and 4-7% lower wall time for both models.\" and \"a negligible decrease in FLOPs (0.11%) and a modest 1% speedup in wall time.\"\n where: p.8 (Table 3, Sec 6)\n7. The main practical win over ordinary KV-cache reuse is storage and context space, not FLOPs. About 26x more cached prompts fit in the same storage.\n number: 1.05 MB per token of KV cache for LLaMA-7B; 26x more prompts\n setup: fp32; 4 bytes x 2 (K+V) x 32 layers x 32 heads x 128 head dim (footnote 3)\n quote: \"for LLaMA-7B, each token in the KV cache requires 1.05 MB storage.\" and \"gisting allows caching of up to 26x more prompts than full instruction caching, using the same amount of storage!\"\n where: p.8\n8. Why FLOPs barely drop versus instruction caching: a forward pass is dominated by processing the new tokens, not by attention over the KV cache.\n number: ~10% (at most 9.6%) of per-layer attention FLOPs depend on KV cache size at 2000 tokens. Predicted gist gain 0.12% vs observed 0.11%.\n setup: Chinchilla FLOPs equations modified for KV cache length; LLaMA-7B, 2000-length cache, single input token\n quote: \"a forward pass through LLaMA-7B with a single input token and a 2000-length KV cache is only ~10% more expensive than the same forward pass with no KV cache\" and \"the Chinchilla equations predict a relative improvement of Gist caching of 0.12%. This is extremely close to the 0.11% improvement actually observed in Table 3.\"\n where: p.8, App F p.16-18\n9. Human evaluation agrees with ChatGPT as judge, though inter-annotator agreement is low.\n number: human vs ChatGPT average win rate 52.3 vs 48.0 (LLaMA) and 40.6 vs 42.0 (FLAN-T5). Cohen's kappa among humans .24 / .33; ChatGPT vs humans .29 for both.\n setup: 100 of 252 Human-split examples, 3 Prolific annotators each (US/UK), ~10% \"I Don't Know\" dropped. Humans cost $141.64; ~22.5k ChatGPT judgments cost $29.28.\n quote: \"human annotators agree with ChatGPT, with average win rates of 52.3% (vs. 48.0%) for LLaMA-7B and 40.6% (vs. 42.0%) for FLAN-T5-XXL.\"\n where: p.5-7 (Table 2), App C-D p.15-16\n10. Gist outputs often differ from the positive control's. Exact match is high only on seen tasks.\n number: ~50% on Seen, ~20-25% on Unseen, ~10% on Human\n setup: exact string match, single-token gist vs positive control (Fig A.3)\n quote: \"for Seen tasks (but unseen inputs), the gist model outputs exactly match the positive control nearly 50% of the time. This drops to ~20–25% for Unseen tasks and ~10% for the OOD Human tasks.\"\n where: p.7\n11. Failure modes: loss of specific detail (verbatim phrases) and runaway generation.\n number: none\n setup: Human split examples. FLAN-T5 gist output \"Culture\" instead of the listed category \"Arts & Culture\". LLaMA gist output a LaTeX example that repeats \"\\subparagraph{The Basics}\" for hundreds of tokens.\n quote: \"first, when the instruction contains specific details, e.g. phrases that must be copied verbatim into the output\" and \"We also see more cases of runaway generations that do not occur with the positive control model\"\n where: p.7 (Sec 5.1)\n12. Encoder-decoder (FLAN-T5) generalises slightly worse out of distribution than decoder-only (LLaMA).\n number: Human ChatGPT win rate 42.5 vs 45.8; normalised score 63.2 vs 84.9\n setup: the paper's hypothesis is untested\n quote: \"one possible reason is that gist masking inhibits the bidirectional attention flow in the encoder, which is more challenging to adjust to than simply limiting the history of a decoder LM. Future work will be needed to investigate this hypothesis.\"\n where: p.7\n\nLIMITS\n- The authors concede: \"achieving such compression necessarily results in some loss of nuance of the original instruction\". They tell practitioners to evaluate the compute/accuracy tradeoff before deployment.\n- The method needs finetuning the LM itself. Retrofitting a frozen LM with a separate compressor is listed only as future work. The same goes for compressing very long prompts such as k-shot, and for \"gist pretraining\".\n- Prompts are short, about 20-26 tokens. The paper never tests long contexts, multi-turn history or documents. Its own future-work section says the biggest gains would come from long prompts.\n- The only models are LLaMA-7B and FLAN-T5-XXL (11B). Training data is synthetic Alpaca+ from GPT-3 davinci. About 59% of tasks have no input.\n- Quality is judged by ChatGPT-3.5 and 100 examples with 3 humans. Cohen's kappa is low (.24-.33). ROUGE-L is also used. There are no downstream task benchmarks.\n- Wall-time gains are measured on single-step decoding at small scale; the authors expect larger gains with bigger sequences and batches, but do not measure that.\n- Dated: the models and judge (LLaMA-1, ChatGPT-3.5 from Mar-Apr 2023) are old. Context windows have grown a great deal since, so the context-space motivation reads differently. This is my inference, not the paper's.\n- Instruction caching (the \"Instruction\" column) does not apply to T5-style encoder-decoders. Gisting is what enables prompt caching there.\n\nBUILDS ON (as printed)\nPrefix-tuning (Li and Liang, 2021); prompt-tuning (Lester et al., 2021); adapters (Houlsby et al., 2019); LoRA (Hu et al., 2022); context distillation (Askell et al., 2021; Snell et al., 2022; Choi et al., 2022); Wingate et al. (2022) prompt compression into a soft prompt; HyperNetworks (Ha et al., 2017); HyperTuning (Phang et al., 2022); Compressive Transformer (Rae et al., 2020); sparse and sliding-window attention (Beltagy et al., 2020; Child et al., 2019); instruction tuning (Wei et al., 2022); Self-Instruct (Wang et al., 2022); Stanford Alpaca (Taori et al., 2023); LLaMA (Touvron et al., 2023); FLAN-T5 (Chung et al., 2022); Pope et al. (2022) for the \"memory time\" argument; Chinchilla FLOPs (Hoffmann et al., 2022).\n\nCODE\nListing A.1 (p.14) is a PyTorch gist mask, about 10 lines of logic. Core of `make_gist_mask(inputs, gist_token, pad_token)`:\n```\npre_gist_mask = make_mask_post_last_gist(inputs, gist_token, dtype=torch.bool)[:, None, None]\npost_gist_mask = make_mask_pre_first_gist(inputs, gist_token, dtype=torch.bool)[:, None, None]\npre_gist_time_mask = pre_gist_mask.permute((0, 1, 3, 2))\nmask = torch.where(pre_gist_time_mask, pre_gist_mask, post_gist_mask)\nmask = mask & (inputs != pad_token)[:, None, None]\n```\nThe helper is `make_mask_pre_first_gist`: `((inputs == gist_token).cumsum(-1) >= 1)`.\n\nFIGURES\n- Fig 1 (p.2): prompting vs finetuning/distillation vs gisting. It shows gisting predicts the cache G(t) from the prompt with no per-task training.\n- Fig 2 (p.3): gist mask tables for decoder-only and encoder-decoder models. This is the fastest way to see the method.\n- Fig 3 (p.6): ROUGE-L and ChatGPT win rate against k in {1, 2, 5, 10}, with compression factors 2x-26x and positive/negative control lines. It shows that k barely matters.\n- Fig A.3 (p.19): exact-match rate with the positive control.\n- Fig A.4 (p.19): per-layer FLOPs breakdown, with the dense block at 51.9% and kq/softmax terms that depend on the cache at about 9.6%.\n\nPROBLEMS: No embedded instructions found. The figure axis text extracted as noise, but the numbers come from Table 1, which extracted cleanly. Figure A.2 text is garbled (an encoding artifact) and has no content. Listing A.3 beyond Example 6 was skimmed, not read.\n\nNote for the target note (05-compression-compaction.md): this is learned soft-token compression of an instruction prompt in the model's KV cache. It is not text summarisation or compaction of conversation history. Any citation should say that. It is a sharpens-style citation only if the note already discusses prompt compression."
+ "type": "empirical",
+ "question": "Can an LM be trained to compress a prompt into a few cached gist tokens that generalise to unseen prompts, cutting inference cost with little loss in output quality?",
+ "hypothesis": "Restricting attention so tokens after the gist tokens cannot see the prompt forces the LM to compress the prompt into the gist activations during ordinary instruction finetuning.",
+ "contributions": [
+  "Gisting: predict a compressed prompt prefix zero-shot, amortising both inference-time prompting cost and per-task distillation cost",
+  "A masking-only way to learn gist models with no extra training cost over instruction finetuning",
+  "Up to 26x prompt compression, 40% FLOPs reduction and 4.2% wall-time speedup with minimal quality loss on LLaMA-7B and FLAN-T5-XXL"
+ ],
+ "method": {
+  "summary": "Insert k copies of a new gist token between the prompt and the input, and mask attention so input and output tokens cannot attend to prompt tokens. Finetune LLaMA-7B and FLAN-T5-XXL on Alpaca+ with this mask; the gist-token key/value activations then serve as a cacheable compressed prompt. Quality is compared with positive/negative controls and a TF-IDF keyword baseline using ROUGE-L, ChatGPT-3.5 and human pairwise judgments.",
+  "task": "instruction following with prompt compression (instruction finetuning with gist masking)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Alpaca+ (Self-Instruct + Stanford Alpaca)",
+    "role": "train",
+    "size": "130,321 examples; 104,664 unique tasks; 48,530 unique inputs; 0-5 inputs per task (0.64 avg); ~59% of tasks have no input",
+    "split": "train minus held-out validation splits",
+    "source": "Self-Instruct (text-davinci-001) and Stanford Alpaca (text-davinci-003) samples",
+    "preprocessing": "examples over max length truncated from the end (<1% truncated); empty inputs omitted"
+   },
+   {
+    "name": "Alpaca+ Seen validation",
+    "role": "eval",
+    "size": "1000 prompts",
+    "split": "seen prompts, unseen non-empty inputs",
+    "source": "held out from Alpaca+",
+    "preprocessing": null
+   },
+   {
+    "name": "Alpaca+ Unseen validation",
+    "role": "eval",
+    "size": "1000 prompts",
+    "split": "unseen prompts with non-empty inputs",
+    "source": "held out from Alpaca+",
+    "preprocessing": null
+   },
+   {
+    "name": "Alpaca+ Human validation",
+    "role": "eval",
+    "size": "252 prompts (83% non-empty inputs); human eval on random 100",
+    "split": "hand-written Self-Instruct prompts and gold completions",
+    "source": "Wang et al. 2022",
+    "preprocessing": "avg train prompt ~20 tokens vs ~26 in this split"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-7B gist",
+    "role": "proposed",
+    "params": "~7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "LLaMA-7B pretrained",
+    "tokenizer": null,
+    "vocab": "base vocab plus one gist token",
+    "layers": "32",
+    "hidden": null,
+    "heads": "32 (head dim 128)",
+    "context": "max sequence length 512 during training/eval (768 on Human split)",
+    "other": {
+     "gist_tokens_k": "1, 2, 5, 10 trained; 1 used for main results"
+    }
+   },
+   {
+    "name": "FLAN-T5-XXL gist",
+    "role": "proposed",
+    "params": "11B",
+    "architecture": "encoder-decoder transformer",
+    "init_from": "FLAN-T5-XXL",
+    "tokenizer": null,
+    "vocab": "base vocab plus one gist token",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max input 128, max output 256 (384/384 on Human split)",
+    "other": {
+     "gist_tokens_k": "1, 2, 5, 10 trained; 1 used for main results"
+    }
+   },
+   {
+    "name": "Positive control",
+    "role": "baseline",
+    "params": "same as base",
+    "architecture": "same, 1 gist token, no mask change (standard instruction finetuning)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Negative control",
+    "role": "baseline",
+    "params": "same as base",
+    "architecture": "trained without access to the task t",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TF-IDF",
+    "role": "baseline",
+    "params": "same as base",
+    "architecture": "instruction replaced by first subword token of its top TF-IDF keyword; standard finetuning",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT-3.5 (gpt-3.5-turbo)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "dates": "2023-03-27 to 2023-04-07"
+    }
+   }
+  ],
+  "training": {
+   "objective": "standard instruction-finetuning LM loss (autoregressive on y) with gist attention mask; viewed as meta context distillation, L_G = E_{t,x}[KL(p_LM(y|t,x) || p_G(y|G(t),x))]",
+   "optimizer": "AdamW",
+   "lr": "2e-5 (LLaMA-7B); 5e-5 (FLAN-T5-XXL)",
+   "lr_schedule": null,
+   "warmup": "ratio 0.03 (LLaMA-7B); 0 (FLAN-T5-XXL)",
+   "batch_size": "128 (LLaMA-7B); 16 (FLAN-T5-XXL)",
+   "steps": "3000 (LLaMA-7B); 16000 (FLAN-T5-XXL)",
+   "epochs": "~3 (LLaMA-7B); ~2 (FLAN-T5-XXL)",
+   "tokens": null,
+   "seq_len": "512 (LLaMA, 768 Human split); input 128/output 256 (FLAN-T5; 384/384 Human split)",
+   "precision": "bf16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4x A100-SXM4-80GB, 480GB RAM, 16 CPUs; DeepSpeed ZeRO stage 3",
+   "compute": null,
+   "wall_clock": "~7 hours (LLaMA-7B); ~25 hours (FLAN-T5-XXL)",
+   "seeds": null,
+   "other": {
+    "deepspeed": "subgroup size 1e9, max live params 1e9, max reuse distance 1e9",
+    "hyperparameter_source": "LLaMA identical to Alpaca; FLAN-T5 identical to Tk-Instruct except lr 5e-5 instead of 1e-5",
+    "note": "no substantial gains training beyond 1 epoch for FLAN-T5-XXL"
+   }
+  },
+  "inference": {
+   "decoding": "greedy; beam search B=4 gave limited gains",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "512 generation length",
+   "samples": "inferred: one greedy output per item, single run; seeds not stated",
+   "prompting": "input is (task t, gist tokens g1..gk, input x)",
+   "retrieval": null,
+   "parameters": {
+    "gist_tokens_k": "1, 2, 5, 10",
+    "compression_factor": "avg token length of validation split / number of gist tokens"
+   },
+   "other": {
+    "efficiency_benchmark": "single forward pass (one decode step with one input token), PyTorch 2.0, 1 A100, averaged over 252 Human instructions; caching strategies None / Instruction / Gist"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-L",
+     "definition": "lexical overlap with reference; text-davinci completions as reference, gold human reference on Human split",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "ChatGPT win rate",
+     "definition": "ChatGPT-3.5 picks the better of gist model vs positive control (random A/B order, ties allowed); 50% = parity",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human win rate",
+     "definition": "same pairwise judgement by 3 Prolific annotators on 100 Human-split examples, IDK dropped",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cohen's kappa",
+     "definition": "linearly weighted agreement among annotators and ChatGPT",
+     "unit": "kappa",
+     "higher_is_better": true
+    },
+    {
+     "name": "CUDA time / GFLOPs",
+     "definition": "per forward pass profiling with different caching strategies",
+     "unit": "ms / GFLOPs",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Positive control",
+    "Negative control",
+    "TF-IDF keyword",
+    "No caching / instruction KV caching (efficiency)"
+   ],
+   "protocol": "Fig 3 error bars are 95% exact binomial CIs, ties split equally and rounded down in favour of positive control; human eval via Prolific, IRB approved; single training run per configuration apparently (no seeds reported)"
+  },
+  "availability": {
+   "code": "https://github.com/jayelm/gisting",
+   "weights": "model checkpoints at same repo",
+   "data": "Alpaca+ outputs and ChatGPT judgments at same repo"
+  },
+  "prompts": [
+   {
+    "purpose": "ChatGPT pairwise judge system prompt, opening (4 worked examples and JSON-format instruction follow; see Listing A.2)",
+    "text": "Given a user instruction and two AI assistant responses, your job is to select the response that is more helpful, and give reasons why. Judge responses holistically, paying special attention to whether the response (1) correctly follows the provided instruction and (2) is factually accurate. If both responses are equal, you may call a tie, but please use this response sparingly.",
+    "where": "Listing A.2, App C, p.15"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "except with a 5e-5 learning rate",
+    "where": "App B, Table A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Gist models compress prompts up to 26x with output quality near the uncompressed positive control (abstract claim).",
+   "kind": "measured",
+   "metric": "compression factor",
+   "value": "26x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-7B and FLAN-T5-XXL, single gist token, Human split (avg prompt ~26 tokens)",
+   "quote": "gisting enables up to 26x compression of prompts, resulting in up to 40% FLOPs reductions, 4.2% wall time speedups, and storage savings, all with minimal loss in output quality",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "LLaMA-7B single-gist ChatGPT win rate vs positive control on Seen prompts.",
+   "kind": "measured",
+   "metric": "ChatGPT win rate vs positive control",
+   "value": "48.6",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": 1000,
+   "setup": "LLaMA-7B, 1 gist token, Seen split (1000 prompts, unseen inputs); 50% = parity with positive control",
+   "quote": "48.6% and 50.8% win rates for LLaMA-7B and FLAN-T5-XXL",
+   "table": null,
+   "note": "FLAN-T5-XXL is 50.8 on the same split",
+   "where": "Sec 5, p.5; Table 1"
+  },
+  {
+   "claim": "Unseen-prompt win rates against positive control stay close to parity.",
+   "kind": "measured",
+   "metric": "ChatGPT win rate vs positive control",
+   "value": "49.7 (LLaMA-7B); 46.2 (FLAN-T5-XXL)",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": 1000,
+   "setup": "Unseen split (1000 prompts within Alpaca+ distribution), 1 gist token",
+   "quote": "49.7% (LLaMA) and 46.2% (FLAN-T5) win rates against the positive controls",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.5"
+  },
+  {
+   "claim": "On the OOD Human split win rates drop slightly.",
+   "kind": "measured",
+   "metric": "ChatGPT win rate vs positive control",
+   "value": "45.8 (LLaMA-7B); 42.5 (FLAN-T5-XXL)",
+   "unit": "%",
+   "baseline_value": "50.0",
+   "n": 252,
+   "setup": "Human split (252 hand-written Self-Instruct prompts), 1 gist token",
+   "quote": "slight drops in win rate to 45.8% (LLaMA) and 42.5% (FLAN-T5)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.5"
+  },
+  {
+   "claim": "ROUGE-L, LLaMA-7B Human split: Pos 27.0, Gist 23.9, TF-IDF 16.5, Neg 14.4 (gist 75.4 normalised).",
+   "kind": "measured",
+   "metric": "ROUGE-L",
+   "value": "23.9",
+   "unit": "ROUGE-L points",
+   "baseline_value": "27.0",
+   "n": 252,
+   "setup": "LLaMA-7B, single gist token, Human split, references = gold human completions",
+   "quote": null,
+   "table": "Table 1, row LLaMA-7B Gist, column Human ROUGE-L",
+   "note": null,
+   "where": "Table 1, p.6"
+  },
+  {
+   "claim": "ROUGE-L, LLaMA-7B Unseen split: Gist 46.6 vs Pos 48.1; Seen: Gist 57.8 vs Pos 58.0.",
+   "kind": "measured",
+   "metric": "ROUGE-L",
+   "value": "46.6",
+   "unit": "ROUGE-L points",
+   "baseline_value": "48.1",
+   "n": 1000,
+   "setup": "LLaMA-7B, single gist token, Unseen split",
+   "quote": null,
+   "table": "Table 1, row LLaMA-7B Gist, column Unseen ROUGE-L",
+   "note": "Seen: 57.8 vs 58.0",
+   "where": "Table 1, p.6"
+  },
+  {
+   "claim": "ROUGE-L, FLAN-T5-XXL: Gist 48.9 (Seen), 43.8 (Unseen), 21.7 (Human) vs Pos 50.6, 45.7, 23.9.",
+   "kind": "measured",
+   "metric": "ROUGE-L",
+   "value": "21.7",
+   "unit": "ROUGE-L points",
+   "baseline_value": "23.9",
+   "n": 252,
+   "setup": "FLAN-T5-XXL, single gist token, Human split",
+   "quote": null,
+   "table": "Table 1, row FLAN-T5-XXL Gist, column Human ROUGE-L",
+   "note": "Seen 48.9 vs 50.6; Unseen 43.8 vs 45.7",
+   "where": "Table 1, p.6"
+  },
+  {
+   "claim": "TF-IDF discrete compression is only marginally better than the negative control.",
+   "kind": "measured",
+   "metric": "ChatGPT win rate vs positive control",
+   "value": "24.6",
+   "unit": "%",
+   "baseline_value": "22.2",
+   "n": 252,
+   "setup": "LLaMA-7B Human split; TF-IDF = first subword of one keyword, same compression as 1 gist token; Neg = 22.2; Gist = 45.8",
+   "quote": "gist compression is vastly superior to discrete compression; the TF-IDF models in Table 1 only marginally outperform the negative control models across the board.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.5; Table 1"
+  },
+  {
+   "claim": "Number of gist tokens barely matters; 10 tokens can hurt.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "k in {1,2,5,10}, both models, Figure 3",
+   "quote": "Models were generally insensitive to the number of gist tokens k: compressing prompts into a single token prefix did not substantially underperform larger prefixes.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.5; Fig 3"
+  },
+  {
+   "claim": "Gist caching cuts FLOPs by 40% versus no caching, for both models.",
+   "kind": "measured",
+   "metric": "GFLOPs reduction vs no caching",
+   "value": "40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 252,
+   "setup": "One forward pass (one decode step, one input token), PyTorch 2.0, 1x A100 80GB, averaged over 252 Human instructions; LLaMA 915 -> 552 GFLOPs, FLAN-T5 716 -> 427",
+   "quote": "Gist caching improves significantly over unoptimized models, with 40% FLOPs savings and 4-7% lower wall time for both models.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, p.8; Table 3"
+  },
+  {
+   "claim": "CUDA wall-time saving versus no caching: 6.8% LLaMA-7B, 4.2% FLAN-T5-XXL.",
+   "kind": "measured",
+   "metric": "CUDA time reduction vs no caching",
+   "value": "6.8% (LLaMA-7B); 4.2% (FLAN-T5-XXL)",
+   "unit": "%",
+   "baseline_value": "23.4 ms (LLaMA none); 31.0 ms (FLAN none)",
+   "n": 252,
+   "setup": "As above; Gist 21.8 ms (LLaMA), 29.7 ms (FLAN)",
+   "quote": null,
+   "table": "Table 3, rows CUDA time (ms), column Gist vs. None",
+   "note": "Abstract says 4.2% wall time speedups",
+   "where": "Table 3, p.8"
+  },
+  {
+   "claim": "Versus caching the uncompressed instruction in the KV cache (LLaMA only), gisting gives negligible FLOPs saving and about 1% wall time.",
+   "kind": "measured",
+   "metric": "GFLOPs reduction vs instruction caching",
+   "value": "0.11",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 252,
+   "setup": "LLaMA-7B, avg KV cache 26 (instruction) vs 1 (gist); wall time 22.1 -> 21.8 ms (1.0%)",
+   "quote": "a negligible decrease in FLOPs (0.11%) and a modest 1% speedup in wall time.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, p.8; Table 3"
+  },
+  {
+   "claim": "Predicted FLOPs gain from Chinchilla-style equations matches the observed one.",
+   "kind": "measured",
+   "metric": "predicted relative FLOPs improvement of gist caching",
+   "value": "0.12",
+   "unit": "%",
+   "baseline_value": "0.11",
+   "n": null,
+   "setup": "LLaMA-7B, KV cache compression rate 26, modified Chinchilla FLOPs equations",
+   "quote": "the Chinchilla equations predict a relative improvement of Gist caching of 0.12%.",
+   "table": null,
+   "note": null,
+   "where": "Appendix F, p.18"
+  },
+  {
+   "claim": "KV cache cost per token for LLaMA-7B, so gisting allows caching up to 26x more prompts in the same storage.",
+   "kind": "worked-example",
+   "metric": "KV cache storage per token",
+   "value": "1.05",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fp32: 4 bytes x 2 (K+V) x 32 layers x 32 heads x 128 head dim",
+   "quote": "for LLaMA-7B, each token in the KV cache requires 1.05 MB storage.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, p.8, footnote 3"
+  },
+  {
+   "claim": "Human annotators agree with ChatGPT judge on average win rate.",
+   "kind": "measured",
+   "metric": "Gist win rate over positive control, human average",
+   "value": "52.3 (LLaMA-7B); 40.6 (FLAN-T5-XXL)",
+   "unit": "%",
+   "baseline_value": "48.0 / 42.0 (ChatGPT)",
+   "n": 100,
+   "setup": "100 of 252 Human-split examples, 3 Prolific annotators each, ~10% 'I Don't Know' dropped",
+   "quote": "human annotators agree with ChatGPT, with average win rates of 52.3% (vs. 48.0%) for LLaMA-7B and 40.6% (vs. 42.0%) for FLAN-T5-XXL.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.5; Table 2"
+  },
+  {
+   "claim": "Inter-annotator agreement is low but ChatGPT agrees with humans about as well as humans agree with each other.",
+   "kind": "measured",
+   "metric": "average pairwise Cohen's kappa (humans)",
+   "value": ".24 (LLaMA-7B); .33 (FLAN-T5-XXL)",
+   "unit": "kappa",
+   "baseline_value": ".29 both (ChatGPT vs humans)",
+   "n": 100,
+   "setup": "Linearly weighted Cohen's kappa, Human split subset",
+   "quote": "The average pairwise Cohen’s κ among human annotators is .24 for LLaMA-7B and .33 for FLAN-T5-XXL.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.5; Table A.2"
+  },
+  {
+   "claim": "Gist outputs match the positive control exactly only on seen tasks.",
+   "kind": "measured",
+   "metric": "exact string match with positive control",
+   "value": "~50% Seen; ~20-25% Unseen; ~10% Human",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-token gist models, Fig A.3",
+   "quote": "the gist model outputs exactly match the positive control nearly 50% of the time. This drops to ~20–25% for Unseen tasks and ~10% for the OOD Human tasks.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.7"
+  },
+  {
+   "claim": "Failure modes: loss of specific detail and runaway generations.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human split, qualitative examples (FLAN-T5 outputs 'Culture' vs 'Arts & Culture'; LLaMA repeats \\subparagraph for hundreds of tokens)",
+   "quote": "We also see more cases of runaway generations that do not occur with the positive control model:",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, p.7"
+  },
+  {
+   "claim": "Gist masking is a small code change at no extra training cost.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Decoder-only and encoder-decoder LMs",
+   "quote": "Overall, these masking changes are extremely simple and can be implemented in roughly 10 source lines of code.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3, p.4"
+  },
+  {
+   "claim": "Encoder-decoder generalises slightly worse OOD; authors' explanation is untested.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLAN-T5 vs LLaMA, Human split",
+   "quote": "Future work will be needed to investigate this hypothesis.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, p.7"
+  },
+  {
+   "claim": "Cost of the judging: ChatGPT judgments and human study.",
+   "kind": "measured",
+   "metric": "evaluation cost",
+   "value": "$29.28 ChatGPT; USD $141.64 humans",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~22.5k ChatGPT judgments; 3 annotators x 100 examples at $14.35/hour",
+   "quote": "In total, we collected ~22.5k judgments from ChatGPT for an estimated cost of $29.28.",
+   "table": null,
+   "note": null,
+   "where": "App C-D, p.15-16"
+  }
+ ],
+ "limits": [
+  "Authors concede gisting loses nuance of the original instruction (Sec 5.1 failure case) and practitioners should evaluate the compute/accuracy tradeoff before deployment.",
+  "Prompts are short (~20-26 tokens); no long prompts, few-shot prompts, documents or conversation history tested, though authors say biggest gains would come from long prompts (future work).",
+  "Requires finetuning the LM itself; retrofitting a frozen LM with a separate compressor is future work.",
+  "Only LLaMA-7B and FLAN-T5-XXL; training data is synthetic GPT-3 Alpaca+ (~59% of tasks have no input).",
+  "Quality judged by ChatGPT-3.5, ROUGE-L and 100 examples with 3 humans (low kappa .24-.33); no downstream benchmarks.",
+  "Wall-time benchmarks are single-step decoding at small scale; larger batch/sequence gains are expected but not measured.",
+  "Gain over plain instruction KV caching is small for LLaMA (0.11% FLOPs, 1% time); main benefit is storage and context space.",
+  "Dated: LLaMA-1 and ChatGPT-3.5 (Mar-Apr 2023); context windows have since grown (reader inference, not the paper's)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "gisting",
+   "definition": "compresses arbitrary prompts into a smaller set of Transformer activations on top of virtual 'gist' tokens",
+   "where": "Sec 1, p.1"
+  },
+  {
+   "term": "gist tokens",
+   "definition": "k copies of a single new vocabulary token g inserted between prompt and input, whose key/value activations G(t) hold the compressed prompt",
+   "where": "Sec 3, p.3"
+  },
+  {
+   "term": "positive control",
+   "definition": "model with a single gist token but no attention mask change, i.e. standard instruction finetuning (upper bound)",
+   "where": "Sec 4.2, p.4"
+  },
+  {
+   "term": "negative control",
+   "definition": "model trained without access to the task t (lower bound)",
+   "where": "Sec 4.2, p.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Prefix-tuning (Li and Liang)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "gist activations are a prefix, but predicted zero-shot instead of learned per task",
+   "quote": null
+  },
+  {
+   "work": "Learning by distilling context (Snell et al.)",
+   "year": 2022,
+   "arxiv": "2209.15189",
+   "relation": "extends",
+   "note": "context distillation perspective",
+   "quote": null
+  },
+  {
+   "work": "A general language assistant as a laboratory for alignment (Askell et al.)",
+   "year": 2021,
+   "arxiv": "2112.00861",
+   "relation": "extends",
+   "note": "context distillation",
+   "quote": null
+  },
+  {
+   "work": "Prompt compression and contrastive conditioning (Wingate et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "compresses one prompt into a soft prompt by gradient descent; gisting amortises across tasks",
+   "quote": null
+  },
+  {
+   "work": "HyperTuning (Phang et al.)",
+   "year": 2022,
+   "arxiv": "2211.12485",
+   "relation": "extends",
+   "note": "gisting is the zero-shot, LM-as-hypernetwork version",
+   "quote": null
+  },
+  {
+   "work": "Compressive Transformer (Rae et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest memory-compression work; three differences listed in Sec 7",
+   "quote": null
+  },
+  {
+   "work": "Prompt injection: Parameterization of fixed inputs (Choi et al.)",
+   "year": 2022,
+   "arxiv": "2206.11349",
+   "relation": "related",
+   "note": "context distillation",
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "evaluates",
+   "note": "decoder-only base model",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (FLAN-T5)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "evaluates",
+   "note": "encoder-decoder base model",
+   "quote": null
+  },
+  {
+   "work": "Self-Instruct (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2212.10560",
+   "relation": "uses-data",
+   "note": "part of Alpaca+ and source of Human split",
+   "quote": null
+  },
+  {
+   "work": "Stanford Alpaca (Taori et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "part of Alpaca+; LLaMA hyperparameters taken from it",
+   "quote": null
+  },
+  {
+   "work": "Super-NaturalInstructions / Tk-Instruct (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "FLAN-T5 hyperparameters taken from it",
+   "quote": null
+  },
+  {
+   "work": "Efficiently scaling transformer inference (Pope et al.)",
+   "year": 2022,
+   "arxiv": "2211.05102",
+   "relation": "related",
+   "note": "memory-time argument for wall time vs FLOPs",
+   "quote": null
+  },
+  {
+   "work": "Training compute-optimal LLMs (Chinchilla)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "uses-method",
+   "note": "FLOPs equations modified for KV cache length",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Prompting retains the multitask capabilities of LMs, but is inefficient. Finetuning/distillation is more efficient, but requires training a model for each task. Gisting compresses prompts into activations on top of gist tokens, saving compute and generalizing to novel tasks at test time.",
+   "page": 2,
+   "why": "contrasts prompting, finetuning and gisting at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Gist Masking. Attention mask modifications for (a) decoder-only and (b) encoder-decoder Transformer LMs to encourage prompt compression into gist tokens.",
+   "page": 3,
+   "why": "the whole method is the mask pattern"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Varying the number of gist tokens. ROUGE-L and ChatGPT scores for (a) LLaMA-7B and (b) FLAN-T5-XXL for different gist tokens.",
+   "page": 6,
+   "why": "shows k barely matters and compression factors 2x-26x"
+  },
+  {
+   "figure": "Fig A.4",
+   "caption": "FLOPs for each operation in a single layer of self attention with a 2000-length KV cache (LLaMA-7B).",
+   "page": 19,
+   "why": "explains why gist caching saves little FLOPs over instruction caching"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing A.1, p.14",
+   "snippet": "pre_gist_mask = make_mask_post_last_gist(inputs, gist_token, dtype=torch.bool)[:, None, None]\npost_gist_mask = make_mask_pre_first_gist(inputs, gist_token, dtype=torch.bool)[:, None, None]\npre_gist_time_mask = pre_gist_mask.permute((0, 1, 3, 2))\nmask = torch.where(pre_gist_time_mask, pre_gist_mask, post_gist_mask)\nmask = mask & (inputs != pad_token)[:, None, None]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Figure axis labels extract as noise; numbers taken from Table 1 and text.",
+  "Figure A.2 has no extractable content.",
+  "Tokenizer, LR schedule, weight decay, dropout and seeds are not stated."
+ ]
 }

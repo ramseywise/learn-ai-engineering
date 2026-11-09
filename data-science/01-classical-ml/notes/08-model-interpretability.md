@@ -23,7 +23,7 @@ cleaned: 2026-11-01
 ---
 # Model Interpretability
 
-> A reviewer asks why your model rejected this applicant, and which features it relies on. The boosted model of the last note has hundreds of trees, so you cannot read it. Three tools answer the three questions people really ask: permutation importance for what the model relies on, partial dependence for how a feature moves the prediction, and SHAP for why one row got its score. Each can mislead, in ways this note shows on the adult census.
+> A reviewer asks why your model rejected this applicant, and which features it relies on. The boosted model of [note 07](07-boosting-in-practice.md) has hundreds of trees, so you cannot read it. Three tools answer the three questions people really ask: permutation importance for what the model relies on, partial dependence for how a feature moves the prediction, and SHAP for why one row got its score. Each can mislead, in ways this note shows on the adult census.
 
 **In plain words.** A big model can't explain itself, yet customers, managers and regulators will all ask why it said no. These tools answer by experiment: like a cook leaving out one ingredient at a time to see which one the dish depends on, they change an input and watch the answer move. Treat what they tell you as a description of the model and not of the world. Finding that a model leans on someone's postcode doesn't mean that the postcode caused anything.
 
@@ -58,7 +58,7 @@ flowchart TD
 
 ## Setup: the model to explain
 
-We use LightGBM on the same adult split as the last note, with a pure-noise column and a random high-cardinality column added on purpose, so we can see which tools credit them.
+We use LightGBM on the same adult split as [note 07](07-boosting-in-practice.md), with a pure-noise column and a random high-cardinality column added on purpose, so we can see which tools credit them.
 
 ```python
 import numpy as np

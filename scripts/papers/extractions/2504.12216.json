@@ -1,0 +1,646 @@
+{
+ "schema": 1,
+ "key": "2504.12216",
+ "pdf": "generative-ai/05-RL/sources/zhao-2025-d1.pdf",
+ "bib": {
+  "title": "d1: Scaling Reasoning in Diffusion Large Language Models via Reinforcement Learning",
+  "authors": [
+   "Siyan Zhao",
+   "Devaansh Gupta",
+   "Qinqing Zheng",
+   "Aditya Grover"
+  ],
+  "first_author": "Zhao",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2504.12216",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 76895,
+  "chars_total": 76895,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can masked diffusion LLMs be turned into stronger reasoning models with SFT and online policy-gradient RL, given that GRPO needs log-probabilities dLLMs cannot compute cheaply?",
+ "hypothesis": "Combining masked SFT on reasoning traces with a GRPO variant using a one-step log-prob estimator improves dLLM reasoning more than either alone.",
+ "contributions": [
+  "d1, a two-stage SFT + RL framework for masked dLLMs",
+  "diffu-GRPO: GRPO with mean-field sequence log-prob and one-step per-token log-prob estimation with random prompt masking, first policy-gradient RL on masked dLLMs",
+  "Empirical study on math, planning and coding showing d1 gives the best results",
+  "Ablations on random masking, mu and p_mask"
+ ],
+ "method": {
+  "summary": "Starting from LLaDA-8B-Instruct, SFT on s1k with masked-diffusion loss, then diffu-GRPO per task using a one-step log-probability estimator with randomly masked prompts so many inner gradient updates can reuse one batch of generations. Evaluated zero-shot at generation lengths 128/256/512.",
+  "task": "reasoning post-training of diffusion LLMs (math, planning, coding)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "s1K",
+    "role": "train",
+    "size": "1000 reasoning questions with traces",
+    "split": "1% held out for evaluation; truncated to max 4096 tokens",
+    "source": "Muennighoff et al. 2025",
+    "preprocessing": "truncated to 4096 tokens; padded to model max length so PAD tokens enter the loss"
+   },
+   {
+    "name": "GSM8K",
+    "role": "both",
+    "size": null,
+    "split": "train split for RL, test split for eval",
+    "source": "huggingface openai/gsm8k",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH500 / MATH",
+    "role": "both",
+    "size": "500 eval problems",
+    "split": "train split of MATH for RL (ankner/math-500)",
+    "source": "Lightman et al. 2023; Hendrycks 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Countdown (3 numbers)",
+    "role": "both",
+    "size": "eval 256 synthetically generated questions",
+    "split": "train from TinyZero Countdown-Tasks-3to4 restricted to 3 numbers",
+    "source": "Jiayi-Pan/Countdown-Tasks-3to4",
+    "preprocessing": null
+   },
+   {
+    "name": "4x4 Sudoku",
+    "role": "both",
+    "size": "train subset of one million unique puzzles; eval 256 randomly generated puzzles",
+    "split": null,
+    "source": "Black-Phoenix/4x4-Sudoku-Dataset, generated with Arel's generator",
+    "preprocessing": null
+   },
+   {
+    "name": "KodCode-Light-RL-10K",
+    "role": "train",
+    "size": "10K",
+    "split": null,
+    "source": "Xu et al. 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 problems",
+    "split": null,
+    "source": "Chen et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MBPP",
+    "role": "eval",
+    "size": "257 tasks",
+    "split": null,
+    "source": "Austin et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaDA-8B-Instruct",
+    "role": "base",
+    "params": "8B",
+    "architecture": "masked diffusion LLM, bidirectional",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: pre-trained on sequences up to 4096 tokens (Sec 4.3)",
+    "other": {
+     "alpha_t": "1 - t"
+    }
+   },
+   {
+    "name": "d1-LLaDA",
+    "role": "proposed",
+    "params": "8B",
+    "architecture": "LLaDA + LoRA",
+    "init_from": "LLaDA+SFT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Dream 7B, Qwen2.5 7B, LLaMA3 8B, Mistral 7B, Deepseek 7B",
+    "role": "evaluated",
+    "params": "7B-8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "scores copied from Dream blog"
+    }
+   }
+  ],
+  "training": {
+   "objective": "diffu-GRPO: clipped GRPO objective with unnormalised advantage A=r-mean(r), reverse KL, using one-step per-token log-prob estimate with prompt masking and mean-field sequence log-prob; SFT: masked-diffusion NELBO weighted 1/t on masked response tokens",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.99 (RL); SFT optimizer and schedule 'match' RL",
+   "lr": "3e-6 (diffu-GRPO); 1e-5 (SFT)",
+   "lr_schedule": "SFT: linear decay; RL: not stated",
+   "warmup": "SFT: none; RL: not stated",
+   "batch_size": "RL: 6 per GPU x 8 GPUs x grad accum 2; coding: 2 per device x 4 GPUs x grad accum 4; SFT: per-device 1, grad accum 4, effective 8",
+   "steps": "diffu-GRPO: 7700 GSM8K, 6600 MATH500, 5000 Countdown, 3800 Sudoku; coding 7500 (base) and 9000 (SFT start); SFT 2460 steps",
+   "epochs": "SFT 20 epochs on s1k",
+   "tokens": null,
+   "seq_len": "RL online generation 256; SFT 4096",
+   "precision": "4-bit quantization with Flash Attention 2 (RL)",
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "gradient clipping 0.2 (RL), 1.0 (SFT); KL beta and clip eps not stated in text; random prompt masking",
+   "hardware": "RL: 8x NVIDIA A100-80G; coding RL: 4x RTX A5000; SFT: 2x A6000",
+   "compute": null,
+   "wall_clock": "Fig 5 shows up to about 20 hours on GSM8K ablation (read from Fig 5)",
+   "seeds": null,
+   "other": {
+    "lora_rl": "rank 128, alpha 64",
+    "lora_sft": "rank 128, alpha 256",
+    "p_mask": "0.15",
+    "mu_main_runs": "not stated for main runs; ablation uses mu=12 (Fig 5 compares mu of 2, 12 and 24)",
+    "G": "not stated",
+    "library": "TRL",
+    "one_model_per_task": "yes, except unified-model experiment",
+    "eval_checkpoint": "RL models evaluated every 100 steps from step 600, best reported (selection on eval)"
+   }
+  },
+  "inference": {
+   "decoding": "semi-autoregressive block decoding: blocks of 32 tokens, N/2 denoising steps, unmask 2 highest-confidence tokens per step within block; greedy",
+   "temperature": "greedy (inferred from 'greedy decoding')",
+   "top_p": null,
+   "max_tokens": "generation lengths 128, 256, 512",
+   "samples": "single greedy run per setting; no seeds reported",
+   "prompting": "0-shot; reasoning and answer tags format",
+   "retrieval": null,
+   "parameters": {
+    "p_mask": "0.15",
+    "denoising_steps": "N/2"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction correct on each benchmark (Sudoku/Countdown test sets of 256 generated instances)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "HumanEval/MBPP score",
+     "definition": "not defined in text",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "effective tokens",
+     "definition": "average number of non-padding, non-EOS tokens per generation",
+     "unit": "tokens",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "LLaDA-8B-Instruct",
+    "LLaDA+SFT (s1k)",
+    "LLaDA+diffu-GRPO",
+    "Dream 7B, Qwen2.5 7B, LLaMA3 8B, Mistral 7B, Deepseek 7B (Fig 3)"
+   ],
+   "protocol": "0-shot, greedy, three generation lengths; best checkpoint chosen from evaluation for RL models; no seeds or significance tests"
+  },
+  "availability": {
+   "code": "https://github.com/dllm-reasoning/d1 (project page https://dllm-reasoning.github.io/)",
+   "weights": null,
+   "data": "public datasets listed"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "learning rate of 3 × 10−6",
+    "where": "App D.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "d1-LLaDA (SFT then diffu-GRPO) reaches 82.1 on GSM8K at generation length 512, vs 78.2 for base LLaDA-8B-Instruct",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "82.1",
+   "unit": "% accuracy",
+   "baseline_value": "78.2",
+   "n": null,
+   "setup": "LLaDA-8B-Instruct base, zero-shot, greedy decoding; per-task diffu-GRPO trained with online generation length 256; best checkpoint among steps 600,700,... reported for RL models",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row + SFT + diffu-GRPO (d1-LLaDA), column GSM8K 512"
+  },
+  {
+   "claim": "d1-LLaDA reaches 40.2 on MATH500 at length 512 vs 36.2 base",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "40.2",
+   "unit": "% accuracy",
+   "baseline_value": "36.2",
+   "n": null,
+   "setup": "LLaDA-8B-Instruct base, zero-shot, greedy decoding; per-task diffu-GRPO trained with online generation length 256; best checkpoint among steps 600,700,... reported for RL models",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row d1-LLaDA, column MATH500 512"
+  },
+  {
+   "claim": "d1-LLaDA reaches 42.2 on Countdown at length 512 vs 16.0 for base at the same length (base best is 20.7 at 128)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "42.2",
+   "unit": "% accuracy",
+   "baseline_value": "16.0",
+   "n": null,
+   "setup": "LLaDA-8B-Instruct base, zero-shot, greedy decoding; per-task diffu-GRPO trained with online generation length 256; best checkpoint among steps 600,700,... reported for RL models",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row d1-LLaDA, column Countdown 512"
+  },
+  {
+   "claim": "d1-LLaDA reaches 22.1 on 4x4 Sudoku at length 128 vs 11.7 base",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "22.1",
+   "unit": "% accuracy",
+   "baseline_value": "11.7",
+   "n": null,
+   "setup": "LLaDA-8B-Instruct base, zero-shot, greedy decoding; per-task diffu-GRPO trained with online generation length 256; best checkpoint among steps 600,700,... reported for RL models",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row d1-LLaDA, column Sudoku 128"
+  },
+  {
+   "claim": "Reported gains of d1-LLaDA over base: modest on math, larger on planning",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3.9 / 4.0 / 26.2 / 10.0",
+   "unit": "% (GSM8K/MATH500/Countdown/Sudoku)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 comparisons, d1-LLaDA vs LLaDA-8B-Instruct",
+   "note": "Paper does not say which lengths are compared. 3.9 and 4.0 match best-length differences (82.1-78.2, 40.2-36.2); 26.2 matches 42.2-16.0 at length 512; Sudoku 10.0 does not match 22.1-11.7=10.4 exactly. Not reconciled by the authors.",
+   "where": "Sec 4.2",
+   "quote": "we observe modest improvements on GSM8K (3.9%) and MATH500 (4.0%), but significantly larger gains on Countdown (26.2%) and Sudoku (10.0%)"
+  },
+  {
+   "claim": "diffu-GRPO beats base LLaDA and SFT in all 12 setups; SFT beats base in only 7 of 12",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "12 of 12 vs 7 of 12",
+   "unit": "setups",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 tasks x 3 generation lengths, Table 1",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "diffu-GRPO outperforms both LLaDA-8B-Instruct and SFT, in all 12 setups, while SFT outperforms LLaDA-8B-Instruct in only 7 of"
+  },
+  {
+   "claim": "d1 (SFT + diffu-GRPO) outperforms diffu-GRPO alone in 11 of 12 setups",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "11 of 12",
+   "unit": "setups",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "This combined approach outperforms pure diffu-GRPO in 11 out of 12 setups"
+  },
+  {
+   "claim": "diffu-GRPO alone on Countdown: 37.1 at 512 vs 16.0 base and 23.8 SFT",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "37.1",
+   "unit": "% accuracy",
+   "baseline_value": "16.0",
+   "n": null,
+   "setup": "LLaDA-8B-Instruct base, zero-shot, greedy decoding; per-task diffu-GRPO trained with online generation length 256; best checkpoint among steps 600,700,... reported for RL models",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row + diffu-GRPO, column Countdown 512"
+  },
+  {
+   "claim": "A single unified diffu-GRPO model across four tasks keeps accuracy close to per-task models (combined d1-LLaDA GSM8K 75.1 at length 128)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.1",
+   "unit": "% accuracy",
+   "baseline_value": "68.7",
+   "n": null,
+   "setup": "One model trained on combined GSM8K, MATH500, Countdown, Sudoku with data subsampled to equal size per task; lengths 128 and 256 only",
+   "note": "Combined model is not uniformly better than per-task: e.g. combined d1-LLaDA Sudoku 21.9 at 128 vs 22.1 per-task; MATH500 29.8 vs 33.8.",
+   "where": "Table 2",
+   "table": "Table 2, row combined d1-LLaDA, column GSM8K 128"
+  },
+  {
+   "claim": "diffu-GRPO on KodCode-Light-RL-10K improves HumanEval at length 256 from 35.3 to 39.0 on the base model",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval accuracy",
+   "value": "39.0",
+   "unit": "% pass",
+   "baseline_value": "35.3",
+   "n": null,
+   "setup": "LLaDA-8B-Instruct trained with diffu-GRPO on KodCode-Light-RL-10K; HumanEval 164 problems",
+   "note": "Not uniform: base+diffu-GRPO drops 3.0 on HumanEval at 512 (37.8 to 34.8).",
+   "where": "Table 3",
+   "table": "Table 3, row + diffu-GRPO, column HumanEval 256"
+  },
+  {
+   "claim": "On top of the s1k SFT checkpoint, diffu-GRPO gives +9.8 on HumanEval at length 128",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval accuracy",
+   "value": "+9.8",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SFT (s1k) checkpoint + diffu-GRPO on KodCode",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Delta (diffu-GRPO gain) under SFT, column HumanEval 128"
+  },
+  {
+   "claim": "Random prompt masking lets the number of inner updates mu scale to 12 or 24 while conventional practice caps mu at 2; higher mu reaches same reward in less wall-clock time",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "12 or 24",
+   "unit": "inner updates mu",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K correctness reward vs completions generated, fixed vs random masking, mu in {2,12,24}; read from Fig 5, no numeric wall-clock reported in text",
+   "note": null,
+   "where": "Sec 4.4, Fig 5",
+   "quote": "While conventional approaches typically limit µ to 2 due to diminishing returns and overfitting risks, our approach enables scaling µ to much higher values (12, or even 24)"
+  },
+  {
+   "claim": "Prompt masking probability: 0.1 and 0.3 are stable, 0.5 and 0.7 unstable, 0.7 degrades sharply after 3000 steps, 0.0 slightly underperforms",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.7 degrades after 3000",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K reward, mu=12, p_mask in {0.0,0.1,0.3,0.5,0.7}",
+   "note": null,
+   "where": "Sec 4.4, Fig 6",
+   "quote": "with 0.7 causing sharp degradation after 3000 steps"
+  },
+  {
+   "claim": "d1-LLaDA gets highest GSM8K and second-highest MATH500 among dLLMs and AR LLMs of similar size",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "82.1 GSM8K, 40.2 MATH500",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Comparison with Dream 7B, Qwen2.5 7B, LLaMA3 8B, Mistral 7B, Deepseek 7B; other-model scores copied from Dream with 8-shot GSM8K, 4-shot MATH, while LLaDA/d1 are 0-shot task-specific RL, so not like-for-like",
+   "note": null,
+   "where": "Fig 3",
+   "quote": "d1-LLaDA achieves the highest GSM8K score and the second-highest MATH500 score"
+  },
+  {
+   "claim": "Going from generation length 128 to 256 improves math more than 256 to 512",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~7.1% vs ~2.5%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K and MATH500, all four models",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "larger jumps observed from 128 to 256 (∼7.1%), than from 256 to 512 (∼2.5%)"
+  },
+  {
+   "claim": "Sudoku accuracy falls with longer generation for all models; Countdown base falls monotonically while SFT/RL variants peak at 512",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Performance decreases with increasing sequence lengths for Sudoku across all models."
+  },
+  {
+   "claim": "No significant chain-of-thought length growth after RL, unlike DeepSeek-R1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Effective token counts, Fig 4",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "we observe no significant CoT length growth post-RL training, as LLaDA-8B-Instruct was pre-trained on sequences up to 4096 tokens"
+  },
+  {
+   "claim": "Aha moments (self-verification, backtracking) appear qualitatively at length 512 in SFT and d1-LLaDA outputs only",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K examples, Appendix E; anecdotal, a few samples",
+   "note": null,
+   "where": "Sec 4.3, App E",
+   "quote": "at sequence length 512, we begin observing “aha moments” in the SFT and d1-LLaDA models"
+  }
+ ],
+ "limits": [
+  "Authors: fixed-length generation in LLaDA means diffu-GRPO trains at a predefined length (256), may prevent finding concise or long CoT; suggest Block Diffusion",
+  "Online generation speed limits RL generation length; scaling length infeasible now",
+  "s1k not suitable for coding as it lacks code",
+  "Per-task RL models; best checkpoint selected on evaluation; single runs, no seeds or confidence intervals",
+  "Fig 3 cross-model comparison mixes 0-shot with 8-shot/4-shot",
+  "Gains on Sudoku shrink at longer lengths; Table 3 shows some negative gains",
+  "Mean-field and one-step log-prob estimates are heuristics with no bias analysis; KL beta, clip epsilon, G and main-run mu not stated",
+  "Qualitative aha-moment evidence is a few examples"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "diffu-GRPO",
+   "definition": "critic-free policy-gradient algorithm for masked dLLMs using one-step log-prob estimation with random prompt masking",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GRPO / DeepSeekMath",
+   "year": 2024,
+   "arxiv": "2402.03300",
+   "relation": "extends",
+   "note": "base algorithm adapted",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "related",
+   "note": "motivation for RL reasoning",
+   "quote": null
+  },
+  {
+   "work": "LLaDA",
+   "year": 2025,
+   "arxiv": "2502.09992",
+   "relation": "extends",
+   "note": "base model and MC log-prob estimator replaced",
+   "quote": null
+  },
+  {
+   "work": "s1: Simple test-time scaling",
+   "year": 2025,
+   "arxiv": "2501.19393",
+   "relation": "uses-data",
+   "note": "s1K SFT data",
+   "quote": null
+  },
+  {
+   "work": "Understanding R1-Zero-like training (Liu et al.)",
+   "year": 2025,
+   "arxiv": "2503.20783",
+   "relation": "uses-method",
+   "note": "unnormalised advantage",
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "related",
+   "note": "clipping",
+   "quote": null
+  },
+  {
+   "work": "Zekri and Boulle, fine-tuning discrete diffusion with policy gradient",
+   "year": 2025,
+   "arxiv": "2502.01384",
+   "relation": "related",
+   "note": "prior small-scale RL for discrete diffusion",
+   "quote": null
+  },
+  {
+   "work": "Dream 7B",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared in Fig 3",
+   "quote": null
+  },
+  {
+   "work": "KodCode",
+   "year": 2025,
+   "arxiv": "2503.02951",
+   "relation": "uses-data",
+   "note": "coding RL data",
+   "quote": null
+  },
+  {
+   "work": "TinyZero",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Countdown data",
+   "quote": null
+  },
+  {
+   "work": "Chu et al. SFT memorizes, RL generalizes",
+   "year": 2025,
+   "arxiv": "2501.17161",
+   "relation": "related",
+   "note": "RL generalises better",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Log Probability Estimation in diffu-GRPO",
+   "page": 4,
+   "why": "shows one-step estimation with random prompt masking per update"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Model performance on Mathematics and Planning Benchmarks",
+   "page": 6,
+   "why": "main results at 3 lengths"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Comparison of fixed vs. random masking across mu",
+   "page": 9,
+   "why": "efficiency claim for mu scaling"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Ablation of prompt masking probability",
+   "page": 9,
+   "why": "p_mask stability"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "A_i^k = r_i - mean({r_j}_{j=1}^G)",
+   "verbatim": false
+  },
+  {
+   "where": "Alg 1",
+   "snippet": "sample G completions; compute advantages; for n=1..mu: q' <- mask prompt with p_mask; estimate log-probs of o_i given q' for pi_theta, pi_old, pi_ref; update by diffu-GRPO objective",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of tables is column-flattened; table cells reconstructed by order",
+  "Sudoku 10.0 gain quoted in text does not match Table 1 difference of 10.4 at 128",
+  "No embedded instructions found"
+ ]
+}

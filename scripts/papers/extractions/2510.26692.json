@@ -1,0 +1,675 @@
+{
+ "schema": 1,
+ "key": "2510.26692",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/team-2025-kimi-linear.pdf",
+ "bib": {
+  "title": "Kimi Linear: An Expressive, Efficient Attention Architecture",
+  "authors": [
+   "Kimi Team"
+  ],
+  "first_author": "Kimi Team",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2510.26692",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 94726,
+  "chars_total": 94726,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; appendix proofs read."
+ },
+ "type": "empirical",
+ "question": "Can a hybrid linear attention architecture match or beat full attention in quality at short context, long context and RL while cutting KV cache and decoding cost?",
+ "hypothesis": "Fine-grained (channel-wise) gating in a delta-rule linear attention, hybridised 3:1 with NoPE full MLA layers, outperforms full attention and GDN hybrids under identical training.",
+ "contributions": [
+  "Kimi Delta Attention (KDA): a linear attention mechanism that refines the gated delta rule with improved recurrent memory management and hardware efficiency.",
+  "The Kimi Linear architecture: a hybrid design adopting a 3:1 KDA-to-global attention ratio, reducing memory footprint while surpassing full-attention quality.",
+  "Fair empirical validation at scale: 1.4T token training runs, with release of kernels, vLLM integration, and checkpoints."
+ ],
+ "method": {
+  "summary": "KDA replaces GDN's scalar forget gate with a per-channel diagonal gate (S_t=(I-b k k^T)Diag(a)S_{t-1}+b k v^T), with a specialised DPLR chunkwise kernel. Layers are interleaved 3 KDA : 1 MLA (NoPE) in a MoE backbone following Moonlight. 48B total / 3B active models are pretrained on 1.4T tokens against MLA and GDN-H baselines, then SFT and RL compared; a 5.7T checkpoint is released.",
+  "task": "language-model pretraining and architecture comparison (short context, long context, RL)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Kimi K2 pretraining corpus",
+    "role": "pretrain",
+    "size": "1.4T tokens (comparison runs); 5.7T tokens (released checkpoint)",
+    "split": null,
+    "source": "Kimi K2 [50]",
+    "preprocessing": null
+   },
+   {
+    "name": "Kimi K2 SFT data plus additional reasoning tasks",
+    "role": "train",
+    "size": null,
+    "split": "multi-stage SFT: broad instruction data then scheduled reasoning-intensive data",
+    "source": "extends K2 SFT data",
+    "preprocessing": null
+   },
+   {
+    "name": "RL prompt set (math, code, STEM) and PTX dataset",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "subsets of K2 recipe; in-house math training set for RLVR comparison",
+    "preprocessing": "pre-selected for moderate difficulty to the start checkpoint"
+   },
+   {
+    "name": "Synthetic tasks (Palindrome, MQAR, Stack)",
+    "role": "both",
+    "size": null,
+    "split": "train lengths 256 to 2048 tokens; Stack uses 64 stacks",
+    "source": "generated",
+    "preprocessing": null
+   },
+   {
+    "name": "Validation set for ablation PPL",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "high-quality dataset with distribution differing from pretraining corpus",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Kimi Linear 48B-A3B",
+    "role": "proposed",
+    "params": "48B total, 3B active",
+    "architecture": "MoE, 8 of 256 experts incl. one shared (sparsity 32), first layer dense; KDA:MLA 3:1, MLA with NoPE; sigmoid low-rank output gate; short conv; head-wise RMSNorm",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096 pretraining; final checkpoint up to 1M tokens",
+    "other": {
+     "d_k=d_v": "128",
+     "chunk_size": "64",
+     "MLA/KDA ratio": "3:1"
+    }
+   },
+   {
+    "name": "MLA baseline",
+    "role": "baseline",
+    "params": "48B total, 3B active",
+    "architecture": "same MoE, all full MLA layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096",
+    "other": {}
+   },
+   {
+    "name": "GDN-H",
+    "role": "baseline",
+    "params": "48B total, 3B active",
+    "architecture": "hybrid Gated DeltaNet with MLA, sigmoid output gate",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096",
+    "other": {}
+   },
+   {
+    "name": "Kimi Linear (RoPE)",
+    "role": "baseline",
+    "params": "48B total, 3B active",
+    "architecture": "hybrid KDA with RoPE in MLA layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096",
+    "other": {}
+   },
+   {
+    "name": "Moonlight",
+    "role": "baseline",
+    "params": "16B total, 3B active",
+    "architecture": "MoE (Moonlight)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "5.7T-token comparison, Tables 8-9"
+    }
+   },
+   {
+    "name": "Scaling-law MoE series",
+    "role": "base",
+    "params": "653M, 878M, 1.1B, 1.4B, 1.7B active",
+    "architecture": "Moonlight-style MoE, 8 of 64 experts",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4,096",
+    "other": {
+     "tokens": "38.8B, 59.8B, 85.2B, 102.5B, 128.0B",
+     "lr": "2.006e-3, 1.790e-3, 1.617e-3, 1.486e-3, 1.371e-3",
+     "batch size": "336, 432, 512, 576, 640 (Table 2, unit not stated)",
+     "layers (Table 2)": "16,18,20,22,24",
+     "hidden (Table 2)": "1216,1376,1536,1632,1776",
+     "heads (Table 2)": "16,18,20,22,24"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token pretraining; SFT; RL (K1.5 algorithm with truncated importance sampling, dynamic KL penalty and mini-batch size, PTX loss)",
+   "optimizer": "MuonClip (Muon in scaling-law runs)",
+   "lr": "1.1e-3 (1.4T comparison runs)",
+   "lr_schedule": "WSD, with the same annealing and long-context activation phase as Kimi K2",
+   "warmup": null,
+   "batch_size": "32 million tokens (global)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "1.4T (comparison); 5.7T (released checkpoint)",
+   "seq_len": "4,096 (1M for final checkpoint)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "PTX loss during RL",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "synthetic task training": "2 layers, 2 heads, head dim 128, <=20,000 steps, LR grid {5e-5,1e-4,5e-4,1e-3}",
+    "scaling law": "Chinchilla methodology, five sizes, hyperparameters grid-searched for MLA; KDA reuses MLA config with 3:1 ratio",
+    "RL math": "RLVR on in-house math set from K2, identical algorithm and hyperparameters for both models"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "1.0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Avg@k for high-variance benchmarks (e.g. AIME 2025 Avg@64, HMMT Avg@32, PolyMath Avg@4); GPQA-Diamond mean of 8 runs",
+   "prompting": "few-shot counts per benchmark in Table 8 (5, 4, 8, 6, 0, 1 shots)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "base eval": "perplexity-based for MMLU, MMLU-Redux, GPQA-Diamond, C-Eval; generation-based otherwise",
+    "efficiency tests": "batch size 1 in Fig 7; Fig 1b uses larger batches enabled by KV savings"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "benchmark accuracy / Pass@1 / Avg@k",
+     "definition": "per benchmark as in Tables 3-5",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "training and validation PPL for ablations",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "TPOT",
+     "definition": "time per output token in decoding",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "Prefill latency",
+     "definition": "time to prefill",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "MLA full attention",
+    "GDN-H",
+    "Kimi Linear (RoPE)",
+    "Moonlight (5.7T)"
+   ],
+   "protocol": "Internal framework derived from LM-Harness-Evaluation; same architecture, parameter count and training setup across baselines; single runs apart from Avg@k."
+  },
+  "availability": {
+   "code": "https://github.com/MoonshotAI/Kimi-Linear; KDA kernel in flash-linear-attention",
+   "weights": "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The learning rate is set to 1.1 × 10−3, and the global batch size is fixed at 32 million tokens.",
+    "where": "Sec 5.4.1"
+   },
+   {
+    "field": "inference.temperature",
+    "quote": "All models are evaluated using temperature 1.0.",
+    "where": "Sec 5.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Kimi Linear beats MLA and GDN-H on MMLU-Pro (4k) under identical 1.4T-token pretraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU-Pro",
+   "value": "51.0",
+   "unit": "score",
+   "baseline_value": "47.2 (MLA); 47.9 (GDN-H)",
+   "n": null,
+   "setup": "1.4T tokens, 48B/3B-active MoE, base model, same recipe",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MMLU-Pro, column Kimi Linear"
+  },
+  {
+   "claim": "Kimi Linear leads on RULER at 128k vs MLA and GDN-H",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER (128k)",
+   "value": "84.3",
+   "unit": "score",
+   "baseline_value": "81.3 (MLA); 80.5 (GDN-H)",
+   "n": null,
+   "setup": "1.4T tokens, 128k context",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Kimi Linear, column RULER"
+  },
+  {
+   "claim": "Kimi Linear has highest long-context average",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. over long-context benchmarks",
+   "value": "54.5",
+   "unit": "score",
+   "baseline_value": "52.2 (MLA); 51.2 (GDN-H); 51.8 (Kimi Linear RoPE)",
+   "n": null,
+   "setup": "1.4T tokens, 128k context, 8 benchmark columns",
+   "note": null,
+   "where": "Sec 5.5.1, Table 5",
+   "quote": "Overall, Kimi Linear achieved the highest average score (54.5)"
+  },
+  {
+   "claim": "Decoding time per output token at 1M context is 6.3x faster than MLA (1.84ms vs 11.48ms)",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPOT speedup",
+   "value": "6.3x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "48B setting, 1M decoding length, larger batch enabled by smaller KV cache",
+   "note": "Fig 7 caption (batch size 1) labels 2.2x/1.8x; Sec 6.3 says 2.3x speedup at 1M in the I/O-bound case and 6.3x as theoretical with larger batches; abstract says up to 6x.",
+   "where": "Fig 1 caption",
+   "quote": "yielding a 6.3× faster TPOT (1.84ms vs. 11.48ms) than MLA at 1M tokens"
+  },
+  {
+   "claim": "KV cache usage reduced by up to 75%",
+   "kind": "measured",
+   "source": null,
+   "metric": "KV cache reduction",
+   "value": "75%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3:1 KDA:MLA hybrid, long-sequence generation",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "reduces memory and KV-cache usage by up to 75% during long-sequence generation"
+  },
+  {
+   "claim": "Kimi Linear achieves about 1.16x compute efficiency vs MLA at compute-optimal training",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute efficiency",
+   "value": "1.16x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 MoE scaling-law model sizes 653M to 1.7B active params, 8 of 64 experts, Muon; fitted MLA loss 2.3092*C^-0.0536 vs Kimi Linear 2.2879*C^-0.0527",
+   "note": null,
+   "where": "Sec 5.3, Fig 5",
+   "quote": "Kimi Linear achieves ∼1.16× computational efficiency compared to the MLA baselines with compute optimal training"
+  },
+  {
+   "claim": "Prefilling at 1M context is 2.9x faster than MLA",
+   "kind": "measured",
+   "source": null,
+   "metric": "prefill speedup",
+   "value": "2.9x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "48B setting, batch 1",
+   "note": null,
+   "where": "Sec 5.6, Fig 7a",
+   "quote": "Kimi Linear outperforming MLA by a factor of 2.3 for 512k sequences and 2.9 for 1M sequences"
+  },
+  {
+   "claim": "Instruct: GPQA-Diamond (Avg@8) Kimi Linear vs MLA vs GDN-H after same SFT",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPQA-Diamond Avg@8",
+   "value": "62.1",
+   "unit": "%",
+   "baseline_value": "57.1 (MLA); 58.6 (GDN-H)",
+   "n": null,
+   "setup": "1.4T tokens, same SFT recipe",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPQA-Diamond (Avg@8), column Kimi Linear"
+  },
+  {
+   "claim": "Instruct: MMLU-Pro Kimi Linear vs MLA",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU-Pro",
+   "value": "67.4",
+   "unit": "%",
+   "baseline_value": "65.7 (MLA); 64.8 (GDN-H)",
+   "n": null,
+   "setup": "1.4T tokens, SFT",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row MMLU-Pro, column Kimi Linear"
+  },
+  {
+   "claim": "Instruct AIME 2025 (Avg@64) gains are small",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME 2025",
+   "value": "21.3",
+   "unit": "%",
+   "baseline_value": "20.6 (MLA); 21.1 (GDN-H)",
+   "n": null,
+   "setup": "1.4T tokens, SFT",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row AIME 2025 (Avg@64), column Kimi Linear"
+  },
+  {
+   "claim": "Kimi Linear trails GDN-H and MLA on EvalPlus after SFT and GDN-H on pretrain EvalPlus",
+   "kind": "measured",
+   "source": null,
+   "metric": "EvalPlus (instruct)",
+   "value": "61.0",
+   "unit": "%",
+   "baseline_value": "62.6 (MLA); 62.5 (GDN-H)",
+   "n": null,
+   "setup": "1.4T tokens, SFT",
+   "note": "Base Table 3 EvalPlus: MLA 59.5, GDN-H 63.1, Kimi Linear 60.2",
+   "where": "Table 4",
+   "table": "Table 4, row EvalPlus, column Kimi Linear"
+  },
+  {
+   "claim": "Kimi Linear RULER at 1M context for the 5.7T released model",
+   "kind": "measured",
+   "source": null,
+   "metric": "RULER@1M",
+   "value": "94.8",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kimi-Linear-Instruct, 5.7T tokens, 48B total/3B active",
+   "note": null,
+   "where": "App D, Table 9",
+   "quote": "Kimi Linear@5.7T obtains a score of 94.8 on RULER at 1M context length."
+  },
+  {
+   "claim": "Released 5.7T instruct beats Moonlight-Instruct on GPQA-Diamond",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPQA-Diamond Avg@8",
+   "value": "71.7",
+   "unit": "%",
+   "baseline_value": "24.7 (Moonlight-Instruct)",
+   "n": null,
+   "setup": "5.7T tokens, Table 9",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row GPQA-Diamond (Avg@8), column Kimi-Linear-Instruct"
+  },
+  {
+   "claim": "Ablation: 3:1 hybrid ratio gives lowest validation PPL among tested ratios",
+   "kind": "measured",
+   "source": null,
+   "metric": "Validation PPL",
+   "value": "5.65",
+   "unit": "PPL",
+   "baseline_value": "5.77 (0:1); 5.66 (1:1); 5.70 (7:1); 5.82 (15:1)",
+   "n": null,
+   "setup": "653M-active scaling model (16 heads, 16 layers)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row 3:1, column Validation PPL"
+  },
+  {
+   "claim": "Ablation: swish output gate is worse than sigmoid",
+   "kind": "measured",
+   "source": null,
+   "metric": "Validation PPL",
+   "value": "5.81",
+   "unit": "PPL",
+   "baseline_value": "5.65 (sigmoid, default)",
+   "n": null,
+   "setup": "same small model",
+   "note": "w/o output gate: train 9.25, val 5.67; w/o convolution layer: train 9.29, val 5.70",
+   "where": "Table 1",
+   "table": "Table 1, row w/ swish output gate, column Validation PPL"
+  },
+  {
+   "claim": "KDA kernel is about 2x faster than the DPLR formulation",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel speed",
+   "value": "nearly 2x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sequence lengths up to 64k, batch 1, 16 heads",
+   "note": null,
+   "where": "Sec 6.2, Fig 2",
+   "quote": "KDA achieves nearly 2× the speed of DPLR for sequence lengths up to 64k"
+  },
+  {
+   "claim": "KDA converges faster than GDN on synthetic Palindrome and MQAR; Mamba2 fails on all",
+   "kind": "measured",
+   "source": null,
+   "metric": "synthetic accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2 layers, 2 heads, head dim 128, up to 20,000 steps, lengths 256-2048",
+   "note": null,
+   "where": "Sec 5.1, Fig 4"
+  },
+  {
+   "claim": "In RL (RLVR on math) Kimi Linear train and test accuracy grows faster than MLA",
+   "kind": "measured",
+   "source": null,
+   "metric": "RL accuracy curves",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.4T-token models, same algorithm and hyperparameters; curves in Fig 6 only",
+   "note": null,
+   "where": "Sec 5.5.1, Fig 6"
+  }
+ ],
+ "limits": [
+  "Authors expect that careful hyperparameter tuning would give better KDA scaling curves; the scaling-law KDA runs reuse MLA's tuned configuration.",
+  "Layers, hidden size, heads, tokenizer, hardware, compute and seeds for the 48B models are not stated.",
+  "Kimi Linear is weaker than MLA on LongBench V2 and Frames, and slightly lower on EvalPlus and LiveBench; many gains are under 1 point from single runs without significance tests.",
+  "RL comparison is shown only as curves in Fig 6.",
+  "Decoding speedup figures differ across text (2.2x/1.8x batch 1 in Fig 7b, 2.3x in Sec 6.3, 6x/6.3x with larger batches); the 6.3x is described as theoretical in Sec 6.3.",
+  "Synthetic-task models are tiny (2 layers)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Kimi Delta Attention (KDA)",
+   "definition": "a hardware-efficient linear attention module that extends Gated DeltaNet with a finer-grained gating mechanism (channel-wise forget gate)",
+   "where": "Sec 1"
+  },
+  {
+   "term": "GDN-H",
+   "definition": "hybrid Gated DeltaNet baseline sharing the architecture and training setup",
+   "where": "Sec 5.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Gated DeltaNet",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "KDA replaces scalar gate with channel-wise gate",
+   "quote": null
+  },
+  {
+   "work": "Gated Linear Attention (Yang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "channel-wise diagonal gating",
+   "quote": null
+  },
+  {
+   "work": "DeltaNet (Schlag/Yang et al.)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "delta rule",
+   "quote": null
+  },
+  {
+   "work": "Mamba2 (Dao and Gu)",
+   "year": 2024,
+   "arxiv": "2405.21060",
+   "relation": "baseline",
+   "note": "fails on synthetic tasks in this setup",
+   "quote": null
+  },
+  {
+   "work": "Muon is Scalable for LLM Training (Moonlight)",
+   "year": 2025,
+   "arxiv": "2502.16982",
+   "relation": "extends",
+   "note": "backbone and optimizer",
+   "quote": null
+  },
+  {
+   "work": "Kimi K2: Open agentic intelligence",
+   "year": 2025,
+   "arxiv": "2507.20534",
+   "relation": "uses-data",
+   "note": "pretraining corpus, SFT, RL and annealing recipe",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-V3 (MLA)",
+   "year": 2025,
+   "arxiv": "2412.19437",
+   "relation": "baseline",
+   "note": "full MLA baseline",
+   "quote": null
+  },
+  {
+   "work": "Training Compute-Optimal LLMs (Hoffmann et al.)",
+   "year": 2022,
+   "arxiv": "2203.15556",
+   "relation": "uses-method",
+   "note": "scaling-law methodology",
+   "quote": null
+  },
+  {
+   "work": "Comba (Hu et al.)",
+   "year": 2025,
+   "arxiv": "2506.02475",
+   "relation": "uses-method",
+   "note": "WY representation formulation",
+   "quote": null
+  },
+  {
+   "work": "RWKV-7",
+   "year": 2025,
+   "arxiv": "2503.14456",
+   "relation": "related",
+   "note": "general DPLR transition",
+   "quote": null
+  },
+  {
+   "work": "Gated Attention for LLMs (Qiu et al.)",
+   "year": 2025,
+   "arxiv": "2505.06708",
+   "relation": "uses-method",
+   "note": "sigmoid output gate",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) Performance vs. acceleration; (b) TPOT vs. decoding length.",
+   "page": 1,
+   "why": "summarises quality and speed advantage at 1M context"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Illustration of our Kimi Linear model architecture",
+   "page": 6,
+   "why": "shows 3 KDA : 1 MLA block stacking with MoE"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "The fitted scaling law curves for MLA and Kimi Linear.",
+   "page": 9,
+   "why": "shows the 1.16x compute efficiency"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Comparisons across long-context benchmarks",
+   "page": 12,
+   "why": "core long-context result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "S_t = (I - β_t k_t k_t^T) Diag(α_t) S_{t-1} + β_t k_t v_t^T ; o_t = S_t^T q_t",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 13",
+   "snippet": "FLOPs_KDA(T; C, d_h) = 6 T d_h^2 + 3 T C d_h + T C^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure data (Fig 4, 6, 7) is not in the text; equations are garbled in extraction.",
+  "Table 2 batch size unit not stated."
+ ]
+}

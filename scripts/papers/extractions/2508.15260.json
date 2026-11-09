@@ -1,19 +1,680 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2508.15260",
  "pdf": "ai-engineering/01-prompt-engineering/sources/fu-2025-deep-think-confidence.pdf",
  "bib": {
   "title": "Deep Think with Confidence",
-  "first_author": "Yichao Fu",
-  "year": "2025",
-  "venue": "ICLR 2026",
+  "authors": [
+   "Yichao Fu",
+   "Xuewei Wang",
+   "Yuandong Tian",
+   "Jiawei Zhao"
+  ],
+  "first_author": "Fu",
+  "year": 2025,
+  "venue": "preprint",
   "arxiv": "2508.15260",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 84784,
+  "chars_total": 84784,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"Deep Think with Confidence\" (DeepConf), Yichao Fu, Xuewei Wang, Yuandong Tian, Jiawei Zhao (Meta AI, UCSD). arXiv:2508.15260v1, 21 Aug 2025. It is a preprint with no venue printed.\n\nCOVERAGE: I read all 84,865 chars of the extraction: main text, Tables 1-12, ablations, appendices A-G and references. In Appendix G (vLLM edit snippets) I read the setup and the API call and skimmed the copy-paste code. Table 10 and the fine text of Figs 8, 9 and 11 (the per-model curves) are figure data and were not extracted. Page numbers are from the figure captions tool and the text.\n\nCLAIMS (ranked)\n- Confidence-filtered voting beats plain majority voting on hard math, with the largest gain from keeping the top 10% of traces.\n  number: DeepSeek-8B AIME25 82.3 to 87.4; Qwen3-32B AIME24 85.3 to 90.8; GPT-OSS-120B AIME25 97.0 (cons@512) to 99.9\n  setup: K=512 traces, offline, 64 resamples from a pool of 4,096 traces per problem. Open-weight models only (Table 1).\n  quote: \"Filtering with η=10% yields the largest gains, with notable improvements like DeepSeek-8B on AIME25 (82.3%→ 87.4%) and Qwen3-32B on AIME24 (85.3% → 90.8%); GPT-OSS-120B even reaches 99.9% on AIME25.\"\n  where: p8, section 4.2\n- Online early stopping cuts generated tokens by large amounts at the same accuracy.\n  number: up to 84.7% fewer tokens; DeepConf-low saves 43-79% and DeepConf-high 18-59% on the sets in the main text\n  setup: Budget 512, Ninit=16 warmup traces, consensus τ=0.95, window 2,048 tokens. DeepSeek-8B, Qwen3-32B and GPT-OSS-120B on AIME24, AIME25, BRUMO25 and HMMT25 (Table 2). GPT-OSS-120B AIME25 went from 3.23e8 to 0.49e8 tokens.\n  quote: \"Compared with the majority voting baseline, DeepConf-low reduces tokens by 43-79% across AIME24/AIME25/BRUMO25/HMMT25.\" Also \"reduces generated tokens by up to 84.7% compared to full parallel thinking.\"\n  where: p1 abstract; p9-10, Table 2\n- Cost of plain majority voting is steep.\n  number: 511 extra traces and 100M extra tokens per question for a 68% to 82% gain\n  setup: Qwen3-8B, AIME 2025\n  quote: \"improving pass@1 accuracy from 68% to 82% using standard majority voting on AIME 2025 requires 511 additional reasoning traces per question using Qwen3-8B, consuming 100 million additional tokens.\"\n  where: p2\n- Aggressive filtering can hurt when the model is \"confidently wrong\". Top-90% is the safe setting.\n  number: top-10% improved 12 of 20 settings (+0.26 to +9.38 points) and dropped on 8 (-4.69 to -0.31), with an average gain of +1.22. Top-90% moved -0.21 to +0.73, average +0.17.\n  setup: Lowest-group-confidence filter, 5 model configs by 4 datasets, voting size 1-512 (Appendix C).\n  quote: \"These regressions arise from rare cases where confidence concentrates on an incorrect answer (“confidently wrong”).\"\n  where: p19, Appendix C\n- Local confidence signals (tail, bottom, lowest group) separate correct from incorrect traces better than a trace-wide mean. Confidence from the first tokens has no signal.\n  number: averages over 23 model-dataset pairs at K=512 with a 10% filter: Tail(10%)@10 84.6, Tail(2k)@10 84.5, LGC(2k)@10 84.4, Mean@10 83.9, plain majority 83.0. Head(10%)@10 scored 81.9.\n  setup: Offline, 5 models by up to 5 datasets (Tables 6-9).\n  quote: \"Across models and datasets, head-based confidence has weak correlation with final correctness and typically matches plain majority voting; applying head-based filters even hurts on average\"\n  where: p18-19, Appendix B.4\n- The consensus-stopping threshold is a tunable trade-off.\n  number: τ=0.95 saved 52.8% of tokens (DeepConf-low) and 54.7% (DeepConf-high) at B=512 with no accuracy loss. τ=0.85 reached up to 69.6% savings, but DeepConf-low lost 0.31 to 0.47 points.\n  setup: Qwen3-32B, AIME24 (Table 3)\n  quote: \"τ =0.95 achieves optimal balance: it preserves accuracy exactly while saving 15.4%/52.8% tokens at B = 32/512 (DeepConf-low) and 22.0%/54.7% (DeepConf-high).\"\n  where: p17\n- Filtering helps less or fails on some model-dataset pairs, and top-10% can lose to plain voting.\n  number: Qwen3-8B AIME25 Top10 77.9 vs majority 82.6; GPT-OSS-120B HMMT25 online DeepConf-low 92.0 vs 92.8; Qwen3-32B BRUMO25 -0.9\n  setup: Tables 2 and 5. Appendix D lists nine DeepConf-low settings and one DeepConf-high setting where matched accuracy at lower tokens was not achieved.\n  quote: \"several exceptions exist within the B ∈ [32, 512] range where matching majority voting accuracy with reduced token consumption is not achieved\"\n  where: p9, p23\n- GPQA-Diamond (graduate-level STEM questions, not competition math) gains are small.\n  number: about 6% over a single trace; Table 1 DeepSeek-8B 72.5 (cons) to 74.0 (best), but 70.6 for Bottom-10%@10\n  setup: DeepSeek-8B, Qwen3-8B and Qwen3-32B, offline\n  quote: \"both variants provide clear average improvements of approximately 6%.\"\n  where: p23, Appendix E\n- Larger warmup moves online accuracy closer to the offline result, with a default of 16.\n  number: |ΔAcc| across warmup sizes is typically ≤1.0 point\n  setup: Ninit 8, 16 and 32 (Table 4)\n  quote: \"Empirically, |∆Acc| across warm-up sizes is small (typically ≤ 1.0 p.p.).\"\n  where: p17\n\nDEFINITIONS (verbatim, for a code or explanation snippet)\n- \"Token Confidence. We define token confidence Ci as the negative average log-probability of the top-k tokens at position i\" (p3)\n- Group confidence is the mean token confidence over a sliding window of n previous tokens (n = 1024 or 2048).\n- Bottom-10% group confidence is the mean of the lowest 10% of group confidences in a trace.\n- Tail confidence is the mean over the last 2,048 tokens.\n- The online stopping threshold is s = Percentile(100−η) of the warmup traces' confidence. A trace stops when its current group confidence falls below s.\n- Consensus β = V(â) / ΣV(a). Sampling stops when β ≥ τ or the budget B is reached.\n\nLIMITS\n- The method needs token log-probabilities (top_logprobs ≥ 2) and a hook in the serving stack. The authors patched vLLM (a pinned commit), and the early-stop check is \"inactive unless logprobs=True and top_logprobs>=2\". Closed APIs that hide logprobs cannot use it. This is not a prompting technique.\n- Only five open-weight models were tested: DeepSeek-8B (R1-0528 distilled into Qwen3-8B), Qwen3-8B, Qwen3-32B, GPT-OSS-20B and GPT-OSS-120B. Four are competition-math sets (AIME24, AIME25, BRUMO25, HMMT25). The one non-math set is GPQA-Diamond. Answers are extracted from `\\boxed{}`, so the tasks have checkable final answers. Open-ended tasks are not tested.\n- The authors concede model overconfidence: \"addressing cases where models exhibit high confidence on incorrect reasoning paths, which is a key limitation observed in our experiments.\" No calibration fix is offered.\n- GPT-OSS-20B and Qwen3-8B often gain nothing or lose. The headline 99.9% and 84.7% are best cases on GPT-OSS-120B AIME25.\n- Results average 64 resamples from a fixed pool of 4,096 traces per problem, not fresh generations. Token counts include only traces generated before early stopping.\n- The \"no additional training or hyperparameter tuning\" claim in the abstract sits alongside tuned choices: η, τ, Ninit and the window size. Each problem also needs 16 full warmup traces.\n- Decoding settings were fixed: temperature 0.6 for DeepSeek-8B and Qwen3, 1.0 for GPT-OSS. GPT-OSS ran at reasoning effort high.\n- Dated: models and benchmarks are from mid-2025.\n- Nothing is said about prompt wording beyond the single instruction below.\n\nBUILDS ON (as printed)\n- Self-consistency with majority voting (Wang et al., 2023).\n- Self-certainty and confidence-based best-of-n (Kang et al., 2025), which the paper calls the \"global confidence\" baseline.\n- Early-stopping and adaptive voting: Dynamic Voting (Xue et al., 2023), Early-Stopping Self-Consistency (Li et al., 2024), Adaptive-Consistency (Aggarwal et al., 2023), Reasoning-Aware SC (Wan et al., 2025) and Dynasor (Fu et al., 2024).\n- Token-level uncertainty (Fadeeva et al., 2024; Geng et al., 2024).\n- It cites Chen et al. 2024b (arXiv:2412.21187) for efficient-CoT fine-tuning, which is in the target note. It also cites Jaech et al. 2024 (arXiv:2412.16720, the o1 system card) as a model reference. Both are already in the note's sources.\n- Hassid et al. 2025 (shorter chains preferred), Snell et al. 2024 and Brown et al. 2024 (repeated sampling).\n\nCODE\n- Appendix G.3 enables the early stop through the OpenAI-compatible endpoint (p25):\n```\nresponses = client.chat.completions.create(\n model=args.model_path, messages=messages, max_tokens=args.max_tokens,\n temperature=0.6, top_p=0.95, logprobs=True, top_logprobs=20, n=real_gen,\n extra_body={\"top_k\": 0, \"vllm_xargs\": {\"enable_conf\": True, \"window_size\": 2048, \"threshold\": conf_threshold}})\n```\n- Fig 1 shows pseudocode: after each token, compute the group confidence `gc`, then \"If gc >= threshold: continue generation else: stop generation\".\n- Algorithm 2 (p7) is a clean pseudo-spec of the online procedure.\n- Prompt (Appendix F): \"Please reason step by step, and put your final answer within \\boxed{}.\" This is the prompt used for Qwen3 and GPT-OSS. This is relevant to the note's \"drop step-by-step CoT\" advice. The paper does not test whether the sentence matters.\n\nFIGURES\n- Fig 1 (p1): top, accuracy bars for AIME25 (pass@1, cons@512, deepconf@512) and tokens saved. Bottom, a token-by-token confidence trace with the stop rule. It is the best single summary.\n- Fig 3 (p5): confidence measures plus weighted voting. A worked example has trace votes 17/15/13/11/9, filtering to the top 10%, and weights (17+13)/2.\n- Fig 4 (p6): online stopping against the warmup threshold.\n- Fig 2 (p3): confidence histograms for correct vs incorrect traces on HMMT25 (30 problems, 4,096 traces each). It shows why tail and bottom-10% separate better than the mean.\n- Fig 6/7 (p10): tokens and accuracy against token cost.\n- Fig 5/8/9: accuracy against voting budget curves (offline and online).\n\nRELEVANCE TO NOTE 07\nIt extends the note's pass@k and verifier-free passage. The note says \"none of it helps without a verifier... You can only vote\". DeepConf is a verifier-free selector that is better than a plain vote, but it needs logprobs and open weights. It is also the same constraint the note gives for Ma et al.: it works only where you control the serving stack. It sets a budget-aware counterpart to the note's overthinking row. The note's \"Real samples are correlated\" caveat is consistent with the 'confidently wrong' failure here.\n\nPROBLEMS\n- No embedded instructions found.\n- The extraction of Fig 1 text is garbled with interleaved axis labels, but the numbers match Table 1/2. Math symbols are mangled in equations, so eq. numbers are given by label only.\n- Table 10 and the data in Figs 8, 9 and 11 were not extracted, so I did not quote them.\n- The abstract says \"99.9% accuracy\" and \"up to 84.7%\". These come from two different configurations: offline tail confidence, and online DeepConf-low (Table 2: 97.9% accuracy at 84.7% fewer tokens). Do not combine them in one sentence.\n- Table 2 DeepConf-low AIME24 DeepSeek-8B is 92.5% accuracy, while Table 4 reports the same cell as 92.5% against an offline 93.3%. These are consistent.\n- Fig 6's text says \"up to 85.8%\" while Table 2 says 84.7% for the same model. This is an inconsistency inside the paper (p9)."
+ "type": "empirical",
+ "question": "Can model-internal token confidence filter and stop parallel reasoning traces to improve accuracy and cut tokens relative to plain majority voting (self-consistency)?",
+ "hypothesis": "Local confidence measures (group, bottom-10%, lowest group, tail) separate correct from incorrect traces better than a trace-wide average, so filtering low-confidence traces during or after generation raises accuracy and saves tokens.",
+ "contributions": [
+  "DeepConf, a test-time method with offline mode (confidence-weighted voting with top-eta filtering) and online mode (early stop below a warmup-derived threshold plus consensus-based adaptive sampling)",
+  "Local confidence measures: group confidence, bottom-10% group confidence, lowest group confidence, tail confidence",
+  "Evaluation on five open models and five benchmarks with 64 repeated runs",
+  "A minimal vLLM patch (Appendix G)"
+ ],
+ "method": {
+  "summary": "Token confidence is the negative mean log-probability of the top-k tokens. Traces are scored by local statistics, then (offline) the top eta percent vote with confidence weights, or (online) generation stops when the sliding-window confidence falls below a threshold taken from 16 warmup traces, and sampling ends once vote consensus reaches tau or the budget B is hit. No training; applied to existing open reasoning models.",
+  "task": "Test-time scaling / self-consistency for competition math and GPQA-Diamond with extractable final answers",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "AIME24",
+    "role": "eval",
+    "size": null,
+    "split": "all problems",
+    "source": "Art of Problem Solving 2024 AIME I and II",
+    "preprocessing": "final answer extracted from \\boxed{}"
+   },
+   {
+    "name": "AIME25",
+    "role": "eval",
+    "size": null,
+    "split": "all problems",
+    "source": "Art of Problem Solving 2025 AIME I and II",
+    "preprocessing": "final answer extracted from \\boxed{}"
+   },
+   {
+    "name": "BRUMO25",
+    "role": "eval",
+    "size": null,
+    "split": "all problems",
+    "source": "Brown University Math Olympiad 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "HMMT25",
+    "role": "eval",
+    "size": "30 problems (Fig 2 caption)",
+    "split": "all problems",
+    "source": "HMMT Feb 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA-Diamond",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Rein et al., 2024",
+    "preprocessing": "only DeepSeek-8B, Qwen3-8B, Qwen3-32B tested"
+   }
+  ],
+  "models": [
+   {
+    "name": "DeepSeek-8B (DeepSeek-R1-0528-Qwen3-8B)",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": "Qwen3-8B distilled from DeepSeek-R1 (0528)",
+    "init_from": null,
+    "tokenizer": "native",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max seq len 64k",
+    "other": {}
+   },
+   {
+    "name": "Qwen3-8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": "native",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max seq len 32k",
+    "other": {}
+   },
+   {
+    "name": "Qwen3-32B",
+    "role": "evaluated",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": "native",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max seq len 32k",
+    "other": {}
+   },
+   {
+    "name": "GPT-OSS-20B",
+    "role": "evaluated",
+    "params": "20B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": "native",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max seq len 130k",
+    "other": {}
+   },
+   {
+    "name": "GPT-OSS-120B",
+    "role": "evaluated",
+    "params": "120B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": "native",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max seq len 130k",
+    "other": {
+     "note": "Table 1 and Table 2 use only DeepSeek-8B, Qwen3-32B, GPT-OSS-120B; appendices cover all five"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling; terminates on EOS or max length; answers parsed from \\boxed{}",
+   "temperature": "0.6 (DeepSeek-8B, Qwen3-8B, Qwen3-32B); 1.0 (GPT-OSS-20B, GPT-OSS-120B)",
+   "top_p": "0.95 (DeepSeek, Qwen3); 1.0 (GPT-OSS)",
+   "max_tokens": "64k DeepSeek-8B; 32k Qwen3-8B/32B; 130k GPT-OSS (Table 11)",
+   "samples": "pool of 4,096 pre-generated traces per problem; each run resamples a working set of K (e.g. 512) from the pool; metrics averaged over 64 independent runs with fresh resampling",
+   "prompting": "Qwen3 and GPT-OSS: same instruction appended to every problem. GPT-OSS: provider's official system prompt, reasoning effort = high. DeepSeek-8B: official system prompt, problem in user message.",
+   "retrieval": null,
+   "parameters": {
+    "Ninit (warmup traces)": "16 (ablated 8, 16, 32)",
+    "eta": "10% for DeepConf-low, 90% for DeepConf-high",
+    "tau (consensus)": "0.95 (ablated 0.85, 0.90, 0.95, 1.0)",
+    "budget B": "32, 64, 128, 256, 512",
+    "group window n": "2,048 tokens (512 and 1K also tested offline; text mentions n=1024 or 2048)",
+    "tail window": "last 2,048 tokens",
+    "bottom percent": "10% of group confidences",
+    "top-k for token confidence": "top_logprobs=20 in the vLLM call (>=2 required); Table 11 top-k: 20 for Qwen3, 40 for GPT-OSS, none for DeepSeek-8B",
+    "stopping threshold s": "Percentile(100-eta) of warmup trace confidences; Sec 4.1 also writes s = min over top-percentile warmup traces"
+   },
+   "other": {
+    "vLLM": "commit 31f09c615f4f067dba765ce5fe7d00d880212a6d, Python 3.12.0, CUDA 12.8",
+    "hardware": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass@1",
+     "definition": "single-trace accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cons@K",
+     "definition": "unweighted majority-vote accuracy with K traces",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Measure@K / Measure+top-eta%@K",
+     "definition": "confidence-weighted majority vote accuracy, optionally keeping the top eta% traces by confidence",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Generated tokens",
+     "definition": "total tokens over all traces; early-stopped traces count tokens produced before stopping",
+     "unit": "tokens (x10^8)",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Self-consistency with unweighted majority voting (Wang et al., 2023)",
+    "Mean (average trace) confidence, self-certainty (Kang et al., 2025)",
+    "budget-only DeepConf (no consensus stopping)",
+    "pass@1 single trace"
+   ],
+   "protocol": "64 runs with fresh resampling from the 4,096-trace pool; no significance test stated; no seeds stated"
+  },
+  "availability": {
+   "code": "project page jiaweizzhao.github.io/deepconf; vLLM edits listed in Appendix G",
+   "weights": "models are public open-weight",
+   "data": "public competition problems"
+  },
+  "prompts": [
+   {
+    "purpose": "instruction appended to every problem for Qwen3 and GPT-OSS",
+    "text": "Please reason step by step, and put your final answer within \\boxed{}.",
+    "where": "Appendix F"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.stopping threshold s",
+    "quote": "s = Percentile100−η({Ct : t ∈Twarmup}),",
+    "where": "Sec 3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DeepSeek-8B on AIME25 rises from majority-vote 82.3% to 87.4% when only the top-10% most confident traces vote.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 87.4,
+   "unit": "%",
+   "baseline_value": 82.3,
+   "n": 64,
+   "setup": "Offline, K=512 traces resampled from a pool of 4,096 per problem, averaged over 64 runs, confidence-weighted majority vote after keeping top 10% by trace confidence; the 87.4 is Tail Conf (last 2,048 tokens) @10% in Table 1 (Bottom-10 gives 87.5; Lowest Group Confidence at 2K gives 87.3 in Table 8, 87.4 best-over-B in Table 5).",
+   "note": "Abstract/Fig1 and Table 1 agree; Table 5 majority baseline for same cell is 82.6 (best over B).",
+   "where": "Sec 4.2, Table 1",
+   "quote": "DeepSeek-8B on AIME25 (82.3% →87.4%) and Qwen3-32B on AIME24"
+  },
+  {
+   "claim": "Qwen3-32B on AIME24 rises from 85.3% to 90.8% with top-10% filtering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 90.8,
+   "unit": "%",
+   "baseline_value": 85.3,
+   "n": 64,
+   "setup": "Offline, K=512 traces resampled from a pool of 4,096 per problem, averaged over 64 runs, confidence-weighted majority vote after keeping top 10% by trace confidence; the 90.8 is Bottom-10% group confidence @10% (Table 1, Table 9). Lowest Group Confidence (2K window) at @10 gives 90.1 (Table 8).",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen3-32B AIME24, column Bottom-10 Conf @512 retention 10%"
+  },
+  {
+   "claim": "GPT-OSS-120B reaches 99.9% on AIME25 offline against 97.0% for cons@512 and 91.8% pass@1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 99.9,
+   "unit": "%",
+   "baseline_value": 97.0,
+   "n": 64,
+   "setup": "Offline, K=512 traces resampled from a pool of 4,096 per problem, averaged over 64 runs, confidence-weighted majority vote after keeping top 10% by trace confidence; 99.9 is Tail Conf (2k)@10% (Table 7), Tail Conf @10 in Table 1. Same filter lowers GPT-OSS-120B on BRUMO25 (82.9 Bottom-10) and HMMT25 (88.9 Tail@10 vs 92.9 majority).",
+   "note": null,
+   "where": "Sec 4.2, Table 1",
+   "quote": "GPT-OSS-120B even reaches 99.9% on AIME25"
+  },
+  {
+   "claim": "Online DeepConf-low cuts generated tokens by 84.7% on GPT-OSS-120B AIME25 (3.23e8 to 0.49e8) with accuracy 97.9% vs 97.1% majority.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Token reduction vs cons@512",
+   "value": 84.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 64,
+   "setup": "Online, budget B=512, Ninit=16, eta=10% (low), tau=0.95, group window 2,048 tokens, 64 runs; tokens counted incl. partial tokens of early-stopped traces",
+   "note": "Main text Sec 4.3 says 'DeepConf-low reduces tokens by 43-79%' across the four sets for the three models, but Table 2 itself shows 43.8% to 84.7% (79.9% GPT-OSS-120B AIME24, 84.7% AIME25); Appendix D says 43-84%. Fig 6 text says 'up to 85.8%'.",
+   "where": "Table 2; abstract",
+   "table": "Table 2, row GPT-OSS-120B AIME25, column DeepConf-low Token (delta%)"
+  },
+  {
+   "claim": "Main text states DeepConf-low saves 43-79% tokens and DeepConf-high 18-59% against majority voting at B=512.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Token reduction range (low)",
+   "value": "43-79",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-8B, Qwen3-32B, GPT-OSS-120B on AIME24/AIME25/BRUMO25/HMMT25, online, B=512, tau=0.95, Ninit=16",
+   "note": "Contradicted by the paper's own Table 2 and Appendix D (43-84%); high range 18-59% matches Table 2 (18.8 to 59.0).",
+   "where": "Sec 4.3",
+   "quote": "DeepConf-low reduces tokens by 43-79%"
+  },
+  {
+   "claim": "Appendix D reports DeepConf-low saves about 43-84% tokens at B=512 across five models and datasets, usually matching or improving accuracy, with Qwen3-8B/AIME25 down 4.4 pp.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Token reduction range (low)",
+   "value": "43-84",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 10: five models, AIME24/25, BRUMO25, HMMT25, GPQA-Diamond (DeepSeek/Qwen only), online, B=512",
+   "note": null,
+   "where": "Appendix D, Table 10",
+   "quote": "about 43-84% fewer tokens than majority voting at B=512"
+  },
+  {
+   "claim": "DeepConf-low loses accuracy on Qwen3-8B AIME25 online (78.1% vs 82.5% majority).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy change",
+   "value": -4.4,
+   "unit": "pp",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Online B=512, Table 10, DeepConf-low vs Maj.@512",
+   "note": null,
+   "where": "Appendix D",
+   "quote": "8B/AIME25 (−4.4 pp)"
+  },
+  {
+   "claim": "Online DeepConf-low on DeepSeek-8B AIME24 gains accuracy and the largest drop on the three main models is Qwen3-32B BRUMO25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy change DeepSeek-8B AIME24",
+   "value": 5.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Online B=512, Table 2",
+   "note": "Table 2: 86.7% to 92.5%. Qwen3-32B BRUMO25 -0.9% per text (93.3 to 92.4).",
+   "where": "Sec 4.3",
+   "quote": "(e.g., DeepSeek-8B AIME24: +5.8%)"
+  },
+  {
+   "claim": "Top-10% filtering improved 12 of 20 settings (+0.26 to +9.38 points) and dropped on 8 (-4.69 to -0.31).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Settings improved",
+   "value": "12/20",
+   "unit": "settings",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Lowest Group Confidence (window 2,048), 5 model configs (DeepSeek-8B, Qwen3-8B, Qwen3-32B, GPT-OSS-20B, GPT-OSS-120B) by 4 math datasets, voting size B swept 1 to 512, vs majority voting",
+   "note": "The range +0.26 to +9.38 (average +5.27) is also printed in Sec 4.2 for DeepSeek-8B alone, as accuracy gain over best majority accuracy.",
+   "where": "Appendix C",
+   "quote": "(12/20 settings; +0.26% ∼+9.38%)"
+  },
+  {
+   "claim": "Average gain of top-10% across the 20 settings is +1.22%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average accuracy change",
+   "value": 1.22,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above (Appendix C, Lowest Group Confidence, B 1..512)",
+   "note": null,
+   "where": "Appendix C",
+   "quote": "the overall average improvement is +1.22%"
+  },
+  {
+   "claim": "Top-90% filtering is the safe option: -0.21 to +0.73 vs majority, average +0.17.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average accuracy change",
+   "value": 0.17,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 20 settings",
+   "note": null,
+   "where": "Appendix C",
+   "quote": "(−0.21% ∼+0.73%, avg. +0.17%)"
+  },
+  {
+   "claim": "Regressions come from confidence concentrating on an incorrect answer.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' explanation of the 8 regressions; no direct test",
+   "note": null,
+   "where": "Appendix C",
+   "quote": "These regressions arise from rare cases where confidence concentrates on an incorrect answer"
+  },
+  {
+   "claim": "Head-of-trace confidence carries little signal and filtering on it hurts on average (81.9 vs 83.0 plain majority).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average accuracy",
+   "value": 81.9,
+   "unit": "%",
+   "baseline_value": 83.0,
+   "n": null,
+   "setup": "Offline K=512, 23 model-dataset pairs, Head(10%)@10",
+   "note": null,
+   "where": "Appendix B.4",
+   "table": "Table 6, row Average Acc., column Head (10%)@10"
+  },
+  {
+   "claim": "Lowest Group Confidence (2k window) with a 10% filter averages 84.4% over 23 pairs against 83.0% plain majority; tail variants average 84.6% and 84.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average accuracy",
+   "value": 84.4,
+   "unit": "%",
+   "baseline_value": 83.0,
+   "n": null,
+   "setup": "Offline K=512, 5 models over 23 model-dataset pairs",
+   "note": null,
+   "where": "Appendix B.4, Tables 7-8",
+   "quote": "over 23 model-dataset pairs, LGC (2k window) with a 10% filter averages 84.4%"
+  },
+  {
+   "claim": "tau=0.95 saves 52.8% of tokens (DeepConf-low) and 54.7% (high) at B=512 with zero accuracy change.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Token reduction at B=512 (low)",
+   "value": 52.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3-32B, AIME24, Ninit=16, vs budget-only baseline at same B",
+   "note": null,
+   "where": "Appendix B.1, Table 3",
+   "quote": "15.4%/52.8% tokens at B = 32/512 (DeepConf-low) and 22.0%/54.7% (DeepConf-high)"
+  },
+  {
+   "claim": "Looser tau raises savings to 69.6% but DeepConf-low loses up to 0.47 points (at B=32) or 0.31 (at B=512).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Token reduction",
+   "value": 69.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3-32B AIME24, tau=0.85, B=512",
+   "note": null,
+   "where": "Appendix B.1, Table 3",
+   "quote": "increase savings up to 69.6% but cause accuracy drops in DeepConf-low"
+  },
+  {
+   "claim": "Accuracy difference between warmup sizes 8, 16 and 32 is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": "|Delta accuracy|",
+   "value": 1.0,
+   "unit": "pp",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Online DeepConf-low, B=512, 5 datasets x 3 models, vs offline baseline",
+   "note": "Table 4 has larger gaps: DeepSeek-8B HMMT25 Ninit=8 -2.2 pp, Ninit=16 -1.5 pp.",
+   "where": "Appendix B.2, Table 4",
+   "quote": "(typically ≤1.0 p.p.)"
+  },
+  {
+   "claim": "Standard majority voting on AIME 2025 with Qwen3-8B needs 511 extra traces and 100 million extra tokens for a gain from 68% to 82%.",
+   "kind": "claim",
+   "source": null,
+   "metric": "Extra traces per question",
+   "value": 511,
+   "unit": "traces",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen3-8B, AIME 2025; stated in the introduction without a table",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "requires 511 additional reasoning traces per question"
+  },
+  {
+   "claim": "GPQA-Diamond: both filter variants improve about 6% over a single trace; top-10% can fall below majority on DeepSeek-8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average accuracy gain over one answer",
+   "value": 6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-8B, Qwen3-8B, Qwen3-32B, offline Lowest Group Confidence, Fig 10",
+   "note": null,
+   "where": "Appendix E",
+   "quote": "approximately 6%"
+  },
+  {
+   "claim": "DeepConf-low on DeepSeek-8B saves a mean 62.88% tokens and DeepConf-high 47.67% at matched accuracy across budgets 32 to 512.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean token saving (low)",
+   "value": 62.88,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-8B, four math sets, online, B in 32..512 (Fig 7)",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "achieves mean token savings of 62.88% and DeepConf-high 47.67%"
+  },
+  {
+   "claim": "Adaptive DeepConf-low matches majority accuracy at 19-96% token reduction on successful settings; eight DeepConf-low settings and one DeepConf-high setting fail to match.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Token reduction range (low)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Budgets 32..512, four math datasets, five models, Fig 9",
+   "note": "Range 19-96% (high 13-84%) is printed in Appendix D; the list names eight low settings.",
+   "where": "Appendix D"
+  }
+ ],
+ "limits": [
+  "Needs token log-probabilities (top_logprobs>=2) and a patched vLLM; hosted APIs that hide logprobs cannot run it.",
+  "Only open-weight models; four of five benchmarks are competition math and GPQA-Diamond is the only other; tasks need a checkable boxed answer.",
+  "Authors concede overconfident wrong traces: 'addressing cases where models exhibit high confidence on incorrect reasoning paths, which is a key limitation observed in our experiments.'",
+  "Top-10% filter hurt 8 of 20 settings; Qwen3-8B AIME25 and several GPT-OSS cells lose accuracy online.",
+  "Results are averaged from resamples of a fixed 4,096-trace pool, not fresh generations; no hardware or wall-clock reported.",
+  "Abstract claims no hyperparameter tuning but eta, tau, Ninit and window size are set choices; warmup needs 16 full traces per problem.",
+  "The paper tests only one prompt sentence; it does not test whether it matters.",
+  "Abstract numbers 99.9% (offline) and 84.7% (online) come from different configurations."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Self-Consistency Improves Chain of Thought Reasoning in Language Models (Wang et al.)",
+   "year": 2023,
+   "arxiv": "2203.11171",
+   "relation": "baseline",
+   "note": "majority-voting baseline",
+   "quote": null
+  },
+  {
+   "work": "Scalable best-of-n selection via self-certainty (Kang et al.)",
+   "year": 2025,
+   "arxiv": "2502.18581",
+   "relation": "extends",
+   "note": "global confidence the paper replaces with local measures",
+   "quote": null
+  },
+  {
+   "work": "Dynamic Voting (Xue et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "adaptive sampling by consensus",
+   "quote": null
+  },
+  {
+   "work": "Early-Stopping Self-Consistency (Li et al.)",
+   "year": 2024,
+   "arxiv": "2401.10480",
+   "relation": "related",
+   "note": "efficient self-consistency",
+   "quote": null
+  },
+  {
+   "work": "Adaptive-Consistency (Aggarwal et al.)",
+   "year": 2023,
+   "arxiv": "2305.11860",
+   "relation": "related",
+   "note": "efficient self-consistency",
+   "quote": null
+  },
+  {
+   "work": "Do not think that much for 2+3=? (Chen et al.)",
+   "year": 2024,
+   "arxiv": "2412.21187",
+   "relation": "related",
+   "note": "efficient-CoT fine-tuning cited",
+   "quote": null
+  },
+  {
+   "work": "Don't overthink it (Hassid et al.)",
+   "year": 2025,
+   "arxiv": "2505.17813",
+   "relation": "related",
+   "note": "prefers shorter chains among samples",
+   "quote": null
+  },
+  {
+   "work": "Dynasor / certaindex (Fu et al.)",
+   "year": 2024,
+   "arxiv": "2412.20993",
+   "relation": "related",
+   "note": "efficient parallel reasoning",
+   "quote": null
+  },
+  {
+   "work": "Qwen3 technical report",
+   "year": 2025,
+   "arxiv": "2505.09388",
+   "relation": "evaluates",
+   "note": "Qwen3-8B/32B",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": "2501.12948",
+   "relation": "evaluates",
+   "note": "DeepSeek-8B distilled from R1-0528",
+   "quote": null
+  },
+  {
+   "work": "gpt-oss-120b and gpt-oss-20b model card",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT-OSS models",
+   "quote": null
+  },
+  {
+   "work": "GPQA (Rein et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "GPQA-Diamond",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Up: DeepConf on AIME 2025. Down: Parallel thinking using DeepConf.",
+   "page": 1,
+   "why": "Shows the headline accuracy and token bars and the stop-below-threshold pseudocode"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Confidence distributions for correct vs. incorrect reasoning traces across different metrics. Data from HMMT25: 30 problems, 4096 traces each.",
+   "page": 3,
+   "why": "Shows why bottom-10% and tail confidence separate correct from incorrect traces better than mean"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "DeepConf during online generation.",
+   "page": 6,
+   "why": "Warmup threshold and stop rule in one picture"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 1 pseudocode",
+   "snippet": "gc = average(conf_list[x-group_size:x]); If gc >= threshold: continue generation else: stop generation",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix G.4 Step 4",
+   "snippet": "def check_conf_stop(self) -> bool:\n    if self.conf_group_list is None or len(self.conf_group_list) == 0:\n        return False\n    return (len(self.conf_group_list) >= self.conf_group_size\n            and self.conf_grouped / len(self.conf_group_list) < self.conf_threshold)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Sec 4.3 text says 43-79% token reduction but Table 2 and Appendix D show up to 84.7% / 43-84%; Fig 6 text says 85.8%.",
+  "Sec 4.1 gives stopping threshold as a min over top-percentile warmup traces while Sec 3.3 uses Percentile(100-eta); Appendix D calls the stopping threshold tau, elsewhere tau is the consensus threshold.",
+  "Dataset sizes (problem counts) for AIME, BRUMO, GPQA-Diamond are not stated; hardware and compute not stated.",
+  "Figures 5, 8, 9, 10, 11 are curves with no extractable numbers."
+ ]
 }

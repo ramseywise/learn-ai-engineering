@@ -1,19 +1,554 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2410.05229",
  "pdf": "generative-ai/08-eval/sources/mirzadeh-2024-gsm-symbolic.pdf",
  "bib": {
   "title": "GSM-Symbolic: Understanding the Limitations of Mathematical Reasoning in Large Language Models",
-  "first_author": "Iman Mirzadeh",
+  "authors": [
+   "Iman Mirzadeh",
+   "Keivan Alizadeh",
+   "Hooman Shahrokhi",
+   "Oncel Tuzel",
+   "Samy Bengio",
+   "Mehrdad Farajtabar"
+  ],
+  "first_author": "Mirzadeh",
   "year": "2024",
-  "venue": "ICLR 2025",
+  "venue": "ICLR 2025 (arXiv v2, 27 Aug 2025)",
   "arxiv": "2410.05229",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 88256,
+  "chars_total": 88256,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about 18000 chars) skimmed only for lineage"
  },
- "legacy_report": "SOURCE: \"GSM-Symbolic: Understanding the Limitations of Mathematical Reasoning in Large Language Models\", Mirzadeh, Alizadeh, Shahrokhi, Tuzel, Bengio, Farajtabar (Apple; Washington State University). Printed header: \"Published as a conference paper at ICLR 2025\". arXiv:2410.05229v2, stamped 27 Aug 2025. This v2 adds a statistics rebuttal (Appendix B) that the 2024 preprint lacks.\n\nCOVERAGE: 24 of 24 pages, 89,010 of 89,010 chars. Body p1-10, references p11-15 (skimmed for origins), appendices A.1-A.6 and B p16-24 read in full. Nothing skipped.\n\nCLAIMS\n\n- claim: Accuracy on the same 100 questions varies across 50 re-instantiations.\n  number: Gemma2-9b-it 79.1 (±3.0) against 87.0 on the GSM8K originals; best-to-worst gap over 12 points, about 15 for Phi-3.5-mini.\n  setup: 100 templates built from 100 randomly chosen GSM8K test questions, 50 samples each, giving 50 sets of 100. 8-shot CoT with the original GSM8K shots, greedy decoding, accuracy. The ± is never defined in the text; the prose treats it as a standard deviation over the 50 sets.\n  quote: \"for the Gemma2-9B, the gap between the worst performance and the best performance is more than 12%, while for Phi-3.5-mini, this gap is around 15%\"\n  where: p5-6, Fig. 2\n\n- claim: The original-question score usually sits above the re-instantiated distribution, which the authors read as possible contamination.\n  number: 21 of 25 models.\n  setup: Same as above; baseline is the 100 original questions.\n  quote: \"often more than one standard deviation away from the center of the GSM-Symbolic performance distribution, frequently on the right side of the distribution (this holds for 21 out of 25 models). One explanation for this could be data contamination\"\n  where: p6\n\n- claim: The drops are small for strong models and larger for small open ones.\n  number: -0.3 (GPT-4o) to -9.2 (Mistral-7b-it-v0.1).\n  setup: Fig. 3. The values match Table 1's full-test column minus Symbolic (95.2 to 94.9; 39.7 to 30.5), so the baseline appears to be the 1,319-question set, not the 100. That is my arithmetic; the paper does not say so.\n  quote: \"GPT-4o 95.2 95.0 94.4 (± 1.62) 94.9 ( ± 1.87) 93.9 ( ± 2.59) 88.0 ( ± 3.43) 63.1 (± 4.53)\"\n  where: p6 Fig. 3; p17 Table 1\n\n- claim: Changing names moves scores less than changing numbers.\n  number: Gemma2-9b-it: Names 88.6 (±2.0), Numbers 83.1 (±2.2), Both 79.1 (±3.0), GSM8K 87.0.\n  setup: Fig. 4, six models, same protocol.\n  quote: \"the variance is lower when changing names compared to numbers\"\n  where: p7\n\n- claim: Adding clauses lowers the mean and widens the spread.\n  number: Gemma2-9b-it M1 84.4 (±2.4), Symbolic 79.1 (±3.0), P1 68.1 (±4.8), P2 41.8 (±6.0). GPT-4o 94.4, 94.9, 93.9, 88.0.\n  setup: Fig. 6 and Table 1; one clause removed (M1), one or two added (P1, P2).\n  quote: \"as the difficulty increases, the performance decreases and the variance increases\"\n  where: p8\n\n- claim: One irrelevant but plausible clause (GSM-NoOp) causes the largest drops.\n  number: -65.7 points for Phi-3-mini (83.7 to 18.0), -32.0 for GPT-4o, -17.5 for o1-preview (94.9 to 77.4).\n  setup: Fig. 8a, drop from full GSM8K, in percentage points. Eight shots of the same question (NoOp-Symb) do not recover it for Phi-3-medium (29.4 to 30.2) or Llama3-8b (18.6 to 19.6).\n  quote: \"the Phi-3-mini model experiencing over a 65% drop, and even stronger models such as o1-preview showing significant declines\"\n  where: p9-10\n\n- claim: Arithmetic error does not explain the drops.\n  number: Gemma2-9b-it in-response arithmetic accuracy 98.9 (GSM8K), 98.3 (Symbolic), 97.4 (P1), 97.1 (P2).\n  setup: Table 2, equations extracted from generated answers.\n  quote: \"GSM-P2 96.2 98.6 97.5 96.4 99.2 97.1\"\n  where: p23\n\n- claim: The authors concede the significance claim depends on the test chosen.\n  number: none\n  setup: They used a one-sample two-sided t-test of the 50 scores against the 100-question score; p<0.001 for most models, 0.13 for Llama3-8b, 0.6 for GPT-4o (Fig. 10).\n  quote: \"if one disagrees with our assumptions and accepts the assumptions of Ivanova et al. (2025), our results would likewise be statistically non-significant, as those authors have shown\"\n  where: p18, Appendix B p23-24\n\nLIMITS\n- Contamination is offered as \"one explanation\", never tested directly. There is no membership or training-data check.\n- The baseline is a single score on 100 questions. Each set also has n=100, so a ±3 spread is about what binomial sampling gives at 80% (my calculation, roughly 4 points; the paper does not compute it). This is the core of the Ivanova et al. critique, which the paper cites but does not refute numerically.\n- The spread is across instantiations under greedy decoding, not across seeds or runs. The o1 models are not greedy.\n- Results are not uniform: Table 1 shows Llama3-8b-instruct 74.0 to 74.6 and o1-mini 93.0 to 94.5 on the 100-question baseline, which sits awkwardly with Fig. 3's \"all models drop\".\n- Templates slightly widen the number ranges, so the Symbolic sets are not strictly equal in difficulty; the authors argue this is immaterial (A.6).\n- \"Not capable of genuine logical reasoning\" is stated as a hypothesis.\n- The model list is dated (largest open model 27B; o1-preview the strongest closed one).\n\nBUILDS ON: Cobbe et al. (2021) GSM8K; Shi et al. (2023) GSM-IC, irrelevant context; Li et al. (2024a) GSM-Plus; Zhang et al. (2024) GSM1K, overfitting; Srivastava et al. (2024) functional MATH variants; Stolfo et al. (2023); Jiang et al. (2024) token bias; Ivanova et al. (2025) for the statistical critique.\n\nCODE: Template spec, p2 Fig. 1: \"#variables: - x = range(5, 100) ... #conditions: - x + y + z + ans == total\". Prompt format, p16 Fig. 9.\n\nFIGURES: Fig. 2, p6. Histograms of 50-set accuracy per model with the GSM8K score as a dashed line. It shows \"a benchmark score is a draw from a distribution\" in one glance and serves both notes.\n\nPROBLEMS: Extraction is clean, with no embedded instructions. Fig. 3 bar labels are run together, so I re-paired them against Table 1. Table 1 has identical cells across several base and instruct pairs (Gemma2b, Gemma-7b, Llama3-8b), and Gemma2-9b M1 (71.2) is below Symbolic (79.1); these are possible table errors I could not resolve. Appendix B body footnote 5 has no visible marker.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/mirzadeh-2024-gsm-symbolic.pdf"
+ "type": "benchmark",
+ "question": "Are reported GSM8K scores reliable measures of mathematical reasoning, and how robust is LLM reasoning to changed names, numbers, difficulty and irrelevant clauses?",
+ "hypothesis": "LLMs do not perform formal reasoning but in-distribution pattern matching, so accuracy should vary across instantiations of one question and collapse under added clauses or irrelevant information.",
+ "contributions": [
+  "GSM-Symbolic: a template-based generator of GSM8K variants",
+  "Evidence that GSM8K accuracy is a distribution with variance and a drop on GSM-Symbolic, hinting at contamination",
+  "Models are robust to name changes but sensitive to number changes; accuracy falls and variance rises with clause count",
+  "GSM-NoOp: irrelevant but plausible clauses cause drops of up to 65%"
+ ],
+ "method": {
+  "summary": "The authors hand-annotate 100 GSM8K test questions as symbolic templates (variables, domains, conditions), generate 50 instances of each, and evaluate 25 open and closed models 8-shot with CoT and greedy decoding. Variants change names only, numbers only, remove/add 1-2 clauses (M1, P1, P2) or add an irrelevant clause (NoOp).",
+  "task": "grade-school math word problems, robustness evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319 test examples (7473 train)",
+    "split": "test; also a random subset of 100 test questions used as templates",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM-Symbolic (and Names, M1, P1, P2, NoOp variants)",
+    "role": "eval",
+    "size": "100 templates x 50 samples = 5000 examples per benchmark (50 datasets of 100)",
+    "split": "derived from 100 random GSM8K test questions",
+    "source": "https://github.com/apple/ml-gsm-symbolic",
+    "preprocessing": "Templates annotated by hand; automated checks that original values do not appear, original values satisfy conditions, answer matches; 10 random samples per template manually reviewed; questions that fewer than two models answer correctly are re-reviewed manually. Numeric ranges kept close to GSM8K, slightly widened."
+   },
+   {
+    "name": "GSM-P1 fine-tuning set",
+    "role": "train",
+    "size": "10000 examples generated from 50 P1 templates separate from test templates",
+    "split": "train",
+    "source": "own",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Gemma, Gemma2 (2b, 7b, 2b, 9b, 27b; base and it), Phi-2, Phi-3 (mini, small, medium), Phi-3.5-mini, Mistral-7b (v0.1, v0.3; base and instruct), Mathstral-7b-v0.1, Llama3-8b (base and instruct)",
+    "role": "evaluated",
+    "params": "2B to 27B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "count": "more than 20 open models"
+    }
+   },
+   {
+    "name": "GPT-4o-mini, GPT-4o, o1-mini, o1-preview",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "count": "25 models in total"
+    }
+   },
+   {
+    "name": "Phi-3.5-mini-instruct (fine-tuned on GSM-P1)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy for all models except o1-mini and o1-preview (API does not allow control; responses to the same prompt change)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "generation until context limit, end-of-response token, or the model begins the next 'Q:'",
+   "samples": "one greedy run per model per 100-question set, 50 sets per benchmark; nearly 500 total evaluations",
+   "prompting": "8-shot chain of thought with the original 8 GSM8K shots (except NoOp-Symb and NoOp-NoOp experiments, and P1-shot ablation); preamble 'As an expert problem solver, solve step by step the following mathematical questions.'",
+   "retrieval": null,
+   "parameters": {
+    "shots": 8
+   },
+   "other": {
+    "shots_ablation": "preliminary experiments said shot count did not significantly change performance; no numbers given"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of the 100 questions in a set answered correctly; reported as mean (+- value) over 50 sets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "arithmetic accuracy",
+     "definition": "Gemma2-9b-it and Phi-3-medium zero-shot 'What is x plus y?' with at least 1000 cases per digit length and operation; plus equations extracted from responses",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GSM8K full test set (1319)",
+    "GSM8K subset of the 100 template questions"
+   ],
+   "protocol": "One-sample two-sided t-test of the 50 GSM-Symbolic scores against the GSM8K(100) score (normality tested); authors say a two-sample z-test (Ivanova et al. 2025) would give non-significant results."
+  },
+  "availability": {
+   "code": "https://github.com/apple/ml-gsm-symbolic",
+   "weights": null,
+   "data": "https://github.com/apple/ml-gsm-symbolic"
+  },
+  "prompts": [
+   {
+    "purpose": "8-shot CoT evaluation",
+    "text": "// preamble or system instruction\nAs an expert problem solver, solve step by step the following mathematical questions.\n// shot-1\nQ: {{question}}\nA: Let's think step by step.\n{{solution}}.\nThe final answer is {{final answer}}.\n...\n// shot 8\n...\n// target question\nQ: {{question}}\nA: Let's think step by step.",
+    "where": "A.1, Fig 9, p16"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "we calculate statistical significance using the one-sample t-test with two-sided alternative hypothesis",
+    "where": "A.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Gemma2-9B best-to-worst gap across 50 GSM-Symbolic sets exceeds 12 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "best-worst accuracy gap",
+   "value": ">12",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 templates from 100 randomly chosen GSM8K test questions, 50 instantiations each (50 sets of 100 questions); 8-shot CoT with the original GSM8K shots; greedy decoding (except o1 models)",
+   "note": null,
+   "where": "Sec 4.1, p5",
+   "quote": "for the Gemma2-9B, the gap between the worst performance and the best performance is more than 12%"
+  },
+  {
+   "claim": "Phi-3.5-mini best-to-worst gap is around 15",
+   "kind": "measured",
+   "source": null,
+   "metric": "best-worst accuracy gap",
+   "value": 15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 templates from 100 randomly chosen GSM8K test questions, 50 instantiations each (50 sets of 100 questions); 8-shot CoT with the original GSM8K shots; greedy decoding (except o1 models)",
+   "note": "Text says 'around 15%'; no table gives the min and max.",
+   "where": "Sec 4.1, p5-6",
+   "quote": "is around 15%"
+  },
+  {
+   "claim": "Gemma2-9b-it mean on GSM-Symbolic is 79.1 against 87.0 on the original 100 GSM8K questions",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.1,
+   "unit": "% accuracy",
+   "baseline_value": 87.0,
+   "n": null,
+   "setup": "100 templates from 100 randomly chosen GSM8K test questions, 50 instantiations each (50 sets of 100 questions); 8-shot CoT with the original GSM8K shots; greedy decoding (except o1 models); Gemma2-9b-it",
+   "note": "The +- is never defined in the text; the prose compares to 'one standard deviation', so it is probably the std across the 50 sets (inferred).",
+   "where": "Fig 2, p6",
+   "quote": "GSM8K 87.0\nGSM-Symbolic 79.1 (±3.0)"
+  },
+  {
+   "claim": "Original GSM8K score lies more than one std from the GSM-Symbolic mean, usually on the right, for 21 of 25 models",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 21,
+   "unit": "models of 25",
+   "baseline_value": null,
+   "n": 25,
+   "setup": "Same 50-set setup, 25 models",
+   "note": null,
+   "where": "Sec 4.1, p6",
+   "quote": "frequently on the right side of the distribution (this holds for 21 out of 25 models)"
+  },
+  {
+   "claim": "Every model drops from GSM8K to GSM-Symbolic; largest drop Mistral-7b-it-v0.1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": -9.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 drop from GSM8K to GSM-Symbolic mean",
+   "note": "Fig 3 value is read from a bar label; the figure bars with -9.2 text appear in the text layer.",
+   "where": "Fig 3, p6",
+   "table": "Fig 3, bar Mistral-7b-it-v0.1 (-9.2)"
+  },
+  {
+   "claim": "GPT-4o shows a negligible drop (-0.3) and Llama3-8b-it -1.3, while Gemma2-9b-it -6.2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": -0.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as Fig 3",
+   "note": null,
+   "where": "Fig 3, p6",
+   "table": "Fig 3, bar GPT-4o (-0.3)"
+  },
+  {
+   "claim": "Changing only names: Gemma2-9b-it 88.6 (+-2.0); numbers only 83.1 (+-2.2); both 79.1 (+-3.0); GSM8K 87.0",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 83.1,
+   "unit": "% accuracy",
+   "baseline_value": 88.6,
+   "n": null,
+   "setup": "Gemma2-9b-it, 50 sets, names-only / numbers-only / both",
+   "note": "baseline_value is the names-only mean 88.6.",
+   "where": "Fig 4, p7",
+   "table": "Fig 4, Gemma2-9b-it panel, row Numbers"
+  },
+  {
+   "claim": "Phi-3-medium: names-only 91.8, numbers-only 89.0, both 82.5, GSM8K 89.0",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 82.5,
+   "unit": "% accuracy",
+   "baseline_value": 91.8,
+   "n": null,
+   "setup": "Phi-3-medium-128k-instruct, 50 sets",
+   "note": null,
+   "where": "Fig 4, p7",
+   "table": "Fig 4, Phi-3-medium panel, row Both"
+  },
+  {
+   "claim": "Gemma2-9b-it accuracy falls as clauses are added: M1 84.4, Symb 79.1, P1 68.1, P2 41.8",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 41.8,
+   "unit": "% accuracy",
+   "baseline_value": 79.1,
+   "n": null,
+   "setup": "Gemma2-9b-it, 50 sets per variant, 8-shot CoT with original GSM8K shots",
+   "note": "Std grows from 2.4 (M1) to 6.0 (P2).",
+   "where": "Fig 6 p8; Table 1",
+   "table": "Fig 6, Gemma2-9b-it panel, GSM-P2 (also Table 1 Symbolic-P2)"
+  },
+  {
+   "claim": "Phi-3.5-mini: P1 64.8, P2 44.8 vs Symbolic 82.1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 44.8,
+   "unit": "% accuracy",
+   "baseline_value": 82.1,
+   "n": null,
+   "setup": "Phi-3.5-mini-instruct",
+   "note": null,
+   "where": "Table 1, p17",
+   "table": "Table 1, row Phi-3.5-mini-instruct, column Symbolic-P2"
+  },
+  {
+   "claim": "GPT-4o holds up until P2: P1 93.9, P2 88.0, vs 94.9 Symbolic",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88.0,
+   "unit": "% accuracy",
+   "baseline_value": 94.9,
+   "n": null,
+   "setup": "GPT-4o",
+   "note": null,
+   "where": "Table 1, p17",
+   "table": "Table 1, row GPT-4o, column Symbolic-P2"
+  },
+  {
+   "claim": "Phi-3-mini drops 65.7 points from GSM8K to GSM-NoOp",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": -65.7,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM-NoOp (irrelevant clause added to GSM-Symbolic templates), 8-shot original GSM8K shots; drop is relative to full GSM8K test accuracy",
+   "note": "Text says 'over a 65% drop'/'up to 65%'; the 65.7 is in percentage points (Table 1: 83.7 on GSM8K full, 18.0 NoOp).",
+   "where": "Sec 4.4 p9; Fig 8a p10",
+   "quote": "with the Phi-3-mini model experiencing over a 65% drop",
+   "table": "Fig 8a, bar Phi-3-mini-128k-instruct (-65.7)"
+  },
+  {
+   "claim": "o1-preview drops 17.5 points from GSM8K to GSM-NoOp (94.9 to 77.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": -17.5,
+   "unit": "points",
+   "baseline_value": 94.9,
+   "n": null,
+   "setup": "o1-preview; API does not allow greedy decoding and outputs vary between runs",
+   "note": null,
+   "where": "Fig 8a; Table 1",
+   "table": "Fig 8a, bar o1-preview (-17.5); Table 1, row o1-preview, column Symbolic-NoOp (77.4)"
+  },
+  {
+   "claim": "Phi-3-medium NoOp accuracy 29.4 / 30.2 / 22.6 under original / NoOp-Symb / NoOp-NoOp shots; the drop is not recovered by shots from the same question or NoOp shots",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 30.2,
+   "unit": "% accuracy",
+   "baseline_value": 29.4,
+   "n": null,
+   "setup": "Phi-3-medium-128k-instruct, 8 shots drawn from GSM-Symbolic (same question) or GSM-NoOp (different questions)",
+   "note": "Values 87.3, 82.5, 29.4, 30.2, 22.6 are the five bars (GSM8K, GSM-Symb, GSM-NoOp, NoOp-Symb, NoOp-NoOp) per the axis labels; mapping of bar order is read from Fig 8 layout.",
+   "where": "Fig 8b, p10",
+   "table": "Fig 8b, Phi-3-medium panel, NoOp-Symb bar"
+  },
+  {
+   "claim": "Some weaker models improve a lot on NoOp-Symb: Gemma2b 48.3 and Mistral-7b-v0.1 62.5, despite 12.1 and 44.5 on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 62.5,
+   "unit": "% accuracy",
+   "baseline_value": 44.5,
+   "n": null,
+   "setup": "Fig 8c, 8 shots of the same question from GSM-Symbolic",
+   "note": "Authors call it 'a very notable observation' without explaining it.",
+   "where": "Fig 8c p10",
+   "table": "Fig 8c, Mistral-7b-v0.1 panel, NoOp-Symb bar"
+  },
+  {
+   "claim": "Statistical test: GPT-4o difference GSM8K vs GSM-Symbolic not significant (p=0.6); Llama3-8b-instruct p=0.13; all other tested models p<0.001 under the one-sample t-test",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.6,
+   "unit": "p-value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One-sample two-sided t-test of the 50 GSM-Symbolic scores against the single GSM8K(100) score; normality checked (p-value of normality test = 0.1)",
+   "note": "Authors state that under Ivanova et al. (2025)'s two-sample z-test the results would likewise be statistically non-significant.",
+   "where": "Fig 10, p17; A.3 p18",
+   "table": "Fig 10, panel GPT-4o, P-Value = 0.6"
+  },
+  {
+   "claim": "Authors concede that, under the statistical assumptions of Ivanova et al. (2025), their results would be non-significant",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix A.3 and B (v2 of the paper)",
+   "note": null,
+   "where": "A.3, p18",
+   "quote": "if one disagrees with our assumptions and accepts the assumptions of Ivanova et al. (2025), our results would likewise be statistically non-significant"
+  },
+  {
+   "claim": "Arithmetic accuracy of Gemma2-9b-it extracted from its own responses is 98.9 on GSM8K and 97.1 on GSM-P2, so arithmetic errors do not explain the drop",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 97.1,
+   "unit": "% accuracy",
+   "baseline_value": 98.9,
+   "n": null,
+   "setup": "Equations with '=' extracted from generated answers, Gemma2-9b-it",
+   "note": null,
+   "where": "A.6 Table 2, p23",
+   "table": "Table 2, row GSM-P2, column All"
+  },
+  {
+   "claim": "Fine-tuning Phi-3.5 on GSM-P1 slightly improves GSM-P1 but lowers GSM-P2; shots from GSM-P1 do not help on P2",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 P1 templates separate from test templates, 10000 generated fine-tuning examples, 1 to 5 epochs",
+   "note": "Values in Fig 11b are axis ranges only (38-45 and 62-66); no learning rate or batch size is given.",
+   "where": "A.4, p18",
+   "quote": "fine-tuning Phi-3.5 on GSM-P1 slightly improves perfor-\nmance on GSM-P1 while decreasing performance on GSM-P2"
+  }
+ ],
+ "limits": [
+  "The +- in all tables is undefined (probably std over 50 sets); each set holds only 100 questions, so per-set noise is large and the best-worst gap is of the size sampling alone produces (the paper itself concedes that under Ivanova et al. 2025's two-sample test the drops are non-significant).",
+  "Only 100 templates, hand-annotated; base GSM8K comparison is a single score on the same 100 questions.",
+  "o1 models not decoded greedily; no seeds or repeated runs per set; decoding and context lengths per model not given.",
+  "Contamination explanation is a hypothesis; no direct check of training data.",
+  "Authors concede they should have articulated statistical assumptions more clearly, and argue a 'true reasoner' would give a degenerate distribution (App B).",
+  "Fine-tuning ablation reports only Phi-3.5 and gives no optimizer or lr.",
+  "Models are 2024 vintage; o1-preview, the strongest, lost only 17.5 on NoOp."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GSM-NoOp",
+   "definition": "add seemingly relevant but ultimately inconsequential statements to GSM-Symbolic templates",
+   "where": "Sec 4.4"
+  },
+  {
+   "term": "GSM-Symbolic-M1 / P1 / P2",
+   "definition": "remove one clause, add one clause, add two clauses to the question",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "GSM8K, Training verifiers to solve math word problems",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "source of questions",
+   "quote": null
+  },
+  {
+   "work": "GSM-IC (Shi et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "irrelevant context impairs LLMs",
+   "quote": null
+  },
+  {
+   "work": "GSM-Plus (Li et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fixed variants without symbolic templates",
+   "quote": null
+  },
+  {
+   "work": "GSM1K (Zhang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "private overfitting check",
+   "quote": null
+  },
+  {
+   "work": "iGSM (Ye et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "synthetic math dataset",
+   "quote": null
+  },
+  {
+   "work": "Ivanova et al. 2025",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "statistical reanalysis arguing observations are not significant; addressed in App B",
+   "quote": null
+  },
+  {
+   "work": "Jiang et al. 2024 token bias",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reasoning as pattern matching",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the GSM-Symbolic template creation process.",
+   "page": 2,
+   "why": "Shows variables, domains and conditions of a template"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "8-shot CoT performance across 50 sets generated from GSM-Symbolic templates.",
+   "page": 6,
+   "why": "Shows the spread of accuracy over sets and where the GSM8K score falls"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "The impact of increasing the number of clauses on performance",
+   "page": 8,
+   "why": "Distributions shift left and widen with difficulty"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "GSM-NoOp drops and shot ablations",
+   "page": 10,
+   "why": "Drop per model and failure of shot fixes"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure bar values (Fig 3, Fig 8) are read from the text layer; mapping of bars to labels in Fig 8b/c depends on figure layout.",
+  "Table 1 columns for base/it pairs are duplicated across rows (e.g. Gemma2-9b and -it share Symbolic, P2 and NoOp values), so some cells look copy-pasted in the source.",
+  "No embedded instructions found."
+ ]
 }

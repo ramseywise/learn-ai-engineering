@@ -69,7 +69,7 @@ def add(item, bucket=None):    # the fix
     ...
 ```
 
-The ML version of this bug is a feature list. Wilson's `feature_collection=[]` default (*Machine Learning Engineering in Action*, ch. 10, Listings 10.15 to 10.18) gave two separately built models the same six features, `['a', 'b', 'c', 'd', 'e', 'f']`, because the second call appended to the list the first had already filled. His fix, `feature_collection if feature_collection else list()`, also replaces an empty list the caller passed in on purpose; test `is None` as above.
+The ML version is a `feature_collection=[]` default that gave two separately built models the same six features (Wilson, *Machine Learning Engineering in Action*, ch. 10); test `is None` as above, and see [readable code and smells](../../../software-design/notes/01-readable-code-and-smells.md) for the rest of that chapter's smell list.
 
 ## Dunder methods: how syntax maps to methods
 

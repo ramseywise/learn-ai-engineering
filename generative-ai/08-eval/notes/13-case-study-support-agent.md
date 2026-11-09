@@ -91,6 +91,8 @@ flowchart LR
 | 7 Grader calibration | Do graders match user outcomes? | Liked/disliked separation, Cohen's d, P/R/F1 vs. sentiment, stability by slice | Experimental graders can inform an investigation but never decide a promotion |
 | 8 Report | What should stakeholders do? | Gate cards, leaderboards with pool and n, `Ship / Hold / Investigate / Needs data` cards | Every claim names its gate, row pool, sample size and source artefact |
 
+Gate 7 sits after generation in the numbering, but calibration status is checked on every run, before a judge scores any gate's rows ([10](10-evals-in-ci.md#the-gate-ladder)).
+
 **The common handoff contract.** Each gate's input names its row pool, artefact paths, run ID, git commit, config snapshot and known exclusions. Its output gives pass/fail, a metric summary, row-level diagnostics, failure labels and a recommended next action. A downstream gate must never silently score rows that an upstream gate marked ineligible. Every artefact shares one header:
 
 ```json

@@ -1,19 +1,719 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2303.10420",
  "pdf": "generative-ai/08-eval/sources/ye-2023-comprehensive-capability-analysis-gpt-3.pdf",
  "bib": {
   "title": "A Comprehensive Capability Analysis of GPT-3 and GPT-3.5 Series Models",
-  "first_author": "Junjie Ye",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Junjie Ye",
+   "Xuanting Chen",
+   "Nuo Xu",
+   "Can Zu",
+   "Zekai Shao",
+   "Shichun Liu",
+   "Yuhan Cui",
+   "Zeyang Zhou",
+   "Chao Gong",
+   "Yang Shen",
+   "Jie Zhou",
+   "Siming Chen",
+   "Tao Gui",
+   "Qi Zhang",
+   "Xuanjing Huang"
+  ],
+  "first_author": "Ye",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2303.10420",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 126269,
+  "chars_total": 126269,
+  "engine": "pymupdf",
+  "skipped": "Reference list only skimmed. Every results table (2-24) and every prompt table (25-45) was read; the long English passages in the SQuAD prompt tables are one fixed Notre Dame passage repeated."
  },
- "legacy_report": "SOURCE: \"A Comprehensive Capability Analysis of GPT-3 and GPT-3.5 Series Models\", Junjie Ye, Xuanting Chen (equal contribution), +13, corresponding author Tao Gui. No venue is printed on the PDF, so preprint (arXiv 2303.10420), 2023. First-author affiliation as printed: \"School of Computer Science, Fudan University, Shanghai, China\" (both first authors).\n\nCOVERAGE: 47 of 47 pages, 126,051 chars. Read in full: body p1-22, limitations p23, Appendix A tables p25-26, Appendix B prompts p27-47. References p23-25 skimmed. Two result tables were not read cell by cell: OntoNotes v5 (Table 10, p13) and Tacred (Table 17, p19); their prose was read.\n\nMETHOD (what the caller asked about)\n- Models: davinci, text-davinci-001, code-davinci-002, text-davinci-002, text-davinci-003, gpt-3.5-turbo, all through the OpenAI API.\n- Tasks: 9 NLU tasks, 21 datasets (Table 1, p5), plus TextFlint perturbed versions (\"ori\" vs \"trans\" columns) for robustness.\n- Test-set size differs by model: \"when evaluating davinci and code-davinci-002, we test on 100 samples, while for text-davinci-001 and text-davinci-002 on 1000 samples. For text-davinci-003 and gpt-3.5-turbo, we use the entire dataset\" (p6). Footnote: datasets under 1000 records are used in full. The reason given is API rate limits (p23). How the 100 or 1000 were drawn is not stated.\n- Prompts: three per dataset, at 0/1/3-shot: \"selecting the three best-performing prompts per dataset\" (p6). What they were selected on is not stated.\n- Few-shot examples: selection is not described. Appendix B shows one fixed example per dataset, reused across all three prompts.\n- Output-to-label mapping: not described. The only handle is an \"analyzable rate\"; for davinci \"We manually calculated the evaluation results and considered the non-analyzable results as wrong answers\" (Table 23, p26). For other models \"-\" means \"the non-analyzable rate exceeds the threshold\" (Table 22, p25); the threshold is never given.\n- Runs and variance: every cell is mean ± a spread, but the paper never says what the ± is, nor gives the number of runs, temperature or seed. My inference only: it is the spread across the three prompts.\n\nCLAIMS\n- claim: Newer models are not uniformly better.\n  number: zero-shot SQuAD1.1 F1 83.58 (code-davinci-002) vs 66.84 (text-davinci-003) vs 55.26 (gpt-3.5-turbo)\n  setup: Table 4, AddSentDiverse \"ori\" column, 9292 samples nominal, but 100 items for code-davinci-002 and the full set for the other two\n  quote: \"code-davinci-002 83.58±2.72\" / \"text-davinci-003 66.84±9.79\" / \"gpt-3.5-turbo 55.26±10.08\"; and \"the evolution of GPT series models does not necessarily lead to universal improvements across all NLU tasks\"\n  where: p10; p22\n- claim: The low gpt-3.5-turbo zero-shot reading-comprehension score is partly a grader artefact.\n  number: none\n  setup: SQuAD, F1/EM against verbose chat answers\n  quote: \"Although these sentences often contain the correct answer, the limitations of automatic evaluation metrics result in the model scoring lower in the zero-shot scenario.\"\n  where: p12\n- claim: Few-shot can be worse than zero-shot.\n  number: WSC273 gpt-3.5-turbo 66.05 (0-shot), 59.77 (1-shot), 58.48 (3-shot)\n  setup: Table 21, \"all\" column, 570 samples, accuracy\n  quote: \"gpt-3.5-turbo 66.05±2.31\", \"gpt-3.5-turbo 59.77±1.06\", \"gpt-3.5-turbo 58.48±3.01\"; \"In the few-shot scenario, most models perform worse than the zero-shot setting\" (IMDB)\n  where: p22; p20\n- claim: Prompt wording alone can move a score from near zero to usable.\n  number: davinci analyzable rate on MRPC 0.00 without a trailing \"Answer\", 100.00 with it; SNLI 0.00 vs 86.00\n  setup: davinci, zero-shot, 100 items, Table 24\n  quote: \"Semantic Matching MRPC 0.00 100.00\" / \"SNLI 0.00 86.00\"\n  where: p26\n- claim: The reported spread is sometimes as large as the mean.\n  number: 26.00±45.03\n  setup: code-davinci-002, zero-shot, MRPC SwapAnt \"ori\", 158 samples nominal (100 evaluated at most), Table 19\n  quote: \"code-davinci-002 0.00±0.00 4.67±8.08 26.00±45.03 8.00±13.86 70.00±3.07\"\n  where: p21\n- claim: Some models fail the output format entirely, so no score exists.\n  number: none\n  setup: POS tagging, zero-shot, WSJ and Daily547\n  quote: \"text-davinci-001 and gpt-3.5-turbo fail to produce output in the expected format\"\n  where: p18\n- claim: Robustness to perturbation did not improve across generations.\n  number: none\n  setup: TextFlint transformations, all tasks\n  quote: \"despite the improved performance of the models, their robustness does not show significant enhancements\"\n  where: p22\n\nLIMITS\n- Conceded: subsampling (\"this does not affect the overall trend analysis\", p23; asserted, not tested); GPT-4 not tested.\n- Not shown: any significance test or confidence interval; the meaning of ±; sampling method; decoding settings; the answer parser; the analyzability threshold. Cross-model comparisons mix n=100, n=1000 and full sets, so many \"best model\" calls rest on 100 items. Prompts were chosen as \"best-performing\", which biases the scores upward and may understate prompt sensitivity. Causal claims about RLHF and \"alignment tax\" are speculation with no ablation. gpt-3.5-turbo is said to be smaller (\"may be due to\"), unverified.\n- Dated: all six models are retired; the findings are useful as method illustrations, not as current rankings.\n\nBUILDS ON: TextFlint (Gui et al., 2021) for perturbations; Chen et al. (2023), \"How robust is GPT-3.5 to predecessors?\", the same group's precursor; promptsource for prompts; Ouyang et al. (2022) for InstructGPT and the \"alignment tax\"; Christiano et al. (2017) for RLHF; Brown et al. (2020).\n\nCODE: none. A prompt template worth keeping (p38): \"Suppose '{premise}' Can we infer that '{hypothesis}'? Please choose one answer: entailment, contradiction, neutral // Answer:\"\n\nFIGURES: Figure 5, p8, \"The analyzability rates of davinci's answer results in the zero-shot scenario...\" with and without \"Answer\" at the end of the prompt. One chart showing that a single trailing word decides whether outputs can be scored at all.\n\nPROBLEMS\n- Extraction drops most spaces in the body text (\"Whilethisstrategy...\"); it is readable, and the quotes above have spaces restored but are otherwise verbatim. Figure 2 extracts only as axis ticks.\n- No embedded instructions aimed at the reader; Appendix B contains prompt templates, treated as data.\n- Internal inconsistencies in the paper: QQP is 5000 samples in Table 1 but \"# 40430 samples\" in Table 20. The Table 5 (EM) 3-shot code-davinci-002 row is identical to the Table 4 (F1) row, a likely copy error. Table 22 zero-shot numbers do not match the body tables (SQuAD1.1 text-davinci-002 is 89.01 in Table 22 and 78.56 in Table 4), with no explanation. \"WSC273\" is listed with 570 samples.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/ye-2023-comprehensive-capability-analysis-gpt-3.pdf"
+ "type": "empirical",
+ "question": "How do the NLU capabilities and robustness of GPT-3 and GPT-3.5 series models change as OpenAI's training strategies evolve?",
+ "hypothesis": null,
+ "contributions": [
+  "Zero-shot, 1-shot and 3-shot evaluation of six GPT-series models on 9 NLU tasks / 21 datasets plus TextFlint perturbations",
+  "Analysis of davinci's instruction comprehension and in-context learning via analyzability rate",
+  "Findings on the effect of SFT, code training, FeedME and PPO/RLHF on NLU performance"
+ ],
+ "method": {
+  "summary": "Six OpenAI API models were prompted zero-, 1- and 3-shot with three hand-picked prompts per dataset on 21 NLU datasets and their TextFlint-transformed versions. Scores are reported as mean ± an undefined spread; davinci additionally gets an analyzability-rate analysis. Test-set size differs by model.",
+  "task": "Natural language understanding: ABSA, MRC, NER (English and Chinese), NLI, POS (English and Chinese), RE, sentiment classification, semantic matching, Winograd",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "21 datasets (SemEval2014-Laptop 331, -Restaurant 492; SQuAD1.1 9868, SQuAD2.0 11491; ACE2005 1312, CoNLL2003 3453, OntoNotes v5 4019, HONOR 1120, MSRANER 4365, OntoNote4NER 4346; MNLI-m 9815, MNLI-mm 9832, SNLI 10000; Daily547 546, WSJ 5461, PKU-SEGPOS 5204; Tacred 15509; IMDB 11257; MRPC 1724, QQP 5000; WSC273 570)",
+    "role": "eval",
+    "size": "Table 1 sample counts",
+    "split": "not stated which split; models other than text-davinci-003 and gpt-3.5-turbo use a 100 or 1000 sample subset",
+    "source": "16 of 21 collated by TextFlint; robustness variants from TextFlint",
+    "preprocessing": "Labels for RE, NER, POS mapped to phrases in the prompt"
+   }
+  ],
+  "models": [
+   {
+    "name": "davinci",
+    "role": "evaluated",
+    "params": "175 billion",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "eval_samples": "100"
+    }
+   },
+   {
+    "name": "text-davinci-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "davinci (FeedME)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "eval_samples": "1000"
+    }
+   },
+   {
+    "name": "code-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "eval_samples": "100"
+    }
+   },
+   {
+    "name": "text-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "code-davinci-002 (FeedME)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "eval_samples": "1000"
+    }
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "text-davinci-002 (PPO)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "eval_samples": "entire dataset"
+    }
+   },
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "eval_samples": "entire dataset",
+     "note": "paper speculates a smaller model than text-davinci-003; not stated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Three prompts per dataset per shot setting; run count and meaning of the ± not stated. davinci/code-davinci-002 on 100 items, text-davinci-001/002 on 1000, text-davinci-003/gpt-3.5-turbo on the full set (datasets under 1000 used in full); how the subsets were drawn is not stated",
+   "prompting": "Zero-shot, 1-shot and 3-shot; three prompts per dataset taken from promptsource or hand-written ('the three best-performing prompts per dataset'); prompts end with 'Answer:' for most tasks; 3-shot adds examples to the 1-shot prompt; selection of few-shot examples not described",
+   "retrieval": null,
+   "parameters": {
+    "analyzable_rate_threshold": "not given; '-' marks non-analyzable rate above it (Table 22)",
+    "shots": "0, 1, 3"
+   },
+   "other": {
+    "api": "OpenAI official API",
+    "fewshot_example": "one fixed example per dataset, reused across the three prompts and, for 3-shot, extended (3-shot prompts are not printed); 1-shot example labels: MNLI-m entailment, MNLI-mm contradiction, SNLI neutral, MRPC Yes, QQP No, WSC yes, IMDB positive",
+    "format_instruction": "For NER, Chinese NER and POS the zero-shot prompts state the output format, while the 1-shot prompts drop that sentence and rely on the example",
+    "prompt_defects": "WSJ 1-shot example labels 'past particle verb' and 'preposition or conjuction', which are not in the candidate list; Tacred options list repeats 'person and state or province of birth'; Table 27 is titled SQuAD1.0 for SQuAD1.1 data"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "ABSA, NLI, POS (English), SC, SM, WSC",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "micro-F1 / F1",
+     "definition": "NER, RE, MRC, PKU-SEGPOS",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact Match",
+     "definition": "MRC",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Analyzable rate",
+     "definition": "share of davinci outputs that can be parsed to an answer; non-analyzable counted wrong",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Comparison among the six models; no fine-tuned baselines"
+   ],
+   "protocol": "Original vs TextFlint-transformed ('ori' vs 'trans') subsets for robustness; mean ± undefined spread; no significance test; 'ori' column compared to 'trans' column for robustness"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "TextFlint-based transformed data; datasets public; release not stated"
+  },
+  "prompts": [
+   {
+    "purpose": "MRPC zero-shot prompt 1",
+    "text": "Does the sentence ‘{sentence1}’ paraphrase (that is, mean the same thing as) this sentence? ‘{sentence2}’ // Options: yes, no // Answer:",
+    "where": "Appendix B, Table 43"
+   },
+   {
+    "purpose": "SemEval2014-Laptop zero-shot prompt 1",
+    "text": "Analyze the sentiment towards the ‘{aspect}’ of ‘{sentence}’ and determine if it is positive, negative, or neutral. // Answer:",
+    "where": "Appendix B, Table 25"
+   },
+   {
+    "purpose": "SQuAD zero-shot prompt 3",
+    "text": "Passage: {context} // Question: {question} // Answer:",
+    "where": "Appendix B, Table 27"
+   },
+   {
+    "purpose": "NER zero-shot prompt (ACE 2005), prompt 1 of 3",
+    "text": "Please identify Organization, Person, Geo-political Entity, Facility, Location, Vehicle and Weapon Entity from the given text, output using the format as “Entity: Organization: None Person: Word1 Geo-political Entity: None Facility: Word2 Location: Word3, Word4 Vehicle: None Weapon: None” // Text: {text} // Entity:",
+    "where": "Appendix B, Table 29"
+   },
+   {
+    "purpose": "NER 1-shot prompt (ACE 2005): the output-format sentence is dropped and one fixed example is used",
+    "text": "Please identify Organization, Person, Geo-political Entity, Facility, Location, Vehicle and Weapon Entity from the given text // Text: thank you , paula . // Entity: Organization: None Person: you, paula Geo-political Entity: None Facility: None Location: None Vehicle: None Weapon: None // Text: {text} // Entity:",
+    "where": "Appendix B, Table 29"
+   },
+   {
+    "purpose": "MNLI-m zero-shot prompt 1",
+    "text": "‘{premise}’ Based on the previous passage, is it entailment or neutral or contradiction that ‘{hypothesis}’ // Answer:",
+    "where": "Appendix B, Table 36"
+   },
+   {
+    "purpose": "IMDB zero-shot prompt 1",
+    "text": "The sentiment expressed for the movie is positive or negative? // ‘{sentence}’ // options:positive,negative // Answer:",
+    "where": "Appendix B, Table 42"
+   },
+   {
+    "purpose": "QQP zero-shot prompt 1",
+    "text": "Can an answer to ‘{question1}’ also be used to answer ‘{question2}’? // Answer:",
+    "where": "Appendix B, Table 44"
+   },
+   {
+    "purpose": "WSC273 zero-shot prompt 1",
+    "text": "‘{text}’ // In the previous sentences, does ‘{target 2}’ refer to ‘{target 1}’? // Options: yes, no // Answer:",
+    "where": "Appendix B, Table 45"
+   },
+   {
+    "purpose": "Tacred zero-shot prompt 1",
+    "text": "‘{token}’ // In above text, what is the relationship between ‘{subj}’ and ‘{obj}’? // Options: ‘{options}’ // Answer:",
+    "where": "Appendix B, Table 35"
+   },
+   {
+    "purpose": "WSJ POS zero-shot prompt 1",
+    "text": "Do part-of-speech task for the given text using the categories in candidate list, output using the format as “Word1¥Categary¥¥Word2¥Category¥¥Word3¥Category” // Candidate list: {candidate} // Text: {text} // Result:",
+    "where": "Appendix B, Table 39"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "when evaluating davinci and code-davinci-002, we test on 100 samples, while for text-davinci-001 and text-davinci-002 on 1000 samples",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adding the word 'Answer' at the end of a zero-shot MRPC prompt took davinci's analyzable rate from 0 to 100%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "analyzability rate",
+   "value": "100.00",
+   "unit": "% analyzable",
+   "baseline_value": "0.00",
+   "n": null,
+   "setup": "davinci, zero-shot, MRPC, 100 samples (inferred from the 100-sample rule for davinci); prompt with vs without trailing 'Answer'",
+   "note": null,
+   "where": "Appendix A.3, Table 24; Fig 5",
+   "table": "Table 24, row MRPC, columns w/o 'Answer' 0.00 and w/ 'Answer' 100.00"
+  },
+  {
+   "claim": "In 3-shot, davinci's analyzable rate on WSJ, PKU-SEGPOS and ACE 2005 rose from near 0 to 90-100%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "analyzability rate",
+   "value": "90.00",
+   "unit": "% analyzable",
+   "baseline_value": "0.00",
+   "n": null,
+   "setup": "davinci, WSJ 3-shot vs 0-shot (0.00); also PKU-SEGPOS 0.00 -> 100.00, ACE 2005 2.00 -> 100.00",
+   "note": null,
+   "where": "Appendix A.2, Table 23",
+   "table": "Table 23, row WSJ, columns 0-shot analyzable rate 0.00, 3-shot analyzable rate 90.00"
+  },
+  {
+   "claim": "davinci's 3-shot score on WSJ POS tagging is 47.12 against 0.00 zero-shot, with non-analyzable outputs counted as wrong.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "47.12",
+   "unit": "evaluation result (accuracy, per Table 1 measure)",
+   "baseline_value": "0.00",
+   "n": null,
+   "setup": "davinci, WSJ, 3-shot, 100 samples; non-analyzable counted wrong",
+   "note": null,
+   "where": "Table 23",
+   "table": "Table 23, row WSJ, 3-shot Evaluation results 47.12"
+  },
+  {
+   "claim": "In zero-shot, davinci on MNLI-m reaches only 30.00 despite 100% analyzability (near three-class chance), and 3-shot gives 34.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "30.00",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "davinci, MNLI-m, zero-shot, 100 samples",
+   "note": "The paper's prose calls davinci's MNLI performance 'good' (Sec 4.1.1) while Table 23 shows 30.00 and 34.00.",
+   "where": "Table 23",
+   "table": "Table 23, row MNLI-m, 0-shot Evaluation results 30.00, 3-shot 34.00"
+  },
+  {
+   "claim": "Zero-shot MNLI-m: gpt-3.5-turbo 67.87 vs text-davinci-003 63.66 vs code-davinci-002 48.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.87",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNLI-m, zero-shot, each model on its own sample size (100 / 1000 / full set)",
+   "note": null,
+   "where": "Appendix A.1, Table 22",
+   "table": "Table 22, row MNLI-m, column gpt-3.5-turbo 67.87 (text-davinci-003 63.66, code-davinci-002 48.00)"
+  },
+  {
+   "claim": "On POS tagging gpt-3.5-turbo and text-davinci-001 fail to produce parseable output on WSJ and Daily547, and text-davinci-003 is best (WSJ 88.45).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.45",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WSJ, zero-shot, text-davinci-003; '-' for gpt-3.5-turbo and text-davinci-001",
+   "note": null,
+   "where": "Table 22; Sec 4.2.5",
+   "quote": "text-davinci-001 and gpt-3.5-turbo\nfail to produce output in the expected format",
+   "table": "Table 22, row WSJ, column text-davinci-003 88.45"
+  },
+  {
+   "claim": "gpt-3.5-turbo scores lowest on zero-shot SQuAD1.1 F1 among the five non-davinci models, partly because chat-style full-sentence answers are penalised by the metric.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "55.26",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD1.1, AddSentDiverse 'ori' subset (9292 samples nominal), zero-shot; 100 / 1000 / full-set sample sizes differ by model",
+   "note": null,
+   "where": "Table 4; Sec 4.2.2",
+   "quote": "Although these sentences often contain the correct answer, the limitations of\nautomatic evaluation metrics result in the model scoring lower in the zero-shot scenario.",
+   "table": "Table 4, row 0-shot gpt-3.5-turbo, AddSentDiverse ori 55.26±10.08 (code-davinci-002 83.58±2.72, text-davinci-003 66.84±9.79)"
+  },
+  {
+   "claim": "Table 22 and the prose disagree on SQuAD1.1 zero-shot: the table gives text-davinci-002 89.01 and text-davinci-001 86.17 above code-davinci-002 83.44, while the text says code-davinci-002 is best by far.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "89.01",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD1.1, zero-shot, text-davinci-002",
+   "note": "Text: 'code-davinci-002 shows much better performance than the other four models'. Table 4 ori columns agree with the text (83.58 vs 78.56 and 73.38), Table 22 does not. Table 22 differs from the per-dataset tables elsewhere too (WSJ text-davinci-003 88.45 vs 75.02 in Table 15; MRPC code-davinci-002 73.51 vs 70.00 in Table 19); how Table 22 is derived is not stated.",
+   "where": "Table 22 vs Sec 4.2.2",
+   "table": "Table 22, row SQuAD1.1, column text-davinci-002 89.01 (code-davinci-002 83.44)"
+  },
+  {
+   "claim": "MRPC zero-shot, code-davinci-002, SwapAnt original: 26.00±45.03, a spread wider than the mean.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "26.00±45.03",
+   "unit": "accuracy % ± undefined spread",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MRPC SwapAnt 'ori' subset (158 samples), zero-shot, code-davinci-002 (100-sample evaluation)",
+   "note": "The ± is never defined. 45.03 is the sample standard deviation (n-1) of 0, 0 and 78, so the mean 26.00 fits three prompt values; the same holds for QQP code-davinci-002 zero-shot SwapAnt ori 32.14±55.67 (Table 20), which fits 0, 0 and 96.43. This is a reviewer inference, not stated. The cell sits under the SwapAnt column group headed '# 158 samples' (NumWord 402, all 1724); code-davinci-002 was run on 100 samples, so 78.00 is probably 78 of 100.",
+   "where": "Table 19",
+   "table": "Table 19, row 0-shot code-davinci-002, SwapAnt ori 26.00±45.03"
+  },
+  {
+   "claim": "SwapAnt causes up to a 61.64% drop in average performance on semantic matching.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "61.64",
+   "unit": "% drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MRPC/QQP semantic matching, zero-shot",
+   "note": "Reviewer arithmetic: 61.64 equals the text-davinci-001 QQP zero-shot SwapAnt drop in points, 75.65 (ori) minus 14.01 (trans), Table 20. The paper does not name the cell, and says 'average performance'.",
+   "where": "Sec 4.2.8",
+   "quote": "SwapAnt results in up to a 61.64% drop in average\nperformance"
+  },
+  {
+   "claim": "The authors conclude that GPT-series evolution does not give universal improvement across NLU tasks and that robustness did not improve notably.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six models, 21 datasets, zero/1/3-shot",
+   "note": null,
+   "where": "Sec 5 Conclusion",
+   "quote": "Our findings reveal that the evolution of GPT series models does not necessarily lead to universal improvements across all NLU tasks"
+  },
+  {
+   "claim": "On IMDB most models do worse in few-shot than zero-shot; authors speculate long inputs hurt.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDB, 1/3-shot vs zero-shot",
+   "note": "Speculative explanation, not tested.",
+   "where": "Sec 4.2.7",
+   "quote": "In the few-shot scenario, most models perform worse than the zero-shot setting."
+  },
+  {
+   "claim": "Full evaluation was not run for davinci/code-davinci-002 (100 samples) and text-davinci-001/002 (1000 samples) because of API rate limits.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100",
+   "unit": null,
+   "baseline_value": null,
+   "n": "100 / 1000 / full",
+   "setup": "Sample sizes per model",
+   "note": null,
+   "where": "Sec 3.2; Limitations",
+   "quote": "we test on 100 samples, while for\ntext-davinci-001 and text-davinci-002 on 1000 samples"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "58.82",
+   "unit": "F1",
+   "baseline_value": "78.56",
+   "n": null,
+   "note": "Unexplained in the text; the large ± suggests one of the three prompts failed.",
+   "claim": "Text-davinci-002 collapses on SQuAD1.1 in 1-shot (F1 58.82±19.61) compared with 0-shot and 3-shot, with a spread of about 19 points.",
+   "setup": "SQuAD1.1 AddSentDiverse ori, text-davinci-002, 1-shot; 0-shot 78.56, 3-shot 82.72",
+   "table": "Table 4, row 1-shot text-davinci-002, AddSentDiverse ori 58.82±19.61",
+   "where": "Table 4"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "86.55",
+   "unit": "F1",
+   "baseline_value": "89.64",
+   "n": null,
+   "note": "On SQuAD2.0 Table 6 the 3-shot gap is code-davinci-002 92.90 vs text-davinci-003 88.88, about 4 points.",
+   "claim": "The prose says 3-shot code-davinci-002 beats the other four models by ten to twenty points on MRC, but Table 4 has text-davinci-003 ahead (89.64 vs 86.55 F1) on SQuAD1.1.",
+   "setup": "SQuAD1.1 AddSentDiverse ori, 3-shot, code-davinci-002",
+   "table": "Table 4, row 3-shot code-davinci-002, AddSentDiverse ori 86.55±0.41; row 3-shot text-davinci-003 89.64±0.40",
+   "where": "Table 4 vs Sec 4.2.2",
+   "quote": "three-shot scenario where it outperforms the other four models by ten to twenty points"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "86.55",
+   "unit": "EM, as printed",
+   "baseline_value": null,
+   "n": null,
+   "note": "EM cannot equal F1 in every cell; the 1-shot EM row (77.82±15.81) differs.",
+   "claim": "Table 5 (SQuAD1.1 Exact Match) 3-shot code-davinci-002 row repeats Table 4's F1 row cell for cell (86.55±0.41, 67.65±3.27 ...), which looks like a copy error.",
+   "setup": "SQuAD1.1 AddSentDiverse ori, 3-shot, code-davinci-002",
+   "table": "Table 5, row 3-shot code-davinci-002, AddSentDiverse ori 86.55±0.41",
+   "where": "Tables 4 and 5"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "80.31",
+   "unit": "F1",
+   "baseline_value": "55.26",
+   "n": null,
+   "note": null,
+   "claim": "gpt-3.5-turbo's SQuAD1.1 F1 rises from 55.26 zero-shot to 80.31 one-shot once examples show short answers.",
+   "setup": "SQuAD1.1 AddSentDiverse ori, gpt-3.5-turbo, 1-shot",
+   "table": "Table 4, row 1-shot gpt-3.5-turbo, AddSentDiverse ori 80.31±2.37",
+   "where": "Table 4; Sec 4.2.2"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.33",
+   "unit": "accuracy %",
+   "baseline_value": "80.07",
+   "n": null,
+   "note": "Under the original column code-davinci-002 beats text-davinci-003 (76.33 vs 70.11) but not gpt-3.5-turbo.",
+   "claim": "The prose says code-davinci-002 beats gpt-3.5-turbo and text-davinci-003 on MNLI-m SwapAnt zero-shot; Table 12 shows it only on the transformed column against gpt-3.5-turbo (51.33 vs 44.06), and it is behind text-davinci-003 there (78.96); on the original column it is behind both.",
+   "setup": "MNLI-m SwapAnt (199 samples), zero-shot, original column",
+   "table": "Table 12, row 0-shot code-davinci-002, SwapAnt ori 76.33±19.40; gpt-3.5-turbo 80.07±9.73; text-davinci-003 70.11±1.57",
+   "where": "Table 12 vs Sec 4.2.4",
+   "quote": "where the performance of code-davinci-\n002 even exceeds that of gpt-3.5-turbo and text-davinci-003"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "22.37",
+   "unit": "accuracy %",
+   "baseline_value": "51.62",
+   "n": null,
+   "note": null,
+   "claim": "gpt-3.5-turbo collapses on MNLI-m NumWord zero-shot (transformed 22.37) against 51.62 for text-davinci-003.",
+   "setup": "MNLI-m NumWord (745 samples), zero-shot, transformed column",
+   "table": "Table 12, row 0-shot gpt-3.5-turbo, NumWord trans 22.37±6.82",
+   "where": "Table 12"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-F1",
+   "value": "54.54",
+   "unit": "micro-F1",
+   "baseline_value": "72.83",
+   "n": null,
+   "note": null,
+   "claim": "Code-davinci-002 on CoNLL2003 scores 72.83 1-shot but 54.54 3-shot, which the authors note.",
+   "setup": "CoNLL2003 ConcatSent ori, code-davinci-002, 3-shot vs 1-shot",
+   "table": "Table 9, row 3-shot code-davinci-002, ConcatSent ori 54.54±2.07; 1-shot 72.83±5.37",
+   "where": "Table 9; Sec 4.2.3"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-F1",
+   "value": "15.38",
+   "unit": "micro-F1",
+   "baseline_value": null,
+   "n": null,
+   "note": null,
+   "claim": "OntoNotes v5 code-davinci-002 3-shot scores read 15.38±0.00 and 71.43±0.00, repeated identical values that look like fractions of a very small number of parsed entities (a reviewer's inference).",
+   "setup": "OntoNotes v5, code-davinci-002, 3-shot, ConcatSent ori",
+   "table": "Table 10, row 3-shot code-davinci-002, ConcatSent ori 15.38±0.00; OOV trans 71.43±0.00",
+   "where": "Table 10"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "70.00",
+   "unit": "accuracy %",
+   "baseline_value": "70.17",
+   "n": null,
+   "note": "Poor on QQP (37.67, Table 20) but not on MRPC.",
+   "claim": "Code-davinci-002 zero-shot on the full MRPC set scores 70.00, equal to text-davinci-003's 70.17, although the prose lists it as performing poorly on semantic matching.",
+   "setup": "MRPC 'all' (1724 samples) ori, zero-shot, code-davinci-002",
+   "table": "Table 19, row 0-shot code-davinci-002, all ori 70.00±3.07; text-davinci-003 70.17±4.51",
+   "where": "Table 19 vs Sec 4.2.8",
+   "quote": "while code-davinci-002 and text-davinci-001 perform pooly"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "84.67",
+   "unit": "accuracy %",
+   "baseline_value": "88.55",
+   "n": null,
+   "note": null,
+   "claim": "On IMDB 3-shot, code-davinci-002 (84.67) is below gpt-3.5-turbo (88.55), contradicting the prose that it does better than the other models overall.",
+   "setup": "IMDB AddSum-Movie ori, 3-shot, code-davinci-002",
+   "table": "Table 18, row 3-shot code-davinci-002, AddSum-Movie ori 84.67±0.58; gpt-3.5-turbo 88.55±0.62",
+   "where": "Table 18 vs Sec 4.2.7",
+   "quote": "code-davinci-002 and text-davinci-001\nperform better than other models overall"
+  },
+  {
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "66.05",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "note": null,
+   "claim": "WSC273 is near chance for code-davinci-002 zero-shot (50.67) and gpt-3.5-turbo is best at 66.05.",
+   "setup": "WSC273 'all' (570 samples), zero-shot, gpt-3.5-turbo",
+   "table": "Table 21, row 0-shot gpt-3.5-turbo, all 66.05±2.31; code-davinci-002 50.67±0.58",
+   "where": "Table 21"
+  }
+ ],
+ "limits": [
+  "No run count, decoding settings, temperature or sampling of subsets is stated; the ± is not defined.",
+  "Sample sizes differ by model (100 / 1000 / full set), so cross-model comparisons mix sample sizes.",
+  "Analyzability threshold never stated; non-analyzable models drop out as '-'.",
+  "GPT-4 not tested (API not available); authors concede reduced samples due to API rate limits.",
+  "Explanations (RLHF, smaller model, SFT task mix) are speculation; OpenAI model details undocumented.",
+  "Models studied are deprecated API models.",
+  "Table 22 (the zero-shot summary in Figure 2) does not match the per-dataset tables and its derivation is not stated.",
+  "Several prose claims are contradicted by the tables (MRC 3-shot margin, MNLI-m SwapAnt, MRPC code-davinci-002, IMDB 3-shot).",
+  "The 3-shot prompts and their examples are not printed; only the 1-shot form is in Appendix B."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "analyzable rate",
+   "definition": "Proportion of model outputs that can be parsed as an answer for the task; non-analyzable results are counted as wrong for davinci",
+   "where": "Sec 4.1.1; Table 23"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "TextFlint",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "robustness transformations and 16 of 21 datasets",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "evaluates",
+   "note": "text-davinci-001/002, alignment tax",
+   "quote": null
+  },
+  {
+   "work": "Qin et al., ChatGPT zero-shot",
+   "year": 2023,
+   "arxiv": "2302.06476",
+   "relation": "related",
+   "note": "prior ChatGPT capability analysis",
+   "quote": null
+  },
+  {
+   "work": "promptsource",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of prompts",
+   "quote": null
+  },
+  {
+   "work": "Brown et al. GPT-3",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "davinci",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2021 Codex",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "code-davinci-002",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The performance of different models in zero-shot scenario.",
+   "page": 3,
+   "why": "Per-dataset bar chart of all models; missing bars show non-analyzable cases"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "The analyzability rates of davinci’s answer results in the zero-shot scenario.",
+   "page": 8,
+   "why": "Shows prompt-ending 'Answer' effect"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 22 SQuAD1.1 zero-shot values disagree with the prose and Table 4.",
+  "Table 24 SemEval2014-Laptop w/ 'Answer' 87.00 vs Table 23 zero-shot analyzable rate 86.00.",
+  "Section 4.1.2 says analyzability drops on most datasets, but Table 24 IMDB (95 -> 94) and Restaurant (14 -> 13) show no gain.",
+  "PDF text extraction splits tables across pages; Table 22 rows are interleaved with page numbers.",
+  "No embedded instructions found.",
+  "Table 5 3-shot code-davinci-002 row duplicates Table 4's row cell for cell.",
+  "Table 22 values differ from the per-dataset tables, for example WSJ text-davinci-003 88.45 vs 75.02 in Table 15.",
+  "Prose claims contradicted by tables: Sec 4.2.2 (ten to twenty points), 4.2.4 (SwapAnt), 4.2.7 (IMDB few-shot), 4.2.8 (MRPC)."
+ ]
 }

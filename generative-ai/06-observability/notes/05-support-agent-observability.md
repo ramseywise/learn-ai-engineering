@@ -75,20 +75,7 @@ The gaps are honest ones. Evaluations go in as scores rather than spans, which w
 
 ### Two-layer evaluation strategy
 
-Logging lets you evaluate, and evaluation of production traffic has two layers.
-
-1. **Manual sampling and labelling.** Based on rules: sample error cases, long dialogues and negative user feedback. People judge execution quality and reasons for failure, primarily to identify failure patterns and provide calibration data for the second layer.
-2. **LLM as judge.** Full coverage of a wider range of traces, using the labelling results from layer 1 as calibration. Running only layer 2 makes scoring criteria prone to drift, and relying solely on layer 1 doesn't cover real-world traffic at scale. Both layers must be used together.
-
-```mermaid
-flowchart LR
-    P[Production traces] --> S[Rule-based sample]
-    P --> J[Judge pipeline, all turns]
-    S --> H[People label and explain failures]
-    H -->|calibration data| J
-    J -->|disagreements, critical findings| H
-    H --> G[Regression fixtures]
-```
+Logging lets you evaluate, and evaluation of production traffic has two layers: rule-based human review that finds failure patterns and calibrates, and a judge that covers all traffic. Both are needed together, because a judge alone drifts and people alone don't scale. [GA 08 note 11](../../08-eval/notes/11-production-and-the-maturity-ladder.md#two-layer-online-review) owns the full account.
 
 Anthropic's agent evals guide makes the same case for combining automated checks and human review, and for reading transcripts ([Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents), Anthropic, 2026-01, engineering blog). The question for a sample is how much it concentrates on failures, since a purely random one spends a reviewer's hour mostly on turns that went fine.
 

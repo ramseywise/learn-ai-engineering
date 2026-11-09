@@ -31,7 +31,7 @@ cleaned: 2026-11-01
 
 > The tasks you pick and the environment they run in decide what an agent eval can see. Add the suites your kind of agent needs, test conversations and sessions as wholes, and reset, isolate and audit the environment before blaming the agent.
 
-[06](06-evaluating-agents.md) and [06b](06b-components-trials-and-cost.md) graded runs: end state, path, components, repeated trials and cost. This chapter is about what the runs are run on. Each trial should move through the same isolated lifecycle, so that one trial's side effects never become the next trial's failure:
+Notes [06](06-evaluating-agents.md) and [06b](06b-components-trials-and-cost.md) graded runs: end state, path, components, repeated trials and cost. This chapter is about what the runs are run on. Each trial should move through the same isolated lifecycle, so that one trial's side effects never become the next trial's failure, as this loop shows.
 
 ```text
  per trial, k times per task

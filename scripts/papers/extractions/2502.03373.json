@@ -1,0 +1,698 @@
+{
+ "schema": 1,
+ "key": "2502.03373",
+ "pdf": "generative-ai/05-RL/sources/yeo-2025-demystifying-long-chain-thought-reasoning.pdf",
+ "bib": {
+  "title": "Demystifying Long Chain-of-Thought Reasoning in LLMs",
+  "authors": [
+   "Edward Yeo",
+   "Yuxuan Tong",
+   "Morry Niu",
+   "Graham Neubig",
+   "Xiang Yue"
+  ],
+  "first_author": "Yeo",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2502.03373",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 100059,
+  "chars_total": 100059,
+  "engine": "pymupdf",
+  "skipped": "References list skimmed only (lines ~1482-1750)."
+ },
+ "type": "empirical",
+ "question": "Under what conditions do long chain-of-thought reasoning behaviours emerge and become stable in LLMs trained with SFT and RL?",
+ "hypothesis": "Long CoT SFT gives a higher ceiling and better RL initialization than short CoT, and reward shaping plus verifiable-signal scaling are needed to stabilize and extend RL-driven CoT growth; base models already contain latent skills such as error validation.",
+ "contributions": [
+  "SFT scaling and RL-initialization comparison of long vs short CoT",
+  "Cosine length-scaling reward with N-gram repetition penalty and per-reward discount factors",
+  "Scaling verifiable reward with noisy web-extracted (WebInstruct) data via filtering and rule-based verifier",
+  "Analysis of RL from base model and pretraining-data origins of long CoT behaviours"
+ ],
+ "method": {
+  "summary": "Llama-3.1-8B and Qwen2.5-Math-7B are SFT-ed on rejection-sampled long CoT distilled from QwQ-32B-Preview (or short CoT from Qwen2.5-Math-72B-Instruct), then trained with PPO in OpenRLHF using a rule-based outcome verifier. Reward variants (classic, cosine length-scaling, repetition penalty, discount factors), context sizes, noisy WebInstruct data and direct RL from base are ablated and evaluated on MATH-500, AIME 2024, TheoremQA and MMLU-Pro-1k.",
+  "task": "RL and SFT for long chain-of-thought mathematical and STEM reasoning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MATH train prompts",
+    "role": "train",
+    "size": "7,500 prompts",
+    "split": "full train split (SFT and RL prompt set)",
+    "source": "Hendrycks et al., 2021",
+    "preprocessing": "Rejection sampling: N candidates per prompt (N in {32,64,128,192,256} long; {32,64,128,256} short), keep correct"
+   },
+   {
+    "name": "WebInstruct-462k",
+    "role": "train",
+    "size": "462k prompts (deduplicated subset of WebInstruct, MinHash)",
+    "split": "Filtered: ~189k responses over 115k prompts; RL uses 30k sampled prompts",
+    "source": "Yue et al., 2024b",
+    "preprocessing": "Short-form answer extraction by Llama-3.1-8B-Instruct, rejection sampling with 2 QwQ-32B-Preview responses per prompt; unfiltered SFT uses one unfiltered response"
+   },
+   {
+    "name": "MATH level 3-5 (~8k)",
+    "role": "train",
+    "size": "approximately 8k questions",
+    "split": "direct RL from Qwen2.5-Math-7B",
+    "source": "Zeng et al. (2025) setup",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH-500",
+    "role": "eval",
+    "size": "500 problems",
+    "split": "i.i.d. subset of MATH test",
+    "source": "Hendrycks et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "AIME 2024",
+    "role": "eval",
+    "size": "30 problems",
+    "split": "all",
+    "source": "AIME 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "TheoremQA",
+    "role": "eval",
+    "size": "800 samples",
+    "split": "all",
+    "source": "Chen et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU-Pro-1k",
+    "role": "eval",
+    "size": "1,000 samples",
+    "split": "i.i.d. subset of MMLU-Pro test",
+    "source": "Wang et al., 2024a",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-3.1-8B",
+    "role": "base",
+    "params": "8B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "RL: prompt 2048 + gen 14336 (16K); SFT context length 128K",
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-Math-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "pretraining 4096; RoPE theta x10 for long CoT",
+    "other": {}
+   },
+   {
+    "name": "QwQ-32B-Preview",
+    "role": "teacher",
+    "params": "32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "distill": "t=1.0, top-p 0.95, max 8192 tokens"
+    }
+   },
+   {
+    "name": "Qwen2.5-Math-72B-Instruct",
+    "role": "teacher",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096",
+    "other": {
+     "distill": "t=0.7, top-p 0.95, max 4096 tokens"
+    }
+   },
+   {
+    "name": "Qwen2.5-7B-Instruct",
+    "role": "judge",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "model-based verifier given reference solution and last 20 lines of CoT"
+    }
+   },
+   {
+    "name": "Qwen2.5-Math-7B-Instruct",
+    "role": "judge",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Sec 5.2 text names it as the model-based verifier; App E.6 names Qwen2.5-7B-Instruct (inconsistent)"
+    }
+   },
+   {
+    "name": "o1-mini-0912 and Qwen2.5-72B-Instruct",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Action Prompting construction of long CoT (o1-mini for reflection)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "SFT on rejection-sampled CoT; PPO with outcome reward (classic +1; cosine length reward with exceed penalty re=-10; N-gram repetition penalty P=-0.05, N=40); separate gamma per reward type in GAE, lambda=1",
+   "optimizer": null,
+   "lr": "SFT 5e-6; RL actor 5e-7, critic 4.5e-6 or 9e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "SFT 256; RL 512 prompts rollout and train batch (Qwen direct RL: 1024, train 128)",
+   "steps": "RL 100-160 iterations read from figures; episodes 4 or 8 or 16 or 20 per run",
+   "epochs": "SFT 2; RL 1 (some runs 2; Qwen SFT+RL 8)",
+   "tokens": "SFT scaling 0.1B to 10B tokens (read from Fig 1 axis); approx 200k SFT samples in Table 1",
+   "seq_len": "SFT 128K context; RL prompt 2048 + gen 14336",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL coefficient 0.01 (Table 7-15)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "evaluation averaged over at least 4 random seeds; training seeds not stated",
+   "other": {
+    "framework": "OpenRLHF with Flash Attention 2, ZeRO/DeepSpeed, micro batch size 1",
+    "cosine_reward": "r0c=+2, rLc=+1, r0w=-10, rLw=0, re=-10 (default); cosine CosFn(t,T,min,max)=min+0.5(max-min)(1+cos(t*pi/T))",
+    "GAE": "lambda=1, gamma=1 default; best gamma_c=1, gamma_p=0.99",
+    "samples_per_prompt": "4-16 by experiment",
+    "Qwen direct RL": "rewards correct +1, wrong -0.5, no answer -1; lambda 0.95; 20 episodes; gen 3072",
+    "REINFORCE++": "clip 0.1, lr 5e-7, KL 0.01"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; greedy (t=0) for direct RL from Qwen2.5-Math-7B",
+   "temperature": "0.7 default; 1.0 for QwQ distillation; 0 for base-model RL eval",
+   "top_p": "0.95",
+   "max_tokens": "16,384 default; 4096 for direct RL from base",
+   "samples": "Averaged over at least 4 seeds; 16 responses per prompt for AIME 2024",
+   "prompting": "zero-shot for base model",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "inference_engine": "vLLM; SymEval grader"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of answers judged correct by SymEval",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "keyword rate",
+     "definition": "frequency of reflection keywords wait, recheck, alternatively, retry, however",
+     "unit": "%",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Short CoT SFT",
+    "Constructed long CoT (Action Prompting)",
+    "Classic reward",
+    "Direct RL from base model",
+    "SFT initialization"
+   ],
+   "protocol": "At least 4 random seeds; 16 samples per AIME prompt; some RL experiments used an earlier version of the grader."
+  },
+  "availability": {
+   "code": "https://github.com/eddycmu/demystify-long-cot",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "model-based verifier",
+    "text": "Given the following last 20 lines of the LLM response to a math question and the reference solution to that question, evaluate if the LLM response is correct based only on the LLM's final answer. LLM response (last 20 lines): ... {out} Reference solution: {ref} Explain your thought process step-by-step before responding with 'Judgement: <correct/wrong/not_found>'",
+    "where": "App E.6"
+   },
+   {
+    "purpose": "short-form answer extraction",
+    "text": "Problem: {Problem} Solution: {Solution} Based on the Problem and the Solution, extract a short final answer that is easy to check.",
+    "where": "App E.7 (truncated; full template there)"
+   },
+   {
+    "purpose": "Action Prompting: clarify, decompose, solution step, reflection, answer templates",
+    "text": "You are a very talented mathematics professor.",
+    "where": "App E.8.2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Long CoT SFT keeps improving on MATH-500 past 70% accuracy at 3.5B SFT tokens; short CoT SFT saturates below 55%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH-500 accuracy",
+   "value": "over 70",
+   "unit": "%",
+   "baseline_value": "below 55 (short CoT)",
+   "n": null,
+   "setup": "Llama-3.1-8B SFT on MATH-prompt data distilled from QwQ-32B-Preview (long) vs Qwen2.5-Math-72B-Instruct (short); N in {32..256} candidates per prompt; MATH-500",
+   "note": null,
+   "where": "Sec 3.1, Fig 1",
+   "quote": "long CoT SFT achieves over 70% accuracy and has yet to plateau even at 3.5B tokens"
+  },
+  {
+   "claim": "RL on top of long CoT SFT adds over 3% absolute on MATH-500; short CoT SFT models gain almost nothing from RL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH-500 accuracy gain from RL",
+   "value": "over 3",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B, PPO, rule-based verifier on MATH train, 4 epochs, 4 samples per prompt, cosine reward with repetition penalty",
+   "note": null,
+   "where": "Sec 3.2, Fig 1",
+   "quote": "RL can improve long CoT SFT models by over 3% absolute"
+  },
+  {
+   "claim": "Emergent long CoT distilled from QwQ-32B-Preview beats constructed (Action Prompting) long CoT on MMLU-Pro-1k after SFT+RL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU-Pro-1k accuracy",
+   "value": "34.6",
+   "unit": "%",
+   "baseline_value": "19.2 (constructed, SFT+RL)",
+   "n": null,
+   "setup": "Llama-3.1-8B, ~200k SFT samples, MATH train prompts, same RL as Sec 3.2",
+   "note": "Emergent SFT+RL MATH-500 59.4, AIME 4.0, TheoremQA 25.2; constructed SFT+RL 52.4, 2.7, 21.0",
+   "where": "Table 1",
+   "table": "Table 1, row SFT+RL Emergent, column MMLU Pro-1k"
+  },
+  {
+   "claim": "Cosine Reward (length-aware, sparse, with exceed-length penalty) stabilizes CoT length growth and training accuracy versus the Classic +1 reward, which drove CoTs to the context limit and collapsed accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B and Qwen2.5-Math-7B long CoT SFT, PPO, 16K context, MATH train",
+   "note": "No single headline number; shown in curves only (Fig 4, 5).",
+   "where": "Sec 4.2, Fig 2, 4, 5",
+   "quote": "We found that the Cosine Reward significantly stabilized the length scaling behavior of the models under RL"
+  },
+  {
+   "claim": "If the correct-answer reward rises with length (r0c < rLc) CoT length grows explosively; lower correct-to-wrong reward ratio yields longer CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B, Rewards A/B/C in Fig 9 (A: r0c=0, rLc=10; B: 6/5; C: 10/9)",
+   "note": null,
+   "where": "Sec 4.3, Fig 9",
+   "quote": "if the reward for a correct answer increases with CoT length (rc 0 < rc L), the CoT length increases explosively"
+  },
+  {
+   "claim": "With a 16K context, performance was worse than with 8K at equal training samples, suggesting larger contexts need more RL compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B, cosine reward + repetition penalty, context 4K/8K/16K, same number of samples",
+   "note": null,
+   "where": "Sec 4.4, Fig 6",
+   "quote": "we observed performance was better under 8K than 16K"
+  },
+  {
+   "claim": "With enough compute the length reward is hacked by repetition and branching ('alternatively') falls; an N-gram repetition penalty (P=-0.05, N=40) mitigates it and gives shorter CoTs and better downstream accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B, cosine reward with and without repetition penalty, 8 episodes, 16 samples, 2 epochs",
+   "note": null,
+   "where": "Sec 4.5, Fig 5, 10, 12",
+   "quote": "Length rewards will be hacked with enough compute (Figure 10), but this can be mitigated using a repetition penalty."
+  },
+  {
+   "claim": "Best discount-factor setting is correctness gamma 1.0 and repetition gamma 0.99 (MATH-500 58.0 vs SFT init 50.4); too-low correctness discount hurts badly (0.99/0.99 gives 47.9 and AIME 0.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH-500 accuracy",
+   "value": "58.0",
+   "unit": "%",
+   "baseline_value": "50.4 (SFT init)",
+   "n": null,
+   "setup": "Llama-3.1-8B, cosine + repetition penalty, separate gamma per reward type via modified GAE, lambda=1",
+   "note": null,
+   "where": "Table 5, Sec 4.6",
+   "table": "Table 5, row correctness discount 1.000, repetition discount 0.99, column MATH-500"
+  },
+  {
+   "claim": "Mixing 50% MATH and 50% WebInstruct for long CoT SFT gives best average accuracy after SFT+RL (32.1) versus 100% MATH (30.8) and 100% WebIT (28.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy over 4 benchmarks",
+   "value": "32.1",
+   "unit": "%",
+   "baseline_value": "30.8",
+   "n": null,
+   "setup": "Llama-3.1-8B, QwQ-32B-Preview distillation, WebInstruct data one unfiltered response per prompt, RL on MATH",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 50% MATH + 50% WebIT SFT + RL, column AVG"
+  },
+  {
+   "claim": "Adding WebInstruct to SFT lifts MMLU-Pro-1k from 32.0 to 41.1 (100% WebIT SFT) but lowers MATH-500 to 41.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU-Pro-1k accuracy",
+   "value": "41.1",
+   "unit": "%",
+   "baseline_value": "32.0 (100% MATH)",
+   "n": null,
+   "setup": "Llama-3.1-8B long CoT SFT",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 100% WebIT SFT, column MMLU Pro-1k"
+  },
+  {
+   "claim": "RL with a rule-based verifier on prompts filtered for short-form answers is best overall from noisy web data (MMLU-Pro-1k 41.4, TheoremQA 28.1); rule-based on unfiltered data is worst (MATH-500 45.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU-Pro-1k accuracy",
+   "value": "41.4",
+   "unit": "%",
+   "baseline_value": "34.6 (MATH baseline)",
+   "n": null,
+   "setup": "Llama-3.1-8B SFT on ~189k responses over 115k prompts; RL 30k prompts, 4 responses each",
+   "note": "Filtered rule-based: MATH-500 48.6, AIME 3.3, TheoremQA 28.1. Unfiltered rule-based: 45.4, 3.3, 25.9, 35.1. Unfiltered model-based 47.9, 3.5, 26.2, 40.4.",
+   "where": "Table 3",
+   "table": "Table 3, row Filtered Rule-Based, column MMLU Pro-1k"
+  },
+  {
+   "claim": "RL directly from Qwen2.5-Math-7B raises accuracy but does not increase self-validation keyword rates (wait, recheck, alternatively, retry, however); recheck already exists in the base model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, PPO, ~8k MATH level 3-5 questions, greedy decoding, max 4096 tokens",
+   "note": null,
+   "where": "Sec 6.1, Fig 7",
+   "quote": "nor effectively incentivize other reflection patterns"
+  },
+  {
+   "claim": "Output length in direct RL from the base model never exceeds the base model's initial length, and rises as KL to the base drops, so length growth may reflect the KL penalty rather than learned long CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B direct RL, KL coefficient 0.01",
+   "note": null,
+   "where": "Sec 6.2, Fig 8",
+   "quote": "never exceeds the initial length of the base model"
+  },
+  {
+   "claim": "Qwen2.5-Math-7B: SFT+RL from long CoT SFT reaches average 49.7 versus 41.0 for direct RL from base and 47.3 for SFT alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average accuracy over 4 benchmarks",
+   "value": "49.7",
+   "unit": "%",
+   "baseline_value": "41.0 (direct RL)",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, QwQ-32B-Preview distillation 32 candidates per prompt, PPO with cosine reward + repetition penalty, 8 samples per prompt, 8 epochs, RoPE theta x10",
+   "note": "Text: surpasses RL from base by 8.7% on average and SFT init by 2.6%. Grader earlier-version caveat in App E.1.",
+   "where": "Table 4",
+   "table": "Table 4, row SFT + RL, column AVG"
+  },
+  {
+   "claim": "Direct RL from the base model lifts MATH-500 from 52.0 to 77.4 but MMLU-Pro-1k only from 2.4 to 19.7, versus 38.5 with long CoT SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH-500 accuracy",
+   "value": "77.4",
+   "unit": "%",
+   "baseline_value": "52.0 (base 0-shot)",
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, Table 4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row (Direct) RL, column MATH 500"
+  },
+  {
+   "claim": "REINFORCE++ was significantly less stable than PPO in this setup; authors caution it may be untuned.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-3.1-8B, classic reward, clip 0.1",
+   "note": null,
+   "where": "Sec 7.3, Fig 13",
+   "quote": "we found it to be significantly more unstable than PPO, leading to lower training accuracies (Figure 13)"
+  },
+  {
+   "claim": "Discussion-forum threads in OpenWebMath show long-CoT-like dialogue (branching, backtracking, correction), hypothesised as a source of long CoT in pretraining data.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MinHash search of OpenWebMath with GPT-4o-generated 'aha' phrases; Perplexity.ai web search",
+   "note": "Qualitative; no counts reported.",
+   "where": "Sec 6.5, App F",
+   "quote": "This raises the intriguing possibility that long CoT originated from human dialogue"
+  }
+ ],
+ "limits": [
+  "RL from Qwen2.5-Math-7B did not reproduce DeepSeek-R1-style emergent behaviour; authors suggest model size (7B) or overexposure to MATH-like data, untested (Sec 6.3, 7.1).",
+  "Could not scale to 32B because the GPU requirement was too large (Sec 7.2).",
+  "REINFORCE++ instability may be due to untuned setup, so no general claim (Sec 7.3).",
+  "Only outcome rewards and mainly 8B/7B models and mostly math prompts; some RL experiments used an earlier grader version (App E.1).",
+  "Results mostly read from curves, few headline numbers; no hardware or compute stated; pretraining-origin hypothesis (forums) is speculative and untested.",
+  "Interactions between repetition penalty strength, training accuracy and cosine reward left to future work (Sec 4.5)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "long chain-of-thought",
+   "definition": "an extended sequence of reasoning tokens that not only exhibits a larger-than-usual token length but also demonstrates more sophisticated behaviors such as branching, backtracking, error validation and correction",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Cosine Reward",
+   "definition": "length-dependent sparse reward: correct CoTs get higher reward than wrong, shorter correct get more than longer correct, shorter wrong get larger penalties than longer wrong",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RL from base producing long CoT; this paper tests replication with Qwen2.5-Math-7B",
+   "quote": null
+  },
+  {
+   "work": "Kimi k1.5",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "length penalty and RL for long CoT",
+   "quote": null
+  },
+  {
+   "work": "Zeng et al. (SimpleRL-Zoo setup)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "Direct RL on Qwen2.5-Math-7B with MATH level 3-5; finds different conclusions on length and emergence",
+   "quote": null
+  },
+  {
+   "work": "Proximal Policy Optimization",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "default RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "OpenRLHF",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "training framework",
+   "quote": null
+  },
+  {
+   "work": "REINFORCE++",
+   "year": 2025,
+   "arxiv": "2501.03262",
+   "relation": "baseline",
+   "note": "compared informally to PPO",
+   "quote": null
+  },
+  {
+   "work": "WebInstruct (Yue et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "noisy web-extracted QA",
+   "quote": null
+  },
+  {
+   "work": "Hendrycks et al. MATH",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "train and MATH-500 eval",
+   "quote": null
+  },
+  {
+   "work": "QwQ-32B-Preview",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "long CoT teacher",
+   "quote": null
+  },
+  {
+   "work": "Hou et al. Advancing language model reasoning through RL and inference scaling",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "context-window and length stability findings consistent",
+   "quote": null
+  },
+  {
+   "work": "Loshchilov and Hutter SGDR",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "cosine formula reused for reward",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Scaling curves of SFT and RL on Llama-3.1-8B with long CoTs and short CoTs.",
+   "page": 3,
+   "why": "Shows long CoT SFT ceiling and RL gains vs short CoT"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Both Llama3.1-8B and Qwen2.5-Math-7B trained under RL with the Classic Reward manifested emergent CoT length scaling past the context window size, resulting in a decline in MATH-500 accuracy.",
+   "page": 4,
+   "why": "Instability that motivates reward shaping"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The Classic and Cosine Reward functions.",
+   "page": 5,
+   "why": "Shape of the cosine reward vs length"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Dynamics of accuracies and reflection keyword rates during RL from the base model Qwen2.5-Math-7B.",
+   "page": 9,
+   "why": "Accuracy rises without keyword rates rising"
+  }
+ ],
+ "code": [
+  {
+   "where": "App C.1, eq 1",
+   "snippet": "CosFn(t, T, eta_min, eta_max) = eta_min + 1/2 (eta_max - eta_min)(1 + cos(t*pi/T))",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4.6",
+   "snippet": "A_t = sum_{l=0}^{L} sum_m gamma_m^l r_{m,t+l} - V(s_t)  (GAE with per-reward-type gamma, lambda=1)",
+   "verbatim": false
+  },
+  {
+   "where": "App C.2, Algorithm 1",
+   "snippet": "N-gram repetition penalty: slide an N-gram window over the sequence; if the n-gram was seen, set r[t]=P for all its positions",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Table 5 and equations is scrambled (column order inferred); Table 5 row labels reconstructed.",
+  "Sec 5.2 names Qwen2.5-Math-7B-Instruct as verifier, App E.6 names Qwen2.5-7B-Instruct.",
+  "Text prints '510%' for a 5-10% range (dash lost).",
+  "No embedded instructions found."
+ ]
+}

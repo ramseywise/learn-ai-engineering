@@ -1,0 +1,592 @@
+{
+ "schema": 1,
+ "key": "2302.12246",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/diao-2023-active-prompting-chain-thought-large.pdf",
+ "bib": {
+  "title": "Active Prompting with Chain-of-Thought for Large Language Models",
+  "authors": [
+   "Shizhe Diao",
+   "Pengcheng Wang",
+   "Yong Lin",
+   "Rui Pan",
+   "Xiang Liu",
+   "Tong Zhang"
+  ],
+  "first_author": "Diao",
+  "year": 2023,
+  "venue": "preprint (arXiv v5, Jul 2024; ACL-format)",
+  "arxiv": "2302.12246",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 88239,
+  "chars_total": 88239,
+  "engine": "pymupdf",
+  "skipped": "Exemplar tables 13-18 skimmed (prompt text only); reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "Which questions should be annotated with chain-of-thought rationales to make the best few-shot exemplars for a task?",
+ "hypothesis": "Annotating the questions on which the LLM is most uncertain (reducing model uncertainty) yields better exemplars than fixed or random ones.",
+ "contributions": [
+  "Propose to judiciously select the most helpful and informative questions for annotation, reducing the human engineering workload.",
+  "Introduce an effective uncertainty-based question selection strategy with several different uncertainty metrics.",
+  "Method surpasses competitive baselines by a large margin on multiple reasoning tasks."
+ ],
+ "method": {
+  "summary": "Active-Prompt: query the LLM k times per question from a pool of unlabeled training questions, score uncertainty (disagreement, entropy, variance, self-confidence), pick top-n most uncertain, have a human write CoT rationales, use them as few-shot exemplars with self-consistency at inference.",
+  "task": "Arithmetic, commonsense and symbolic reasoning via few-shot CoT prompting",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "both",
+    "size": "7473 train / 1319 test",
+    "split": "1000 randomly sampled train questions for uncertainty estimation; eval on test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "ASDiv",
+    "role": "eval",
+    "size": "2096 test",
+    "split": "test; exemplars transferred from GSM8K",
+    "source": "Miao et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "1000 test",
+    "split": "test; exemplars transferred from GSM8K",
+    "source": "Patel et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "both",
+    "size": "97467 train / 254 test",
+    "split": "1000 sampled train; test",
+    "source": "Ling et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "SingleEq",
+    "role": "eval",
+    "size": "508 test",
+    "split": "test; exemplars transferred from GSM8K",
+    "source": "Koncel-Kedziorski et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "CSQA",
+    "role": "both",
+    "size": "9741 train / 1221 dev",
+    "split": "eval on dev (no public test labels)",
+    "source": "Talmor et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "both",
+    "size": "2061 train / 1880 dev",
+    "split": "eval on dev",
+    "source": "Geva et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Letter (4)",
+    "role": "both",
+    "size": "1000 train / 1000 test",
+    "split": "OOD: prompts use two-letter names, test four",
+    "source": "Wei et al. 2022b",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "code-davinci-002",
+    "role": "evaluated",
+    "params": "not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": "main model"
+   },
+   {
+    "name": "text-davinci-002",
+    "role": "evaluated",
+    "params": "not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "evaluated",
+    "params": "not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo (0613 default; 0301 also)",
+    "role": "evaluated",
+    "params": "not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama2-70b-chat",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Uncertainty estimation: sample k answers per question; inference: self-consistency, most consistent answer",
+   "temperature": "T = 0.7 at inference",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "40 samples per test question for self-consistency (gpt-3.5-turbo and some rows run without SC); k = 10 samples per training question for uncertainty estimation; 1000 candidate questions; GSM8K pool resampled with seeds 1, 12, 42 (Table 7)",
+   "prompting": "Few-shot CoT with n exemplars as Wei et al.: 8 for GSM8K, ASDiv, SVAMP, SingleEq; 7 CSQA; 6 StrategyQA; 4 AQuA and Letter. Uncertainty-estimation stage uses Wei et al. exemplars (or zero-shot 'Let's think step by step'). Number of human-annotated questions = number of exemplars (8 for GSM8K); ASDiv/SVAMP/SingleEq reuse GSM8K annotations.",
+   "retrieval": null,
+   "parameters": {
+    "k": "10 (all main experiments; Fig 2 shows 1,5,10,15 on text-davinci-003, converges at 10)",
+    "n": "number of exemplars per dataset above",
+    "pool_size": "1000 (random subsample if train larger)",
+    "tie_break": "random among ties at max uncertainty; StrategyQA uses entropy / frequency for D",
+    "disagreement": "u = h/k, h unique answers",
+    "entropy": "argmax over questions of -sum P ln P with P answer frequency",
+    "variance": "answers normalized by sum of numbers in the question",
+    "self_confidence": "categorical {very confident, confident, not confident, wrong answer}"
+   },
+   "other": {
+    "annotator": "one co-author, no trial and error; annotator B uses GSM8K gold rationales"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "exact match accuracy",
+     "definition": "exact match of final answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CoT (Wei et al. 2022b)",
+    "Self-consistency (Wang et al. 2022)",
+    "Auto-CoT (Zhang et al. 2022b)",
+    "Random-CoT",
+    "Complex-CoT (Fu et al. 2022)"
+   ],
+   "protocol": "Single run per cell; CoT and SC numbers mostly copied from original papers (rest from DIVERSE); test sets same as Wei et al.; no significance tests; seed variance only for GSM8K pool sampling (Table 7)"
+  },
+  "availability": {
+   "code": "https://github.com/shizhediao/active-prompt",
+   "weights": null,
+   "data": "public datasets; full annotated exemplars in appendix Tables 13-18"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot uncertainty estimation",
+    "text": "Let's think step by step.",
+    "where": "Sec 5.1"
+   },
+   {
+    "purpose": "self-confidence template",
+    "text": "For the question q and the predicted answer a, report the confidence about the answer from choices. (a) very confident (b) confident (c) not confident (d) wrong answer",
+    "where": "Appendix D"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "we set temperature\nT “ 0.7 and infer 40 times for each question",
+    "where": "Sec 3.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Active-Prompt (E) is best on GSM8K with code-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 83.4,
+   "unit": "%",
+   "baseline_value": 78.0,
+   "n": null,
+   "setup": "GSM8K test (1319 qs), code-davinci-002, 8 exemplars, exact-match accuracy; SC/Active-Prompt use 40 samples at T=0.7; uncertainty k=10 on 1000-question pool",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block code-davinci-002, row Active-Prompt (E), column GSM8K"
+  },
+  {
+   "claim": "Active-Prompt (D) on GSM8K with code-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 82.2,
+   "unit": "%",
+   "baseline_value": 78.0,
+   "n": null,
+   "setup": "GSM8K test (1319 qs), code-davinci-002, 8 exemplars, exact-match accuracy; SC/Active-Prompt use 40 samples at T=0.7; uncertainty k=10 on 1000-question pool",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block code-davinci-002, row Active-Prompt (D), column GSM8K"
+  },
+  {
+   "claim": "Self-consistency on GSM8K with code-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 78.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K test (1319 qs), code-davinci-002, 8 exemplars, exact-match accuracy; SC/Active-Prompt use 40 samples at T=0.7; uncertainty k=10 on 1000-question pool (SC number mostly from original paper / DIVERSE per Table 1 caption)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block code-davinci-002, row SC, column GSM8K"
+  },
+  {
+   "claim": "Random-CoT on GSM8K with code-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 78.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K test (1319 qs), code-davinci-002, 8 exemplars, exact-match accuracy; SC/Active-Prompt use 40 samples at T=0.7; uncertainty k=10 on 1000-question pool",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block code-davinci-002, row Random-CoT, column GSM8K"
+  },
+  {
+   "claim": "CoT on GSM8K with code-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 63.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K, code-davinci-002, Wei et al. exemplars, no SC",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block code-davinci-002, row CoT, column GSM8K"
+  },
+  {
+   "claim": "Auto-CoT on GSM8K with code-davinci-002 (only GSM8K reported; taken from the Auto-CoT paper)",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 62.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002, no SC, number copied from Auto-CoT original paper",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block code-davinci-002, row Auto-CoT, column GSM8K"
+  },
+  {
+   "claim": "Active-Prompt without SC beats Auto-CoT on GSM8K (same code-davinci-002, no SC)",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 67.0,
+   "unit": "%",
+   "baseline_value": 62.8,
+   "n": null,
+   "setup": "code-davinci-002, no self-consistency, human-annotated rationales",
+   "note": null,
+   "where": "Table 10, row Active-Prompt, column GSM8K",
+   "table": "Table 10, row Active-Prompt, column GSM8K"
+  },
+  {
+   "claim": "Variance-based Active-Prompt (V) is worse on GSM8K than D and E",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 75.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002 (GSM8K), Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Active-Prompt (V), column GSM8K"
+  },
+  {
+   "claim": "Zero-shot uncertainty estimation (Let's think step by step) is competitive with few-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 82.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002 GSM8K, Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Zero-Shot-Active-Prompt, column GSM8K"
+  },
+  {
+   "claim": "Active-Prompt (D) beats Random-CoT on GSM8K by 3.6 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap",
+   "value": 3.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GSM8K code-davinci-002 D vs Random-CoT",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Active-Prompt (82.2) by 3.6%"
+  },
+  {
+   "claim": "Average improvement of Active-Prompt (D) over SC across datasets, code-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg gain",
+   "value": 1.8,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 datasets, code-davinci-002",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "1.8% improvement over self-consistency"
+  },
+  {
+   "claim": "Average improvement of Active-Prompt (D) over SC, text-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg gain",
+   "value": 7.0,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 datasets, text-davinci-002",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "average of 7.0%"
+  },
+  {
+   "claim": "Largest gain over SC on GSM8K with code-davinci-002",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 4.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-davinci-002",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "GSM8K (4.2%)"
+  },
+  {
+   "claim": "Active-Prompt selected 1000-instance subsample is stable across seeds on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 78.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seeds 1, 12, 42 give 78.5, 78.5, 78.4; model/setting not named for this table",
+   "note": "Value 78.5 differs from Table 1 82.2/83.4; setting not stated (possibly SC-less or other model); unresolved",
+   "where": "Table 1",
+   "table": "Table 7, row GSM8K, column Seed 1"
+  },
+  {
+   "claim": "Longer CoT annotations do not help (gpt-3.5-turbo GSM8K)",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 69.4,
+   "unit": "%",
+   "baseline_value": 74.2,
+   "n": null,
+   "setup": "gpt-3.5-turbo, annotations lengthened to avg 155 words vs 160",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 12, row Longer CoT, column GSM8K"
+  },
+  {
+   "claim": "Active-Prompt on gpt-3.5-turbo-0613 without SC, GSM8K (E)",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 78.2,
+   "unit": "%",
+   "baseline_value": 74.2,
+   "n": null,
+   "setup": "no SC",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block gpt-3.5-turbo-0613 (w.o. SC), row Active-Prompt (E), column GSM8K"
+  },
+  {
+   "claim": "Active-Prompt exemplars selected by gpt-3.5-turbo then used on Llama2-70b-chat (GSM8K)",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": 58.9,
+   "unit": "%",
+   "baseline_value": 54.8,
+   "n": null,
+   "setup": "Llama2-70b-chat inference",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 5, row gpt-3.5-turbo -> Llama2-70b-chat, column GSM8K"
+  }
+ ],
+ "limits": [
+  "Only text-davinci-002 or -003 could be run fully (cost); no GPT-4; no self-consistency for gpt-3.5-turbo.",
+  "code-davinci-002 access shut off, making main experiments hard to reproduce.",
+  "Annotation done by one co-author; annotator choice changes results (GSM8K gold rationales beat own).",
+  "Self-confidence uncertainty fails (LLM over-confident); Llama-2 logits also overconfident.",
+  "Pool limited to 1000 training questions; ASDiv/SVAMP/SingleEq depend on transferring GSM8K exemplars, which gives smaller gains.",
+  "Diversity and complexity combination left to future work; single run, no significance tests."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Active-Prompt",
+   "definition": "Uncertainty-based selection of questions for human CoT annotation, then few-shot CoT with self-consistency",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "exemplars, datasets, exemplar counts",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "baseline",
+   "note": "inference and baseline",
+   "quote": null
+  },
+  {
+   "work": "Auto-CoT (Zhang et al.)",
+   "year": 2022,
+   "arxiv": "2210.03493",
+   "relation": "baseline",
+   "note": "diversity-based selection",
+   "quote": null
+  },
+  {
+   "work": "Complexity-based prompting (Fu et al.)",
+   "year": 2022,
+   "arxiv": "2210.00720",
+   "relation": "baseline",
+   "note": "Complex-CoT, Table 11",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot CoT (Kojima et al.)",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "uses-method",
+   "note": "zero-shot uncertainty estimation",
+   "quote": null
+  },
+  {
+   "work": "Gentile et al. Fast rates in pool-based batch active learning",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "uncertainty-based active learning motivation",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "main dataset",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustrations of our proposed approach. There are four stages.",
+   "page": 2,
+   "why": "Shows the four-stage pipeline: estimate, select, annotate, infer."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison among the different numbers of predicted answers.",
+   "page": 7,
+   "why": "Accuracy vs k, converging at 10."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "The relation between uncertainty and accuracy.",
+   "page": 15,
+   "why": "Negative correlation motivating the method."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1",
+   "snippet": "u = h / k  (disagreement: h unique answers among k samples)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 flattened to one cell per line by extraction; column order read from header (GSM8K ASDIV SVAMP AQUA SINGLEEQ CSQA STRATEGY LETTER AVG).",
+  "Table 7 (78.5/78.5/78.4) does not state model or whether SC is used; differs from Table 1 82.2/83.4.",
+  "Intro/Sec 3.3 say k=10 but Fig 1 illustrates k=5; Sec 5.1 says text-davinci-003 for Fig 2.",
+  "No embedded instructions found."
+ ]
+}

@@ -57,7 +57,7 @@ The rules from the topic notes on one page. Each group links to the note that ex
 - If one prompt does too much, **split it into a chain**. Use a workflow before an agent.
 - With **reasoning models**, state the goal rather than the steps, drop "think step by step", and tune *effort* rather than wording.
 
-**Shipping** ([08](notes/08-prompt-optimization.md), [09](notes/09-evaluating-prompts.md), [10](notes/10-adversarial-prompting.md))
+**Shipping** ([08](notes/08-evaluating-prompts.md), [09](notes/09-prompt-optimization.md), [10](notes/10-adversarial-prompting.md))
 - **Build the eval before you tune the prompt.** Change one thing at a time and re-score.
 - For LLM judges: **specific, ordinal, multi-aspect** questions, and never self-grading.
 - **Assume the system prompt will leak, and assume injection will happen.** Least privilege, human approval in code, and quarantined models are the defenses that hold.
@@ -67,8 +67,9 @@ The rules from the topic notes on one page. Each group links to the note that ex
 ## Where to start
 
 - **Lecture deck:** [slides/prompt-engineering.pptx](slides/prompt-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=01-prompt-engineering`).
-- **New to this:** watch the [DAIR lecture](https://youtu.be/dOxUroR57xs) (1 h), read notes 01–06 alongside book Ch 1–9 and run the code snippets in each note, then read notes 07–11.
-- **Building something now:** the [vendor guides](references.md#vendor-guides) for your model, then [09 — evaluating prompts](notes/09-evaluating-prompts.md).
+- **New to this:** watch the [DAIR lecture](https://youtu.be/dOxUroR57xs) (1 h), read notes 01–06 alongside book Ch 1–9 and run the code snippets in each note, then read notes 07–10. Notes 07b and 11 are optional.
+- **Building something now:** the [vendor guides](references.md#vendor-guides) for your model, then [08 — evaluating prompts](notes/08-evaluating-prompts.md).
+- **A prompt is failing:** each note ends its Pitfalls section with symptom and fix pairs. To find which failure you have, score the outputs ([08](notes/08-evaluating-prompts.md)) and read the errors ([Eval pillar 02, defining correct](../../generative-ai/08-eval/notes/02-defining-correct.md)).
 - **Need an example prompt:** the [prompt library](notes/prompt-library.md).
 - **Security:** [10](notes/10-adversarial-prompting.md) and [safety and security](../09-safety-and-security/README.md).
 
@@ -87,7 +88,9 @@ The rules from the topic notes on one page. Each group links to the note that ex
 
 | Chapter | Why |
 |---|---|
-| None in other subjects | AI engineering is the last subject in the path |
+| [Context engineering](../02-context-engineering/README.md) | Prompts are one layer of the context it composes |
+| [Safety and security](../09-safety-and-security/README.md) | Builds on the attack catalogue and prompt-level defences in [10](notes/10-adversarial-prompting.md) |
+| [GA 01/10 Prompting fundamentals](../../generative-ai/01-llm-fundamentals/notes/10-prompting-fundamentals.md) | The application-level summary of this pillar, written for readers of GA 01 |
 
 ---
 
@@ -130,14 +133,14 @@ A prompt eval harness: three prompt variants over twelve labelled tickets, three
 5. [Tools and function calling](notes/05-tools-and-function-calling.md) — the loop, writing tool definitions, safety gates, debugging.
 6. [Chaining and workflows](notes/06-chaining-and-workflows.md) — prompt chains, topologies, Anthropic's workflow patterns, workflows vs. agents.
 7. [Prompting reasoning models](notes/07-prompting-reasoning-models.md) — what changes, effort settings, deep-research agents.
-   - 7b. [Reasoning-model failure modes](notes/07b-reasoning-model-failure-modes.md) — overthinking, underthinking, unfaithful chains, and the evidence.
+   - 7b. *Optional.* [Reasoning-model failure modes](notes/07b-reasoning-model-failure-modes.md) — overthinking, underthinking, unfaithful chains, and the evidence.
 
 **Practice**
 
-8. [Prompt optimization](notes/08-prompt-optimization.md) — prompts as versioned artifacts, APE/OPRO, meta-prompting, DSPy.
-9. [Evaluating prompts](notes/09-evaluating-prompts.md) — the offline tech tree, LLM-as-judge (SOMA), online metrics, a case study.
+8. [Evaluating prompts](notes/08-evaluating-prompts.md) — the offline tech tree, LLM-as-judge (SOMA), online metrics, a case study.
+9. [Prompt optimization](notes/09-prompt-optimization.md) — prompts as versioned artifacts, APE/OPRO, meta-prompting, DSPy. Needs the eval from 8.
 10. [Adversarial prompting](notes/10-adversarial-prompting.md) — injection, leaking, jailbreaks, layered defenses, bias, factuality.
-11. [Applications](notes/11-applications.md) — synthetic data, code, images and multimodal prompts.
+11. *Optional.* [Applications](notes/11-applications.md) — synthetic data, code, images and multimodal prompts.
 
 **Reference:** [prompt-library.md](notes/prompt-library.md) — copyable example prompts by task.
 

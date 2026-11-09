@@ -1,0 +1,409 @@
+{
+ "schema": 1,
+ "key": "2411.00640",
+ "pdf": "generative-ai/08-eval/sources/miller-2024-adding-error-bars-evals.pdf",
+ "bib": {
+  "title": "Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations",
+  "authors": [
+   "Evan Miller"
+  ],
+  "first_author": "Miller",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2411.00640",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 35790,
+  "chars_total": 35790,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "theory",
+ "question": "How should researchers compute uncertainty, compare models, reduce variance and plan sample size when analysing language model eval results as experiments?",
+ "hypothesis": "Treating eval questions as draws from a super-population lets standard experiment-analysis statistics give rigorous error bars and significance tests for evals.",
+ "contributions": [
+  "Standard errors via CLT, with clustered standard errors for grouped questions",
+  "Variance reduction by resampling and next-token probabilities; advice not to change temperature",
+  "Paired-difference analysis for model comparison",
+  "Power analysis and sample-size formula with MDE",
+  "Reporting formats (Tables 2, 3, 5)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Clustered standard errors on DROP are about 3x the naive CLT standard errors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SE ratio",
+   "value": "3.05",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4: DROP, Anthropic models, ratio SE_clustered/SE_CLT (1.34 vs 0.44); model and run details not given",
+   "quote": "Clustered and naive standard errors computed on two popular evals using Anthropic models (non-fictional numbers). Analyzing the same data, clustered standard errors can be over 3X larger than naive standard errors.",
+   "table": "Table 4, row DROP, column Ratio",
+   "note": null,
+   "where": "Sec 2.2, Table 4"
+  },
+  {
+   "claim": "Clustering inflates MGSM standard error by 1.88x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SE ratio",
+   "value": "1.88",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4: MGSM, Anthropic models, 250 clusters of 2,500 questions per Table 3 (fictional there)",
+   "quote": "MGSM (1.62%) (0.86%) 1.88",
+   "table": "Table 4, row MGSM, column Ratio",
+   "note": "Quote is reconstructed cell text; see table ref. Table 3 prints MGSM SE as 1.6% and Table 4 as 1.62%.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Clustering inflates RACE-H standard error only slightly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SE ratio",
+   "value": "1.10",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4: RACE-H, Anthropic models",
+   "quote": "RACE-H (0.51%) (0.46%) 1.10",
+   "table": "Table 4, row RACE-H, column Ratio",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Under uniform difficulty and binary scores, resampling K times multiplies estimator variance by (1+2/K)/3; max reduction is 2/3.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "variance reduction",
+   "value": "2/3",
+   "unit": "fraction of variance removed",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binary scores, question difficulty x~U[0,1]; Var(x)=1/12, E[sigma^2]=1/6",
+   "quote": "The upper limit on variance reduction via resampling in this example is 2/3.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "K=2 reduces variance by 1/3, K=4 by 1/2, K=6 by 5/9 in that example.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same uniform-difficulty example",
+   "quote": "Going from K = 1 (no resampling of answers) to K = 2, the total variance is reduced by 1/3. Increasing to K = 4, we have a variance reduction of 1/2, and setting K = 6, we reduce variance by 5/9.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "Analysing next-token probabilities removes conditional variance, matching the resampling limit of 2/3 variance reduction.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "2/3",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-token multiple-choice eval, uniform difficulty",
+   "quote": "Using the uniform-difficulty example from the previous section, next-token probabilities will reduce the variance of the estimator by 2/3 (the upper limit achievable via resampling) compared to grading a single sample from each question.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Lowering temperature to 0 can triple the minimum variance (1/12 to 1/4).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1/12 to 1/4",
+   "unit": "variance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-token true/false eval, conditional means at T=1 ~U[0,1], T=0 rounds to Bernoulli(1/2)",
+   "quote": "has inadvertently tripled the minimum variance in the score data from 1/12 to 1/4.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "With x~U[1/3,1], T=0 shifts the mean from 2/3 to 3/4 and raises variance of conditional means about five-fold.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "approx 5x",
+   "unit": "variance ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-token true/false eval",
+   "quote": "Then E[xT=1] = 2/3 < E[xT=0] = 3/4 and Var(xT=1) = 1/27 ≪Var(xT=0) = 3/16; that is, not only has the temperature change shifted the expected score, but the variance of the conditional means has increased approximately five-fold.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Paired differences cut estimator variance by 1/3 when score correlation is 0.5 (uniform scores, zero conditional variance).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1/3",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two models, continuous scores uniform on [0,1] from next-token probabilities, correlation 0.5",
+   "quote": "will reduce the variance of the estimator by 1/3 in relative terms (that is, from 1/6 to 1/9 in absolute terms).",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "In the fictional comparison, Galleon beats Dreadnought on MATH significantly (+2.5%, SE 0.7%, CI +1.2 to +3.8) with paired analysis.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "paired difference",
+   "value": "+2.5%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fictional data, paired, MATH 5,000 questions, correlation 0.50",
+   "quote": "MATH Galleon Dreadnought +2.5% (0.7%) (+1.2%, +3.8%) 0.50",
+   "table": "Table 5, row MATH, columns Model - Baseline, 95% Conf. Interval, Correlation",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "HumanEval (-3.1%, SE 2.1%) and MGSM (-2.7%, SE 1.7%, clustered) differences are not significant at 5%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "-3.1% and -2.7%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fictional data, paired; CIs (-7.2%, +1.0%) and (-6.1%, +0.7%); MGSM clustered",
+   "quote": "the differences on HumanEval and MGSM are indistinguishable from statistical noise.",
+   "table": "Table 5, rows HumanEval and MGSM, column Model - Baseline",
+   "note": "Table 1 prints Dreadnought HumanEval as 87.7% but Table 2 as 86.7%; the -3.1% difference matches 86.7%.",
+   "where": "Sec 4.2, Table 5"
+  },
+  {
+   "claim": "A paired test needs about 969 independent questions to detect a 3-point difference with 80% power at alpha 0.05, so new evals should have at least 1,000 questions.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "sample size n",
+   "value": "969",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sigma_A^2=sigma_B^2=0, omega^2=1/9, delta=0.03, beta=0.20, alpha=0.05; parameters stated to be fictional but reasonable",
+   "quote": "n = (z0.025 + z0.20)2(1/9)/(0.03)2 ≈969",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Raising per-question samples K from 1 to 10 lowers the Minimum Detectable Effect from 13.2% to 7.5%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "MDE",
+   "value": "13.2% to 7.5%",
+   "unit": "MDE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sigma^2=1/6 each, omega^2=1/9, Corr 0.5, n=198, alpha=0.05, beta=0.20",
+   "quote": "increasing KA = KB from 1 to 10 reduces the Minimum Detectable Effect from 13.2% to 7.5%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Llama 3 report uses SE_Bernoulli for all evals, so its intervals are too wide for fractional scores and too narrow for clustered evals.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dubey et al. 2024 Llama 3 report",
+   "quote": "We also note that [7] incorrectly estimates all of its standard errors using SEBernoulli, even when si takes fractional values, such as with an F1 score.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1, 2.2"
+  }
+ ],
+ "limits": [
+  "Analytic treatment with fictional models and hypothetical numbers; only Table 4 uses real (Anthropic model) data, with no model, run or sample details stated.",
+  "Assumes questions are i.i.d. draws from a super-population, or clusters are independent; CLT needs finite variance and large n.",
+  "Next-token probability variance reduction does not apply to chain-of-thought evals.",
+  "Power inputs (omega^2, sigma^2) must be estimated from earlier data with K much greater than 1.",
+  "Does not judge the qualitative merits of evals; a reader is assumed to have some statistics training.",
+  "Examples assume uniform difficulty and independent question draws for simple closed forms.",
+  "Estimation of cluster-adjusted quantities with subsampling: sample whole clusters."
+ ],
+ "practices": [
+  "Report the standard error of the mean in parentheses beneath each eval score, with the question count (Sec 2.1, Table 2).",
+  "Compute SE with the CLT formula, not SE_Bernoulli, when scores are fractional (Sec 2.1).",
+  "Bootstrapping is unnecessary unless the sampling scheme or estimator is complicated (Sec 2.1).",
+  "Use clustered standard errors when questions come in related groups, and report cluster count (Sec 2.2, Table 3).",
+  "Resample each question K times with K large enough that E[sigma^2]/K is much less than Var(x) and average per question; do not pool all K*N answers (Sec 3.1).",
+  "Use next-token probabilities when the eval can be run without generation (Sec 3.2).",
+  "Do not lower sampling temperature to cut variance (Sec 3.3).",
+  "Compare two models with paired question-level differences and report differences, SEs, CIs and correlations (Sec 4.2, Table 5).",
+  "Run power analysis to choose n, K, or find the MDE before running an eval (Sec 5)."
+ ],
+ "terms": [
+  {
+   "term": "super-population",
+   "definition": "hypothetical, infinite, unseen population of questions from which eval questions are drawn at random",
+   "where": "Sec 2"
+  },
+  {
+   "term": "conditional mean / conditional variance",
+   "definition": "the mean x_i and variance sigma_i^2 of a question score conditional on the selection of question i",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "clustered standard error",
+   "definition": "SE adjusted for correlation among questions drawn together, a sliding scale between perfectly correlated and uncorrelated clusters",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Minimum Detectable Effect",
+   "definition": "the mean score difference between two models under the alternative hypothesis",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chatbot Arena",
+   "year": 2024,
+   "arxiv": "2403.04132",
+   "relation": "related",
+   "note": "popularised confidence intervals on Elo scores",
+   "quote": null
+  },
+  {
+   "work": "The Llama 3 Herd of Models",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "contradicts",
+   "note": "its SE_Bernoulli confidence intervals are too wide or too narrow in some cases",
+   "quote": null
+  },
+  {
+   "work": "Quantifying Variance in Evaluation Benchmarks (Madaan et al.)",
+   "year": 2024,
+   "arxiv": "2406.10229",
+   "relation": "related",
+   "note": "cited for industry practice of bolding SOTA without significance testing",
+   "quote": null
+  },
+  {
+   "work": "With Little Power Comes Great Responsibility (Card et al.)",
+   "year": 2020,
+   "arxiv": "2010.06595",
+   "relation": "related",
+   "note": "power in NLP",
+   "quote": null
+  },
+  {
+   "work": "When should you adjust standard errors for clustering? (Abadie et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "clustered standard errors",
+   "quote": null
+  },
+  {
+   "work": "So you want to run an experiment, now what? (List, Sadoff, Wagner)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "power analysis set-up",
+   "quote": null
+  },
+  {
+   "work": "Imbens and Rubin, Causal Inference",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "experiment design overview",
+   "quote": null
+  },
+  {
+   "work": "Inspect framework",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "computes SE_CLT correctly via stderr()",
+   "quote": null
+  },
+  {
+   "work": "OpenAI Evals",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bootstraps standard errors",
+   "quote": null
+  },
+  {
+   "work": "MATH, HumanEval, MGSM, DROP, RACE, QuAC, SQuAD",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evals used in examples",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2",
+   "caption": "We suggest two new reporting practices: including the number of questions in each eval, and the standard error of each estimate in parentheses",
+   "page": 3,
+   "why": "shows the report format"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Clustered and naive standard errors computed on two popular evals using Anthropic models",
+   "page": 4,
+   "why": "real-data size of the clustering correction"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Suggested presentation of pairwise differences, standard errors, confidence intervals, and correlation values",
+   "page": 8,
+   "why": "shows how paired analysis flips a naive reading"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-3",
+   "snippet": "SE_CLT = sqrt((1/(n-1) * sum_i (s_i - sbar)^2)/n); SE_Bernoulli = sqrt(sbar(1-sbar)/n); CI95 = sbar ± 1.96 SE",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 7, 9",
+   "snippet": "SE_paired = sqrt((1/(n-1) sum (s_{A-B,i} - sbar_{A-B})^2)/n); n = (z_{α/2}+z_β)^2 (ω^2 + σ_A^2/K_A + σ_B^2/K_B)/δ^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 prints Dreadnought HumanEval as 87.7% but Table 2 prints 86.7%; the -3.1% difference matches 86.7%.",
+  "Text typo 'MSGM' for MGSM in Sec 4.2.",
+  "MGSM SE in Table 3 (1.5%/1.6%) is fictional, and in Table 4 (1.62%) is real; do not mix.",
+  "No embedded instructions found."
+ ]
+}

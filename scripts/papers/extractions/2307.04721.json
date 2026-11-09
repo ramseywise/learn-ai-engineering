@@ -1,0 +1,474 @@
+{
+ "schema": 1,
+ "key": "2307.04721",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mirchandani-2023-large-language-models-as-general.pdf",
+ "bib": {
+  "title": "Large Language Models as General Pattern Machines",
+  "authors": [
+   "Suvir Mirchandani",
+   "Fei Xia",
+   "Pete Florence",
+   "Brian Ichter",
+   "Danny Driess",
+   "Montserrat Gonzalez Arenas",
+   "Kanishka Rao",
+   "Dorsa Sadigh",
+   "Andy Zeng"
+  ],
+  "first_author": "Mirchandani",
+  "year": 2023,
+  "venue": "7th Conference on Robot Learning (CoRL 2023)",
+  "arxiv": "2307.04721",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 74698,
+  "chars_total": 74698,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can pre-trained LLMs, with no further training, complete, transform and improve abstract token sequences (including random-token ones), and can this be used for low-level robotics control?",
+ "hypothesis": "LLMs can act as basic general pattern machines whose in-context pattern manipulation is largely invariant to the specific tokens involved, so it transfers to robotics and sequential decision making.",
+ "contributions": [
+  "Show LLMs complete ARC and PCFG sequence transformations, partly even under random token alphabets",
+  "Release an adjustable-difficulty PCFG pattern benchmark",
+  "Apply sequence completion to motion extrapolation (table sweeping, whiteboard drawing)",
+  "Apply sequence improvement to reward-conditioned trajectories (Marker in Cup, Grid, CartPole, clicker training)"
+ ],
+ "method": {
+  "summary": "Pretrained LLMs (GPT-3 family, PaLM, gpt-4-0613) are prompted few-shot with flattened ARC grids, PCFG-generated sequences, sampled functions or reward-prefixed trajectories expressed as integers or random vocabulary tokens, and complete them autoregressively. No training or fine-tuning is done.",
+  "task": "in-context sequence transformation, completion and improvement (ARC, PCFG, sinusoids, robot motion, online RL)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ARC (Abstraction and Reasoning Corpus)",
+    "role": "eval",
+    "size": "800 problems; 3.3 input-output examples on average, 1-3 test inputs each",
+    "split": "all 800 (train+eval tasks)",
+    "source": "Chollet 2019",
+    "preprocessing": "grids flattened in row-major order, integers/space-prefixed tokens, comma separates input from output"
+   },
+   {
+    "name": "PCFG benchmark (new, released)",
+    "role": "eval",
+    "size": "100 runs per (k,w) cell; k=[1,2,4,8,16,32], w=[0,1,3,7,15,31]",
+    "split": null,
+    "source": "procedurally generated from the PCFG of Hupkes et al. 2020",
+    "preprocessing": "ops: copy, reverse, shift, swap, repeat, echo, append, prepend, remove_first, remove_second"
+   },
+   {
+    "name": "Table Sweeping demonstrations",
+    "role": "eval",
+    "size": "30 kinesthetic demonstrations, 20-30 s each, 3 Hz, 7-dim pose",
+    "split": "first two-thirds as context, last third as ground truth",
+    "source": "collected by authors",
+    "preprocessing": "each value binned to integer 0-100, dims space-delimited"
+   },
+   {
+    "name": "Whiteboard Drawing",
+    "role": "eval",
+    "size": "scripted loops at 5 Hz",
+    "split": "2 loops as context, third loop predicted",
+    "source": "scripted",
+    "preprocessing": "states discretised 0-300"
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-4-0613 (g4)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003 (d3)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-002 / -001 (d2, d1), text-curie-001 (c1), text-babbage-001 (b1), text-ada-001 (a1)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 tokens for ada, babbage, curie",
+    "other": {}
+   },
+   {
+    "name": "PaLM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_experiment": "8B parameter variant of PaLM used in Appendix A.3"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ARC random-alphabet: 5 random alphabets averaged; PCFG: 100 runs per (k,w); sinusoid: 11 trials; Marker in Cup: 11 trials with different goal; Grid: 50 episodes, 5 trials; CartPole: 100 episodes; Table Sweeping: 30 trials; embedding experiment: K=100, 3 seeds, 30 instances, context 5/10/20 examples",
+   "prompting": "Few-shot in-context input-output pairs; ARC as comma-separated integers per row, newline between rows; PCFG as 'a b c, d e; ...'; trajectories as 'reward: s s s, ...' lines; no task description given for sequence completion.",
+   "retrieval": null,
+   "parameters": {
+    "grid_env": "9x9, start at centre, 20 timesteps, reward 100-10*distance, context limit 1024 tokens, prompt asks for max seen return plus random offset up to 20, 20 initial random trajectories",
+    "cartpole": "obs pole angle and velocity normalised 0-100, actions 1/2, horizon 200, context 1024 tokens, first 100 episodes random",
+    "marker_in_cup": "states normalised 0-200 in appendix (0-100 in main text), 50 timesteps, context trajectories stop at 20/40/60/80% to goal, prompt '100: start state'",
+    "clicker": "step every 2 s, episodes reset after 30 s, first two episodes random, equal number of reward 0 and 1 examples"
+   },
+   "other": {
+    "note": "temperature, top_p, max tokens, decoding are not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ARC problems solved",
+     "definition": "number of the 800 ARC problems with correct test output predicted",
+     "unit": "count out of 800",
+     "higher_is_better": true
+    },
+    {
+     "name": "PCFG accuracy",
+     "definition": "pattern completion accuracy averaged over k and w",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "DTW distance",
+     "definition": "dynamic time warping distance between prediction and ground-truth function or trajectory",
+     "unit": "error",
+     "higher_is_better": false
+    },
+    {
+     "name": "Return",
+     "definition": "task reward, e.g. CartPole steps upright",
+     "unit": "reward",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Ainooson et al. 2023 (DSL brute force)",
+    "Kaggle 1st place 2022",
+    "Xu et al. 2022",
+    "Alford et al. 2021",
+    "Ferre et al. 2021",
+    "DreamCoder on PCFG",
+    "structure-learning GP (Gen) on sinusoids",
+    "random exploration"
+   ],
+   "protocol": "Single reported numbers per model; some averaged over random alphabets or trials; no significance tests."
+  },
+  "availability": {
+   "code": "https://general-pattern-machines.github.io",
+   "weights": null,
+   "data": "PCFG benchmark released (same website)"
+  },
+  "prompts": [
+   {
+    "purpose": "ARC context format",
+    "text": "input:\n0, 0, 0, 0\n0, 3, 4, 0\n0, 7, 6, 0\n0, 0, 0, 0\noutput:",
+    "where": "Listing 1, p.14"
+   },
+   {
+    "purpose": "PCFG context format",
+    "text": "6 7 7 8 1 5 9 8 9, 1 5 9 8 9 7 7 6 6; 4 3 0 3 5 0 2 3 8; 5 0 2 3 8 3 3 4 4; 1 3 3 3 7 0 1 9 9,",
+    "where": "Listing 2, p.17"
+   },
+   {
+    "purpose": "CartPole context format",
+    "text": "52: 40 50, 1, 40 54, 2, 41 49, 1, 41 54, 1, ...\n60: ...\n75: ...\n98: 44 50, 1, 44 55, 2, 45 50,",
+    "where": "Listing 4, p.20"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "text-davinci-003 prompted with digit grids correctly solves 85 of 800 ARC problems, exceeding some program-synthesis systems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ARC problems solved",
+   "value": "85",
+   "unit": "of 800",
+   "baseline_value": "32 (Ferre 2021), 57 on 160-task subset (Xu 2022)",
+   "n": 800,
+   "setup": "Table 1, d3, integer alphabet, no training",
+   "quote": "can correctly infer solutions for up to 85 problems",
+   "table": null,
+   "note": "Other rows: gpt-4-0613 77, PaLM 42, d2 64, d1 11.",
+   "where": "Sec 4, Table 1"
+  },
+  {
+   "claim": "With randomly sampled token alphabets text-davinci-003 still solves an average of 43.6 ARC problems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ARC problems solved",
+   "value": "43.6",
+   "unit": "of 800",
+   "baseline_value": "85",
+   "n": 5,
+   "setup": "d3, 5 random alphabets from vocabulary",
+   "quote": "across 5 random alphabets solves an average of 43.6 problems",
+   "table": null,
+   "note": "Table 1 prints this as 44±6; best single alphabet solved 52.",
+   "where": "Sec 4, token mapping invariance"
+  },
+  {
+   "claim": "PCFG accuracy: d3 averages 75% and 58±1% under random alphabets; accuracy rises with model size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PCFG accuracy",
+   "value": "75",
+   "unit": "%",
+   "baseline_value": "39 (text-ada-001)",
+   "n": 100,
+   "setup": "Table 2, averaged over k and w, 100 runs per cell",
+   "quote": null,
+   "table": "Table 2, row (d3) text-davinci-003, column Accuracy (%)",
+   "note": "PaLM 74, d2 69, d1 60, c1 54, b1 50, a1 39, d3 random A 58 ± 1",
+   "where": "Sec 4, Table 2"
+  },
+  {
+   "claim": "Tokenizers that merge adjacent digits (e.g. '8686') break the pattern; space-separated tokens fix near-zero ARC performance in BIG-Bench.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARC formatting, BPE/SentencePiece tokenizers that do not tokenize per digit",
+   "quote": "which maps to a different token embedding",
+   "table": null,
+   "note": "Qualitative; no numbers given.",
+   "where": "Sec 4, Observation: consistent tokenization matters"
+  },
+  {
+   "claim": "Newly sampled Gaussian embeddings unseen in training support single-token pattern tasks about as well as native embeddings at 1 sigma, degrade at 2 sigma.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 8B, K=100 embeddings, 3 seeds, 30 instances, context of 5/10/20 examples",
+   "quote": "In case of 2σ, the performance degrades.",
+   "table": null,
+   "note": "Values only in Fig 11.",
+   "where": "Appendix A.3"
+  },
+  {
+   "claim": "Larger LLMs and more context give lower error extrapolating sinusoids.",
+   "kind": "measured",
+   "source": null,
+   "metric": "DTW error",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 11,
+   "setup": "3 function families, discretised to integers 0-100, 3 vs 5 periods of context",
+   "quote": "we observe that greater context and larger scale LLMs yield higher quality predictions",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, Fig 3"
+  },
+  {
+   "claim": "On Grid, d3 consistently finds a solution within 50 episodes while weaker models exploit suboptimal context.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max return",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "9x9 Grid, 50 episodes, 5 trials, vs random exploration",
+   "quote": "whereas d3 can consistently find a solution to Grid within 50 episodes",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, Fig 5"
+  },
+  {
+   "claim": "text-davinci-003 can generate a Marker in Cup trajectory with reward above 90 when context has ordered meta-patterns.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reward",
+   "value": "90",
+   "unit": "reward (0-100)",
+   "baseline_value": null,
+   "n": 11,
+   "setup": "11 trials, different goal positions, context rewards roughly 70-90",
+   "quote": "is able to generalize the pattern and generate a trajectory that achieves a reward >90",
+   "table": null,
+   "note": "Context ordering matters (Fig 4).",
+   "where": "Sec 6"
+  }
+ ],
+ "limits": [
+  "LLM in the control loop is expensive: every dimension of every timestep needs a query.",
+  "Extrapolation is bounded by context length (1024 tokens used for Grid and CartPole).",
+  "Requires consistent tokenization, which needs knowledge of the model's tokenizer.",
+  "Token invariance holds only partly: action token choice (0 vs 1-indexed) biased behaviour.",
+  "Possible ARC contamination; authors use random alphabets and PCFG to mitigate.",
+  "Language-only control is unpredictable and lacks physical grounding; only suitable for constrained lab settings.",
+  "Models used (GPT-3 family, PaLM, GPT-4-0613) are closed and now dated; no decoding settings reported.",
+  "ARC result below brute-force DSL search (130 by Ainooson, 164 by Kaggle winner on a different protocol)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "general pattern machine",
+   "definition": "an LLM's ability to represent, manipulate, and extrapolate more abstract, nonlinguistic patterns",
+   "where": "Sec 1"
+  },
+  {
+   "term": "token mapping invariance",
+   "definition": "LLMs can still solve a non-trivial number of ARC problems using alphabets A sampled randomly from the LLM's token vocabulary",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Abstraction and Reasoning Corpus (Chollet, On the measure of intelligence)",
+   "year": 2019,
+   "arxiv": "1911.01547",
+   "relation": "uses-data",
+   "note": "ARC benchmark",
+   "quote": null
+  },
+  {
+   "work": "Compositionality decomposed (Hupkes et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PCFG operations for the new benchmark",
+   "quote": null
+  },
+  {
+   "work": "Rethinking the Role of Demonstrations (Min et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "random label mappings retain ICL performance",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT-3 / InstructGPT model family",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "evaluates",
+   "note": "evaluated model",
+   "quote": null
+  },
+  {
+   "work": "Decision Transformer (Chen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "return-conditioned prompting for sequence improvement",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting (Zhou et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "meta-pattern sequence improvement",
+   "quote": null
+  },
+  {
+   "work": "In-context RL with algorithm distillation (Laskin et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Dark Room environment inspired Grid",
+   "quote": null
+  },
+  {
+   "work": "LIFT (Dinh et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLMs on non-language classification/regression",
+   "quote": null
+  },
+  {
+   "work": "DreamCoder (Ellis et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "program synthesis baseline on PCFG",
+   "quote": null
+  },
+  {
+   "work": "Sennrich et al. BPE; Kudo and Richardson SentencePiece",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tokenizers whose digit merging breaks ARC",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "LLMs out-of-the-box can complete (highlighted) complex ARC patterns expressed in arbitrary tokens.",
+   "page": 1,
+   "why": "Shows the same grid task with digits and with random tokens."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "LLMs out-of-the-box can solve a non-trivial number of ARC problems.",
+   "page": 4,
+   "why": "Compares LLMs with DSL and program-synthesis systems."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Table 5 and 6 cells are scrambled in text extraction; not used for results."
+ ]
+}

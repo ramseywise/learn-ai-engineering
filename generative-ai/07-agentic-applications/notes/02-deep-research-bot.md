@@ -389,7 +389,41 @@ Rubrics with zero reward variance across a group are dropped, because they can't
 
 ---
 
-## How far the design has spread
+## How the design evolved
+
+Recent systems change one part of this loop: retrieval, plan shape, interleaving, who owns the plan, or training. Papers that point the same loop at research itself spend their design on verification, which is the question [04](04-coding-agent.md) and [05](05-data-analysis-agent.md) take up. The survey of those systems, with what each one measured, is under Further reading at the end of this note.
+
+---
+
+## Review: what to fix before reusing it
+
+| Issue | Where | Fix |
+|---|---|---|
+| `--deep` builds `DEEP_RESEARCH_AGENT_PROMPT` but passes the simple prompt to `SimpleAgent` | `eval_simple_agent.py` | Pass `system_message` |
+| Docstring parser splits on the literal string `"\\n"`, so parameter descriptions are never parsed | `utils._generate_tool_schema` | `split("\n")` |
+| Compaction drops the most recent tool results | `compact_conversation` | Keep the last k messages after the summary |
+| `execute_tool` uses `asyncio.run` per async tool | `utils.py` | Breaks inside notebooks or servers with a running loop; make the loop async |
+| `clarification_tool` calls `input()` | `tools.py` | Make it an interrupt (see [05-graph 04](../../../ai-engineering/05-graph-engineering/notes/04-durable-execution-and-interrupts.md)) |
+| Notebook 03 installs the `add_rl` branch, which has helpers missing from the local package (`_to_plain`, `WANDB_BASE_URL`) | notebook 03 | Run it in Colab from upstream |
+| A single judge (DeepSeek-R1) with `temperature=1.0` | `eval_config.py` | Run ≥2 trials and report variance, or use two judges |
+
+---
+
+## Rules of thumb
+
+| Rule | Why |
+|---|---|
+| Write the bare loop once before reaching for a framework | You'll know what the framework is hiding |
+| Return tool errors and bad JSON to the model as tool messages | It self-corrects; the run survives |
+| Put the turn budget in the transcript and force a final answer | The model paces itself; no empty runs |
+| Refine each search result with a cheap model before the agent sees it | Keeps the main context small and on-topic |
+| Give the model no-op `plan` and `think` tools | Structured reflection, kept in context |
+| Compact at a threshold inside the state, not the loop | The loop stays simple; the policy is in one place |
+| Score research reports pairwise against a reference, normalised | Absolute LLM-judge scores drift; ratios hold up better |
+
+---
+
+## Further reading: how far the design has spread
 
 Once you know the loop, a recent paper can be read by asking which part it changed. Huang et al.'s survey offers a useful map: static versus dynamic workflows, single versus multi-agent planning, API versus browser retrieval, and tuning by prompt, fine-tuning or RL (Huang et al., [Deep Research Agents](https://arxiv.org/abs/2506.18096), 2025, preprint). Notes 01 and 02 are its two ends: static with a fixed path, dynamic with a free one.
 
@@ -424,42 +458,12 @@ The same loop has also been pointed at research itself. Here the check gets hard
 
 Note the direction of travel: the later papers spend their design on verification. That is the question note [04](04-coding-agent.md) and note [05](05-data-analysis-agent.md) take up.
 
----
-
-## Review: what to fix before reusing it
-
-| Issue | Where | Fix |
-|---|---|---|
-| `--deep` builds `DEEP_RESEARCH_AGENT_PROMPT` but passes the simple prompt to `SimpleAgent` | `eval_simple_agent.py` | Pass `system_message` |
-| Docstring parser splits on the literal string `"\\n"`, so parameter descriptions are never parsed | `utils._generate_tool_schema` | `split("\n")` |
-| Compaction drops the most recent tool results | `compact_conversation` | Keep the last k messages after the summary |
-| `execute_tool` uses `asyncio.run` per async tool | `utils.py` | Breaks inside notebooks or servers with a running loop; make the loop async |
-| `clarification_tool` calls `input()` | `tools.py` | Make it an interrupt (see [05-graph 04](../../../ai-engineering/05-graph-engineering/notes/04-durable-execution-and-interrupts.md)) |
-| Notebook 03 installs the `add_rl` branch, which has helpers missing from the local package (`_to_plain`, `WANDB_BASE_URL`) | notebook 03 | Run it in Colab from upstream |
-| A single judge (DeepSeek-R1) with `temperature=1.0` | `eval_config.py` | Run ≥2 trials and report variance, or use two judges |
-
----
-
-## Rules of thumb
-
-| Rule | Why |
-|---|---|
-| Write the bare loop once before reaching for a framework | You'll know what the framework is hiding |
-| Return tool errors and bad JSON to the model as tool messages | It self-corrects; the run survives |
-| Put the turn budget in the transcript and force a final answer | The model paces itself; no empty runs |
-| Refine each search result with a cheap model before the agent sees it | Keeps the main context small and on-topic |
-| Give the model no-op `plan` and `think` tools | Structured reflection, kept in context |
-| Compact at a threshold inside the state, not the loop | The loop stays simple; the policy is in one place |
-| Score research reports pairwise against a reference, normalised | Absolute LLM-judge scores drift; ratios hold up better |
-
----
-
 ## Pitfalls
 
 - **No stopping rule.** A model with open-ended tools will keep searching. Put explicit stop conditions in the prompt and a hard turn budget in the code, somewhere the agent cannot edit. When The AI Scientist's experiments ran over their time limits, it tried to edit the code to extend the limit, and it once relaunched itself until someone had to step in ([Lu et al.](https://arxiv.org/abs/2408.06292), 2024, preprint).
 - **Compaction that loses the latest evidence.** Summarizing everything after the request drops the result the model has just asked for. Keep the last few messages.
 - **Compaction that loses citations.** If the summary drops URLs, later claims can no longer be sourced. Name them in the compaction prompt, and test for it.
-- **Trusting a single judge.** One high-temperature LLM judge is noisy. Run several trials and report the spread.
+- **Trusting a single judge.** One high-temperature LLM judge is noisy. Run several trials and report the spread. How judges are built and checked is in [08-eval 04](../../08-eval/notes/04-graders.md) and [05](../../08-eval/notes/05-llm-as-judge.md).
 - **Comparing absolute judge scores across runs.** Harshness drifts. Score relative to a reference.
 - **Citations nobody checks.** RACE judges reports and does not fetch the pages. Without FACT or an equivalent, a confident invented link can score well.
 - **Optimizing the in-loop judge.** DR Tulu's highest-reward run did worse downstream. A rubric you train against becomes a target.

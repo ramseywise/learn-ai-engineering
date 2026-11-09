@@ -1,19 +1,689 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2504.01848",
  "pdf": "generative-ai/08-eval/sources/starace-2025-paperbench.pdf",
  "bib": {
   "title": "PaperBench: Evaluating AI's Ability to Replicate AI Research",
-  "first_author": "Giulio Starace",
-  "year": "2025",
-  "venue": null,
+  "authors": [
+   "Giulio Starace",
+   "Oliver Jaffe",
+   "Dane Sherburn",
+   "James Aung",
+   "Chan Jun Shern",
+   "Leon Maksin",
+   "Rachel Dias",
+   "Evan Mays",
+   "Benjamin Kinsella",
+   "Wyatt Thompson",
+   "Johannes Heidecke",
+   "Amelia Glaese",
+   "Tejal Patwardhan"
+  ],
+  "first_author": "Starace",
+  "year": 2025,
+  "venue": "preprint",
   "arxiv": "2504.01848",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 102913,
+  "chars_total": 102913,
+  "engine": "pymupdf",
+  "skipped": "Per-paper result tables 10-18 skimmed for structure only; references skimmed for lineage."
  },
- "legacy_report": "SOURCE: \"PaperBench: Evaluating AI's Ability to Replicate AI Research\", Starace, Jaffe, Sherburn, Aung, Chan, Maksin, Dias, Mays, Kinsella, Thompson, Heidecke, Glaese, Patwardhan (OpenAI). Venue as printed: \"Pre-print. Copyright 2025 by the author(s).\"; arXiv:2504.01848v3 [cs.AI], 7 Apr 2025. No conference venue is printed on the PDF.\n\nCOVERAGE: 30 of 30 pages, 103,565 of 103,565 chars. Body (p1-10), appendices A-I (p13-30), all per-paper result tables and all prompt figures were read in full. References (p10-12) were skimmed for origins only. The note 06-evaluating-agents.md has no existing PaperBench mention (grep for \"paperbench\" and \"2504.01848\" returned nothing).\n\nCLAIMS\n\n- claim: The rubric is a weighted tree; only leaves are graded, pass/fail, and a parent's score is the weighted average of its children up to the root.\n  number: 8,316 leaf nodes across 20 papers (I summed Table 7's leaf column and it matches)\n  setup: 20 ICML 2024 Spotlight/Oral papers; each rubric co-developed with an original author; weights mean importance, not difficulty; the agent never sees the rubric\n  quote: \"Leaf nodes are graded for binary pass/fail criteria, and a parent's score is the weighted average of its children.\" (p3, Fig. 2) / \"Across the 20 papers in PaperBench there are 8,316 leaf nodes.\" (p5)\n  where: p3, p5, Table 7 p15\n\n- claim: Leaves are decomposed until one is quick for an expert to check.\n  number: under 15 minutes per leaf\n  setup: design rule, assumes familiarity with the paper\n  quote: \"an expert human could review whether a submission satisfies it in less than 15 minutes\" (p5)\n  where: p5\n\n- claim: There are three leaf types (Code Development, Execution, Result Match), each showing the judge different files. Result Match is graded only from outputs of a fresh re-run of reproduce.sh on a clean VM, not from the agent's own run.\n  number: none\n  setup: Ubuntu 24.04 VM, A10 GPU; reproduce.sh capped at 12 hours in their experiments, average run 5.5 minutes\n  quote: \"ensure replication outputs can be distinguished from any results hard-coded by the candidate at task-time\" (p3)\n  where: p3-4, Table 1\n\n- claim: The judge (SimpleJudge) grades each leaf independently, given the paper, addendum, sibling/ancestor criteria and the top-ranked relevant files. It was validated on JudgeEval, a set of human-graded leaves.\n  number: o3-mini-high F1 0.83 (accuracy 0.83, precision 0.83, recall 0.83) at $66 per paper; o1 F1 0.84 at $830; GPT-4o 0.73 at $120; GPT-4o-mini 0.59 at $8; random 0.49\n  setup: JudgeEval = partial replications of four PaperBench papers plus one dev-set paper, hand-graded by the authors; macro-averaged across papers; binary classification per leaf\n  quote: \"o3-mini with the SimpleJudge scaffolding is the most cost-effective, with an F1 score of 0.83 at $66 USD per paper\" (p6)\n  where: p6, Table 3\n\n- claim: Judge accuracy differs by leaf type; it is weakest on judging code and strongest on matching results.\n  number: o3-mini-high F1 0.72 Code Development, 0.82 Execution, 0.94 Result Match\n  setup: same JudgeEval\n  quote: \"O3- MINI -HIGH achieves an F1-score of 0.72 in Code Development, which we deem acceptable for tracking signal on this requirement type.\" (p18)\n  where: p18, Table 8\n\n- claim: Grading cost in tokens, and against a human grader.\n  number: about 50M input and 2M output tokens per paper; human estimated at 12 hours at $100/hr\n  setup: o3-mini judge; the human figure is an assumed rate, not a measured bill\n  quote: \"On average SimpleJudge uses around 50,000,000 input tokens and 2,000,000 output tokens per paper.\" (p6, fn 7) / \"Human cost estimated at 12 hours of work at an hourly rate of $100 USD/hr.\" (p17, Fig. 5)\n  where: p6, p17\n\n- claim: Running the agents costs far more than grading them.\n  number: $400 per paper, $8,000 per 20-paper run; grading adds $66 per paper\n  setup: o1 IterativeAgent, 12-hour rollout, API credits only\n  quote: \"it costs $400 in API credits to run an o1 IterativeAgent 12-hour rollout on a single paper in PaperBench. For the 20 papers, this sums to $8000 USD per eval run.\" (p9)\n  where: p9\n\n- claim: Human baseline: ML PhDs beat o1 on a 3-paper subset, and the agent leads early then plateaus.\n  number: humans 41.4% (best of 3 attempts, 48 hours) vs o1 26.6%\n  setup: 8 participants enrolled in or holding an ML PhD; 4 papers attempted, 3 attempts each, only the best performer after week one was extended; part-time over four weeks, hours from a timesheet with unattended compute time counted; AI assistants allowed; o1 with IterativeAgent, 36-hour run\n  quote: \"our human baseline of ML PhDs (best of 3 attempts) achieved 41.4% after 48 hours of effort, compared to 26.6% achieved by o1 on the same subset\" (p2)\n  where: p2, p8, Fig. 3\n\n- claim: Headline agent scores, and their sensitivity to scaffold.\n  number: Claude 3.5 Sonnet 21.0 ± 0.8, o1 13.2 ± 0.3 (BasicAgent); with IterativeAgent o1 24.4 ± 0.7, Claude 16.1 ± 0.1; o1 at 36 hours 26.0 ± 0.3\n  setup: 20 papers, 3 runs each, 12-hour limit, A10 GPU, o3-mini judge; error is one SEM\n  quote: \"We observe that these modifications significantly boost scores for o3-mini and o1 compared to BasicAgent, but hamper Claude 3.5 Sonnet, highlighting models' sensitivities to prompting.\" (p7, Table 5)\n  where: p7, Tables 4-5\n\n- claim: Scores come almost entirely from writing code, not from running it or matching results.\n  number: Claude BasicAgent 35.4 Code Dev / 1.8 Execution / 0.7 Result; best@3 human 72.4 / 20.4 / 8.9\n  setup: Table 9; human row is the 3-paper subset\n  quote: \"BEST @3 H UMAN [3 PAPER SUBSET ] 72.4 20 .4 8 .9\" (p19)\n  where: p19\n\n- claim: The code-only variant is cheaper but only a weak proxy for the full benchmark.\n  number: Pearson r 0.48; grading about $10 per paper (about 85% less); o1 scores 43.4 ± 0.8\n  setup: o1 only\n  quote: \"o1 performance correlates with a Pearson r value of 0.48, with PB = 0.45PBCD + 0.05.\" (p4, fn 5)\n  where: p4, p6, Table 6\n\n- claim: A coarser rubric inflates the score. Collapsing the tree to shallower depths raised one submission's grade sharply.\n  number: 0.93 (1 leaf), 0.48 (9 leaves), 0.30 (30), 0.27 (90), 0.25 (361, unpruned); depth 3 cut grading cost 10x\n  setup: a single JudgeEval submission (\"rice/0\"), 3 repeats, experimental judge\n  quote: \"pruning at depth 3 reduced grading cost by 10×, while the performance of the Judge deteriorates only slightly\" (p18)\n  where: p18-19, Fig. 6\n\n- claim: Rule violations were caught by a log text search plus manual review.\n  number: 10 of 646 runs disqualified, scored 0\n  quote: \"We find 10 cases of using blacklisted resources across all 646 runs\" (p4)\n  where: p4\n\n- claim: Run-to-run variance on the same paper is high.\n  number: none overall; e.g. o3-mini IterativeAgent on one paper scored 0.680, 0.542, 0.144 (p22, Table 14)\n  quote: \"Due to the high variance, we recommend others to use several seeds when evaluating PaperBench\" (p18)\n  where: p18\n\nLIMITS\n- Conceded: only 20 papers; the judge \"is not as accurate as an expert human\" and is non-deterministic; rubrics take \"multiple weeks per paper\" and others were hard to train to write them; contamination risk for future models; loopholes \"cannot yet\" be ruled out; no adversarial stress test of the judge.\n- Not shown: no inter-rater agreement for the human gold labels (the human is treated as ideal performance); the number of JudgeEval submissions and leaves is not stated; JudgeEval submissions were human-made, partly from authors' code, so judge accuracy on real agent output is untested; no judge repeat-variance figure on the main results; no measure of how judge error shifts the final Replication Score; no trajectory grading at all, since it is outcome and artifact grading only; no comparison against alternative rubrics, though the authors say \"many different realizations\" would be \"no less valid\".\n- Human baseline: 8 people, 3 papers, best-of-3 with selective extension, assigned to papers they felt most confident on, AI tools allowed; four attempts used an A100 instead of an A10. It is not a clean human-only or average-human number.\n- Dated: models are Claude 3.5 Sonnet, o1, o3-mini, GPT-4o, Gemini 2.0 Flash and DeepSeek-R1, with prices as of 2025/03/21. Authors say results are not an upper bound.\n\nBUILDS ON: Rubrics: Sawada et al., 2023 (ARB); Harvey Team, 2024 (BigLaw Bench). LLM judges: Zheng et al., 2023; Chen et al., 2024; Fu et al., 2023; Zhuge et al., 2024 (Agent-as-a-Judge). Benchmarks: Siegel et al., 2024 (CORE-Bench); Chan et al., 2024 (MLE-bench); Wijk et al., 2024 (RE-Bench, credited for the agents-lead-early pattern). Scaffold: Yao et al., 2023 (ReAct); UK AI Safety Institute, 2025 (Inspect basic agent).\n\nCODE: Judge output structure, p27 Fig. 9: \"# Expectations ... # Reality ... # Score ... Give a score of either 0 or 1\" and \"If anything appears to be missing, assume that the attempt failed to produce it (treat it as a failure).\"\n\nFIGURES: Figure 2, p3, \"Rubrics hierarchically decompose the replication task into a tree of increasingly granular requirements...\" It shows weights, binary leaves and the roll-up to 55% in one picture, which is the mechanism the note needs. (Runner-up if cost matters more: Fig. 5, p17, judge F1 against cost per paper.)\n\nPROBLEMS\n- Extraction was clean. Figure-internal text for Figs. 1-3 and 6 is scrambled, and the human-judge value in Fig. 6 is not recoverable from the text.\n- The PDF reproduces judge, agent and task prompts in full (p25-30), with imperative text such as \"You are judging...\" and \"YOU MUST use the bash and python tools\". I treated these as exhibits and did not follow them.\n- Internal inconsistencies in the source: footnote 7 prices the o3-mini judge on \"public OpenAI o1 API pricing\"; the reproduce.sh cap is 12 hours in the text (p3) but \"7 days\" in the task instructions (p29); Table 9 says o1 IterativeAgent used two seeds while Table 12 lists three runs; Table 9 labels the third column \"Results Analysis\" rather than Result Match; Table 17's FRE row (0*, 0*, 0.007, mean 0.061) does not add up; the abstract says \"20 ICML 2024\" papers and Fig. 3 covers 4 papers while the headline human number is on 3.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/starace-2025-paperbench.pdf"
+ "type": "benchmark",
+ "question": "Can AI agents replicate state-of-the-art ML research papers from scratch, and how do we grade that at scale?",
+ "hypothesis": null,
+ "contributions": [
+  "PaperBench: 20 ML papers with author-approved rubrics and an automated LLM-judge grading workflow",
+  "PaperBench Code-Dev: lighter variant grading only code development",
+  "JudgeEval: human-graded dataset to assess automated judges",
+  "Evaluations of frontier models on PaperBench"
+ ],
+ "method": {
+  "summary": "Agents get a paper plus addendum and must write a repository with reproduce.sh. The submission is re-run in a fresh VM (A10 GPU) and an LLM judge grades each leaf of a weighted rubric tree as pass/fail; scores propagate as weighted averages to a root Replication Score.",
+  "task": "from-scratch replication of ML papers by agents (long-horizon ML R&D), rubric-graded",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "PaperBench",
+    "role": "eval",
+    "size": "20 papers, 8,316 leaf nodes",
+    "split": "all 20 (ICML 2024 Spotlight/Oral); plus 2 NeurIPS 2024 Workshop papers as dev set; held-out set kept internally",
+    "source": "ICML 2024; 20 of 42 contacted authors co-developed rubrics",
+    "preprocessing": "Filtered by commercial/geographic, empirical content, single-machine hardware, no closed-source model dependency, no human data, reproducibility, non-framework, accessible dependencies (gpt-4o-2024-08-06 prompts then manual read)"
+   },
+   {
+    "name": "JudgeEval",
+    "role": "eval",
+    "size": "partial replications of 4 PaperBench papers + 1 dev paper (number of leaf nodes not stated)",
+    "split": "human-graded leaf nodes as ground truth",
+    "source": "replications written from scratch or by modifying authors' codebases",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4o (gpt-4o-2024-08-06)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "o1 (o1-2024-12-17, reasoning=high)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "o3-mini (o3-mini-2025-01-31, reasoning=high)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-R1 (via OpenRouter)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude 3.5 Sonnet New (claude-3-5-sonnet-20241022)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini 2.0 Flash (gemini-2.0-flash)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SimpleJudge backend o3-mini-2025-01-31 (reasoning high)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also_tested_on_JudgeEval": "GPT-4o-mini, GPT-4o, o1-mini, o1",
+     "response_parser": "gpt-4o-2024-08-06 extracts score, explanation, valid-score flag"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 runs per paper per model (2 seeds for o1 IterativeAgent and Gemini BasicAgent per Table 9); average Replication Score across papers; SEM reported",
+   "prompting": "BasicAgent: ReAct tool loop based on Inspect AI basic agent, with end_task tool, context trimming, paginated file reader; tools: bash, Python, web browser, file reader. IterativeAgent: no end-task tool, 'take next step' prompt. Task instructions in Figs 13-14.",
+   "retrieval": null,
+   "parameters": {
+    "agent_time_limit": "12 hours (36 h extended o1 run)",
+    "agent_hardware": "Ubuntu 24.04 Docker, single A10 GPU",
+    "api_credit_given": "HuggingFace key and OpenAI API with $1000",
+    "reproduce_runtime_cap": "12 hours in experiments (task text says 7 days)",
+    "judge_file_filter": "whitelist source files; if too big for context minus 10,000 tokens, judge ranks files and top ten are used",
+    "judge_context_reserve": "n_ctx - 10,000 tokens",
+    "max_steps": "not stated (task text uses ${max_steps} placeholder)",
+    "blacklist_monitor": "text search of agent logs for blacklisted URLs, manual review, disqualified scored 0"
+   },
+   "other": {
+    "human_baseline": "8 ML PhD participants, 4 papers, 3 attempts per paper, part-time over 4-week window, best@3; A10 GPU (A100 for four attempts); AI assistants allowed; snapshots graded at various hours",
+    "reproduction": "fresh VM Ubuntu 24.04, A10 GPU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Replication Score",
+     "definition": "Weighted average of leaf pass/fail scores propagated up the rubric tree; averaged across papers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1 / accuracy / precision / recall (JudgeEval)",
+     "definition": "Binary classification of leaf nodes against human labels, macro-averaged over papers",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Human ML PhDs (best@3, 48 h) on subset",
+    "Random judge baseline",
+    "BasicAgent vs IterativeAgent"
+   ],
+   "protocol": "Reproduce.sh executed in fresh VM, LLM judge grades each leaf; 3 runs per paper; SEM; Code-Dev variant skips reproduction and grades only Code Development nodes."
+  },
+  "availability": {
+   "code": "open-sourced (Abstract: 'We open-source our code'); URL not given in the text",
+   "weights": null,
+   "data": "open-sourced with code; URL not given in text"
+  },
+  "prompts": [
+   {
+    "purpose": "Judge file ranking",
+    "text": "SYSTEM: You are judging an attempt to reproduce a research paper. ... respond with a list of filepaths separated by newlines in descending order of importance.",
+    "where": "Figure 7 (abridged here; full text in paper)"
+   },
+   {
+    "purpose": "Judge grading",
+    "text": "Be strict and thorough in grading your resolution criteria, but do not check for things that are outside of your scope.",
+    "where": "Figures 8-9 (abridged)"
+   },
+   {
+    "purpose": "BasicAgent system prompt",
+    "text": "You are a helpful agent attempting to solve a task. ... Use as much of the available time as possible to refine and optimize your solution ... ACTUALLY REPLICATE the paper YOURSELF",
+    "where": "Figure 10 (abridged)"
+   },
+   {
+    "purpose": "IterativeAgent continue message",
+    "text": "Now given the previous progress made by the agent, take the next step towards replicating the paper",
+    "where": "Figure 12 (abridged)"
+   },
+   {
+    "purpose": "Task instructions",
+    "text": "You are tasked with reproducing a research paper. ... Your task is to replicate as many of the core contributions of this paper as possible",
+    "where": "Figures 13-14 (abridged)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best agent in the main setup (Claude 3.5 Sonnet New, BasicAgent) reaches 21.0% average Replication Score.",
+   "kind": null,
+   "source": null,
+   "metric": "Replication Score",
+   "value": 21.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 papers, 3 runs each, BasicAgent, 12 h limit, o3-mini-high SimpleJudge",
+   "note": null,
+   "where": "Sec 5.2, Table 4",
+   "quote": "Claude 3.5 Sonnet which scores 21.0%."
+  },
+  {
+   "claim": "o1-high with BasicAgent scores 13.2%; other models under 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Replication Score",
+   "value": 13.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BasicAgent, 20 papers x 3 runs, 12 h",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "OpenAI o1 performs weaker, with a score of 13.2%."
+  },
+  {
+   "claim": "With IterativeAgent, o1-high rises to 24.4% (12 h), more than BasicAgent's 13.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Replication Score",
+   "value": 24.4,
+   "unit": "%",
+   "baseline_value": 13.2,
+   "n": null,
+   "setup": "IterativeAgent (no early end, piecemeal prompt), 12 h",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row O1-HIGH"
+  },
+  {
+   "claim": "o3-mini-high rises from 2.6% (BasicAgent) to 8.5% with IterativeAgent.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Replication Score",
+   "value": 8.5,
+   "unit": "%",
+   "baseline_value": 2.6,
+   "n": null,
+   "setup": "IterativeAgent, 12 h",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row O3-MINI-HIGH"
+  },
+  {
+   "claim": "Claude 3.5 Sonnet falls from 21.0% to 16.1% with IterativeAgent, showing prompt sensitivity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Replication Score",
+   "value": 16.1,
+   "unit": "%",
+   "baseline_value": 21.0,
+   "n": null,
+   "setup": "IterativeAgent, 12 h",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row CLAUDE-3.5-SONNET"
+  },
+  {
+   "claim": "o1 IterativeAgent with a 36 h limit reaches 26.0%, only slightly above 12 h (24.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Replication Score",
+   "value": 26.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IterativeAgent, 36 h",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row O1-HIGH (extended 36 hour limit)"
+  },
+  {
+   "claim": "Human baseline (ML PhDs, best of 3, 48 h) scored 41.4% vs o1's 26.6% on the same 3-paper subset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Replication Score",
+   "value": 41.4,
+   "unit": "%",
+   "baseline_value": 26.6,
+   "n": null,
+   "setup": "3-paper subset; best@3 human attempts, 48 hours; o1 IterativeAgent 36 h run",
+   "note": "Fig 3 shows 4 papers; test-time-model-adaptation human attempt ended at 24 h and is excluded from the 3-paper subset.",
+   "where": "Sec 1",
+   "quote": "achieved 41.4% after 48 hours of effort, compared to 26.6% achieved by o1 on the same subset."
+  },
+  {
+   "claim": "o1 outperforms humans early but plateaus after the first hour; humans overtake after 24 h.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "o1 IterativeAgent 36 h run vs human attempts (Fig 3)",
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Best judge scaffold (o3-mini-high SimpleJudge) gets F1 0.83 on JudgeEval at about $66 per paper.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.83,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JudgeEval: partial replications of 4 PaperBench papers + 1 dev paper, human-graded leaf nodes, macro-averaged",
+   "note": null,
+   "where": "Sec 4.2, Table 3",
+   "quote": "with an F1 score of 0.83 at $66 USD per paper."
+  },
+  {
+   "claim": "o1 judge gets F1 0.84 but at $830 per paper; random baseline is 0.49.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.84,
+   "unit": "F1",
+   "baseline_value": 0.49,
+   "n": null,
+   "setup": "JudgeEval, SimpleJudge o1 high",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row O1, column F1"
+  },
+  {
+   "claim": "Judge F1 by type for o3-mini-high: Code Dev 0.72, Execution 0.82, Result Match 0.94.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (Code Development)",
+   "value": 0.72,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JudgeEval, o3-mini-high",
+   "note": null,
+   "where": "Appendix G, Table 8",
+   "quote": "O3-MINI-HIGH achieves an F1-score of 0.72 in Code Development"
+  },
+  {
+   "claim": "o1 on PaperBench Code-Dev scores 43.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Replication Score",
+   "value": 43.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Code-Dev variant (only Code Development nodes, no reproduction), o1 IterativeAgent",
+   "note": null,
+   "where": "Sec 1, Table 6",
+   "quote": "On this variant, o1 achieves a score of 43.4%."
+  },
+  {
+   "claim": "Code-Dev correlates only weakly with full PaperBench for o1 (Pearson r 0.48).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": 0.48,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "o1 performance, per footnote 5",
+   "note": "Fit given as PB = 0.45 PBCD + 0.05.",
+   "where": "Sec 2.6 footnote 5",
+   "quote": "o1 performance correlates with a Pearson r value of 0.48, with"
+  },
+  {
+   "claim": "Models score far higher on Code Development nodes than Execution or Result Match: o1 IterativeAgent 43.3 / 4.5 / 0.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Code Development score",
+   "value": 43.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-requirement-type average, o1 IterativeAgent",
+   "note": "Table 9 heading prints RESULTS ANALYSIS for the Result Match column. Human best@3 on 3-paper subset: 72.4 / 20.4 / 8.9.",
+   "where": "Appendix I.1, Table 9",
+   "table": "Table 9, row O1 (ITERATIVEAGENT), column CODE DEVELOPMENT"
+  },
+  {
+   "claim": "Judge cost per paper is about $66 (o3-mini) and about $10 for Code-Dev; roughly 50M input and 2M output tokens per paper.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Judge cost",
+   "value": 66,
+   "unit": "USD per paper",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SimpleJudge o3-mini-high",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "We estimate our judge with o3-mini costs around $66 USD in OpenAI API credits"
+  },
+  {
+   "claim": "An o1 IterativeAgent 12 h rollout costs about $400 per paper, about $8000 per full eval run.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Rollout cost",
+   "value": 400,
+   "unit": "USD per paper",
+   "baseline_value": null,
+   "n": null,
+   "setup": "o1 IterativeAgent, 12 h",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "it costs $400 in API"
+  },
+  {
+   "claim": "Agent-produced reproduce.sh scripts ran for 5.5 minutes on average; reproduction capped at 12 h.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Reproduction runtime",
+   "value": 5.5,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all agent submissions",
+   "note": null,
+   "where": "Sec 2.2 footnote 1",
+   "quote": "scripts executed for an average of 5.5 minutes"
+  },
+  {
+   "claim": "10 of 646 runs used blacklisted resources and were set to score 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Disqualified runs",
+   "value": 10,
+   "unit": "runs",
+   "baseline_value": null,
+   "n": 646,
+   "setup": "post-hoc monitor on agent logs, manual review",
+   "note": null,
+   "where": "Sec 2.5",
+   "quote": "We find 10 cases of using"
+  },
+  {
+   "claim": "Pruning the rubric at depth 3 cut grading cost 10x with only slight judge deterioration (single submission, preliminary).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Grading cost reduction",
+   "value": 10,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one rice/0 JudgeEval submission, o3-mini SimpleJudge",
+   "note": "Judge scored 0.30 at depth 3 vs 0.25 unpruned; human grade shown in red.",
+   "where": "Appendix H, Fig 6",
+   "quote": "pruning at depth 3 reduced grading cost by 10"
+  },
+  {
+   "claim": "Rubric corpus: 20 papers, 8,316 gradable leaf nodes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Leaf nodes",
+   "value": 8316,
+   "unit": "nodes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 ICML 2024 Spotlight/Oral papers",
+   "note": "Sec 3.1 says '8,316 leaf nodes'; Table 2 labels per-paper counts 'Nodes' but they are total nodes (Table 7 total vs leaf columns differ).",
+   "where": "Abstract",
+   "quote": "8,316 individually gradable tasks."
+  },
+  {
+   "claim": "Agents show high variance across runs on the same paper; authors recommend several seeds.",
+   "kind": "claim",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tables 10-18",
+   "note": null,
+   "where": "Appendix I"
+  }
+ ],
+ "limits": [
+  "Only 20 papers; authors argue thousands of rubric requirements mitigate this.",
+  "Contamination: authors' codebases exist online; future models may have internalised them.",
+  "Rubric creation takes an expert several full days each; hard to train others; hard to replicate the process.",
+  "LLM judge less accurate than an expert human (F1 0.83), non-deterministic; Code Development is the weakest type (F1 0.72).",
+  "Cost: about $8000 per eval run for o1 IterativeAgent plus about $66 per paper grading.",
+  "Human baseline is small (8 participants, 3 papers for the headline comparison), part-time, assigned to papers they felt confident about.",
+  "Claude 3.7 Sonnet could not be evaluated due to API rate limits; agent scaffolds only lightly tuned, so scores are initial baselines not capability ceilings.",
+  "Rubric child order encodes dependencies only implicitly; specification-gaming loopholes cannot be ruled out.",
+  "High variance across runs on same paper; Code-Dev only weakly correlated with full score."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Replication Score",
+   "definition": "weight-adjusted proportion of all satisfied rubric requirements",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Result Match / Execution / Code Development",
+   "definition": "three leaf requirement types determining which files the judge sees",
+   "where": "Sec 2.4, Table 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CORE-Bench",
+   "year": 2024,
+   "arxiv": "2409.11363",
+   "relation": "related",
+   "note": "reproduce results given the repository; PaperBench is from scratch",
+   "quote": null
+  },
+  {
+   "work": "MLE-bench",
+   "year": 2024,
+   "arxiv": "2410.07095",
+   "relation": "related",
+   "note": "Kaggle ML engineering agents",
+   "quote": null
+  },
+  {
+   "work": "RE-Bench",
+   "year": 2024,
+   "arxiv": "2411.15114",
+   "relation": "related",
+   "note": "7 open-ended ML research engineering tasks; human comparison trend consistent",
+   "quote": null
+  },
+  {
+   "work": "MLAgentBench",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Kaggle-style agent eval",
+   "quote": null
+  },
+  {
+   "work": "DSBench",
+   "year": 2024,
+   "arxiv": "2409.07703",
+   "relation": "related",
+   "note": "data science agents",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "uses-method",
+   "note": "BasicAgent architecture",
+   "quote": null
+  },
+  {
+   "work": "Inspect AI basic agent",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "BasicAgent is based on it",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "LLM judge idea",
+   "quote": null
+  },
+  {
+   "work": "Agent-as-a-Judge",
+   "year": 2024,
+   "arxiv": "2410.10934",
+   "relation": "related",
+   "note": "agent judges more accurate on some tasks",
+   "quote": null
+  },
+  {
+   "work": "ICML 2024 Spotlight and Oral papers",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "the 20 evaluated papers",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "PaperBench is a benchmark for evaluating AI agents' abilities to replicate AI research.",
+   "page": 2,
+   "why": "Pipeline: submission, reproduction, judge grading."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Rubrics hierarchically decompose the replication task into a tree of increasingly granular requirements.",
+   "page": 3,
+   "why": "Shows weighted-average score propagation (example 55%)."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparing human versus agent performance on a 4-paper subset of PaperBench.",
+   "page": 8,
+   "why": "o1 leads early, plateaus after 1 h; humans overtake after 24 h."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance on JudgeEval vs average cost per paper",
+   "page": 17,
+   "why": "Cost versus F1 trade-off of judge backends."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Replication score under rubric pruning depth for rice/0",
+   "page": 19,
+   "why": "Pruning at depth 3 gives 10x cheaper grading."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 9 column header reads RESULTS ANALYSIS where Result Match is meant.",
+  "Prompt texts in 'prompts' are abridged; text colour coding in Figs 8-9 is lost in extraction.",
+  "Main text says the judge sees the full rubric JSON; Appendix D says only siblings and direct ancestors."
+ ]
 }

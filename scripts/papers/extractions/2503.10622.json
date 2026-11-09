@@ -1,0 +1,744 @@
+{
+ "schema": 1,
+ "key": "2503.10622",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhu-2025-transformers-without-normalization.pdf",
+ "bib": {
+  "title": "Transformers without Normalization",
+  "authors": [
+   "Jiachen Zhu",
+   "Xinlei Chen",
+   "Kaiming He",
+   "Yann LeCun",
+   "Zhuang Liu"
+  ],
+  "first_author": "Zhu",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2503.10622",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 65418,
+  "chars_total": 65418,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can Transformers be trained without normalization layers by replacing them with a simple element-wise tanh with a learnable scale?",
+ "hypothesis": "Normalization layers matter mainly through their non-linear squashing of extreme activations, so a learnable scaled tanh can replace them.",
+ "contributions": [
+  "Observe that LN input-output maps in trained Transformers are tanh-like S-curves",
+  "Propose Dynamic Tanh DyT(x)=gamma*tanh(alpha x)+beta as a drop-in replacement",
+  "Show parity with LN/RMSNorm across vision, language, speech, DNA, diffusion, mostly without hyperparameter tuning"
+ ],
+ "method": {
+  "summary": "Replace each LN/RMSNorm (attention, FFN and final) with DyT and train both versions with the original public recipes and unchanged hyperparameters. alpha is a scalar initialised to 0.5 (tuned for LLaMA); gamma=1, beta=0.",
+  "task": "drop-in replacement of normalization layers in Transformers; pretraining and supervised training",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "train",
+    "size": "not stated",
+    "split": null,
+    "source": "Deng et al. 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": "200B tokens",
+    "split": null,
+    "source": "Gao et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "LibriSpeech",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Panayotov et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Human reference genome GRCh38",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "GRCh38 2013; eval on GenomicBenchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA 7B/13B/34B/70B with DyT",
+    "role": "proposed",
+    "params": "7B, 13B, 34B, 70B",
+    "architecture": "decoder-only Transformer, RMSNorm replaced by DyT, extra learnable scalar (init sqrt(d)) after embedding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 / 40 / 48 / 80",
+    "hidden": "4096 / 5120 / 8196 (as printed; Table 11 says 8192) / 8196",
+    "heads": null,
+    "context": "4096 tokens (inferred from benchmark sequence length only)",
+    "other": {}
+   },
+   {
+    "name": "LLaMA with RMSNorm",
+    "role": "baseline",
+    "params": "7B-70B",
+    "architecture": "LLaMA",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ViT-B/L, ConvNeXt-B/L, MAE, DINO, DiT-B/L/XL, wav2vec 2.0 Base/Large, HyenaDNA, Caduceus",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LN replaced by DyT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "each model's original objective",
+   "optimizer": "AdamW for ViT (beta (0.9,0.95) for ViT-L); LLaMA optimizer not stated",
+   "lr": "LLaMA 3e-4 (7B,13B), 1.5e-4 (34B,70B); ViT/ConvNeXt 4e-3; MAE 2.4e-3; DINO 7.5e-4 / 5e-4; DiT 4e-4; wav2vec 5e-4 (Base) / 3e-4 (Large); HyenaDNA 6e-4; Caduceus 8e-3",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "LLaMA 4M tokens",
+   "steps": null,
+   "epochs": "inferred: 300 for ViT-B/ConvNeXt-B (Fig 5 axis)",
+   "tokens": "200B (LLaMA, Pile); alpha0 search 30B",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "stochastic depth 0.1 (ViT-B), 0.4 (ViT-L)",
+   "hardware": "not stated for training",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "alpha_init": "0.5 default; LLaMA tuned (attn/other) 0.8/0.2, 0.6/0.15, 0.2/0.05, 0.2/0.05 for 7B..70B",
+    "DiT": "lr searched on LN models and reused; zero init removed for DyT",
+    "wav2vec": "first group norm kept",
+    "LLaMA recipe": "FMS-FSDP codebase, follows LLaMA 2"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config; seeds not stated",
+   "prompting": "lm-eval zero-shot, 15 tasks",
+   "retrieval": null,
+   "parameters": {
+    "alpha0": "0.5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "ImageNet-1K",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FID",
+     "definition": "standard ImageNet reference batch",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "LLM train loss",
+     "definition": "loss after 200B tokens",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "zero-shot avg",
+     "definition": "mean over 15 lm-eval tasks (anli_r1-3, arc_challenge, arc_easy, boolq, hellaswag, openbookqa, piqa, record, rte, truthfulqa_mc1/2, wic, winogrande)",
+     "unit": "accuracy",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LN / RMSNorm",
+    "Fixup",
+    "SkipInit",
+    "sigma-Reparam",
+    "BN (ResNet-50, VGG19)"
+   ],
+   "protocol": "single runs, no significance tests stated"
+  },
+  "availability": {
+   "code": "project page jiachenzhu.github.io/DyT",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We maintain the learning rate at the default 3e-4 for 7B and 13B and 1.5e-4 for 34B and 70B, in line with LLaMA 2.",
+    "where": "App A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DyT matches RMSNorm on LLaMA 7B: zero-shot average 0.513 for both; training loss 1.59 (RMSNorm) vs 1.60 (DyT)",
+   "kind": "measured",
+   "source": null,
+   "metric": "train loss",
+   "value": "1.59 vs 1.60",
+   "unit": "loss",
+   "baseline_value": "1.59",
+   "n": null,
+   "setup": "LLaMA pretraining on The Pile, 200B tokens, recipe of LLaMA 2 (FMS-FSDP), hyperparameters identical to RMSNorm model; DyT with alpha0 tuned per Table 10 and a learnable scalar after the embedding; loss is training loss after training",
+   "note": null,
+   "where": "Sec 5, Table 4",
+   "table": "Table 4, row LLaMA 7B, columns RMSNorm (0.513 / 1.59) and DyT (0.513 / 1.60)"
+  },
+  {
+   "claim": "LLaMA 13B: RMSNorm 0.529 / 1.53, DyT 0.529 / 1.54",
+   "kind": "measured",
+   "source": null,
+   "metric": "train loss",
+   "value": "1.53 vs 1.54",
+   "unit": "loss",
+   "baseline_value": "1.53",
+   "n": null,
+   "setup": "LLaMA pretraining on The Pile, 200B tokens, recipe of LLaMA 2 (FMS-FSDP), hyperparameters identical to RMSNorm model; DyT with alpha0 tuned per Table 10 and a learnable scalar after the embedding; loss is training loss after training",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LLaMA 13B, columns RMSNorm (0.529 / 1.53) and DyT (0.529 / 1.54)"
+  },
+  {
+   "claim": "LLaMA 34B: RMSNorm 0.536 / 1.50, DyT 0.536 / 1.50 (identical)",
+   "kind": "measured",
+   "source": null,
+   "metric": "train loss",
+   "value": "1.50 vs 1.50",
+   "unit": "loss",
+   "baseline_value": "1.50",
+   "n": null,
+   "setup": "LLaMA pretraining on The Pile, 200B tokens, recipe of LLaMA 2 (FMS-FSDP), hyperparameters identical to RMSNorm model; DyT with alpha0 tuned per Table 10 and a learnable scalar after the embedding; loss is training loss after training",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LLaMA 34B, columns RMSNorm (0.536 / 1.50) and DyT (0.536 / 1.50)"
+  },
+  {
+   "claim": "LLaMA 70B: RMSNorm 0.549 / 1.45, DyT 0.549 / 1.45 (identical)",
+   "kind": "measured",
+   "source": null,
+   "metric": "train loss",
+   "value": "1.45 vs 1.45",
+   "unit": "loss",
+   "baseline_value": "1.45",
+   "n": null,
+   "setup": "LLaMA pretraining on The Pile, 200B tokens, recipe of LLaMA 2 (FMS-FSDP), hyperparameters identical to RMSNorm model; DyT with alpha0 tuned per Table 10 and a learnable scalar after the embedding; loss is training loss after training",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row LLaMA 70B, columns RMSNorm (0.549 / 1.45) and DyT (0.549 / 1.45)"
+  },
+  {
+   "claim": "Summary claim on LLMs: DyT on par with RMSNorm at all four sizes",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA pretraining on The Pile, 200B tokens, recipe of LLaMA 2 (FMS-FSDP), hyperparameters identical to RMSNorm model; DyT with alpha0 tuned per Table 10 and a learnable scalar after the embedding; loss is training loss after training",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "As shown in Table 4, DyT performs on par with RMSNorm across all four model sizes."
+  },
+  {
+   "claim": "LLaMA alpha0 must be tuned and is smaller for wider models: optimal alpha0 (attention/other) 0.8/0.2 for 7B, 0.6/0.15 for 13B, 0.2/0.05 for 34B and 70B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.8/0.2, 0.6/0.15, 0.2/0.05, 0.2/0.05",
+   "unit": "alpha0 (attention/other)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA models pretrained 30B tokens each, compared by training loss",
+   "note": "Table 10 prints width 8196 for 34B/70B; Table 11 prints 8192.",
+   "where": "Sec 7.2",
+   "table": "Table 10, rows LLaMA 7B/13B/34B/70B, column optimal alpha0 (attention/other)"
+  },
+  {
+   "claim": "Larger models need smaller alpha0 for LLMs",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B-70B, 30B-token runs",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "1. Larger models require smaller α0 values."
+  },
+  {
+   "claim": "Higher alpha0 in attention-block DyT layers than in FFN/final DyT layers improves LLM loss",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B and 13B alpha0 grid at 30B tokens (Fig 11)",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "2. Higher α0 values for attention blocks improve performance."
+  },
+  {
+   "claim": "Width, not depth, determines optimal alpha0: widths 1024/2048/4096/8192 give 1.0/1.0, 1.0/0.5, 0.8/0.2, 0.2/0.05 at every depth 8-64",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA training, Table 11",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "We find that the model width is critical in determining the optimal α0, while model depth has minimal influence."
+  },
+  {
+   "claim": "Default alpha0=0.5 is adequate for non-LLM models; tuning it rarely helps",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.5,
+   "unit": "alpha0",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All non-LLM tasks; values 0.5 to 1.2 generally fine; supervised ViT-L diverges for alpha0 above 0.6",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "We find that tuning the initialization of α (denoted α0) rarely leads to significant performance improvements."
+  },
+  {
+   "claim": "Supervised ViT-L diverges for alpha0 > 0.6 at the default lr; larger model or lr needs smaller alpha0",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.6,
+   "unit": "alpha0",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K supervised ViT-L, Fig 9/10",
+   "note": null,
+   "where": "Sec 7.1",
+   "quote": "The main exception is supervised ViT-L experiments, where training becomes unstable and diverges when α0 exceeds 0.6."
+  },
+  {
+   "claim": "Without the learnable scalar (init sqrt(d)) after the embedding, DyT LLaMA activations start too small and training struggles",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA with DyT, Appendix A",
+   "note": null,
+   "where": "App A",
+   "quote": "Without this scaling scalar, we find that the magnitudes of model activations at the beginning of training are too small, and the training struggles to progress."
+  },
+  {
+   "claim": "Efficiency without compilation, inference, normalization layer only: RMSNorm 2.1s vs DyT 1.0s (down 52.4%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "2.1s vs 1.0s",
+   "unit": "s per 100 forward passes",
+   "baseline_value": "2.1s",
+   "n": null,
+   "setup": "LLaMA 7B, single sequence of 4096 tokens, H100, BF16, Hugging Face implementation, no optimisations",
+   "note": null,
+   "where": "App C",
+   "table": "Table 14, rows RMSNorm / DyT, column inference layer"
+  },
+  {
+   "claim": "Without compilation, inference, whole model: RMSNorm 14.1s vs DyT 13.0s (down 7.8%)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "14.1s vs 13.0s",
+   "unit": "s per 100 forward passes",
+   "baseline_value": "14.1s",
+   "n": null,
+   "setup": "same as above",
+   "note": null,
+   "where": "App C",
+   "table": "Table 14, column inference model"
+  },
+  {
+   "claim": "Without compilation, training, layer only: RMSNorm 8.3s vs DyT 4.8s (down 42.2%)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "8.3s vs 4.8s",
+   "unit": "s per 100 forward-backward passes",
+   "baseline_value": "8.3s",
+   "n": null,
+   "setup": "same as above",
+   "note": null,
+   "where": "App C",
+   "table": "Table 14, column training layer"
+  },
+  {
+   "claim": "Without compilation, training, whole model: RMSNorm 42.6s vs DyT 39.1s (down 8.2%)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "42.6s vs 39.1s",
+   "unit": "s per 100 forward-backward passes",
+   "baseline_value": "42.6s",
+   "n": null,
+   "setup": "same as above",
+   "note": null,
+   "where": "App C",
+   "table": "Table 14, column training model"
+  },
+  {
+   "claim": "With torch.compile, RMSNorm and DyT are identical: inference layer 0.3s both, model 12.3s both; training layer 3.9s both, model 38.9s both",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.3s / 12.3s / 3.9s / 38.9s",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B, 4096 tokens, H100, BF16, torch.compile",
+   "note": "Compiling the whole HF LLaMA model increased latency; compiling only the norm/DyT layers was more efficient.",
+   "where": "App C",
+   "table": "Table 15, rows RMSNorm and DyT (all columns equal)"
+  },
+  {
+   "claim": "Authors state no speedup over normalization when properly compiled",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA 7B",
+   "note": null,
+   "where": "Sec 9",
+   "quote": "we find that DyT offers no speedup over models with normalization layers when properly compiled/optimized (see Appendix C)"
+  },
+  {
+   "claim": "ViT-B ImageNet-1K top-1: LN 82.3% vs DyT 82.5%; ViT-L 83.1% vs 83.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "82.5% vs 82.3%",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K supervised, ConvNeXt recipe, 300 epochs per Fig 5, identical hyperparameters",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows ViT-B and ViT-L, columns LN and DyT"
+  },
+  {
+   "claim": "ConvNeXt-B 83.7% both; ConvNeXt-L 84.3% LN vs 84.4% DyT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "83.7/84.4",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K supervised",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows ConvNeXt-B and ConvNeXt-L"
+  },
+  {
+   "claim": "Self-supervised: MAE ViT-B 83.2/83.2, MAE ViT-L 85.5/85.4, DINO ViT-B p16 83.2/83.4, DINO p8 84.1/84.5 (LN/DyT)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K pretraining then fine-tuning; default hyperparameters",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, all rows, columns LN and DyT"
+  },
+  {
+   "claim": "DiT FID LN vs DyT: B 64.9/63.9, L 45.9/45.7, XL 19.9/20.8 (XL worse with DyT)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DiT on ImageNet-1K, lr searched on LN and reused for DyT, zero init removed for DyT",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, rows DiT-B, DiT-L, DiT-XL"
+  },
+  {
+   "claim": "wav2vec 2.0 validation loss LN/DyT: Base 1.95/1.95, Large 1.92/1.91; HyenaDNA 85.2/85.2, Caduceus 86.9/86.9",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "loss / %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LibriSpeech; GenomicBenchmarks",
+   "note": null,
+   "where": "Tables 5,6",
+   "table": "Tables 5 and 6, all rows"
+  },
+  {
+   "claim": "Removing tanh (identity) makes ViT training diverge: ViT-B reached 61.0% then failed; tanh 82.5%, hardtanh 82.2%, sigmoid 81.6%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 82.5,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K, ViT-B",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row ViT-B, columns identity/tanh/hardtanh/sigmoid"
+  },
+  {
+   "claim": "Removing learnable alpha hurts ViT-B: tanh 81.1% without vs 82.5% with alpha",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.1,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K ViT-B",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, column tanh, rows without alpha / with alpha"
+  },
+  {
+   "claim": "alpha tracks 1/std of activations during and after training",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-B, ConvNeXt-B (Fig 8)",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "Both analyses suggest that α functions partially as a normalization mechanism by learning values approximating 1/std of the input activations."
+  },
+  {
+   "claim": "Versus normalization-free baselines (lr searched for all): ViT-B LN 82.3, Fixup 77.2, SkipInit 74.1, sigmoidReparam 82.5, DyT 82.8; MAE ViT-L Fixup 74.1, DyT 85.8",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K, simple learning-rate search for all methods",
+   "note": "Column is sigma-Reparam in the paper.",
+   "where": "Table 9",
+   "table": "Table 9, rows ViT-B, ViT-L, MAE ViT-B, MAE ViT-L"
+  },
+  {
+   "claim": "DyT cannot replace BN in classic ConvNets: ResNet-50 76.2% BN vs 68.9% DyT; VGG19 72.7% vs 71.0%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "68.9% vs 76.2%",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K, torchvision recipes, same hyperparameters as BN",
+   "note": null,
+   "where": "App D",
+   "table": "Table 16, rows ResNet-50 and VGG19"
+  },
+  {
+   "claim": "Tuning lr gives only modest gains for DyT (ViT-B 82.5 to 82.8 at lr 6e-3; MAE ViT-B 83.2 to 83.7 at 3.2e-3)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix B",
+   "note": null,
+   "where": "App B",
+   "table": "Table 12, rows ViT-B and MAE ViT-B, column DyT (tuned)"
+  },
+  {
+   "claim": "About 99% of LN points fall in the linear range of the tanh-like curve; extremes (|x|>50 in ViT) are squashed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trained ViT-B, wav2vec 2.0 Large, DiT-XL (Fig 2)",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "Most points (∼99%) fall in this linear range."
+  }
+ ],
+ "limits": [
+  "Only LN and RMSNorm tested; DyT fails to replace BN in ResNet-50 and VGG19 (Table 16)",
+  "No speedup over normalization when compiled (Appendix C); benefits on other hardware uncertain",
+  "LLM alpha0 needs per-size tuning (30B-token searches), contradicting the 'no tuning' claim for LLMs; also needs extra scalar after embedding",
+  "LLaMA results are 200B-token runs, loss reported only after training, single seeds",
+  "Efficiency measured on one H100, one 4096-token sequence, forward/backward only",
+  "Efficiency table 14 numbers are uncompiled HF implementation"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Dynamic Tanh (DyT)",
+   "definition": "DyT(x) = gamma * tanh(alpha x) + beta with learnable scalar alpha",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Layer normalization",
+   "year": 2016,
+   "arxiv": "1607.06450",
+   "relation": "baseline",
+   "note": "LN replaced",
+   "quote": null
+  },
+  {
+   "work": "RMSNorm (Zhang and Sennrich)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LLaMA norm replaced",
+   "quote": null
+  },
+  {
+   "work": "Batch normalization",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "DyT fails to replace it",
+   "quote": null
+  },
+  {
+   "work": "LLaMA / LLaMA 2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "recipe and models",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LLM pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Fixup, SkipInit, sigma-Reparam",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 9 comparisons",
+   "quote": null
+  },
+  {
+   "work": "Ni et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LN non-linearity",
+   "quote": null
+  },
+  {
+   "work": "Brock et al. NF-Nets",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "normalizer-free ResNets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Output vs. input of selected LN layers in ViT, wav2vec 2.0, DiT",
+   "page": 3,
+   "why": "Shows LN is tanh-shaped"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Original block vs block with DyT",
+   "page": 2,
+   "why": "Drop-in swap"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Heatmaps of loss at 30B tokens for alpha0 settings",
+   "page": 11,
+   "why": "Attention vs other alpha0"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "x = tanh(self.alpha * x); return self.γ * x + self.β",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 10 prints width 8196 for 34B/70B; Table 11 uses 8192",
+  "Table 9 header is sigma-Reparam (text extraction shows sigmaReparam)",
+  "No embedded instructions found",
+  "Seeds, LLaMA optimizer/schedule/warmup not stated"
+ ]
+}

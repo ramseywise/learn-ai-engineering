@@ -35,7 +35,7 @@ finally:
 
 ### Blind catches hide wrong input
 
-Wilson shows how a blanket `except: pass` turns a caller's mistake into a plausible-looking result (*Machine Learning Engineering in Action*, ch. 10, Listings 10.10 to 10.13). A function that divides one list by another and wraps the division in a bare `except: pass` returns an empty list when given the string `'oops'` as the numerator list, with no error. Catching `ZeroDivisionError` alone fixes the intended case: 99 of 100 elements come back and the bad one is dropped. His final version logs the failure, substitutes `0.0` for that element, lets a `TypeError` propagate, and raises its own `CalculationError(ValueError)` if the output has a different length from the input. The book's own caveat is that printing to stdout is a weak way to record a failure; use `log` as below, so the failure lands where it can be searched. The chapter's demonstration is a single function, so it shows the mechanism rather than how often it bites. The same pattern is on the smell list in [readable code and smells](../../../software-design/notes/01-readable-code-and-smells.md).
+Wilson shows how a bare `except: pass` turns a caller's mistake into a plausible-looking result (*Machine Learning Engineering in Action*, ch. 10); the pattern is on the smell list in [readable code and smells](../../../software-design/notes/01-readable-code-and-smells.md), and the fix is the narrow catch and `log` call below.
 
 ## Your own exceptions
 

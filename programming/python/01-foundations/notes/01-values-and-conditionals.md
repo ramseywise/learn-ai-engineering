@@ -74,3 +74,7 @@ Wrap only the line that can fail, and name the exception you expect. A bare `exc
 ## Exercises
 
 [`practice/exercises/01_values_and_conditionals.py`](../practice/exercises/01_values_and_conditionals.py): pay with overtime, a grade from a score, and safe numeric parsing.
+
+## Next
+
+[2 — Functions](02-functions.md): wrapping this logic so you can call it again.

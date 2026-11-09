@@ -1,0 +1,675 @@
+{
+ "schema": 1,
+ "key": "2404.05405",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/allen-zhu-2024-physics-language-models.pdf",
+ "bib": {
+  "title": "Physics of Language Models: Part 3.3, Knowledge Capacity Scaling Laws",
+  "authors": [
+   "Zeyuan Allen-Zhu",
+   "Yuanzhi Li"
+  ],
+  "first_author": "Allen-Zhu",
+  "year": 2024,
+  "venue": "preprint (arXiv v1, April 7 2024; submitted for Meta internal review March 14, 2024)",
+  "arxiv": "2404.05405",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 186719,
+  "chars_total": 186719,
+  "engine": "pymupdf",
+  "skipped": "All text read. Rows of bare figure-axis labels (model-size dots such as '8-4', run names like 'N1000k-D10-C1-K1-L1-T40k', axis tick numbers) were filtered out of the later part of the read because they carry no prose; all prose, captions, parameter lists, proofs and references were read."
+ },
+ "type": "empirical",
+ "question": "How many bits of factual knowledge can a language model store per parameter, and how do training duration, architecture, quantization, MoE sparsity and junk data change that capacity?",
+ "hypothesis": "Knowledge storage scales linearly with parameters with a universal constant that can be measured on controlled synthetic data (stated implicitly: 'does the total knowledge scale linearly with the model's size? What is the exact constant?').",
+ "contributions": [
+  "A framework (bit-complexity lower bound, Theorem 3.2, and capacity ratio R(F)) that measures knowledge bits stored by a model on synthetic (name, attribute, value) data",
+  "12 results: 2 bits/param after 1000 exposures, 1 bit/param at 100 exposures, architecture, int8/int4 quantization, MoE, and junk data effects",
+  "Mitigation: prepend a special token (like a domain name) to useful data"
+ ],
+ "method": {
+  "summary": "Pretrain GPT2 (rotary embeddings, no dropout), LLaMA, Mistral and variants from random initialization on synthetic biographies (bioS, bioSsimple, bioR) and a parameterised bioD dataset, sweeping model size and number of people N. Learned knowledge bits are computed from the summed cross-entropy loss on knowledge tokens via the Theorem 3.2 lower bound, and divided by parameter count to give the capacity ratio. Variations: 1000 vs 100 exposures, architecture, GPTQ int8/int4, 32-expert MoE, 7/8 junk tokens with or without a special token.",
+  "task": "next-token pretraining on synthetic knowledge; capacity measurement",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "bioS(N)",
+    "role": "pretrain",
+    "size": "N from 10K to 20M people (bioS(20M) about 1B bits); 6 attributes each, ~47.6 bits/person excluding names",
+    "split": "none; knowledge learned is measured on the training people; extractability test fine-tunes on half of people, tests on other half",
+    "source": "Synthetic, from Allen-Zhu and Li [3]; online generation: each biography freshly sampled from 50 sentence templates per attribute, random order",
+    "preprocessing": "Paragraphs randomly concatenated with <EOS>, randomly cut into 512-token windows; GPT2Tokenizer (only 3275 distinct tokens used)"
+   },
+   {
+    "name": "bioSsimple(N)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Each biography generated once with fixed template choice and order",
+    "preprocessing": null
+   },
+   {
+    "name": "bioR(N)",
+    "role": "pretrain",
+    "size": "N up to 1M, 22GB",
+    "split": null,
+    "source": "bioS facts each written 40 times by LLaMA2",
+    "preprocessing": null
+   },
+   {
+    "name": "bioD(N,K,C,D,L,T)",
+    "role": "pretrain",
+    "size": "K,C 1 to 50; D 10 to 10,000; L 1 to 50; T 20 to 40,000; N 100K to 1M",
+    "split": null,
+    "source": "Synthetic random tuples (Definition 2.2); |N0|=400x400x1000 names",
+    "preprocessing": "One paragraph per person, random attribute order, fixed template"
+   },
+   {
+    "name": "Junk mixture",
+    "role": "pretrain",
+    "size": "1/8 of tokens bioS(N) useful (N 50K to 1M), 7/8 bioS(N'=100M) junk or N'=1K repetitive",
+    "split": null,
+    "source": "Synthetic",
+    "preprocessing": "Each 512-token window holds only useful or only junk data, separated by <EOS>"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT2-l-h (rotary, no dropout)",
+    "role": "proposed",
+    "params": "1M to 0.5B (bioS(N) base laws); GPT2-small counted as 88M",
+    "architecture": "GPT-2 decoder with rotary position embedding, no dropout, tied embedding/output",
+    "init_from": "random initialization",
+    "tokenizer": "GPT2Tokenizer",
+    "vocab": "3275 tokens used (of 50256)",
+    "layers": "l, 1-layer models excluded from main figures; up to GPT2-28-20, GPT2-25-20, GPT2-20-16",
+    "hidden": "64h",
+    "heads": "h",
+    "context": "512",
+    "other": {
+     "head_dim": "64",
+     "gpt2_small_med_large": "GPT2-12-12, GPT2-24-16, GPT2-36-20"
+    }
+   },
+   {
+    "name": "LLaMA-l-h",
+    "role": "baseline",
+    "params": null,
+    "architecture": "gated MLP (silu), untied weights, LLaMA tokenizer, no layernorm bias, no GQA",
+    "init_from": "random initialization",
+    "tokenizer": "LLaMA tokenizer",
+    "vocab": null,
+    "layers": "l",
+    "hidden": "64h",
+    "heads": "h",
+    "context": "512",
+    "other": {
+     "variants": "tied weights; standard MLP; GPT2Tokenizer"
+    }
+   },
+   {
+    "name": "Mistral-l-h",
+    "role": "baseline",
+    "params": null,
+    "architecture": "gated MLP with 10.5d^2 MLP params, group-query attention (4 groups if h%4==0, 1 if odd, else 2)",
+    "init_from": "random initialization",
+    "tokenizer": "near-LLaMA tokenizer",
+    "vocab": null,
+    "layers": "l",
+    "hidden": "64h",
+    "heads": "h",
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "GPT2_1/4 and GPT2_0",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GPT2 with MLP d->d->d (1/4 size) or no MLP",
+    "init_from": "random initialization",
+    "tokenizer": "GPT2Tokenizer",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "GPT2-MoE (32 experts)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "MLP replaced by 32 experts d->d->d, tutel; topk=1, cap factor=2 (8 at test); total/effective params ratio ~11.3",
+    "init_from": "random initialization",
+    "tokenizer": "GPT2Tokenizer",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard autoregressive cross-entropy",
+   "optimizer": "AdamW",
+   "lr": "0.0005 to 0.001 typical; per-N values in other (0.0002 to 0.005)",
+   "lr_schedule": "cosine decay from 1 to 0.1 times the reference rate",
+   "warmup": "1K steps",
+   "batch_size": "12 to 1536, scaled with N (see other)",
+   "steps": "about 140K (N=10K) to about 1M (N=10M) for 1000 exposures",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512",
+   "precision": "mixed-precision fp16 (bf16 for LLaMA/Mistral where fp16 unstable; GPT2 bf16 nearly identical)",
+   "weight_decay": "0.001 to 0.02 per N",
+   "dropout": "none",
+   "regularisation": null,
+   "hardware": "64 A100s for GPT2-20-16 on bioS(10M)",
+   "compute": null,
+   "wall_clock": "8.5 days (GPT2-20-16, bioS(10M), 1000 exposures, 64 A100s); 2.4 days (GPT2-12-32, bioS(20M), 100 exposures, hardware not stated)",
+   "seeds": null,
+   "other": {
+    "param_1000_exposure": "N=10K wd .02 lr .001 bs 24 (~140K steps); 20K wd .02 lr .001 bs 48 (~140K); 50K wd .02 lr .001 bs 96 (~175K); 100K/200K wd .02 lr .001 bs 192 (~175K/349K); 500K/1M wd .01 lr .0005 bs 192 (~435K/870K); 2M wd .005 lr .0003 bs 1536 (~220K); 5M wd .002 lr .0003 bs 1536 (~540K); 10M wd .001 lr .0003 bs 1536 (~1M)",
+    "param_100_exposure": "50K wd .01 lr .001 bs 12; 100K lr .001 bs 24; 200K lr .001 bs 48; 500K lr .0005 bs 96; 1M lr .0005 bs 192; 2M lr .0003/.0005/.001 bs 384; 5M lr .0003/.0005 bs 768; 10M lr .0002/.0003/.0005 bs 1024; 20M wd .002 lr .0002/.0003/.0005 bs 1536 (bs 1280 for GPT2-28-20)",
+    "bioD": "wd 0.01, lr 0.0005, batch 192, 1000 exposures",
+    "LLaMA_Mistral": "best of 3 learning rates per N; bf16 for 2M+ at 1000 exposures and for all 100-exposure runs",
+    "MoE": "higher lrs, e.g. 1000 exposure N=10K lr .001/.002; 100 exposure 50K lr .001/.002/.005",
+    "junk": "per-run wd/lr/batch in App E Parameter 10 (e.g. 100-exposure junk N=50K wd .01 lr .0003/.0005/.001 bs 12; 1000-exposure N=200K bs 1536)",
+    "gpus_irrelevant": "Remark A.3: results same on 64 GPUs bs 24 or 1536 GPUs bs 1",
+    "exposures": "1000 or 100 (also 300/600 with junk); 100 exposures of bioR = 2.5 passes, 1000 = 25 passes"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Memorization test: prompt 'Anya Briar Forger was born on' and check generation; extractability: QA text 'What is the birthday of Anya Briar Forger? Answer: October 2, 1996.'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "extractability_finetune": "LoRA on half of people, ranks (r',r) in {(8,2),(16,2),(8,4),(32,4),(8,8),(32,8),(128,8),(32,16),(128,16)}, best reported; no warmup, bs 96, lr 0.001 linear decay to 0, wd 0.1, 75,000 steps",
+    "quantization": "auto_gptq (GPTQ), calibration on 1000 people's biographies"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "capacity ratio R(F)",
+     "definition": "[N log2(N0/e^p1) + N log2(S0/e^p2)] / P for bioS (with an extra diversity term for bioD), p1 = summed loss on name tokens, p2 = summed loss on value tokens; P = parameters",
+     "unit": "bits per parameter",
+     "higher_is_better": true
+    },
+    {
+     "name": "max capacity ratio Rmax(F)",
+     "definition": "bit complexity of the data (loss zero) divided by P",
+     "unit": "bits per parameter",
+     "higher_is_better": null
+    },
+    {
+     "name": "memorizable / extractable knowledge accuracy",
+     "definition": "summed per-person accuracy over five attributes (company city excluded)",
+     "unit": "# of people",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT2 vs LLaMA, Mistral, GPT2 with 1/4 MLP, no MLP, 32-expert MoE; no-junk vs junk"
+   ],
+   "protocol": "Peak R(F) across a sweep of model shapes per N; positive results use one fixed lr set, negative results report the best of 3 lrs. No seeds or error bars stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.GPT2.params",
+    "quote": "GPT2small, typically known to have 124M parameters, is counted as having only 88M parameters",
+    "where": "App A"
+   },
+   {
+    "field": "training.other.param_1000_exposure",
+    "quote": "For N = 10K, we use wd = 0.02, lr = 0.001, and batch size 24 (about 140K training steps);",
+    "where": "App A.1 Parameter 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Sufficiently trained GPT2 stores about 2 bits of knowledge per parameter (peak capacity ratio).",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio R(F)",
+   "value": 2,
+   "unit": "bits/param",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT2 (rotary, no dropout) trained from scratch on synthetic bioS(N) biographies, N 10K to 10M, models 1M to 0.5B params, 1000 exposures per knowledge piece, fp16, AdamW",
+   "quote": "we establish that language models can and only can store 2 bits of",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "In the 1000-exposure setting no model exceeds a capacity ratio of 2.3; peak is at least 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio R(F)",
+   "value": 2.3,
+   "unit": "bits/param (upper bound over all models)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT2 (rotary, no dropout) trained from scratch on synthetic bioS(N) biographies, N 10K to 10M, models 1M to 0.5B params, 1000 exposures per knowledge piece, fp16, AdamW",
+   "quote": "(c) across all models, R(F) ≤2.3.",
+   "table": null,
+   "note": "Peak R(F) >= 2 stated on the previous lines of Result 1(a).",
+   "where": "Sec 5, Result 1"
+  },
+  {
+   "claim": "Reaching 2 bits/param needs about 1000 exposures of each knowledge piece.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exposures",
+   "value": 1000,
+   "unit": "exposures",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT2 (rotary, no dropout) trained from scratch on synthetic bioS(N) biographies, N 10K to 10M, models 1M to 0.5B params, 1000 exposures per knowledge piece, fp16, AdamW",
+   "quote": "Achieving a 2bit/param capacity requires each knowledge piece to be visited 1000 times during",
+   "table": null,
+   "note": "An exposure is one appearance of the knowledge piece, not a pass over the data; bioS 1000 exposures is under 1 pass, bioR 1000 exposures is 25 passes.",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "With only 100 exposures the GPT2 capacity ratio falls to 1 bit/param (peak at least 1), a loss of no more than 2x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio R(F)",
+   "value": 1,
+   "unit": "bits/param",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT2 on bioS(N), N 10K to 10M, 100 exposures, learning rates tuned per N (Parameter 2)",
+   "quote": "capacity ratio falls to 1bit/param.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1 Result 4, Sec 6"
+  },
+  {
+   "claim": "A 7B model is predicted to store 14B bits, more than English Wikipedia plus textbooks by the authors' estimate.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 14,
+   "unit": "B bits (7B params x 2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Extrapolation of the 2 bits/param law; Wikipedia 4.5B words, textbooks under 16B words (Remark G.1), under 14B bits of knowledge",
+   "quote": "Consequently, a 7B model can store 14B bits of",
+   "table": null,
+   "note": null,
+   "where": "Abstract, Remark 1.1"
+  },
+  {
+   "claim": "int8 quantization (GPTQ via auto_gptq, calibration on 1000 biographies) leaves capacity unchanged; int4 drops it to 0.7 bits/param.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio R(F)",
+   "value": 0.7,
+   "unit": "bits/param (int4)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT2 models from the base scaling laws quantized post-training to int8/int4; the body text says int4 loses 'more than 2x'",
+   "quote": "quantizing to int4 reduces capacity to 0.7bit/param.",
+   "table": null,
+   "note": "Sec 8 body says 'to int4 reduces their capacity by more than 2x' and does not repeat 0.7; 0.7 appears only in the Sec 1 summary.",
+   "where": "Sec 1 Result 8"
+  },
+  {
+   "claim": "At 100 exposures LLaMA's capacity ratio can be 1.3x worse than GPT2's even after tuning learning rate; gated MLP is the cause.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio ratio GPT2/LLaMA",
+   "value": 1.3,
+   "unit": "x worse",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bioS(N), 100 exposures, LLaMA/Mistral learning rate best of three, bf16 (fp16 often fails for LLaMA/Mistral <100M)",
+   "quote": "capacity ratio can be 1.3x worse than GPT2",
+   "table": null,
+   "note": null,
+   "where": "Sec 7 Result 6, Fig 4-5"
+  },
+  {
+   "claim": "At 100 exposures, removing all MLP layers lowers GPT2 capacity ratio by more than 1.5x; shrinking the MLP to 1/4 does not matter.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio ratio",
+   "value": 1.5,
+   "unit": "x lower",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bioS(N), 100 exposures, GPT2 with no MLP (GPT2_0), Fig 4",
+   "quote": "Removing MLPs decreases the capacity ratio by more than 1.5x.",
+   "table": null,
+   "note": null,
+   "where": "Sec 7 Result 6"
+  },
+  {
+   "claim": "MoE with 32 experts (topk=1, cap factor=2) lowers peak capacity ratio only 1.3x at 1000 exposures despite 11.3x fewer parameters used at inference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio ratio",
+   "value": 1.3,
+   "unit": "x decrease",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT2-MoE 32 experts, bioS(N), capacity ratio measured against total parameters",
+   "quote": "in the 1000-exposure settings, the peak capacity ratio decreases by 1.3x; and",
+   "table": null,
+   "note": "Figure 7 text says 8.8% of total parameters used at inference; Fig 16 caption and Sec 9 say 11.3x fewer.",
+   "where": "Sec 9 Result 9"
+  },
+  {
+   "claim": "MoE with 32 experts lowers peak capacity ratio 1.5x at 100 exposures.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio ratio",
+   "value": 1.5,
+   "unit": "x decrease",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above, 100 exposures",
+   "quote": "in the 100-exposure settings, the peak capacity ratio decreases by 1.5x.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9 Result 9"
+  },
+  {
+   "claim": "With 7/8 junk tokens and 100 exposures of useful data, capacity for useful knowledge degrades by up to 20x versus no junk.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio ratio",
+   "value": 20,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixture: 1/8 of tokens from bioS(N) (useful) and 7/8 from bioS(N'=100M) (junk), GPT2, useful data seen 100 exposures (so about 8x more total tokens than the no-junk 100-exposure run); N up to 1M",
+   "quote": "the capacity ratio may degrade by 20x compared",
+   "table": null,
+   "note": "Abstract/Sec 1 phrase it 'sometimes by 20x'; footnote: junk persons seen only 0.2 times (N=200k).",
+   "where": "Sec 10 Result 10, Fig 8(b) vs 8(a)"
+  },
+  {
+   "claim": "More exposures of useful data under 7/8 junk reduce the loss to 3x, 1.5x, 1.3x at 300, 600, 1000 exposures (relative to 100 exposures without junk).",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio ratio",
+   "value": 3,
+   "unit": "x (300 exposures; 1.5x at 600; 1.3x at 1000)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixture: 1/8 of tokens from bioS(N) (useful) and 7/8 from bioS(N'=100M) (junk), GPT2, useful data seen 100 exposures (so about 8x more total tokens than the no-junk 100-exposure run); N up to 1M; 300/600/1000 exposures, N<=500K (300,600) or <=200K (1000)",
+   "quote": "capacity ratio still degrades by 3x/1.5x/1.3x",
+   "table": null,
+   "note": null,
+   "where": "Sec 10 Result 10, Fig 8(c)-(e)"
+  },
+  {
+   "claim": "Prepending a special token to all useful data cuts the 100-exposure junk loss from 20x to 2x; at 300 exposures it matches the no-junk 100-exposure law.",
+   "kind": "measured",
+   "source": null,
+   "metric": "capacity ratio ratio",
+   "value": 2,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixture: 1/8 of tokens from bioS(N) (useful) and 7/8 from bioS(N'=100M) (junk), GPT2, useful data seen 100 exposures (so about 8x more total tokens than the no-junk 100-exposure run); N up to 1M; special token at the start of every useful document (like wikipedia.org); model not told it marks quality data",
+   "quote": "the capacity ratio degrades only by 2x (Figure 8(g) vs. Figure 8(a)).",
+   "table": null,
+   "note": null,
+   "where": "Sec 10 Result 12, Fig 8(g)(h)"
+  },
+  {
+   "claim": "If the 7/8 junk is highly repetitive (bioS with N'=1K), the 100-exposure capacity of useful data is unchanged.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixture: 1/8 of tokens from bioS(N) (useful) and 7/8 from bioS(N'=1K) (junk), GPT2, useful data seen 100 exposures (so about 8x more total tokens than the no-junk 100-exposure run); N up to 1M",
+   "quote": null,
+   "table": null,
+   "note": "No number; claim only.",
+   "where": "Sec 10 Result 11, Fig 8(f)"
+  },
+  {
+   "claim": "Capacity ratio is nearly unchanged (slightly lower) when each biography is rewritten 40 times by LLaMA2 (bioR) versus bioS; low-diversity bioSsimple is also slightly lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 exposures; bioR N<=1M (22GB), bioSsimple, Fig 11",
+   "quote": null,
+   "table": null,
+   "note": "Claim only; no number printed beyond 'approximately 2'.",
+   "where": "Sec 5.1 Result 2, App A.3"
+  },
+  {
+   "claim": "Knowledge learned at the 2 bits/param boundary is also extractable via QA fine-tuning (LoRA); accuracy drops only 1.2x for models exactly at the boundary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extractable-knowledge accuracy",
+   "value": 1.2,
+   "unit": "x decrease in total accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bioS(N) GPT2, LoRA fine-tune on half the people, test on the other half; best of 9 LoRA rank choices",
+   "quote": "there a 1.2x decrease in total accuracy.24",
+   "table": null,
+   "note": "Fine-tuning: no warmup, batch 96, lr 0.001 linear decay to 0, wd 0.1, 75,000 steps.",
+   "where": "App A.2"
+  },
+  {
+   "claim": "Each bioS person carries about 47.6 bits of knowledge excluding names.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 47.6,
+   "unit": "bits/person",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bioS attribute space S0 (birth date, city, university, major, employer, gender)",
+   "quote": "each person contains log2(S0) ≈47.6 bits of knowledge.",
+   "table": null,
+   "note": null,
+   "where": "Remark 4.4"
+  },
+  {
+   "claim": "GPT2-20-16 on bioS(10M) for 1000 exposures cost 8.5 days on 64 A100s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 8.5,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "64 A100s, 1000 exposures; GPT2-12-32 on bioS(20M) 100 exposures took 2.4 days (hardware not stated)",
+   "quote": "Training GPT2-20-16 on bioS(10M) for 1000 exposures costs 8.5 days with 64 A100s,",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, Fig 1 caption"
+  },
+  {
+   "claim": "Under the paper's counting (unused embedding rows excluded), GPT2-small has 88M parameters on bioS rather than 124M.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88,
+   "unit": "M params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bioS vocabulary uses only 3275 GPT2 tokens",
+   "quote": "GPT2small, typically known to have 124M parameters, is counted as having only 88M",
+   "table": null,
+   "note": "Model sizes in all capacity ratios exclude unused embedding rows.",
+   "where": "App A"
+  }
+ ],
+ "limits": [
+  "Synthetic, uniformly random (name, attribute, value) facts; real knowledge is not uniform and not measured; the 2 bits/param is for idealised data",
+  "Only exposures of 100 and 1000 for base laws; no exposure counts beyond 1000 without junk, and capacity law needs 1000 exposures to reach 2",
+  "Largest models only 0.5B params, GPT2 up to 28 layers; authors saw 'no need to scale up further'",
+  "Single quantization method (GPTQ via auto_gptq); authors say other methods unexplored; int4 result may reflect the package",
+  "Negative results use best-of-3 learning rates, positive results single lr sets (deliberate asymmetry)",
+  "Seeds and variance not reported",
+  "Footnote 19 omitted experiment on layer-removal probing",
+  "Paper contains no analysis of membership inference, memorization of rare strings, or tokens-per-parameter thresholds"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "capacity ratio",
+   "definition": "model's learned knowledge bits (Theorem 3.2 lower bound) divided by parameter count",
+   "where": "Def 4.1"
+  },
+  {
+   "term": "N-exposure",
+   "definition": "each knowledge piece is visited N times during training, differing from N passes since one pass can expose a piece many times",
+   "where": "Sec 1"
+  },
+  {
+   "term": "bit complexity",
+   "definition": "minimum bits required to encode the N knowledge tuples",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Physics of Language Models: Part 3.1, Knowledge Storage and Extraction",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Source of bioS data and the extractability protocol (arXiv 2309.14316 in reference list)",
+   "quote": null
+  },
+  {
+   "work": "Physics of Language Models: Part 3.2, Knowledge Manipulation",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "arXiv 2309.14402",
+   "quote": null
+  },
+  {
+   "work": "Physics of Language Models: Part 1, Context-Free Grammar",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "arXiv 2305.13673; absolute positional embedding limits",
+   "quote": null
+  },
+  {
+   "work": "GPTQ",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "int8/int4 quantization, arXiv 2210.17323",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "base architecture",
+   "quote": null
+  },
+  {
+   "work": "LLaMA / Llama 2 / Mistral 7B",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared architectures; LLaMA2 also writes bioR",
+   "quote": null
+  },
+  {
+   "work": "Shazeer GLU variants",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "gated MLP, arXiv 2002.05202",
+   "quote": null
+  },
+  {
+   "work": "Tutel MoE",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MoE implementation, arXiv 2206.03382",
+   "quote": null
+  },
+  {
+   "work": "Kaplan et al. 2020; Hoffmann et al. 2022",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "standard compute scaling laws the paper contrasts with",
+   "quote": null
+  },
+  {
+   "work": "LoRA (Hu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "extractability fine-tuning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Scaling laws for GPT2 pretrained on bioS(N) data using fp16 for 1000/100 exposures.",
+   "page": 9,
+   "why": "Shows learned bits vs params with 2/1 bit/param lines"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "A closer comparison on LLaMA's scaling laws with bioS(N) data for 100 exposures.",
+   "page": 15,
+   "why": "Isolates gated MLP as the cause of LLaMA's deficit"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Capacity ratios with 7/8 junk data (useful data observed 100/300/600/1000 exposures during pretraining).",
+   "page": 18,
+   "why": "Junk penalty and special-token fix in one view"
+  }
+ ],
+ "code": [
+  {
+   "where": "Def 4.3",
+   "snippet": "R(F) = (N log2(N0/e^p1) + N log2(S0/e^p2)) / P ; Rmax(F) = (N log2(N0/N) + N log2 S0) / P",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure axis labels (model-shape dots, run names) appear as text noise in the cache; filtered when reading.",
+  "Intro says int4 gives 0.7 bit/param but Sec 8 only says more than 2x loss.",
+  "Figure 7 says 8.8% of parameters used at inference; text says 11.3x fewer (same thing, 1/11.3).",
+  "No embedded instructions found."
+ ]
+}

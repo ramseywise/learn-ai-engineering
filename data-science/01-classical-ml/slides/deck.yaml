@@ -1,4 +1,4 @@
-# Classical ML lecture deck. Covers notes 01-15, in the README's syllabus order, opened by an overview part.
+# Classical ML lecture deck. Covers notes 01 to 15 including 04b and 05b, in the README's reading order (01, 02, 03, 04, 04b, 06, 07, 09, 08, 05, 05b, 10 to 15), opened by an overview part.
 # Levels: LEVEL=core is the talk for any audience, practice adds how it is done, and the full deck adds code and maths.
 # Build: make slides PILLAR=data-science/01-classical-ml STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
@@ -138,9 +138,9 @@ parts:
         image: ../../sources/images/classical-overfit-curve.png
         caption: "A tree on breast cancer, 20 stratified splits: depth 10 scores 1.000 on train and 0.927 on test, and test peaks at 0.931 at depth 5. Run `practice/overfit_curve.py`."
         bullets:
-          - "**Underfit:** low train score and low test score."
-          - "**Overfit:** train pulls away from a test score that stops improving."
-          - "**Every family has a knob** that moves along this curve."
+          - "**Underfit:** train and test both low."
+          - "**Overfit:** train pulls away from test."
+          - "**Every family has a knob** on this curve."
         takeaway: Read train and test together, since both low is underfitting and a wide gap is overfitting.
         source: notes/01-statistical-foundations.md  # also: notes/06-ensembles.md
         notes: >-
@@ -185,7 +185,7 @@ parts:
           knn.fit(X_train, y_train)                  # 2. fit
           y_pred = knn.predict(X_test)               # 3. predict
           print(knn.score(X_test, y_test))           # 4. score: 0.974
-        takeaway: The API is uniform by design, so estimators chain in pipelines and plug into search.
+        takeaway: "Choose, fit, predict, score: the same four calls for every family, so swapping a model is one line."
         source: notes/01-statistical-foundations.md
         notes: >-
           The scikit-learn paper names this consistency as a goal of the library. Because the interface is the same, we can
@@ -333,12 +333,12 @@ parts:
         image: ../../sources/images/classical-leaky-selection.png
         caption: "Ten datasets of pure noise, keeping the top 5% of 10,000 columns: mean R² 0.90 leaky, -0.10 in a pipeline. Run `practice/leaky_selection.py`."
         bullets:
-          - "**Select, then cross-validate:** selection saw every fold's target."
-          - "**Cross-validate the pipeline:** selection is refit inside each fold, and the score is honest."
-          - "**fit** runs `fit_transform` on each step. **predict** runs only `transform`."
+          - "**Select first:** selection saw every fold's target."
+          - "**Pipeline:** selection is refit inside each fold."
         takeaway: Any step with a fit goes in a pipeline, refit inside each fold, and the chain ships as one object.
         source: notes/03-feature-engineering-and-pipelines.md
         notes: >-
+          In a pipeline, fit runs fit_transform on each step and predict runs only transform.
           This is the most important bug in applied machine learning. Nothing crashes. You get a wonderful score. With scaling the bias is small, and with selection it is enormous. The note's single run on seed 42 gets 0.89 and -0.03, and the book's own run gets 0.91 and -0.25. Ten datasets give the bars here. Pipelines exist for this reason. The chain does the right thing in each fold, you can tune preprocessing jointly with the model, and the same object goes to production. That closes the section: we can now trust a score, so next we go looking for a better one.
 
   - title: Winning on tables
@@ -354,7 +354,7 @@ parts:
         lead: With a score we can believe, we can look for the strongest model on a table.
         statement: "Bagging averages deep trees to cut variance. Boosting adds shallow trees to cut bias. Together they are the default for tables."
         attribution: Breiman 2001 for forests, Friedman 2001 for gradient boosting
-        takeaway: Bagging averages deep trees to cut variance, and boosting adds shallow trees to cut bias.
+        takeaway: Try a forest for stable variance and boosting for accuracy, and stop boosting early.
         source: notes/06-ensembles.md
         notes: >-
           Averaged trees have lower variance, but only so far: correlated errors don't average away. That's why forests also
@@ -378,8 +378,8 @@ parts:
         takeaway: Each new tree fits the loss's negative gradient, so boosting is gradient descent with trees as steps, and early stopping picks the rounds.
         source: notes/06-ensembles.md
         notes: >-
-          On adult census with no tuning beyond a lower learning rate, sklearn's histogram booster reaches 0.927 against
-          0.896 for a 300-tree forest on one-hot features. More forest trees can only average away variance, so the curve flattens. More boosting rounds keep fitting the training set, so the test curve turns over: at a rate of 0.05 boosting peaks at 0.928 with 200 trees and falls to 0.920 at 2,000. A forest on ordinal-coded columns reaches 0.900 at 500. That's why rounds get early stopping rather than a grid. Now which library?
+          On adult census with no tuning beyond a lower learning rate, on the five-seed table sklearn's histogram booster reaches 0.929 against
+          0.897 for a 300-tree forest on one-hot features. More forest trees can only average away variance, so the curve flattens. More boosting rounds keep fitting the training set, so the test curve turns over: at a rate of 0.05 boosting peaks at 0.928 with 200 trees and falls to 0.920 at 2,000. A forest on ordinal-coded columns reaches 0.900 at 500. That's why rounds get early stopping rather than a grid. Now which library?
 
       - layout: table
         beat: practice
@@ -432,7 +432,7 @@ parts:
         beat: problem
         title: Tuning gained 0.0009. Choosing the family gained 0.025.
         recall: On adult census, how did the gain from tuning compare with the gain from choosing the family?
-        statement: "On the adult census test rows, moving from logistic regression to boosting adds 0.025 of AUC. A 32-trial search on top of boosting adds 0.0009."
+        statement: "Boosting adds 0.025 of AUC over logistic regression. A 32-trial search adds 0.0009."
         attribution: "AUC 0.9013, then 0.9263, then 0.9272, inside a bootstrap 95% interval of 0.9209 to 0.9337"
         takeaway: On adult census boosting added 0.025 AUC and a 32-trial search 0.0009, so choose the family first.
         source: notes/09-training-and-tuning.md
@@ -513,6 +513,7 @@ parts:
         level: practice
         title: Folds must mimic how new data will arrive
         recall: When does a shuffled split flatter a model?
+        lead: Match the splitter to how the data was collected, or the score flatters the model.
         header: [Your data, Splitter, Measured]
         widths: [3.2, 2.6, 6]
         rows:
@@ -542,7 +543,7 @@ parts:
       - layout: cards
         beat: fundamentals
         title: Three questions, three tools
-        recall: Which tool would you use for how a feature moves the prediction?
+        recall: Which tool answers which interpretability question?
         cards:
           - {title: "What does it rely on?", body: Permutation importance on held-out data}
           - {title: "How does a feature act?", body: "Partial dependence, with one line per row (ICE)"}
@@ -588,7 +589,7 @@ parts:
         title: Built-in importance credits random columns
         recall: Why does a random column get impurity credit but not permutation credit?
         image: ../../sources/images/classical-importance-noise.png
-        caption: "LightGBM on adult census with two planted random columns: gain share 0.028 and 0.023, permutation AUC drop 0.0002 and 0.0003. Run `practice/importance_noise.py`."
+        caption: "Adult census, two planted random columns: gain share 0.028 and 0.023, permutation AUC drop 0.0002 and 0.0003. Run `practice/importance_noise.py`."
         takeaway: Gain is measured on training data and credits overfit noise, so use permutation on held-out data.
         source: notes/08-model-interpretability.md
         notes: >-
@@ -607,7 +608,7 @@ parts:
         lead: Now the labels go away, and with them the score.
         statement: "Unsupervised learning has no ground truth, so no number tells you the structure you found is the one you wanted."
         attribution: Judge by stability, by looking at the result, and by whether it helps a later task
-        takeaway: Treat clusters and components as hypotheses to check, not results to report.
+        takeaway: Judge clusters by stability, by looking at them, and by whether they help a later task, and treat them as hypotheses until then.
         source: notes/05-unsupervised-learning.md
         notes: >-
           Two kinds of work live here. Transforming the data, with PCA, NMF or t-SNE, and grouping it, with k-means,
@@ -668,6 +669,32 @@ parts:
           between two regimes, 1.000 against 0.000 for a Gaussian per feature, and 60 noise columns take it from 0.965 to 0.489.
           Those two tables are generated by `practice/isolation_forest.py`.
 
+      - layout: compare
+        beat: pitfalls
+        level: practice
+        title: One-hot lets the numbers shout, and FAMD rebalances
+        recall: Why does k-means on one-hot columns ignore the categories?
+        lead: 1,200 generated customers, 5 numeric and 6 categorical columns. In k-means a column's say is roughly its variance.
+        emphasis: right
+        left:
+          title: One-hot, then k-means
+          bullets:
+            - Numbers hold variance **5.0**, the 26 dummies **3.4**
+            - Only categories hold the groups, and ARI is **0.319** on the dummies alone
+            - Adding the numbers takes it to **0.003**
+          tag: Numbers bury the categories
+        right:
+          title: FAMD, then k-means
+          bullets:
+            - Numbers hold variance **5.0**, the dummies **20.0**
+            - ARI **0.890** when both hold the groups
+            - ARI **0.542** when only categories do
+          tag: Both heard
+        takeaway: In k-means a column's say is its variance, so one-hot dummies are drowned out by z-scored numbers, and FAMD reweights them.
+        source: notes/05b-clustering-categorical-and-mixed-data.md
+        notes: >-
+          K-means minimises squared distance, so a column's say is roughly its variance. A z-scored number has variance 1, and a dummy column for a category with share p has variance p times one minus p, at most 0.25. Six categorical columns with 26 levels between them hold 3.4 of variance against 5.0 for five numbers, and in the categorical world all of that 5.0 is noise. FAMD z-scores the numbers and divides each centred dummy by the square root of its share, so each column can contribute at most 1 to any axis, which lifts the dummies to 20.0. Pagès rejects even a normed PCA on dummies because it favours high-count levels.
+
       - layout: image
         beat: practice
         level: practice
@@ -690,6 +717,23 @@ parts:
           and it's the only one here that can answer "no groups" through BIC. All of these tables are generated, so read the shape
           and not the ranking. Published simulations also put Gower with PAM last, and they too draw numbers from normals. On Palmer
           penguins, numbers alone beat every mixed method, so which columns you include is itself a choice.
+
+      - layout: code
+        beat: pitfalls
+        level: practice
+        title: No internal index picks four groups, but each beats its control
+        recall: How do you use silhouette, CH and DB on mixed-data clusters?
+        lead: "FAMD coordinates with k-means, true k is 4. Each cell reads data with groups / shuffled-column control."
+        lang: output
+        code: |
+          k          silhouette     Calinski-Harabasz   Davies-Bouldin
+          2          0.216 / 0.121  329 / 125           1.653 / 2.919
+          4 (truth)  0.243 / 0.110  277 / 117           1.534 / 2.264
+          6          0.254 / 0.129  232 / 120           1.472 / 1.866
+        takeaway: Read the gap to a shuffled-column control and not the peak, because stability and surrogate accuracy don't validate segments either.
+        source: notes/05b-clustering-categorical-and-mixed-data.md
+        notes: >-
+          Silhouette says 6, Calinski-Harabasz says 2 and Davies-Bouldin says 5, so no index picks the true 4. On the control, Davies-Bouldin improves steadily as k grows with nothing there to find. The gap between the data and control columns carries the message: silhouette 0.243 against 0.110. Stability needs a control too. Gower with PAM is stable at 0.802 across overlapping 80 percent subsamples while recovering the truth at 0.263, so stability says you would get the same answer again, not the right one. A classifier fitted to the cluster labels reaches 0.958 accuracy with groups and still 0.913 with none, so it explains the segments and cannot validate them. The check that matters comes from outside the data: do the segments predict something later better than a one-line rule?
 
       - layout: table
         beat: pitfalls
@@ -793,7 +837,7 @@ parts:
         beat: practice
         title: The threshold matters far more than resampling
         recall: Once the threshold is tuned, how much does the choice of resampling method change the cost?
-        lead: "SMOTE invents new rare-class rows. Cost per 1,000 applicants. At 5:1, SMOTE costs **176.4** with the threshold at 0.5 and **143.1** with it tuned."
+        lead: "SMOTE invents rare-class rows. At 5:1 it costs **176.4** per 1,000 at threshold 0.5, **143.1** tuned."
         image: ../../sources/images/credit-lab-method-comparison.png
         caption: "Across 10 settings, SMOTE at 0.5 lost beyond noise in 8 and never won. With its own tuned threshold, it tied in all 10."
         takeaway: Tune the threshold and leave the data alone, since on the 3% credit file tuned costs span 142.4 to 144.5 per 1,000 applicants and the seed moves them by 5.9.
@@ -854,7 +898,7 @@ parts:
           - ["Skew: features one month stale", "0.531", "0.012", "0.726", The score monitor misses it]
           - ["Skew: PAY_0 filled with 0", "3.539", "0.073", "0.717", Silently stopped working]
         highlight: [3]
-        takeaway: Concept shift looks like no change at all, so monitor inputs as well as the score and get labels when you can.
+        takeaway: Concept shift leaves every PSI at the noise floor while AUC falls, so only fresh labels can show it.
         source: notes/10-imbalance-errors-and-drift.md
         notes: >-
           Concept shift is the frightening row: identical features by construction, so every PSI equals the no-change row, while
@@ -862,6 +906,58 @@ parts:
           line. Amounts recorded in thousands are the opposite case, a huge alarm with moderate harm: worst feature PSI 7.706, score PSI 3.291, ROC-AUC 0.753. Stale features show 0.531 only when the coded column is binned by level, and 0.049 with quantile bins, so bin
           coded columns by level. The noise floor here was 0.011, and the 0.1 and 0.25 lines are conventions. In credit scoring
           labels arrive a year late, so input and prediction monitors are what you have.
+
+      - layout: steps
+        beat: practice
+        title: Read errors in six steps, and finish on rows nobody read
+        recall: What do you do with a finding from reading errors?
+        steps:
+          - {n: "1", title: Name the errors, text: "Say which class is positive, and set the table at the decision threshold"}
+          - {n: "2", title: Profile the four cells, text: "Compare missed defaulters with caught ones, and declined good customers with approved ones"}
+          - {n: "3", title: Read rows, text: "Random rows first, so the most confident mistakes don't distort the picture"}
+          - {n: "4", title: Slice and count, text: "Error rates with intervals, and each slice's share of the cost"}
+          - {n: "5", title: Diagnose, text: "Most patterns point to data, labels or the threshold, not the model"}
+          - {n: "6", title: Confirm, text: "Re-test every finding on a blackbox set nobody read"}
+        takeaway: Every finding from reading errors is a hypothesis until it holds on rows you did not read.
+        source: notes/12-reading-the-errors.md
+        notes: >-
+          A metric says how often the model is wrong, and only the wrong rows say why. The first thing to fix is the names. Say which class is positive, here will default, so a declined applicant is a predicted positive, and set the table at the decision threshold and not at 0.5. Then compare the cells. Then read random rows, slice by groups you can name and count each slice's share of the cost, because that share is the ceiling on what a fix for it could gain. Diagnose, and only then act. The last step is the one people skip, and the next slides show why it matters.
+
+      - layout: table
+        beat: practice
+        title: Most error patterns point away from the model
+        recall: What should you check before you change the model after reading errors?
+        lead: Missed defaulters look like approved customers. The approved defaulted at 10.9% against a predicted 10.2%, and a fresh logistic separates the two groups at AUC 0.699.
+        header: [What you see, What it means, What to do]
+        widths: [3.8, 3.6, 4.4]
+        rows:
+          - [Errors look identical to correct rows, "The information isn't in the data", Find a new source or accept the limit]
+          - [Labels look wrong, Label noise, Audit labels before changing the model]
+          - [One group's errors concentrate, "The model underfits it, or the group is small", "A general feature, more data, partial pooling"]
+          - [FP and FN trade off along the score, The threshold, Move it from the cost ratio and leave the model alone]
+          - [Errors grow with time since training, Drift, Monitor it]
+        takeaway: Look for missing information, bad labels and the wrong threshold before you change the model.
+        source: notes/12-reading-the-errors.md
+        notes: >-
+          This is the diagnosis table. In the credit run the false negatives look like the correctly approved customers on status and late months, with standardised gaps of minus 0.12 and 0.10. The approved group defaulted at 10.9 percent against a mean predicted risk of 10.2 percent, so a false negative at a score of 0.12 is less a mistake than a bet at 12 percent that lost. A new logistic regression on the same inputs separates them at AUC 0.699, hardly more than the model's own 0.683. So the information is not in these columns. The threshold row has its own lesson. The eyeball set seems to prefer 0.13, at 568.7 against 590.0 at the cost-ratio threshold of one sixth. On the blackbox set 0.13 costs 563.3 against 541.6, so the threshold from the costs stands.
+
+      - layout: code
+        beat: pitfalls
+        level: deep
+        title: Stable slices held on 4,500 unread rows. One faded
+        recall: Why must a slice you found by reading be re-tested on unread rows?
+        lead: "Cost per 1,000 applicants. Eyeball is the 1,500 rows we read, blackbox is the 4,500 we did not."
+        lang: output
+        code: |
+          slice                    eyeball  blackbox  score / default on blackbox
+          limit under 50k          709.443   624.268  0.310 / 0.314
+          limit 240k+              422.969   431.925  0.144 / 0.130
+          status 2+ months late    372.093   288.210  0.698 / 0.712
+          education high school    715.415   605.263  faded, not significant
+        takeaway: A slice found by reading is real only if it survives rows you did not read. High school faded.
+        source: notes/12-reading-the-errors.md
+        notes: >-
+          Three things happened. The stable slices held: low limits cost more, high limits less, and people two or more months behind cost least of all, because the model declines all of them and 71 percent of them default. High-school education looked bad on the eyeball set and faded. And some slices that did not pass the Benjamini-Hochberg correction on 1,500 rows did on 4,500, with 2 of 21 surviving on the eyeball set and 7 of 21 on the blackbox set, because the larger set has more power. That is one reason a blackbox set is bigger than an eyeball set. Under-50k limits cost more only because the group is riskier, the model's score of 0.310 matches the actual 0.314.
 
       - layout: image
         beat: pitfalls
@@ -871,11 +967,11 @@ parts:
         image: ../../sources/images/reading-errors-noise-fix.png
         caption: "Thirty seeds. The noise fix gains 18.6 per 1,000 on the rows read and loses 8.3 on the rows not read, on 27 of 30 seeds. Run `practice/reading_errors.py`."
         bullets:
-          - "**Mechanism fix:** +4.1 read, -1.1 unread, so it did not work either."
-          - "**Test set, used once:** gain 5.5, interval -7.3 to 18.2, so no evidence of a gain."
+          - "**Mechanism fix:** +4.1 read, -1.1 unread."
         takeaway: Read errors on one set and score the fix on rows you did not read, because reading selects on noise.
         source: notes/12-reading-the-errors.md
         notes: >-
+          Test set, used once: gain 5.5, interval -7.3 to 18.2, so no evidence of a gain. The mechanism fix did not work either.
           Look at the mean bars. Any slice picked for being bad looks fixable on the rows we read: it was bad by chance, and that badness doesn't repeat. We expected the real-mechanism fix to survive, and it did not, with 13 seeds above zero and 17 below. Boosted trees had already taken most of what those columns hold. Reuse a holdout to accept 20 rounds of noise patches and it reports a gain of 16.5, while a fresh half shows -1.9, so a held-out set can only select so many times before it becomes another training set. That closes the section: the number now comes with its costs and its blind spots. Next, who decides what to do with it?
 
   - title: People and accountability
@@ -905,10 +1001,10 @@ parts:
         image: ../../sources/images/review-queue-three-routes.png
         caption: "Each route's expected cost is a straight line in the probability of a problem. Generated invoices, invented prices. Run `practice/review_queue.py`."
         bullets:
-          - "**Prices:** paying a problem 150, sending back a good invoice 30, a clerk's four minutes 3."
+          - "**Prices:** problem paid 150, good one sent back 30, review 3."
           - "**This clerk** catches 90%: pay below **0.027**, reject above **0.595**."
           - "**A perfect clerk:** 0.020 and 0.900."
-          - "**No review route:** reject above 0.167."
+          - "**No review:** reject above 0.167."
         takeaway: Write each route's cost as a line, take the crossings, and use the person's measured catch rate, not a perfect one.
         source: notes/13-automate-review-or-reject.md
         notes: >-
@@ -965,7 +1061,7 @@ parts:
         bullets:
           - "**Highest score:** a person can only agree at p of 0.953, so the queue costs money and changes little."
           - "**Expected saving:** at 2% the band tightens around 1/6, where pay and reject cost the same."
-        takeaway: Rank the queue by expected saving, since at 5% capacity the highest scores cost 5.279 against 4.661.
+        takeaway: Send to review the invoices nearest the pay-or-reject coin flip, not the riskiest, since at 5% capacity the highest scores cost 5.279 against 4.661.
         source: notes/13-automate-review-or-reject.md
         notes: >-
           The instinct is the riskiest first, and that's wrong. These are the invoices where the decision without a person is closest to
@@ -1096,6 +1192,48 @@ parts:
 
       - layout: table
         beat: pitfalls
+        title: A low impact ratio does not name its cause
+        recall: Why can a low impact ratio come from more than the model?
+        lead: "Impact ratio of group B against A. Generated applicants, the top 20% advance, five seeds per row. Each row removes one planted cause."
+        header: [World, Unaware model, Proxies dropped too]
+        widths: [5, 3.4, 3.4]
+        rows:
+          - [As planted, "0.497", "0.640"]
+          - [No recruiter bias, "0.641", "0.640"]
+          - [No skill gap, "0.763", "0.988"]
+          - [Neither, "0.979", "0.988"]
+        takeaway: A low ratio can come from the model, the label or the world before anyone applied, so say which before you blame the model.
+        source: notes/15-fairness-in-automated-scoring.md
+        notes: >-
+          The selection rate is the share of a group advanced, and the impact ratio is a group's rate over the highest group's. Both need only decisions and a group column, so an audit starts here. On the 20,000 generated test applicants the unaware model gives B against A a ratio of 0.469 with an interval of 0.430 to 0.512, and C against A 0.806 with an interval of 0.714 to 0.910. The table reruns the world with plants removed. With recruiters playing fair the ratio is still 0.641, because a skill gap of 0.35 standard deviations thins the top 20 percent harder than it moves the mean. The four-fifths rule is a US federal employment rule of thumb. It is not a pass mark, not a finding of discrimination and not portable outside that context.
+
+      - layout: compare
+        beat: pitfalls
+        title: Dropping the group column leaves its proxies behind
+        recall: Why doesn't deleting the sensitive column remove its effect?
+        lead: Impact ratio of group B, on generated applicants.
+        emphasis: right
+        left:
+          title: Drop the group column
+          bullets:
+            - Ratio **0.469**, up from 0.189 with every column
+            - Postcode alone identifies B at AUC **0.827**
+            - 83.6% of those either version advances are advanced by both
+          tag: Proxies remain
+        right:
+          title: Drop the proxies too
+          bullets:
+            - Ratio **0.600**
+            - Work-sample pass rate of those selected, 0.659 to 0.669
+            - Still under 0.8, because the base-rate gap is left
+          tag: Recruiter effect removed
+        takeaway: Other columns such as postcode predict the group (AUC 0.827), so predict the group from your features and keep only those with a job-related reason.
+        source: notes/15-fairness-in-automated-scoring.md
+        notes: >-
+          A model trained on a biased label reaches for whatever predicts that bias, so postcode picks up what the group column carried. Don't lean on the 96.5 percent of decisions that stay identical: at 20 percent capacity two unrelated selections already agree on about 68 percent. Dropping a feature is also a decision to verify, because a real proxy can carry real signal. In this generator postcode and gap say nothing about the work sample, which is why dropping them raises the pass rate of those selected.
+
+      - layout: table
+        beat: pitfalls
         title: When base rates differ, you can't equalise every error
         kicker: "Chouldechova; Kleinberg et al., 2017"
         recall: When base rates differ, can one model equalise PPV, FPR and FNR across groups?
@@ -1121,6 +1259,26 @@ parts:
           decisions unchanged, because postcode alone identifies B at AUC 0.827. So an audit states the decision, the population, where each label came from, counts with
           intervals, the alternatives tried, the jurisdiction and date, and what is not established. It doesn't find out whether the model is fair. That closes the last section, so let's collect what to take with you.
 
+      - layout: code
+        beat: pitfalls
+        level: deep
+        title: An audit states what was measured and what was not
+        recall: What must an audit report state besides the ratio?
+        lead: "One line per group, with counts, an interval and the check on the label."
+        lang: output
+        code: |
+          Model: unaware, trained on recruiter decisions. Decision: top 20% advance
+          Data: generated, 20,000 test applicants
+          A: 3178/13937 = 0.228; the reference
+          B: 515/4817 = 0.107; ratio 0.469 (95% interval 0.430 to 0.512); short of 0.8 by 364
+          C: 229/1246 = 0.184; ratio 0.806 (95% interval 0.714 to 0.910); short of 0.8 by 0
+          Label: recruiter decisions; 5,000 audited work samples used as the check
+          Not established: the cause, job-relatedness, or whether any law is met
+        takeaway: An audit reports counts, intervals and what is not established, so C's 0.806 reads as unsettled and not as a pass.
+        source: notes/15-fairness-in-automated-scoring.md
+        notes: >-
+          An audit report records what was measured, under what assumptions, and what remains unknown. It states the decision, the population and window, where each label came from, how the group data was obtained, rates with counts, the alternatives tried, the jurisdiction and date, what is not established, and when it gets repeated. C is the line to teach from: the point reads 0.806 and the interval runs 0.714 to 0.910, so passes is not what the data says. Metrics have limits no report can compute away, and an appeals route and a person able to overturn the result are part of the system too. The audit does not find out whether the model is fair.
+
   - title: Take it with you
     agenda: false
     divider: false
@@ -1131,32 +1289,33 @@ parts:
         recall: "Where are most of classical ML's failures?"
         cards:
           - title: Baseline first
-            body: Dummy, then linear, then boosting. Each sets a bar.
+            body: Dummy, linear, then boosting.
           - title: Test once
-            body: Choose on validation or CV, and report test a single time.
+            body: Report the test set one time.
           - title: Fit inside the fold
-            body: Any step with a fit goes in the pipeline.
+            body: Fits go in the pipeline.
           - title: Cost sets the routes
-            body: Price each error and each review, and leave the data alone.
+            body: Price errors, not data.
           - title: Family before tuning
-            body: "Tuning gained 0.0009, the family 0.025. Compare across seeds."
+            body: "Tuning 0.0009, family 0.025."
           - title: Keep watching
-            body: Score monitors miss most drift, so audit a random sample nobody chose.
+            body: Audit a random sample.
         takeaway: Most of classical ML's failures are in the measurement, not in the model.
         source: notes/09-training-and-tuning.md  # also: notes/10-imbalance-errors-and-drift.md, notes/11-choosing-a-metric.md, notes/13-automate-review-or-reject.md, notes/14-learning-from-corrections.md
         notes: >-
           If you remember one slide, take this one. Nearly all of these are about believing your number rather than about
           choosing a cleverer algorithm.
 
-      - layout: bullets
+      - layout: cards
         beat: wrap
         title: Where to next
         recall: Which habits from classical ML carry over to neural models?
-        bullets:
-          - "**Deep learning:** the MLP grows into backprop, CNNs and sequence models."
-          - "**NLP:** tree and linear models meet text, with bag-of-words and TF-IDF."
-          - "**Practice:** run the scripts and labs in `practice/`."
-          - "**Exercises:** try the Try-it section at the end of each note."
+        cards:
+          - {title: Deep learning, body: "The MLP grows into backprop, CNNs and sequences"}
+          - {title: NLP, body: "Trees and linear models meet text: bag-of-words, TF-IDF"}
+          - {title: Practice, body: "Run the scripts and labs in practice/"}
+          - {title: Exercises, body: "Try-it section at the end of each note"}
+          - {title: "Carries over", body: "Splits, leakage, metrics, thresholds"}
         takeaway: Pipelines, metrics and calibration carry over unchanged to every neural model that follows.
         source: notes/10-imbalance-errors-and-drift.md
         notes: >-

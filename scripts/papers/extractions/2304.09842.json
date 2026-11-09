@@ -1,0 +1,553 @@
+{
+ "schema": 1,
+ "key": "2304.09842",
+ "pdf": "generative-ai/03-agentic-foundations/sources/lu-2023-chameleon.pdf",
+ "bib": {
+  "title": "Chameleon: Plug-and-Play Compositional Reasoning with Large Language Models",
+  "authors": [
+   "Pan Lu",
+   "Baolin Peng",
+   "Hao Cheng",
+   "Michel Galley",
+   "Kai-Wei Chang",
+   "Ying Nian Wu",
+   "Song-Chun Zhu",
+   "Jianfeng Gao"
+  ],
+  "first_author": "Lu",
+  "year": 2023,
+  "venue": "37th Conference on Neural Information Processing Systems (NeurIPS 2023)",
+  "arxiv": "2304.09842",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 98892,
+  "chars_total": 98892,
+  "engine": "pymupdf",
+  "skipped": "References (lines 1521-1712) skimmed only for lineage; failure-case Tables 19-24 read."
+ },
+ "type": "system",
+ "question": "Can an LLM planner compose a wide, heterogeneous set of tools (LLMs, vision models, web search, Python, rule-based) into natural-language programs for knowledge-intensive reasoning without any training?",
+ "hypothesis": "An in-context LLM planner that synthesizes sequential natural-language programs over a richer tool inventory generalizes CoT and PoT and outperforms them.",
+ "contributions": [
+  "A plug-and-play compositional reasoning framework, Chameleon, that composes external tools to address LLM limitations",
+  "An LLM as natural-language planner that integrates LLMs, off-the-shelf vision models, web search engines, Python functions and rule-based modules",
+  "Effectiveness on ScienceQA and TabMWP, significantly surpassing the state of the art"
+ ],
+ "method": {
+  "summary": "A training-free system: an LLM planner (gpt-3.5-turbo or gpt-4), prompted with module descriptions, constraints and few-shot examples, emits a sequence of module names (a natural-language program); modules are bound by string matching and executed sequentially over a query and a cache updated by hand-written update_input/update_cache functions. Evaluated on ScienceQA and TabMWP with task-specific module subsets.",
+  "task": "multi-modal science QA (ScienceQA) and tabular math word problems (TabMWP)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ScienceQA",
+    "role": "eval",
+    "size": null,
+    "split": "test set",
+    "source": "Lu et al. [32]",
+    "preprocessing": null
+   },
+   {
+    "name": "TabMWP",
+    "role": "eval",
+    "size": null,
+    "split": "test set",
+    "source": "Lu et al. [33]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Chameleon (ChatGPT) planner and LLM modules",
+    "role": "proposed",
+    "params": null,
+    "architecture": "gpt-3.5-turbo engine",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Chameleon (GPT-4) planner and LLM modules",
+    "role": "proposed",
+    "params": null,
+    "architecture": "gpt-4 engine",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Image captioner (vit-gpt2-image-captioning)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Hugging Face nlpconnect/vit-gpt2-image-captioning",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "max caption length": "16",
+     "beams": "4",
+     "max output tokens": "512"
+    }
+   },
+   {
+    "name": "Text detector (EasyOCR)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "JaidedAI/EasyOCR",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature 0 (planner and LLM modules)",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "planner program 128; LLM modules default 512; Query Generator 64; TabMWP Row Lookup 256, Column Lookup 256, Program Generator 256",
+   "samples": "1 run per item, no seeds or repeats stated (inferred: temperature 0, single pass)",
+   "prompting": "Planner: instruction plus module descriptions plus few-shot question-to-module-sequence examples. LLM modules default four in-context examples. ScienceQA: Knowledge Retrieval 3, Solution Generator 2. TabMWP: Knowledge Retrieval 5, Row Lookup 7, Column Lookup 6, Table Verbalizer 7, Solution Generator 16.",
+   "retrieval": "Bing Search API returns top three responses; Knowledge Retrieval is LLM-generated, not an index",
+   "parameters": {
+    "invalid-program fallback ScienceQA": "default to Solution_Generator then Answer_Generator if not the final two elements",
+    "invalid-program fallback TabMWP": "default to Program_Generator, Program_Verifier, Program_Executor, Answer_Generator",
+    "TabMWP constraints": "must include Answer_Generator; Program_Generator before Verifier and Executor",
+    "Row Lookup enabled when": "more than three rows and 18 table cells",
+    "Column Lookup enabled when": "two or more columns and 18 or more cells",
+    "Answer Generator": "rule-based; two-place precision for numeric answers; most similar option for multiple choice"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "QA accuracy",
+     "definition": "percent of test questions answered correctly, broken down by question type and grade",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Score drop with disabled module",
+     "definition": "accuracy decline when a module is disabled, ChatGPT, 500 test examples",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Random choice, human, heuristic guess",
+    "Fine-tuned: MCAN, Top-Down, BAN, DFAF, ViLT, Patch-TRM, VisualBERT, UnifiedQA, MM-CoT, LLaMA-Adapter, TAPEX",
+    "Few-shot GPT-3, GPT-3 CoT, GPT-3 CoT-PromptPG, Codex PoT-SC",
+    "ChatGPT/GPT-4 CoT and PoT"
+   ],
+   "protocol": "Single test-set evaluation; no seeds, confidence intervals or significance tests reported. Ablation on 500 test examples with ChatGPT. Error analysis on 50 ChatGPT-mistake ScienceQA examples."
+  },
+  "availability": {
+   "code": "project page https://chameleon-llm.github.io (inferred: URL on title page; code release not stated in text)",
+   "weights": null,
+   "data": "ScienceQA and TabMWP public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "ScienceQA planner instruction",
+    "text": "You need to act as a policy model, that given a question and a modular set, determines the sequence of modules that can be executed sequentially can solve the question.",
+    "where": "Table 8, p.18 (module list and examples follow)"
+   },
+   {
+    "purpose": "TabMWP planner instruction",
+    "text": "You need to act as a policy model, that given a question and a modular set, determines the sequence of modules that can be executed sequentially can solve the question.",
+    "where": "Table 9, p.19 (module list and examples follow)"
+   },
+   {
+    "purpose": "ScienceQA Solution Generator",
+    "text": "Given the question (and the context), select the answer from the options [\"A\", \"B\", \"C\", \"D\", \"E\"]. You should give concise and step-by-step solutions. Finally, conclude the answer in the format of \"the answer is [ANSWER]\"",
+    "where": "Table 12, p.21"
+   },
+   {
+    "purpose": "TabMWP Program Generator",
+    "text": "Read the following table and then write Python code to answer a question.",
+    "where": "Table 17, p.23"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Chameleon (GPT-4) sets a few-shot state of the art on ScienceQA overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.54,
+   "unit": "%",
+   "baseline_value": 83.99,
+   "n": null,
+   "setup": "ScienceQA test, GPT-4 planner and modules, few-shot, 0 tuned params",
+   "quote": "Chameleon, powered by GPT-4, achieves an 86.54% overall accuracy on ScienceQA, improv-\ning the best published few-shot result by 11.37%.",
+   "table": null,
+   "note": "baseline is GPT-4 CoT",
+   "where": "Abstract, Table 3"
+  },
+  {
+   "claim": "Chameleon (GPT-4) reaches 98.78% on TabMWP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 98.78,
+   "unit": "%",
+   "baseline_value": 96.93,
+   "n": null,
+   "setup": "TabMWP test, GPT-4, few-shot",
+   "quote": "On TabMWP, GPT-4-powered\nChameleon improves the accuracy by 17.0%, lifting the state of the art to 98.78%.",
+   "table": null,
+   "note": "baseline is GPT-4 PoT",
+   "where": "Abstract, Table 4"
+  },
+  {
+   "claim": "Chameleon (ChatGPT) beats ChatGPT CoT on ScienceQA only slightly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.93,
+   "unit": "%",
+   "baseline_value": 78.31,
+   "n": null,
+   "setup": "ScienceQA test, gpt-3.5-turbo",
+   "quote": "achieves a 79.93% accuracy, a 1.62% improvement over Chain-of-Thought (CoT) [57] prompted ChatGPT.",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Chameleon (GPT-4) exceeds GPT-4 CoT on ScienceQA by 2.55 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 2.55,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA test",
+   "quote": "outperforming GPT-4 CoT\n[32] by 2.55% and GPT-3 CoT by 11.37%",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Chameleon (ChatGPT) beats ChatGPT PoT on TabMWP by 3.79 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 3.79,
+   "unit": "points",
+   "baseline_value": 89.49,
+   "n": null,
+   "setup": "TabMWP test",
+   "quote": "Chameleon (ChatGPT) outperforms ChatGPT CoT and ChatGPT PoT by 11.25% and 3.79%",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Chameleon (GPT-4) beats GPT-4 CoT on TabMWP by 7.97 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 7.97,
+   "unit": "points",
+   "baseline_value": 90.81,
+   "n": null,
+   "setup": "TabMWP test",
+   "quote": "an improvement of 7.97% over chain-of-thought (CoT) prompted GPT-4",
+   "table": null,
+   "note": null,
+   "where": "1"
+  },
+  {
+   "claim": "Chameleon (GPT-4) exceeds human performance on TabMWP by 8.56 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": 8.56,
+   "unit": "points",
+   "baseline_value": 90.22,
+   "n": null,
+   "setup": "TabMWP test; human 90.22",
+   "quote": "surpasses Codex\nPoT-SC [6], the best-published model, by 17.0% and human performance by 8.56%",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Chameleon (ChatGPT) on TabMWP overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 93.28,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TabMWP test, gpt-3.5-turbo",
+   "quote": null,
+   "table": "Table 4, row Chameleon (ChatGPT), column ALL",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Disabling Knowledge Retrieval hurts ScienceQA most among LLM tools.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": -7.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, 500 test examples",
+   "quote": null,
+   "table": "Table 5, row Knowledge Retrieval, column Delta(ScienceQA)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Disabling Text Detector drops ScienceQA accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": -8.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, 500 test examples",
+   "quote": null,
+   "table": "Table 5, row Text Detector, column Delta(ScienceQA)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Disabling Program Generator drops TabMWP accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy drop",
+   "value": -7.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, 500 test examples",
+   "quote": null,
+   "table": "Table 5, row Program Generator, column Delta(TabMWP)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "ChatGPT planner is biased toward some tools: Knowledge Retrieval in 72% of ScienceQA queries, Bing Search in 3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tool call rate",
+   "value": 72,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceQA, Chameleon (ChatGPT)",
+   "quote": "ChatGPT calls “Knowledge Retrieval” in 72% of queries but only calls “Bing Search” in 3% of cases on\nScienceQA",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "GPT-4 planner calls Knowledge Retrieval more (81%) and Bing Search more (11%) than ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tool call rate",
+   "value": 81,
+   "unit": "%",
+   "baseline_value": 72,
+   "n": null,
+   "setup": "ScienceQA, Chameleon (GPT-4)",
+   "quote": "GPT-4 calls “Knowledge Retrieval” more frequently (81% vs. 72%) and calls “Bing\nSearch” more than ChatGPT (11% vs. 3%)",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "GPT-4 yields fewer distinct programs than ChatGPT on TabMWP (19 vs 28).",
+   "kind": "measured",
+   "source": null,
+   "metric": "distinct programs",
+   "value": 19,
+   "unit": "programs",
+   "baseline_value": 28,
+   "n": null,
+   "setup": "TabMWP, same planner prompt",
+   "quote": null,
+   "table": "Table 7, row Chameleon (GPT-4) under TabMWP, column # of different programs",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Error analysis: image-understanding mistakes fall from 32 (ChatGPT) to 10 with Chameleon (ChatGPT).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mistake count",
+   "value": 10,
+   "unit": "mistakes",
+   "baseline_value": 32,
+   "n": null,
+   "setup": "50 ChatGPT-mistake ScienceQA examples",
+   "quote": "the mistakes made by ChatGPT in the category of image understanding are reduced\nto 10 and 19 from 32",
+   "table": null,
+   "note": "10 for Chameleon (ChatGPT), 19 for Chameleon (GPT-4)",
+   "where": "5.4"
+  }
+ ],
+ "limits": [
+  "Authors concede: evaluated on only two benchmarks; planner quality may drive performance; the program is generated in one step with no re-planning; the module list and descriptions must fit in the LLM context window (Appendix B).",
+  "Failure cases: weak tool outputs (poor search query, weak captioner), suboptimal plans, and missing tools such as arrow parsing in food webs (Tables 19-24).",
+  "No seeds, variance, significance tests, cost or latency reported; planner and modules rely on closed OpenAI models (gpt-3.5-turbo, gpt-4) and Bing, so rerun depends on deprecated engines.",
+  "Ablation uses 500 test examples with ChatGPT only.",
+  "Broader impacts: misinformation and privacy risks if tools and data sources are not curated; over-reliance on autonomy (Appendix C).",
+  "No tool-call safety, sandboxing or permission discussion for Python execution; Program Verifier is an LLM check."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "natural-language-like program",
+   "definition": "a sequence of module names generated by the planner, bound to modules by string matching",
+   "where": "Section 3"
+  },
+  {
+   "term": "module inventory",
+   "definition": "the set of pre-built modules {Mi}, each corresponding to a tool",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoT is a special case: Solution_Generator then Answer_Generator",
+   "quote": null
+  },
+  {
+   "work": "Program of Thoughts (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PoT is a special case; Codex PoT-SC best published on TabMWP",
+   "quote": null
+  },
+  {
+   "work": "Toolformer",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "trains LMs on tool-use data for five tools",
+   "quote": null
+  },
+  {
+   "work": "Neural module networks (Andreas et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspiration for compositional modules, without supervision of programs",
+   "quote": null
+  },
+  {
+   "work": "ART, WebGPT, MM-ReAct, Visual ChatGPT, ViperGPT, VisProg, HuggingGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "compared in Table 1",
+   "quote": null
+  },
+  {
+   "work": "AutoGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "shares the same spirit; Chameleon claims to be first to verify on benchmarks",
+   "quote": null
+  },
+  {
+   "work": "ScienceQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Lu et al. [32]",
+   "quote": null
+  },
+  {
+   "work": "TabMWP",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Lu et al. [33]",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report; ChatGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base planner LLMs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples from our Chameleon approach with GPT-4 on ScienceQA",
+   "page": 1,
+   "why": "Shows the planned module sequences per query."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Transitions between modules in programs generated by Chameleon (GPT-4) on ScienceQA",
+   "page": 24,
+   "why": "Transition probabilities show learned-in-context tool ordering."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Tools called in the generated programs from Chameleon on ScienceQA",
+   "page": 9,
+   "why": "Planner bias difference between ChatGPT and GPT-4."
+  },
+  {
+   "figure": "Table 8",
+   "caption": "The prompt constructed for the planner model on the ScienceQA task",
+   "page": 18,
+   "why": "Concrete tool-description planner prompt."
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3, Eq 1-5",
+   "snippet": "p <- P(x0; I, M, G, D); y_t <- M^t(x_{t-1}; c_{t-1}); x_t <- update_input(x_{t-1}, y_t); c_t <- update_cache(c_{t-1}, y_t); r = y_T <- M^T(x_{T-1}; c_{T-1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of tables is one value per line; Table 4 and Table 3 cells were read by position.",
+  "No prompt-injection content found."
+ ]
+}

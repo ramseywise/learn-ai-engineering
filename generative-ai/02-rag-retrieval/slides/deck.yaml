@@ -1,4 +1,4 @@
-# Deck for generative-ai/02-rag-retrieval. Source of truth: notes/01-12.
+# Deck for generative-ai/02-rag-retrieval. Source of truth: notes/01-12, including 02b and 11b.
 # Build: make slides PILLAR=generative-ai/02-rag-retrieval STRICT=1 PREVIEW=1
 # Spec: scripts/slides/deck-spec.md
 # Running example: Tallybook's support bot quotes a stale 14-day refund page; the policy is 30 days.
@@ -79,6 +79,66 @@ parts:
       full context only when RAG says it can't answer. That recovered the quality at 38 to 61% of the
       tokens. Yu and colleagues saw quality peak and then fall as retrieved context grew. When the corpus
       doesn't fit the window, retrieval is the only option anyway.
+  - layout: table
+    level: deep
+    title: Five ways to train the retriever and the reader
+    recall: What are the five ways to train the two halves of a RAG system?
+    lead: Everything earlier in the course is the first row.
+    header:
+    - Paradigm
+    - What is trained
+    - Example
+    widths:
+    - 2.4
+    - 4
+    - 4.4
+    highlight:
+    - 0
+    rows:
+    - - Training-free
+      - Nothing
+      - The course, most production RAG
+    - - Independent
+      - Each half on its own objective
+      - A tuned embedder plus a tuned LLM
+    - - Retriever first
+      - Retriever fixed, LLM learns to use it
+      - RETRO, with a frozen BERT retriever
+    - - LLM first
+      - LLM fixed, retriever learns from it
+      - Izacard and Grave, reader attention
+    - - Joint
+      - Both, end to end
+      - REALM, Atlas
+    takeaway: There are five ways to train the pair (training-free, independent, retriever first, LLM first, joint), and most production RAG stays training-free because joint training forces both to be retrained together.
+    source: notes/02b-training-the-retriever-and-the-reader.md
+    notes: 'Raieli and Iuculano sort the options. Izacard and Grave are the surprising row, because the
+      reader''s own attention scores supervise the retriever and no question-passage labels are needed:
+      top-20 recall 80.0 against 79.4 for supervised DPR on Natural Questions. It needs a decent start,
+      though. From untrained BERT it reached only 68.8. These are mostly language-modelling and open-domain
+      QA numbers at research scale, so they tell you what is possible and what it costs, not what the
+      Tallybook bot needs.'
+  - layout: cards
+    level: deep
+    title: What training the pair costs, and where the numbers mislead
+    recall: What goes wrong when you train a retriever and reader together?
+    cards:
+    - title: A stale index
+      accent: D4621A
+      body: 'REALM re-embedded 13M chunks about every 500 steps. An index **30×** staler cut NQ dev exact match from **38.2 to 28.7**. Atlas paid about 30% extra compute to refresh.'
+    - title: A signal with no labels
+      body: 'RPT-Sem scored chunks by how much they raised the next chunk''s likelihood. Precision@2 went from **25.2%** (BM25) to **30.0%**.'
+    - title: Multipliers are not QA results
+      body: 'RETRO matches a model 25× larger on language modelling, but scored **45.5** EM on Natural Questions against FiD''s **51.4**.'
+    - title: A near-duplicate in the prompt
+      body: 'ALCUNA put the parent entity in the context. ChatGLM''s differentiation score fell from **41.42 to 24.71**.'
+    takeaway: Keep the index fresh while a retriever trains, read language-modelling multipliers as such, and leave near-duplicates of the answer out of the prompt.
+    source: notes/02b-training-the-retriever-and-the-reader.md
+    notes: 'Four things to remember from the research. Joint training makes the stored vectors stale each
+      update, and REALM measured the damage. A retriever can be trained from the language model''s own
+      likelihood, as RPT does, with no labels. RETRO''s 25 times fewer parameters is a language-modelling
+      claim. And the reader can be hurt by a near-duplicate, which for Tallybook is the old refund
+      policy sitting beside the new one.'
   - layout: image
     title: Three generations of the same pipeline
     recall: Name Gao's three RAG paradigms.
@@ -855,6 +915,60 @@ parts:
       queries and the interval still crosses zero. That also sets the priority order for the shortlist:
       cheap information first. A newer model and the pipeline backend are flags, multi-query is a node,
       HyDE depends on the backend, and DPO waits for 200 or more preference pairs.'
+  - layout: code
+    level: deep
+    title: Why DPO is blocked at 32 queries
+    recall: Why can 32 queries and 5 configs never give 200 DPO pairs?
+    lang: python
+    code: "def pairs_from(hits_by_query, configs):\n    pairs = []\n    for q, hits in hits_by_query.items():\n        for good in sorted(hits):\n            for bad in sorted(set(configs) - hits):\n                pairs.append((q, good, bad))\n    return pairs\n\n# 5 configs: at most 2 x 3 = 6 pairs per query\nprint(32 * 2 * 3)   # 192"
+    bullets:
+    - A pair needs one config that **hits** and one that **misses**.
+    - Everyone hits or everyone misses gives **no pair**.
+    - Ceiling is **192**, under the 200 needed.
+    takeaway: More annotated queries unblock DPO, not more configs, because pairs from one question are not independent examples.
+    source: notes/11b-training-the-pieces-and-the-pipeline-eval.md
+    notes: 'The note blocks item 5, DPO, on 200 or more preference pairs, with 32 annotated queries and no stored
+      golden responses. With five configs a query yields at most 2 times 3 pairs. A perfect split of every
+      query still gives 192, and real queries where everyone hits or everyone misses give nothing.'
+  - layout: table
+    level: deep
+    title: Trained pieces beat prompted ones, by less than the headline
+    recall: What did trained retrievers, filters and loops gain over prompting?
+    lead: One piece each. Every result is a single run, mostly preprints.
+    header:
+    - Method
+    - What it trains
+    - Headline result
+    widths:
+    - 2
+    - 4
+    - 5.5
+    rows:
+    - - REPLUG LSR
+      - Retriever, from a frozen LM's likelihood
+      - "NQ 16-shot **40.6 to 45.5**; untrained Contriever already gave 44.7"
+    - - RA-DIT
+      - Reader and query encoder
+      - "5-shot dev average **53.8 to 54.6**; the reader matters more at 0-shot"
+    - - MMOA-RAG
+      - Rewriter, selector and generator (PPO)
+      - "HotpotQA F1 **44.69 to 48.29** over supervised warm-up alone"
+    - - FILCO
+      - A context filter
+      - "Inputs shrink **44-64%**; NQ exact match up 4.3 and 8.6"
+    - - ADAPT-LLM
+      - When to retrieve
+      - "PopQA **38.15%** against 36.59% for always retrieving"
+    - - Auto-RAG
+      - The retrieval loop itself
+      - "Six-set average **44.3** against 38.4 for IRCoT"
+    takeaway: Training a retriever, filter, trigger or loop can help, but retrieval itself is most of the gain and each result is one run, so measure on your own queries first.
+    source: notes/11b-training-the-pieces-and-the-pipeline-eval.md
+    notes: 'These are the papers filed beside item 5. REPLUG shows the caveat best: an untrained Contriever
+      already gave most of the gain, and training added about a point. RA-DIT found the retriever''s
+      share small and the reader''s larger. ADAPT-LLM''s margin over always retrieving is under 1.6 points
+      on one run, so the evidence is comparable accuracy, not a measured cost saving. Auto-RAG''s baselines
+      are published runs, not rerun. None of this replaces the paired bootstrap on your own queries.'
   - layout: flow
     title: What a managed backend takes off your hands
     recall: What can't a managed RAG service do for you?

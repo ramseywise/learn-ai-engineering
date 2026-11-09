@@ -1,19 +1,599 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2409.06666",
  "pdf": "generative-ai/07-agentic-applications/sources/fang-2024-llama-omni.pdf",
  "bib": {
-  "title": "LLaMA-Omni: Seamless Speech Interaction with Large Language Models",
-  "first_author": "Qingkai Fang",
-  "year": "2024",
-  "venue": null,
+  "title": "LLAMA-OMNI: SEAMLESS SPEECH INTERACTION WITH LARGE LANGUAGE MODELS",
+  "authors": [
+   "Qingkai Fang",
+   "Shoutao Guo",
+   "Yan Zhou",
+   "Zhengrui Ma",
+   "Shaolei Zhang",
+   "Yang Feng"
+  ],
+  "first_author": "Fang",
+  "year": 2024,
+  "venue": "ICLR 2025",
   "arxiv": "2409.06666",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 67056,
+  "chars_total": 67056,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: LLaMA-Omni: Seamless Speech Interaction with Large Language Models. Qingkai Fang, Shoutao Guo, Yan Zhou, Zhengrui Ma, Shaolei Zhang, Yang Feng (ICT/CAS). ICLR 2025, arXiv 2409.06666v2, 1 Mar 2025.\n\nCOVERAGE: All 91,892 chars were extracted, every page including appendices A-C and Tables 3-7, and the references were skimmed. About 25K chars of base64 `<latexit>` junk from Figure 2 were stripped, which left 67,172 chars of real text. The body is 10 pages. References run to page 15, the appendices to page 18. Nothing was skipped.\n\nCLAIMS (ranked)\n\n- The latency is 236 ms, not 226 ms. It is the minimum response latency, at Ω=10.\n  - number: 236.18 ms total (206.03 ms LLM + 30.15 ms vocoder). GPT-4o's average audio latency is quoted as 320 ms.\n  - setup: streaming scenario, latency measured on 1 NVIDIA L40 GPU, greedy decoding, InstructS2S-Eval.\n  - quote: \"LLaMA-Omni can achieve a minimum latency of 236ms (with Ω = 10), which is even lower than GPT-4o's average audio latency of 320ms.\"\n  - where: p.8, §4.5. Abstract, intro and conclusion also say 236ms. Table 4, p.17.\n- Training is cheap.\n  - number: about 65 hours on 4 L40 GPUs (the abstract says \"less than 3 days\"). The training set is 200K samples. Both stages use batch size 32 and 3 epochs.\n  - setup: stage 1 trains the adaptor and the LLM at peak LR 2e-5. Stage 2 trains only the speech decoder at 2e-4. Both use a cosine schedule with 3% warmup.\n  - quote: \"The entire training process takes approximately 65 hours on 4 NVIDIA L40 GPUs.\"\n  - where: p.6, §4.1.\n- LLaMA-Omni scores highest in the offline scenario (Table 2). ASR-WER is worse than the cascaded systems and better than SpeechGPT.\n  - number: S2TIF/S2SIF/∆/ASR-WER/UTMOS by model:\n    - SpeechGPT: 2.98 / 2.19 / 0.79 / 45.00 / 3.8958\n    - SALMONN+Orca: 3.44 / 3.40 / 0.04 / 3.78 / 3.8286\n    - Qwen2-Audio+Orca: 3.47 / 3.38 / 0.09 / 6.77 / 3.6119\n    - LLaMA-Omni: 3.99 / 3.47 / 0.52 / 10.82 / 3.9296\n  - setup: InstructS2S-Eval, 199 instructions from AlpacaEval (helpful_base and vicuna subsets, math and code removed). The text is scored 1-5 by GPT-4o. Speech responses are first transcribed by Whisper-large-v3. Greedy decoding.\n  - quote: \"LLaMA-Omni 3.99 3.47 0.52 10.82 3.9296\"\n  - where: p.7, Table 2.\n- The authors give two reasons for the S2TIF lead. The baselines are not aligned to speech style: they produce formatted content and redundant explanations. Their explanation for the higher WER is that the speech decoder saw only about 1K hours of data.\n  - number: none beyond the 1K hours.\n  - quote: \"LLaMA-Omni's speech decoder is trained on only approximately 1K hours of data, which is far less than the industrial TTS model.\"\n  - where: p.8.\n- Chunk size Ω trades latency against quality (streaming sweep, Table 4). A larger Ω gives slightly lower ChatGPT score, better ASR-WER, better UTMOS and an almost constant speech rate.\n  - setup: Ω in {10, 20, 40, 60, 80, 100} units. Total latency is LLM + vocoder.\n\n| Ω | Total latency (ms) | ChatGPT | ASR-WER | UTMOS | WPS |\n|---|---|---|---|---|---|\n| 10 | 236.18 | 3.54 | 9.84 | 3.2304 | 2.76 |\n| 20 | 281.41 | 3.56 | 9.91 | 3.4748 | 2.75 |\n| 40 | 346.73 | 3.52 | 10.37 | 3.6688 | 2.74 |\n| 60 | 412.06 | 3.52 | 10.47 | 3.7549 | 2.74 |\n| 80 | 487.44 | 3.50 | 10.70 | 3.7858 | 2.73 |\n| 100 | 562.81 | 3.49 | 10.71 | 3.8242 | 2.74 |\n| Offline | 1753.77 (1542.71 LLM + 211.06 vocoder) | 3.47 | 10.82 | 3.9296 | 2.73 |\n\n  - quote: \"At a latency of 563ms (Ω = 100), the results of all metrics are relatively close to those in the offline scenario.\"\n  - where: p.8-9, Table 4 p.17.\n  - Note that the ASR-WER in the streaming rows (9.84-10.71) is lower than offline (10.82).\n- Cascaded streaming TTS degrades at low latency. Word-chunk size Θ in {1,3,5,7,9}. Both cascades can go below 300 ms, with the lowest latency at Θ=1.\n  - number (Tables 6, 7, Θ=1): SALMONN+Orca is 232.16 ms, ChatGPT 3.28, WER 6.64, WPS 1.86 (offline 3.40 / 3.78 / 3.31). Qwen2-Audio+Orca is 308.61 ms, ChatGPT 2.79, WER 25.25, WPS 1.90 (offline 3.38 / 6.77 / 3.30). Qwen2-Audio+Orca's 308.61 ms at Θ=1 is above 300, and the text says \"below 300ms\", so the text is slightly loose.\n  - quote: \"streaming speech synthesis at the word level tends to introducing additional errors\" and \"when the latency is low, the overall speech rate of cascaded systems drops sharply.\"\n  - where: p.9, Tables 6-7 p.18.\n- SpeechGPT is far slower: more than 4.5 s in streaming. In Table 5 the streaming latency is 4929.65 ms at Ω=10, rising to 8366.83 ms at Ω=100 and 18090.45 ms offline. Streaming ChatGPT scores are 2.16-2.22 and ASR-WER is 42-45.\n  - setup: chain-of-modality decoding generates the text instruction, then the text response, then units.\n  - quote: \"its decoding latency is significantly higher than other systems (>4500ms)\"\n  - where: p.9, Table 5.\n- Offline baseline latencies (the whole response is generated before speech synthesis): LLaMA-Omni 1753.77 ms, SALMONN+Orca 5324.07 ms, Qwen2-Audio+Orca 9424.42 ms. This is Tables 4, 6, 7, where Table 6 is SALMONN+Orca and Table 7 is Qwen2-Audio+Orca.\n- Human evaluation favours LLaMA-Omni.\n  - number: wins/ties/losses out of 100 votes.\n    - Helpfulness: vs Qwen2-Audio+Orca 50/20/30, vs SALMONN+Orca 48/28/24.\n    - Naturalness: vs Qwen2-Audio+Orca 42/20/38, vs SALMONN+Orca 44/33/23.\n  - setup: LLaMA-Omni at Ω=40 (347 ms) against SALMONN+Orca Θ=3 (352 ms) and Qwen2-Audio+Orca Θ=3 (420 ms). 20 random instructions, 5 participants, 100 votes per comparison.\n  - quote: \"each pairwise model comparison results in a total of 100 votes.\"\n  - where: p.9, Fig 4. The text refers to it as \"Figure 5\". The vote counts are read from the extracted Fig 4 text, whose row-to-baseline mapping is inferred from order (Qwen2-Audio on top).\n- The InstructS2S-200K dataset.\n  - number: 200K samples. About 50K are from Alpaca and about 150K are first-turn instructions from the first 150K UltraChat entries. 418 h of instruction speech, 1058 h of response speech. Averages: instruction 7.5 s, response 19.0 s, text instruction 21.7 and text response 39.5 (units not stated), unit sequence 553.6.\n  - setup: Llama-3-70B-Instruct rewrites the instructions (fillers, numbers spelled out, brief) and generates concise responses with no lists or parentheses. Speech is synthesised with CosyVoice-300M-SFT (random male or female voice) for instructions and VITS trained on LJSpeech for responses.\n  - quote: \"Speech Instruction Duration 418h / Speech Response Duration 1058h\"\n  - where: p.5, Table 1.\n- Architecture and configuration.\n  - Whisper-large-v3 encoder, frozen.\n  - Adaptor: 5× downsampling by concatenating frames.\n  - LLM: Llama-3.1-8B-Instruct.\n  - Speech decoder: 2 LLaMA-style Transformer layers, 425M parameters, hidden 4096, 32 heads, FFN 11008, non-autoregressive, trained with CTC. Upsample factor λ=25.\n  - Units: HuBERT, K-means with 1000 clusters, unit HiFi-GAN vocoder with duration predictor.\n  - quote: \"The speech decoder consists of 2 Transformer layers with the same architecture as LLaMA, with a hidden dimension of 4096, 32 attention heads, and a feed-forward network dimension of 11008, which contains 425M parameters.\"\n  - where: p.6.\n- Decoding speed. Because the speech decoder is non-autoregressive, generating text plus speech is about as fast as generating text alone. This is a claim without a measured number.\n  - quote: \"the decoding speed for generating both text and speech responses simultaneously is not significantly different from the speed of generating text response alone.\"\n  - where: p.4.\n- Small Ω hurts quality in two ways. UTMOS falls at small Ω because speech is cut into more segments, which adds discontinuities. The authors also speculate that the vocoder handles short unit sequences more reliably, because it is trained on short sequences.\n  - where: p.8.\n\nLIMITS\n- Offline is the default; the abstract's headline latency is the best streaming setting only. At Ω=10 the speech is the least natural, with UTMOS 3.23 against 3.93 offline.\n- There is no decoding-mode ablation beyond offline vs streaming and the Ω sweep. There are no ablations of the CTC decoder, the upsample factor λ, the two-stage training, or the data. Decoding is greedy only.\n- The evaluation is small. InstructS2S-Eval is 199 text-synthesised instructions (CosyVoice), with no real human speech. The human study has 20 prompts and 5 raters. The judge is GPT-4o, and the S2SIF score depends on Whisper ASR. The authors concede the S2SIF drop comes partly from \"errors introduced during the speech synthesis process and the reliance on an ASR model for evaluation\".\n- Latency is measured only on a single L40, and \"latency\" is time to the start of the speech response. No end-to-end audio-in-to-audio-out measurement with input streaming is given, and the model waits for the whole spoken instruction (not full-duplex).\n- ASR-WER of 10.82 offline is worse than the cascaded systems (3.78, 6.77). The authors blame the small 1K-hour training set for the speech decoder. The voice is a fixed LJSpeech VITS voice, so the speech has no expressiveness. The future-work section lists \"enhancing the expressiveness of generated speech responses and improving real-time interaction capabilities\".\n- Only English is evaluated, and only single-turn instructions: only the first turn of UltraChat is used.\n- Baselines are SpeechGPT, SALMONN+Orca and Qwen2-Audio+Orca. Mini-Omni and Moshi are named only in related work and are not compared. This is dated by 2026.\n- Related-work claim: the authors say they train on far less data than Mini-Omni and Moshi, and that unlike theirs, CTC removes the need to pre-align speech and text.\n\nBUILDS ON\n- SpeechGPT (Zhang et al., 2023): the discrete-unit target and the chain-of-modality baseline.\n- Whisper (Radford et al., 2023): the encoder.\n- Ma et al. (2024b): the speech adaptor, which downsamples by concatenating frames.\n- Llama-3.1-8B-Instruct (Dubey et al., 2024): the LLM.\n- HuBERT (Hsu et al., 2021): the units.\n- Unit HiFi-GAN with duration predictor (Polyak et al., 2021; Kong et al., 2020): the vocoder.\n- CTC (Graves et al., 2006a).\n- NAR streaming Transformer (Ma et al., 2023), plus Ma et al. (2024a) and Zhang et al. (2024b) (StreamSpeech): the streaming decoder.\n- Cho et al. (2024), \"Speechworthy\": concise answers for speech.\n- Contemporaries: Mini-Omni (Xie & Wu, 2024) and Moshi (Défossez et al., 2024).\n\nCODE\nAlgorithm 1, the inference loop (p.4). Streaming works by running the CTC decoder over the growing upsampled hidden states, collapsing the units, and flushing a chunk to the vocoder once at least Ω new units exist:\n```\nif |Y^U| - j >= Ω then\n  y^S ← V(Y^U_{j+1:}); Y^S ← Y^S + y^S; j ← |Y^U|\n```\nPrompt template (App. A, p.16):\n```\n<|begin of text|><|start header id|>system<|end header id|>\nYou are a helpful language and speech assistant. You are able to understand the speech content that the user provides, and assist the user with a variety of tasks using natural language. <|eot id|>\n<|start header id|>user<|end header id|>\n<speech>\nPlease answer the questions in the user's input speech. <|eot id|>\n<|start header id|>assistant<|end header id|>\n```\nAppendix A also gives three other prompts. One is the GPT-4o scoring prompt (1-5 on helpfulness, relevance, fluency and suitability for speech interaction, output as JSON). The other two are Llama-3-70B prompts for instruction rewriting and for response generation.\n\nFIGURES\n- Fig 1 (p.2): simultaneous text and speech generation overview.\n- Fig 2 (p.3): architecture and two-stage training. The extraction is garbled, so look at the image.\n- Fig 3 (p.8): four latency-vs-metric curves (ChatGPT score, ASR-WER, UTMOS, WPS) for all systems, streaming and offline. This is the quickest view of LLaMA-Omni's latency-quality frontier against the cascades.\n- Fig 4 (p.9): human-evaluation win/tie/lose bars for helpfulness and naturalness.\n- I did not run the figure-caption script.\n\nPROBLEMS\n- The extraction contained roughly 25K chars of embedded base64 `<latexit>` blobs from Fig 2, and I stripped them. The paper text is intact.\n- Your prompt says 226 ms. The paper says 236 ms (236.18 ms exactly, Table 4). Check the note.\n- The text calls the human-eval figure \"Figure 5\" but the figure is Fig 4.\n- There were no embedded instructions in the PDF.\n- Page numbers are from the printed pages, inferred from the extraction order.\n- Extracted copy for re-checking: /tmp/llo2.txt (stripped version)."
+ "type": "system",
+ "question": "How can an open-source LLM be given low-latency, high-quality speech-to-speech interaction without a separate ASR/TTS cascade and with little training data and compute?",
+ "hypothesis": "An LLM with a speech encoder and a CTC-based non-autoregressive streaming speech decoder, trained on speech-style instruction data, can produce text and speech simultaneously with latency below cascaded and prior speech-LMs.",
+ "contributions": [
+  "LLaMA-Omni architecture: speech encoder, speech adaptor, LLM, streaming speech decoder generating text and speech simultaneously",
+  "InstructS2S-200K dataset of 200K speech instructions with speech-style responses",
+  "Training in under 3 days on 4 GPUs; response latency as low as 236ms"
+ ],
+ "method": {
+  "summary": "Frozen Whisper-large-v3 encoder feeds a trainable adaptor into Llama-3.1-8B-Instruct. A 2-layer NAR Transformer speech decoder takes LLM hidden states (upsampled 25x), predicts HuBERT units with CTC, and a unit HiFi-GAN vocoder synthesizes chunks of Omega units while the LLM still generates text. Two-stage training: adaptor+LLM on text responses, then speech decoder only.",
+  "task": "speech-to-text and speech-to-speech instruction following",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "InstructS2S-200K",
+    "role": "train",
+    "size": "200K speech instruction/response triplets; 418h instruction audio, 1058h response audio",
+    "split": "all used for training",
+    "source": "Built by authors: ~50K Alpaca instructions + first 150K UltraChat entries (first turn only); rewritten and answered by Llama-3-70B-Instruct; instructions TTS by CosyVoice-300M-SFT (random male/female voice), responses by VITS trained on LJSpeech",
+    "preprocessing": "Instruction rewriting (fillers, numbers as words, brief); concise TTS-friendly responses; response units from HuBERT + K-means (1000 clusters), consecutive duplicates merged"
+   },
+   {
+    "name": "InstructS2S-Eval",
+    "role": "eval",
+    "size": "199 instructions",
+    "split": "test only",
+    "source": "AlpacaEval subsets helpful_base and vicuna, math and code questions removed; speech via CosyVoice-300M-SFT",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-Omni",
+    "role": "proposed",
+    "params": "inferred: ~8B LLM + Whisper-large-v3 encoder + 425M speech decoder; total not stated",
+    "architecture": "Whisper encoder + 2-layer MLP adaptor (5x downsample) + Llama-3.1-8B-Instruct + NAR CTC streaming Transformer speech decoder + unit HiFi-GAN vocoder",
+    "init_from": "Llama-3.1-8B-Instruct; Whisper-large-v3 encoder (frozen)",
+    "tokenizer": null,
+    "vocab": "1000 unit clusters (+ CTC blank)",
+    "layers": "speech decoder: 2 LLaMA-style Transformer layers",
+    "hidden": "speech decoder: 4096",
+    "heads": "speech decoder: 32",
+    "context": null,
+    "other": {
+     "speech_decoder_params": "425M",
+     "ffn_dim": 11008,
+     "upsample_lambda": 25,
+     "adaptor_downsample_k": 5
+    }
+   },
+   {
+    "name": "SpeechGPT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "discrete-unit speech-language model, chain-of-modality prompting",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SALMONN + Orca",
+    "role": "baseline",
+    "params": null,
+    "architecture": "speech-to-text LLM + Orca streaming TTS cascade",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2-Audio + Orca",
+    "role": "baseline",
+    "params": null,
+    "architecture": "audio LLM + Orca streaming TTS cascade",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Whisper-large-v3",
+    "role": "judge",
+    "params": null,
+    "architecture": "ASR used to transcribe speech responses for scoring and WER",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Stage 1: cross-entropy on text response (L_LLM); Stage 2: CTC loss on discrete units (L_CTC)",
+   "optimizer": null,
+   "lr": "Stage 1 peak 2e-5; Stage 2 peak 2e-4",
+   "lr_schedule": "cosine",
+   "warmup": "first 3% of steps",
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "3 (both stages)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4 NVIDIA L40 GPUs",
+   "compute": "about 65 hours on 4 L40 (less than 3 days)",
+   "wall_clock": "approximately 65 hours",
+   "seeds": null,
+   "other": {
+    "stage1_trainable": "speech adaptor and LLM (encoder frozen)",
+    "stage2_trainable": "speech decoder only (encoder, adaptor, LLM frozen)",
+    "stage2_schedule": "same batch size, steps and scheduler as stage 1"
+   }
+  },
+  "inference": {
+   "decoding": "greedy search",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single greedy run per instruction; no seeds",
+   "prompting": "Llama-3 chat template with system prompt and <speech> placeholder (App. A)",
+   "retrieval": null,
+   "parameters": {
+    "unit_chunk_size_Omega": "offline: infinity; streaming: [10, 20, 40, 60, 80, 100]",
+    "word_chunk_size_Theta_cascades": "[1, 3, 5, 7, 9]",
+    "upsample_lambda": "25"
+   },
+   "other": {
+    "latency_hardware": "1 NVIDIA L40 GPU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ChatGPT Score",
+     "definition": "GPT-4o scores 1-5 on helpfulness, relevance, fluency, suitability for speech; for S2SIF the speech is first transcribed with Whisper-large-v3",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "ASR-WER",
+     "definition": "WER between Whisper-large-v3 transcript of speech response and the model's text response",
+     "unit": "WER",
+     "higher_is_better": false
+    },
+    {
+     "name": "UTMOS",
+     "definition": "MOS prediction model score for naturalness",
+     "unit": "MOS",
+     "higher_is_better": true
+    },
+    {
+     "name": "Latency",
+     "definition": "time from speech instruction input to start of speech response, measured on 1 L40",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "Speech rate (WPS)",
+     "definition": "average words per second of generated speech",
+     "unit": "words/s",
+     "higher_is_better": null
+    },
+    {
+     "name": "Human evaluation",
+     "definition": "side-by-side win/tie/lose on helpfulness and naturalness; 20 instructions, 5 participants, 100 votes per comparison",
+     "unit": "votes",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SpeechGPT",
+    "SALMONN + Orca",
+    "Qwen2-Audio + Orca"
+   ],
+   "protocol": "InstructS2S-Eval, 199 instructions, greedy single run, GPT-4o judge; offline and streaming scenarios; no seeds or significance tests; human eval on 20 sampled instructions vs the two cascades"
+  },
+  "availability": {
+   "code": "https://github.com/ictnlp/LLaMA-Omni",
+   "weights": "https://huggingface.co/ICTNLP/Llama-3.1-8B-Omni",
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "LLaMA-Omni input template",
+    "text": "<|begin of text|><|start header id|>system<|end header id|>\nYou are a helpful language and speech assistant. You are able to understand the speech content that the user provides, and assist the user with a variety of tasks using natural language. <|eot id|>\n<|start header id|>user<|end header id|>\n<speech>\nPlease answer the questions in the user’s input speech. <|eot id|>\n<|start header id|>assistant<|end header id|>",
+    "where": "App. A"
+   },
+   {
+    "purpose": "GPT-4o ChatGPT Score judge",
+    "text": "I need your help to evaluate the performance of several models in a speech interaction scenario. The models receive the user’s speech input and respond with speech output. For evaluation purposes, both the user’s speech input and the model’s speech response have been transcribed into text using Automatic Speech Recognition (ASR). Your task is to rate the model’s responses based on the provided user input transcription [Instruction] and the model’s output transcription [Response]. Please consider factors such as helpfulness, relevance, fluency, and suitability for speech interaction in your evaluation, and provide a single score on a scale from 1 to 5.\nBelow are the transcription of user’s instruction and models’ response:\n### [Instruction]: {instruction}\n### [Response]: {response}\nAfter evaluating, please output the scores in JSON format: {score: ...}. You don’t need to provide any explanations.",
+    "where": "App. A"
+   },
+   {
+    "purpose": "Instruction rewriting (Llama-3-70B-Instruct)",
+    "text": "Below is an instruction data containing the user’s instruction. I would like to generate a speech version of this instruction for training a large language model that supports speech input. Therefore, please rewrite my instruction data according to the following requirements:\n1. Modify the instruction to simulate human speech, adding fillers as appropriate (but not too many ‘you know’, ‘like’, etc.).\n2. The question should not contain content that cannot be synthesized by the TTS model. Numbers should be written in English words rather than Arabic numerals.\n3. The question should be relatively brief without excessive verbiage.\n[instruction]: {instruction}\nPlease output in JSON format as follows: {“question”: {question}}.",
+    "where": "App. A"
+   },
+   {
+    "purpose": "Response generation (Llama-3-70B-Instruct)",
+    "text": "Below is the transcribed text of a user’s speech query. Please provide a response to this question, which will be converted to speech using TTS. Please follow these requirements for your response:\n1. Your response should not contain content that cannot be synthesized by the TTS model, such as parentheses, ordered lists, etc. Numbers should be written in English words rather than Arabic numerals.\n2. Your response should be very concise and to the point, avoiding lengthy explanations.\n[instruction]: {instruction}\nPlease output in JSON format as follows: {“response”: {response}}.",
+    "where": "App. A"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "we train the speech adapter and the LLM with a batch size of 32 for 3 epochs",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Minimum response latency of 236ms (Omega=10), below GPT-4o's quoted 320ms average audio latency.",
+   "kind": "measured",
+   "metric": "response latency",
+   "value": "236",
+   "unit": "ms",
+   "baseline_value": "320 (GPT-4o average audio latency, quoted)",
+   "n": null,
+   "setup": "Streaming scenario, Omega=10, 1 NVIDIA L40 GPU, greedy search, InstructS2S-Eval (199 instructions)",
+   "quote": "LLaMA-Omni can achieve a minimum latency of 236ms (with Ω= 10), which is even lower than GPT-4o’s average audio latency of 320ms.",
+   "note": "Table 4 gives 236.18 ms total = 206.03 LLM + 30.15 vocoder. Abstract says 236ms. GPT-4o 320ms is not measured here.",
+   "where": "p.8 Sec 4.5; Table 4"
+  },
+  {
+   "claim": "LLaMA-Omni scores highest on speech-to-text instruction following (ChatGPT Score) offline.",
+   "kind": "measured",
+   "metric": "ChatGPT Score S2TIF",
+   "value": "3.99",
+   "unit": "1-5 GPT-4o score",
+   "baseline_value": "3.47 (Qwen2-Audio + Orca, best baseline)",
+   "n": 199,
+   "setup": "InstructS2S-Eval offline, greedy, GPT-4o judge",
+   "quote": null,
+   "table": "Table 2, row LLaMA-Omni, column S2TIF",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "LLaMA-Omni scores highest on speech-to-speech instruction following (ChatGPT Score) offline.",
+   "kind": "measured",
+   "metric": "ChatGPT Score S2SIF",
+   "value": "3.47",
+   "unit": "1-5 GPT-4o score",
+   "baseline_value": "3.40 (SALMONN + Orca)",
+   "n": 199,
+   "setup": "InstructS2S-Eval offline, speech transcribed with Whisper-large-v3 then GPT-4o scored",
+   "quote": null,
+   "table": "Table 2, row LLaMA-Omni, column S2SIF",
+   "note": "Margin over cascades is small (3.47 vs 3.40 vs 3.38); drop from S2TIF is 0.52 vs 0.04 and 0.09 for cascades.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Speech-text alignment (ASR-WER) of LLaMA-Omni is worse than cascades but far better than SpeechGPT.",
+   "kind": "measured",
+   "metric": "ASR-WER",
+   "value": "10.82",
+   "unit": "WER %",
+   "baseline_value": "45.00 (SpeechGPT); 3.78 SALMONN+Orca; 6.77 Qwen2-Audio+Orca",
+   "n": 199,
+   "setup": "Offline, InstructS2S-Eval",
+   "quote": null,
+   "table": "Table 2, row LLaMA-Omni, column ASR-WER",
+   "note": "Unit of WER not stated explicitly (percent assumed).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "LLaMA-Omni has highest UTMOS offline (speech naturalness).",
+   "kind": "measured",
+   "metric": "UTMOS",
+   "value": "3.9296",
+   "unit": "predicted MOS",
+   "baseline_value": "3.8958 (SpeechGPT)",
+   "n": 199,
+   "setup": "Offline, InstructS2S-Eval",
+   "quote": null,
+   "table": "Table 2, row LLaMA-Omni, column UTMOS",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training takes about 65 hours on 4 NVIDIA L40 GPUs.",
+   "kind": "measured",
+   "metric": "training time",
+   "value": "65",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Both stages, 200K samples, 4x L40",
+   "quote": "The entire training process takes approximately 65 hours on 4 NVIDIA L40 GPUs.",
+   "note": "Abstract says less than 3 days on just 4 GPUs.",
+   "where": "p.6 Sec 4.1"
+  },
+  {
+   "claim": "At Omega=100 the latency is 563ms and metrics are close to offline.",
+   "kind": "measured",
+   "metric": "latency",
+   "value": "563",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Streaming, Omega=100",
+   "quote": "At a latency of 563ms (Ω= 100), the results of all metrics are relatively close to those in the offline scenario.",
+   "note": "Table 4 gives 562.81 ms.",
+   "where": "p.9"
+  },
+  {
+   "claim": "SpeechGPT streaming latency exceeds 4500ms because it generates text instruction and response before units.",
+   "kind": "measured",
+   "metric": "latency",
+   "value": "4500",
+   "unit": "ms (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Streaming, any Omega",
+   "quote": "its decoding latency is significantly higher than other systems (>4500ms)",
+   "note": "Table 5: 4929.65 ms at Omega=10; offline 18090.45 ms.",
+   "where": "p.9; Table 5"
+  },
+  {
+   "claim": "Smaller Omega lowers UTMOS (3.2304 at Omega=10 vs 3.8242 at Omega=100) because of more discontinuities; ChatGPT Score and ASR-WER change only slightly.",
+   "kind": "measured",
+   "metric": "UTMOS at Omega=10",
+   "value": "3.2304",
+   "unit": "predicted MOS",
+   "baseline_value": "3.8242 at Omega=100",
+   "n": 199,
+   "setup": "Streaming LLaMA-Omni",
+   "quote": null,
+   "table": "Table 4, row 10, column UTMOS",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Human evaluation (20 instructions, 5 participants, 100 votes per comparison) favours LLaMA-Omni (Omega=40, 347ms) over SALMONN+Orca (Theta=3, 352ms) and Qwen2-Audio+Orca (Theta=3, 420ms) on helpfulness and naturalness.",
+   "kind": "measured",
+   "metric": "human win/tie/lose votes",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Side-by-side, win/tie/lose",
+   "quote": null,
+   "note": "Figure 4 bar labels (50/20/30, 48/28/24 helpfulness; 42/20/38, 44/33/23 naturalness) were not mapped to systems reliably from text extraction, so no value is recorded. Text refers to 'Figure 5' but the figure is Figure 4.",
+   "where": "p.9 Sec 4.6, Fig 4"
+  },
+  {
+   "claim": "Dataset InstructS2S-200K totals 418h of instructions and 1058h of responses.",
+   "kind": "measured",
+   "metric": "dataset duration",
+   "value": "418",
+   "unit": "h instruction audio (1058h response)",
+   "baseline_value": null,
+   "n": 200000,
+   "setup": "50K Alpaca + 150K UltraChat first-turn instructions",
+   "quote": null,
+   "table": "Table 1, row Speech Instruction Duration",
+   "note": null,
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "Only 199 instructions in the eval set, single greedy run, GPT-4o judge; no significance tests.",
+  "S2SIF is judged through Whisper ASR transcripts, so ASR errors lower scores.",
+  "Speech decoder is trained on only about 1K hours; authors concede ASR-WER higher than cascades with industrial TTS.",
+  "Responses use one standard voice (VITS/LJSpeech); expressiveness of speech not addressed (future work).",
+  "Latency excludes full-duplex or real-time interruption; authors plan to improve real-time interaction.",
+  "The 320ms GPT-4o latency is a quoted figure, not measured under the same conditions.",
+  "Human eval is small (20 instructions, 5 raters)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "response latency",
+   "definition": "the time interval between the input of a speech instruction and the start of the speech response",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "S2TIF / S2SIF",
+   "definition": "speech-to-text and speech-to-speech instruction-following tasks",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Llama-3.1-8B-Instruct (Dubey et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LLM backbone",
+   "quote": null
+  },
+  {
+   "work": "Whisper-large-v3 (Radford et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen speech encoder",
+   "quote": null
+  },
+  {
+   "work": "SpeechGPT (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "discrete-unit speech LM; unit extraction followed",
+   "quote": null
+  },
+  {
+   "work": "SALMONN (Tang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "with Orca TTS",
+   "quote": null
+  },
+  {
+   "work": "Qwen2-Audio",
+   "year": 2024,
+   "arxiv": "2407.10759",
+   "relation": "baseline",
+   "note": "with Orca TTS",
+   "quote": null
+  },
+  {
+   "work": "Mini-Omni",
+   "year": 2024,
+   "arxiv": "2408.16725",
+   "relation": "related",
+   "note": "contemporary work",
+   "quote": null
+  },
+  {
+   "work": "Moshi",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "contemporary work",
+   "quote": null
+  },
+  {
+   "work": "Ma et al. 2023 / 2024a, Zhang et al. 2024b (NAR streaming Transformer, CTC)",
+   "year": 2024,
+   "arxiv": "2406.03049",
+   "relation": "uses-method",
+   "note": "CTC streaming speech decoder",
+   "quote": null
+  },
+  {
+   "work": "HuBERT (Hsu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "unit extraction",
+   "quote": null
+  },
+  {
+   "work": "Unit HiFi-GAN vocoder (Polyak et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "vocoder",
+   "quote": null
+  },
+  {
+   "work": "Ma et al. (2024b)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "speech adaptor downsampling",
+   "quote": null
+  },
+  {
+   "work": "Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "50K instructions",
+   "quote": null
+  },
+  {
+   "work": "UltraChat",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "150K instructions",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval subsets",
+   "quote": null
+  },
+  {
+   "work": "CosyVoice-300M-SFT / VITS / LJSpeech",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "TTS for data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Left: Model architecture of LLaMA-Omni. Right: Illustration of the two-stage training strategy for LLaMA-Omni.",
+   "page": 3,
+   "why": "Shows the encoder-adaptor-LLM-decoder-vocoder pipeline and which parts train in each stage"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Results on the InstructS2S-Eval benchmark in the streaming scenario. We report the ChatGPT Score, ASR-WER, UTMOS, and WPS under different latency conditions.",
+   "page": 8,
+   "why": "Quality vs latency trade-off for LLaMA-Omni and cascades"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Results of human evaluation from the perspectives of helpfulness and naturalness.",
+   "page": 9,
+   "why": "Human win/tie/lose votes"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 5",
+   "snippet": "L_CTC = -log P(Y^U|O) = -log sum_{A in beta^-1(Y^U)} prod_{i=1}^{lambda*M} P(a_i|O)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text cites 'Figure 5' for human evaluation but the figure is Figure 4.",
+  "Figure 2 base64 latex junk stripped by extractor; bar-label mapping in Fig 4 not reliable from text."
+ ]
 }

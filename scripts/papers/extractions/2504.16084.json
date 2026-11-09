@@ -1,0 +1,625 @@
+{
+ "schema": 1,
+ "key": "2504.16084",
+ "pdf": "generative-ai/05-RL/sources/zuo-2025-ttrl.pdf",
+ "bib": {
+  "title": "TTRL: Test-Time Reinforcement Learning",
+  "authors": [
+   "Yuxin Zuo",
+   "Kaiyan Zhang",
+   "Li Sheng",
+   "Shang Qu",
+   "Ganqu Cui",
+   "Xuekai Zhu",
+   "Haozhan Li",
+   "Yuchen Zhang",
+   "Xinwei Long",
+   "Ermo Hua",
+   "Biqing Qi",
+   "Youbang Sun",
+   "Zhiyuan Ma",
+   "Lifan Yuan",
+   "Ning Ding",
+   "Bowen Zhou"
+  ],
+  "first_author": "Zuo",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2504.16084",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 63708,
+  "chars_total": 63708,
+  "engine": "pymupdf",
+  "skipped": "references skimmed"
+ },
+ "type": "empirical",
+ "question": "Can an LLM be trained with RL on unlabeled test data, with rewards estimated by the model's own majority vote?",
+ "hypothesis": "Test-time-scaling signals such as majority voting give rewards good enough to drive RL without ground-truth labels.",
+ "contributions": [
+  "Introduce TTRL, RL on unlabeled data with majority-voting rewards",
+  "Show consistent gains across models and tasks and that TTRL can exceed the initial maj@n",
+  "Analysis of why it works and when it fails"
+ ],
+ "method": {
+  "summary": "GRPO is run on each benchmark's unlabeled questions. 64 samples per question vote for a label; reward is 1 if a sampled answer equals the majority answer, else 0; 32 of the samples are used for training. Evaluation is pass@1 on the same benchmark.",
+  "task": "RL for mathematical/scientific reasoning without labels (test-time training)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "AIME 2024",
+    "role": "both",
+    "size": "inferred: 30 problems (AIME benchmark; not stated in text)",
+    "split": "test questions without labels used for TTRL; same set evaluated",
+    "source": "Li et al., 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "AMC",
+    "role": "both",
+    "size": null,
+    "split": "same as above",
+    "source": "Li et al., 2024",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH-500",
+    "role": "both",
+    "size": "500 problems (name)",
+    "split": "same as above; also split into 5 difficulty levels for Table 3",
+    "source": "Hendrycks et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "GPQA-Diamond",
+    "role": "both",
+    "size": null,
+    "split": "same as above",
+    "source": "Rein et al., 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2.5-Math-1.5B / 7B",
+    "role": "base",
+    "params": "1.5B, 7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-7B, Qwen2.5-32B",
+    "role": "base",
+    "params": "7B, 32B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen3-8B (thinking and non-thinking)",
+    "role": "base",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "3k (Table 1) or 32k (Fig 3)",
+    "other": {}
+   },
+   {
+    "name": "LLaMA-3.1-8B-Instruct, LLaMA-3.2-3B-Instruct, LLaMA-3.2-3B-Oat-Zero",
+    "role": "base",
+    "params": "8B, 3B, 3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-Nemo-Instruct-2407, Ministral-8B-Instruct-2410",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek-Math-7B-Instruct, DeepSeek-R1-LLaMA-8B, Skywork-OR1-Math-7B",
+    "role": "base",
+    "params": "7B, 8B, 7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32,768 tokens max generation for LRMs",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "GRPO with majority-vote rule-based reward (Eq 3); PPO and PRIME also tried on MATH-500",
+   "optimizer": "AdamW",
+   "lr": "5e-7 peak",
+   "lr_schedule": "cosine",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "episodes: 10 (MATH-500), 30 (AMC), 80 (AIME 2024)",
+   "tokens": null,
+   "seq_len": "max generation 3,072 tokens; 32,768 for LRMs",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 * NVIDIA A100 80GB GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rollout": "64 responses sampled for voting, downsampled to 32 per prompt for training",
+    "rollout_temperature": "0.6 (1.0 for Qwen2.5-Math and LRMs)",
+    "note": "batch size, KL coefficient, clip range not stated; Fig 11 failure used train batch 256",
+    "training_data_size": "equals the benchmark dataset size (Table 4 caption)"
+   }
+  },
+  "inference": {
+   "decoding": "sampling for main results; greedy for analysis and Qwen2.5-Math additional experiments (Table 4, Fig 4, Fig 8)",
+   "temperature": "0.6",
+   "top_p": "0.95",
+   "max_tokens": "3072 (32k for LRMs)",
+   "samples": "16 responses per question (4 for 32k context); avg@64/maj@64 in Fig 7",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "vote_n": 64
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1",
+     "definition": "mean over k samples of correctness p_i",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "maj@n",
+     "definition": "accuracy of majority-voted answer over n samples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "label accuracy / reward accuracy",
+     "definition": "whether estimated label matches truth / fraction of majority rewards equal to ground-truth rewards",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "backbone model without TTRL",
+    "RL (leakage): RL on test data with ground-truth labels",
+    "R1-Zero-like RL models (Table 4)"
+   ],
+   "protocol": "TTRL applied to each benchmark individually, then evaluated on that benchmark; no held-out set, no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/PRIME-RL/TTRL",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.rollout",
+    "quote": "we sample 64 responses using a temperature of 0.6 (1.0 for Qwen2.5-Math and LRMs)\nfor voting-based label estimation and downsample 32 responses per prompt for training.",
+    "where": "Sec 3.1 Implementation Details"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TTRL lifts Qwen2.5-Math-7B AIME 2024 pass@1 from 12.9 to 40.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 AIME 2024",
+   "value": 40.2,
+   "unit": "%",
+   "baseline_value": 12.9,
+   "n": null,
+   "setup": "TTRL (GRPO, majority-vote reward) run separately on each benchmark's unlabeled test questions, Qwen2.5-Math-7B, pass@1 = mean over 16 samples at temp 0.6, top-p 0.95, max 3072 tokens",
+   "note": null,
+   "where": "Sec 1; Table 1",
+   "quote": "improvement on AIME 2024 of 211% (12.9 to 40.2)"
+  },
+  {
+   "claim": "Average gain of 76% over AIME 2024, AMC, MATH-500, GPQA for Qwen2.5-Math-7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg relative gain",
+   "value": 76,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TTRL (GRPO, majority-vote reward) run separately on each benchmark's unlabeled test questions, Qwen2.5-Math-7B, pass@1 = mean over 16 samples at temp 0.6, top-p 0.95, max 3072 tokens",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "with an average gain of 76% across AIME 2024, AMC, MATH-500,"
+  },
+  {
+   "claim": "GPQA pass@1 falls for Qwen2.5-Math-7B under TTRL",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 GPQA",
+   "value": 27.7,
+   "unit": "%",
+   "baseline_value": 29.1,
+   "n": null,
+   "setup": "TTRL (GRPO, majority-vote reward) run separately on each benchmark's unlabeled test questions, Qwen2.5-Math-7B, pass@1 = mean over 16 samples at temp 0.6, top-p 0.95, max 3072 tokens",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen2.5-Math-7B w/ TTRL, column GPQA"
+  },
+  {
+   "claim": "Mistral-Nemo-Instruct AIME falls to 0 under TTRL",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 AIME",
+   "value": 0,
+   "unit": "%",
+   "baseline_value": 0.8,
+   "n": null,
+   "setup": "Mistral-Nemo-Instruct, TTRL per benchmark, 16 samples temp 0.6",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Mistral-Nemo-Instruct w/ TTRL, column AIME (0 vs 0.8, delta -0.8)"
+  },
+  {
+   "claim": "Qwen2.5-Math-1.5B MATH-500 from 32.7 to 73.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 MATH-500",
+   "value": 73.0,
+   "unit": "%",
+   "baseline_value": 32.7,
+   "n": null,
+   "setup": "Qwen2.5-Math-1.5B, TTRL on MATH-500, 16 samples temp 0.6",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "starting from a subpar perfor-\nmance of 32.7 on MATH-500, the model improved by 123.2% to reach 73.0"
+  },
+  {
+   "claim": "Qwen3-8B (non-thinking, 3k context) AIME 26.9 to 46.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 AIME 2024",
+   "value": 46.7,
+   "unit": "%",
+   "baseline_value": 26.9,
+   "n": null,
+   "setup": "Qwen3-8B non-thinking, 3k context",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Qwen3-8B* w/ TTRL, column AIME 2024"
+  },
+  {
+   "claim": "TTRL on LRMs: Skywork-OR1-Math-7B and Qwen3-8B (thinking) gain ~10 points AIME 2024",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIME 2024 accuracy",
+   "value": null,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "32k context, 4 responses per question, Skywork-OR1-Math-7B and Qwen3-8B thinking; values 66.7->75.0 and 72.5->82.5 read from Fig 3 (assignment of pairs to models not labelled in text)",
+   "note": null,
+   "where": "Sec 3.2, Fig 3",
+   "quote": "yielding improvements of ap-\nproximately 10 points on both backbones."
+  },
+  {
+   "claim": "After TTRL, avg@64 exceeds the base model's maj@64 on all three benchmarks (AIME 32.3 vs 30.0)",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg@64 vs maj@64",
+   "value": 32.3,
+   "unit": "%",
+   "baseline_value": 30.0,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, AIME 2024, 64 samples; other benchmarks AMC 63.9 vs 56.6, MATH-500 84.2 vs 66.4 (read from Fig 7, mapping inferred from bar order)",
+   "note": "Fig 7 values are read from figure text order",
+   "where": "Sec 4.1, Fig 7",
+   "quote": "TTRL avg@64 consistently outperforms Qwen2.5-Math-7B maj@64 across all benchmarks, with"
+  },
+  {
+   "claim": "Final avg@16 exceeds the initial maj@16 by more than 20 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg@16 minus initial maj@16",
+   "value": 20,
+   "unit": "points (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TTRL on AMC, Qwen2.5-Math-1.5B (Fig 6)",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "the final avg@16 score exceeds the initial\nmaj@16 score by more than 20 points"
+  },
+  {
+   "claim": "TTRL curve closely approaches RL on test labels (leakage) on MATH-500",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, MATH-500, Fig 8; no number given",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "Surprisingly, we find that the performance curve of TTRL\nclosely approaches that of RL (leakage)."
+  },
+  {
+   "claim": "On AIME 2024 label accuracy starts ~37% while reward accuracy reaches 92% (Lucky Hit)",
+   "kind": "measured",
+   "source": null,
+   "metric": "reward accuracy",
+   "value": 92,
+   "unit": "%",
+   "baseline_value": 37,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, AIME 2024; 37 is initial label accuracy of majority voting",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "initial label estimation\nthrough majority voting achieves an accuracy of only 37%, the reward accuracy reaches\nan impressive 92%"
+  },
+  {
+   "claim": "Base model's most frequent answer is only 16.6% of predictions on AIME",
+   "kind": "measured",
+   "source": null,
+   "metric": "majority ratio",
+   "value": 16.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B base on AIME 2024",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "the most frequently\npredicted answer accounts for only 16.6% of all predictions"
+  },
+  {
+   "claim": "Gains shrink with MATH-500 difficulty: Level 1 +45.4 points, Level 5 +16.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy delta",
+   "value": 16.8,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Math-1.5B, TTRL run on each difficulty subset independently",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/ TTRL delta, column MATH-500-L5 (+16.8; L1 +45.4)"
+  },
+  {
+   "claim": "Greedy-decoding AIME 2024 for Qwen2.5-Math-7B 16.7 to 43.3 (+159.3%)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 greedy AIME 2024",
+   "value": 43.3,
+   "unit": "%",
+   "baseline_value": 16.7,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, greedy decoding, baseline from Dr. GRPO",
+   "note": "Table 1 (sampling) gives 12.9 to 40.2; Table 4 (greedy) gives 16.7 to 43.3",
+   "where": "Table 4",
+   "table": "Table 4, row Qwen2.5-Math-7B w/ TTRL, column AIME 2024"
+  },
+  {
+   "claim": "TTRL performance generalises out of distribution (e.g. TTRL on AIME, eval AMC 39.8 to 60.1)",
+   "kind": "measured",
+   "source": null,
+   "metric": "greedy accuracy",
+   "value": 60.1,
+   "unit": "%",
+   "baseline_value": 39.8,
+   "n": null,
+   "setup": "Qwen2.5-Math-7B, trained by TTRL on AIME 2024, greedy eval on AMC; values from Fig 4 text",
+   "note": "Number-to-panel mapping is read from Fig 4 text order",
+   "where": "Sec 3.2 Fig 4",
+   "quote": "TTRL achieves substantial improvements across all benchmarks."
+  },
+  {
+   "claim": "GRPO, PPO and PRIME give closely aligned TTRL curves",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MATH-500, Qwen2.5-Math-1.5B, 30 steps (Fig 5)",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "The performance trajectories of GRPO, PPO, and PRIME are\nclosely aligned."
+  },
+  {
+   "claim": "Temperature 1.0 vs 0.6 and larger train batch matter: failed attempts keep high entropy",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AIME 2024, Fig 11",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "Both of these failed attempts\nexhibit persistently high entropy that does\nnot diminish throughout training"
+  },
+  {
+   "claim": "Response length falls under TTRL; at Level 1 by 73.3%",
+   "kind": "measured",
+   "source": null,
+   "metric": "response length change",
+   "value": -73.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qwen2.5-Math-1.5B, MATH-500 Level 1",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Response Len. w/ TTRL, column MATH-500-L1 (2,339.2 to 624.3, down 73.3%)"
+  }
+ ],
+ "limits": [
+  "Authors concede it is an initial exploration; prior-knowledge and hyperparameter impacts need deeper analysis, ablations promised in future revisions",
+  "Trains and evaluates on the same unlabeled test questions (transductive); the comparison with models trained on large labeled sets is called unfair by the authors",
+  "Fails with wrong temperature/episodes or when prior knowledge is insufficient (harder MATH-500 levels gain less)",
+  "GPQA and some instruct models (Mistral-Nemo AIME) get worse or no gain",
+  "No seeds, variance or batch size/KL settings reported"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Lucky Hit",
+   "definition": "for an incorrectly predicted answer, even if the estimated label does not match the ground truth label, as long as it differs from the predicted answer, the verifier will still output a negative reward",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "RL (leakage)",
+   "definition": "performing RL directly on the test data with ground-truth labels",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "rule-based rewards, pass@k protocol",
+   "quote": null
+  },
+  {
+   "work": "GRPO (DeepSeekMath, Shao et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "PPO (Schulman et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "alternative algorithm",
+   "quote": null
+  },
+  {
+   "work": "PRIME (Cui et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "alternative algorithm",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "majority voting turned into a reward",
+   "quote": null
+  },
+  {
+   "work": "Akyurek et al., test-time training for abstract reasoning",
+   "year": 2024,
+   "arxiv": "2411.07279",
+   "relation": "related",
+   "note": "TTT",
+   "quote": null
+  },
+  {
+   "work": "Right question is already half the answer (Zhang et al.)",
+   "year": 2025,
+   "arxiv": "2504.05812",
+   "relation": "related",
+   "note": "concurrent",
+   "quote": null
+  },
+  {
+   "work": "Dr. GRPO / Oat-Zero (Liu et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Table 4 baselines",
+   "quote": null
+  },
+  {
+   "work": "MATH, AIME, AMC, GPQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 10",
+   "caption": "A toy case of Lucky Hit",
+   "page": 11,
+   "why": "Shows why wrong majority labels still give mostly correct rewards"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Training dynamics of TTRL on AMC using Qwen2.5-Math-1.5B",
+   "page": 9,
+   "why": "avg@16 and maj@16 both rise"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 1",
+   "snippet": "rewards = [1 if ans == majority_answer else 0 for ans in answers]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure values (Figs 3, 4, 7) come from figure text order; mapping to bars is inferred",
+  "Note generative-ai/05-RL/notes/01-rl-foundations.md does not cite this paper; TTRL appears in notes/08-reasoning-rl-deepseek-r1.md"
+ ]
+}

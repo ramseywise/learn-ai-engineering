@@ -1,19 +1,606 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2402.03620",
  "pdf": "generative-ai/03-agentic-foundations/sources/zhou-2024-self-discover.pdf",
  "bib": {
-  "title": "Self-Discover: Large Language Models Self-Compose Reasoning Structures",
-  "first_author": "Pei Zhou",
-  "year": "2024",
-  "venue": null,
+  "title": "SELF-DISCOVER: Large Language Models Self-Compose Reasoning Structures",
+  "authors": [
+   "Pei Zhou",
+   "Jay Pujara",
+   "Xiang Ren",
+   "Xinyun Chen",
+   "Heng-Tze Cheng",
+   "Quoc V. Le",
+   "Ed H. Chi",
+   "Denny Zhou",
+   "Swaroop Mishra",
+   "Huaixiu Steven Zheng"
+  ],
+  "first_author": "Zhou",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2402.03620",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 63936,
+  "chars_total": 63936,
+  "engine": "pymupdf",
+  "skipped": "Fig. 10 meta-prompt text is garbled glyphs in the extraction and could not be read; figure values read from extracted chart labels."
  },
- "legacy_report": "SOURCE: SELF-DISCOVER: Large Language Models Self-Compose Reasoning Structures. Pei Zhou, Jay Pujara, Xiang Ren (USC); Xinyun Chen, Heng-Tze Cheng, Quoc V. Le, Ed H. Chi, Denny Zhou, Swaroop Mishra, Huaixiu Steven Zheng (Google DeepMind). arXiv:2402.03620v1 [cs.AI], 6 Feb 2024. Marked \"Preprint.\" in the PDF (no venue printed).\n\nCOVERAGE: All 17 pages and all 64,131 chars were read: main text, references, Appendices A-E (Table 2 modules, Table 3 BBH per task, Tables 4-5 error examples, Fig. 11). Not readable: the Fig. 10 meta-prompt text came out as garbled glyphs, so the exact meta-prompts are unavailable (only the Stage-2 prompt is quoted in prose). Figure data was taken from the extracted text; I did not run the figures script or view the images.\n\nCLAIMS (ranked)\n- Self-Discover beats zero-shot CoT and Plan-and-Solve on aggregate BBH, T4D and MATH with both PaLM 2-L and GPT-4.\n  number: BBH 67 vs CoT 60 vs PS 61 (PaLM 2-L); 81 vs 75 vs 73 (GPT-4). T4D 69 vs 40 vs 42 (PaLM 2-L); 85 vs 52 vs 53 (GPT-4). MATH 50.5 vs 42 vs 49 (PaLM 2-L); 73 vs 71 vs 70 (GPT-4).\n  setup: zero-shot, 23 BBH tasks, T4D, 200-example MATH subsample. PaLM 2-L for MATH is a version with stronger instruction tuning. GPT-4 is gpt-4-turbo-preview.\n  quote: \"PaLM 2-L + Self-Discover 67% 69% 50.5%\" / \"GPT-4 + Self-Discover 81% 85% 73%\"\n  where: Table 1, p.5\n- It wins on most tasks.\n  number: 23/25 vs direct, 21/25 vs CoT.\n  setup: zero-shot, PaLM 2-L, 25 tasks.\n  quote: \"SELF -DISCOVER outperforms Direct Answering on 23/25 and CoT on 21/25 tasks in zero-shot setting using PaLM 2-L.\"\n  where: Fig. 1 caption, p.2\n- Efficiency: 1 inference call per instance plus 3 task-level meta-prompt calls, against 10x for CoT-Self-Consistency and 40x for majority vote over the 40 modules, and it still scores higher.\n  number: 10-40x less inference compute.\n  setup: GPT-4, only 2 BBH tasks (movie recommendation, geometric shapes); self-consistency samples 10 times.\n  quote: \"SELF -DISCOVER only requires one call per instance and three more inference calls on the task-level, CoT-self-consistency requires 10 times more since we have to sample 10 times for each instance, and methods using each RM requires 40 times more as we use 40 RMs.\"\n  where: Sec 4.3, p.6. The abstract's \"10-40x\" comes from this two-task subset.\n- Biggest gains are on world-knowledge tasks (sports, movies, ruin names).\n  number: Fig. 4 values 4.0, 14.2, 14.3, 19.8 and 12.0, 5.2, 8.0, 19.7. Their pairing to category and baseline is not recoverable from the extraction, so I read the World Knowledge gain as about 19.7-19.8 points; this is an unconfirmed pairing.\n  setup: PaLM 2-L, BBH categories from Suzgun et al. 2022.\n  quote: \"SELF -DISCOVER performs best on tasks that require diverse world knowledge.\"\n  where: Sec 4.2 and Fig. 4, p.5\n- MATH gains are small because the failures are computation errors, not bad plans.\n  number: structures correct 87.5% (175 of 200); 99 wrong predictions, of which 25.3% are bad structures and 74.7% are calculation errors.\n  setup: PaLM 2-L, 200 MATH samples, manual annotation by the authors. \"Correct\" means a human expert can solve the task by following the structure.\n  quote: \"out of 99 examples where the model prediction is wrong, wrong reasoning structures account for only 25.3% of the errors. The remaining 74.7% errors are due to errors in the intermediate calculations such as math computations.\"\n  where: App. D, p.14. The authors suggest \"using tools or code generation\" as the fix.\n- On the T4D grounded agent task it exceeds the expert-designed Foresee and Reflect (FaR) structure.\n  number: 69% (PaLM 2-L), 85% (GPT-4); \"≥ 27% (32%) absolute improvement over all baselines\".\n  quote: \"SELF -DISCOVER achieves 69% and 85% accuracy on PaLM 2-L and GPT-4, significantly outperforming previous SoTA prompting method such as Foresee and Reflect (FaR)\"\n  where: Sec 4.1, p.5\n- Ablation: each of SELECT, ADAPT, IMPLEMENT adds gain.\n  number (GPT-4, CoT / S / SA / SAI): Snarks 89/90/93/94; Movie 73/73/79/86; T4D 50/65/80/85; Geometry 43/50/45/61. The mapping of figure numbers to methods is inferred from the figure's number ordering.\n  quote: \"with each stage, model's zero-shot reasoning capability improve consistently across tasks\"\n  where: Fig. 8, p.7. Note that on Geometry, SA (45) is lower than S (50), so \"consistently\" is not strictly true.\n- Structures transfer across models and beat OPRO-optimized prompts on 3 of 4 tasks.\n  number: PaLM 2-L structures on GPT-4 versus OPRO prompts, on Snarks, Movie, T4D and Geometry. Figure values: OPRO 94, 74, 52, 43; Self-Discover 94, 79, 79, 57 (reading of the figure's numbers).\n  Also, GPT-4 structures on Llama2-70B: 52% vs CoT 42% (disambiguation QA, zero-shot). On GPT-3.5-turbo: 56% vs CoT 51% (geometry, with a 3-shot structured demonstration).\n  quote: \"SELF -DISCOVER outperforms OPRO on 3 out of 4 tasks despite that OPRO used 20% data to optimize the prompt.\"\n  where: Sec 5.2, Fig. 9, p.7-8\n- Per-task gains vary and several tasks regress. GPT-4 BBH, CoT vs Self-Discover:\n  - multistep_arithmetic_two 92 vs 70\n  - penguins 100 vs 90\n  - tracking_shuffled_seven 80 vs 68\n  - web_of_lies 80 vs 71\n  - word_sorting 90 vs 85\n  Large gains: geometric_shapes 56 to 60; sports 61 to 90; salient_translation 50 to 70.\n  quote: \"multistep_arithmetic_two 10 25 10 92 70 4 50 47\"\n  where: Table 3, p.14. Columns are Human avg, Human max, GPT-4 Direct, CoT, SD, then PaLM 2-L Direct, CoT, SD.\n\nMETHOD (for the note)\n- Stage 1 runs once per task, with three meta-prompts and a few unlabeled task examples. SELECT picks from 39 seed reasoning modules. ADAPT rewrites the picked modules for the task. IMPLEMENT turns them into a JSON key-value plan, using one human-written structure from another task as the demo.\n- Stage 2 runs per instance: the model fills in the JSON values. The Stage-2 prompt is quoted below under CODE.\n- The 39 seed modules are adopted from Fernando et al. (2023), Promptbreeder, and include \"Let's think step by step\" and \"break down\".\n- For MATH, structures are generated per instance with a one-shot demo, not once per task.\n\nLIMITS\n- Authors concede: \"We acknowledge that SELF -D ISCOVER input and output are longer than CoT and Direct prompting, increasing cost.\" They also say the benefit appears as the instance count grows.\n- Authors concede: gains on MATH and algorithmic tasks are moderate, because the bottleneck is arithmetic execution.\n- Authors concede: zero-shot meta-prompting Llama2 gave \"low-quality structure outputs\" (fn 3), so a smaller model cannot discover structures and has to borrow them from GPT-4.\n- The compute comparison is on only 2 BBH tasks with GPT-4, not all tasks.\n- MATH uses only 200 samples, with answers hand-checked. BBH answer extraction uses hand-designed heuristics.\n- Accuracy figures carry no variance or seeds.\n- The transfer test covers 4 tasks (OPRO comparison) and 2 task subsets (Llama2 and ChatGPT).\n- The OPRO baseline got 20% of the data. The comparison is not like for like.\n- No tool use or agent loop is involved. The one agent-like task (T4D) is a theory-of-mind reasoning benchmark, not tool-calling.\n- Dated: models are Oct-Dec 2023 (GPT-4-turbo-preview, PaLM 2-L, Llama2-70B). The paper predates reasoning models with built-in thinking, so the gain over zero-shot CoT may be smaller on them.\n\nBUILDS ON (as printed)\n- Chain of thought: Wei et al. 2022; Kojima et al. 2022; Nye et al. 2021 (scratchpad).\n- Decomposition: least-to-most (Zhou et al. 2022a; Drozdov et al. 2022); decomposed prompting (Khot et al. 2022).\n- Step-back prompting: Zheng et al. 2023.\n- Plan-and-Solve: Wang et al. 2023.\n- Self-consistency: Wang et al. 2022.\n- Search-based prompting: Tree of Thoughts (Yao et al. 2023a); Graph of Thoughts (Besta et al. 2023).\n- Seed modules: Fernando et al. 2023 (Promptbreeder).\n- OPRO: Yang et al. 2023; also Zhou et al. 2022b (APE).\n- Foresee and Reflect (Zhou et al. 2023, T4D).\n- Program-aided methods: PAL (Gao et al. 2023b); Program of Thoughts (Chen et al. 2022).\n- Related skill-composition work: SkiC (Chen et al. 2023); StrategyLLM (Gao et al. 2023a).\n- Human problem-solving: Newell et al. 1958; Rasmussen 1983.\n- Benchmarks: BBH (Suzgun et al. 2022), MATH (Hendrycks et al. 2021).\n\nCODE (Stage-2 prompt, verbatim, App. A, p.12)\n\"Follow the step-by-step reasoning plan in JSON to correctly solve the task. Fill in the values following the keys by reasoning specifically about the task given. Do not simply rephrase the keys.\"\nExample discovered structure (Fig. 2, p.3), colored objects: keys \"Type and color of each item\", \"Number of items of each color\", \"Number of items of each type\", \"Number of items of each color and type\", \"Final answer\".\n\nFIGURES\n- Fig. 2 (p.3): two-stage pipeline, task-level discovery then instance-level JSON filling. This is the quickest way to see the method.\n- Fig. 3 (p.4): SELECT, ADAPT, IMPLEMENT flow.\n- Fig. 5 (p.6): accuracy against inference calls per instance. It carries the efficiency argument.\n- Fig. 7 (p.7): the same SVG question answered by CoT, Plan-and-Solve and Self-Discover. CoT and Plan-and-Solve answer wrongly; the structured run reaches the right answer.\n- Fig. 8 (p.7): ablation.\n- Fig. 9 (p.8): transfer against OPRO.\n- Fig. 11 (p.17): human-written and model-discovered structures for the navigate task share \"step-wise mental notes\".\n- Tables 4-5 (p.15-16): wrong-structure and wrong-calculation examples.\n\nPROBLEMS: No embedded instructions found. The Fig. 10 meta-prompt text is garbled (font-encoding glyphs). Figure bar values (Fig. 4, 8, 9) came as loose numbers whose assignment to bars is partly inferred, as flagged above. The reference list has a duplicated Hendrycks entry. The paper has no tool-use or ReAct content: for note 02 (tool use and ReAct) it fits only as a contrast, since it is a prompt-level reasoning scaffold. The nearest fit is note 01 or the reasoning-prompt notes, and the paper's own suggestion that code or tools fix calculation errors links to tool use."
+ "type": "empirical",
+ "question": "Can an LLM compose, per task and without labels, a reasoning structure from atomic reasoning modules that beats fixed prompting such as CoT at lower inference cost?",
+ "hypothesis": "Each task has a unique intrinsic reasoning structure, and composing several atomic reasoning modules into it beats applying a single a priori module such as CoT.",
+ "contributions": [
+  "SELF-DISCOVER, a two-stage zero-shot framework (SELECT, ADAPT, IMPLEMENT at task level; follow the JSON structure at instance level)",
+  "Gains over CoT and Plan-and-Solve on BBH, T4D and MATH with PaLM 2-L and GPT-4, with 10-40x less inference compute than self-consistency or per-module voting",
+  "Evidence that discovered structures transfer across models (PaLM 2-L to GPT-4, GPT-4 to Llama2-70B and GPT-3.5) and resemble human structures"
+ ],
+ "method": {
+  "summary": "Stage 1 (once per task) runs three meta-prompts on a model: SELECT useful modules from 39 seed reasoning modules given a few unlabeled task examples, ADAPT them to the task, IMPLEMENT them as a JSON key-value reasoning structure (with one human-written example structure from another task). Stage 2 appends the structure to every instance and the model fills in the values to reach the answer. Evaluated zero-shot against direct, CoT, Plan-and-Solve and ensembling baselines.",
+  "task": "zero-shot prompting for complex reasoning (BBH, T4D, MATH)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "BIG-Bench Hard (BBH)",
+    "role": "eval",
+    "size": "23 tasks",
+    "split": "all tasks; number of examples per task not stated",
+    "source": "Suzgun et al., 2022",
+    "preprocessing": "Models told to end with 'Thus, the final answer is [X]'; heuristics designed per task by manual inspection of outputs to extract answers"
+   },
+   {
+    "name": "Thinking for Doing (T4D)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhou et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "MATH",
+    "role": "eval",
+    "size": "200 examples subsampled from the test set",
+    "split": "test subsample",
+    "source": "Hendrycks et al., 2021",
+    "preprocessing": "Extracted answers manually sanity-checked and annotated for all methods; instance-level structures generated via one-shot demonstration"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (gpt-4-turbo-preview)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM 2-L (instruction-tuned)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "MATH": "a PaLM 2-L with stronger instruction tuning is used for MATH"
+    }
+   },
+   {
+    "name": "GPT-3.5-turbo (ChatGPT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "October-December 2023"
+    }
+   },
+   {
+    "name": "Llama2-70B",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "zero-shot meta prompting Llama2 gave low-quality structures, so GPT-4 structures were used"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Self-Discover: 1 call per instance plus 3 task-level meta-prompt calls; CoT-Self-Consistency samples 10 per instance; majority voting over 40 reasoning modules (inferred: 39 listed in Table 2, text says 40 RMs); number of runs/seeds not stated",
+   "prompting": "Zero-shot. Stage 2 prompt: follow the JSON plan, then the structure, then the task instance. Stage 1 uses the few task examples without labels (number not stated; Appendix E humans were given 3). Llama2 used zero-shot; GPT-3.5 geometry used 3-shot demonstration of structured reasoning.",
+   "retrieval": null,
+   "parameters": {
+    "seed_reasoning_modules": "39 (Table 2), from Fernando et al. 2023",
+    "stage1_calls_per_task": 3,
+    "cot_sc_samples": 10,
+    "structure_format": "JSON-like key-value pairs"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy / exact match",
+     "definition": "final answer extracted from 'Thus, the final answer is [X]' compared with gold",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "inference calls per instance",
+     "definition": "number of LLM calls needed per instance",
+     "unit": "calls",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Direct prompting",
+    "Zero-shot CoT (Kojima et al. 2022)",
+    "Plan-and-Solve (Wang et al. 2023)",
+    "CoT-Self-Consistency",
+    "Majority voting of each reasoning module",
+    "Best of each reasoning module (oracle labels)",
+    "OPRO (Yang et al. 2023)",
+    "Foresee and Reflect (FaR) on T4D"
+   ],
+   "protocol": "Single reported accuracy per cell; no seeds, variance or significance tests stated. Efficiency comparison on only 2 BBH tasks (movie recommendation, geometric shapes) with GPT-4."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Stage 2: solve instance with discovered structure",
+    "text": "Follow the step-by-step reasoning plan in JSON to correctly solve the task. Fill in the values following the keys by reasoning specifically about the task given. Do not simply rephrase the keys.",
+    "where": "Appendix A"
+   },
+   {
+    "purpose": "Answer format for evaluation",
+    "text": "Thus, the final answer is [X]",
+    "where": "Appendix B"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.cot_sc_samples",
+    "quote": "For CoT-Self-Consistency, we sample 10 times.",
+    "where": "Figure 5 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Self-Discover beats zero-shot CoT on aggregate BBH with PaLM 2-L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH accuracy",
+   "value": 67,
+   "unit": "%",
+   "baseline_value": 60,
+   "n": null,
+   "setup": "23 BBH tasks, PaLM 2-L, zero-shot",
+   "quote": null,
+   "table": "Table 1, row PaLM 2-L + Self-Discover, column BBH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Self-Discover beats CoT on aggregate BBH with GPT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BBH accuracy",
+   "value": 81,
+   "unit": "%",
+   "baseline_value": 75,
+   "n": null,
+   "setup": "23 BBH tasks, GPT-4, zero-shot",
+   "quote": null,
+   "table": "Table 1, row GPT-4 + Self-Discover, column BBH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Self-Discover on T4D with PaLM 2-L, far above CoT (40%) and Plan-and-Solve (42%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "T4D accuracy",
+   "value": 69,
+   "unit": "%",
+   "baseline_value": 40,
+   "n": null,
+   "setup": "T4D, PaLM 2-L, zero-shot",
+   "quote": null,
+   "table": "Table 1, row PaLM 2-L + Self-Discover, column T4D",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Self-Discover on T4D with GPT-4, versus CoT 52% and PS 53%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "T4D accuracy",
+   "value": 85,
+   "unit": "%",
+   "baseline_value": 52,
+   "n": null,
+   "setup": "T4D, GPT-4, zero-shot",
+   "quote": "SELF-DISCOVER achieves 69% and 85% accuracy on\nPaLM 2-L and GPT-4",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "MATH gains are modest with PaLM 2-L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": 50.5,
+   "unit": "%",
+   "baseline_value": 42,
+   "n": null,
+   "setup": "200-example MATH subsample, PaLM 2-L (stronger instruction tuning); PS 49%, direct 45%",
+   "quote": null,
+   "table": "Table 1, row PaLM 2-L + Self-Discover, column MATH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "MATH gain with GPT-4 is small (CoT 71%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MATH accuracy",
+   "value": 73,
+   "unit": "%",
+   "baseline_value": 71,
+   "n": null,
+   "setup": "200-example MATH subsample, GPT-4",
+   "quote": null,
+   "table": "Table 1, row GPT-4 + Self-Discover, column MATH",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Self-Discover reaches higher accuracy than CoT-SC and per-module voting with 10-40x fewer inference calls.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference compute reduction",
+   "value": "10-40x",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, BBH movie recommendation and geometric shapes only; CoT-SC 10 samples, voting over 40 modules",
+   "quote": "requiring 10-40x fewer inference compute",
+   "table": null,
+   "note": null,
+   "where": "Abstract, Fig 5"
+  },
+  {
+   "claim": "Reasoning structures were correct in most MATH cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct structures",
+   "value": 87.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200 MATH samples, PaLM 2-L, human judged a structure correct if an expert could solve the task by following it (175/200)",
+   "quote": "87.5% (175) examples have correct reasoning structures",
+   "table": null,
+   "note": null,
+   "where": "Appendix D"
+  },
+  {
+   "claim": "Most Self-Discover errors on MATH come from calculation, not structure.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of errors from intermediate calculation",
+   "value": 74.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "99 wrong predictions out of 200 MATH samples; wrong structures 25.3%",
+   "quote": "The remaining 74.7% errors are due to errors in\nthe intermediate calculations",
+   "table": null,
+   "note": null,
+   "where": "Appendix D"
+  },
+  {
+   "claim": "Self-Discover gains are largest on world-knowledge BBH tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy delta over CoT",
+   "value": 19.7,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 2-L, 4 BBH categories; values read from Fig 4 labels (4.0, 14.2, 14.3, 19.8, 12.0, 5.2, 8.0, 19.7); mapping of labels to bars is ambiguous",
+   "quote": null,
+   "table": "Fig 4 labels",
+   "note": "Read from chart labels; which value belongs to which category and baseline was not verified.",
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Ablation: full SAI beats CoT on Geometry with GPT-4 (CoT 43, S 50, SA 45, SAI 61).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61,
+   "unit": "%",
+   "baseline_value": 43,
+   "n": null,
+   "setup": "GPT-4, Geometry; also Snarks 89/90/93/94, Movie 73/73/79/86, T4D 50/65/80/85 for CoT/S/SA/SAI",
+   "quote": null,
+   "table": "Fig 8 labels",
+   "note": "Order of labels read from chart; SA is below S on Geometry.",
+   "where": "Fig 8"
+  },
+  {
+   "claim": "Structures composed by PaLM 2-L transfer to GPT-4 and beat OPRO prompts on 3 of 4 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy on Geometry",
+   "value": 57,
+   "unit": "%",
+   "baseline_value": 43,
+   "n": null,
+   "setup": "GPT-4 with PaLM 2-L structures vs OPRO prompts; Snarks 94 vs 94, Movie 79 vs 74, T4D 79 vs 52, Geometry 57 vs 43",
+   "quote": "SELF-DISCOVER outperforms OPRO on 3 out\nof 4 tasks",
+   "table": null,
+   "note": "Per-task values read from Fig 9 labels.",
+   "where": "Fig 9"
+  },
+  {
+   "claim": "GPT-4 structures help Llama2-70B on disambiguation QA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 52,
+   "unit": "%",
+   "baseline_value": 42,
+   "n": null,
+   "setup": "Llama2-70B zero-shot, disambiguation_qa, GPT-4-discovered structure vs CoT",
+   "quote": "using self-discovered structures on Llama2 (52%)\noutperforms CoT (42%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "GPT-4 structures help GPT-3.5-turbo on geometry.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 56,
+   "unit": "%",
+   "baseline_value": 51,
+   "n": null,
+   "setup": "GPT-3.5-turbo, geometry, 3-shot demonstration of structured reasoning vs CoT",
+   "quote": "GPT-3.5-\nturbo (56%) outperforms CoT (51%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Abstract claims gains of as much as 32% over CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max gain over CoT",
+   "value": 32,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBH, T4D, MATH",
+   "quote": "by as much as 32% compared\nto Chain of Thought (CoT)",
+   "table": null,
+   "note": "Equals the T4D GPT-4 gain over Plan-and-Solve (85-53) per Sec 4.1; vs CoT it is 85-52=33; Fig 1 and intro give other figures (up to 42%).",
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "Evaluated only on BBH, T4D and a 200-example MATH subsample; MATH gains are small and computation errors dominate.",
+  "Authors concede longer input and output than CoT/direct, increasing cost per call.",
+  "Llama2-70B could not produce good structures itself (footnote 3).",
+  "No seeds, variances or significance tests; number of unlabeled task examples for Stage 1 not given; decoding settings not given.",
+  "Efficiency comparison covers 2 tasks only; answer extraction used manual per-task heuristics.",
+  "Tied to Oct-Dec 2023 model versions; gpt-4-turbo-preview and PaLM 2-L are dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "reasoning structure",
+   "definition": "an explicit key-value (JSON-like) plan composed from atomic reasoning modules that the model fills in during decoding",
+   "where": "Sec 2"
+  },
+  {
+   "term": "atomic reasoning module",
+   "definition": "a high-level problem-solving heuristic in natural language, such as critical thinking or step-by-step thinking",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Promptbreeder",
+   "year": 2023,
+   "arxiv": "2309.16797",
+   "relation": "uses-data",
+   "note": "source of the 39 seed reasoning modules",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Wei et al. 2022; zero-shot CoT Kojima et al. 2022",
+   "quote": null
+  },
+  {
+   "work": "Plan-and-Solve prompting",
+   "year": 2023,
+   "arxiv": "2305.04091",
+   "relation": "baseline",
+   "note": "compared in Table 1",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Wang et al. 2022; 10 samples",
+   "quote": null
+  },
+  {
+   "work": "Large language models as optimizers (OPRO)",
+   "year": 2023,
+   "arxiv": "2309.03409",
+   "relation": "baseline",
+   "note": "transfer comparison",
+   "quote": null
+  },
+  {
+   "work": "Challenging BIG-Bench tasks (BBH)",
+   "year": 2022,
+   "arxiv": "2210.09261",
+   "relation": "uses-data",
+   "note": "23 tasks",
+   "quote": null
+  },
+  {
+   "work": "How far are LLMs from agents with theory-of-mind? (T4D)",
+   "year": 2023,
+   "arxiv": "2310.03051",
+   "relation": "uses-data",
+   "note": "T4D task; FaR baseline",
+   "quote": null
+  },
+  {
+   "work": "MATH",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Hendrycks et al. 2021; 200 test examples",
+   "quote": null
+  },
+  {
+   "work": "Take a step back",
+   "year": 2023,
+   "arxiv": "2310.06117",
+   "relation": "related",
+   "note": "step-back prompting",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "decomposition prompting",
+   "quote": null
+  },
+  {
+   "work": "Tree of thoughts",
+   "year": 2023,
+   "arxiv": "2305.10601",
+   "relation": "related",
+   "note": "search-based prompting",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "OpenAI 2023b",
+   "quote": null
+  },
+  {
+   "work": "PaLM 2 technical report",
+   "year": 2023,
+   "arxiv": "2305.10403",
+   "relation": "evaluates",
+   "note": "Anil et al. 2023",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "70B",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of using SELF-DISCOVER for problem-solving.",
+   "page": 3,
+   "why": "shows the two stages and the JSON structure"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Comparison of accuracy with number of inference calls required per instance.",
+   "page": 6,
+   "why": "accuracy versus call count across baselines"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Comparison of generated reasoning process from CoT, Plan-and-Solve, and SELF-DISCOVER on BBH-geometric shape task.",
+   "page": 7,
+   "why": "worked example of structure-guided correct reasoning"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Ablation study on three SELF-DISCOVER actions on 4 reasoning tasks.",
+   "page": 7,
+   "why": "each action adds accuracy"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eqs 1-4, Sec 2",
+   "snippet": "D_S = M(p_S || D || t_i); D_A = M(p_A || D_S || t_i); D_I = M(p_A || S_human || D_A || t_i); A = M(D_S || t), for all t in T",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig. 10 meta-prompt text extracted as garbled glyphs; the Stage 1 meta-prompts are unavailable.",
+  "Eq 3 uses p_A where p_I is meant, and Eq 4 uses D_S where D_I is meant (paper typos).",
+  "Abstract says 'as much as 32%' and intro says 'up to 42%'; Fig 1 labels give +11%/+39%/+5.5% and +7%/+29%/+8.5%. Text says 'over 20/24 tasks', Fig 1 says 21/25 and 23/25.",
+  "Text says 40 reasoning modules, Table 2 lists 39.",
+  "No embedded instructions found."
+ ]
 }

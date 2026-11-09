@@ -1,0 +1,571 @@
+{
+ "schema": 1,
+ "key": "2309.12307",
+ "pdf": "generative-ai/05-RL/sources/chen-2023-longlora.pdf",
+ "bib": {
+  "title": "LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models",
+  "authors": [
+   "Yukang Chen",
+   "Shengju Qian",
+   "Haotian Tang",
+   "Xin Lai",
+   "Zhijian Liu",
+   "Song Han",
+   "Jiaya Jia"
+  ],
+  "first_author": "Chen",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2309.12307",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 68541,
+  "chars_total": 68541,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the context window of pre-trained LLMs be extended cheaply, with sparse shifted attention during fine-tuning and a LoRA variant, while keeping full attention at inference?",
+ "hypothesis": "Short (grouped) attention with shifting approximates long-context attention during training, and LoRA closes the gap to full fine-tuning if embedding and normalization layers are trainable.",
+ "contributions": [
+  "Shifted sparse attention (S2-Attn), two lines of code, training only",
+  "LoRA+ : LoRA plus trainable embedding and normalization layers",
+  "Extend Llama2 7B to 100k, 13B to 65536, 70B to 32768 on one 8x A100 machine",
+  "LongAlpaca-12k long instruction dataset"
+ ],
+ "method": {
+  "summary": "Fine-tune Llama2 with Position Interpolation and S2-Attn (half the heads shifted by half a group, group = 1/4 of context) plus LoRA with trainable embeddings and norms, on RedPajama by next-token prediction; inference uses standard full attention. Also SFT on LongAlpaca-12k.",
+  "task": "long-context extension of pre-trained LLMs (perplexity, retrieval)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RedPajama",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Together Computer 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "PG19",
+    "role": "eval",
+    "size": "test split 100 documents",
+    "split": "validation (ablations), test (Tables 14-15)",
+    "source": "Rae et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Proof-pile",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Azerbayev et al. 2022",
+    "preprocessing": "follows Position Interpolation data processing"
+   },
+   {
+    "name": "LongAlpaca-12k",
+    "role": "train",
+    "size": "12k: 9k long-context QA + 3k short QA sampled from Alpaca",
+    "split": null,
+    "source": "self-collected from technical papers, science fiction, books",
+    "preprocessing": "filtered potentially harmful content"
+   },
+   {
+    "name": "LongChat topic retrieval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Li et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "LongBench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bai et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "LEval open-ended",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "An et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama2 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Llama2 pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 base; extended to 8192-100,000",
+    "other": {
+     "position": "Position Interpolation"
+    }
+   },
+   {
+    "name": "Llama2 13B",
+    "role": "base",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Llama2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "extended to 65536",
+    "other": {}
+   },
+   {
+    "name": "Llama2 70B",
+    "role": "base",
+    "params": "70B",
+    "architecture": "decoder-only transformer",
+    "init_from": "Llama2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "extended to 32768",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next token prediction",
+   "optimizer": "AdamW beta1=0.9 beta2=0.95",
+   "lr": "2e-5 (7B, 13B); 1e-5 (70B)",
+   "lr_schedule": null,
+   "warmup": "linear learning rate warmup (length not stated)",
+   "batch_size": "global 64 (per-device 1, grad accumulation 8, 8 GPUs)",
+   "steps": "1000",
+   "epochs": "5 (SFT)",
+   "tokens": "about 0.3 billion tokens (SFT 16384 run, ~4 hours)",
+   "seq_len": "8192 to 100,000",
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single 8x A100 machine; DeepSpeed stage 2 (stage 3 for max context), Flash-Attention2, gradient checkpointing",
+   "compute": "Table 12, 7B 1000 iters: 5.2 h (8192) to 52.4 h (65536)",
+   "wall_clock": "see Table 12",
+   "seeds": null,
+   "other": {
+    "LoRA rank": "8 in Table 2 headline; not otherwise stated",
+    "LoRA alpha": null,
+    "S2-Attn group size": "1/4 of context",
+    "SFT": "same lr, weight decay, batch size as extension step, 5 epochs",
+    "ablation rank": "8-256 tested"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "passkey: 10 trials per length",
+   "prompting": "SFT prompt: Below is {material type}. Memorize the content and answer my question after the paper. {material content} Now the material ends. {question}",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "perplexity eval": "sliding window S=256 (Press et al 2022)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "sliding window S=256 on PG19 / proof-pile",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "topic retrieval accuracy",
+     "definition": "LongChat topic retrieval",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "passkey accuracy",
+     "definition": "find hidden passkey",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "LEval win-rate",
+     "definition": "vs GPT-3.5-Turbo judged by GPT-4",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Full attention fine-tuning (PI)",
+    "plain LoRA",
+    "LongChat-13B",
+    "MPT-30B-chat",
+    "MPT-7B-storywriter",
+    "ChatGLM2-6B",
+    "Vicuna-v1.5-7B",
+    "GPT-3.5-Turbo"
+   ],
+   "protocol": "single runs, no seeds or significance reported"
+  },
+  "availability": {
+   "code": "github.com/dvlab-research/LongLoRA",
+   "weights": "released",
+   "data": "LongAlpaca released"
+  },
+  "prompts": [
+   {
+    "purpose": "passkey retrieval document",
+    "text": "There is an important info hidden inside a lot of irrelevant text. Find it and memorize them. I will quiz you about the important information there. The grass is green. The sky is blue. The sun is yellow. Here we go. There and back again. (repeat M times) The pass key is 12362. Remember it. 12362 is the pass key. The grass is green. ... (repeat N times) What is the pass key? The pass key is",
+    "where": "Appendix A.2"
+   },
+   {
+    "purpose": "SFT long QA format",
+    "text": "Below is {material type}. Memorize the content and answer my question after the paper.",
+    "where": "Appendix B.6"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "S2-Attn full fine-tuning at 32768 target context reaches PPL 8.08 vs full attention 8.04, while short attention without shift reaches 9.47",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 validation perplexity",
+   "value": "8.08",
+   "unit": "perplexity",
+   "baseline_value": "8.04 (full attention); 9.47 (short attn, no shift)",
+   "n": null,
+   "setup": "Llama2 7B fully fine-tuned on RedPajama, target context 32768, S2-Attn group size 1/4 of target",
+   "table": "Table 1, row S2-Attn, column 32768",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "With S2-Attn at 32768, plain LoRA at rank 8 is far behind full FT; larger rank does not close the gap",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 validation perplexity",
+   "value": "11.44",
+   "unit": "perplexity",
+   "baseline_value": "8.08 (Full FT)",
+   "n": null,
+   "setup": "Llama2 7B, S2-Attn, RedPajama, target 32768; LoRA rank 8 to 256 gives 11.44 to 11.98",
+   "table": "Table 2, row PPL, column LoRA rank 8",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Making normalization and embedding layers trainable (LoRA+) closes the LoRA gap",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 validation perplexity",
+   "value": "8.12",
+   "unit": "perplexity",
+   "baseline_value": "8.08 (Full FT); 11.44 (LoRA rank 8)",
+   "n": null,
+   "setup": "Llama2 7B, S2-Attn, target 32768, LoRA rank 8 + Norm & Embed",
+   "table": "Table 2, row PPL, column + Norm & Embed",
+   "note": "+Norm alone 10.49, +Embed alone 8.29",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Normalization layers are 0.004% of Llama2 7B parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameter share",
+   "value": "0.004%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2 7B",
+   "quote": "Especially for normal- ization layers, the parameters are only 0.004% in the whole Llama2 7B.",
+   "note": "Intro says embedding < 2% and normalization <=0.004%",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Perplexity improves with longer evaluation context for 7B trained at 32768 (proof-pile, LoRA+ with S2-Attn)",
+   "kind": "measured",
+   "source": null,
+   "metric": "proof-pile test perplexity",
+   "value": "2.50",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2 7B trained at 32768 with S2-Attn + LoRA+, evaluated at 32768 context; 8192-trained model gives 2.72 at 8192",
+   "table": "Table 3, row 7B 32768 S2-Attn+LoRA+, column 32768",
+   "note": "Text: perplexity gets better from 2.72 to 2.50 by -0.22",
+   "where": "Table 3 / Sec 4.2"
+  },
+  {
+   "claim": "LongLoRA extends Llama2 7B to 100k, 13B to 65536, 70B to 32768 on a single 8x A100 machine; 7B at 100k evaluates at 2.52 on proof-pile at 100,000 context",
+   "kind": "measured",
+   "source": null,
+   "metric": "proof-pile test perplexity",
+   "value": "2.52",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2 7B trained at 100,000 context, DeepSpeed stage 3, evaluated at 100,000",
+   "table": "Table 4, row 7B 100,000, column 100,000",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Training time at 65536 context: LongLoRA 52.4 h vs LoRA 92.5 h; Full FT OOM",
+   "kind": "measured",
+   "source": null,
+   "metric": "training hours",
+   "value": "52.4",
+   "unit": "hours",
+   "baseline_value": "92.5 (LoRA)",
+   "n": null,
+   "setup": "Llama2 7B, 1000 iterations, 8x A100, Flash-Attention2, DeepSpeed stage 2, per-GPU batch 1, grad accum 8",
+   "table": "Table 12, row LongLoRA, column 65536 Train hours",
+   "note": "Text: LongLoRA spends 56.6% of LoRA training hours at 65536",
+   "where": "Table 12"
+  },
+  {
+   "claim": "Without Flash-Attention2, S2-Attn gives 2.1x training speedup and 1.8x memory saving at 8192 context",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "2.1",
+   "unit": "x",
+   "baseline_value": "17.5 h w/o vs 8.2 h with S2-Attn",
+   "n": null,
+   "setup": "Llama2 7B, LoRA+, 8192 context, no Flash-Attention2",
+   "quote": "Without Flash-Attention2 (Dao, 2023), S2-Attn improves the training speed by 2.1\u00d7 and GPU memory cost by 1.8\u00d7 on 8192 context length.",
+   "where": "Table 13"
+  },
+  {
+   "claim": "Attention share of FLOPs rises from 24.5% at 8192 to 72.2% at 65536, falling to 39.4% with S2-Attn",
+   "kind": "measured",
+   "source": null,
+   "metric": "Attn share of FLOPs",
+   "value": "72.2%",
+   "unit": "%",
+   "baseline_value": "39.4% with S2-Attn",
+   "n": null,
+   "setup": "Llama2 7B context-stage FLOPs, batch 1, torchprofile",
+   "quote": "Attn has 24.5% of the total FLOPs at the 8192 context length while it increases to 72.2% at the 65536 context length. It decreases to 39.4% when S2-Attn is used.",
+   "where": "Sec B.5, Table 11"
+  },
+  {
+   "claim": "Topic retrieval on LongChat at 16k: Ours-13B 0.94 vs LongChat-13B 0.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "topic retrieval accuracy",
+   "value": "0.94",
+   "unit": "accuracy (0-1)",
+   "baseline_value": "0.9 (LongChat-13B)",
+   "n": null,
+   "setup": "Llama2 13B fine-tuned at 18k context on RedPajama next-token; LongChat topic retrieval",
+   "table": "Table 5, row Ours-13B, column 16k",
+   "note": "Ours at 6k 0.98 vs LongChat 1.0",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Passkey retrieval: model fine-tuned on 32768 shows no accuracy degradation until 33k or 34k; extended PI to 48k gives 60%-90% in 33k-45k",
+   "kind": "measured",
+   "source": null,
+   "metric": "passkey accuracy",
+   "value": "60%-90%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "10 trials per document length",
+   "setup": "Llama2 7B fine-tuned at 32768, tested 1k to 34k at ~1k interval, 10 random passkeys each",
+   "quote": "presents moderate retrieval ability (60%-90% accuracy) in the range of 33k to 45k",
+   "where": "Sec 4.2, Fig 4"
+  },
+  {
+   "claim": "S2-Attn pattern ablation: with full attention at test, S2-Attn cro. heads gets 8.12 while stride sparse gets 24.03",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 validation perplexity",
+   "value": "8.12",
+   "unit": "perplexity",
+   "baseline_value": "Full-Attn row 8.64 (sparse test) ... see table; stride sparse 24.03",
+   "n": null,
+   "setup": "Llama2 7B to 32768, improved LoRA, tested with full attention",
+   "table": "Table 6, row test w/ full-attn, column S2-Attn cro. heads",
+   "note": "Table is flattened in the text; mapping of columns inferred from order",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Group size 1/2 and 1/4 of context give minor gaps to full attention; smaller groups are worse",
+   "kind": "measured",
+   "source": null,
+   "metric": "PG19 validation perplexity",
+   "value": "8.04",
+   "unit": "perplexity",
+   "baseline_value": "8.02 (full) at 8192; 1/8 group 8.16",
+   "n": null,
+   "setup": "Llama2 7B to 8192, group 1/4 of context",
+   "table": "Table 7, row 8192, column 1/4",
+   "where": "Table 7"
+  },
+  {
+   "claim": "LongBench average: Ours-7B 36.8 vs GPT-3.5-Turbo 44.0 and LongChat-v1.5-7B 34.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "LongBench Avg",
+   "value": "36.8",
+   "unit": "score",
+   "baseline_value": "44.0 (GPT-3.5-Turbo)",
+   "n": null,
+   "setup": "Llama2 7B SFT at 16384 context on LongAlpaca-12k, about 4 hours, 0.3B tokens",
+   "table": "Table 9, row Ours-7B, column Avg",
+   "where": "Table 9"
+  },
+  {
+   "claim": "LEval open-ended win rate vs GPT-3.5-Turbo judged by GPT-4: Ours-7B 39.06",
+   "kind": "measured",
+   "source": null,
+   "metric": "win-rate",
+   "value": "39.06",
+   "unit": "%",
+   "baseline_value": "33.68 (LongChat-7B)",
+   "n": null,
+   "setup": "Llama2 7B SFT at 16384, judge GPT-4",
+   "table": "Table 10, row Ours-7B, column Win-rate",
+   "where": "Table 10"
+  }
+ ],
+ "limits": [
+  "Perplexity degrades on short contexts after extension, a known Position Interpolation limitation (Sec 4.2)",
+  "LoRA rank, alpha, LR schedule, warmup length, precision and seeds not stated",
+  "Single runs; no variance reported",
+  "Only Llama2 and RoPE position interpolation tested; authors plan other LLMs and position encodings",
+  "Peak memory barely differs from LoRA with Flash-Attention2; gain is mainly training time",
+  "Mostly perplexity and retrieval evaluation; SFT evaluated only on LongBench/LEval at 7B",
+  "Shifting moves last tokens to the front group, inconsistent with causal masks, though ablated (Table 8) to no effect"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "S2-Attn",
+   "definition": "shifted sparse attention: split context into groups, attend within group, shift by half group in half the heads",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "LoRA+",
+   "definition": "improved LoRA with trainable embedding and normalization layers",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LoRA",
+   "year": 2022,
+   "arxiv": "2106.09685",
+   "relation": "extends",
+   "note": "low-rank adaptation basis",
+   "quote": null
+  },
+  {
+   "work": "Extending context window via positional interpolation",
+   "year": 2023,
+   "arxiv": "2306.15595",
+   "relation": "extends",
+   "note": "training settings and position scaling",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "base models",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention-2",
+   "year": 2023,
+   "arxiv": "2307.08691",
+   "relation": "uses-method",
+   "note": "compatible attention kernel",
+   "quote": null
+  },
+  {
+   "work": "RedPajama",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training data",
+   "quote": null
+  },
+  {
+   "work": "LongChat",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "topic retrieval baseline",
+   "quote": null
+  },
+  {
+   "work": "Focused Transformer",
+   "year": 2023,
+   "arxiv": "2307.03170",
+   "relation": "related",
+   "note": "full FT long context",
+   "quote": null
+  },
+  {
+   "work": "Landmark attention",
+   "year": 2023,
+   "arxiv": "2305.16300",
+   "relation": "related",
+   "note": "passkey task",
+   "quote": null
+  },
+  {
+   "work": "Swin Transformer",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "shifted windows spirit",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of LongLoRA",
+   "page": 2,
+   "why": "Shows S2-Attn plus trainable embedding/norm in one picture"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "LongLoRA closes the accuracy gap between LoRA and full fine-tuning",
+   "page": 1,
+   "why": "Perplexity, memory and hours vs context in one view"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "qkv = cat((qkv.chunk(2, 3)[0], qkv.chunk(2, 3)[1].roll(-G/2, 1)), 3).view(B*N/G,G,3,H,D)\nout = self_attn(qkv)\nout = cat((out.chunk(2, 2)[0], out.chunk(2, 2)[1].roll(G/2, 1)), 2)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Tables are flattened in the text; Table 6 column mapping inferred from order",
+  "No embedded instructions found"
+ ]
+}

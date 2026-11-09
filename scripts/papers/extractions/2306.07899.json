@@ -1,19 +1,454 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2306.07899",
  "pdf": "generative-ai/08-eval/sources/veselovsky-2023-artificial-artificial-artificial-intelligence.pdf",
  "bib": {
   "title": "Artificial Artificial Artificial Intelligence: Crowd Workers Widely Use Large Language Models for Text Production Tasks",
-  "first_author": "Veniamin Veselovsky",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Veniamin Veselovsky",
+   "Manoel Horta Ribeiro",
+   "Robert West"
+  ],
+  "first_author": "Veselovsky",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2306.07899",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 34443,
+  "chars_total": 34443,
+  "engine": "pymupdf",
+  "skipped": "none; 9 pages, no appendices; references skimmed"
  },
- "legacy_report": "SOURCE: \"Artificial Artificial Artificial Intelligence: Crowd Workers Widely Use Large Language Models for Text Production Tasks\", Veniamin Veselovsky*, Manoel Horta Ribeiro*, Robert West (*equal contribution). Affiliation as printed: \"EPFL\" for all three. No venue is printed; the only identifier is \"arXiv:2306.07899v1 [cs.CL] 13 Jun 2023\", so preprint, 2023. The paper calls itself work in progress.\n\nCOVERAGE: 9 of 9 pages, 34,541 of 34,541 characters. Body is pp. 1-7, references pp. 7-9 (skimmed for origins). There are no appendices. All four figure captions and both tables were read.\n\nCLAIMS\n\n- claim: An estimated 33-46% of crowd-submitted summaries were produced with LLM help.\n  number: 33-46%\n  setup: 46 summaries from 44 MTurk workers, one abstract-summarisation task, around 1 June 2023. The range is two classifier thresholds, not one interval.\n  quote: \"we estimate that 21 of the 46 crowdsourced summaries (46%; 95% CI: [31%, 61%]) were synthetically generated\" (logit threshold 0, p=50%); \"using a threshold of 4 (corresponding to a predicted probability of 98%), we still arrive at an estimate of 15 of the 46 crowdsourced summaries (33%; 95% CI: [20%, 45%])\"\n  where: p5\n\n- claim: The task was summarising NEJM medical abstracts (16 abstracts, about 400 words each) into at least 100 words, on Amazon Mechanical Turk.\n  number: 48 summaries, 44 workers, 46 after de-duplication; 1 USD per summary, about 15 USD/hour\n  setup: single summarisation step adapted from Horta Ribeiro et al. (2019); keystrokes and copy/paste logged with Javascript\n  quote: \"Workers were paid 1 USD per summary, which we estimate conservatively would take around 4 minutes to conclude, for a pay rate of 15 USD/hour. We obtained 48 summaries written by 44 distinct workers.\"\n  where: p3\n\n- claim: The detector is a fine-tuned e5-base classifier trained only on this task's data.\n  number: 99% accuracy (summary-level split), 97% (abstract-level split)\n  setup: real class = 16 original abstracts + 128 pre-LLM human summaries from the 2019 study; synthetic class = 320 ChatGPT summaries (10 per abstract at temperatures 0.7 and 1, prompted with the MTurk instruction). Held-out test data only, not the new MTurk responses.\n  quote: Table 1: \"Summary-level 0.99 ±0.02 0.99 ±0.03 0.99 ±0.02 0.98 ±0.04 / Abstract-level 0.97 ±0.03 0.97 ±0.02 0.97 ±0.02 0.97 ±0.04\" (accuracy, macro-F1, precision, recall)\n  where: p6 (data on p4)\n\n- claim: Keystroke evidence is a post-hoc check, not part of the estimate.\n  number: 41 of 46 summaries (89%) involved pasting; all 5 written without pasting were classified human; 15 synthetic were all pasted\n  setup: conservative threshold of 4; assumes un-pasted text is human\n  quote: \"only five summaries were written entirely in the text box without any pasting. Importantly, our classifier labeled all of them as human-written\"\n  where: p6, Table 2\n\n- claim: Summaries classified synthetic mostly had little overlap with the source abstract, suggesting the pasted text came from elsewhere.\n  number: 10 of 13\n  setup: pasted summaries with longest-common-substring overlap under 10%\n  quote: \"out of 13 summaries with an overlap of less than 10%, 10 (76%) were classified as synthetically generated\"\n  where: p6\n\n- claim: Off-the-shelf detectors did poorly on this task.\n  number: 6 of 10\n  setup: 10 ChatGPT summaries the authors generated, tested on GPTZero\n  quote: \"out of 10 summaries that we had synthesized via ChatGPT, GPTZero detected only six as synthetic\"\n  where: p3\n\n- claim (conclusion for crowd-label users): crowdsourced text can no longer be assumed to be a human gold standard, and crowd workers may shift to being a filter on model output.\n  number: none\n  quote: \"the data would no longer be the intended human gold standard\" (p1); \"Instead of providing de novo annotations, crowd workers may instead serve as an important human filter for detecting when these models succeed and when they fail.\" (p7)\n\nLIMITS\n- No correction for classifier error was applied. You asked how it was corrected: it was not. The 33-46% is raw classified counts at two thresholds; each CI is a sampling interval on 46 items. The 5 un-pasted summaries are the only false-positive check, and the false-negative rate is only argued qualitatively.\n- No ground truth for LLM use: no worker admitted or was observed using one. The keystroke logic rests on two stated assumptions.\n- Authors concede one task only: \"we acknowledge the uncertainty regarding the generalization of our findings to other tasks\". It was chosen because it is easy for LLMs.\n- Not shown: labelling or classification tasks (as opposed to text production), other platforms (Prolific, Upwork are named but not tested), worker qualifications or filters, quality of the LLM-assisted summaries, or any LLM other than ChatGPT in the training data.\n- The 2019 human summaries and 2023 responses differ in more than LLM availability (worker pool, task variant), which the classifier could pick up.\n- Dated: a June 2023 snapshot, v1. The promised update was not in this PDF.\n- Minor arithmetic: 10/13 is 77%, printed as 76%.\n\nBUILDS ON: Horta Ribeiro, Gligoric and West (2019), \"Message distortion in information cascades\" (task and human data); Wang et al. (2022), e5 embeddings (classifier); Suzgun et al. (2023), string2string (overlap measure).\n\nCODE: none in the PDF. Repository printed: https://github.com/epfl-dlab/GPTurk\n\nFIGURES: one candidate, Figure 1, p2: \"Illustration of our approach for quantifying the prevalence of LLM usage among crowd workers solving a text summarization task.\" It shows the pipeline (pre-LLM human responses plus ChatGPT responses train the classifier, which is then applied to new MTurk responses, with keystrokes as a side check) faster than prose.\n\nPROBLEMS: Extraction was clean. Figure 3 and 4 axis text is interleaved with body text but the captions are readable. No embedded instructions were found.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/veselovsky-2023-artificial-artificial-artificial-intelligence.pdf"
+ "type": "empirical",
+ "question": "To what extent do crowd workers on MTurk use LLMs when completing a text production (abstract summarisation) task?",
+ "hypothesis": "Crowd workers have financial incentives to use LLMs, so a substantial share of crowdsourced text is likely LLM-produced.",
+ "contributions": [
+  "Case study estimating 33-46% of MTurk summaries were produced with LLM help",
+  "A bespoke, low-cost synthetic-text detector (fine-tuned e5-base) that beats off-the-shelf detectors on this task",
+  "Post-hoc validation using keystroke/paste logs and overlap with the source abstract"
+ ],
+ "method": {
+  "summary": "Reran a single-step abstract summarisation task from Horta Ribeiro et al. (2019) on MTurk, logging keystrokes. Fine-tuned an e5-base classifier on human vs ChatGPT-written summaries of the same task, applied it to the 46 new summaries, and validated with paste and longest-common-substring heuristics.",
+  "task": "crowd-sourced abstract summarisation; synthetic-vs-human text classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Horta Ribeiro et al. (2019) human data: NEJM abstracts",
+    "role": "train",
+    "size": "16 abstracts (4 topics x 4 papers), ~2,000 characters each",
+    "split": "abstract-level: 12 train/val, 4 test; summary-level: random 75/10/15",
+    "source": "New England Journal of Medicine abstracts (vaccination, breast cancer, cardiovascular disease, nutrition)",
+    "preprocessing": null
+   },
+   {
+    "name": "Real human summaries (Horta Ribeiro et al. 2019)",
+    "role": "train",
+    "size": "128 high-quality summaries",
+    "split": "as above",
+    "source": "Horta Ribeiro et al. (2019) MTurk task",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic ChatGPT summaries",
+    "role": "train",
+    "size": "320 (16 abstracts x 10 summaries x 2 temperatures)",
+    "split": "as above",
+    "source": "ChatGPT prompted with the MTurk task instruction",
+    "preprocessing": null
+   },
+   {
+    "name": "New MTurk summaries (target)",
+    "role": "eval",
+    "size": "48 summaries by 44 workers, 46 after removing duplicates",
+    "split": "all used for prevalence estimation",
+    "source": "MTurk, around 1 June 2023, 1 USD per summary",
+    "preprocessing": "2 duplicate summaries removed (for two abstracts); keystrokes logged with JavaScript incl. copy/paste via keyboard or menu"
+   }
+  ],
+  "models": [
+   {
+    "name": "e5-base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "e5-base pretrained encoder (Wang et al. 2022), contrastive pretraining, fine-tuned as classifier",
+    "init_from": "e5-base pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 max token length",
+    "other": {}
+   },
+   {
+    "name": "ChatGPT",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generates synthetic summaries; version not stated"
+    }
+   },
+   {
+    "name": "GPTZero / OpenAI AI Detector / Writer",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "off-the-shelf detectors; only GPTZero numbers given"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: binary classification (synthetic vs real), cross-entropy not stated",
+   "optimizer": null,
+   "lr": "2x10^-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "5 (best validation checkpoint kept)",
+   "tokens": null,
+   "seq_len": "256 max token length",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "train_points_abstract_level": "370 training points",
+    "note": "error bars in Table 1 not defined in text"
+   }
+  },
+  "inference": {
+   "decoding": "ChatGPT sampling for synthetic data",
+   "temperature": "0.7 and 1 (10 summaries each per abstract)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "10 summaries per abstract per temperature for ChatGPT; classifier applied once to the 46 summaries",
+   "prompting": "MTurk task instruction used as the ChatGPT prompt",
+   "retrieval": null,
+   "parameters": {
+    "decision_threshold": "logit 0 (p=50%) gives 46%; logit 4 (p=98%) gives 33%; post-hoc analysis uses logit 4",
+    "classifier_used": "summary-level model"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy / macro-F1 / precision / recall",
+     "definition": "test performance of synthetic-vs-real classifier",
+     "unit": "fraction (0-1)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Prevalence of LLM use",
+     "definition": "fraction of the 46 new summaries classified synthetic at a logit threshold",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "Overlap",
+     "definition": "length of longest common substring between summary and original abstract divided by abstract length",
+     "unit": "ratio",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "GPTZero (10 ChatGPT summaries)"
+   ],
+   "protocol": "Two train/test splits (abstract-level, summary-level); +/- values in Table 1 not defined; 95% CIs on prevalence (method not stated); post-hoc validation via paste logging: summaries with no paste assumed human (false-positive check), pasted summaries with low overlap assumed synthetic (false-negative check)."
+  },
+  "availability": {
+   "code": "https://github.com/epfl-dlab/GPTurk",
+   "weights": null,
+   "data": "https://github.com/epfl-dlab/GPTurk"
+  },
+  "prompts": [
+   {
+    "purpose": "worker task instructions (ChatGPT prompt used the same instruction; exact text not given beyond Fig 2)",
+    "text": "You will be given a short text (around 400 words) with medicine-related information. Your task is to: Read the text carefully. Write a summary of the text. Your summary should: Convey the most important information in the text, as if you are trying to inform another person about what you just read. Contain at least 100 words. We expect high-quality summaries and will manually inspect some of them.",
+    "where": "Figure 2, p4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "datasets.new MTurk",
+    "quote": "We obtained 48 summaries written by 44 distinct workers.",
+    "where": "3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "At logit threshold 0, 46% of the 46 MTurk summaries were classified synthetic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prevalence synthetic",
+   "value": "46",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 46,
+   "setup": "summary-level e5-base classifier, 46 MTurk summaries, logit threshold 0 (p=50%), around 1 June 2023",
+   "quote": "we estimate that 21 of the 46 crowdsourced summaries (46%; 95% CI: [31%, 61%]) were synthet-",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "At the conservative logit threshold 4, 33% were classified synthetic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prevalence synthetic",
+   "value": "33",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 46,
+   "setup": "same classifier and data, logit threshold 4 (p=98%)",
+   "quote": "we still arrive at an estimate of 15 of the 46 crowd-",
+   "table": null,
+   "note": "95% CI [20%, 45%]",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Headline: 33-46% of crowd summaries were produced with LLM help; as nearly all workers submitted one summary, this is also the worker fraction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "prevalence range",
+   "value": "33-46",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 46,
+   "setup": "range over logit thresholds; one task, one platform, 44 workers",
+   "quote": "we conclude that 33\u201346% of crowdsourced",
+   "table": null,
+   "note": "Range reflects two thresholds, not an interval",
+   "where": "Sec 4, abstract"
+  },
+  {
+   "claim": "The classifier reaches 99% accuracy with the summary-level split.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.99",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fine-tuned e5-base, summaries of all abstracts pooled before split, 15% test",
+   "quote": "our fine-tuned model achieved an accuracy",
+   "table": "Table 1, row Summary-level, column Accuracy",
+   "note": "text says 99% accuracy and macro-F1; Table 1 prints 0.99 \u00b10.02",
+   "where": "Table 1"
+  },
+  {
+   "claim": "The classifier reaches 97% accuracy on held-out abstracts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.97",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "abstract-level split: 12 abstracts train/val, 4 abstracts test",
+   "quote": "still capable of successfully identifying synthetic",
+   "table": "Table 1, row Abstract-level, column Accuracy",
+   "note": "Table prints 0.97 \u00b10.03; macro-F1 0.97",
+   "where": "Table 1"
+  },
+  {
+   "claim": "All 5 summaries written without pasting were classified human; none flagged, suggesting a low false-positive rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "false positives among no-paste summaries",
+   "value": "0",
+   "unit": "of 5",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "logit threshold 4; assumes no-paste summaries are human",
+   "quote": "only five sum-",
+   "table": "Table 2, row Synthetic, column Without pasting",
+   "note": "Table 2: with pasting 15 synthetic, 26 human; without pasting 0 synthetic, 5 human",
+   "where": "Table 2, Sec 4"
+  },
+  {
+   "claim": "89% of summaries involved pasting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "paste share",
+   "value": "89",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 46,
+   "setup": "keystroke logs",
+   "quote": "(affecting 89%, or",
+   "table": null,
+   "note": "41 of 46",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Of 13 summaries with under 10% overlap with the abstract, 10 were classified synthetic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction synthetic among low-overlap",
+   "value": "76",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 13,
+   "setup": "pasted summaries; overlap = longest common substring / abstract length",
+   "quote": "with an overlap of less than 10%, 10 (76%) were",
+   "table": null,
+   "note": "10/13 is 77% when computed; paper prints 76%",
+   "where": "Sec 4, Fig 4"
+  },
+  {
+   "claim": "Off-the-shelf detector GPTZero found only 6 of 10 ChatGPT-made summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "detections",
+   "value": "6",
+   "unit": "of 10",
+   "baseline_value": null,
+   "n": 10,
+   "setup": "10 ChatGPT summaries",
+   "quote": "out of 10 summaries that we had synthesized via",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "OpenAI's own classifier recognised only 26% of LLM-written texts.",
+   "kind": "reported",
+   "source": "OpenAI blog, new AI classifier",
+   "metric": "recall",
+   "value": "26",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cited from OpenAI",
+   "quote": "sifier recognizes only 26% of LLM-written texts as",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  }
+ ],
+ "limits": [
+  "One task (summarisation), one platform, 46 summaries from 44 workers, one time point (June 2023); authors flag generalisation to harder tasks as uncertain",
+  "Authors call it work in progress",
+  "Detector trained only on ChatGPT output; prevalence depends on threshold choice and the classifier-on-human distribution shift; validation uses assumptions (no paste = human, low-overlap paste = synthetic) not ground truth",
+  "Only 5 no-paste summaries underpin the false-positive check; 'paste' does not confirm LLM use",
+  "No error bars defined; hardware, optimizer and seeds not stated",
+  "Keystroke tracking raises privacy concerns (authors' ethical note)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "overlap",
+   "definition": "ratio of the length of the longest common substring between a summary and the original abstract to the abstract length",
+   "where": "Fig 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Message distortion in information cascades (Horta Ribeiro et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of the summarisation task, abstracts and 128 human summaries",
+   "quote": null
+  },
+  {
+   "work": "Text embeddings by weakly-supervised contrastive pre-training (e5)",
+   "year": 2022,
+   "arxiv": "2212.03533",
+   "relation": "uses-method",
+   "note": "classifier backbone",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "generator of synthetic text",
+   "quote": null
+  },
+  {
+   "work": "GPTZero, OpenAI AI text classifier, Writer",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "off-the-shelf detectors said to fail",
+   "quote": null
+  },
+  {
+   "work": "Generating faithful synthetic data with LLMs (Veselovsky et al.)",
+   "year": 2023,
+   "arxiv": "2305.15041",
+   "relation": "related",
+   "note": "synthetic data unfaithful to real data",
+   "quote": null
+  },
+  {
+   "work": "string2string (Suzgun et al.)",
+   "year": 2023,
+   "arxiv": "2304.14395",
+   "relation": "uses-method",
+   "note": "longest common substring overlap",
+   "quote": null
+  },
+  {
+   "work": "Gilardi et al.; Toernberg; Kocon et al.",
+   "year": 2023,
+   "arxiv": "2303.15056",
+   "relation": "related",
+   "note": "LLMs as annotators outperforming crowd workers",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of our approach for quantifying the prevalence of LLM usage among crowd workers solving a text summarization task.",
+   "page": 2,
+   "why": "pipeline in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Proportion of summaries predicted as synthetic depending on the logit threshold.",
+   "page": 5,
+   "why": "shows prevalence estimate stability across thresholds"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Overlap between summaries and original abstracts, for summaries involving a paste action.",
+   "page": 6,
+   "why": "shows flagged summaries have low overlap with the source"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Table 1 +/- values undefined. Data counts: 16 abstracts + 128 + 320 = 464 but text says 370 training points at abstract level (not reconciled). Some quotes end at hyphenated line breaks."
+ ]
 }

@@ -1,0 +1,551 @@
+{
+ "schema": 1,
+ "key": "2402.12354",
+ "pdf": "generative-ai/05-RL/sources/hayou-2024-lora.pdf",
+ "bib": {
+  "title": "LoRA+: Efficient Low Rank Adaptation of Large Models",
+  "authors": [
+   "Soufiane Hayou",
+   "Nikhil Ghosh",
+   "Bin Yu"
+  ],
+  "first_author": "Hayou",
+  "year": 2024,
+  "venue": "Proceedings of the 41st International Conference on Machine Learning, Vienna, Austria. PMLR 235, 2024",
+  "arxiv": "2402.12354",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 78634,
+  "chars_total": 78634,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Is using the same learning rate for the LoRA matrices A and B optimal when the model width is large, and if not, how should the rates be set?",
+ "hypothesis": "With large width, equal learning rates for A and B prevent efficient feature learning; a larger rate for B than for A (fixed ratio) fixes this.",
+ "contributions": [
+  "Infinite-width scaling analysis showing standard LoRA (same lr for A and B) is inefficient (Proposition 1, Theorem 1)",
+  "LoRA+: eta_B = lambda * eta_A with lambda>1 fixed, tuning only eta_A, same cost as LoRA",
+  "Experiments on RoBERTa-base, GPT-2 and Llama-7b showing 1-2% gains and up to ~2X speedup",
+  "Guidance on the ratio lambda (about 2^4 for RoBERTa Init[2]; 2^1-2^2 for Llama)"
+ ],
+ "method": {
+  "summary": "Theory (toy linear model, then general architectures with Adam in the infinite-width limit) shows efficient LoRA needs eta_A = Theta(1/n) and eta_B = Theta(1). LoRA+ sets eta_B = lambda*eta_A and grid-searches eta_A; experiments sweep (eta_A, eta_B) grids on GLUE tasks with GPT-2/RoBERTa-base and on MNLI and flan-v2 with Llama-7b.",
+  "task": "parameter-efficient fine-tuning (LoRA) of language models; learning-rate scaling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic toy data (X~N(0,I_d), Y=sin(mean X))",
+    "role": "both",
+    "size": "1000 train, 100 test; d=5",
+    "split": "1000/100",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "GLUE: MNLI, QQP, SST2, QNLI",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Wang et al. 2018",
+    "preprocessing": "sequence length 128"
+   },
+   {
+    "name": "MNLI (Llama)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "sequence length 128"
+   },
+   {
+    "name": "flan-v2 random subset",
+    "role": "train",
+    "size": "100,000 examples",
+    "split": "1 epoch; evaluated on MMLU",
+    "source": "Longpre et al. 2023",
+    "preprocessing": "Tsource=1536, Ttarget=512"
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hendrycks et al. 2020",
+    "preprocessing": "5-shot prompting, average accuracy"
+   }
+  ],
+  "models": [
+   {
+    "name": "Roberta-base",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "width": "paper says n≈700 for GPT2 (width remark)",
+     "lora_targets": "query, value"
+    }
+   },
+   {
+    "name": "GPT-2",
+    "role": "base",
+    "params": null,
+    "architecture": "decoder transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lora_targets": "c_attn, c_proj, c_fc"
+    }
+   },
+   {
+    "name": "Llama-7b",
+    "role": "base",
+    "params": "7b",
+    "architecture": "decoder transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lora_targets": "q_proj, k_proj, v_proj, o_proj, up_proj, down_proj, gate_proj",
+     "width": "n≈4000 for LLama (paper remark)"
+    }
+   },
+   {
+    "name": "Toy MLP f(x)=Wout relu(BA relu(Win x))",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP with LoRA layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "n=100",
+    "heads": null,
+    "context": null,
+    "other": {
+     "d": 5,
+     "r": 4
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: task loss (classification / instruction fine-tuning); toy model squared loss",
+   "optimizer": "AdamW (GLUE: beta1=0.9, beta2=0.99, eps=1e-8; Llama: beta1=0.9, beta2=0.999, eps=1e-6); toy model: gradient descent",
+   "lr": "grid. GLUE: etaA in {4e-3,2e-3,1e-3,5e-4,2e-4,1e-4}, etaB in {8e-4,4e-4,2e-4,1e-4,5e-5,2e-5,1e-5} (as printed; figures show A on 1e-5..8e-4 and B on 1e-4..4e-3). Llama: etaA,etaB in {1e-6,5e-6,1e-5,2.5e-5,5e-5,1e-4}, etaB>=etaA (figures show wider ranges)",
+   "lr_schedule": "GLUE: linear, no warmup; Llama: constant",
+   "warmup": "GLUE: none; Llama: null",
+   "batch_size": "GLUE 32; Llama MNLI 32; Llama flan-v2 16",
+   "steps": null,
+   "epochs": "GLUE 3 (SST2 10; Fig 17 MNLI RoBERTa 10); Llama 1",
+   "tokens": null,
+   "seq_len": "128 (GLUE, Llama MNLI); Llama flan-v2 source 1536 / target 512",
+   "precision": "FP16 (RoBERTa/GPT-2 main, Llama MNLI); full precision variants in App C.4; BF16 (Llama flan-v2)",
+   "weight_decay": null,
+   "dropout": "LoRA dropout 0.1 (Llama)",
+   "regularisation": null,
+   "hardware": "Nvidia V100, Nvidia A10 (GLUE); V100 (Llama MNLI); A10 (Llama flan-v2)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "GLUE 3 seeds; Llama 2 seeds for etaA=etaB and near-optimal, 1 otherwise; toy 3 seeds",
+   "other": {
+    "lora_rank_alpha": "RoBERTa/GPT-2 alpha=r=8 (also r=4 and r=16 in App C.6); Llama MNLI r=8 alpha=16; Llama flan-v2 r=64 alpha=16 (adapters on every linear layer excl. embeddings)",
+    "init": "Init[1]: sigma_B^2=0, sigma_A^2=Theta(1/n); Init[2]: sigma_B^2=Theta(1), sigma_A^2=0; main text results use Init[2] unless stated",
+    "toy init": "Win~N(0,1), Wout~N(0,1/n), A~N(0,1/n), B~N(0,1)",
+    "checkpointing": "flan-v2: test accuracy of best checkpoint every 500 steps; Llama MNLI: best checkpoint"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "MMLU 5-shot; accuracy averaged over seeds as in training",
+   "prompting": "MMLU 5-shot",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test accuracy",
+     "definition": "accuracy on task test set (GLUE, MNLI); MMLU average accuracy for flan-v2 models",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "test/train loss",
+     "definition": "loss; shown as 100x loss in App C.5",
+     "unit": "loss",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "standard LoRA with etaA = etaB (best equal-rate choice)"
+   ],
+   "protocol": "grid sweep over (etaA, etaB); report best overall vs best with etaA≈etaB; averaged over seeds; fluctuations about 0.1% (GLUE); no significance test"
+  },
+  "availability": {
+   "code": "https://github.com/nikhil-ghosh-berkeley/loraplus",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Learning rate grid. ηA ∈{4e-3, 2e-3, 1e-3, 5e-4, 2e-4, 1e-4}, ηB ∈{ 8e-4, 4e-4, 2e-4, 1e-4, 5e-5, 2e-5, 1e-5 }.",
+    "where": "Appendix C.1.2 (grid labels look swapped relative to the figure axes, where A runs 1e-5..8e-4 and B 1e-4..4e-3)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LoRA+ improves performance by 1-2% and speeds finetuning up to ~2X at the same compute as LoRA.",
+   "kind": "claim",
+   "source": null,
+   "metric": "improvement",
+   "value": "1%-2%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract claim across experiments (RoBERTa, GPT-2, Llama-7b)",
+   "quote": "LoRA+ improves performance (1%−2% improvements)",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Llama-7b trained 1 epoch on 100k flan-v2 subset gains roughly 1.3% MMLU with etaB >> etaA versus the best etaB = etaA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU gain",
+   "value": "1.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7b, flan-v2 100k, r=64, alpha=16, 2 seeds, Init[2], 5-shot MMLU; best checkpoint every 500 steps",
+   "quote": "results in a roughly 1.3% gain compared with the optimal ηB = ηA",
+   "table": null,
+   "note": "Reported as '%' in text; Fig 5 left shows best 44.0 MMLU acc, so likely points. Gain is vs best equal-rate setting.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Llama-7b on MNLI: etaB = etaA is nearly optimal, so LoRA+ gives little gain on an easy task.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": "nearly optimal",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7b, MNLI, 1 epoch, r=8, alpha=16, FP16, T=128",
+   "quote": "In Figure 5, ηB = ηA is nearly optimal for all ηB ≥ηA.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "For RoBERTa with Init[2], a ratio lambda≈2^4 generally improves performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "lambda",
+   "value": "2^4",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base GLUE, Init[2], alpha=r=8, FP16",
+   "quote": "setting a ratio of λ = ηB/ηA ≈24 improves performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3 (24 is 2^4 with lost superscript)"
+  },
+  {
+   "claim": "With Init[1] the optimal ratio is smaller, of order 2^2-2^3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "lambda",
+   "value": "2^2-2^3",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base, Init[1]",
+   "quote": "the optimal ratio is smaller and is of order 22-23",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3 (superscripts lost in extraction)"
+  },
+  {
+   "claim": "For Llama, a ratio of order 2^1-2^2 seems optimal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "lambda",
+   "value": "2^1-2^2",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7b experiments (flan-v2, MNLI)",
+   "quote": "For LLama experiments, it seems that a",
+   "table": null,
+   "note": "Quote is truncated by line break in the text: 'ratio of order 21-22 is optimal..'. Appears as 'it seems that a ratio of order 21-22 is optimal'.",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Optimal ratio is model and task sensitive with significant variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": "significant variance",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "top-4 learning-rate pairs per (model, task), GPT2 and RoBERTa, Fig 6",
+   "quote": "The optimal ratio is model and task sensitive and shows significant",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 6"
+  },
+  {
+   "claim": "RoBERTa-base MNLI with etaB = 2^4 etaA reaches the same test accuracy about 2X faster than standard LoRA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "2X",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base on MNLI, etaA tuned by grid search in both setups (Fig 7)",
+   "quote": "2X SpeedUp",
+   "table": null,
+   "note": "Read from Fig 7 label; 'up to ~2X SpeedUp' in abstract.",
+   "where": "Fig 7"
+  },
+  {
+   "claim": "RoBERTa-base best test accuracy gap between optimal (etaA,etaB) and etaA≈etaB is larger for harder tasks (MNLI, QQP) than SST2, QNLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "qualitative",
+   "value": "larger gap on harder tasks",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-base, FP16, 3 epochs (10 SST2), T=128, 3 seeds",
+   "quote": "the gap between the optimal choice of learning rates overall and the optimal choice when ηA ≈ηB is more pronounced for ‘harder’",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Efficient LoRA requires eta_B/eta_A = Theta(n); equal rates cannot be efficient.",
+   "kind": "measured",
+   "source": null,
+   "metric": "scaling",
+   "value": "eta_A=Theta(n^-1), eta_B=Theta(1)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Infinite-width limit, Adam, single LoRA layer trainable, physics-level rigor; relies on Assumption 1",
+   "quote": "LoRA Finetuning is efficient with ηA = Θ(n−1) and ηB = Θ(1).",
+   "table": null,
+   "note": "Informal theorem; proof is non-rigorous per paper.",
+   "where": "Theorem 1, Sec 4"
+  },
+  {
+   "claim": "Toy model: best train/test losses occur with etaB >> etaA; best at t=200 is (etaA,etaB)=(2.78,1.29e-4) per figure caption.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best lr pair",
+   "value": "(2.78, 1.29e-4)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toy MLP n=100, r=4, d=5, 3 seeds, gradient descent, t=200",
+   "quote": "(η∗ A, η∗ B) = (2.78, 1.29e−4)",
+   "table": null,
+   "note": "Caption's stated pair has etaA > etaB, which seems inconsistent with the text's 'etaB >> etaA'; possibly labels swapped in the caption. Equal-rate optimum is 2.15e-2 each.",
+   "where": "Fig 2 caption"
+  },
+  {
+   "claim": "Llama flan-v2 with Init[1] has MMLU 0.6% higher than Init[2] and optimal ratio twice as large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU gain",
+   "value": "0.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama-7b flan-v2 100k, Init[1] vs Init[2] (App C.8, Fig 18b)",
+   "quote": "the optimal MMLU accuracy is 0.6% higher than using Init[2] and the optimal ratio ηB/ηA is twice as large",
+   "table": null,
+   "note": null,
+   "where": "Fig 18 caption"
+  }
+ ],
+ "limits": [
+  "Optimal ratio lambda depends on model, task and initialization; analysis gives only the scaling (constants in Theta are intractable) and the authors leave refinement to future work.",
+  "Theory is of 'physics level of rigor', single-sample fine-tuning, a single trainable LoRA layer, and assumes mu-P pretraining; Theorem 1 relies on Assumption 1 and is stated informally.",
+  "Compute-limited GLUE runs (T=128, 3 epochs) give lower accuracies than Hu et al. 2021.",
+  "Train loss on flan-v2 did not favor etaB>etaA on grid tried; model overfits within one epoch (Fig 18 caption).",
+  "Only 7B Llama and small GLUE models; no larger widths or other PEFT variants tested.",
+  "Gains are larger on hard tasks and small on easy ones (MNLI for Llama)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LoRA+",
+   "definition": "set the learning rates for A, B such that ηB = ληA with λ > 1 fixed and tune ηA.",
+   "where": "Sec 4"
+  },
+  {
+   "term": "Efficient learning (Definition 5)",
+   "definition": "LoRA fine-tuning is stable and for all LoRA layers, all steps t>1, delta1_t and delta2_t = Theta(1).",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LoRA: Low-rank adaptation of large language models (Hu et al.)",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "extends",
+   "note": "the method whose same-lr setup is shown suboptimal",
+   "quote": null
+  },
+  {
+   "work": "Tensor Programs IV / V (muP), Yang & Hu; Yang et al.",
+   "year": 2021,
+   "arxiv": "2203.03466",
+   "relation": "uses-method",
+   "note": "scaling / feature-learning framework",
+   "quote": null
+  },
+  {
+   "work": "Tensor Programs IVb, Yang & Littwin",
+   "year": 2023,
+   "arxiv": "2308.01814",
+   "relation": "uses-method",
+   "note": "Adam in infinite width limit; feature learning definition",
+   "quote": null
+  },
+  {
+   "work": "QLoRA, Dettmers et al.",
+   "year": 2023,
+   "arxiv": "2305.14314",
+   "relation": "related",
+   "note": "quantized LoRA",
+   "quote": null
+  },
+  {
+   "work": "LoftQ, Li et al.",
+   "year": 2023,
+   "arxiv": "2310.08659",
+   "relation": "related",
+   "note": "initialization for quantized LoRA",
+   "quote": null
+  },
+  {
+   "work": "VeRA, Kopiczko et al.",
+   "year": 2023,
+   "arxiv": "2310.11454",
+   "relation": "related",
+   "note": "fewer trainable parameters",
+   "quote": null
+  },
+  {
+   "work": "GLUE, Wang et al.",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MNLI, QQP, SST2, QNLI",
+   "quote": null
+  },
+  {
+   "work": "The Flan Collection, Longpre et al.",
+   "year": 2023,
+   "arxiv": "2301.13688",
+   "relation": "uses-data",
+   "note": "flan-v2 100k subset",
+   "quote": null
+  },
+  {
+   "work": "MMLU, Hendrycks et al.",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "evaluation",
+   "quote": null
+  },
+  {
+   "work": "Llama (Touvron et al.), RoBERTa (Liu et al.), GPT-2 (Radford et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models fine-tuned",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The key difference between standard LoRA and LoRA+ is in how learning rates are set",
+   "page": 2,
+   "why": "One-picture statement of the method"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Train/Test accuracy of toy model over (etaA, etaB) grid",
+   "page": 5,
+   "why": "Shows optimum lies off the etaA=etaB diagonal"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Test accuracy of Roberta-base finetuning on MNLI, QQP, QNLI, SST2",
+   "page": 8,
+   "why": "Heatmaps of best (etaA,etaB) vs equal rates"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Llama-7b MMLU after flan-v2 and MNLI test accuracy",
+   "page": 9,
+   "why": "Main LLM result: +1.3 on flan-v2, none on MNLI"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Test accuracy of Roberta-base on MNLI, LoRA+ (etaB=2^4 etaA) vs standard",
+   "page": 9,
+   "why": "Shows the ~2X speedup"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4",
+   "snippet": "LoRA+ : set the learning rates for A, B such that ηB = ληA with λ > 1 fixed and tune ηA.",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Superscripts lost in text extraction (2^4 appears as '24'; 2^1-2^2 as '21-22').",
+  "Appendix C.1.2 learning-rate grid labels appear swapped relative to figure axes.",
+  "Figure data (heatmap numbers) is in the text as loose numerals; not parsed.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,19 +1,617 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2304.11633",
  "pdf": "ai-engineering/01-prompt-engineering/sources/li-2023-evaluating-chatgpt-s-information-extraction.pdf",
  "bib": {
   "title": "Evaluating ChatGPT's Information Extraction Capabilities: An Assessment of Performance, Explainability, Calibration, and Faithfulness",
-  "first_author": "Bo Li",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Bo Li",
+   "Gexiang Fang",
+   "Yang Yang",
+   "Quansen Wang",
+   "Wei Ye",
+   "Wen Zhao",
+   "Shikun Zhang"
+  ],
+  "first_author": "Li",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2304.11633",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 76586,
+  "chars_total": 76586,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
  },
- "legacy_report": "SOURCE: \"Evaluating ChatGPT's Information Extraction Capabilities: An Assessment of Performance, Explainability, Calibration, and Faithfulness\", Bo Li, Gexiang Fang, Yang Yang, Quansen Wang, Wei Ye, Wen Zhao, Shikun Zhang (Peking University, Boston University). arXiv:2304.11633v1 [cs.CL], 23 Apr 2023. Preprint. The PDF names no venue. Code and data: github.com/pkuserc/ChatGPT_for_IE.\n\nCOVERAGE: All 18 pages read, 76,592 of 76,592 chars. That covers the body, tables 1-11 and the appendix (A.1 datasets, A.2 SOTA methods, A.3 input example). References were skimmed only. There is no limitations section and no results appendix beyond the dataset counts. Offsets are character offsets in the extraction, approximate. Appendix starts at about 68544.\n\nCLAIMS (ranked)\n- ChatGPT, given a label set, is far below supervised BERT/RoBERTa/SOTA on most IE tasks. It beats them only on entity typing.\n  number: BBN ET 85.6 vs SOTA 82.2; CoNLL NER 67.2 vs 94.6; TACRED RC 20.3 vs 75.6; ACE05-E ED 17.1 vs 75.8; ACE05-E EE 17.0|7.3 vs 74.7|56.8\n  setup: ChatGPT (official API, March 2023-era), whole test sets, Micro-F1. Prompt is task description + label set + input + output-format instruction. Conversation cleared after each response. Baselines are supervised and cited or re-run.\n  quote: \"ChatGPT's performance is not comparable to that of baseline models and SOTA methods in most cases.\" Table 2 row: \"CoNLL2003 92.8 92.4 94.6 (Wang et al., 2021) 67.2\"\n  where: sec 4.2, Table 2, about 20-23k\n\n- Performance drops as task complexity rises: ET is good, NER/RC are middling, and RE/ED/EAE/EE are poor.\n  number: ET 85.6 / 73.4; ACE05-R RE 40.5|4.5; SciERC RE 25.9|5.5\n  setup: as above\n  quote: \"ChatGPT's performance varies based on the complexity of the task, and it performs well on straightforward tasks.\"\n  where: sec 4.2\n\n- Judged without a label set (OpenIE), ChatGPT's outputs are often reasonable. The gap against the label-set accuracy is large, and the label set itself seems to hurt.\n  number: Standard vs OpenIE accuracy: BBN 86.8% vs 97.2%; CoNLL 69.0% vs 93.3%; SemEval 43.3% vs 84.3%; ACE05-E ED 12.4% vs 42.6%; EAE 17.3% vs 65.3%; EE 4.9% vs 28.8%; RE 14.9% vs 23.9%\n  setup: about 200 random samples per dataset. OpenIE correctness is a majority vote of 3 domain experts on whether the prediction is \"reasonable\", not a match to ground truth. Standard is exact match to the gold label.\n  quote: \"more than 84% of the predictions are considered reasonable by the domain experts in ET, NER, and RC tasks.\" Also: \"some labels are not easy to understand, thereby negatively impact the performance.\"\n  where: sec 4.3, Table 3, sec 4.2\n\n- Top-k answers act as a candidate generator. Recall rises sharply from top-1 to top-5.\n  number: BBN 85.6 -> 92.7 -> 94.9 (+9.3); SemEval2010 42.5 -> 62.1 -> 76.0 (+33.5); the text gives top-3 gain on SemEval as 19.6%\n  setup: whole test set, asked for top3 and top5 labels from the given label set. Only 2 datasets are reported (\"other datasets show similar observation\").\n  quote: \"BBN 85.6% 92.7% 94.9% (+9.3%)  SemEval2010 42.5% 62.1% 76.0% (+33.5%)\"\n  where: sec 4.4, Table 5\n\n- Self-reported verbal confidence is overconfident and badly calibrated, especially on harder tasks. ChatGPT's ECE is much worse than BERT/RoBERTa except on ET.\n  number: ECE ChatGPT vs BERT: BBN 0.026 vs 0.012; CoNLL 0.204 vs 0.052; SemEval 0.460 vs 0.023; ACE05-R 0.745 vs 0.020; ED 0.656 vs 0.161; EAE 0.699 vs 0.154; EE 0.699 vs 0.211\n  setup: ChatGPT is asked to output an integer confidence from 1 to 100 (0-100 in the appendix prompt) with each prediction. ECE uses 50 equal-width bins. Whole test set.\n  quote: \"ChatGPT shows much poorer calibration compared to BERT-based methods\" and \"it displays overconfidence in both correct and incorrect predictions.\"\n  where: sec 5.2, Tables 6-7, footnote 8\n\n- The confidence gap between correct and incorrect predictions is small in some tasks, and on EAE the incorrect-prediction confidence is nearly as high as the correct one.\n  number: Table 6 EAE ChatGPT correct 0.956 / incorrect 0.910. BBN 0.888 / 0.828. ACE05-R 0.760 / 0.764.\n  quote: \"ACE05-E(EAE) 0.762 0.785 0.956 0.525 0.555 0.910\"\n  where: Table 6. Note: the authors also write \"we note a significant confidence gap between correct and incorrect predictions\", which fits only some rows. This is my reading of the table, not an authors' claim.\n\n- ChatGPT's self-judged explanation quality is about 100%, so self-check is inflated against human-check. Human-check is high on simple tasks and low on EE and EAE.\n  number: Standard setting self-check 100% on all datasets; human-check BBN 99.2, ACE05-R 90.0, ED 96.3, EAE 74.1, EE 47.1. OpenIE human-check EE 78.0 (self 94.0).\n  setup: only samples with correct Standard-IE predictions are evaluated. About 200 samples per dataset, 3 domain experts. The reason and the \"if_reasonable\" self-rating come in the same output JSON.\n  quote: \"ChatGPT achieves nearly a 100% reasonable score among almost all datasets. This suggests that ChatGPT is very confident in its ability to provide reasonable explanations.\"\n  where: sec 5.1, Table 4\n\n- Explanations are faithful to the input text.\n  number: over 95% faithful in nearly all datasets; the lowest is ACE05-R Standard at 90.0%, the rest 93.8-100%.\n  setup: correct predictions only, manual annotation of whether the reason is fictitious.\n  quote: \"with over 95% of samples considered faithful in nearly all datasets under different settings.\"\n  where: sec 5.3, Table 8\n\n- Why this paper's verdict differs from earlier positive IE reports (Wei et al. 2023; Gao et al. 2023): it scored whole test sets with one concise unified prompt, while prior work used small random subsets and domain-specific or label-description-heavy prompts.\n  number: none\n  quote: \"prior studies reported on a very small set of test samples drawn at random, which may have substantial variance.\"\n  where: sec 4.2\n\n- Evaluation design: 15 keys across 4 dimensions (performance, explainability, calibration, faithfulness). 10 keys come from ChatGPT's own JSON output and 5 are manual.\n  number: 7 tasks, 14 datasets, \"nearly 3,000\" manually annotated samples\n  quote: \"we randomly select nearly 3,000 samples in total for our analysis.\"\n  where: sec 4.1, Table 1. Per-dataset annotated counts are in Table 9 (e.g. SemEval 400, ACE05-R 66, EE 552). Table 9 labels BBN as \"ED\", which looks like a typo for ET.\n\nLIMITS\n- Zero-shot, single prompt, no few-shot demonstrations, no CoT variation, and no prompt-sensitivity test. The authors concede that the prompt choice may explain the contrasts with prior work.\n- Only gpt-3.5-era \"ChatGPT\" (Mar-Apr 2023) is tested. The model version is not stated, and it has dated heavily. Current models would score differently.\n- Human judgement is \"reasonable\" by 3 experts with no reported inter-annotator agreement. OpenIE \"correctness\" does not require matching the ground truth, so it is not comparable with Standard-IE accuracy.\n- The explainability and faithfulness subsets are conditioned on correct predictions. They exclude failures.\n- Explanations and verbal confidence come in the same output as the answer, which may influence the answer. This is not tested.\n- The OpenIE/explainability samples are small (about 200 per dataset; ACE05-R only 66 annotated).\n- Calibration uses verbalised confidence, not token probabilities. Other models are compared on softmax probabilities, so the confidence measures are not like for like.\n- Table 5 shows only 2 datasets. Results on a 14-dataset study are partly asserted.\n- No limitations section.\n\nBUILDS ON: Guo et al. 2017 (calibration/ECE, overconfidence); Maynez et al. 2020, He et al. 2023 (faithfulness); Wei et al. 2022b (CoT); Ouyang et al. 2022 (instruction/RLHF); Brown et al. 2020; Rajani et al. 2019, Zini and Awad 2023 (explainability); Qin et al. 2023, Bang et al. 2023 (ChatGPT evaluations); Wei et al. 2023, Gao et al. 2023 (contrasting ChatGPT IE reports). The task and SOTA datasets include Zuo et al. 2022, Wang et al. 2021, Ye et al. 2022, Hsu et al. 2022, Lin et al. 2020.\n\nCODE: Table 11 (appendix A.3, about 70k) shows the evaluation prompt structure: Task Description, Pre-defined Label Set, Input and Task Requirement. The output is a JSON list of dictionaries with nine keys: \"trigger\", \"word_index\", \"event_type\", \"top3_event_type\", \"top5_event_type\", \"confidence\", \"if_context_dependent\", \"reason\", \"if_reasonable\". It ends with: \"Note that your answer should only contain the json string and nothing else.\" The confidence key is \"an integer ranging from 0 to 100\".\n\nFIGURES: There are no figures. The tables carry the results: Table 1 (the 15 keys), Table 2 (performance), Table 3 (Standard vs OpenIE), Table 4 (explainability), Table 5 (top-k), Table 6 (confidence), Table 7 (ECE), Table 8 (faithfulness). I did not run the figures script.\n\nPROBLEMS: The extraction is clean, apart from ligature glyphs (\"ﬁ\", \"ﬂ\"), which I normalized in the quotes to ASCII. Quotes are otherwise verbatim except for line breaks and hyphenation joins. The PDF gives no page numbers per claim, so I used section and table references. I found no embedded instructions. The paper is a preprint with no stated venue. If the target note cites it as an EMNLP/ACL paper, that is not supported by the PDF."
+ "type": "empirical",
+ "question": "How well does ChatGPT do on seven information extraction tasks, and are its explanations, confidence scores and rationales explainable, calibrated and faithful?",
+ "hypothesis": null,
+ "contributions": [
+  "Evaluate ChatGPT on four dimensions (performance, explainability, calibration, faithfulness), collecting 15 keys from ChatGPT or domain experts",
+  "Compare ChatGPT with BERT, RoBERTa and SOTA on Standard-IE and OpenIE settings",
+  "Release manually annotated test sets and code"
+ ],
+ "method": {
+  "summary": "ChatGPT is prompted zero-shot via the official API on 14 IE datasets (7 tasks) with a single JSON-output prompt that asks for prediction, top-3/5, confidence 0-100, a reason and a self-judged reasonableness flag. Standard-IE gives a label set; OpenIE gives none and domain experts judge reasonableness. Human annotation on about 3,000 sampled items checks reasons and faithfulness.",
+  "task": "information extraction (ET, NER, RC, RE, ED, EAE, EE) evaluation of ChatGPT",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "BBN",
+    "role": "eval",
+    "size": "23542 test; 385 annotated",
+    "split": "test only",
+    "source": "Weischedel and Brunstein 2005",
+    "preprocessing": null
+   },
+   {
+    "name": "OntoNotes 5.0 (ET)",
+    "role": "eval",
+    "size": "13393 test",
+    "split": "test only",
+    "source": "Gillick et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "CoNLL2003",
+    "role": "eval",
+    "size": "3453 test; 300 annotated",
+    "split": "test only",
+    "source": "Sang and Meulder 2003",
+    "preprocessing": null
+   },
+   {
+    "name": "OntoNotes 5.0 (NER)",
+    "role": "eval",
+    "size": "8233 test",
+    "split": "test only",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "TACRED",
+    "role": "eval",
+    "size": "15517 test",
+    "split": "test only",
+    "source": "Zhang et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "SemEval2010",
+    "role": "eval",
+    "size": "2717 test; 400 annotated",
+    "split": "test only",
+    "source": "Hendrickx et al. 2010",
+    "preprocessing": null
+   },
+   {
+    "name": "ACE05-R",
+    "role": "eval",
+    "size": "2050 test; 66 annotated",
+    "split": "test only",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SciERC",
+    "role": "eval",
+    "size": "551 test",
+    "split": "test only",
+    "source": "Luan et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "ACE05-E",
+    "role": "eval",
+    "size": "832 test (ED, EE), 403 (EAE); annotated 218 ED, 313 EAE, 552 EE",
+    "split": "test only",
+    "source": "Wadden et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "ACE05-E+",
+    "role": "eval",
+    "size": "676 test (ED, EE), 424 (EAE)",
+    "split": "test only",
+    "source": "Lin et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": "not stated; official API, early 2023"
+    }
+   },
+   {
+    "name": "BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Per-dataset SOTA (PICOT, ACE, KLG, RIFRE, PL-Marker, SaliencyED, ONEIE, DEGREE)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one response per item; whole test sets queried via official API; conversation cleared after each response. Human evaluation on about 3,000 samples in total, roughly 200 per dataset",
+   "prompting": "Zero-shot instruction = task description + label set (Standard-IE only) + input and requirement asking for JSON with trigger/prediction, top3, top5, confidence (0-100), if_context_dependent, reason, if_reasonable. No demonstrations.",
+   "retrieval": null,
+   "parameters": {
+    "confidence_range": "1 to 100 (ED example says 0 to 100)",
+    "ECE_bins": "50 equally spaced bins"
+   },
+   "other": {
+    "model_version_and_date": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Micro-F1",
+     "definition": "all tasks except RE and EE; RE reports NER F1 and relation F1, EE trigger F1 and argument F1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (Standard-IE vs OpenIE)",
+     "definition": "Standard: match to ground truth; OpenIE: 3 domain experts vote whether prediction is reasonable",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "top-k recall",
+     "definition": "ground truth within ChatGPT's top 1/3/5 predicted labels",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "reasonable score",
+     "definition": "share of correct-prediction samples whose reason is judged reasonable by ChatGPT (self-check) or 3 experts (human-check)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ECE",
+     "definition": "expected calibration error, deviation of confidence from accuracy, 50 bins",
+     "unit": "0-1",
+     "higher_is_better": false
+    },
+    {
+     "name": "faithfulness",
+     "definition": "share of explanations not fictitious relative to input text, expert-annotated, for correct predictions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT",
+    "RoBERTa",
+    "dataset SOTA"
+   ],
+   "protocol": "Fine-tuned baselines cited from papers or re-implemented with official code; ChatGPT zero-shot. No repeated runs, seeds or significance test reported. Inter-annotator agreement not reported."
+  },
+  "availability": {
+   "code": "https://github.com/pkuserc/ChatGPT_for_IE",
+   "weights": null,
+   "data": "manually annotated test sets released at same url"
+  },
+  "prompts": [
+   {
+    "purpose": "Event detection input, Standard-IE (three parts: task description, label set, input and requirement)",
+    "text": "Task Description: Given an input list of words, identify all triggers in the list, and categorize each of them into the predefined set of event types. A trigger is the main word that most clearly expresses the occurrence of an event in the predefined set of event types. ... Input and Task Requirement: Perform ED task for the following input list, and print the output: [...] The output of ED task should be a list of dictionaries following json format. Each dictionary corresponds to the occurrence of an event in the input list and should consists of \"trigger\", \"word_index\", \"event_type\", \"top3_event_type\", \"top5_event_type\", \"confidence\", \"if_context_dependent\", \"reason\" and \"if_reasonable\" nine keys. ... Note that your answer should only contain the json string and nothing else.",
+    "where": "Table 11, Appendix A.3 (abridged)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ChatGPT beats SOTA on BBN entity typing in the Standard-IE (label set given) setting",
+   "kind": "measured",
+   "source": null,
+   "metric": "Micro-F1",
+   "value": "85.6",
+   "unit": "%",
+   "baseline_value": "82.2",
+   "n": null,
+   "setup": "BBN, whole test set (23542), ChatGPT with label set, micro-F1",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BBN, column ChatGPT"
+  },
+  {
+   "claim": "ChatGPT is far below SOTA on CoNLL2003 NER",
+   "kind": "measured",
+   "source": null,
+   "metric": "Micro-F1",
+   "value": "67.2",
+   "unit": "%",
+   "baseline_value": "94.6",
+   "n": null,
+   "setup": "CoNLL2003 whole test set, Standard-IE",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row CoNLL2003, column ChatGPT"
+  },
+  {
+   "claim": "ChatGPT is far below SOTA on TACRED relation classification",
+   "kind": "measured",
+   "source": null,
+   "metric": "Micro-F1",
+   "value": "20.3",
+   "unit": "%",
+   "baseline_value": "75.6",
+   "n": null,
+   "setup": "TACRED whole test set, Standard-IE",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row TACRED, column ChatGPT"
+  },
+  {
+   "claim": "ChatGPT is very poor on ACE05-E event detection",
+   "kind": "measured",
+   "source": null,
+   "metric": "Micro-F1",
+   "value": "17.1",
+   "unit": "%",
+   "baseline_value": "75.8",
+   "n": null,
+   "setup": "ACE05-E whole test set, Standard-IE",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ACE05-E (ED), column ChatGPT"
+  },
+  {
+   "claim": "ChatGPT relation extraction on ACE05-R: entity F1 40.5, relation F1 4.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "RE relation F1",
+   "value": "4.5",
+   "unit": "%",
+   "baseline_value": "73.0",
+   "n": null,
+   "setup": "ACE05-R whole test set, Standard-IE; relation F1",
+   "note": "Entity F1 40.5 vs SOTA 91.1",
+   "where": "Table 2",
+   "table": "Table 2, row ACE05-R, column ChatGPT"
+  },
+  {
+   "claim": "Under OpenIE, domain experts judged 97.2% of BBN predictions reasonable vs 86.8% accuracy with label set",
+   "kind": "measured",
+   "source": null,
+   "metric": "expert-judged reasonable rate",
+   "value": "97.2",
+   "unit": "%",
+   "baseline_value": "86.8",
+   "n": null,
+   "setup": "BBN, ~200 sampled test items, 3 experts vote on reasonableness, no label set",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BBN(ET), column OpenIE"
+  },
+  {
+   "claim": "OpenIE reasonableness on CoNLL NER 93.3% vs 69.0% Standard",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "93.3",
+   "unit": "%",
+   "baseline_value": "69.0",
+   "n": null,
+   "setup": "CoNLL sample, expert vote",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row CoNLL(NER), column OpenIE"
+  },
+  {
+   "claim": "OpenIE reasonableness on SemEval2010 RC 84.3% vs 43.3% Standard",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "84.3",
+   "unit": "%",
+   "baseline_value": "43.3",
+   "n": null,
+   "setup": "SemEval2010 sample, expert vote",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row SemEval2010(RC), column OpenIE"
+  },
+  {
+   "claim": "OpenIE stays low on ACE05-R relation extraction (23.9%) and ACE05-E EE (28.8%)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "23.9",
+   "unit": "%",
+   "baseline_value": "14.9",
+   "n": null,
+   "setup": "ACE05-R sample, expert vote",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ACE05-R(RE), column OpenIE"
+  },
+  {
+   "claim": "Top-5 recall on SemEval2010 reaches 76.0% from 42.5% top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-k recall",
+   "value": "76.0",
+   "unit": "%",
+   "baseline_value": "42.5",
+   "n": null,
+   "setup": "SemEval2010 whole test set, ChatGPT asked for top-1/3/5 classes from label set",
+   "note": "Table 5 prints +33.5% as the top-5 gain; text says top-3 gain is 19.6%",
+   "where": "Table 5",
+   "table": "Table 5, row SemEval2010, column top-5"
+  },
+  {
+   "claim": "Top-5 recall on BBN is 94.9%",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "94.9",
+   "unit": "%",
+   "baseline_value": "85.6",
+   "n": null,
+   "setup": "BBN whole test set",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row BBN, column top-5"
+  },
+  {
+   "claim": "ChatGPT reasons are accepted by human experts in most datasets, but only 47.1% for ACE05-E EE in Standard setting",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "47.1",
+   "unit": "%",
+   "baseline_value": "100.0",
+   "n": null,
+   "setup": "Samples with correct Standard predictions, ~200 per dataset, 3 experts",
+   "note": "Base is ChatGPT self-check, always 100.0",
+   "where": "Table 4",
+   "table": "Table 4, row ACE05-E (EE), column Standard Human-check"
+  },
+  {
+   "claim": "ChatGPT approves its own explanations nearly always (self-check 100.0%)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 self-check, Standard setting, all 7 datasets",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, column Standard Self-check"
+  },
+  {
+   "claim": "ChatGPT ECE is much worse than BERT on SemEval RC",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": "0.460",
+   "unit": null,
+   "baseline_value": "0.023",
+   "n": null,
+   "setup": "Whole test set, 50 bins; confidence 1-100 verbalised by ChatGPT",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row SemEval(RC), column ChatGPT"
+  },
+  {
+   "claim": "ChatGPT ECE on ACE05-R relation extraction is 0.745",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": "0.745",
+   "unit": null,
+   "baseline_value": "0.020",
+   "n": null,
+   "setup": "Whole test set, 50 bins",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row ACE05-R(RE), column ChatGPT"
+  },
+  {
+   "claim": "ChatGPT ECE is low on BBN ET",
+   "kind": "measured",
+   "source": null,
+   "metric": "ECE",
+   "value": "0.026",
+   "unit": null,
+   "baseline_value": "0.012",
+   "n": null,
+   "setup": "Whole test set",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row BBN(ET), column ChatGPT"
+  },
+  {
+   "claim": "ChatGPT is more confident on incorrect than correct predictions in EAE",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean confidence",
+   "value": "0.910",
+   "unit": null,
+   "baseline_value": "0.525",
+   "n": null,
+   "setup": "ACE05-E EAE; incorrect confidence vs correct 0.956",
+   "note": "baseline_value is BERT incorrect confidence",
+   "where": "Table 6",
+   "table": "Table 6, row ACE05-E(EAE), column ChatGPT incorrect"
+  },
+  {
+   "claim": "Faithfulness: over 95% of explanations judged faithful in nearly all datasets",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ACE05-R Standard, the lowest cell",
+   "note": "Text says over 95% in nearly all; ACE05-R Standard is 90.0",
+   "where": "Table 8",
+   "table": "Table 8, row ACE05-E-R (RE), column Standard-IE"
+  }
+ ],
+ "limits": [
+  "Closed model, version and date not stated; no decoding settings reported, so reruns are not exact",
+  "Only one concise unified prompt, no prompt variants or few-shot; authors note other work used domain prompts and got better IE results",
+  "Self-check reasonableness is by the same model, 100% so uninformative",
+  "Human evaluation by 3 experts on ~200 samples per dataset; no inter-annotator agreement; OpenIE accuracy is not comparable with F1 and does not require matching ground truth",
+  "Verbalised confidence, not token probabilities, used for ECE",
+  "Standard-IE ChatGPT choice of label set may be hurt by hard-to-understand labels",
+  "Explanations judged only for correct predictions",
+  "No limitations section",
+  "Results for early-2023 ChatGPT have dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Standard-IE setting",
+   "definition": "ChatGPT selects the most appropriate answer from a set of candidate labels, given task description, input text, prompt and label set",
+   "where": "3.2"
+  },
+  {
+   "term": "OpenIE setting",
+   "definition": "no candidate labels are given; ChatGPT relies solely on task description, prompt and input text",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Wei et al. 2023 / Gao et al. 2023 (ChatGPT for IE)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "they found ChatGPT desirable on IE with small random samples and domain-specific prompts",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al., 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al., 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "Guo et al., 2017 (calibration)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ECE",
+   "quote": null
+  },
+  {
+   "work": "Qin et al. 2023; Bang et al. 2023; Zhong et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "other ChatGPT evaluations",
+   "quote": null
+  },
+  {
+   "work": "ACE05, CoNLL2003, BBN, TACRED, SemEval2010, SciERC, OntoNotes",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "14 datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2",
+   "caption": "The performances of ChatGPT and several baseline models on 14 IE datasets on the Standard-IE setting.",
+   "page": 4,
+   "why": "Gap to supervised models per task"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "The accuracy of Standard-IE setting and OpenIE setting on the sampled test set.",
+   "page": 4,
+   "why": "Contrast of label-set and open evaluation"
+  },
+  {
+   "figure": "Table 11",
+   "caption": "The input example of event detection task.",
+   "page": 12,
+   "why": "Whole prompt template"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 8 row label ACE05-R (RE) in text but quoted tables are cell refs",
+  "Table 5 text says +19.6% for SemEval top-3 but table prints +33.5% for top-5 gain",
+  "Confidence range stated 1-100 in 3.3 but 0-100 in the Table 11 prompt",
+  "Page count not verified (legacy report says 18 pages)",
+  "No embedded instructions found"
+ ]
 }

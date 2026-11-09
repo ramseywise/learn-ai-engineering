@@ -1,19 +1,619 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "doi:10.1145/2523813",
  "pdf": "data-engineering/sources/gama-2014-survey-concept-drift-adaptation.pdf",
  "bib": {
-  "title": "A survey on concept drift adaptation",
-  "first_author": "João Manuel Portela da Gama",
-  "year": "2014",
-  "venue": "ACM Computing Surveys",
+  "title": "A Survey on Concept Drift Adaptation",
+  "authors": [
+   "Joao Gama",
+   "Indre Zliobaite",
+   "Albert Bifet",
+   "Mykola Pechenizkiy",
+   "Abdelhamid Bouchachia"
+  ],
+  "first_author": "Gama",
+  "year": 2014,
+  "venue": "ACM Computing Surveys (this PDF is the pre-publication version: footer reads Vol. 1, No. 1, Article 1, January 2013, placeholder DOI 10.1145/0000000.0000000; the 2014 year and the DOI come from the ledger key, not the PDF)",
   "arxiv": null,
   "doi": "10.1145/2523813"
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 156058,
+  "chars_total": 156058,
+  "engine": "pymupdf",
+  "skipped": "Reference list (about lines 1736-2060) skimmed for lineage only; figures not rendered, captions and surrounding text read."
  },
- "legacy_report": "SOURCE: \"A Survey on Concept Drift Adaptation\", Joao Gama, Indre Zliobaite, Albert Bifet, Mykola Pechenizkiy, Abdelhamid Bouchachia. ACM Computing Surveys. The file is the author's pre-publication version. Its footer reads \"ACM Computing Surveys, Vol. 1, No. 1, Article 1, Publication date: January 2013\", with placeholder DOI \"10.1145/0000000.0000000\" and \"35 pages\". The PDF does NOT confirm the 2014 volume, issue or DOI. The \"2014\" in the filename and any ACM CSUR 46(4) citation would have to be checked outside this file.\n\nCOVERAGE: 44 pages, 155,981 chars (pypdf; my re-extraction counted 157,600, probably a newline difference). I read the body (survey, sections 1-5), the online appendix (pseudocode, datasets, MOA example) and the Figure 11 and 12 text. The reference list (lines ~1558-1873) was only skimmed for origins. Text was clean. Figures were not rendered, and only their captions and surrounding text were read. The Fig 12 numbers are not in the text.\n\nCLAIMS (ranked)\n- Drift is defined as a change in the joint distribution, and drift types are split by which component changes. Only real drift changes p(y|X) and requires adaptation.\n  number: none\n  setup: supervised online learning, general definition\n  quote: \"concept drift between time pointt0 and time pointt1 can be deﬁned as ∃X :pt0(X,y )⁄=pt1(X,y )\" and \"From a predictive perspective only the changes that affect the prediction decision require adaptation.\"\n  where: sec 2.1, pp 3-4\n- Taxonomy of drift types: real (p(y|X) changes, with or without a p(X) change), virtual (p(X) changes only), population drift, and prior-probability drift. The paper notes that \"virtual drift\" has several meanings in the literature and fixes its own.\n  quote: \"Real concept drift refers to changes inp(y|X).\" and \"In this paper virtual drift refers to change in the data distributionp(X).\"\n  where: p 4\n- Drift patterns over time: sudden/abrupt, incremental, gradual, reoccurring, and outliers (outliers are not drift). Drift can also be characterised by severity, predictability and frequency. A detector must not confuse noise or outliers with drift.\n  quote: \"One of the challenges for concept drift handling algorithms is not to mix the true drift with an outlier or noise\"\n  where: sec 2.2, p 5 (Fig 2)\n- Requirements for models in changing environments, and the generic adaptive loop of predict, diagnose, update. The four modules are Memory, Change Detection, Learning, Loss Estimation. Labels may be delayed or absent.\n  quote: \"(1) detect to concept drift (and adapt if needed) as soon as possible; (2) distinguish drifts from noise and be adaptive to changes, but robust to noise; (3) operate in less than example arrival time and use not more than a ﬁxed amount of memory\"\n  where: sec 2.3-2.4, pp 6-7 (Fig 3)\n- Four families of change detection (Fig 6, sec 3.2): (i) sequential analysis (SPRT, CUSUM, Page-Hinkley); (ii) control charts / SPC (and EWMA); (iii) monitoring two distributions on two windows (ADWIN, Kifer, KL divergence, entropy, paired learners); (iv) contextual (Splice, IFCS). The survey states the trade-off between the families.\n  quote: \"comparing two distributions for change detection requires more computational resources than detecting based on the evolution of indicators, but potentially may give more precise information about the location of change.\"\n  where: p 18\n- Cost of each detector family (Table II): sequential analysis and SPC are O(1) memory and time. Two-distribution monitoring (ADWIN) is O(logW) to O(W).\n  number: O(1); O(logW)-O(W)\n  quote: \"sequential analysis O(1) O(1) CUSUM, PH ... monitoring two distributions O(logW )−O(W ) O(logW )−O(W ) ADWIN\"\n  where: Table II, p 18\n- SPC / DDM rule with three states, based on the Bernoulli/Binomial error rate. Warning is p_i+s_i >= p_min+2*s_min (about 95% confidence). Out-of-Control is >= p_min+3*s_min (about 99%). It needs n > 30 examples. The time between Warning and Out-of-Control measures the rate of drift. In Algorithm 3, the instances buffered during Warning are used to train the new model after Out-of-Control.\n  number: 2 sigma / 3 sigma; n>30; 95% / 99%\n  quote: \"A commonly used conﬁdence level for Warning is 95% with the threshold pi +σi≥ pmin + 2∗σmin, and for Out-of-Control is 99% with the thresholdpi +σi≥pmin + 3∗σmin.\"\n  where: sec 3.2.2, p 16\n- CUSUM: g_t = max(0, g_{t-1} + (x_t - delta)), alarm if g_t > lambda, then reset to 0. Page-Hinkley: m_T is the cumulative deviation from the mean minus delta, M_T is its running minimum, and an alarm fires when PH_T = m_T - M_T > lambda. Trade-off: low delta means faster detection but more false alarms. Larger lambda means fewer false alarms but possibly missed changes. CUSUM is memoryless, and its accuracy depends on delta and lambda.\n  quote: \"Low values of δ allow faster detection, at the cost of increasing the number of false alarms.\" and \"Larger λ will entail fewer false alarms, but might miss some changes.\"\n  where: sec 3.2.1, p 15\n- EWMA: Z_t = (1-lambda)Z_{t-1} + lambda*e_t. It signals when Z_t > mu_0 + L*sigma_Zt, where L is the control limit.\n  quote: \"We can signal a change when Zt > µ0 +LσZt.\"\n  where: p 16\n- ADWIN: two sub-windows are compared with a Hoeffding-bound cut, and the older sub-window is dropped when the means differ. It assumes no data distribution. Default confidence delta suggested is 0.2. Memory and time are O(log W) per item thanks to an exponential histogram.\n  number: eps_cut = sqrt((1/2m) ln(4|W|/delta)); delta default 0.2; O(logW)\n  quote: \"δ is a user deﬁned conﬁdence parameter, the suggested default value is 0.2.\" and \"it stores this data in onlyO(logW ) memory andO(logW ) processing time per item, rather than theO(W ).\"\n  where: p 17\n- Detection by comparing a fixed reference window to a sliding recent window with a statistical test (null hypothesis that the distributions are equal), per Kifer et al. 2004 and KL-divergence methods (Dasu 2006, Sebastiao & Gama 2007). Detection windows are conceptually different from training windows.\n  quote: \"If the null hypothesis is rejected, a change is declared at the start of the recent window.\"\n  where: sec 3.2.3, p 16\n- Adaptation strategies, blind vs informed. Blind adaptation (fixed windows, example weighting, incremental learners such as VFDT) forgets at a constant speed and is slow to react. Informed adaptation (triggered by a detector) can replace the model globally or locally (CVFDT grows an alternate subtree).\n  quote: \"The blind approaches forget old concepts at a constant speed independently of whether changes are happening or not.\"\n  where: sec 3.3.2, p 20\n- Memory taxonomy: data management (single example vs multiple examples/windows, fixed or variable size) and forgetting (abrupt: sliding or landmark windows, reservoir sampling; gradual: fading factor alpha, exponential weights w=exp(-lambda*j)). Window-size trade-off: short window is fast but noisy, long window is stable but slow. Recency assumption fails with noise, reoccurring concepts, or slow drift longer than the window.\n  quote: \"A short window reﬂects the current distribution more accurately, thus it can assure fast adaptation in periods with concept changes, but in stable periods too short window worsens the performance of the system.\"\n  where: sec 3.1, pp 11-13\n- Ensembles are grouped into dynamic combination, continuous update, and structural update. Methods named: SEA (fixed-size ensemble, drops worst member), DWM (weights multiplied by beta on mistakes, new expert added when the ensemble errs, prune below theta), AddExp, Learn++.NSE, Wang et al. 2003 (weights = MSE_r - MSE_i), DDD (low- and high-diversity ensembles). Diversity finding from Minku et al. 2010:\n  quote: \"before the drift occurs, ensembles with less diversity obtain lower test errors, but shortly after the drift occurs, highly diverse ensembles are better regardless the type of drift.\"\n  where: sec 3.3.3, pp 21-23\n- Reoccurring concepts: FLORA3 was first. Store old models in a sleeping mode and select among them by meta-learning (Gama & Kosina 2011).\n  where: p 23\n- Loss estimation without a holdout: compare a short-window (or small fading factor) error estimate to a long-term one, and run Page-Hinkley on their ratio (Gama et al. 2013). Fading factors were somewhat faster than sliding windows in the authors' report.\n  quote: \"Their experiments show that drift detection based on the ratio of fading estimates is somewhat faster that with sliding windows.\"\n  where: sec 3.4, p 24\n- Evaluation protocol for streams. Cross-validation is not applicable because it mixes temporal order. Use holdout, prequential (interleaved test-then-train) with landmark window, sliding window or fading factor, and controlled permutations (Zliobaite 2011b) for order bias. Averaging accuracy over time can hide adaptation behaviour.\n  quote: \"cross-validation is not directly applicable to the streaming settings with evolving data because it would mix the temporal order of data.\"\n  where: sec 4.2, pp 26-27\n- Metrics for the detector itself: probability of true detection, probability of false alarms (best expressed as average run length, evaluated only on drift-free data), detection delay, and detection point accuracy. Streaming cost metrics: RAM-Hours (1 GB for 1 hour) and Kappa statistic for imbalance.\n  quote: \"we may use the inverse of the time to detection or the average run length , the expected time between false positive detections\"\n  where: sec 4.1, pp 25-26\n- Significance testing: McNemar statistic M = sign(a-b)(a-b)^2/(a+b), rejects equal performance when M > 6.635 at 0.99 confidence. Nemenyi test with CD = q_alpha*sqrt(k(k+1)/6N) after Friedman, for more than two classifiers.\n  number: 6.635\n  quote: \"At 0.99 conﬁdence it rejects the null hypothesis (the performances are equal) ifM >6.635.\"\n  where: sec 4.2.3, p 28\n- MOA demo (only empirical result): a stream of one million instances from the Random RBF generator with centroid drift speed 1e-4 per instance, scored prequentially with a window of 1000. The sliding-window prequential estimate closely approximates holdout. Hoeffding Tree adapts worst. Ensembles do better but cost more RAM-Hours. Leveraging Bagging has the highest accuracy and Kappa and the highest resource use.\n  number: 1,000,000 instances; speed 10^-4; window 1000. No accuracy values are given in the text.\n  quote: \"Hoeffding Tree is the method with lower capacity of adaption. Ensemble methods perform better than single classiﬁers, but they have a higher cost in RAM-Hours.\"\n  where: App C, App-8\n- Application categories: monitoring and control, management and strategic planning, personal assistance and information, ubiquitous environments. Examples: boiler mass flow, wind power with online training, spam, Netflix, and the DARPA Stanley car. Competition winners credited modelling temporal dynamics.\n  quote: \"it is important ﬁrst to understand the nature and source of drift and only then engineer an effective adaptive learning strategy.\"\n  where: sec 2.5, p 10\n- Benchmark datasets. Synthetic: SEA (thresholds theta = 9, 8, 7, 9.5), STAGGER, rotating hyperplane, RBF, function generator, LED (Bayes accuracy 74%), waveform (86%). Real: ELEC2 electricity (45,312 instances), ECUE spam (>10,000 emails over ~2 years), PAKDD'09 credit (5 years), Airline (~116M records).\n  quote: \"The ELEC2 dataset contains 45, 312 in-stances.\"\n  where: App B, App-3 to App-6\n\nLIMITS\n- The scope is online supervised learning with real drift. The paper says it excludes drift detectable from p(X) alone, tracking drifting priors, novelty detection, and clustering-based semi-supervised methods. It points to other work for those. This is the opposite emphasis from input-feature and data-quality monitors, which are label-free.\n- Labels are assumed to arrive promptly. The paper concedes that feedback may be delayed, biased, costly or absent, and that validation for delayed or unsupervised settings \"only start to be investigated\".\n- It concedes a closed-loop or reinforcement-feedback bias: \"we cannot evaluate and compare the performance of concept drift handling techniques by replaying historical data.\"\n- Open challenges listed: scalability, robustness, interpretable and explainable adaptation, less dependence on labels, adaptive systems that automate the whole knowledge-discovery pipeline, and integrating expert knowledge.\n- No head-to-head benchmark across detectors. The one experiment is a single MOA illustration. Synthetic data is noted as uncertain to reflect real drift.\n- Dated: 2013 text, so it has no deep-learning drift work, no feature-store or ML-platform monitoring practice, and no unsupervised multivariate tests such as MMD or PSI as practised today.\n\nBUILDS ON (as printed)\nPage 1954 (CUSUM, Page-Hinkley); Wald 1947 (SPRT); Basseville and Nikiforov 1993; Schlimmer and Granger 1986 (STAGGER, origin of the term concept drift); Widmer and Kubat 1993 and 1996 (FLORA); Gama et al. 2004 (SPC drift detection); Bifet and Gavalda 2006 and 2007 (ADWIN); Kifer et al. 2004; Domingos and Hulten 2000 (VFDT); Hulten et al. 2001 (CVFDT); Street and Kim 2001 (SEA); Kolter and Maloof 2003 and 2007 (DWM); Littlestone 1987 (Winnow); Tsymbal 2004 (prior survey); Gao et al. 2007 and Kelly et al. 1999 (drift decomposition); Moreno-Torres et al. 2012 (dataset shift); Zliobaite 2011b; Gama et al. 2013 (fading-factor loss estimation); Vitter 1985 (reservoir sampling); Bifet et al. 2011b (MOA).\n\nCODE (verbatim)\n- CUSUM: \"gt = max(0,gt−1 + (xt−δ)) (g0 = 0)\", alarm if \"gt >λ\", then \"setting gt = 0\" (p 15).\n- Page-Hinkley Algorithm 1 (App-1): \"LetmT (t)←mT (t− 1) +R(t)− SR(t)t −δ ; LetMT←min(MT,mT (t)) ; ifmT (t)−MT≥λ then drift←TRUE\". The printed init \"MT← 1\" looks like an extraction fault for a large initial value.\n- SPC Algorithm 3 (App-2): \"ifpt +σt <p min +β×σmin then In-control ... else ifpt +σt <p min +α×σmin then ... Warning ... else Out-control: train a new decision model using the instances in the buffer; ... re-startpmin andσmin\".\n- Prequential error: \"S = ∑nt=1f(ˆyt,yt)\" (p 27). McNemar: \"M =sign(a−b)×(a−b)2/(a+b)\" (p 28).\n\nFIGURES (captions only, text-extracted; not rendered)\n- Fig 1 (p 5): \"Types of drifts: circles represent instances, different colors represent different classes.\" Shows original data vs virtual drift vs real drift, so it shows that only real drift moves the decision boundary.\n- Fig 2 (p 5): \"Patterns of changes over time (outlier is not concept drift).\" Shows sudden, incremental, gradual, reoccurring and outlier.\n- Fig 3 (p 7): \"A generic schema for an online adaptive learning algorithm.\" Shows the predict/diagnose/update loop with memory, learning, loss estimation and change detection.\n- Fig 4-8 (pp 11-23): taxonomy trees for the four modules.\n- Fig 9 (p 28): cross-validating across multiple related data streams.\n- Fig 11 (App-8): hold-out vs prequential landmark vs sliding window of 1000. Fig 12 (App-9): accuracy, Kappa and RAM-Hours on a drifting RBF stream.\n\nPROBLEMS\n- No embedded instructions found.\n- Venue and DOI are not confirmed by the PDF (see SOURCE).\n- Minor extraction faults: garbled math, such as the Eq 1 fraction and ADWIN epsilon_cut. The STAGGER citation prints \"[?]\". Algorithm numbering is out of order in the appendix (4 after 5).\n- Reference list skimmed only, as instructed."
+ "type": "survey",
+ "question": "How can the scattered literature on handling concept drift in online supervised learning be organised into one taxonomy of adaptive learning methods, evaluation methods and applications?",
+ "hypothesis": null,
+ "contributions": [
+  "Characterise the adaptive learning process (predict, diagnose, update) and the types of drift (Sec 2).",
+  "Propose a taxonomy around four modules: memory, change detection, learning, loss estimation (Sec 3).",
+  "Discuss evaluation methodology for adaptive learners on streams (Sec 4).",
+  "Present illustrative applications and a collection of benchmark datasets and a MOA example (Sec 2.5, online appendices B and C)."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Real concept drift is a change in p(y|X); only changes that affect the prediction decision require adaptation; virtual drift is a change in p(X) alone.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Definitions, Sec 2.1; formal drift is exists X: p_t0(X,y) != p_t1(X,y) (Eq 2).",
+   "quote": "From a predictive perspective only the changes that affect the prediction decision require adaptation.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Adaptive learning is a loop of predict, diagnose, update, built from memory, learning, change-detection and loss-estimation modules.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Generic online adaptive learner, Fig 3 and Sec 2.4.",
+   "quote": "Section 3 will discuss the four modules of the system (Data Management, Learning, Change Detection, Loss Estimation) in detail.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.4"
+  },
+  {
+   "claim": "Blind adaptation (fixed windows, example weighting, plain online learners) forgets old concepts at a constant speed whether or not drift happens; informed adaptation reacts to a detector trigger.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.3.2.",
+   "quote": "The blind approaches forget old concepts at a constant speed independently of whether changes are happening or not.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3.2"
+  },
+  {
+   "claim": "Detector memory and processing cost: sequential analysis and SPC are O(1); two-distribution monitoring such as ADWIN is O(log W) to O(W).",
+   "kind": "reported",
+   "source": "Table II of this survey (CUSUM, PH, SPC, ADWIN)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "W is the size of the detection window.",
+   "quote": "Comparing two distributions for change detection requires more computational resources than detecting based on the evolution of indicators, but potentially may give more precise information about the location of change.",
+   "table": null,
+   "note": null,
+   "where": "Table II, Sec 3.2.4"
+  },
+  {
+   "claim": "ADWIN suggested default confidence parameter delta.",
+   "kind": "reported",
+   "source": "Bifet and Gavalda 2006; 2007",
+   "metric": "delta (confidence)",
+   "value": 0.2,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ADWIN drops the older subwindow when two subwindow means differ by more than eps_cut = sqrt((1/2m) ln(4|W|/delta)), m the harmonic mean of the subwindow sizes.",
+   "quote": "the suggested default value is 0.2",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.3"
+  },
+  {
+   "claim": "SPC drift-detector thresholds: Warning at p_i + sigma_i >= p_min + 2*sigma_min (95%), Out-of-Control at >= p_min + 3*sigma_min (99%).",
+   "kind": "reported",
+   "source": "Gama et al. 2004 (SPC drift detection)",
+   "metric": "threshold multiplier",
+   "value": 3,
+   "unit": "sigma_min",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Error rate treated as Binomial approximated by Normal, valid for n > 30 examples; the 3 is the Out-of-Control multiplier, 2 the Warning multiplier.",
+   "quote": "pi + σi ≥pmin + 3 ∗σmin",
+   "table": null,
+   "note": "Algorithm 3 in the appendix uses parameters alpha (out-control) and beta (warning) instead of the literals 3 and 2.",
+   "where": "Sec 3.2.2"
+  },
+  {
+   "claim": "Exponential ageing weight of an example that arrived j steps ago is exp(-lambda*j); lambda = 0 weights all examples equally.",
+   "kind": "reported",
+   "source": "Klinkenberg 2004",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gradual forgetting, full memory.",
+   "quote": "If λ = 0, all the examples have the same weight.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.2"
+  },
+  {
+   "claim": "Reservoir sampling adds the i-th item with probability k/i, k the reservoir size.",
+   "kind": "reported",
+   "source": "Vitter 1985",
+   "metric": "add probability",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sampling as an alternative to windows.",
+   "quote": "When the ith item arrives, it is added to the reservoir with probability p = k/i",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1.2"
+  },
+  {
+   "claim": "Ensemble diversity: before a drift, low-diversity ensembles have lower test error; shortly after a drift, highly diverse ensembles are better regardless of drift type; long after, diversity matters less.",
+   "kind": "reported",
+   "source": "Minku et al. 2010",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ensembles under different drift types.",
+   "quote": "shortly after the drift occurs, highly diverse ensembles are better regardless the type of drift",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3.3"
+  },
+  {
+   "claim": "Weighted ensemble weight w_i = MSE_r - MSE_i, where MSE_r is the MSE of a random classifier.",
+   "kind": "reported",
+   "source": "Wang et al. 2003",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Classifiers trained on sequential stream batches.",
+   "quote": "the weight wi of a classiﬁer Li is wi = MSEr −MSEi",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3.3"
+  },
+  {
+   "claim": "Cross-validation is not directly applicable to evolving streams because it mixes temporal order; use holdout, prequential (test-then-train) or controlled permutations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Evaluation, Sec 4.2.",
+   "quote": "cross-validation is not directly applicable to the streaming settings with evolving data because it would mix the temporal order of data.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "McNemar test between two stream classifiers rejects equality at 0.99 confidence when M exceeds 6.635, M = sign(a-b)(a-b)^2/(a+b).",
+   "kind": "reported",
+   "source": "McNemar 1947",
+   "metric": "M threshold",
+   "value": 6.635,
+   "unit": "chi-square statistic",
+   "baseline_value": null,
+   "n": null,
+   "setup": "a = instances misclassified by the first classifier only, b = by the second only.",
+   "quote": "if M > 6.635",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.3"
+  },
+  {
+   "claim": "Nemenyi critical difference CD = q_alpha * sqrt(k(k+1)/6N) for k learners over N datasets, used after a Friedman rejection.",
+   "kind": "reported",
+   "source": "Demsar 2006",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Comparison of more than two classifiers.",
+   "quote": "CD = qα",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.3"
+  },
+  {
+   "claim": "MOA example: a prequential sliding window of size 1000 approximates hold-out evaluation on a stream of one million instances.",
+   "kind": "measured",
+   "source": null,
+   "metric": "window size",
+   "value": 1000,
+   "unit": "instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MOA, one-million-instance stream; Fig 11 compares hold-out, prequential landmark and prequential sliding window.",
+   "quote": "a prequential evaluation using a sliding window of size 1000",
+   "table": null,
+   "note": "The accuracy curves are only in figures, not in the text.",
+   "where": "App C, Fig 11"
+  },
+  {
+   "claim": "MOA drift experiment: Random RBF stream, centroids move at constant speed 1e-4 per instance; Hoeffding Tree adapts least, ensembles do better but cost more RAM-Hours, Leveraging Bagging scores highest accuracy and Kappa at the highest resource cost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "centroid speed",
+   "value": 0.0001,
+   "unit": "distance per instance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random RBF generator, one million instances, prequential sliding window 1000; learners Hoeffding Tree, Adaptive Hoeffding Tree, ADWIN Bagging, Leveraging Bagging.",
+   "quote": "constant speed 10−4",
+   "table": null,
+   "note": "Fig 12 accuracy, Kappa and RAM-Hours values are not in the text.",
+   "where": "App C, Fig 12"
+  },
+  {
+   "claim": "RAM-Hour: every GB of RAM deployed for 1 hour equals one RAM-Hour, a cost measure based on cloud rental.",
+   "kind": "reported",
+   "source": "Bifet et al. 2010b (as cited)",
+   "metric": "RAM-Hours",
+   "value": 1,
+   "unit": "GB-hour per RAM-Hour",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Streaming resource measure.",
+   "quote": "Every GB of RAM deployed for 1 hour equals one RAM-Hour.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "ELEC2 electricity dataset has 45,312 instances, one per 30 minutes (48 per day); label is price change relative to a 24-hour moving average.",
+   "kind": "reported",
+   "source": "Harries 1999",
+   "metric": "instances",
+   "value": 45312,
+   "unit": "instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Australian New South Wales Electricity Market.",
+   "quote": "The ELEC2 dataset contains 45, 312",
+   "table": null,
+   "note": "Printed as '45, 312' with a space.",
+   "where": "App B.2"
+  },
+  {
+   "claim": "Airline dataset holds about 116 million flight records.",
+   "kind": "reported",
+   "source": "compiled by E. Ikonomovska",
+   "metric": "records",
+   "value": 116,
+   "unit": "million",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Real-world concept-drift data.",
+   "quote": "approximately 116 million",
+   "table": null,
+   "note": null,
+   "where": "App B.2"
+  },
+  {
+   "claim": "LED generator optimal Bayes accuracy is 74% with each attribute inverted with 10% chance; waveform optimal Bayes accuracy is 86%.",
+   "kind": "reported",
+   "source": "Breiman et al. 1984 (CART)",
+   "metric": "optimal Bayes accuracy",
+   "value": 74,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LED seven-segment digit task; waveform is 3 classes, wave21 with 21 attributes, wave40 with 19 added irrelevant ones.",
+   "quote": "accuracy is 74%",
+   "table": null,
+   "note": "Waveform figure is 86% (quote: 'accuracy is 86%').",
+   "where": "App B.1"
+  },
+  {
+   "claim": "SEA generator concepts use boundary x1 + x2 <= theta with theta = 9, 8, 7, 9.5 over three attributes in [0,10], only two relevant.",
+   "kind": "reported",
+   "source": "Street and Kim 2001",
+   "metric": "theta",
+   "value": 9.5,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four abrupt concepts.",
+   "quote": "(4) θ = 9.5",
+   "table": null,
+   "note": null,
+   "where": "App B.1"
+  },
+  {
+   "claim": "The Netflix rating matrix is high-dimensional and about 1% non-zero, so windowing and instance weighting are not the best choice for collaborative filtering drift.",
+   "kind": "reported",
+   "source": "Koren 2010",
+   "metric": "density",
+   "value": 1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Netflix Prize, winning ensemble handled many kinds of change.",
+   "quote": "containing only about 1% of non-zero elements",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5.3"
+  },
+  {
+   "claim": "Data volume generated in 2012 was estimated to surpass 2.8 zetabytes.",
+   "kind": "reported",
+   "source": "Gantz and Reinsel 2012 (IDC)",
+   "metric": "data volume",
+   "value": 2.8,
+   "unit": "zetabytes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Motivation for stream mining.",
+   "quote": "surpass 2.8 zetabytes",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  }
+ ],
+ "limits": [
+  "Covers only real concept drift in online supervised learning with immediate labels; drifting priors, novelty detection and semi-supervised clustering-based methods are excluded (Sec 2.1).",
+  "The authors concede that most methods do not address representation bias in closed-loop systems, so historical replay cannot validate them (Sec 5).",
+  "Delayed or on-demand labels and unsupervised drift handling were only beginning to be studied (Sec 5).",
+  "Predates deep learning and ML-platform monitoring; the methods are classical stream learners (Hoeffding trees, ensembles, ADWIN, SPC).",
+  "The PDF is a pre-publication version: the volume, DOI and 2014 date are not confirmed in it; some citations print as [?] (STAGGER in App B).",
+  "The only experiments are the MOA illustration in App C, with results only in figures."
+ ],
+ "practices": [
+  "Do not mistake outliers or noise for drift; the learner must be adaptive yet robust to noise (Sec 2.2-2.3).",
+  "Understand the nature and source of drift first, then engineer the adaptive strategy (Sec 2.5.4).",
+  "Use a naive baseline such as 'tomorrow will look the same like today' to judge the gain of an adaptive method (Sec 4.1).",
+  "Evaluate change detectors on true detection probability, false alarm rate or average run length, detection delay and detection-point accuracy; count false alarms only on drift-free data (Sec 4.1).",
+  "Use prequential evaluation (test-then-train) with a sliding window or fading factor instead of cross-validation (Sec 4.2.1).",
+  "Use controlled permutations to avoid overfitting to one fixed stream order (Sec 4.2.1).",
+  "Report cost with RAM-Hours and use the Kappa statistic for imbalanced streams (Sec 4.1).",
+  "Test significance with McNemar for two classifiers and Friedman then Nemenyi for several (Sec 4.2.3).",
+  "Use synthetic streams for known drift ground truth and real streams for realism (Sec 4.3, App B).",
+  "Choose window size by the trade-off: short windows adapt fast but hurt in stable periods (Sec 3.1.1)."
+ ],
+ "terms": [
+  {
+   "term": "concept drift",
+   "definition": "Formally between t0 and t1: exists X such that p_t0(X,y) != p_t1(X,y).",
+   "where": "Sec 2.1, Eq 2"
+  },
+  {
+   "term": "real concept drift",
+   "definition": "Changes in p(y|X), with or without change in p(X).",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "virtual drift",
+   "definition": "Change in the data distribution p(X) without affecting p(y|X).",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "population drift",
+   "definition": "Changes in the population from which future samples will be drawn compared with the design sample.",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "drift patterns",
+   "definition": "Sudden/abrupt, incremental, gradual, reoccurring concepts; an outlier is not drift.",
+   "where": "Sec 2.2, Fig 2"
+  },
+  {
+   "term": "incremental algorithm with partial memory",
+   "definition": "Incremental algorithm that may access previous or selected examples.",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "blind vs informed adaptation",
+   "definition": "Blind adapts without explicit change detection; informed reacts to a trigger such as a change detector.",
+   "where": "Sec 3.3.2"
+  },
+  {
+   "term": "prequential evaluation",
+   "definition": "Interleaved test-then-train: each instance tests the model before it is used for training; error is the accumulated sum of a loss S = sum f(y_hat_t, y_t).",
+   "where": "Sec 4.2.1"
+  },
+  {
+   "term": "stability-plasticity dilemma",
+   "definition": "The balance between being stable to handle noise and learning new patterns when learning continuously from a stream.",
+   "where": "Sec 3.3.1"
+  },
+  {
+   "term": "catastrophic forgetting",
+   "definition": "Some neural networks completely forget past patterns when exposed to a new set of patterns.",
+   "where": "Sec 3.3.1"
+  },
+  {
+   "term": "RAM-Hour",
+   "definition": "One GB of RAM deployed for one hour.",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "CUSUM / Page-Hinkley",
+   "definition": "Sequential tests: g_t = max(0, g_{t-1} + (x_t - delta)) alarmed when above lambda; PH uses m_T minus its running minimum M_T against lambda.",
+   "where": "Sec 3.2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Tsymbal 2004, The problem of concept drift",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Named as the most cited earlier survey, now outdated.",
+   "quote": null
+  },
+  {
+   "work": "Widmer and Kubat 1996 (FLORA family)",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "First supervised incremental learners for evolving data; window size adaptation.",
+   "quote": null
+  },
+  {
+   "work": "Schlimmer and Granger 1986 (STAGGER)",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Origin of the term concept drift.",
+   "quote": null
+  },
+  {
+   "work": "Kolter and Maloof 2003; 2007 (DWM)",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Dynamic Weighted Majority ensemble.",
+   "quote": null
+  },
+  {
+   "work": "Bifet and Gavalda 2006; 2007 (ADWIN)",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Adaptive windowing detector.",
+   "quote": null
+  },
+  {
+   "work": "Gama et al. 2004 (SPC drift detection)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Statistical process control detector.",
+   "quote": null
+  },
+  {
+   "work": "Hulten et al. 2001 (CVFDT)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Concept-adapting Hoeffding tree with alternate trees.",
+   "quote": null
+  },
+  {
+   "work": "Street and Kim 2001 (SEA)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "SEA ensemble and synthetic generator.",
+   "quote": null
+  },
+  {
+   "work": "Bifet et al. 2011b (MOA)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Framework for the appendix C experiment.",
+   "quote": null
+  },
+  {
+   "work": "Gama et al. 2013, evaluating on evolving streams (fading factors)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Forgetting-based prequential estimation and PH on error-estimator ratios.",
+   "quote": null
+  },
+  {
+   "work": "Zliobaite 2011b, controlled permutations",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Evaluation on randomised stream copies.",
+   "quote": null
+  },
+  {
+   "work": "Moreno-Torres et al. 2012",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Dataset shift review the survey distinguishes itself from.",
+   "quote": null
+  },
+  {
+   "work": "Harries 1999 (ELEC2); Delany et al. (ECUE spam); Katakis text streams",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Real drift benchmarks listed in App B.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Types of drifts: circles represent instances, different colors represent different classes.",
+   "page": 5,
+   "why": "Shows that only real drift moves the decision boundary."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Patterns of changes over time (outlier is not concept drift).",
+   "page": 5,
+   "why": "Sudden, incremental, gradual, reoccurring and outlier on one axis."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "A generic schema for an online adaptive learning algorithm.",
+   "page": 7,
+   "why": "The memory, learning, loss estimation and change-detection loop."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Four modules of adaptive learning systems with a taxonomy of methods.",
+   "page": 11,
+   "why": "The survey's whole taxonomy on one page."
+  },
+  {
+   "figure": "Fig 12",
+   "caption": "Prequential Evaluation for a RBF stream of a million of instances where the centers are moving with a speed of 10-4.",
+   "page": null,
+   "why": "Accuracy, Kappa and RAM-Hours trade-off of Hoeffding Tree vs ensembles; numbers are only in the plot."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2.1",
+   "snippet": "g_t = max(0, g_{t-1} + (x_t - delta)), g_0 = 0; alarm if g_t > lambda, then g_t = 0",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.2.2",
+   "snippet": "In-Control: p_j + s_j < p_min + 2*s_min; Out-of-Control: p_j + s_j >= p_min + 3*s_min; Warning in between",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.2.2",
+   "snippet": "Z_0 = mu_0, Z_t = (1 - lambda) Z_{t-1} + lambda e_t; signal change when Z_t > mu_0 + L sigma_Zt (EWMA)",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix A, Algorithms 1-7",
+   "snippet": "Pseudocode for Page-Hinkley, ADWIN, SPC, DWM, CVFDT, AddExp (discrete and continuous)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The cached text is the pre-publication version (2013 footer, placeholder DOI), so the 2014 volume/pages and final text are not confirmed.",
+  "Algorithm 1 in the appendix initialises M_T to 1, which looks like a typo.",
+  "Equation text has extraction-mangled symbols; some words use ligatures (fi) in the text cache.",
+  "STAGGER citation prints as [?] in App B.",
+  "No embedded instructions found."
+ ]
 }

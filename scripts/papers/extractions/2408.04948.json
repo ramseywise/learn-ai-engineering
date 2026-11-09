@@ -1,0 +1,349 @@
+{
+ "schema": 1,
+ "key": "2408.04948",
+ "pdf": "ai-engineering/05-graph-engineering/sources/sarmah-2024-hybridrag.pdf",
+ "bib": {
+  "title": "HybridRAG: Integrating Knowledge Graphs and Vector Retrieval Augmented Generation for Efficient Information Extraction",
+  "authors": [
+   "Bhaskarjit Sarmah",
+   "Benika Hall",
+   "Rohan Rao",
+   "Sunil Patel",
+   "Stefano Pasquali",
+   "Dhagash Mehta"
+  ],
+  "first_author": "Sarmah",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.04948",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 52080,
+  "chars_total": 52080,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does combining vector-based retrieval and knowledge-graph retrieval contexts improve RAG question answering over earnings call transcripts compared with either alone?",
+ "hypothesis": "Concatenating VectorRAG and GraphRAG contexts yields more accurate answers than either alone, because each covers the other's failure cases.",
+ "contributions": [
+  "HybridRAG: concatenating VectorRAG and GraphRAG contexts for generation",
+  "A ground-truth Q&A dataset built from Nifty-50 earnings call transcripts",
+  "Comparison of VectorRAG, GraphRAG and HybridRAG on retrieval and generation metrics"
+ ],
+ "method": {
+  "summary": "Earnings call PDFs are chunked; one pipeline embeds chunks into Pinecone (VectorRAG), another builds a KG of LLM-extracted triplets queried by depth-1 DFS from the entity (GraphRAG). HybridRAG concatenates the vector context first and graph context second and feeds it to GPT-3.5-Turbo. All three are scored with modified RAGAS metrics.",
+  "task": "question answering over financial earnings call transcripts (RAG)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Nifty-50 earnings call transcripts, Q1 FY2024 (quarter ending June 2023)",
+    "role": "eval",
+    "size": "50 documents; avg 27 pages, avg 60,000 tokens, avg 16 questions per document; 400 randomly selected questions with their exact responses as ground truth",
+    "split": "no split; all used for evaluation",
+    "source": "scraped from company websites with a custom web scraper; publicly available; not released (no link stated)",
+    "preprocessing": "PyPDFLoader, RecursiveCharacterTextSplitter; KG chunks 2024 chars with 204 overlap (Sec 4.1)"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "answer generator, KG triplet extraction and RAGAS-style judge (judge model inferred: not stated explicitly)"
+    }
+   },
+   {
+    "name": "text-embedding-ada-002",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "1024 (VectorRAG maximum output tokens)",
+   "samples": "inferred: one run per question; no seeds or repeats reported",
+   "prompting": "Q&A prompt template instructing LLM to act as expert Q&A system, use only provided context, not refer to the context; exact text not given",
+   "retrieval": "VectorRAG: Pinecone, chunk size 1024, overlap 0, 'Chunks for Similarity Algorithm' 20, 'Number of Context Retrieved' 4, filters on quarter, year, company. GraphRAG: LangChain NetworkxEntityGraph + GraphQAChain, DFS depth 1 from the entity; 13950 triplets, 11405 nodes, 13883 edges. HybridRAG: concatenate VectorRAG context then GraphRAG context.",
+   "parameters": {
+    "dfs_depth": "1",
+    "vector_chunks_for_similarity": "20",
+    "contexts_retrieved": "4",
+    "kg_chunk_size_chars": "2024 (Sec 4.1) vs 1024 (Table 4)",
+    "kg_chunk_overlap": "204 (Sec 4.1) vs 0 (Table 4)"
+   },
+   "other": {
+    "kg_triplet_format": "['h','type','r','o','type','metadata']; entity descriptions under four words; two-tier LLM chain (abstract of chunk, then entity/relation extraction)",
+    "kg_store": "pickle file"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Faithfulness (F)",
+     "definition": "|V|/|S|: supported statements over statements extracted from the answer by the LLM",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Answer relevance (AR)",
+     "definition": "mean cosine similarity (ada-002 embeddings) between original question and n questions the LLM generates from the answer",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Context precision (CP)",
+     "definition": "RAGAS: sum over ranks of precision@k times relevance indicator, divided by relevant items in top K",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Context recall (CR)",
+     "definition": "fraction of ground-truth sentences attributable to the retrieved context",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "VectorRAG",
+    "GraphRAG"
+   ],
+   "protocol": "RAGAS framework 'modified a bit'; the modifications are not specified; single run; no significance test; LLM-as-judge model not named."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Faithfulness statement extraction",
+    "text": "Given a question and answer, create one or more statements from each sentence in the given answer. question: [question] answer: [answer]",
+    "where": "Sec 2.4.1"
+   },
+   {
+    "purpose": "Answer relevance question generation",
+    "text": "Generate a question for the given answer. answer: [answer]",
+    "where": "Sec 2.4.2"
+   },
+   {
+    "purpose": "Faithfulness statement verification",
+    "text": "Consider the given context and following statements, then determine whether they are supported by the information present in the context. Provide a brief explanation for each statement before arriving at the verdict (Yes/No). Provide a final verdict for each statement in order at the end in the given format. Do not deviate from the specified format. statement: [statement 1] ... statement: [statement n]",
+    "where": "Sec 2.4.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "HybridRAG scores highest answer relevance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer relevance",
+   "value": 0.96,
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 questions from Q1 FY2024 earnings call transcripts of 50 Nifty-50 companies; GPT-3.5-Turbo temp 0; RAGAS-style metrics (modified); single run; VectorRAG 0.91, GraphRAG 0.89",
+   "note": null,
+   "where": "Section 5",
+   "table": "Table 5, row AR, column HybridRAG"
+  },
+  {
+   "claim": "HybridRAG matches GraphRAG on faithfulness, above VectorRAG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "faithfulness",
+   "value": 0.96,
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 questions from Q1 FY2024 earnings call transcripts of 50 Nifty-50 companies; GPT-3.5-Turbo temp 0; RAGAS-style metrics (modified); single run; VectorRAG 0.94",
+   "note": null,
+   "where": "Section 5",
+   "table": "Table 5, row F, column HybridRAG"
+  },
+  {
+   "claim": "GraphRAG has the highest context precision; HybridRAG the lowest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "context precision",
+   "value": 0.96,
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 questions from Q1 FY2024 earnings call transcripts of 50 Nifty-50 companies; GPT-3.5-Turbo temp 0; RAGAS-style metrics (modified); single run; VectorRAG 0.84, HybridRAG 0.79",
+   "note": null,
+   "where": "Section 5",
+   "table": "Table 5, row CP, column GraphRAG"
+  },
+  {
+   "claim": "HybridRAG context precision is lower than VectorRAG, attributed to the larger combined context.",
+   "kind": "measured",
+   "source": null,
+   "metric": "context precision",
+   "value": 0.79,
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 questions from Q1 FY2024 earnings call transcripts of 50 Nifty-50 companies; GPT-3.5-Turbo temp 0; RAGAS-style metrics (modified); single run; VectorRAG 0.84",
+   "note": "Authors also say precision depends on ordering: graph context is appended last so answers drawn from it score lower precision.",
+   "where": "Section 5",
+   "table": "Table 5, row CP, column HybridRAG"
+  },
+  {
+   "claim": "VectorRAG and HybridRAG reach perfect context recall; GraphRAG lags.",
+   "kind": "measured",
+   "source": null,
+   "metric": "context recall",
+   "value": 1,
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 questions from Q1 FY2024 earnings call transcripts of 50 Nifty-50 companies; GPT-3.5-Turbo temp 0; RAGAS-style metrics (modified); single run; GraphRAG 0.85",
+   "note": null,
+   "where": "Section 5",
+   "table": "Table 5, row CR, column VectorRAG"
+  },
+  {
+   "claim": "GraphRAG context recall is lowest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "context recall",
+   "value": 0.85,
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400 questions from Q1 FY2024 earnings call transcripts of 50 Nifty-50 companies; GPT-3.5-Turbo temp 0; RAGAS-style metrics (modified); single run",
+   "note": null,
+   "where": "Section 5",
+   "table": "Table 5, row CR, column GraphRAG"
+  },
+  {
+   "claim": "Qualitative: GraphRAG better on extractive questions, VectorRAG on abstractive ones; GraphRAG can fail when no entity is named; hybrid falls back to whichever works.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same dataset; no per-question-type numbers given",
+   "note": null,
+   "where": "Section 5",
+   "table": "Overall GraphRAG performs better in extractive questions compared to VectorRAG."
+  }
+ ],
+ "limits": [
+  "Single proprietary-ish dataset of 400 questions from 50 Indian earnings calls; not released; no variance, seeds or significance tests.",
+  "Ground-truth answers are the management's actual responses in the transcript, and the questions come from the same documents.",
+  "Differences are small (0.94 vs 0.96 faithfulness) and judged by an unnamed LLM judge with 'modified' RAGAS.",
+  "HybridRAG lowers context precision (0.79); concatenation grows context and order affects precision.",
+  "Only baselines are the authors' own VectorRAG and GraphRAG; no other GraphRAG (e.g. Edge et al.) is run; no ablation of ordering, depth or k.",
+  "Authors list future work: multi-modal inputs, numerical analysis, better financial metrics, real-time data.",
+  "Exact KG extraction prompt omitted for space."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HybridRAG",
+   "definition": "concatenation of contexts retrieved by VectorRAG and GraphRAG, fed to the LLM for the final response",
+   "where": "Sec 2.3.1, 4.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lewis et al., Retrieval-augmented generation",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "VectorRAG basis",
+   "quote": null
+  },
+  {
+   "work": "Edge et al., From local to global: a graph RAG approach",
+   "year": 2024,
+   "arxiv": "2404.16130",
+   "relation": "extends",
+   "note": "GraphRAG basis; its LLM-judged metrics discussed",
+   "quote": null
+  },
+  {
+   "work": "RAGAS",
+   "year": 2023,
+   "arxiv": "2309.15217",
+   "relation": "uses-method",
+   "note": "evaluation framework, modified",
+   "quote": null
+  },
+  {
+   "work": "Li and Passino, FinDKG",
+   "year": 2024,
+   "arxiv": "2407.10909",
+   "relation": "uses-method",
+   "note": "KG triplet extraction prompt baseline",
+   "quote": null
+  },
+  {
+   "work": "Sarmah et al., Towards reducing hallucination in extracting information from financial reports",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "metadata inclusion",
+   "quote": null
+  },
+  {
+   "work": "FinanceBench",
+   "year": 2023,
+   "arxiv": "2311.11944",
+   "relation": "related",
+   "note": "rejected as dataset; no KG context",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 5",
+   "caption": "Performance Metrics for Different RAG Pipelines.",
+   "page": 5,
+   "why": "Whole result in four rows by three methods"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A schematic diagram describing knowledge graph creation process of GraphRAG.",
+   "page": 3,
+   "why": "KG build pipeline"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Chunk size and overlap for KG construction differ between Sec 4.1 (2024 / 204) and Table 4 (1024 / 0).",
+  "Sec 4.3 says 'three metrics' then lists four.",
+  "400 questions vs avg 16 per doc x 50 docs = 800; sampling is described as random.",
+  "Reference list entries [32]-[33] appear mislabelled versus in-text names (TAT-QA/FIQA); source ledger text only."
+ ]
+}

@@ -148,7 +148,7 @@
 
 ## AI Papers of the Week
 
-Recent papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`). Newest first.
+Papers added to the pillar after the first pass, each folded into the note named in its last column. Many came from the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`). Newest first.
 
 | | Paper | arXiv | Chapters |
 |---|---|---|---|

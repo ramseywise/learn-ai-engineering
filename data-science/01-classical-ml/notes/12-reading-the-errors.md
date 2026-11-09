@@ -236,11 +236,7 @@ female  n 2727  prevalence 0.211  PPV 0.379  FPR 0.318  FNR 0.273  FPR from the 
         95% Wilson: FPR 0.299 to 0.338, FNR 0.238 to 0.311
 ```
 
-The intervals overlap here, so this table doesn't show a clear difference. But some gap has to appear in general, and [Chouldechova](https://doi.org/10.1089/big.2016.0047) (*Big Data* 2017) shows why. Whenever the base rates differ, these quantities are tied by an identity:
-
-$$FPR = \frac{p}{1-p}\cdot\frac{1-PPV}{PPV}\cdot(1-FNR)$$
-
-where $p$ is the prevalence and $PPV$ is precision. The "FPR from the identity" column above recovers the observed rate exactly. Chouldechova's conclusion: "if the PPV is the same across groups—but the prevalence differs between groups, the instrument cannot achieve equal false positive and false negative rates across those groups." So you have to choose which equality you want, and there is no setting that gives all of them. The result concerns equal precision at a threshold. Calibration doesn't imply it, since "well-calibrated scores can fail to satisfy predictive parity at a given threshold", and the paper points to concurrent work by Kleinberg et al. for the related result on calibration, which isn't read here. In lending, which gap is acceptable is a legal and policy question, so report the numbers to the people who decide.
+The intervals overlap here, so this table doesn't show a clear difference. But some gap has to appear in general. Whenever the base rates differ, the rates are tied by an identity, $FPR = \frac{p}{1-p}\cdot\frac{1-PPV}{PPV}\cdot(1-FNR)$ with $p$ the prevalence, and the "FPR from the identity" column above recovers the observed rate exactly. It follows that groups with different prevalence can't have equal precision and equal error rates at once, so you have to choose which equality you want. Chouldechova's result, its limits and the other fairness definitions are in [note 15](15-fairness-in-automated-scoring.md#the-impossibility-in-numbers). In lending, which gap is acceptable is a legal and policy question, so report the numbers to the people who decide.
 
 ### Step 5: diagnose
 
@@ -402,7 +398,7 @@ After 20 rounds the reused half reports a gain of 16.5 per 1,000, and the fresh 
 | Profile the cells | Missed chunks against found chunks, and distractors against useful ones ([GA 02/01](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#measure-each-stage), [GA 08/07](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md#retrieval-metrics)) |
 | Read rows | [Read the transcripts](../../../generative-ai/08-eval/notes/09-reading-results.md#read-the-transcripts), random ones before the dramatic ones |
 | Slice and count | [Slice before you conclude](../../../generative-ai/08-eval/notes/09-reading-results.md#slice-before-you-conclude), with the correction for many slices |
-| Eyeball and blackbox | [Dev and held-out eval sets](../../../generative-ai/08-eval/notes/03b-splits-contamination-and-public-benchmarks.md#splits-versioning-contamination). A prompt rewritten from failures it was scored on is the noise fix again ([AIE 01/09](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md)) |
+| Eyeball and blackbox | [Dev and held-out eval sets](../../../generative-ai/08-eval/notes/03b-splits-contamination-and-public-benchmarks.md#splits-versioning-contamination). A prompt rewritten from failures it was scored on is the noise fix again ([AIE 01/08](../../../ai-engineering/01-prompt-engineering/notes/08-evaluating-prompts.md)) |
 | Fix classes, not rows | A rule that names one failing trace in the system prompt is a row fix. Check it with [verification loops](../../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) on traces it hasn't seen |
 
 Prompts and judge instructions are especially easy to overfit, because they take no training run and because a sentence that names a failing case reads as a sensible improvement.
@@ -424,7 +420,7 @@ Prompts and judge instructions are especially easy to overfit, because they take
 ## Try it
 
 1. Swap the positive class to "will repay". What is a false positive now, and which column of the step 1 table changes meaning?
-2. Check Chouldechova's identity by hand for women on the blackbox set: prevalence 0.211, PPV 0.379 and FNR 0.273.
+2. Check the identity by hand for women on the blackbox set: prevalence 0.211, PPV 0.379 and FNR 0.273.
 3. Limits under 50k carry 33.1% of eyeball-set cost. What is the most any fix limited to that slice could save per 1,000 applicants, from a cost of 590.0?
 4. On the eyeball set, "limit: under 50k" has $p=0.015$, the third smallest of 21. Show by hand why BH at $q=0.05$ doesn't count it as a discovery.
 5. A colleague wants to try a second feature idea, now that the first has failed. Which set can they score it on, and which can't they?
@@ -451,7 +447,7 @@ Prompts and judge instructions are especially easy to overfit, because they take
 | Slice Finder's method? | One-sided Welch's t-test against the counterpart, an effect-size threshold, and α-investing for interactive use. |
 | What is the ceiling? | A slice's share of all errors or cost: the most a fix for it could gain. |
 | Can a model that doesn't use sex treat the sexes differently? | Yes. Features and base rates differ. Report error rates by group on columns the model can't see. |
-| What does Chouldechova's result say? | With equal PPV and different prevalence, FPR and FNR can't both be equal. It concerns predictive parity at a threshold, not calibration. |
+| Can groups with different prevalence have equal precision and equal error rates? | No: with equal PPV and different prevalence, FPR and FNR can't both be equal (Chouldechova, [note 15](15-fairness-in-automated-scoring.md#the-impossibility-in-numbers)). |
 | How do you avoid fitting to errors you have read? | Split reading from scoring, fix classes with a named mechanism and write it down first, correct for many tests, count rounds, check feature dates. |
 | What did the noise fix show? | Over 30 seeds, +18.6 on the eyeball set and −8.3 on the blackbox set. |
 | Does a fix from a real mechanism always work? | No. Ours gained 4.1 on the eyeball set and lost 1.1 on the blackbox set. Errors that look like correct rows point to missing information. |

@@ -1,19 +1,804 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2404.02060",
  "pdf": "ai-engineering/02-context-engineering/sources/li-2024-long-context-llms-struggle-long.pdf",
  "bib": {
-  "title": "Long-context LLMs Struggle with Long In-context Learning",
-  "first_author": "Tianle Li",
-  "year": "2024",
-  "venue": null,
+  "title": "LongICLBench: Long-context LLMs Struggle with Long In-context Learning",
+  "authors": [
+   "Tianle Li",
+   "Ge Zhang",
+   "Quy Duc Do",
+   "Xiang Yue",
+   "Wenhu Chen"
+  ],
+  "first_author": "Li",
+  "year": 2024,
+  "venue": "preprint (Preprint. Under review.)",
   "arxiv": "2404.02060",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 64533,
+  "chars_total": 64533,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"LongICLBench: Long-context LLMs Struggle with Long In-context Learning\". Tianle Li, Ge Zhang, Quy Duc Do, Xiang Yue, Wenhu Chen. Affiliations are University of Waterloo, Carnegie Mellon University (Yue) and Vector Institute, Toronto. It is an arXiv preprint (2404.02060v3, cs.CL, 12 Jun 2024). No venue is printed in the PDF.\n\nCOVERAGE: All 19 pages and all 64,513 extracted chars were read: body, Tables 1-10, appendix A.1-A.6, and the references (skimmed). Figures were not viewed. Figure content is known only from the text and the captions in the extraction.\n\nCLAIMS (ranked)\n- Claim: On the hardest task, Discovery (174 labels), nearly every model scores about zero, and only Gemini-1.5-Pro is clearly above zero.\n  number: Gemini-1.5-Pro 14.0 at 10K tokens, then 6.0, 3.2, 1.8, 2.8 at 20K to 50K. GPT4-turbo 1.5 at 10K, then 0.5. GPT4o 2.8, Claude3-Opus 1.2. Fine-tuned SoTA is 87.4.\n  setup: 500 test examples per dataset, 1 to 5 rounds of demonstrations (1 round is one example per label), and 15 models. Metric is accuracy.\n  quote: \"On the most difficult extreme-label classification task Discovery (Sileo et al., 2019), all LLMs achieve close-to-zero performance except Gemini-1.5-Pro with 14% accuracy. In contrast, a fine-tuned BERT model (Kenton & Toutanova, 2019) can achieve 87%.\"\n  where: p.3 (intro), Table 6 on p.8.\n- Claim: Performance falls as task difficulty (label count and demonstration length) rises, and the strongest models reach a ceiling between DialogRE and Discovery.\n  number: none stated as one figure. GPT4-turbo scores 84.4 (BANKING77, 5R), 84.2 (TacRED, 5R), 57.7 (DialogRE, 5R) and 0.5 (Discovery, 5R).\n  setup: same as above.\n  quote: \"Our initial hypothesis suggests that the strongest LLMs like GPT-4-turbo are capped at a certain complexity level between DialogRE and Discovery.\"\n  where: p.6, Tables 3-6.\n- Claim: More demonstrations help only up to a point. Most models peak mid-length (about 13K-25K tokens) and then degrade or fluctuate. Only GPT4-turbo and GPT4o consistently improve on TacRED and DialogRE.\n  number: Claude3-Opus on BANKING77 goes 62.2 (7K), 43.8 (9K), 26.0 (14K). On TacRED it goes 74.1 (7K), 35.4 (10K). On DialogRE it goes 30.3 (13K), 15.3 (19K), 0.8 (25K), 0 (32K). Mistral on TacRED falls 53.3 to 42.3 from 4K to 18K. Gemini-1.5-Pro on BANKING77 goes 82.2 (7K) to 70.4 (14K).\n  setup: as above. These are the paper's cases of late-context degradation.\n  quote: \"only GPT4-turbo and GPT4o can consistently benefit from more demonstrations, all of the other models reach their peak at the middle with context length around 13K to 25K.\"\n  where: p.6, Tables 3-5.\n- Claim: Grouping same-label demonstrations together lowers accuracy for most models, and the drop can be very large. Models handle labels near the end of the prompt best.\n  number: On TacRED 3-round (10K tokens), scattered to grouped: Mistral 51.6 to 5.1 (-46.5). Qwen 45.2 to 33.0 (-12.2). GPT4-turbo 79.5 to 59.2 (-20.3). Gemini-1.5-Pro 79.6 to 57.3 (-22.3). ChatGLM3 38.9 to 35.6 (-3.3).\n  setup: TacRED, 41 labels x 3 = 123 instances, base models except the API models. LLaMA-2-7B-32K (+2.6) and RWKV (+2.6) rose slightly, at near-zero baselines.\n  quote: \"even the GPT4-turbo and Gemini1.5-Pro are not immune to the challenges posed by grouped distributions, experiencing a notable decline in performance by 20.3% and 22.3%.\"\n  where: p.9 (section 4.2), Table 10 on p.19.\n- Claim: Some models (Mistral, InternLM2) can use only the labels at the end of the prompt once examples are grouped. The abstract describes this as a bias toward later labels.\n  number: none beyond Table 10. InternLM2 goes 15.5 to 4.8.\n  setup: TacRED, grouped distribution.\n  quote: \"demonstrate high sensitivity to the distribution of instances, only handling instances with labels positioned at the end of the prompt.\"\n  where: p.9. The abstract on p.1 says \"a bias towards labels presented later in the sequence\".\n- Claim: Non-Transformer models (RWKV, Mamba) perform far behind the Transformers. Mamba-2.8B scores 0 on every task.\n  number: RWKV on BANKING77 gets 8.6, 21.2, 0.4, 0, 0. Mamba-2.8B gets 0 on all.\n  setup: RWKV-5-World 3B (Table 2 lists 3B; the result tables list 7B) and Mamba-2.8B. Their training windows are only 4K and 2K, though the paper lists the support length as ∞.\n  quote: \"Among the open-source models, the non-Transformer-based models, like RWKV and Mamba (Peng et al., 2023a; Gu & Dao, 2023), perform far behind the Transformer-based models.\"\n  where: p.3, Tables 3-6.\n- Claim: A claimed context window does not guarantee usable long-context ability. Several open models with 100K-200K windows score about zero at 2K-14K tokens.\n  number: LLaMA-2-7B-LongLora (100K) scores 0 on every column of BANKING77. Yi-6B-200K goes 25.8, 0, 0, 0, 1.2. InternLM2 (200K) on TacRED falls 29.6 to 8.0. Gemma-7B (8K) is 0 on BANKING77.\n  setup: base models, extreme-label ICL.\n  quote: none beyond the table rows (Table 3: \"LLaMA-2-7B-LongLora 7B 100K 0 0 0 0 0\"). The paper does not discuss the cause.\n  where: Table 3, p.7.\n- Claim: Passkey and needle retrieval and QA are weak tests of long context. Passkey is reported as passed (99%+), and QA can be answered from a short snippet.\n  number: \"99%+\"\n  quote: \"Several LLMs achieve 99%+ on this synthetic task.\"\n  where: p.2 (intro). The paper cites this without testing it.\n- Claim: Some models' accuracy is nearly linear in demonstration length.\n  number: none.\n  quote: \"the performance of Qwen and Mistral is almost linear w.r.t the demonstration length.\"\n  where: p.6.\n\nOther numbers\n- Benchmark: 6 datasets, 28 to 174 classes, 2K to 50K tokens (Table 1). The datasets are GoEmotions (28 labels), BANKING77 (77), TacRED (41), Few-NERD (66), DialogRE (36) and Discovery (174).\n- Discovery takes 61 tokens per example, so 1 shot per label already exceeds 10K tokens.\n- Best scores at 5 rounds, against fine-tuned SoTA: BANKING77 GPT4-turbo 84.4 (SoTA 94.4). TacRED GPT4-turbo 84.2 and Gemini 82.3 (SoTA 76.8, so beaten). DialogRE GPT4-turbo 57.7 (SoTA 77.1). Few-NERD GPT4-turbo 56.8 (SoTA 70.9). GoEmotions GPT4-turbo 32.0 (SoTA 58.9).\n- Few-NERD (Table 8) is the one dataset where most Transformer models still improve with length. GoEmotions (Table 7) gets no benefit from more shots.\n\nLIMITS\n- Authors concede: \"LongICLBench currently encompasses only one type of evaluation application, specifically on extreme-label classification with long in-context learning\" (A.6, p.18).\n- Only 500 test examples per dataset and a single sampled demonstration set shared by all models. There are no seeds, variance or confidence intervals.\n- The position analysis is a pilot on one dataset (TacRED, 3 rounds) and has no controlled position sweep. The \"later-label bias\" is read off scatter plots.\n- Open models are about 7B base models (not instruction-tuned) and the API models are instruction-tuned. This confounds model-class comparisons. Zeros may partly reflect the models failing the output format, not a lack of understanding, and the paper does not separate the two.\n- Table 6 marks some cells ✗ (out of memory or over-length, not explained).\n- Dated: the models are GPT-4-turbo, GPT-4o, Claude 3 Opus and Gemini-1.5-Pro as of spring 2024. Newer models are not covered. The causal \"reasoning\" explanation in the abstract is asserted without an experiment.\n- The Table 2/Table 3 labels for RWKV differ (3B versus 7B), and its support length is listed as 4K in some tables and 1K in others.\n\nBUILDS ON\n- Lost in the Middle (Liu et al., 2023) for the position analysis.\n- Extreme-label ICL (Anil et al., 2022; Milios et al., 2023).\n- Datasets: Demszky 2020, Casanueva 2020, Zhang 2017, Ding 2021, Yu 2020, Sileo 2019.\n- Related long-context benchmarks: LongBench (Bai 2023b), L-Eval (An 2023), LooGLE (Li 2023b), ∞Bench (Zhang 2024), Long-Range Arena (Tay 2021), and passkey (Mohtashami & Jaggi 2023).\n- Context-extension methods: RoPE (Su), ALiBi (Press), Position Interpolation (Chen 2023a), LongLoRA, LongRoPE (Ding 2024), Mamba (Gu & Dao 2023), RWKV (Peng 2023a).\n\nCODE: none. The prompt templates are in Table 9 on p.18: \"Given a customer service query, please predict the intent of the query. The predicted answer must come from the demonstration examples with the exact format.\"\n\nFIGURES\n- Fig 1 (p.1): accuracy against context length per model across difficulty levels. It shows the rise-then-fall pattern.\n- Fig 2 (p.2): passkey and QA tasks versus extreme-label ICL. It shows why the benchmark needs the whole prompt.\n- Fig 3 (p.3): representative models across datasets at 9K, 18K, 32K and 41K tokens.\n- Fig 4 (p.9): per-class accuracy against prompt position, scattered versus grouped. It is the best visual for the position effect.\n- Figs 5-6: the same plots for other models.\n\nPROBLEMS: No embedded instructions found. The extraction is clean, but figure plots are not extractable as text. The venue is unconfirmed, so cite it as an arXiv preprint. The target note, /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/02-context-engineering/notes/11-failure-modes.md, exists. My grep for \"iclbench\" or \"li 2024\" returned no match, so it appears not to cite this paper yet. I did not read the note itself."
+ "type": "benchmark",
+ "question": "Can long-context LLMs comprehend an entire long input, tested via in-context learning on extreme-label classification tasks of increasing label-space size and length?",
+ "hypothesis": "Initial hypothesis: the strongest LLMs like GPT-4-turbo are capped at a certain complexity level between DialogRE and Discovery.",
+ "contributions": [
+  "Identify ICL on extreme-label classification as a testbed for long-context ability and build LongICLBench.",
+  "Evaluate recent long-context LLMs at gradually increasing difficulty and find sensitivity to instance position in the prompt."
+ ],
+ "method": {
+  "summary": "Six extreme-label classification datasets (28 to 174 classes, 2K-50K tokens) are turned into few-shot prompts of 1-5 rounds (one example per label per round). 15 long-context LLMs (11 open ~7B, 4 API) are evaluated on 500 test examples per dataset. A TacRED pilot compares scattered vs grouped demonstration order.",
+  "task": "extreme-label in-context classification / relation extraction / NER",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GoEmotions",
+    "role": "eval",
+    "size": "28 classes, 28 tokens/shot, total [1K,4K]",
+    "split": "500 test examples sampled evenly by label; demos 1-5 rounds (one round = one example per label)",
+    "source": "Demszky et al. 2020, 58k Reddit comments",
+    "preprocessing": "subset of classes kept so each dataset fits ~1-5 rounds; evenly sampled by label"
+   },
+   {
+    "name": "BANKING77",
+    "role": "eval",
+    "size": "77 classes, 28 tokens/shot, total [2K,11K]",
+    "split": "500 test examples sampled evenly by label; demos 1-5 rounds (one round = one example per label)",
+    "source": "Casanueva et al. 2020, 13,083 examples",
+    "preprocessing": "subset of classes kept so each dataset fits ~1-5 rounds; evenly sampled by label"
+   },
+   {
+    "name": "TacRED",
+    "role": "eval",
+    "size": "41 classes, 80 tokens/shot, total [4K,18K]",
+    "split": "500 test examples sampled evenly by label; demos 1-5 rounds (one round = one example per label)",
+    "source": "Zhang et al. 2017, 106,264 examples",
+    "preprocessing": "subset of classes kept so each dataset fits ~1-5 rounds; evenly sampled by label"
+   },
+   {
+    "name": "Few-NERD",
+    "role": "eval",
+    "size": "66 classes, 61 tokens/shot, total [5K,23K]",
+    "split": "500 test examples sampled evenly by label; demos 1-5 rounds (one round = one example per label)",
+    "source": "Ding et al. 2021",
+    "preprocessing": "subset of classes kept so each dataset fits ~1-5 rounds; evenly sampled by label"
+   },
+   {
+    "name": "DialogRE",
+    "role": "eval",
+    "size": "36 classes, 226 tokens/shot, total [8K,32K]",
+    "split": "500 test examples sampled evenly by label; demos 1-5 rounds (one round = one example per label)",
+    "source": "Yu et al. 2020, Friends dialogues",
+    "preprocessing": "subset of classes kept so each dataset fits ~1-5 rounds; evenly sampled by label"
+   },
+   {
+    "name": "Discovery",
+    "role": "eval",
+    "size": "174 classes, 61 tokens/shot, total [10K,50K]",
+    "split": "500 test examples sampled evenly by label; demos 1-5 rounds (one round = one example per label)",
+    "source": "Sileo et al. 2019",
+    "preprocessing": "subset of classes kept so each dataset fits ~1-5 rounds; evenly sampled by label"
+   }
+  ],
+  "models": [
+   {
+    "name": "Gemma-7B-base",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Gemma",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 8K, support 8K",
+    "other": {
+     "strategy": "RoPE + LF"
+    }
+   },
+   {
+    "name": "LLaMA-2-7B-32K",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "LLaMA-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 32K, support 32K",
+    "other": {
+     "strategy": "Position Interpolation"
+    }
+   },
+   {
+    "name": "ChatGLM3-6B-32K",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": "ChatGLM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 32K, support 32K",
+    "other": {
+     "strategy": "Position Encoding Scheme"
+    }
+   },
+   {
+    "name": "Qwen-1.5-7B-base",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Qwen",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 32K, support 32K",
+    "other": {
+     "strategy": "NTK-Aware Interpolation"
+    }
+   },
+   {
+    "name": "Mistral-7B-v0.2-base",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Mistral",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 32K, support 32K",
+    "other": {
+     "strategy": "LF"
+    }
+   },
+   {
+    "name": "LLaMA-2-7B-LongLora",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "LLaMA-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 100K, support 100K",
+    "other": {
+     "strategy": "Shifted Short Attention"
+    }
+   },
+   {
+    "name": "Yi-6B-200K",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": "Yi",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 200K, support 200K",
+    "other": {
+     "strategy": "Position Interpolation + LF"
+    }
+   },
+   {
+    "name": "InternLM2-7B-base",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "InternLM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 32K, support 200K",
+    "other": {
+     "strategy": "Dynamic NTK"
+    }
+   },
+   {
+    "name": "Long-LLaMA-code-7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "LLaMA-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 8K, support 256K",
+    "other": {
+     "strategy": "Focused Transformer"
+    }
+   },
+   {
+    "name": "RWKV-5-World",
+    "role": "evaluated",
+    "params": "3B (Table 2) / 7B (Tables 3-8)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 4K, support unbounded",
+    "other": {
+     "strategy": "Attention-free Model",
+     "note": "Table 2 lists 3B; Tables 3-8 list 7B; Table 4/3 Support differ (1K vs 4K)"
+    }
+   },
+   {
+    "name": "Mamba-2.8B",
+    "role": "evaluated",
+    "params": "2.8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train 2K, support unbounded",
+    "other": {
+     "strategy": "State Space Model"
+    }
+   },
+   {
+    "name": "GPT4-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "GPT-4",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train -, support 128K",
+    "other": {
+     "strategy": "-"
+    }
+   },
+   {
+    "name": "GPT4o",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "GPT-4",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train -, support 128K",
+    "other": {
+     "strategy": "-"
+    }
+   },
+   {
+    "name": "Claude3-Opus",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "Claude3",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train -, support 200K",
+    "other": {
+     "strategy": "-"
+    }
+   },
+   {
+    "name": "Gemini-1.5-Pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "Gemini",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "train -, support 10M",
+    "other": {
+     "strategy": "-"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per model, dataset and round count; same example set for all models; seeds not stated",
+   "prompting": "Per-dataset template (Table 9): instruction plus n rounds of labelled demonstrations, answer must come from demonstration labels",
+   "retrieval": null,
+   "parameters": {
+    "rounds": "1 to 5 (1 to 5 shots per label)",
+    "test_examples_per_dataset": 500,
+    "pilot_tacred": "3 rounds, 41 labels x 3 = 123 demos, scattered vs grouped"
+   },
+   "other": {
+    "hardware": "open-source models on eight NVIDIA RTX A6000 GPUs, weights from HuggingFace; API models via official docs",
+    "base_models": "base models before instruction tuning except API models"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "used for entity recognition and relation extraction datasets (Few-NERD, TacRED, DialogRE)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "used for the other datasets (GoEmotions, BANKING77, Discovery)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SoTA fine-tuned: RoBERTa+ICDA (BANKING77) 94.4",
+    "DeepStruct (TacRED) 76.8",
+    "HiDialog (DialogRE) 77.1",
+    "MTL (Discovery) 87.4",
+    "BERT (GoEmotions) 58.9",
+    "PL-Marker (Few-NERD) 70.9"
+   ],
+   "protocol": "Single run, 500 test examples sampled evenly by label; no significance test; mean tokens per dataset in Table 1"
+  },
+  "availability": {
+   "code": "https://github.com/TIGER-AI-Lab/LongICLBench",
+   "weights": null,
+   "data": "LongICLBench under MIT license"
+  },
+  "prompts": [
+   {
+    "purpose": "GoEmotion",
+    "text": "Given a comment, please predict the emotion category of this comment. The prediction answer must come from the demonstration examples with the exact format. The examples are as follows: {comment: \"...comment...\" emotion category: \"...emotion...\"} x repeat n times",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "BANKING77",
+    "text": "Given a customer service query, please predict the intent of the query. The predicted answer must come from the demonstration examples with the exact format. The examples are as follows: {service query: \"...service...\" intent category: \"...intent...\"} x repeat n times",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "TacRED",
+    "text": "Given a sentence and a pair of subject and object entities within the sentence, please predict the relation between the given entities. The examples are as follows: {sentence: \"...sentence... the subject is \"...subject...\" the object is \"...object...\" the relation between the two entities is: \"...relation...\"} x repeat n times",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "Few-NERD",
+    "text": "Given the sentence, please find the name entities in the sentence and their corresponding entity types in the strict format of the given examples as following (Entity: EntityType): {\"...entity...\": \"...entity type...\"} x repeat n times",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "DialogRE",
+    "text": "Given the dialogue, please find the name pair entities in the dialogue and their corresponding relation types in the strict format of given examples as following (note that the number of entities has to strictly have the same value as the number of respective relation): {Dialogue: \"...dialogue...\" The list of entity pairs are \"...\" The \"...number of pairs...\" respective relations between each entity pair are: \"...\"} x repeat n times",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "Discovery",
+    "text": "Given two sentence1 and sentence2, please predict the conjunction word between the two sentences. The predicted answer must come from the demonstration examples with the exact format. The examples are as follows: {\"...sentence1...\" ( ) \"...sentence2...\" the conjunction word in ( ) is \"...conjunction...\"} x repeat n times",
+    "where": "Table 9"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "we sample 500 examples from the test set of each dataset",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Gemini-1.5-Pro is the only model clearly above zero on Discovery (174 labels), at 14% accuracy with 1 round (10K tokens); it falls to 6.0, 3.2, 1.8, 2.8 at 20K-50K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "14.0",
+   "unit": "accuracy %",
+   "baseline_value": "87.4 (SoTA MTL)",
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds; Discovery",
+   "quote": null,
+   "table": "Table 6, row Gemini-1.5-Pro, column 1R (10K)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Abstract/intro: on Discovery all LLMs get close to zero except Gemini-1.5-Pro with 14% accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "14%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discovery, 174 labels",
+   "quote": "all LLMs achieve close-to-zero performance except Gemini-1.5-Pro with 14% accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "A fine-tuned BERT model reaches 87% on Discovery, versus near zero for in-context LLMs.",
+   "kind": "reported",
+   "source": null,
+   "metric": "accuracy",
+   "value": "87%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discovery; fine-tuned BERT (Table 6 lists SoTA MTL 87.4)",
+   "quote": "In contrast, a fine-tuned BERT model (Kenton & Toutanova, 2019) can achieve 87%.",
+   "table": null,
+   "note": "Table 6 labels the 87.4 row 'SoTA (MTL)', the intro attributes 87% to fine-tuned BERT.",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "GPT4-turbo scores 1.5 at 1 round on Discovery then 0.5 for 2-5 rounds; GPT4o 2.8 then 0.8, 0.8, 0.6, 0.4; Claude3-Opus 1.2 then 0.6, 0.6, 0.6, 0.2; all open-source models are 0 (ChatGLM3 1.0 at 2R, RWKV 0.2 at 2R).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "1.5",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds; Discovery",
+   "quote": null,
+   "table": "Table 6, row GPT4-turbo, column 1R",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Claude3-Opus on DialogRE collapses with context: 16.8 (8K), 30.3 (13K), 15.3 (19K), 0.8 (25K), 0 (32K).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "0",
+   "unit": "F1 % at 32K",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds; DialogRE",
+   "quote": null,
+   "table": "Table 5, row Claude3-Opus, columns 1R-5R (16.8, 30.3, 15.3, 0.8, 0)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "GPT4-turbo on DialogRE rises monotonically: 42.9, 47.8, 52.0, 55.9, 57.7 from 8K to 32K; SoTA HiDialog 77.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "57.7",
+   "unit": "F1 %",
+   "baseline_value": "77.1",
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds; DialogRE",
+   "quote": null,
+   "table": "Table 5, row GPT4-turbo, column 5R",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Claude3-Opus on BANKING77 degrades with more demos: 60.0, 62.6, 62.2, 43.8, 26.0 (2K to 14K).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "26.0",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds; BANKING77",
+   "quote": null,
+   "table": "Table 3, row Claude3-Opus, column 5R",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "LLaMA-2-7B-LongLora scores 0 at every length (1R-5R) on BANKING77, and also on TacRED, DialogRE, Discovery, GoEmotions and Few-NERD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0",
+   "unit": "accuracy %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds; BANKING77",
+   "quote": null,
+   "table": "Table 3, row LLaMA-2-7B-LongLora, columns 1R-5R (all 0)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "On BANKING77 GPT4-turbo reaches 84.4 at 5R (14K) vs SoTA RoBERTa+ICDA 94.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "84.4",
+   "unit": "accuracy %",
+   "baseline_value": "94.4",
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds",
+   "quote": null,
+   "table": "Table 3, row GPT4-turbo, column 5R",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Grouping same-label demos on TacRED (3 rounds, 10K tokens) drops GPT4-turbo from 79.5 to 59.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 delta",
+   "value": "-20.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TacRED, 3 rounds, 41 labels x3 = 123 demos, scattered vs grouped",
+   "quote": "experiencing a notable decline in performance by 20.3% and 22.3%",
+   "table": "Table 10, row GPT4-turbo, columns Scatter 79.5, Grouped 59.2, delta -20.3",
+   "note": null,
+   "where": "Sec 4.2, Table 10"
+  },
+  {
+   "claim": "Grouping on TacRED drops Gemini-1.5-Pro from 79.6 to 57.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-22.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TacRED, 3 rounds",
+   "quote": null,
+   "table": "Table 10, row Gemini-1.5-Pro, columns 79.6, 57.3, -22.3",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "Grouping on TacRED drops Mistral-7B-v0.2-base from 51.6 to 5.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-46.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TacRED, 3 rounds",
+   "quote": null,
+   "table": "Table 10, row Mistral-7B-v0.2-base, columns 51.6, 5.1, -46.5",
+   "note": "Text says Mistral and InternLM2 show significant drops. InternLM2 15.5 to 4.8 (-9.7); Qwen 45.2 to 33.0 (-12.2); ChatGLM3 38.9 to 35.6 (-3.3).",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Models with different mechanisms do not all benefit from more demos; on TacRED and DialogRE only GPT4-turbo and GPT4o consistently benefit and others peak mid-context (13K-25K).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TacRED, DialogRE",
+   "quote": "only GPT4-turbo and GPT4o can consistently benefit from more demonstrations, all of the other models reach their peak at the middle with context length around 13K to 25K",
+   "table": null,
+   "note": "Table 4 shows Gemini-1.5-Pro also rising roughly (72.6 to 82.3), so the text claim is not fully matched by the table.",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Transformer-based models beat RNN-like (RWKV, Mamba); Mamba-2.8B scores 0 on all datasets, RWKV near 0 on most.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all datasets",
+   "quote": "models of Transformer-based architecture perform consistently better than the RNN-based ones in all the evaluated datasets",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Mistral-7B-v0.2-base on TacRED declines from 53.3 (4K) to 42.3 (18K), and on DialogRE from 24.0 to 21.1: more demos hurt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "42.3",
+   "unit": "F1 %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 test examples per dataset, even label distribution, base models (API models as served), demonstrations of 1 to 5 rounds; TacRED",
+   "quote": null,
+   "table": "Table 4, row Mistral-7B-v0.2-base, column 5R",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Authors' hypothesis: even strongest LLMs like GPT-4-turbo are capped at a complexity level between DialogRE and Discovery.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative",
+   "quote": "Our initial hypothesis suggests that the strongest LLMs like GPT-4-turbo are capped at a certain complexity level between DialogRE and Discovery.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  }
+ ],
+ "limits": [
+  "Authors: LongICLBench covers only one evaluation type, extreme-label classification via long ICL.",
+  "Decoding settings, temperature, seeds and max tokens are not stated; single run per cell, no variance.",
+  "Open-source models are base (not instruction-tuned) 7B, so near-zero scores may reflect format-following failure rather than long-context comprehension; failed runs marked with a cross in Table 6.",
+  "The grouped/scattered analysis is a pilot on one dataset (TacRED, 3 rounds) with 123 demos.",
+  "API models (GPT-4-turbo, Claude 3 Opus, Gemini-1.5-Pro) are versions of early 2024 and have dated.",
+  "Table 2 lists RWKV-5-World as 3B but Tables 3-8 list 7B."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "round (1R..5R)",
+   "definition": "a complete set of examples containing all unique chosen labels",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lost in the Middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Position-sensitivity analysis is inspired by it",
+   "quote": "Inspired by the Lost in the Middle phenomenon (Liu et al., 2023)"
+  },
+  {
+   "work": "In-context learning for text classification with many labels (Milios et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "extreme-label ICL as testbed",
+   "quote": null
+  },
+  {
+   "work": "Exploring length generalization in LLMs (Anil et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "extreme-label ICL",
+   "quote": null
+  },
+  {
+   "work": "LongBench / L-Eval / LooGLE / InfiniteBench / Long-Range Arena",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "long-context benchmarks it complements",
+   "quote": null
+  },
+  {
+   "work": "Same task, more tokens (Levy et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "input length hurts reasoning",
+   "quote": null
+  },
+  {
+   "work": "GoEmotions, BANKING77, TacRED, Few-NERD, DialogRE, Discovery",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "six datasets",
+   "quote": null
+  },
+  {
+   "work": "Mamba (Gu & Dao)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "SSM",
+   "quote": null
+  },
+  {
+   "work": "RWKV (Peng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "RNN-like",
+   "quote": null
+  },
+  {
+   "work": "Gemini 1.5 (Reid et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "API",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT4-turbo/GPT4o",
+   "quote": null
+  },
+  {
+   "work": "Claude 3 model family",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Opus",
+   "quote": null
+  },
+  {
+   "work": "LongLoRA (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "LLaMA-2-7B-LongLora",
+   "quote": null
+  },
+  {
+   "work": "BERT (Kenton & Toutanova)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fine-tuned SOTA on Discovery",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "LLM performance on long in-context benchmark across different lengths.",
+   "page": 1,
+   "why": "Shows performance vs length by difficulty."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Visualization of accuracy for every class when instances from the same class are scattered V.S. grouped in the demonstration prompt.",
+   "page": 9,
+   "why": "Shows position bias toward labels at end of prompt."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures not viewed; only text read.",
+  "Gemini/GPT/Claude version strings not given."
+ ]
 }

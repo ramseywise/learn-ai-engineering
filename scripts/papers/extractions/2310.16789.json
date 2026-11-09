@@ -1,19 +1,734 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.16789",
  "pdf": "generative-ai/08-eval/sources/shi-2023-detecting-pretraining-data-large-language.pdf",
  "bib": {
   "title": "Detecting Pretraining Data from Large Language Models",
-  "first_author": "Weijia Shi",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Weijia Shi",
+   "Anirudh Ajith",
+   "Mengzhou Xia",
+   "Yangsibo Huang",
+   "Daogao Liu",
+   "Terra Blevins",
+   "Danqi Chen",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Shi",
+  "year": 2023,
+  "venue": "ICLR 2024",
   "arxiv": "2310.16789",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 79961,
+  "chars_total": 79961,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; Figure plots (2, 4, 5, 7) are images so per-point values were not read."
  },
- "legacy_report": "SOURCE: \"Detecting Pretraining Data from Large Language Models\", Shi, Ajith, Xia, Huang, Liu, Blevins, Chen, Zettlemoyer. Venue as printed: \"Published as a conference paper at ICLR 2024\" (arXiv:2310.16789v3, 9 Mar 2024). First author Weijia Shi: University of Washington; co-first author Anirudh Ajith: Princeton University.\n\nCOVERAGE: 23 of 23 pages extracted (80,314 chars). Pages 1-13 and appendices 19-23 read in full; reference pages 17-18 read; reference pages 14-16 skimmed (opening lines only). Figure plots are not in the text extraction, so the per-point values in Figures 2, 4, 5 and 7 are unread.\n\nCLAIMS\n- claim: Min-K% Prob is the average log-likelihood of the k% lowest-probability tokens; a higher score means member.\n  number: k = 20\n  setup: k swept over 10-50 on a held-out validation set with one LLaMA model, then fixed for all experiments\n  quote: \"MIN-K% P ROB(x) = 1E Xxi∈Min-K%(x) log p(xi|x1, ..., xi−1). (1) where E is the size of the Min-K%(x) set\" and \"found that k = 20works best. We use this value for all experiments without further tuning.\"\n  where: p4, p5\n- claim: It needs per-token probabilities but no reference model and no knowledge of the training corpus.\n  number: none\n  quote: \"assuming that the detector has access to the LM only as a black box, and can compute token probabilities for any data point x\"\n  where: p3\n- claim: WikiMIA is 394 member plus 394 non-member Wikipedia event pages, split by date.\n  number: non-members created after 1 January 2023; members pre-2017 (also printed as pre-2016); truncated to 32, 64, 128, 256; original and ChatGPT-paraphrased settings\n  quote: \"we ultimately collected 394 recent events as our non-member data, and we randomly selected 394 events from pre-2016 Wikipedia pages as our member data\"\n  where: p4\n- claim: Headline average AUC is 0.72 against 0.67 for the best baseline, perplexity.\n  number: 0.72 vs 0.67. Per-model original-setting AUC: Pythia-2.8B 0.67, NeoX-20B 0.76, LLaMA-30B 0.74, LLaMA-65B 0.74, OPT-66B 0.71. Other baseline averages: Neighbor 0.65, Zlib 0.65, Lowercase 0.61, Smaller Ref 0.66.\n  setup: WikiMIA, five open models, original and paraphrase settings\n  quote: \"MIN-K% P ROB achieves an AUC score of 0.72 on average, marking a 7.4% improvement over the best baseline method (i.e., PPL)\"\n  where: p5, Table 1 p6\n- claim: At a 5% false-positive rate it catches only about a fifth of members.\n  number: TPR@5%FPR average 22.2 (Zlib 20.6, PPL 19.3)\n  setup: WikiMIA, same five models\n  quote: \"MIN-K% PROB 13.7 15.1 21.6 27.3 22.3 25.9 20.9 30.9 21.6 23.0 22.2\"\n  where: Table 6, p19\n- claim: Downstream contamination, simulated: average AUC 0.86 against 0.84 for perplexity.\n  number: BoolQ 0.91, Commonsense QA 0.80, IMDB 0.98, Truthful QA 0.74; TPR@5%FPR average 46 vs 42\n  setup: LLaMA-7B further trained one epoch at learning rate 1e-4 on RedPajama text with 200 inserted and 200 held-out examples per dataset; 27M tokens, 0.1% contaminant\n  quote: \"MIN-K% P ROB 0.91 0.80 0.98 0.74 0.86\"\n  where: p8, Table 3; Table 7 p19\n- claim: A lower learning rate makes detection much harder.\n  number: at 1e-5: 0.64, 0.59, 0.76, 0.72, 0.56; at 1e-4: 0.91, 0.80, 0.98, 0.82, 0.74\n  setup: same simulation; columns BoolQ, Commonsense QA, IMDB, LSAT QA, Truthful QA\n  quote: \"1 × 10−5 0.64 0.59 0.76 0.72 0.56\"\n  where: Table 4, p9\n- claim: Detection gets easier with larger models, longer text and more occurrences; the effect of corpus size depends on whether the contaminant is an outlier.\n  number: none in the text (plots only)\n  setup: LLaMA 7/13/30/65B at length 128; lengths 32-256; Poisson-distributed duplicates; corpora of 0.17M-26M tokens (outlier) and 0.77M-7.6M (in-distribution news)\n  quote: \"Detection of outlier contaminants like downstream examples gets easier as data size increases ... detecting general in-distribution samples from the pretraining data distribution gets harder with more data\"\n  where: p5-6, p8\n- claim: Copyrighted books: AUC 0.88 on the validation set, perplexity 0.84.\n  number: 0.88; \"nearly 90%\" of 100 Books3 books flagged at over 50% contamination\n  setup: text-davinci-003; validation set of 50 books believed memorised plus 50 books first published in 2023, 100 snippets of 512 words each; threshold chosen to maximise validation accuracy\n  quote: \"Figure 4 reveals nearly 90% of the books have an alarming contamination rate over 50%.\"\n  where: p6-7\n- claim: Unlearning audit: the \"unlearned\" Harry Potter model still reproduces content.\n  number: 188 suspicious chunks of about 1000; 5.3% of completions scored 4 or above by GPT-4; 103 of 1000 questions selected, ROUGE-L recall 0.23 vs 0.10 for unselected\n  setup: LLaMA2-7B-WhoIsHarryPotter vs LLaMA2-7B-chat, books 1-4, score ratio within (1/1.15, 1.15), 20 samples each\n  quote: \"Among the 103 selected questions, we observe an average ROUGE-L recall of 0.23. Conversely, for the unselected questions, the average ROUGE-L recall is 0.10.\"\n  where: p10-12\n\nLIMITS\n- No limitations section. The headline is AUC, so no threshold is given for WikiMIA: \"we don't need to determine the threshold ϵ\" (p5). The only fitted threshold is the book one, and its value is not printed.\n- No false-positive rate is reported for the book test set. All 100 test books are presumed positives, so the \"nearly 90%\" figure has no negative control beyond the validation set.\n- Member and non-member sets differ in date as well as membership (pre-2017 vs 2023 events). The paper does not test whether the detector is picking up the date shift rather than membership.\n- Book-validation positives are \"likely\" members, not confirmed.\n- Contamination results come from a small fine-tuning simulation where inserted examples are outliers, not from real pretraining. The 1e-5 row shows near-chance AUC on some tasks.\n- Closed models are covered only by text-davinci-003, which exposed log-probabilities. Models without token probabilities are out of scope.\n- The 7.4% is relative (0.72 vs 0.67), about 5 AUC points.\n- No confidence intervals or seeds anywhere.\n\nBUILDS ON: Shokri et al. (2016) for membership inference; Yeom et al. (2018a) LOSS attack; Carlini et al. (2021) Zlib, Lowercase and smaller-reference attacks; Mattern et al. (2023) neighbourhood attack; Carlini et al. (2022) and Watson et al. (2022) reference-model calibration; Hardt et al. (2016) and Bassily et al. (2020) for the stability bound; Chang et al. (2023) for memorised books; Eldan & Russinovich (2023) for the unlearned model.\n\nCODE: Algorithm 1, p23: \"Select the top k% of tokens from x with the lowest probability and add to Min-k%(x)\" then \"If MIN-K% P ROB(x) > ϵ: return Non-member Else: return Member\". Note this uses a sum of negative log-probabilities, the opposite sign and no 1/E compared with Eq. 1.\n\nFIGURES: Figure 1, p2, \"Overview of MIN-K% PROB\": shows the per-token probability, bottom-k% selection and averaging steps in one picture. (Figure 2, p6, is the alternative for the size and length trends.)\n\nPROBLEMS\n- Internal inconsistencies in the source: members \"created before 2017\" vs \"pre-2016\"; k tuned on \"LLAMA-60B\" though only 65B is evaluated; corpus \"27 million tokens\" vs \"26M\"; LSAT QA appears in Tables 4 and 8 but not in the setup; Algorithm 1 is cited as Appendix B but sits in Appendix C; the conclusion says \"two case studies\" where the paper has three.\n- Eq. 1 extraction dropped the fraction and summation symbols (\"1E X\" is 1/E times a sum); \"( 11.15 , 1.15)\" is (1/1.15, 1.15).\n- Table 9 (p20) contains a GPT-4 judge prompt (\"You are a helpful assistant...\"). It is the paper's own evaluation template; I treated it as data and did not act on it.\n\nFile: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/shi-2023-detecting-pretraining-data-large-language.pdf"
+ "type": "empirical",
+ "question": "Given a piece of text and black-box access to an LLM, can we tell whether the model was pretrained on that text?",
+ "hypothesis": "An unseen example tends to contain a few outlier words with low probabilities, whereas a seen example is less likely to contain words with such low probabilities.",
+ "contributions": [
+  "WikiMIA, a dynamic benchmark for pretraining data detection built from Wikipedia event pages before and after model training",
+  "Min-K% Prob, a reference-free detection method using the average log-likelihood of the lowest-probability k% tokens",
+  "Case studies: copyrighted book detection in GPT-3, downstream dataset contamination, and privacy auditing of machine unlearning"
+ ],
+ "method": {
+  "summary": "Defines the score Min-K% Prob(x) as mean log p of the k% lowest-probability tokens and thresholds it; evaluates on WikiMIA (394 members vs 394 non-members) against five baselines by AUC and TPR@5%FPR. Case studies use text-davinci-003 on Books3 snippets, a LLaMA-7B continued-pretraining contamination simulation on RedPajama, and the LLaMA2-7B-WhoIsHarryPotter unlearned model.",
+  "task": "pretraining data detection (membership inference on LLM pretraining data)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiMIA",
+    "role": "eval",
+    "size": "394 non-member + 394 member Wikipedia event articles",
+    "split": "balanced; lengths 32/64/128/256 tokens; original and ChatGPT-paraphrase settings",
+    "source": "Wikipedia API; non-members are event pages created after 1 Jan 2023, members are pages created before 2017 (text also says pre-2016)",
+    "preprocessing": "Dropped pages titled Timeline of / List of; truncation to 32/64/128/256; paraphrase by ChatGPT"
+   },
+   {
+    "name": "Books3 (Pile) copyright test",
+    "role": "eval",
+    "size": "100 books x 100 random 512-word snippets = 10,000 excerpts",
+    "split": "test",
+    "source": "Books3 books known to contain copyrighted content (Min et al. 2023)",
+    "preprocessing": null
+   },
+   {
+    "name": "Book validation set",
+    "role": "dev",
+    "size": "50 books memorised by ChatGPT (positive) + 50 books first edition 2023 (negative); 100 snippets of 512 words each = 10,000",
+    "split": "balanced; used to choose the threshold by maximising accuracy",
+    "source": "Chang et al. 2023 list for positives",
+    "preprocessing": null
+   },
+   {
+    "name": "RedPajama + downstream contaminants",
+    "role": "train",
+    "size": "27 million tokens, 0.1% from downstream sets; 200 positive + 200 negative examples per downstream dataset",
+    "split": "BoolQ, IMDB, TruthfulQA, CommonsenseQA (Table 4 adds LSAT QA, undescribed)",
+    "source": "RedPajama (TogetherCompute 2023); examples inserted as contiguous segments at random positions",
+    "preprocessing": "formatted downstream examples"
+   },
+   {
+    "name": "Size ablation corpora",
+    "role": "train",
+    "size": "0.17M, 0.27M, 2.6M, 26M tokens (downstream); 0.77M, 3.9M, 7.6M tokens (News August 2023 control, 1000/5000/10000 examples, 100 positive + 100 negative)",
+    "split": null,
+    "source": "RedPajama; RealTimeData/News_August_2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Harry Potter books 1-4 and GPT-4 questions",
+    "role": "eval",
+    "size": "about 1000 512-word chunks; 1000 GPT-4 generated questions",
+    "split": "188 chunks and 103 questions kept by score-ratio filter",
+    "source": "plain text of books; GPT-4 prompted with 'Can you give me a list of questions and answers related to Harry Potter'",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Pythia-2.8B",
+    "role": "evaluated",
+    "params": "2.8B",
+    "architecture": "decoder-only LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "smaller_ref": "Pythia-70M"
+    }
+   },
+   {
+    "name": "GPT-NeoX-20B",
+    "role": "evaluated",
+    "params": "20B",
+    "architecture": "decoder-only LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "smaller_ref": "GPT-Neo-125M"
+    }
+   },
+   {
+    "name": "LLaMA 7B/13B/30B/65B",
+    "role": "evaluated",
+    "params": "7B, 13B, 30B, 65B",
+    "architecture": "decoder-only LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "smaller_ref": "LLaMA-7B for 30B and 65B"
+    }
+   },
+   {
+    "name": "OPT-66B",
+    "role": "evaluated",
+    "params": "66B",
+    "architecture": "decoder-only LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "smaller_ref": "OPT-350M"
+    }
+   },
+   {
+    "name": "text-davinci-003 (GPT-3)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-7B (contamination simulation)",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only LM",
+    "init_from": "LLaMA 7B pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA2-7B-WhoIsHarryPotter and LLaMA2-7B-chat",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "decoder-only LM",
+    "init_from": "LLaMA2-7B-chat then unlearning finetune (Eldan and Russinovich 2023)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "similarity score 1-5; question and gold answer generation"
+    }
+   },
+   {
+    "name": "ChatGPT",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "WikiMIA paraphrases"
+    }
+   }
+  ],
+  "training": {
+   "objective": "continued pretraining (next-token) on contaminated corpus, case study Sec 6 only",
+   "optimizer": null,
+   "lr": "1e-4 (constant); 1e-5 in ablation",
+   "lr_schedule": "constant",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "1",
+   "tokens": "27 million (main); 0.17M to 26M in size ablation",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "The method itself trains nothing; this block describes only the Sec 6 simulation."
+   }
+  },
+  "inference": {
+   "decoding": "story completion and QA with multinomial sampling",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "20 sampled continuations per chunk and 20 answers per question; detection scores deterministic, single run, no seeds stated",
+   "prompting": "Story completion: first 200 words of a 512-word chunk as prompt. GPT-4 similarity prompt in Table 9.",
+   "retrieval": null,
+   "parameters": {
+    "k": "20 percent of tokens, chosen from sweep over 10,20,30,40,50 on held-out validation using 'LLaMA-60B' (sic) and fixed for all experiments",
+    "threshold": "not needed for AUC; for books chosen by maximising accuracy on the 10,000-snippet validation set",
+    "unlearn_filter_ratio": "MIN-K% score ratio unlearned/original within (1/1.15, 1.15)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AUC",
+     "definition": "Area under the ROC curve of TPR against FPR for the Min-K% or baseline score",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "TPR@5%FPR",
+     "definition": "True positive rate at 5% false positive rate",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Contamination rate",
+     "definition": "Percent of a book's 512-word snippets flagged as members",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "SimCSE similarity",
+     "definition": "Sentence-embedding similarity of completion to gold continuation",
+     "unit": "0-1",
+     "higher_is_better": null
+    },
+    {
+     "name": "GPT-4 similarity",
+     "definition": "GPT-4 rating 1-5 of similarity between completion and gold",
+     "unit": "1-5",
+     "higher_is_better": null
+    },
+    {
+     "name": "ROUGE-L recall",
+     "definition": "(# overlapping words between candidate and reference) / (# words in the reference)",
+     "unit": "ratio",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Neighbor (Mattern et al. 2023, DetectGPT-style)",
+    "PPL / LOSS attack (Yeom et al. 2018)",
+    "Zlib entropy ratio (Carlini et al. 2021)",
+    "Lowercase ratio (Carlini et al. 2021)",
+    "Smaller Ref (Carlini et al. 2021)"
+   ],
+   "protocol": "Single run per cell, no seeds, confidence intervals or significance tests reported. Baselines in contamination study omit Smaller Ref."
+  },
+  "availability": {
+   "code": "Project page swj0419.github.io/detect-pretrain.github.io (as printed); no repository stated in text",
+   "weights": null,
+   "data": "WikiMIA released via project page (inferred from the page URL on the title block)"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-4 similarity rating (system)",
+    "text": "You are a helpful assistant in evaluating the similarity between two outputs generated by two different AI chatbots. Your goal is to rate the similarity between the two outputs based on a scale of 1 to 5, with 1 being highly dissimilar and 5 being highly similar.",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "GPT-4 similarity rating (user)",
+    "text": "Rate the similarity between Output (a) and Output (b) on a scale of 1 to 5, where 1 indicates high dissimilarity, and 5 indicates high similarity. Here are some rules of the evaluation: (1) Consider how closely Output (a) matches Output (b) in terms of content, context, and relevance. (2) Do not provide a rating outside the 1 to 5 scale, and avoid giving a rating of 3 (neutral) whenever possible. (3) Your judgment should be as objective as possible, without being influenced by any potential bias. You should answer 'Score: ', followed by an integer rating between 1 to 5, where 1 indicates high dissimilarity, and 5 indicates high similarity. You should then output 'Reason: ' and provide a short sentence to explain your rating. Output (a): Output (b):",
+    "where": "Table 9"
+   },
+   {
+    "purpose": "Generate Harry Potter questions",
+    "text": "Can you give me a list of questions and answers related to Harry Potter",
+    "where": "Sec 7.2.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.k",
+    "quote": "found that k = 20 works best",
+    "where": "Sec 4.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Min-K% Prob averages 0.72 AUC on WikiMIA across five models and two settings, 7.4% above the best baseline (PPL).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.72",
+   "unit": "AUC",
+   "baseline_value": "0.67",
+   "n": null,
+   "setup": "WikiMIA, lengths 32/64/128/256 mixed per Table 1 (length not stated for Table 1), Pythia-2.8B, NeoX-20B, LLaMA-30B, LLaMA-65B, OPT-66B, original and paraphrase; k=20",
+   "note": "0.72 vs 0.67 is a 7.5% relative gain by the printed averages; the paper says 7.4%.",
+   "where": "Sec 4.3, Table 1",
+   "quote": "MIN-K% PROB achieves an AUC score of 0.72 on average, marking a 7.4% improvement over the best baseline method (i.e., PPL)."
+  },
+  {
+   "claim": "On WikiMIA with LLaMA-65B (original), Min-K% Prob scores AUC 0.74 against PPL 0.71.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.74",
+   "unit": "AUC",
+   "baseline_value": "0.71",
+   "n": null,
+   "setup": "WikiMIA, LLaMA-65B, original setting",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MIN-K% PROB, column LLaMA-65B Ori."
+  },
+  {
+   "claim": "Min-K% Prob reaches AUC 0.76 on NeoX-20B original, the highest cell in Table 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.76",
+   "unit": "AUC",
+   "baseline_value": "0.70",
+   "n": null,
+   "setup": "WikiMIA, NeoX-20B, original (PPL 0.70)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row MIN-K% PROB, column NeoX-20B Ori."
+  },
+  {
+   "claim": "Smaller-reference-model calibration did not beat plain perplexity on average (0.66 vs 0.67).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.66",
+   "unit": "AUC",
+   "baseline_value": "0.67",
+   "n": null,
+   "setup": "WikiMIA Table 1 average; reference models LLaMA-7B, GPT-Neo-125M, OPT-350M, Pythia-70M",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Smaller Ref, column Avg."
+  },
+  {
+   "claim": "Detection AUC rises with model size (LLaMA 7B to 65B) and with text length (32 to 256).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiMIA, reference-free methods; size test at 128-length text on LLaMA 7/13/30/65B; per-point values only in Fig 2",
+   "note": "Qualitative; point values only in the figure and not read.",
+   "where": "Sec 4.4, Fig 2",
+   "quote": "As model size or text length increases, detection becomes easier."
+  },
+  {
+   "claim": "On the GPT-3 (text-davinci-003) validation set of 100 books, Min-K% Prob gets AUC 0.88, above PPL 0.84.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.88",
+   "unit": "AUC",
+   "baseline_value": "0.84",
+   "n": 10000,
+   "setup": "Validation: 50 books memorised by ChatGPT (positives) vs 50 books first edition 2023 (negatives), 100 snippets of 512 words each, 10,000 examples; target text-davinci-003",
+   "note": null,
+   "where": "Sec 5.2, Fig 3",
+   "quote": "Figure 3 shows MIN-K% PROB achieves an AUC of 0.88, outperforming baselines in detecting"
+  },
+  {
+   "claim": "Nearly 90% of 100 sampled Books3 books have a detected contamination rate above 50% on GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of books with contamination rate >50%",
+   "value": "nearly 90%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 Books3 books, 100 random 512-word snippets each (10,000), threshold tuned on the validation set, target text-davinci-003",
+   "note": "Contamination rate is the share of snippets flagged by the detector, not verified ground truth; the validation positives are books ChatGPT has memorised, used as a proxy for GPT-3 membership.",
+   "where": "Sec 5.2, Fig 4",
+   "quote": "Figure 4 reveals nearly 90% of the books have an alarming contamination rate"
+  },
+  {
+   "claim": "Min-K% Prob has the best average AUC (0.86) for detecting contaminant downstream examples after continued pretraining of LLaMA-7B, ahead of PPL 0.84.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.86",
+   "unit": "AUC",
+   "baseline_value": "0.84",
+   "n": null,
+   "setup": "LLaMA-7B finetuned 1 epoch at constant lr 1e-4 on 27M-token RedPajama corpus with 200 inserted examples each of BoolQ, IMDB, TruthfulQA, CommonsenseQA; 400 eval examples per dataset (200 positive, 200 negative)",
+   "note": null,
+   "where": "Table 3, Sec 6.1",
+   "table": "Table 3, row MIN-K% PROB, column Avg."
+  },
+  {
+   "claim": "On the contamination task Min-K% Prob improves TPR@5%FPR by 12.2% over the best baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TPR@5%FPR relative improvement",
+   "value": "12.2%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as Table 3 setup",
+   "note": "Table 7 averages are 46 (Min-K%) vs 42 (PPL), which is a 4 point or about 9.5% relative gap; the 12.2% is not reproducible from the printed averages.",
+   "where": "Sec 6.1, Table 7",
+   "quote": "MIN-K% PROB shows 12.2% improvement over the best baseline."
+  },
+  {
+   "claim": "Raising the learning rate from 1e-5 to 1e-4 lifts contamination-detection AUC on BoolQ from 0.64 to 0.91.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.91",
+   "unit": "AUC",
+   "baseline_value": "0.64",
+   "n": null,
+   "setup": "Continued pretraining of LLaMA-7B on contaminated corpus, BoolQ; other datasets also rise (IMDB 0.76 to 0.98, TruthfulQA 0.56 to 0.74)",
+   "note": "Table 4 includes LSAT QA, which the text never describes or includes in Table 3.",
+   "where": "Table 4",
+   "table": "Table 4, row 1e-4, column BoolQ"
+  },
+  {
+   "claim": "For outlier contaminants (downstream examples) detection gets easier as the pretraining corpus grows, but for in-distribution contaminants (news) it gets harder.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMA-7B continued pretraining; corpora of 0.17M, 0.27M, 2.6M, 26M tokens (downstream) and 0.77M, 3.9M, 7.6M tokens (news, 100 positive and 100 negative); values only in Fig 5a/5b",
+   "note": null,
+   "where": "Sec 6.2, Fig 5",
+   "quote": "Detection of outlier contaminants like downstream examples gets easier as data size increases, since"
+  },
+  {
+   "claim": "Examples that occur more often in the pretraining data are easier to detect.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Contaminated corpus where occurrences per example follow a Poisson distribution; values only in Fig 5c",
+   "note": null,
+   "where": "Sec 6.2",
+   "quote": "Figure 5c shows that AUC scores positively correlates with the occurrence of examples."
+  },
+  {
+   "claim": "Contaminant accuracy minus non-contaminant accuracy is 0.04 at lr 1e-5 and 0.11 at lr 1e-4, so higher learning rate means more memorisation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap contaminant minus non-contaminant",
+   "value": "0.11",
+   "unit": "accuracy",
+   "baseline_value": "0.04",
+   "n": null,
+   "setup": "Model finetuned in Sec 6.1, five downstream datasets averaged",
+   "note": null,
+   "where": "Appendix A, Table 8",
+   "quote": "is 0.04 at a learning rate of 1 × 10−5 and 0.11 at a learning rate of 1 × 10−4.",
+   "table": "Table 8 caption"
+  },
+  {
+   "claim": "The Who's Harry Potter unlearned model still produced close completions: 5.3% of completions have GPT-4 similarity of 4 or more, and 10 chunks reach 4 or more.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of completions with GPT-4 similarity >=4",
+   "value": "5.3%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 188,
+   "setup": "LLaMA2-7B-WhoIsHarryPotter; 188 suspicious chunks from Harry Potter books 1-4 (about 1000 512-word chunks), prompted with first 200 words, 20 multinomial samples per chunk; GPT-4 judge 1-5",
+   "note": null,
+   "where": "Sec 7.2.1",
+   "quote": "5.3% generated completions have greater and equal to 4 GPT score similarity to the gold completion."
+  },
+  {
+   "claim": "Questions selected by Min-K% Prob ratio get ROUGE-L recall 0.23 against 0.10 for unselected questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L recall",
+   "value": "0.23",
+   "unit": "ratio",
+   "baseline_value": "0.10",
+   "n": 103,
+   "setup": "1000 GPT-4-generated Harry Potter questions, 103 selected by score ratio in (1/1.15, 1.15); 20 multinomial samples per question from LLaMA2-7B-WhoIsHarryPotter; reference answers from GPT-4",
+   "note": null,
+   "where": "Sec 7.2.2",
+   "quote": "we observe an average ROUGE-L recall of 0.23. Conversely, for the unselected questions, the average ROUGE-L recall is 0.10."
+  },
+  {
+   "claim": "Perplexity alone identifies no unlearn-failed Harry Potter chunk.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same chunk screening as Sec 7.2.1",
+   "note": null,
+   "where": "Sec 7.2.1",
+   "quote": "We also notice that using perplexity alone as the metric fails to identify any such chunk."
+  }
+ ],
+ "limits": [
+  "Authors concede only Harry Potter books 1-4 were used and that all 7 might expose more unlearn-failed chunks.",
+  "Absolute AUC is modest (0.72 average on WikiMIA), so the method is a weak per-instance detector.",
+  "WikiMIA members/non-members differ in time, so a temporal distribution shift could be exploited rather than true memorisation; the paper argues events are accurate but does not test this.",
+  "GPT-3 book 'ground truth' is a proxy (books ChatGPT memorised); contamination rates are detector outputs, not verified.",
+  "Single runs, no variance or significance reported; models and k tuned on LLaMA only.",
+  "Contamination study is a small simulation (LLaMA-7B, 27M tokens, one epoch); real pretraining differs.",
+  "Size ablation shows AUC rises with size for outliers but falls for in-distribution data, so the stated theory-aligned result depends on contaminant type."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Min-K% Prob",
+   "definition": "Average log-likelihood of the k% tokens of a text with the lowest probability; high value suggests the text is in the pretraining data",
+   "where": "Sec 3, Eq 1"
+  },
+  {
+   "term": "Pretraining data detection problem",
+   "definition": "Given a piece of text and black-box access to an LLM with no knowledge of its pretraining data, determine whether the model was pretrained on the text",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Membership inference attacks against machine learning models (Shokri et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "MIA framing",
+   "quote": null
+  },
+  {
+   "work": "Extracting training data from large language models (Carlini et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Zlib, Lowercase, Smaller Ref",
+   "quote": null
+  },
+  {
+   "work": "Membership inference attacks against language models via neighbourhood comparison (Mattern et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Neighbor",
+   "quote": null
+  },
+  {
+   "work": "DetectGPT (Mitchell et al.)",
+   "year": 2023,
+   "arxiv": "2301.11305",
+   "relation": "baseline",
+   "note": "Neighbor identical to it",
+   "quote": null
+  },
+  {
+   "work": "Privacy risk in machine learning (Yeom et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LOSS attack = PPL",
+   "quote": null
+  },
+  {
+   "work": "Who's Harry Potter? Approximate unlearning in LLMs (Eldan and Russinovich)",
+   "year": 2023,
+   "arxiv": "2310.02238",
+   "relation": "evaluates",
+   "note": "audited unlearned model",
+   "quote": null
+  },
+  {
+   "work": "Speak, Memory (Chang et al.)",
+   "year": 2023,
+   "arxiv": "2305.00118",
+   "relation": "uses-data",
+   "note": "books memorised by ChatGPT",
+   "quote": null
+  },
+  {
+   "work": "The Pile / Books3 (Gao et al.)",
+   "year": 2020,
+   "arxiv": "2101.00027",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "RedPajama (TogetherCompute)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Sainz et al.; Golchin and Surdeanu (Time travel in LLMs)",
+   "year": 2023,
+   "arxiv": "2308.08493",
+   "relation": "related",
+   "note": "prompting-based contamination detection, not instance level",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of MIN-K% PROB.",
+   "page": 2,
+   "why": "Shows the pipeline: per-token probabilities, bottom k%, average log likelihood."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "As model size or text length increases, detection becomes easier.",
+   "page": 6,
+   "why": "Scaling of detectability with size and length."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Effect of contamination rate and occurrence frequency on the ease of detection of data contaminants.",
+   "page": 9,
+   "why": "Outlier vs in-distribution contaminants diverge with corpus size."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "AUC score for detecting pretraining examples from the given model on WIKIMIA.",
+   "page": 6,
+   "why": "Main comparison against baselines."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3",
+   "snippet": "MIN-K% PROB(x) = 1/E * sum_{xi in Min-K%(x)} log p(xi|x1, ..., xi-1)",
+   "verbatim": false
+  },
+  {
+   "where": "Algorithm 1, Appendix C",
+   "snippet": "If MIN-K% PROB(x) > eps: return Non-member; Else: return Member (with score defined as sum of -log p over lowest-probability k% tokens)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Algorithm 1 uses the negative log-likelihood sum and a Non-member rule above threshold, which differs from Eq 1 (mean log-likelihood, high means member); sum vs mean also differs.",
+  "Text says LLaMA-60B for the k sweep while models are 30B/65B.",
+  "Members described as pre-2016 and pre-2017 in different places.",
+  "Table 4 has an LSAT QA column absent elsewhere.",
+  "12.2% TPR improvement does not match Table 7 averages (46 vs 42).",
+  "No embedded instructions found."
+ ]
 }

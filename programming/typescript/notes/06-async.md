@@ -58,6 +58,8 @@ Two consequences. A timer of `0` still waits for all the synchronous code and ev
 ## Writing async code
 
 ```ts
+interface User { id: number; name: string }
+
 async function loadUser(id: number): Promise<User> {
   const res = await fetch(`https://api.example.com/users/${id}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -78,6 +80,21 @@ const [a, b] = await Promise.all([getA(), getB()]);           // parallel: total
 
 ```ts
 const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });   // cancels the request itself
+```
+
+To cancel on demand (a Stop button, a user who navigates away), create the controller yourself and call `abort()`:
+
+```ts
+const controller = new AbortController();
+const pending = fetch(url, { signal: controller.signal });
+stopButton.onclick = () => controller.abort();   // fetch rejects with an AbortError
+
+try {
+  const res = await pending;
+} catch (err) {
+  if (err instanceof DOMException && err.name === 'AbortError') return;   // cancelled on purpose
+  throw err;
+}
 ```
 
 `fetch`, Node streams and most SDKs (including Anthropic's) accept a `signal`. Pass it down through your own async functions too.

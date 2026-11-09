@@ -1,0 +1,603 @@
+{
+ "schema": 1,
+ "key": "2409.12183",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/sprague-2024-cot-or-not-cot.pdf",
+ "bib": {
+  "title": "To CoT or not to CoT? Chain-of-thought helps mainly on math and symbolic reasoning",
+  "authors": [
+   "Zayne Sprague",
+   "Fangcong Yin",
+   "Juan Diego Rodriguez",
+   "Dongwei Jiang",
+   "Manya Wadhwa",
+   "Prasann Singhal",
+   "Xinyu Zhao",
+   "Xi Ye",
+   "Kyle Mahowald",
+   "Greg Durrett"
+  ],
+  "first_author": "Sprague",
+  "year": 2025,
+  "venue": "ICLR 2025 (Published as a conference paper at ICLR 2025; arXiv v3 7 May 2025)",
+  "arxiv": "2409.12183",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 150731,
+  "chars_total": 150731,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Tables 7-16 (per-dataset numbers, unparseable rates, answer-span indices) skimmed, not transcribed."
+ },
+ "type": "empirical",
+ "question": "For which kinds of tasks does prompt-based chain-of-thought actually improve over direct answering, and why?",
+ "hypothesis": "Common belief (tested and rejected): CoT outperforms direct answering on nearly all reasoning problems; the authors expect gains mainly where symbolic execution is needed.",
+ "contributions": [
+  "Meta-analysis of 110 papers / 1,218 comparisons showing CoT gains concentrate in math, symbolic and logic",
+  "Own evaluation of 20 datasets x 14 models, zero-shot and few-shot",
+  "MMLU analysis: gain concentrated on items containing '='",
+  "Plan vs execution decomposition showing tool solvers beat CoT on symbolic tasks"
+ ],
+ "method": {
+  "summary": "Meta-analysis of CoT-vs-direct comparisons in ICLR/EACL/NAACL 2024 papers, plus own greedy-decoded zero/few-shot evaluations of 14 LLMs on 20 datasets, plus a plan/execute decomposition (direct, CoT, tool solver) on GSM8K, GSM8K-Hard, ContextHub, FOLIO.",
+  "task": "Comparing CoT vs direct-answer prompting across reasoning task types",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Meta-analysis corpus",
+    "role": "eval",
+    "size": "4,642 papers screened, 516 with CoT keyword, 110 kept, 1,218 comparisons, 264 datasets",
+    "split": null,
+    "source": "ICLR 2024, EACL 2024, NAACL 2024 (incl. Findings, Workshop)",
+    "preprocessing": "Excluded multimodal, CoT-fine-tuned, multi-pass (self-consistency, ToT), tool-augmented; best prompt per method; 0-100 scale only"
+   },
+   {
+    "name": "20 evaluation datasets",
+    "role": "eval",
+    "size": "Not stated in aggregate",
+    "split": null,
+    "source": "CommonsenseQA(7-shot), StrategyQA(6), SIQA, PIQA, Winogrande, ARC Easy, ARC Challenge, AGIEval LSAT(3), BiGGen Bench, MMLU(5), MMLU Pro(5), BBH, MuSR(1), GPQA(3), MuSiQue, GSM8K(8), GSM8K-Hard(8), FOLIO(4), ContextHub(3), MATH(4)",
+    "preprocessing": "BiGGen: questions that say 'Think step-by-step' removed; ContextHub levels 1 and 2 only; MuSiQue judged by GPT-4o"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama 2 7B Chat, Mistral 7B Instruct v0.3, Llama 3.1 8B/70B Instruct, Gemma 2 9B It, Phi-3 Small 8k, Qwen 2 7B/72B Instruct",
+    "role": "evaluated",
+    "params": "7B to 72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "context": "Llama 2 and Gemma 4k (vLLM limit), Mistral 8k, Llama 3.1 128k, Qwen 131k",
+    "other": {}
+   },
+   {
+    "name": "GPT-4o Mini (2024-07-18), GPT-4o (2024-08-06), Gemini 1.5 Flash/Pro, Claude 3 Haiku, Claude 3.5 Sonnet (20240620)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "context": "128k to 1m",
+    "other": {}
+   },
+   {
+    "name": "GPT-4o",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "context": null,
+    "other": {
+     "use": "MuSiQue answer equivalence"
+    }
+   },
+   {
+    "name": "GPT-4o-mini",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "context": null,
+    "other": {
+     "use": "BiGGen Bench judge, 1-5 scale"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy on all models (vLLM for open models)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one greedy run per model-dataset-prompt; no seeds stated",
+   "prompting": "zero-shot direct, zero-shot CoT (Kojima-style, 'Let's think step by step' in assistant turn where possible), few-shot direct, few-shot CoT (Wei-style); prompts mostly from Llama 3.1 evals; closed models that cannot prefix assistant turns use different prompts",
+   "retrieval": null,
+   "parameters": {
+    "plan_settings": "Few-shot direct, few-shot CoT, Plan+Direct Solver, Plan+CoT Solver, Plan+Tool Solver (PAL Python interpreter for GSM8K; SatLM with Z3 for FOLIO and ContextHub); prompts from Ye et al. 2023",
+    "unparseable handling": "random guess for multiple choice FOLIO/ContextHub, incorrect for GSM8K",
+    "bonferroni_p": "0.00027 (14 models x 13 datasets), paired bootstrap",
+    "equals_classifier": "item has '=' in question or generated response"
+   },
+   "other": {
+    "hardware": "mostly 8 A40s or 4 Quadro RTX 8000s; others via API",
+    "max_tokens and sampling parameters": "released on Huggingface, not in paper"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "Percent correct after answer extraction; BiGGen reports share of responses scoring >=4 from LLM judge",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CoT delta",
+     "definition": "CoT accuracy minus direct-answer accuracy",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "direct answer prompt"
+   ],
+   "protocol": "Paired bootstrap with Bonferroni for knowledge/soft/commonsense datasets; unparseable rates reported (<=15% zero-shot, <10% for formal reasoning except tool)"
+  },
+  "availability": {
+   "code": "https://github.com/Zayne-sprague/To-CoT-or-not-to-CoT",
+   "weights": null,
+   "data": "Prompts, outputs and sampling params on Huggingface (TAUR-Lab collection); meta-analysis paper list released"
+  },
+  "prompts": [
+   {
+    "purpose": "MATH zero-shot CoT, Llama 3.1 70B",
+    "text": "Solve the following math problem efficiently and clearly: - For simple problems (2 steps or fewer): Provide a concise solution with minimal explanation. - For complex problems (3 steps or more): Use this step-by-step format: ## Step 1: [Concise description] [Brief explanation and calculations] ## Step 2: ... Regardless of the approach, always conclude with: Therefore, the final answer is: $\\boxed{answer}$. I hope it is correct.",
+    "where": "App J"
+   },
+   {
+    "purpose": "AGIEval LSAT zero-shot CoT",
+    "text": "Explain your reasoning step-by-step for each question before answering. Give your final answer in the format \"The answer is therefore <A, B, C, D, E>\". Failure to comply with the answer formatting will result in no credit. ... Let's think step by step.",
+    "where": "App J"
+   },
+   {
+    "purpose": "CommonsenseQA zero-shot direct answer system prompt",
+    "text": "You are a helpful AI assistant that will answer reasoning questions. You will always say at the end \"Answer: <Your Answer Letter Choice>\". You must only pick one answer and you must end your response with \"Answer: <Your Answer Letter Choice>\" everytime!",
+    "where": "App J"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Meta-analysis covers 110 papers and 1,218 experimental comparisons from ICLR 2024, EACL 2024 and NAACL 2024 (incl. Findings and Workshop), screened from 4,642 papers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1,218",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": 110,
+   "setup": "Papers with >=2 mentions of CoT (516), manually filtered to CoT vs direct on the same model and dataset, 0-100 scale, best prompt each",
+   "quote": "A total of 110 papers were found that matched our criteria with 1,218 experimental com-\nparisons.",
+   "table": null,
+   "note": "Appendix A: 35 papers from ICLR and 75 from NAACL and EACL, covering 264 datasets; 516 papers after keyword filter.",
+   "where": "Sec 3; App A"
+  },
+  {
+   "claim": "In the literature, CoT gains are largest for symbolic reasoning, then math, then logical reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "14.2, 12.3, 6.9",
+   "unit": "points (mean CoT delta)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-paper-per-category means, meta-analysis of 110 papers",
+   "quote": "with average improvements of 14.2, 12.3, 6.9, respectively",
+   "table": null,
+   "note": null,
+   "where": "Sec 3 Results"
+  },
+  {
+   "claim": "Literature: top-3 categories average 56.9 with CoT vs 45.5 without.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "56.9 vs 45.5",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Symbolic, math, logical categories, meta-analysis",
+   "quote": "Average perfor-\nmance on these top three tasks with CoT was 56.9, whereas performance without CoT was 45.5.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3 Results"
+  },
+  {
+   "claim": "Literature: for all other categories CoT gives only 56.8 vs 56.1 direct.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "56.8 vs 56.1",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Non-top-3 categories, meta-analysis",
+   "quote": "For other categories, the average performance with CoT was 56.8, compared to 56.1 without CoT.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3 Results"
+  },
+  {
+   "claim": "Own experiments: 20 datasets, 14 models, zero-shot and few-shot, greedy decoding via vLLM for open models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20 datasets, 14 models",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Models 7B to 72B open (Llama 2 7B to Llama 3.1 70B, Qwen 2 72B) plus closed models (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro etc.)",
+   "quote": "ran our own evaluations of\n20 datasets across 14 models",
+   "table": null,
+   "note": "Table 3 lists 12 models (no Qwen), Table 5 lists 14 and Table 6 has 14 rows; text says 14.",
+   "where": "Abstract; Table 4, 5"
+  },
+  {
+   "claim": "Zero-shot, mathematical category: direct 22.6 vs CoT 50.2 average over 14 models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "22.6 -> 50.2",
+   "unit": "% accuracy",
+   "baseline_value": 22.6,
+   "n": null,
+   "setup": "Zero-shot, 14 models, Table 6 average row",
+   "quote": null,
+   "table": "Table 6, row Average, columns Mathematical DA % and CoT %",
+   "note": null,
+   "where": "App F.1 Table 6"
+  },
+  {
+   "claim": "Zero-shot, symbolic category: direct 45.2 vs CoT 56.1 average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "45.2 -> 56.1",
+   "unit": "% accuracy",
+   "baseline_value": 45.2,
+   "n": null,
+   "setup": "Zero-shot, 14 models",
+   "quote": null,
+   "table": "Table 6, row Average, columns Symbolic DA % and CoT %",
+   "note": null,
+   "where": "App F.1 Table 6"
+  },
+  {
+   "claim": "Zero-shot, commonsense category: direct 74.8 vs CoT 75.7 average (negligible).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "74.8 -> 75.7",
+   "unit": "% accuracy",
+   "baseline_value": 74.8,
+   "n": null,
+   "setup": "Zero-shot, 14 models",
+   "quote": null,
+   "table": "Table 6, row Average, columns Commonsense DA % and CoT %",
+   "note": null,
+   "where": "App F.1 Table 6"
+  },
+  {
+   "claim": "Zero-shot, other categories: knowledge 73.3 -> 77.5, soft reasoning 58.3 -> 60.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "73.3 -> 77.5; 58.3 -> 60.3",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot, 14 models",
+   "quote": null,
+   "table": "Table 6, row Average, columns Knowledge and Soft",
+   "note": null,
+   "where": "App F.1 Table 6"
+  },
+  {
+   "claim": "On MMLU, as much as 95% of CoT gain comes from questions or outputs containing '='.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "95%",
+   "unit": "% of total CoT gain",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU, per model; the '=' feature classifies math-related items",
+   "quote": "As\nmuch as 95% of the total performance gain from CoT on MMLU is attributed to questions\ncontaining “=” in the question or generated output.",
+   "table": null,
+   "note": "Abstract says: 'directly generating the answer without CoT leads to almost identical accuracy as CoT unless the question or model’s response contains an equals sign'. Table 18 max for a model with partial gain is 94.0% (Llama 3.1 70b); Qwen 2 7b shows 100.0% because the without-= delta is negative.",
+   "where": "Sec 1; App G.1 Table 18"
+  },
+  {
+   "claim": "MATH and GSM8K show gains as large as 41.6% and 66.9% from zero-shot CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "41.6, 66.9",
+   "unit": "% points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-dataset, zero-shot, best model",
+   "quote": "MATH and GSM8K show gains as large as 41.6%\nand 66.9%, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "GSM8K few-shot, Llama 3.1 70B: CoT 96.1 vs Plan + Tool Solver 94.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "96.1 vs 94.4",
+   "unit": "% accuracy",
+   "baseline_value": 96.1,
+   "n": null,
+   "setup": "Few-shot (8-shot) GSM8K, Llama 3.1 70B Instruct",
+   "quote": null,
+   "table": "Table 20, GSM8K rows CoT and Plan + Tool Solver, column Llama 3.1 70b Acc.",
+   "note": "Tool solver does NOT beat CoT on plain GSM8K for this model; also Direct 39.1, Plan+CoT 94.7, Plan+Direct 42.2.",
+   "where": "App H Table 20"
+  },
+  {
+   "claim": "GSM8K few-shot, GPT-4o Mini: CoT 94.2 vs Plan + Tool Solver 90.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "94.2 vs 90.5",
+   "unit": "% accuracy",
+   "baseline_value": 94.2,
+   "n": null,
+   "setup": "Few-shot GSM8K, GPT-4o Mini",
+   "quote": null,
+   "table": "Table 20, GSM8K rows CoT and Plan + Tool Solver, column GPT-4o Mini Acc.",
+   "note": "Tool solver also below CoT here; direct 32.8, Plan+CoT 92.0.",
+   "where": "App H Table 20"
+  },
+  {
+   "claim": "GSM8K-Hard few-shot, Llama 3.1 70B: CoT 47.8 vs Plan + Tool Solver 68.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "47.8 vs 68.0",
+   "unit": "% accuracy",
+   "baseline_value": 47.8,
+   "n": null,
+   "setup": "Few-shot GSM8K-Hard, Llama 3.1 70B",
+   "quote": null,
+   "table": "Table 20, GSM8K-Hard rows CoT and Plan + Tool Solver, column Llama 3.1 70b Acc.",
+   "note": null,
+   "where": "App H Table 20"
+  },
+  {
+   "claim": "GSM8K-Hard few-shot, GPT-4o Mini: CoT 52.2 vs Plan + Tool Solver 70.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "52.2 vs 70.4",
+   "unit": "% accuracy",
+   "baseline_value": 52.2,
+   "n": null,
+   "setup": "Few-shot GSM8K-Hard, GPT-4o Mini",
+   "quote": null,
+   "table": "Table 20, GSM8K-Hard rows CoT and Plan + Tool Solver, column GPT-4o Mini Acc.",
+   "note": null,
+   "where": "App H Table 20"
+  },
+  {
+   "claim": "CoT is characterised as a poor but universal approximation to symbolic solvers.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5 conclusion from plan/execute comparison on GSM8K, GSM8K-Hard, ContextHub, FOLIO",
+   "quote": "CoT appears to be a poor (but universal) approximation to\nsuch solvers.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Only 32% (59) of benefiting dataset-model pairs in Knowledge/Soft/Commonsense categories are significant after Bonferroni; 26 of those on MMLU and MMLU Pro.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "59",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Paired bootstrap, 13 datasets x 14 models, p threshold 0.00027",
+   "quote": "About\n32% (59) of the datasets that show a benefit in these three reasoning categories were considered\nsignificant.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Prompt wording matters little: four zero-shot CoT prompts on Llama 3.1 8B across 7 datasets vary little on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3.1 8B Instruct, 7 datasets, 4 prompts",
+   "quote": "There is very little variation between the CoT prompts on average.",
+   "table": null,
+   "note": null,
+   "where": "App D Fig 7"
+  },
+  {
+   "claim": "Few-shot CoT does not change which datasets benefit, only MuSR Team Allocation starts to improve.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Few-shot vs zero-shot, all models",
+   "quote": "Only one dataset, MuSR Team Allocation, starts to improve with\nfew-shot",
+   "table": null,
+   "note": null,
+   "where": "App E"
+  },
+  {
+   "claim": "Direct-answer prompts give the answer within the first 60 characters; unparseable rates at or below 15%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "60",
+   "unit": "characters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Answer-span index, all models and datasets",
+   "quote": "direct answer prompts all return an answer within\nthe first 60 characters",
+   "table": null,
+   "note": null,
+   "where": "App F.3"
+  }
+ ],
+ "limits": [
+  "Long-horizon planning is not covered except via BiGGen Bench (Sec 6, App I.1).",
+  "Dataset contamination is unknown; mitigated by scale range, GSM8K-Hard, recent datasets, 2023 papers in the meta-analysis (App I.2).",
+  "Only single-prompt CoT; multi-call methods (self-consistency, ToT, debate), CoT-fine-tuned models and multimodal models are excluded.",
+  "Authors say a fair comparison would match compute (e.g. ensembling), so small CoT gains in the literature are not a win for CoT.",
+  "Models are mid-2024 instruction-tuned; dedicated reasoning models trained with RL are not studied (dated).",
+  "Why CoT does not help non-symbolic tasks is left open: pretraining limits vs missing modes of deliberation.",
+  "BiGGen lack of gain: 'Future work is needed to prove this.'"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "symbolic problem",
+   "definition": "a problem that can be grounded in a natural, well agreed-upon formal system",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Soft Reasoning",
+   "definition": "questions relying on commonsense and natural language but going beyond simple inferences about these statements",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Show Your Work: Scratchpads (Nye et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "early CoT, results align",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "few-shot CoT prompts",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "zero-shot CoT prompts",
+   "quote": null
+  },
+  {
+   "work": "PAL: Program-aided language models (Gao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Plan+Tool Solver for GSM8K; source of GSM8K-Hard",
+   "quote": null
+  },
+  {
+   "work": "SatLM (Ye et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Z3 solver for FOLIO/ContextHub; plan prompts",
+   "quote": null
+  },
+  {
+   "work": "Llama 3.1 (Dubey et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation prompts taken from Llama 3.1 evals",
+   "quote": null
+  },
+  {
+   "work": "MMLU, MMLU Pro, MuSR, BiGGen Bench, GSM8K, MATH, FOLIO, ContextHub",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation datasets",
+   "quote": null
+  },
+  {
+   "work": "Kambhampati et al.; Wang et al. (MMLU Pro)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "report CoT not useful or harmful outside math",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Left: meta-analysis of CoT literature; each point is a reported delta. Right: average zero-shot CoT vs direct across five categories, 20 datasets, 14 LLMs.",
+   "page": 1,
+   "why": "Whole result at a glance: gains only in math and symbolic."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "CoT deltas on MMLU and MMLU Pro with vs without '=' in question or response.",
+   "page": 8,
+   "why": "Shows MMLU gain is math slice."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Performance of prompt variants separating planning and execution.",
+   "page": 9,
+   "why": "Tool solver beats CoT on hard symbolic tasks."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 3 lists 12 models but text, Table 5 and Table 6 give 14.",
+  "Intro says 'as much as 95%' of MMLU gain from '='; Table 18 max (excluding Qwen 2 7b at 100.0%) is 94.0%.",
+  "Plain GSM8K: CoT beats Plan+Tool Solver for Llama 3.1 70B and GPT-4o Mini; tool solver wins on GSM8K-Hard and ContextHub only; so 'dominated by Plan + Tool solver in most settings' is not universal.",
+  "No instructions embedded in the PDF text."
+ ]
+}

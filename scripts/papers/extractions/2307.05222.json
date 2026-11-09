@@ -1,19 +1,248 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2307.05222",
  "pdf": "ai-engineering/08-multimodal-engineering/sources/sun-2023-emu.pdf",
  "bib": {
   "title": "Emu: Generative Pretraining in Multimodality",
-  "first_author": "Quan Sun",
-  "year": "2023",
+  "authors": ["Quan Sun", "Qiying Yu", "Yufeng Cui", "Fan Zhang", "Xiaosong Zhang", "Yueze Wang", "Hongcheng Gao", "Jingjing Liu", "Tiejun Huang", "Xinlong Wang"],
+  "first_author": "Sun",
+  "year": 2023,
   "venue": "ICLR 2024",
   "arxiv": "2307.05222",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 91332,
+  "chars_total": 91332,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; qualitative figure text (Figs 4-12) read but not recorded."
  },
- "legacy_report": "SOURCE: \"Emu: Generative Pretraining in Multimodality\", Quan Sun, Qiying Yu, Yufeng Cui, Fan Zhang, Xiaosong Zhang, Yueze Wang, Hongcheng Gao, Jingjing Liu, Tiejun Huang, Xinlong Wang (BAAI, Tsinghua, Peking U). ICLR 2024 (arXiv 2307.05222v2, May 2024). Note: the PDF is v2/ICLR; it cites DreamLLM (Sep 2023) and CM3Leon, so those rows are post-v1.\n\nCOVERAGE: All 29 pages, 91,342 of 91,342 chars (main text, ethics, appendices A-E, Tables 5-11, qualitative figures). References were skimmed. Extraction was clean. No embedded instructions found.\n\nCLAIMS (ranked)\n- claim: Core design. Images are encoded by EVA-CLIP, compressed by a Causal Transformer into N fixed visual embeddings, and interleaved with text tokens in a 14B LLaMA-13B-based model. Text tokens get cross-entropy loss and visual embeddings get l2 regression, in one autoregressive objective.\n  number: 14B params\n  setup: EVA-01-CLIP 1B encoder, LLaMA-13B, Causal Transformer of 12 blocks (random init), Stable Diffusion v1.5 decoder; images 224x224\n  quote: \"We adopt the cross-entropy classification loss for discrete text tokens, and the ℓ2 regression loss for continuous visual embeddings.\" / \"The total number of parameters of Emu is 14B and is trained end-to-end.\"\n  where: p3, p6\n- claim: Rationale for the Causal Transformer. Raster-order autoregression over pixels or patches is poor, so 2D features are turned into a 1D causal latent sequence. No ablation of this choice is reported.\n  number: none\n  setup: each block has causal self-attention, cross-attention to EVA-CLIP features (keys/values), and an FFN\n  quote: \"Auto-regressively modeling images in raster order is counter-intuitive and has not demonstrated satisfactory performance\"\n  where: p4\n- claim: Image generation works by appending [IMG] and autoregressively producing N embeddings. A separately fine-tuned diffusion decoder turns them into pixels. It is a two-stage design: the LLM regresses embeddings, then SD decodes them.\n  number: none\n  setup: the decoder is trained after pretraining with the encoder, LLM and VAE frozen. Only the U-Net is updated.\n  quote: \"If the desired output is image, we will append a [IMG] token at the end of the input sequence, then Emu will autoregressively generate N visual embeddings that will then be sent to the visual decoder\"\n  where: p5-6\n- claim: Pretraining scale and cost are modest.\n  number: 128 A100-80G, 10k steps, ~82M samples, 150B tokens, ~2 days\n  setup: data are LAION-2B, LAION-COCO, MMC4, WebVid-10M and YT-Storyboard-1B. Batch sizes are 128/64/16/16 per source (Table 5 lists 128, 128, 64, 16, 16).\n  quote: \"We train the model on 128 NVIDIA 80G-A100 GPUs for 10k steps with around 82M samples (150B tokens in total), and the pretraining takes approximately 2 days.\"\n  where: p6\n- claim: Video as interleaved data. YT-Storyboard-1B pairs YouTube storyboard thumbnails with subtitles by timestamp. Using thumbnails avoids video decoding and cuts storage about 20x.\n  number: 18M videos, 1.8B images, 20x storage reduction\n  setup: video IDs from YT-Temporal-1B. 8 frames are sampled per video in pretraining.\n  quote: \"this approach leads to a substantial 20-fold reduction in data storage costs, resulting in increased download efficiency.\"\n  where: p5, p16\n- claim: Ablation shows YT-Storyboard-1B helps modestly. COCO CIDEr rose 110.8 to 112.9, MSVDQA k=4 rose 31.1 to 34.9, and OKVQA zero-shot with text-only examples (k=0*) fell 43.9 to 42.3.\n  number: see claim\n  setup: small Emu-7B (EVA-CLIP-Large + LLaMA-7B), 7.2k steps plus 2.4k extra on storyboard data. Single run, no variance reported.\n  quote: \"Emu-7B w/o YT-Storyboard-1B 110.8 43.9 44.6 30.2 31.1 16.9 19.9 / Emu-7B w/ YT-Storyboard-1B 112.9 42.3 45.7 30.8 34.9 17.9 20.8\"\n  where: p17 (Table 6)\n- claim: Zero-shot understanding. Emu gets COCO CIDEr 112.4. Instruction-tuned Emu-I gets 120.4, and 14B Emu-I beats Flamingo-80B on some tasks.\n  number: CIDEr 112.4 / 120.4; VQAv2 62.0 vs 56.3; VizWiz 38.3 vs 31.6; MSVDQA 37.0 vs 35.6\n  setup: zero-shot. Emu uses multimodal chain-of-thought (caption first, then answer). The * rows use two text-only examples with the images removed. The 62.0 / 38.3 / 37.0 figures are Emu-I* rows. Emu-I trails Emu on VizWiz (32.2 vs 34.2), VisDial and NExTQA (5.8 vs 19.6) without *.\n  quote: \"Emu-I can outperform much larger-scale Flamingo-80B model in several tasks such as VQAv2 (62.0% vs. 56.3%), VizWiz (38.3% vs. 31.6%), and MSVDQA (37.0% vs. 35.6%).\"\n  where: p7 (Table 1)\n- claim: Emu loses to dedicated image generators on FID, though it beats GILL, the other LLM-based generator.\n  number: FID 11.66 (Emu) vs 12.20 (GILL) vs 9.93 (SDv1.5) vs 7.27 (Imagen) vs 7.23 (Parti)\n  setup: zero-shot, 30k random MS-COCO val prompts, PNDM scheduler, 50 steps, classifier-free guidance scale 5.0 (Emu) and 3.0 (SD1.5)\n  quote: \"However, our model is inferior to SDv1.5 in terms of FID. This is probably because the condition space (image embeddings) of our visual decoder deviates a lot from the condition space (text embeddings) of the diffusion model used as initialization, and our model is trained for a relatively short 15k steps.\"\n  where: p7-8 (Table 2)\n- claim: Few-shot in-context performance rises with k and beats Flamingo-9B and Kosmos-1.\n  number: Emu 4-shot VQAv2 58.4, VizWiz 41.3, MSRVTTQA 21.8; Flamingo-9B 56.3 / 34.9 / 18.2\n  setup: k=2,4,8, RICES retrieval of examples by EVA-CLIP cosine similarity. 5000 random train samples per dataset. Video queries use 8 frames, support videos 2 frames.\n  quote: \"Emu achieves a VQAv2 accuracy of 58.4% and VizWiz 41.3% under the 4-shot setting, surpassing Flamingo-9B by +2.1% and +6.4%, respectively.\"\n  where: p8 (Table 3), p20\n- claim: MM-Vet in-the-wild score is 36.3 for Emu-I-14B, ahead of LLaVA-65B at 35.5. It is weak on Math (3.8) and Spat (25.2).\n  number: 36.3 ±0.3 total\n  setup: zero-shot, mean and std over 5 runs. The margin over DreamLLM-7B (35.9) is within roughly two stds.\n  quote: \"Emu-I -14B 45.5 19.2 36.7 35.9 25.2 3.8 36.3±0.3\"\n  where: p8 (Table 4)\n- claim: Instruction tuning is light. LoRA is applied only to the LLM's self-attention layers, and everything else is frozen. It takes about 16 hours.\n  number: LoRA rank=alpha=16; 16 A100-80G, ~16 h; batch 128, 10K steps; LR 1e-5\n  setup: data are ShareGPT (~70K), Alpaca (52K), LLaVA filtered 158K to 130K, VideoChat-11K and ~30K Video-ChatGPT. Loss is on the answer only.\n  quote: \"The overall instruction tuning stage takes around 16 hours with 16 A100-80G GPUs. We attach LoRAs (Hu et al., 2022) on all linear projections of the self-attention layer, with the LoRA rank and alpha being 16.\"\n  where: p6, p18\n- claim: Data-curation lessons. The detailed-description subset of LLaVA was dropped because it made the model produce instruction-irrelevant descriptions. Samples containing a degenerate phrase were filtered. WebVid metadata (resolution, camera parameters) was cleaned, and ~1M captions were rewritten with Vicuna-13B. MMC4 images were dropped below a CLIP-similarity threshold. Decoder training prompts over 150 length were dropped.\n  number: CLIP threshold 0.32; ~1M WebVid captions cleaned; LLaVA 158K to 130K; length filter drops ~8% of LAION-Aesthetics and 0.01% of LAION-COCO\n  setup: described in the appendix, with no ablations\n  quote: \"any image with a CLIP similarity score below the threshold of 0.32 for all text in the same document is discarded.\"\n  where: p16, p18\n- claim: Eval prompting tricks matter. Multimodal CoT (generate a caption first, then answer) is a test-time technique. VizWiz \"unanswerable\" is handled by a yes/no gate (\"is the answer known?\"). Text-only example prompts fix output format.\n  number: none\n  setup: prompt templates in Table 10 (e.g. \"a picture of {caption}. based on the picture, {question} short answer:\")\n  quote: \"The experimental results demonstrate that this test-time technique effectively improves the model's performance without any additional data, leveraging the inherent capability of the model itself.\"\n  where: p20-21\n- claim: Continuous embeddings (Emu) vs discrete image tokens (CM3Leon) vs AnyMAL.\n  number: COCO captioning: Emu 112.4, AnyMAL-13B 99.5, CM3Leon 61.6. COCO FID: CM3Leon 10.82 vs Emu 11.66. VQAv2: 52.0 / 59.6 / 47.6 (AnyMAL ahead on VQAv2 and Emu behind it).\n  setup: zero-shot, Table 11. The paper says Emu is SOTA on 5 of 6 columns, but CM3Leon's FID is better.\n  quote: \"CM3Leon discretizes images, but we directly input and output image continuous features. We can find that CM3Leon performs much worse than Emu on image-to-text tasks.\"\n  where: p20-21 (Table 11)\n- claim: Emu-I did not beat prior work on every benchmark. In Table 1, PaLI-X-55B (finetuned) is far ahead on COCO (149.2) and VQAv2 (86.0). Emu-I VQAv2 is 57.2 (62.0*). Emu is also below Flamingo-9B* on MSVDQA/MSRVTTQA/NExTQA zero-shot in the plain rows (18.8/8.3/19.6 vs 30.2/13.7/23.0).\n  number: see claim\n  setup: Table 1\n  quote: \"Flamingo-9B * 79.4 - 61.5 51.8 44.7 28.8 48.0 30.2 13.7 23.0\" and \"Emu 112.4 96.5 72.0 52.0 38.2 34.2 47.4 18.8 8.3 19.6\"\n  where: p7\n\nLIMITS\n- Authors concede: hallucination (visual and language), slow autoregressive inference, knowledge frozen after pretraining, possible non-factual output, English-centric (\"proficiency in languages other than English is currently delicate\"). Ethics section says it is research-only and that deployment needs risk analysis. Web data may contain personal images.\n- Not shown: no ablation of Causal Transformer vs alternatives, of regression vs discrete tokens, or of N. The value of N is never stated in the text I read. No latency or throughput numbers, no human eval of generation, no hallucination benchmark, and no OCR or high-resolution evaluation (224x224 input, OCR 19.2 on MM-Vet). The image generation is weaker than plain SD1.5 and the decoder is trained only 15k steps. Quality of generation is shown only via cherry-picked qualitative figures. The ablation uses a 7B model, single runs, and has one mixed result.\n- Dated: LLaMA-1 base, SD1.5, CLIP-style 224px encoder, the benchmarks and baselines (Flamingo, Kosmos-1, BLIP-2, LLaVA-65B, MiniGPT-4) are mid-2023. Later unified models are not covered.\n\nBUILDS ON: Flamingo (Alayrac et al., 2022; interleaved data, few-shot, RICES via Yang et al., 2022b), EVA-CLIP (Sun et al., 2023), LLaMA (Touvron et al., 2023), Stable Diffusion (Rombach et al., 2022), Kosmos-1 (Huang et al., 2023, multimodal CoT prompting), MMC4 (Zhu et al., 2023b), OpenFlamingo (Awadalla et al., 2023; CLIP filter), YT-Temporal-1B (Zellers et al., 2022), LLaVA (Liu et al., 2023b), LoRA (Hu et al., 2022), classifier-free guidance (Ho & Salimans, 2022), GILL (Koh et al., 2023a, concurrent), BLIP-2 Q-Former (Li et al., 2023b), \"Language models are general-purpose interfaces\" (Hao et al., 2022).\n\nCODE: none (no code in the paper). Useful verbatim templates:\n- Instruction packing (p7, eq. 2): \"<System Message> [USER]: <Instruction> [ASSISTANT]: <Answer>\" (only the Answer is in the loss; [USER]/[ASSISTANT] special tokens are initialised from the embeddings of \"user\"/\"assistant\")\n- Emu image QA prompt (p21, Table 10): \"a picture of {caption}. based on the picture, {question} short answer:\"\n- Image system message (p19, Table 8): \"You are a helpful assistant and you will be presented with an image: [IMG]ImageContent[/IMG]. You will be able to see the image after I provide it to you. Please answer my questions based on the given image.\"\n\nFIGURES\n- Fig 2 (p4): \"Emu unifies the modeling of different modalities in an auto-regressive manner...\" Architecture diagram: encoder, causal transformer, LLM with classification or regression heads, and decoder. Best single figure for the notes.\n- Fig 3 (p6): interleaved video-text data from storyboard thumbnails plus timestamped subtitles. Shows how video becomes interleaved data.\n- Fig 1 (p2): generalist interface examples (captioning, VQA, in-context text-to-image, image blending).\n- Fig 8/9 (p25-26): in-context text-to-image with and without context, showing style carried over.\n- Fig 10-12 (p27-29): qualitative comparisons with LLaVA, mPLUG-Owl, InstructBLIP and Video-ChatGPT. These are single cherry-picked examples. Fig 11 shows Emu listing 8 Agatha Christie books while the baselines did not.\n- Tables worth reproducing: Table 1 (zero-shot), 2 (FID), 3 (few-shot), 6 (video ablation), 11 (vs CM3Leon/AnyMAL).\n\nPROBLEMS: None with extraction beyond the two-column layout interleaving table headers (e.g. Table 3's PALI-X row is incomplete in the text: \"PALI-X - 56.9 57.1\" with no column labels, so its k-columns are ambiguous). Table 3 text order is jumbled with Table 2, but the numbers quoted above were read from rows. Page numbers are PDF pages, which match the printed numbers."
+ "type": "system",
+ "question": "Can one autoregressive model trained to classify the next text token and regress the next visual embedding, on image-text, interleaved document and interleaved video data, serve as a generalist interface for both image-to-text and text-to-image tasks?",
+ "hypothesis": "Supervising the vision side with a next-embedding regression loss, and adding video as a source of interleaved data, improves multimodal capacity over LMMs that only predict text.",
+ "contributions": [
+  "Emu: a 14B multimodal model trained end-to-end with one objective, classifying the next text token or regressing the next visual embedding.",
+  "A Causal Transformer that turns 2D EVA-CLIP features into N 1D causal embeddings per image.",
+  "YT-Storyboard-1B: interleaved video-text data built from YouTube storyboard thumbnails and subtitles.",
+  "Zero-shot and few-shot results on captioning, image and video QA and text-to-image generation, plus an instruction-tuned assistant (Emu-I)."
+ ],
+ "method": {
+  "summary": "EVA-CLIP encodes images, a 12-block Causal Transformer compresses them to N visual embeddings, and these are interleaved with text tokens in a LLaMA-13B-initialised LLM trained with cross-entropy on text and l2 regression on visual embeddings. After pretraining, a Stable Diffusion v1.5 U-Net is fine-tuned to decode the LLM's regressed embeddings into images; a LoRA instruction-tuned variant (Emu-I) is also built.",
+  "task": "Unified next-element prediction over interleaved image/video/text sequences; image captioning, VQA, video QA, text-to-image",
+  "trains": true,
+  "datasets": [
+   {"name": "LAION-2B", "role": "pretrain", "size": null, "split": null, "source": "English subset of LAION-5B (Schuhmann et al., 2022)", "preprocessing": null},
+   {"name": "LAION-COCO", "role": "pretrain", "size": "600M images", "split": null, "source": "LAION-2B subset captioned by an ensemble of BLIP and CLIP", "preprocessing": null},
+   {"name": "MMC4", "role": "pretrain", "size": "approximately 75 million documents, 400 million images, 38 billion tokens", "split": null, "source": "Multimodal-C4 (Zhu et al., 2023b)", "preprocessing": "Images with CLIP similarity below 0.32 to all text in the same document discarded; random subsequence L=1024 with up to first N=5 images, plus N=5 image-sentence pairs subsequence of L=512"},
+   {"name": "WebVid-10M", "role": "pretrain", "size": "10M video-text pairs; approximately 1 million descriptions needed cleaning", "split": null, "source": "Bain et al., 2021", "preprocessing": "Word-list heuristic removal of metadata (resolution, camera parameters), then rewriting with Vicuna-13B"},
+   {"name": "YT-Storyboard-1B", "role": "pretrain", "size": "18 million videos, about 1.8 billion storyboard images", "split": null, "source": "Collected from YouTube using video ids from YT-Temporal-1B (Zellers et al., 2022)", "preprocessing": "Storyboard thumbnails and subtitles sorted by timestamp, adjacent subtitles merged; no video decoding, 20-fold smaller storage; 8 frames sampled per video in pretraining"},
+   {"name": "LAION-COCO + LAION-Aesthetics", "role": "train", "size": null, "split": "data ratio 7:2", "source": "Visual decoder training (text-to-image)", "preprocessing": "Prompts longer than 150 dropped: about 8% of LAION-Aesthetics, 0.01% of LAION-COCO"},
+   {"name": "Instruction data: ShareGPT, Alpaca, LLaVA, VideoChat-11K, Video-ChatGPT-100k", "role": "train", "size": "ShareGPT about 70K dialogues; Alpaca 52K; LLaVA 158K reduced to 130K; VideoChat-11K (7K descriptions + 4K conversations); about 30K Video-ChatGPT subset", "split": null, "source": "public", "preprocessing": "LLaVA detailed-description subset removed and data containing 'on top of the back of' filtered"},
+   {"name": "MS-COCO val (30k prompts), COCO Caption, VQAv2, OKVQA, VizWiz, VisDial, MSVDQA, MSRVTTQA, NExTQA, MM-Vet", "role": "eval", "size": "30k random val prompts for FID", "split": "Table 9: COCO T2I Val; COCO Caption Test; VQAv2 Test-dev; OKVQA Val; VizWiz Test-dev; VisDial Val; video QA Test", "source": "public benchmarks", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Emu", "role": "proposed", "params": "14B", "architecture": "EVA-01-CLIP encoder + 12-block Causal Transformer + decoder-only LLaMA + Stable Diffusion decoder", "init_from": "EVA-01-CLIP 1B (encoder), LLaMA-13B (LLM), Stable Diffusion v1.5 (decoder), Causal Transformer random init", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"EVA-01-CLIP": "40-layer ViT", "image resolution": "224x224", "special tokens": "[IMG], [/IMG], <s>, </s>", "N visual embeddings per image": null}},
+   {"name": "Emu-I", "role": "proposed", "params": "14B", "architecture": "Emu with LoRA on self-attention of the LLM", "init_from": "pretrained Emu (frozen)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"LoRA": "rank 16, alpha 16, on all linear projections of self-attention; no adaptation on vision encoder"}},
+   {"name": "Emu-7B (ablation)", "role": "proposed", "params": "inferred: about 7B from LLaMA-7B", "architecture": "EVA-CLIP-Large + LLaMA-7B", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Flamingo-9B / Flamingo-80B, Kosmos-1, MetaLM, PaLI-X-55B, GILL, SDv1.5, Imagen, Parti, DALL-E 2, GLIDE, Make-A-Scene, CM3Leon, AnyMAL-13B, MM-Vet comparison models", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Next-element prediction: cross-entropy on discrete text tokens (language modeling head), l2 regression on continuous visual embeddings (separate regression head)",
+   "optimizer": "AdamW, beta1, beta2, eps = 0.9, 0.98, 1e-6 (pretraining); 0.9, 0.999, 1e-8 (decoder)",
+   "lr": "peak 4e-5 vision encoder, 3e-5 LLM, 1e-4 Causal Transformer (pretraining); decoder warm up to 1e-4 over first 5k, then 5e-5 at 10k and 1e-5 at 14k; instruction tuning 1e-5",
+   "lr_schedule": "cosine decay (pretraining); instruction tuning cosine to zero",
+   "warmup": "ratio 0.2 (pretraining); 500 steps linear (instruction tuning)",
+   "batch_size": "pretraining per dataset 128, 128, 64, 16, 16 (Table 5); text says 128 image-text pairs, 64 interleaved image-text, 16 video-text and interleaved video-text; decoder 50 x 4 x 8; instruction tuning 128",
+   "steps": "10k pretraining; 15k decoder; 10K instruction tuning",
+   "epochs": "instruction tuning 3 epochs for ShareGPT, Alpaca, LLaVA; 60K samples for video instruction data",
+   "tokens": "around 82M samples (150B tokens in total) pretraining",
+   "seq_len": "MMC4 subsequences L=1024 or L=512; otherwise null",
+   "precision": null,
+   "weight_decay": "0.05 (pretraining); 1e-2 (decoder)",
+   "dropout": null,
+   "regularisation": "Image embedding condition randomly dropped 10% of the time in decoder training for classifier-free guidance",
+   "hardware": "128 NVIDIA A100-80G (pretraining); 32 A100-40G (decoder); 16 A100-80G (instruction tuning)",
+   "compute": null,
+   "wall_clock": "about 2 days pretraining; about 16 hours instruction tuning",
+   "seeds": null,
+   "other": {"decoder frozen parts": "Visual Encoder, LLM and VAE frozen; only U-Net updated", "decoder objective": "epsilon-prediction at 512x512", "instruction template": "<System Message> [USER]: <Instruction> [ASSISTANT]: <Answer>, loss only on <Answer>", "frames": "8 frames randomly sampled per video in pretraining; images randomly placed before or after their sentence"}
+  },
+  "inference": {
+   "decoding": "Image generation: PNDM scheduler, 50 steps, classifier-free guidance. Text decoding settings not stated.",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "FID on 30k random MS-COCO val prompts; MM-Vet mean and std over 5 evaluation runs",
+   "prompting": "Zero-shot with task templates (Table 10), multimodal chain-of-thought (generate caption, then answer); * rows use two text-only task examples chosen by RICES; few-shot k=2,4,8 via RICES",
+   "retrieval": "RICES: 5000 random training samples per dataset, EVA-CLIP features, highest cosine similarity; video uses mean of frame features; 8 frames for query video, 2 frames for support video examples",
+   "parameters": {"classifier-free guidance scale": "5.0 Emu, 3.0 SDv1.5"},
+   "other": {"VizWiz": "model first asked 'is the answer known?' (yes/no); 'no' returns 'unanswerable'", "post-processing": "filter 'it is', 'it's', 'a', 'an', 'the'", "OKVQA": "VQAv2 evaluation code with Porter stemming"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "FID", "definition": "zero-shot, 30k random MS-COCO val prompts", "unit": "FID", "higher_is_better": false},
+    {"name": "CIDEr", "definition": "COCO caption test", "unit": "CIDEr", "higher_is_better": true},
+    {"name": "VQA accuracy", "definition": "VQAv2 test-dev, OKVQA val, VizWiz test-dev", "unit": "%", "higher_is_better": true},
+    {"name": "NDCG", "definition": "VisDial val", "unit": "NDCG", "higher_is_better": true},
+    {"name": "Top-1 acc. / WUPS", "definition": "MSVDQA, MSRVTTQA top-1; NExTQA WUPS", "unit": "%", "higher_is_better": true},
+    {"name": "MM-Vet capability scores", "definition": "Rec, OCR, Know, Gen, Spat, Math, Total; mean and std of 5 runs", "unit": "score", "higher_is_better": true}
+   ],
+   "baselines": ["Flamingo-9B", "Flamingo-80B", "Kosmos-1", "MetaLM", "PaLI-X-55B", "GILL", "SDv1.5", "Imagen", "Parti", "DALL-E 2", "CM3Leon", "AnyMAL-13B", "DreamLLM-7B", "LLaVA-65B", "MiniGPT-4-14B", "InstructBLIP-14B"],
+   "protocol": "Zero-shot (with multimodal CoT) and few-shot k=2,4,8; single runs except MM-Vet (5 runs); no significance tests; some results from official evaluation websites"
+  },
+  "availability": {"code": "https://github.com/baaivision/Emu", "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "Emu zero-shot image QA", "text": "a picture of {caption}. based on the picture, {question} short answer:", "where": "Table 10"},
+   {"purpose": "Emu zero-shot captioning (also first CoT step)", "text": "describing the image in detail. the image shows", "where": "Table 10"},
+   {"purpose": "Emu-I image QA", "text": "[USER]: based on the content of the image and common sense, please provide an accurate answer consisting of only one word or phrase. [ASSISTANT]: the answer is:", "where": "Table 10"},
+   {"purpose": "Instruction-tuning system message, images", "text": "You are a helpful assistant and you will be presented with an image: [IMG]ImageContent[/IMG]. You will be able to see the image after I provide it to you. Please answer my questions based on the given image.", "where": "Table 8"}
+  ],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "Batch size per dataset 128, 128, 64, 16, 16", "where": "Table 5"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Emu has a zero-shot COCO caption CIDEr of 112.4, above the other LMMs in Table 1.",
+   "kind": "measured", "source": null, "metric": "CIDEr", "value": "112.4", "unit": "CIDEr", "baseline_value": "84.7 Kosmos-1; 79.4 Flamingo-9B *", "n": null,
+   "setup": "Pretrained 14B Emu, zero-shot, with multimodal chain-of-thought prompting (caption first, then answer); COCO caption test",
+   "quote": "Emu achieves impressive zero-shot CIDEr score (Vedantam et al., 2015) of 112.4",
+   "table": null, "note": null, "where": "Sec 5.1, Table 1"
+  },
+  {
+   "claim": "Emu's zero-shot COCO FID is worse than SDv1.5 but better than GILL.",
+   "kind": "measured", "source": null, "metric": "FID", "value": "11.66", "unit": "FID (lower is better)", "baseline_value": "9.93 SDv1.5; 12.20 GILL; 7.27 Imagen; 7.23 Parti", "n": "30k prompts",
+   "setup": "Zero-shot, 30k random MS-COCO val prompts, PNDM scheduler 50 steps, classifier-free guidance scale 5.0 for Emu and 3.0 for SDv1.5 (chosen as best for each)",
+   "quote": null,
+   "table": "Table 2, row Emu (ours), column FID", "note": "Table 11 also lists CM3Leon at 10.82 FID, better than Emu, yet the text says Emu is state-of-the-art on 5 of 6 benchmarks there.", "where": "Sec 5.1, Table 2"
+  },
+  {
+   "claim": "The authors attribute the FID gap to SDv1.5 to condition-space mismatch and short decoder training (conjecture, not tested).",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Decoder fine-tuned 15k steps on 32 A100-40G",
+   "quote": "This is probably because the condition space (image embeddings) of our visual decoder deviates a lot from the condition space (text embeddings) of the diffusion model used as initialization, and our model is trained for a relatively short 15k steps.",
+   "table": null, "note": null, "where": "Sec 5.1"
+  },
+  {
+   "claim": "Instruction-tuned Emu-I beats Flamingo-80B on VQAv2, VizWiz and MSVDQA zero-shot.",
+   "kind": "measured", "source": null, "metric": "VQAv2 accuracy", "value": "62.0", "unit": "%", "baseline_value": "56.3 Flamingo-80B", "n": null,
+   "setup": "Zero-shot, Emu-I* (two text-only examples as prompt), 14B. VizWiz 38.3 vs 31.6, MSVDQA 37.0 vs 35.6. Flamingo-80B figures are quoted from Flamingo, not in Table 1.",
+   "quote": "Emu-I can outperform much larger-scale Flamingo-80B model in several tasks such as VQAv2 (62.0% vs. 56.3%), VizWiz (38.3% vs. 31.6%), and MSVDQA (37.0% vs. 35.6%).",
+   "table": null, "note": "Without the * prompt Emu-I scores lower on VizWiz (32.2) than Emu (34.2), and on NExTQA (5.8 vs 19.6).", "where": "Sec 5.1, Table 1"
+  },
+  {
+   "claim": "Emu-I zero-shot COCO CIDEr is 120.4.",
+   "kind": "measured", "source": null, "metric": "CIDEr", "value": "120.4", "unit": "CIDEr", "baseline_value": "112.4 Emu", "n": null,
+   "setup": "Zero-shot, instruction-tuned Emu-I",
+   "quote": null, "table": "Table 1, row Emu-I, column COCO", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Emu 4-shot beats Flamingo-9B on VQAv2 and VizWiz.",
+   "kind": "measured", "source": null, "metric": "VQAv2 accuracy, k=4", "value": "58.4", "unit": "%", "baseline_value": "56.3 Flamingo-9B", "n": null,
+   "setup": "Pretrained Emu, 4 in-context examples selected by RICES. VizWiz 41.3 vs 34.9.",
+   "quote": "Emu achieves a VQAv2 accuracy of 58.4% and VizWiz 41.3% under the 4-shot setting, surpassing Flamingo-9B by +2.1% and +6.4%, respectively.",
+   "table": null, "note": null, "where": "Sec 5.2, Table 3"
+  },
+  {
+   "claim": "Emu 4-shot MSRVTTQA exceeds Flamingo-9B.",
+   "kind": "measured", "source": null, "metric": "MSRVTTQA top-1, k=4", "value": "21.8", "unit": "%", "baseline_value": "18.2 Flamingo-9B", "n": null,
+   "setup": "Pretrained Emu, 4-shot RICES",
+   "quote": "4-shot 21.8% v.s. Flamingo’s 18.2% on the MSRVTTQA benchmark", "table": null, "note": null, "where": "Sec 5.2"
+  },
+  {
+   "claim": "Emu on VizWiz (zero-shot, text-only-example row) beats Kosmos-1 and Flamingo-9B.",
+   "kind": "measured", "source": null, "metric": "VizWiz accuracy", "value": "34.4", "unit": "%", "baseline_value": "29.2 Kosmos-1; 28.8 Flamingo-9B", "n": null,
+   "setup": "Zero-shot, Emu * row",
+   "quote": "Notably, Emu achieves an accuracy of 34.4% on the complex VizWiz VQA dataset, versus Kosmos-1’s 29.2% and Flamingo-9B’s 28.8%.",
+   "table": null, "note": "34.4 is the Emu * row; plain Emu is 34.2.", "where": "Sec 5.1"
+  },
+  {
+   "claim": "Emu-I-14B total MM-Vet score is 36.3, above LLaVA-65B (35.5) and DreamLLM-7B (35.9).",
+   "kind": "measured", "source": null, "metric": "MM-Vet Total", "value": "36.3", "unit": "score, ±0.3 std over 5 runs", "baseline_value": "35.5 LLaVA-65B", "n": 5,
+   "setup": "Zero-shot, MM-Vet, mean of 5 evaluation runs",
+   "quote": null, "table": "Table 4, row Emu-I -14B, column Total", "note": "Emu-I is below LLaVA-65B on OCR (19.2 vs 28.2), Spat and Math (3.8 vs 15.0).", "where": "Sec 5.3, Table 4"
+  },
+  {
+   "claim": "Adding YT-Storyboard-1B improves the 7B ablation modestly on COCO CIDEr and MSVDQA, but lowers OKVQA k=0*.",
+   "kind": "measured", "source": null, "metric": "COCO CIDEr k=0", "value": "112.9", "unit": "CIDEr", "baseline_value": "110.8 without", "n": 1,
+   "setup": "Emu-7B (EVA-CLIP-Large + LLaMA-7B), 7.2k steps on pairs plus 2.4k extra on YT-Storyboard-1B, single run. MSVDQA k=4 34.9 vs 31.1; OKVQA k=0* 42.3 vs 43.9.",
+   "quote": null, "table": "Table 6, row Emu-7B w/ YT-Storyboard-1B, column COCO k=0", "note": null, "where": "App A.1.3, Table 6"
+  },
+  {
+   "claim": "Few-shot performance rises with k (k=2,4,8) for Emu on VQAv2.",
+   "kind": "measured", "source": null, "metric": "VQAv2 accuracy", "value": "59.0", "unit": "% at k=8", "baseline_value": "56.4 at k=2", "n": null,
+   "setup": "Pretrained Emu, RICES",
+   "quote": "we can observe a positive correlation between the number of shots k (k = 0, 2, 4, 8) and the performance of Emu", "table": null, "note": "Claimed for k=0 too, but Table 3 has no k=0 column.", "where": "Sec 5.2, Table 3"
+  },
+  {
+   "claim": "Against CM3Leon (discrete image tokens), Emu scores far higher on COCO captioning.",
+   "kind": "measured", "source": null, "metric": "COCO CIDEr", "value": "112.4", "unit": "CIDEr", "baseline_value": "61.6 CM3Leon", "n": null,
+   "setup": "Zero-shot, Table 11; CM3Leon figures copied from that work (evaluation conditions not described). CM3Leon FID 10.82 is better than Emu 11.66.",
+   "quote": "We can find that CM3Leon performs much worse than Emu on image-to-text tasks.",
+   "table": "Table 11, row CM3Leon, column COCO (Image2Text) 61.6", "note": null, "where": "App D, Table 11"
+  },
+  {
+   "claim": "Pretraining cost: 128 A100-80G, 10k steps, about 2 days.",
+   "kind": "measured", "source": null, "metric": "pretraining compute", "value": "2 days", "unit": "days on 128 A100-80G", "baseline_value": null, "n": null,
+   "setup": "Pretraining of 14B Emu; 82M samples, 150B tokens",
+   "quote": "We train the model on 128 NVIDIA 80G-A100 GPUs for 10k steps with around 82M samples (150B tokens in total), and the pretraining takes approximately 2 days.",
+   "table": null, "note": null, "where": "Sec 3.2"
+  },
+  {
+   "claim": "Storyboard thumbnails instead of raw video cut data storage 20-fold and avoid video decoding.",
+   "kind": "claim", "source": null, "metric": "storage reduction", "value": "20-fold", "unit": "fold", "baseline_value": null, "n": null,
+   "setup": "YT-Storyboard-1B versus raw video; no measurement shown",
+   "quote": "this approach leads to a substantial 20-fold reduction in data storage costs",
+   "table": null, "note": null, "where": "App A.1.1"
+  },
+  {
+   "claim": "Instruction tuning takes about 16 hours on 16 A100-80G.",
+   "kind": "measured", "source": null, "metric": "instruction tuning compute", "value": "16 hours", "unit": "hours", "baseline_value": null, "n": null,
+   "setup": "LoRA rank/alpha 16, 10K steps, batch 128",
+   "quote": "The overall instruction tuning stage takes around 16 hours with 16 A100-80G GPUs.", "table": null, "note": null, "where": "App B.1"
+  }
+ ],
+ "limits": [
+  "Authors concede hallucination, slow autoregressive inference, no knowledge updates after pretraining, non-factual output, and English-dominated data.",
+  "No ablation of regression versus discrete tokens or of the Causal Transformer; the only ablation is YT-Storyboard-1B on a 7B variant, single run.",
+  "Image generation is evaluated only by FID on COCO plus qualitative figures; no human evaluation or CLIP-score.",
+  "Emu's FID is worse than SDv1.5; the cause offered (condition-space mismatch, short training) is untested.",
+  "Evaluation uses multimodal CoT captioning and task templates tuned per benchmark; * rows use text-only examples, so numbers depend on prompt format. Flamingo-80B and other baseline figures are copied, not rerun.",
+  "Paper says model is preliminary, research only; ethics section flags inherited bias and privacy risk."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Causal Transformer", "definition": "transforms 2D spatial visual signals to 1D causal sequences in a latent space; accepts N randomly initialised embeddings and outputs N embeddings conditioned on EVA-CLIP features via cross-attention", "where": "Sec 2.1"},
+  {"term": "YT-Storyboard-1B", "definition": "interleaved video-text data from YouTube storyboard thumbnails and subtitles ordered by timestamp", "where": "Sec 3.1"},
+  {"term": "RICES", "definition": "Retrieval In-Context Example Selection: choose in-context examples by highest cosine similarity of EVA-CLIP features", "where": "App C.3"}
+ ],
+ "lineage": [
+  {"work": "Flamingo (Alayrac et al., 2022)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "Compared throughout; RICES and text-only-example prompting follow it", "quote": null},
+  {"work": "EVA-CLIP (Sun et al., 2023)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "Initialises the visual encoder", "quote": null},
+  {"work": "LLaMA (Touvron et al., 2023)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "Initialises the multimodal LLM", "quote": null},
+  {"work": "Stable Diffusion (Rombach et al., 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "Initialises the visual decoder; v1.5 is a baseline", "quote": null},
+  {"work": "GILL (Koh et al., 2023a)", "year": 2023, "arxiv": "2305.17216", "relation": "baseline", "note": "Concurrent LLM-based image generator", "quote": null},
+  {"work": "CM3Leon (Yu et al., 2023a)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "Discretises images, whereas Emu uses continuous features", "quote": null},
+  {"work": "Kosmos-1 (Huang et al., 2023)", "year": 2023, "arxiv": "2302.14045", "relation": "baseline", "note": "Source of multimodal CoT prompting", "quote": null},
+  {"work": "MMC4 (Zhu et al., 2023b)", "year": 2023, "arxiv": "2304.06939", "relation": "uses-data", "note": "Interleaved image-text pretraining data", "quote": null},
+  {"work": "DreamLLM (Dong et al., 2023)", "year": 2023, "arxiv": "2309.11499", "relation": "related", "note": "MM-Vet comparison only (cited in v2)", "quote": null},
+  {"work": "LLaVA, ShareGPT, Alpaca, VideoChat, Video-ChatGPT", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "Instruction tuning data", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Emu unifies the modeling of different modalities in an auto-regressive manner. Visual signals are first encoded into embeddings, and together with text tokens form an interleaved sequence. The training objective is to either classify the next text token or regress the next visual embedding.", "page": 4, "why": "Shows the whole pipeline: classification head for text, regression head for visual embeddings, decoder at inference."},
+  {"figure": "Fig 3", "caption": "Interleaved video-text data. The combination of storyboard thumbnails and subtitles captions creates a natural interleaved sequence of video and text that is ordered by the timestamps.", "page": 6, "why": "Shows how YT-Storyboard-1B is built."},
+  {"figure": "Table 2", "caption": "Zero-shot text-to-image results on MS-COCO validation set. 30k samples are randomly sampled for evaluation.", "page": 8, "why": "The FID comparison against SDv1.5, GILL and others."}
+ ],
+ "code": [
+  {"where": "Eq 1, p4", "snippet": "max_theta sum_{u in D} sum_{i=1}^{|u|} log P(u_i | u_1, ..., u_{i-1}; theta)", "verbatim": false}
+ ],
+ "problems": [
+  "Batch sizes: text lists four values (128, 64, 16, 16) while Table 5 lists five (128, 128, 64, 16, 16); whether sizes are per GPU or global is unstated, and 10k steps does not obviously reproduce the stated 82M samples.",
+  "N (visual embeddings per image) is never given in the text.",
+  "The text claims a trend over k=0,2,4,8 but Table 3 has no k=0 column.",
+  "Table 3 PaLI-X row lists only three values (the 4- and 8-shot VQAv2 columns, with one cell positional); text-layer flattening of the table made columns ambiguous.",
+  "No embedded instructions found."
+ ]
 }

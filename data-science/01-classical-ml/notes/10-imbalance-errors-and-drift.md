@@ -132,7 +132,7 @@ Three lessons, all measured:
 
 - **Count events, not rows.** Detecting the same 20% cut takes 1,284 per arm at a 22% rate and 11,452 at 3%, and the simulation agrees with the formula at power 0.809. The events needed are of a similar order, 282 and 343. And in lending the outcome takes months to arrive, so the experiment is slower than the count suggests.
 - **A test set is as big as its defaulters.** With 50 defaulters, the SD of ROC-AUC is 0.039, more than any gap between methods in this chapter's next table. To detect a difference you need a few hundred events or several seeds.
-- **Good customers saturate early, defaulters do not.** Training on all 434 defaulters and just 434 good customers gives ROC-AUC 0.759 against 0.762 with all 14,018. Keeping all good customers and just 25 defaulters gives 0.676. That's why undersampling can be cheap and thinning positives is costly. If you've seen no defaults among 1,000 approved loans, the rule of three still only bounds the true rate at 0.3%.
+- **Good customers saturate early, defaulters do not.** Training on all 434 defaulters and just 434 good customers gives ROC-AUC 0.759 against 0.762 with all 14,018. Keeping all good customers and just 25 defaulters gives 0.676. That's why undersampling can be cheap and thinning positives is costly. If you've seen no defaults among 1,000 approved loans, the rule of three still only bounds the true rate at 0.3%. That rule says that with zero events in $n$ cases the 95% upper bound is about $3/n$, a shortcut for $1-0.05^{1/n}$. [DA 02/04](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#when-wald-fails-wilson) covers why the usual interval fails at a count of zero.
 
 ## Imbalance: what each remedy does
 
@@ -347,7 +347,7 @@ ROC-AUC is the honest comparison here since it ignores the class mix. The leaked
 
 ## Calibration: the bridge from score to price
 
-A lender prices with a probability: expected loss = PD × LGD × exposure. Rank isn't enough. Note 04 has [reliability diagrams and the methods](04b-thresholds-pr-roc-and-calibration.md#calibration-is-a-08-really-80); here's what resampling does to them.
+A lender prices with a probability: expected loss = PD × LGD × exposure. Rank isn't enough. Note 04b has [reliability diagrams and the methods](04b-thresholds-pr-roc-and-calibration.md#calibration-is-a-08-really-80); here's what resampling does to them.
 
 ```python
 from sklearn.calibration import CalibratedClassifierCV
@@ -420,7 +420,7 @@ The repairs, all on held-out validation data, never on train:
 
 - **Prior shift**, note 02's log-odds correction, needs no data but needs the mechanism to match. For undersampling it's right, intercept -0.036. For class weights and oversampling it leaves +0.23 and +0.27. For SMOTE it leaves +0.545, an average PD of 1.8%: SMOTE doesn't just change the prior, it moves the boundary.
 - **Intercept recalibration**, van den Goorbergh et al.'s fix, and **Platt scaling** both restore the mean, to 0.030, with the Brier back to 0.028 for every method.
-- **Isotonic** restores the mean too, but with 144 defaulters to fit on, the steps make a slope near 0.8. Note 04 keeps sigmoid for when data is short, and this is that case.
+- **Isotonic** restores the mean too, but with 144 defaulters to fit on, the steps make a slope near 0.8. Note 04b keeps sigmoid for when data is short, and this is that case.
 
 After repair every method has the same Brier as doing nothing, so the resampling and its repair cancel out. Their conclusion is ours: correction followed by recalibration is "only worth the effort if imbalance correction leads to better discrimination", and here it doesn't. The fix also costs validation data you could have used elsewhere. [Note 13](13-automate-review-or-reject.md#calibration-is-the-precondition) shows the same repair deciding whether a two-threshold queue works at all.
 

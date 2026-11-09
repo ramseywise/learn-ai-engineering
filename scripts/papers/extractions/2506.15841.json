@@ -1,0 +1,833 @@
+{
+ "schema": 1,
+ "key": "2506.15841",
+ "pdf": "ai-engineering/02-context-engineering/sources/zhou-2025-mem1.pdf",
+ "bib": {
+  "title": "MEM1: Learning to Synergize Memory and Reasoning for Efficient Long-Horizon Agents",
+  "authors": [
+   "Zijian Zhou",
+   "Ao Qu",
+   "Zhaoxuan Wu",
+   "Sunghwan Kim",
+   "Alok Prakash",
+   "Daniela Rus",
+   "Jinhua Zhao",
+   "Bryan Kian Hsiang Low",
+   "Paul Pu Liang"
+  ],
+  "first_author": "Zhou",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2506.15841",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 74811,
+  "chars_total": 74811,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only for lineage; everything else read."
+ },
+ "type": "empirical",
+ "question": "Can a language agent learn, through end-to-end RL, to consolidate its memory inside its reasoning so that context stays near-constant over long multi-turn tasks without losing accuracy?",
+ "hypothesis": "Reasoning can double as working memory: if the context is pruned each turn and reward depends on information gathered earlier, the agent will learn to keep only what is essential in a single internal state.",
+ "contributions": [
+  "MEM1, an end-to-end RL framework that keeps constant memory by updating a shared internal state <IS> that merges reasoning and memory consolidation",
+  "A masked-trajectory method (2D attention mask) so PPO policy gradients are valid under context pruning",
+  "A scalable task-augmentation recipe that composes N single-objective QA questions into multi-objective long-horizon tasks",
+  "Experiments on internal-retrieval QA, open-web QA and WebShop showing better or comparable accuracy with lower memory and latency"
+ ],
+ "method": {
+  "summary": "Each turn the agent emits <IS> (reasoning plus consolidated memory) then a <query> or <answer>; after each turn all previous-turn tags are pruned, leaving the question, latest IS, query and info. Trained with PPO from Qwen2.5-7B Base using a masked trajectory so token advantages are computed under the pruned contexts. Trained on 2-objective composite HotpotQA/NQ QA (outcome-only exact-match reward) and separately on WebShop; tested on up to 16-objective QA, single-objective Wiki QA and zero-shot online web QA.",
+  "task": "multi-turn agentic QA with retrieval, and WebShop navigation; RL for memory consolidation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Multi-objective QA from Search-R1 data (HotpotQA + Natural Questions)",
+    "role": "train",
+    "size": null,
+    "split": "2-objective composites; train-test split follows original papers",
+    "source": "Search-R1 [24] mix of HotpotQA [59] and NQ [26]; N questions composed into one query (Prompt 1)",
+    "preprocessing": "Interleave N questions into one composite query; answers separated by semicolons"
+   },
+   {
+    "name": "Held-out multi-objective test sets (1,2,3,4,6,8,16 objectives)",
+    "role": "eval",
+    "size": null,
+    "split": "augmented from original test sets (out-of-distribution)",
+    "source": "HotpotQA, NQ test sets",
+    "preprocessing": "same composition"
+   },
+   {
+    "name": "WebShop",
+    "role": "both",
+    "size": "first 1000 samples test, 1000th to 1500th val, remainder train",
+    "split": "as stated",
+    "source": "Yao et al. 2022 [60]",
+    "preprocessing": null
+   },
+   {
+    "name": "Online Web-QA (Serper API)",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot transfer, unseen by agent",
+    "source": "Google results via Serper; top 10 results (titles, snippets, URLs) returned",
+    "preprocessing": "agent does not fetch page content"
+   },
+   {
+    "name": "Wiki RAG single-objective QA",
+    "role": "eval",
+    "size": null,
+    "split": "as in Search-R1",
+    "source": "Wikipedia 2018 dump [25]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MEM1-7B (MEM1-QA, MEM1-WebShop)",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only transformer (Qwen2.5)",
+    "init_from": "Qwen2.5-7B Base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "critic": "PPO critic model (size not stated)"
+    }
+   },
+   {
+    "name": "Qwen2.5-14B-Instruct",
+    "role": "baseline",
+    "params": "14B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2.5-7B-Instruct (full context; truncate = MEM1 prompt and rollout; A-MEM)",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Search-R1",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "1-objective, EM reward"
+    }
+   },
+   {
+    "name": "DeepResearcher",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "1-objective, F1 reward"
+    }
+   },
+   {
+    "name": "MEM1-QA (SFT)",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "SFT on GPT-4o curated trajectories using MEM1 rollout; further trained on 1- and 3-objective tasks"
+    }
+   },
+   {
+    "name": "WebShop baselines: Agent-FLAN-7B, Agent-R-8B, AgentLM-7B/13B, GPT-4o (plain, truncate, A-MEM), Qwen2.5-7B/14B-Instruct",
+    "role": "baseline",
+    "params": "various",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "Agent-R": "scores from original paper (closed source)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "PPO with token-level advantages, critic, KL penalty; reward = exact match for QA (outcome only, no format reward or intermediate reward), built-in environment reward for WebShop",
+   "optimizer": null,
+   "lr": "actor 1e-6 (10^-6), critic 1e-5 (10^-5)",
+   "lr_schedule": "linear warmup of 50 steps (decay not stated)",
+   "warmup": "50 steps",
+   "batch_size": "data batch size 64, mini batch size 64",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty (coefficient not stated)",
+   "hardware": "4 H100 or H200 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "veRL for RL, Swift for SFT",
+    "rollout temperature": "1 during training",
+    "max turns": "6 for 1 to 4 objectives, 20 for harder tasks",
+    "hint": "[HINT: YOU HAVE {turns_left} TURNS LEFT] prepended inside <info>",
+    "attention mask": "2D mask for objective computation plus 1D info mask; position ids not duplicated (App A.7)",
+    "training horizon": "2-objective only",
+    "training steps seen": "read from Fig 6: phases to roughly step 250+; total not stated",
+    "SFT and instruct starts": "authors say RL from base beat instruction-tuned and SFT starts"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "0.01 during inference",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; tables report mean ± error for efficiency metrics, run count not given",
+   "prompting": "Prompt 1 (multi-objective QA), Prompt 2 (single QA), Prompt 3 (WebShop); XML tags <think>/<search>/<information>/<answer> in prompts, <IS>/<query>/<info> in text",
+   "retrieval": "Local Wiki: Faiss-GPU with E5 Base, 3 passages per retrieval; Web: Serper API top 10 results",
+   "parameters": {
+    "context kept": "at most two <IS>, two <query>, one <info>",
+    "max turns": "6 (1 to 4 objectives), 20 (more)"
+   },
+   "other": {
+    "serving": "vLLM with automatic prefix caching, single H200, 10 concurrent threads"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match (EM)",
+     "definition": "Answer extracted between <answer> tags; multi-objective answers separated by semicolons; 0 if tags mismatched or answer count wrong, else 1 point per correct answer",
+     "unit": "count per task (max equals number of objectives)",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "Word-level F1 vs ground truth, max over ground truths; multi-objective F1 is the sum over sub-questions",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Peak token usage",
+     "definition": "Max tokens (GPT-4o-mini tokenizer) in any single sequence in the trajectory, system prompt excluded",
+     "unit": "tokens (tables in x10^2 or x10^3)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Dependency",
+     "definition": "sum over steps of (2*n_o + n_p) * n_o / 2, n_p prefix tokens, n_o output tokens, system prompt ignored",
+     "unit": "x10^5 or x10^6",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inference time",
+     "definition": "Total elapsed time per trajectory on single H200, 10 threads, vLLM",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "Avg Final Reward",
+     "definition": "WebShop environment reward",
+     "unit": "reward",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Qwen2.5-14B-Instruct",
+    "Qwen2.5-7B-Instruct",
+    "Qwen2.5-7B-Instruct (truncate)",
+    "Qwen2.5-7B-Instruct (A-MEM)",
+    "Search-R1",
+    "DeepResearcher",
+    "MEM1-QA (SFT)",
+    "Agent-FLAN",
+    "Agent-R",
+    "AgentLM",
+    "GPT-4o variants"
+   ],
+   "protocol": "Test sets from original papers; efficiency metrics reported with ± values (nature of ± not defined); number of runs and seeds not stated; no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/MIT-MI/MEM1",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Multi-objective QA (Prompt 1)",
+    "text": "You will answer multiple complex questions using iterative reasoning, summarization, and web search. At each step, you will see the questions, a cumulative summary of relevant information, the current search query, and search results (except in the first step, where only the questions are provided). Your task is to: 1. Perform reasoning and update a cumulative, concise summary within <think> ... </think>. This acts as persistent memory and must include all essential information from previous <think> and <information> tags. 2. Then choose one of the following actions: - If any question remains unanswered, issue a single query for one question inside <search> ... </search>. The query should consist of keywords or a short phrase. Only search one question at a time. - If all questions are answered, provide the final answers—separated by semicolons—within <answer> answer1; answer2; ... </answer>. The answers must be concise, contain only essential words, and avoid any explanations. Important: - Always follow this structure after <information> or the initial questions: <think> ... </think><search> ... </search> or <think> ... </think><answer> ... </answer>. - Do not search multiple queries or questions simultaneously. Answer the following questions:[QUESTIONS]",
+    "where": "App A.3, Prompt 1"
+   },
+   {
+    "purpose": "WebShop (Prompt 3)",
+    "text": "You are browsing an online shop.",
+    "where": "App A.3, Prompt 3 (opening line only; rest abridged out)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Learning rate is set to 10−6 for the actor model and 10−5 for the critic model with a linear warmup of 50 steps.",
+    "where": "App A.1"
+   },
+   {
+    "field": "training.batch_size",
+    "quote": "both the data batch size and mini batch size are set to 64",
+    "where": "App A.1"
+   },
+   {
+    "field": "inference.temperature",
+    "quote": "Temperature is set to 1 during training and 0.01 during inference.",
+    "where": "App A.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MEM1-7B improves performance 3.5x and cuts memory 3.7x vs Qwen2.5-14B-Instruct on 16-objective QA (headline).",
+   "kind": "measured",
+   "source": null,
+   "metric": "performance ratio",
+   "value": "3.5x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16-objective multi-hop QA (HotpotQA/NQ composites), MEM1-7B trained on 2-objective only, vs Qwen2.5-14B-Instruct; max 20 turns",
+   "quote": "MEM1-7B improves performance by 3.5× while reducing memory usage by 3.7× compared to Qwen2.5-14B-Instruct on a 16-objective multi-hop QA task",
+   "table": null,
+   "note": "Ratios are consistent with Table 1: EM 1.97/0.567=3.47; peak 38.4/10.4=3.69 (peak in x10^2 tokens).",
+   "where": "Abstract"
+  },
+  {
+   "claim": "16-objective EM: MEM1-QA vs Qwen2.5-14B-Inst.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "1.97",
+   "unit": "EM count",
+   "baseline_value": 0.567,
+   "n": null,
+   "setup": "16-objective multi-hop QA (HotpotQA/NQ composites), MEM1-7B trained on 2-objective only, vs Qwen2.5-14B-Instruct; max 20 turns",
+   "quote": null,
+   "table": "Table 1, row MEM1-QA, column 16-Objective EM (baseline row Qwen2.5-14B-Inst: 0.567)",
+   "note": "Table 4 prints the RL 16-objective EM as 1.900, Table 1 prints 1.97. Max possible is 16; EM scale appears to be a mean count per task, unit not clearly defined.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "16-objective peak tokens: MEM1-QA vs Qwen2.5-14B-Inst.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Peak tokens (x10^2)",
+   "value": "10.4",
+   "unit": "x10^2 tokens",
+   "baseline_value": 38.4,
+   "n": null,
+   "setup": "16-objective multi-hop QA (HotpotQA/NQ composites), MEM1-7B trained on 2-objective only, vs Qwen2.5-14B-Instruct; max 20 turns",
+   "quote": null,
+   "table": "Table 1, row MEM1-QA, column 16-Objective Peak (x10^2) (baseline row Qwen2.5-14B-Inst: 38.4)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "MEM1 needs 27.1% of peak tokens and 29.3% of inference time of Qwen2.5-14B-Instruct at 16 objectives.",
+   "kind": "measured",
+   "source": null,
+   "metric": "peak token share",
+   "value": "27.1%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16-objective multi-hop QA (HotpotQA/NQ composites), MEM1-7B trained on 2-objective only, vs Qwen2.5-14B-Instruct; max 20 turns",
+   "quote": "In the 16-objective task, it requires only 27.1% of the peak tokens and 29.3% of the total inference time compared to Qwen2.5-14B-Instruct.",
+   "table": null,
+   "note": "Time: MEM1 8.70 s vs 29.7 s in Table 1 (8.70/29.7=0.293).",
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Untrained Qwen2.5-7B-Instruct with MEM1 prompt and rollout (truncate) vs full-log context, 16 objectives, EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.396",
+   "unit": "EM count",
+   "baseline_value": 0.165,
+   "n": null,
+   "setup": "16-objective QA, no RL training, truncate = MEM1 prompt and rollout applied to Qwen2.5-7B-Instruct; baseline = same model with full context",
+   "quote": null,
+   "table": "Table 1, row Qwen2.5-7B-Inst (truncate), column 16-Objective EM (0.396); row Qwen2.5-7B-Inst, column 16-Objective EM (0.165)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Same comparison, 16 objectives, peak tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Peak tokens (x10^2)",
+   "value": "13.3",
+   "unit": "x10^2 tokens",
+   "baseline_value": 43.3,
+   "n": null,
+   "setup": "16-objective QA; truncate vs full-context Qwen2.5-7B-Instruct, no training",
+   "quote": null,
+   "table": "Table 1, row Qwen2.5-7B-Inst (truncate), column 16-Objective Peak (x10^2) (13.3); row Qwen2.5-7B-Inst (43.3)",
+   "note": "Full-context 16-obj peak (43.3) is lower than 8-obj (49.5); Fig 4 caption says baseline context stops growing because performance degraded or collapsed.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "At 2 objectives, the MEM1 prompt on untrained Qwen2.5-7B gives no EM gain (0.262 vs 0.268) but halves-plus peak tokens (8.28 vs 19.6 x10^2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.262",
+   "unit": "EM count",
+   "baseline_value": 0.268,
+   "n": null,
+   "setup": "2-objective QA, truncate vs full-context Qwen2.5-7B-Instruct",
+   "quote": null,
+   "table": "Table 1, row Qwen2.5-7B-Inst (truncate), column 2-Objective EM (0.262) and Peak (8.28); row Qwen2.5-7B-Inst EM 0.268, Peak 19.6",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "MEM1-QA at 2 objectives (training horizon): EM 0.709, peak 6.40 x10^2, time 6.49 s, lower EM than Qwen2.5-14B-Inst (0.732).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.709",
+   "unit": "EM count",
+   "baseline_value": 0.732,
+   "n": null,
+   "setup": "2-objective QA test",
+   "quote": null,
+   "table": "Table 1, row MEM1-QA, column 2-Objective EM",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "MEM1 peak tokens are near constant: 6.40 (2-obj), 8.01 (8-obj), 10.4 (16-obj) x10^2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Peak tokens (x10^2) at 8 objectives",
+   "value": "8.01",
+   "unit": "x10^2 tokens",
+   "baseline_value": 44.7,
+   "n": null,
+   "setup": "MEM1-QA vs Qwen2.5-14B-Inst at 8 objectives",
+   "quote": null,
+   "table": "Table 1, row MEM1-QA, column 8-Objective Peak (x10^2); baseline Qwen2.5-14B-Inst 44.7",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Other methods collapse at 16 objectives: Search-R1 EM 0.009, DeepResearcher 0.071 (14B 0.567).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.009",
+   "unit": "EM count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16-objective QA, Search-R1 and DeepResearcher trained on 1-objective",
+   "quote": null,
+   "table": "Table 1, row Search-R1, column 16-Objective EM (0.009); row DeepResearcher 0.071",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Abstract-level 1.27x lower peak memory and 1.78x faster inference at 16 objectives vs the best uncollapsed baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "peak memory ratio",
+   "value": "1.27x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16-objective QA vs best uncollapsed baseline",
+   "quote": "along with 1.27× lower peak memory usage and 1.78× faster inference compared to the respective best uncollapsed baseline",
+   "table": null,
+   "note": "The introduction's ratios use a different baseline (best uncollapsed) from the abstract's 3.7x (vs 14B); which row is the best uncollapsed baseline is not stated.",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "WebShop: MEM1 avg final reward 70.87 beats AgentLM-13B (70.80).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg Final Reward",
+   "value": "70.87",
+   "unit": "reward",
+   "baseline_value": 70.8,
+   "n": null,
+   "setup": "WebShop, MEM1 trained in WebShop",
+   "quote": null,
+   "table": "Table 2, row MEM1-WebShop, column Avg Final Reward (70.87); row AgentLM-13B 70.80",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "WebShop: MEM1 peak token 0.81 x10^3 vs AgentLM-7B 2.24 x10^3 (2.8x).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Peak token (x10^3)",
+   "value": "0.81",
+   "unit": "x10^3 tokens",
+   "baseline_value": 2.24,
+   "n": null,
+   "setup": "WebShop vs AgentLM-7B (best baseline per text)",
+   "quote": null,
+   "table": "Table 2, row MEM1-WebShop, column Peak Token (x10^3)",
+   "note": "Text claims 2.8x peak, 1.9x dependency, 1.5x inference time vs AgentLM; 2.24/0.81=2.77.",
+   "where": "Table 2, Sec 4.3"
+  },
+  {
+   "claim": "Single-objective Wiki RAG: MEM1-QA EM 0.405 vs Qwen2.5-14B 0.422, Search-R1 0.445; peak 5.63 x10^2 vs 8.89 and 11.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.405",
+   "unit": "EM",
+   "baseline_value": 0.422,
+   "n": null,
+   "setup": "Wiki RAG single-objective, MEM1 trained on 2-objective only",
+   "quote": null,
+   "table": "Table 3, row Wiki RAG MEM1-QA, column EM",
+   "note": "Text says MEM1 attains 'the highest EM score' in this table, but Search-R1 prints 0.445 and 14B prints 0.422, both above MEM1-QA 0.405.",
+   "where": "Table 3, Sec 4.3"
+  },
+  {
+   "claim": "Zero-shot online web QA: MEM1-QA EM 0.397 vs DeepResearcher 0.372, with peak 5.79 vs 10.27 x10^2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.397",
+   "unit": "EM",
+   "baseline_value": 0.372,
+   "n": null,
+   "setup": "Online Web-QA, zero-shot transfer",
+   "quote": null,
+   "table": "Table 3, row Online Web-QA MEM1-QA, column EM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "RL beats SFT: 16-objective EM 1.900 for RL vs 0.000 for SFT; SFT collapses beyond six objectives.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "1.900",
+   "unit": "EM count",
+   "baseline_value": 0.0,
+   "n": null,
+   "setup": "MEM1-QA RL vs SFT (GPT-4o curated trajectories, plus 1- and 3-objective data)",
+   "quote": null,
+   "table": "Table 4, row #Q 16, columns RL and SFT",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Adding a format reward (-1 penalty) speeds convergence but lowers 2-objective EM to 0.466 vs 0.709.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "0.466",
+   "unit": "EM count",
+   "baseline_value": 0.709,
+   "n": null,
+   "setup": "2-objective QA test, outcome-only reward vs format reward",
+   "quote": "The format-constrained agent achieves an exact match score of 0.466, compared to 0.709 for MEM1 trained with only outcome-based reward",
+   "table": null,
+   "note": null,
+   "where": "App D.2"
+  },
+  {
+   "claim": "Training shows phases (exploration <50 steps, format acquisition, shortcut near step 150, second shift after step 200, consolidation after step 250).",
+   "kind": "measured",
+   "source": null,
+   "metric": "valid action ratio at start",
+   "value": "0.55",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2-objective QA RL training run",
+   "quote": "The ratio of valid actions hovers around 0.55",
+   "table": null,
+   "note": null,
+   "where": "App C"
+  }
+ ],
+ "limits": [
+  "Authors concede MEM1 assumes environments with well-defined, verifiable rewards; open-ended tasks with sparse or noisy reward are future work.",
+  "Position ids are not duplicated, so the masked attention does not fully recover the original attention (App A.7); authors claim no significant effect, no ablation shown.",
+  "Training steps, seeds, number of eval runs, critic size, KL coefficient, dataset sizes and optimiser are not stated; no significance tests.",
+  "EM scale for multi-objective tasks (e.g. 1.97 at 16 objectives) is a per-task count whose normalisation is not defined; results are one 7B base model.",
+  "Table 3 and text disagree on 'highest EM' (MEM1-QA 0.405 below Search-R1 0.445 and 14B 0.422).",
+  "Baseline collapse at high objective counts caps their peak tokens, so peak-token ratios depend on collapse behaviour (Fig 4 caption).",
+  "Peak tokens exclude system prompt and use GPT-4o-mini tokenizer; peak token is a proxy for memory, not measured GPU memory.",
+  "MEM1 at 2 objectives is below Qwen2.5-14B-Instruct (0.709 vs 0.732 EM); the A-MEM 16-objective EM (0.730) is higher than the 14B model, though lower than MEM1."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Internal state (IS)",
+   "definition": "A compact element in which the agent interleaves reasoning and consolidated memory; the only memory retained between turns",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Masked trajectory",
+   "definition": "Stitched full trajectory with a 2D attention mask restricting each token to the context that was retained when it was generated, so policy-gradient ratios stay valid",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Multi-objective QA",
+   "definition": "Composite query formed by interleaving N questions from a QA corpus, requiring answers to all (semicolon separated)",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Search-R1",
+   "year": 2025,
+   "arxiv": "2503.09516",
+   "relation": "extends",
+   "note": "RL search agent with append-all context; training data and rollout code basis; baseline",
+   "quote": null
+  },
+  {
+   "work": "DeepResearcher",
+   "year": 2025,
+   "arxiv": "2504.03160",
+   "relation": "baseline",
+   "note": "RL deep-research agent trained on 1-objective web QA",
+   "quote": null
+  },
+  {
+   "work": "A-MEM",
+   "year": 2025,
+   "arxiv": "2502.12110",
+   "relation": "baseline",
+   "note": "External agentic memory with vector DB, applied to Qwen2.5-7B-Instruct and GPT-4o",
+   "quote": null
+  },
+  {
+   "work": "PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "veRL / HybridFlow",
+   "year": 2024,
+   "arxiv": "2409.19256",
+   "relation": "uses-method",
+   "note": "RL training framework",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Interleaved reasoning and acting with growing context",
+   "quote": null
+  },
+  {
+   "work": "LightThinker",
+   "year": 2025,
+   "arxiv": "2502.15589",
+   "relation": "uses-method",
+   "note": "Dependency metric definition",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Multi-hop QA source",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "QA source",
+   "quote": null
+  },
+  {
+   "work": "WebShop",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Shopping environment",
+   "quote": null
+  },
+  {
+   "work": "Agent-FLAN",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "WebShop baseline",
+   "quote": null
+  },
+  {
+   "work": "Agent-R",
+   "year": 2025,
+   "arxiv": "2501.11425",
+   "relation": "baseline",
+   "note": "WebShop baseline, scores from original paper",
+   "quote": null
+  },
+  {
+   "work": "AgentTuning / AgentLM",
+   "year": 2023,
+   "arxiv": "2310.12823",
+   "relation": "baseline",
+   "note": "WebShop baseline",
+   "quote": null
+  },
+  {
+   "work": "Qwen2.5",
+   "year": 2024,
+   "arxiv": "2412.15115",
+   "relation": "uses-method",
+   "note": "Base model Qwen2.5-7B and 14B-Instruct baseline",
+   "quote": null
+  },
+  {
+   "work": "Mem0",
+   "year": 2025,
+   "arxiv": "2504.19413",
+   "relation": "related",
+   "note": "External memory framework",
+   "quote": null
+  },
+  {
+   "work": "COMPACT",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Retrieved-document compression trained separately",
+   "quote": null
+  },
+  {
+   "work": "Reinforce++",
+   "year": 2025,
+   "arxiv": "2501.03262",
+   "relation": "related",
+   "note": "Alternative policy optimisation named for token-level advantages",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Long context dilutes attention",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of memory management between MEM1 and existing reasoning agents.",
+   "page": 2,
+   "why": "Shows append-all context vs MEM1 replacing it with an updated <IS> each turn."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Conceptual comparison of context length between MEM1 and existing reasoning agents on long-horizon tasks.",
+   "page": 3,
+   "why": "Growing vs near-constant context at a glance."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "RL pipeline; context evolution; 2D attention mask used in objective computation.",
+   "page": 5,
+   "why": "Explains the masked trajectory that makes PPO work under pruning."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Performance and efficiency scaling of MEM1 with the number of objectives.",
+   "page": 8,
+   "why": "Peak tokens linear for baselines, flat for MEM1."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Comparison of models on multi-objective multi-hop QA tasks.",
+   "page": 8,
+   "why": "Source of the headline 3.5x / 3.7x numbers and truncate vs full-context ablation."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Metrics of training progress for MEM1 with RL.",
+   "page": 21,
+   "why": "Shows the reward-hacking shortcut and recovery phases."
+  }
+ ],
+ "code": [
+  {
+   "where": "App A.4.1",
+   "snippet": "Dependency := sum_{i in [T]} (2 n_o^(i) + n_p^(i)) * n_o^(i) / 2",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4.1",
+   "snippet": "[HINT: YOU HAVE {turns_left} TURNS LEFT]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction of tables is cell-per-line; Table 1 columns were mapped by order (EM, F1, Peak, Time per 2/8/16-objective block). Table 1 omits 1,3,4,6-objective columns (only in Fig 4).",
+  "No embedded instructions found.",
+  "Paper never says exactly which row is the 'best uncollapsed baseline' behind the 1.27x / 1.78x intro numbers."
+ ]
+}

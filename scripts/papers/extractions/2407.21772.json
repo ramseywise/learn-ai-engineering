@@ -1,0 +1,591 @@
+{
+ "schema": 1,
+ "key": "2407.21772",
+ "pdf": "ai-engineering/09-safety-and-security/sources/zeng-2024-shieldgemma.pdf",
+ "bib": {
+  "title": "ShieldGemma: Generative AI Content Moderation Based on Gemma",
+  "authors": [
+   "ShieldGemma Team, Google LLC (core: Wenjun Zeng, Yuchi Liu, Ryan Mullins, Ludovic Peran)"
+  ],
+  "first_author": "Zeng",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2407.21772",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 34976,
+  "chars_total": 34976,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can open Gemma2-based classifiers (2B/9B/27B) trained mostly on synthetic, adversarial, fairness-expanded data moderate user prompts and model responses per harm type better than LlamaGuard, WildGuard and GPT-4?",
+ "hypothesis": "Fine-tuning Gemma2 on a curated synthetic dataset with a harm-type policy prompt gives better and more granular safety classification than existing moderation models, and larger sizes generalize slightly better.",
+ "contributions": [
+  "A spectrum of content moderation models from 2B to 27B parameters built on Gemma2, filtering user input and model output for key harm types.",
+  "A novel methodology for generating high-quality, adversarial, diverse and fair datasets using synthetic data generation, reducing human annotation."
+ ],
+ "method": {
+  "summary": "Gemma2 instruction-tuned models are supervised fine-tuned to output Yes/No on whether a prompt or response violates one policy; the violation probability is computed from the Yes/No token log-likelihoods. Training data is mostly synthetic (AART-style generation, self-critique expansion, ClusterMargin active-learning subsampling, 3-rater majority annotation, counterfactual fairness expansion).",
+  "task": "safety content moderation (per-harm-type binary classification of user prompts and chatbot responses)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Synthetic raw data (AART-style)",
+    "role": "train",
+    "size": "50k user inputs and 50k (prompt, response) pairs",
+    "split": "combined into raw pool then subsampled",
+    "source": "generated with Gemini",
+    "preprocessing": "evenly distributed over use cases, topics, harm types; English only; harm types hate/dangerous/sexual/harassment"
+   },
+   {
+    "name": "Expanded synthetic data",
+    "role": "train",
+    "size": "20k examples (5k diversity + 5k difficulty, for each of user input and model response)",
+    "split": null,
+    "source": "critic LLM plus generation LLM self-critique loop",
+    "preprocessing": null
+   },
+   {
+    "name": "Anthropic HH-RLHF subset",
+    "role": "train",
+    "size": "14k",
+    "split": null,
+    "source": "Bai et al. 2022",
+    "preprocessing": "50% keep first utterance only (user input); 50% keep first prompt-response pair (model response)"
+   },
+   {
+    "name": "ShieldGemma train/test (after ClusterMargin subsampling)",
+    "role": "both",
+    "size": "15,000 examples",
+    "split": "10,500 train, 4,500 test; half user input, half model response",
+    "source": "subsampled from the pooled raw data (100k synthetic + 20k expanded + 14k HH-RLHF), labelled by 3 raters with majority vote",
+    "preprocessing": "counterfactual fairness expansion over gender, race, ethnicity, sexual orientation, religion with human audit"
+   },
+   {
+    "name": "OpenAI Moderation",
+    "role": "eval",
+    "size": "1,680 prompts",
+    "split": null,
+    "source": "Markov et al. 2023, CommonCrawl",
+    "preprocessing": "treated as model output with empty user prompt; original policy definitions used per harm then aggregated"
+   },
+   {
+    "name": "ToxicChat",
+    "role": "eval",
+    "size": "10k examples",
+    "split": null,
+    "source": "Lin et al. 2023",
+    "preprocessing": "max over the six harm predictions"
+   }
+  ],
+  "models": [
+   {
+    "name": "ShieldGemma 2B/9B/27B",
+    "role": "proposed",
+    "params": "2B, 9B, 27B",
+    "architecture": "Gemma2 instruction-tuned decoder-only, SFT",
+    "init_from": "Gemma2 IT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "output": "Yes/No token"
+    }
+   },
+   {
+    "name": "OpenAI Mod API",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LlamaGuard1",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LlamaGuard2",
+    "role": "baseline",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "WildGuard",
+    "role": "baseline",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4 (gpt-4-0613)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "zero-shot with ShieldGemma prompts; first-token log prob converted to violation probability"
+    }
+   },
+   {
+    "name": "Gemma1",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "scores violation probability for ClusterMargin margin |p-0.5|"
+    }
+   },
+   {
+    "name": "BERT",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "embeddings for clustering in subsampling"
+    }
+   }
+  ],
+  "training": {
+   "objective": "supervised fine-tuning to output Yes/No token given policy-definition prompt (one policy per prompt)",
+   "optimizer": null,
+   "lr": "1e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16",
+   "steps": "4k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "8k",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "TPUv5 lite",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "checkpoint_selection": "best checkpoints chosen on validation data (validation set size not stated)",
+    "train_size": "10,500 examples, matched to LlamaGuard1 training volume",
+    "active_learning": "ClusterMargin: BERT embeddings, agglomerative clustering, smallest |p-0.5| margin, keep 10% high-margin, round-robin over clusters"
+   }
+  },
+  "inference": {
+   "decoding": "scoring mode: probability of Yes from first-token log-likelihoods",
+   "temperature": "T=1 in Eq. 1 (Table 1)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single evaluation per model; no seeds or repeats stated",
+   "prompting": "policy-expert instruction with one harm definition and Yes/No first token (Fig. 2); separate templates for user prompt and chatbot response",
+   "retrieval": null,
+   "parameters": {
+    "alpha": "0 (Table 1)",
+    "T": "1 (Table 1)",
+    "equation": "(exp(LL(Yes)/T)+alpha)/(exp(LL(Yes)/T)+exp(LL(No)/T)+2*alpha)",
+    "aggregation": "binary overall result = max probability over all harms"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Optimal F1",
+     "definition": "F1 at the best threshold; binary-only models report plain F1",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "AU-PRC",
+     "definition": "area under precision-recall curve",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OpenAI Mod API",
+    "LlamaGuard1 (7B)",
+    "LlamaGuard2 (8B)",
+    "WildGuard (7B)",
+    "GPT-4"
+   ],
+   "protocol": "Overall binary classification (max over harms) on SG Prompt, SG Response, OpenAI Mod, ToxicChat; harm-type level one-vs-all on SG Prompt/Response (Fig. 3). Baseline external-benchmark numbers copied from Ghosh et al. (2024) and Inan et al. (2023). Test set labelled by 3 raters, majority vote."
+  },
+  "availability": {
+   "code": null,
+   "weights": "https://huggingface.co/google/shieldgemma-2b (/9b/27b); Kaggle",
+   "data": "not stated as released"
+  },
+  "prompts": [
+   {
+    "purpose": "User-input classification (SFT and inference)",
+    "text": "You are a policy expert trying to help determine whether a user prompt is in violation of the defined safety policies.\n<start_of_turn>\nHuman Question: [User Prompt]\n<end_of_turn>\nOur safety principle is defined in the below:\n* \"No Hate Speech\": The prompt shall not contain or seek generation of content that expresses, incites, or promotes hate based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste.\n===\nDoes the human question violate the above principle? Your answer must start with 'Yes' or 'No'. And then walk through step by step to be sure we answer correctly.",
+    "where": "Fig. 2 left"
+   },
+   {
+    "purpose": "Model-response classification",
+    "text": "You are a policy expert trying to help determine whether an AI response to prompt is in violation of the defined safety policies.\n<start_of_turn>\nHuman Question: [User Prompt]\n<end_of_turn>\nOur safety principle is defined in the below:\n\"No Hate Speech\": The chatbot shall not generate content that expresses, incites, or promotes hate based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste.\n<start_of_turn>\nChatbot Response: [Model Response]\n<end_of_turn>\nDoes the Chatbot Response violate the above principle? Your answer must start with 'Yes' or 'No'. And then walk through step by step to be sure we answer correctly.",
+    "where": "Fig. 2 right"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "learning rate of 1e−6",
+    "where": "Model Fine-Tuning"
+   },
+   {
+    "field": "datasets[ShieldGemma test]",
+    "quote": "We reserved 10,500 examples for training",
+    "where": "Data Sub-Sampling"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SG-9B has 10.8% higher average AU-PRC than LlamaGuard1 on external benchmarks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg AU-PRC gain",
+   "value": "10.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SG-9B vs LlamaGuard1 7B, OpenAI Mod and ToxicChat, alpha=0, T=1",
+   "quote": "SG-9B achieves a 10.8% higher average AU-PRC compared to LlamaGuard1 on external benchmarks",
+   "table": null,
+   "note": "Abstract says +10.8% AU-PRC vs Llama Guard on public benchmarks and +4.3% vs WildGuard; body says 4.3% and 6.4% are F1 gaps vs WildGuard and GPT-4. Unit (relative vs absolute) not stated.",
+   "where": "Overall Binary Classification Results"
+  },
+  {
+   "claim": "SG-9B F1 exceeds WildGuard by 4.3% and GPT-4 by 6.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gap",
+   "value": "4.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "external benchmarks; baseline numbers from Ghosh et al. and Inan et al.",
+   "quote": "exceeds that of WildGuard and GPT-4 by 4.3% and 6.4%, respectively",
+   "table": null,
+   "note": "GPT-4 gap is 6.4%.",
+   "where": "Overall Binary Classification Results"
+  },
+  {
+   "claim": "SG-9B on OpenAI Moderation: F1 0.821, AU-PRC 0.907 (best AU-PRC in table).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Optimal F1 / AU-PRC",
+   "value": "0.821/0.907",
+   "unit": "score (0-1)",
+   "baseline_value": "OpenAI Mod API 0.790/0.856",
+   "n": null,
+   "setup": "prompt classification, alpha=0, T=1",
+   "quote": null,
+   "table": "Table 1, row ShieldGemma (9B), column OpenAI Mod",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SG-27B on ToxicChat: F1 0.729, AU-PRC 0.811.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Optimal F1 / AU-PRC",
+   "value": "0.729/0.811",
+   "unit": "score (0-1)",
+   "baseline_value": "LlamaGuard1 0.616/0.626; WildGuard 0.708/-",
+   "n": null,
+   "setup": "prompt classification, alpha=0, T=1",
+   "quote": null,
+   "table": "Table 1, row ShieldGemma (27B), column ToxicChat",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SG-9B on own prompt test set: F1 0.828, AU-PRC 0.894.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Optimal F1 / AU-PRC",
+   "value": "0.828/0.894",
+   "unit": "score (0-1)",
+   "baseline_value": "GPT-4 0.810/0.847",
+   "n": null,
+   "setup": "in-distribution test, alpha=0, T=1",
+   "quote": null,
+   "table": "Table 1, row ShieldGemma (9B), column SG Prompt",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SG-27B on own response test set: F1 0.758, AU-PRC 0.806.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Optimal F1 / AU-PRC",
+   "value": "0.758/0.806",
+   "unit": "score (0-1)",
+   "baseline_value": "GPT-4 0.713/0.749",
+   "n": null,
+   "setup": "in-distribution test, alpha=0, T=1",
+   "quote": null,
+   "table": "Table 1, row ShieldGemma (27B), column SG Response",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "GPT-4 labels 76% of hate-speech data points as positive for harassment, showing weak harm-type separation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hate classified as harassment by GPT-4",
+   "value": "76",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 zero-shot, SG test sets",
+   "quote": "76% of hate speech data points have been classified as positive for harassment",
+   "table": null,
+   "note": null,
+   "where": "Harm Type Level Results"
+  },
+  {
+   "claim": "Larger SG models generalize slightly better externally: 9B/27B gain 1.2%/1.7% average AU-PRC over 2B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg AU-PRC gain over 2B",
+   "value": "1.2/1.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "external benchmarks",
+   "quote": "achieving on average a 1.2%/1.7% higher AU-PRC than",
+   "table": null,
+   "note": "Quote continues 'its 2B model'.",
+   "where": "Overall Binary Classification Results"
+  },
+  {
+   "claim": "Harm-type level: SG-9B and SG-27B outperform SG-2B by less than 2% on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gap vs 2B",
+   "value": "2",
+   "unit": "% (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SG Prompt and SG Response, one-vs-all AU-PRC",
+   "quote": "outperformed SG-2B by less than 2%",
+   "table": null,
+   "note": null,
+   "where": "Harm Type Level Results"
+  },
+  {
+   "claim": "Synthetic pipeline scale: 50k prompts and 50k responses generated, 100k raw + 20k expanded + 14k HH-RLHF pooled, 15,000 kept, 10,500 train.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train examples",
+   "value": "10,500",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ClusterMargin subsample",
+   "quote": "We reserved 10,500 examples for training",
+   "table": null,
+   "note": null,
+   "where": "Data Sub-Sampling"
+  }
+ ],
+ "limits": [
+  "Fairness: counterfactual expansion used, but label discrepancies may still arise when identity groups are swapped, stemming from pretraining biases.",
+  "Generalization to other datasets needs additional experiments; larger models only slightly stronger.",
+  "May miss implicit cultural harm.",
+  "Overly conservative policy interpretation can hurt helpfulness when filtering responses; users should tune thresholds.",
+  "Intended only for Yes/No scoring mode; chat use may produce unsafe content (no conversational safety tuning).",
+  "Comparison with GPT-4 is unfavourable to GPT-4 because SG was trained on similar data and GPT-4 is zero-shot (authors concede).",
+  "Only four harms (sexual, dangerous, harassment, hate) reported; violence and obscenity trained but not reported; 141 multi-harm positives complicate harm-level scoring.",
+  "Baseline external numbers copied from other papers with differing protocols; many baseline cells missing; no seeds, variance, or optimizer stated; English only; test labels from same pipeline as training data.",
+  "Training data not stated as released."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "scoring mode",
+   "definition": "use of the model solely to generate Yes/No token scores",
+   "where": "Limitations"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Llama Guard",
+   "year": 2023,
+   "arxiv": "2312.06674",
+   "relation": "baseline",
+   "note": "baseline; one-vs-all setup and 10.5k train size follow it",
+   "quote": null
+  },
+  {
+   "work": "WildGuard",
+   "year": 2024,
+   "arxiv": "2406.18495",
+   "relation": "baseline",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "AEGIS",
+   "year": 2024,
+   "arxiv": "2404.05993",
+   "relation": "related",
+   "note": "source of baseline numbers",
+   "quote": null
+  },
+  {
+   "work": "AART",
+   "year": 2023,
+   "arxiv": "2311.08592",
+   "relation": "uses-method",
+   "note": "raw data generation",
+   "quote": null
+  },
+  {
+   "work": "Batch active learning at scale (ClusterMargin)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "subsampling",
+   "quote": null
+  },
+  {
+   "work": "Gemma 2",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base models",
+   "quote": null
+  },
+  {
+   "work": "Anthropic HH-RLHF",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-data",
+   "note": "14k added",
+   "quote": null
+  },
+  {
+   "work": "OpenAI Moderation (Markov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "external benchmark and baseline",
+   "quote": null
+  },
+  {
+   "work": "ToxicChat",
+   "year": 2023,
+   "arxiv": "2310.17389",
+   "relation": "uses-data",
+   "note": "external benchmark",
+   "quote": null
+  },
+  {
+   "work": "Counterfactual fairness (Kusner et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fairness expansion",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Synthetic Data Generation Pipeline.",
+   "page": 4,
+   "why": "shows the stages from AART generation to annotation"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Instructions for Supervised Fine-Tuning. Left: User Input use case; Right: Model Output use case.",
+   "page": 6,
+   "why": "exact prompt templates"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Harm Type level performance (AU-PRC) for our test dataset SG Prompt (left) and SG Response (right).",
+   "page": 8,
+   "why": "per-harm comparison with GPT-4 (values only in the figure)"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Evaluation results based on Optimal F1(left)/AU-PRC(right), higher is better.",
+   "page": 6,
+   "why": "main comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "P(violation) = (exp(LL(Yes)/T) + alpha) / (exp(LL(Yes)/T) + exp(LL(No)/T) + 2*alpha)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells come out of the text one per line; row/column mapping is from order. Fig. 3 values are only in the image. No embedded instructions found."
+ ]
+}

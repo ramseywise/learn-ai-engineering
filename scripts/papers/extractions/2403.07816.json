@@ -1,0 +1,602 @@
+{
+ "schema": 1,
+ "key": "2403.07816",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sukhbaatar-2024-branch-train-mix.pdf",
+ "bib": {
+  "title": "Branch-Train-MiX: Mixing Expert LLMs into a Mixture-of-Experts LLM",
+  "authors": [
+   "Sainbayar Sukhbaatar",
+   "Olga Golovneva",
+   "Vasu Sharma",
+   "Hu Xu",
+   "Xi Victoria Lin",
+   "Baptiste Rozière",
+   "Jacob Kahn",
+   "Daniel Li",
+   "Wen-tau Yih",
+   "Jason Weston",
+   "Xian Li"
+  ],
+  "first_author": "Sukhbaatar",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2403.07816",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 60159,
+  "chars_total": 60159,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can an LLM be given several specialised domain capabilities cheaply, combining the parallel training of Branch-Train-Merge with a single unified Mixture-of-Experts model?",
+ "hypothesis": "Even a small amount of combined MoE finetuning after independent expert training and merging can give large improvements, and learned token-level routing beats BTM's input-level expert selection.",
+ "contributions": [
+  "BTX: branch seed LLM, train experts in parallel, mix FF layers as MoE experts, average other params, finetune router",
+  "BTX generalises Branch-Train-Merge (no MoE finetune) and sparse upcycling (no expert training)",
+  "Best accuracy-efficiency tradeoff versus dense, BTM and sparse upcycling baselines"
+ ],
+ "method": {
+  "summary": "Copy Llama-2 7B three times and continue pretraining on math, code and Wikipedia data independently. Combine the feedforward layers of the three experts plus the original seed as four MoE experts per layer, average attention and other parameters, add a randomly initialised linear router per layer, then finetune the whole MoE on the mixed data for 80B tokens.",
+  "task": "continued pretraining of a pretrained LLM for multi-domain capability (MoE upcycling)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Math (Llemma mixture: AlgebraicStack, OpenWebMath, Arxiv, Github, Commoncrawl)",
+    "role": "train",
+    "size": "201B tokens (48k steps)",
+    "split": null,
+    "source": "Llemma data (Azerbayev et al., 2023)",
+    "preprocessing": null
+   },
+   {
+    "name": "Code (CodeLlama mixture)",
+    "role": "train",
+    "size": "210B tokens (50k steps)",
+    "split": null,
+    "source": "CodeLlama data (Rozière et al., 2023); 82.18% code, 9.90% natural language related to code, 6.93% natural language",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikipedia",
+    "role": "train",
+    "size": "42B tokens",
+    "split": null,
+    "source": "Wikipedia documents extracted June to August 2022; 90.91% Wikipedia, 9.09% Commoncrawl",
+    "preprocessing": "removed hyperlinks, comments and other formatting boilerplate"
+   },
+   {
+    "name": "MoE finetuning mixture",
+    "role": "train",
+    "size": "80B tokens",
+    "split": null,
+    "source": "all expert data plus Llama-2 pretraining data, sampled math 30.16%, code 40.31%, Wikipedia 10.30%, Llama-2 data 19.23%",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K, MATH, HumanEval, MBPP, Natural Questions, TriviaQA, ARC-Easy, ARC-Challenge, SIQA, PIQA, WinoGrande, MMLU",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "public benchmarks",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama-2 7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 32,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "layers_note": "inferred: Fig 3 shows Layer 32 as last layer"
+    }
+   },
+   {
+    "name": "BTX Top-2",
+    "role": "proposed",
+    "params": "11.1B active (training and inference), per Table 4",
+    "architecture": "Llama-2 7B with 4-expert MoE feedforward per layer, Top-2 routing",
+    "init_from": "Llama-2 7B expert LLMs (math, code, Wikipedia, seed)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "routing": "g(Wx)=SoftMax(TopK(Wx)), k=2",
+     "new_params": "only router linear Wl per layer"
+    }
+   },
+   {
+    "name": "BTX Sample Top-1",
+    "role": "proposed",
+    "params": "6.7B active",
+    "architecture": "gumbel-softmax Top-1 routing",
+    "init_from": "same experts",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama-2 13B, CodeLlama 7B, Llemma 7B, Dense, Sparse upcycling, BTM",
+    "role": "baseline",
+    "params": "7B/13B",
+    "architecture": "see text",
+    "init_from": "Llama-2 7B (except Llama-2 13B)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "language modelling NLL for experts; NLL plus load-balancing loss L_LB = alpha*N*sum u_i p_i for MoE stage",
+   "optimizer": "AdamW",
+   "lr": "peak 1e-4",
+   "lr_schedule": "cosine decay to 10% of peak",
+   "warmup": "100 steps",
+   "batch_size": "4M tokens",
+   "steps": "experts 48k (math), 50k (code); MoE stage not stated in steps",
+   "epochs": null,
+   "tokens": "experts 201B math, 210B code, 42B Wikipedia; MoE finetune 80B (Top-2), 160B for Sample Top-1 at equal compute",
+   "seq_len": "4096",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "load balancing alpha=0.01 for default Top-2",
+   "hardware": null,
+   "compute": "BTX 926.1 GPU-days total; sparse upcycling (CM) 1007.1 GPU-days (Table 3)",
+   "wall_clock": "BTX 7.8 days, sparse upcycling CM 7.9 days (Table 3)",
+   "seeds": null,
+   "other": {
+    "switch_capacity_factor": "1.5",
+    "sample_top1_temperature": "tau=max(0.5,-rt), r=1e-4, t training steps; first layer uses soft routing",
+    "same_hparams": "same optimiser hyperparameters for baselines, experts and MoE models",
+    "moe_share_of_compute": "23% for BTX, 100% for sparse upcycling CM",
+    "tokens_total": "533B BTX vs 252B sparse upcycling CM (Table 3)",
+    "ablation_finetune_tokens": "10B, 40B, 80B, 160B in Table 4/5"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single greedy run; no seeds stated",
+   "prompting": "zero- or few-shot: GSM8K 8-shot, MATH 4-shot, HumanEval 0-shot, MBPP 3-shot, NQ 5-shot, TriviaQA 5-shot, reasoning 0-shot, MMLU 5-shot",
+   "retrieval": null,
+   "parameters": {
+    "top_k": 2,
+    "BTM expert selection": "tf-idf cosine similarity to mean tf-idf embedding of each expert's training data, Top-k experts (Top-1 or Top-2)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@1",
+     "definition": "HumanEval and MBPP",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "exact match",
+     "definition": "GSM8K, MATH, Natural Questions, TriviaQA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy",
+     "definition": "MMLU and ARC, reasoning tasks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-2 7B",
+    "Llama-2 13B",
+    "Dense (data-matching)",
+    "Sparse upcycling (data-matching and compute-matching)",
+    "Branch-Train-Merge Top-1/Top-2",
+    "CodeLlama 7B",
+    "Llemma 7B"
+   ],
+   "protocol": "Domain scores are averages: math = GSM8K and MATH, code = HumanEval and MBPP, knowledge = NQ and TriviaQA, reasoning = ARC-E, ARC-C, SIQA, PIQA, WinoGrande. No seeds or significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "inferred: Llemma, CodeLlama mixtures cited; Wikipedia dump slice not released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "anneal the learning rate to the peak of 1e −4 with 100 steps of warmup, and decay to 10% of the peak with a cosine schedule",
+    "where": "4.1.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BTX Top-2 achieves the highest average over the benchmark suite among compared 7B-based methods, above sparse upcycling DM, dense and BTM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score",
+   "value": 47.9,
+   "unit": "%",
+   "baseline_value": 44.5,
+   "n": null,
+   "setup": "Llama-2 7B seed, experts on math/code/Wikipedia plus seed as generalist, MoE finetune 80B tokens, Top-2 routing, load balancing alpha=0.01; Table 2 aggregate",
+   "note": "Baseline value is Dense (DM) 44.5; Llama-2 7B seed 40.7",
+   "where": "Table 2",
+   "table": "Table 2, row BTX Top-2, column Average"
+  },
+  {
+   "claim": "BTX beats BTM by a large margin on average, showing MoE finetuning for learned routing helps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score",
+   "value": 47.9,
+   "unit": "%",
+   "baseline_value": 43.4,
+   "n": null,
+   "setup": "Llama-2 7B seed, experts on math/code/Wikipedia plus seed as generalist, MoE finetune 80B tokens, Top-2 routing, load balancing alpha=0.01",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BTX Top-2 vs BTM Top-2, column Average"
+  },
+  {
+   "claim": "BTX Top-2 averages above sparse upcycling (DM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score",
+   "value": 47.9,
+   "unit": "%",
+   "baseline_value": 46.3,
+   "n": null,
+   "setup": "Llama-2 7B seed, experts on math/code/Wikipedia plus seed as generalist, MoE finetune 80B tokens, Top-2 routing, load balancing alpha=0.01",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Sparse upcycling (DM), Top-2, column Average"
+  },
+  {
+   "claim": "BTX uses 23% of compute on MoE training and trains on over 2x the tokens of compute-matched sparse upcycling at similar total compute, slightly higher average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Total training tokens",
+   "value": 533,
+   "unit": "B tokens",
+   "baseline_value": 252,
+   "n": null,
+   "setup": "Table 3, compute matched (926.1 vs 1007.1 GPU-days)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BTX, column #tokens (B)"
+  },
+  {
+   "claim": "BTX average vs sparse upcycling compute-matched.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score",
+   "value": 47.9,
+   "unit": "%",
+   "baseline_value": 47.3,
+   "n": null,
+   "setup": "Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BTX, column Average"
+  },
+  {
+   "claim": "Expert training reduces total GPU-days a little: BTX total compute 926.1 vs 1007.1 GPU-days for sparse upcycling CM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Total compute",
+   "value": 926.1,
+   "unit": "GPU-days",
+   "baseline_value": 1007.1,
+   "n": null,
+   "setup": "Table 3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BTX, column Total compute (GPU-days)"
+  },
+  {
+   "claim": "Math expert improves GSM8K from the seed but forgets TriviaQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K",
+   "value": 39.5,
+   "unit": "%",
+   "baseline_value": 14.7,
+   "n": null,
+   "setup": "Table 1, Llama-2 7B continued on Llemma data",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Math expert, column GSM8K"
+  },
+  {
+   "claim": "Code expert drops TriviaQA from the seed (catastrophic forgetting).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TriviaQA",
+   "value": 29.9,
+   "unit": "%",
+   "baseline_value": 58.5,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Code expert, column TriviaQA"
+  },
+  {
+   "claim": "BTX Top-2 math average approaches Llemma but code approaches CodeLlama, while Llemma and CodeLlama are much weaker on knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Knowledge average",
+   "value": 41.0,
+   "unit": "%",
+   "baseline_value": 22.2,
+   "n": null,
+   "setup": "Table 2",
+   "note": "Baseline is CodeLlama 7B 22.2; Llemma 17.2",
+   "where": "Table 2",
+   "table": "Table 2, row BTX Top-2, column Knowledge"
+  },
+  {
+   "claim": "BTX Top-2 on math vs Llama-2 7B seed.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Math average",
+   "value": 27.4,
+   "unit": "%",
+   "baseline_value": 8.6,
+   "n": null,
+   "setup": "Table 2",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BTX Top-2, column Math"
+  },
+  {
+   "claim": "Soft routing is the best of routing methods but with most active parameters (19.7B); Switch Top-1 is worst.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score (5-task) at 10B finetune tokens",
+   "value": 35.8,
+   "unit": "%",
+   "baseline_value": 24.7,
+   "n": null,
+   "setup": "Table 4, routing ablation, no load balancing",
+   "note": "Baseline is Switch Top-1 24.7",
+   "where": "Table 4",
+   "table": "Table 4, row Soft routing, 10B tokens, column Average score"
+  },
+  {
+   "claim": "Freezing the expert FF modules during MoE finetuning has little impact.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score (5-task)",
+   "value": 34.7,
+   "unit": "%",
+   "baseline_value": 34.7,
+   "n": null,
+   "setup": "Table 5, 10B finetune tokens",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row no LB & freeze experts, column Average Score"
+  },
+  {
+   "claim": "Blending experts degrades all tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score (5-task)",
+   "value": 22.2,
+   "unit": "%",
+   "baseline_value": 34.7,
+   "n": null,
+   "setup": "Table 5",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row blending experts, column Average Score"
+  },
+  {
+   "claim": "Splitting experts into 8 modules does not improve over BTX even with top-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Average score (5-task)",
+   "value": 34.5,
+   "unit": "%",
+   "baseline_value": 34.7,
+   "n": null,
+   "setup": "Table 5",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row split experts, top-4 of 8, column Average Score"
+  },
+  {
+   "claim": "Without load balancing a dead Code expert emerges: HumanEval drops.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HumanEval",
+   "value": 19.5,
+   "unit": "%",
+   "baseline_value": 27.4,
+   "n": null,
+   "setup": "Table 5",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row no load-balancing (LB), column Human Eval"
+  },
+  {
+   "claim": "BTX outperforms Llama-2 13B on all tasks except reasoning while using less than half the extra training compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 4.2",
+   "note": null,
+   "where": "4.2.1",
+   "quote": "BTX also outperforms Llama-2 13B on all tasks except reasoning, even though Llama-2 13B uses significantly more training compute and has slightly more active parameters."
+  }
+ ],
+ "limits": [
+  "Only three domains and four experts tried due to compute limits.",
+  "Simple MoE implementation, experts not placed on separate GPUs; efficiency gains unoptimised.",
+  "Compared only to BTM (0% MoE compute) and sparse upcycling (100% MoE compute); no sweep of compute allocation ratio.",
+  "Only uniform mixture sampling for MoE finetuning tested.",
+  "Instruction finetuning and RLHF of the BTX model are left for future work; the paper covers pretraining only.",
+  "No seeds, variance or significance tests; single Llama-2 7B scale; no code or weights released per text.",
+  "Hardware (GPU type and count) not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Branch-Train-MiX (BTX)",
+   "definition": "branch from a seed LLM, train expert copies on different data, mix their feedforward layers into MoE layers, average other parameters and finetune",
+   "where": "Section 1, 3"
+  },
+  {
+   "term": "Branch-Train-Merge (BTM)",
+   "definition": "train separate expert LLMs independently and combine only their output distributions at inference",
+   "where": "Section 1"
+  },
+  {
+   "term": "Sparse upcycling",
+   "definition": "initialise a MoE from a dense model by copying its feedforward module as experts",
+   "where": "Section 4.1.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Branch-Train-Merge (Li et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "BTX adds MoE merge and finetune",
+   "quote": null
+  },
+  {
+   "work": "Scaling expert language models with unsupervised domain discovery (Gururangan et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tf-idf expert selection for BTM",
+   "quote": null
+  },
+  {
+   "work": "Sparse upcycling (Komatsuzaki et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MoE from dense model, special case of BTX",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "seed model and training setup",
+   "quote": null
+  },
+  {
+   "work": "Llemma (Azerbayev et al.)",
+   "year": 2023,
+   "arxiv": "2310.10631",
+   "relation": "uses-data",
+   "note": "math data and baseline",
+   "quote": null
+  },
+  {
+   "work": "Code Llama (Rozière et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "code data and baseline",
+   "quote": null
+  },
+  {
+   "work": "Switch Transformers (Fedus et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "load balancing loss and Switch routing",
+   "quote": null
+  },
+  {
+   "work": "Mixtral of Experts (Jiang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MoE experts do not specialise by domain",
+   "quote": null
+  },
+  {
+   "work": "Categorical reparameterization with gumbel-softmax (Jang et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Sample Top-1 routing",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The Branch-Train-MiX (BTX) method has three steps: branch, train, mix",
+   "page": 2,
+   "why": "Shows the pipeline at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Left: average performance vs training budget; Right: normalised performance by domain",
+   "page": 8,
+   "why": "Compute-performance tradeoff"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "BTX routing decisions of tokens at various layers to different experts",
+   "page": 10,
+   "why": "Shows load balancing revives dead code expert"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3.2",
+   "snippet": "FF_MoE^l(x) = sum_{i=1..N} g_i(W^l x) FF_i^l(x); g(W^l x) = SoftMax(TopK(W^l x))",
+   "verbatim": false
+  },
+  {
+   "where": "Section 3.3",
+   "snippet": "L_LB = alpha N sum_i u_i p_i, u_i = (1/|B|) sum_{x in B} g_i(W^l x), p_i = (1/|B|) sum_{x in B} SoftMax_i(W^l x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Paper has no code or data release statement.",
+  "Text names no GPU type or count."
+ ]
+}

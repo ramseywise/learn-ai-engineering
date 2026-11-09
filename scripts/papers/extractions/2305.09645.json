@@ -1,0 +1,197 @@
+{
+ "schema": 1,
+ "key": "2305.09645",
+ "pdf": "ai-engineering/05-graph-engineering/sources/jiang-2023-structgpt.pdf",
+ "bib": {
+  "title": "StructGPT: A General Framework for Large Language Model to Reason over Structured Data",
+  "authors": ["Jinhao Jiang", "Kun Zhou", "Zican Dong", "Keming Ye", "Wayne Xin Zhao", "Ji-Rong Wen"],
+  "first_author": "Jiang",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 23 Oct 2023; the text prints no venue)",
+  "arxiv": "2305.09645",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 64159,
+  "chars_total": 64159,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "How can a frozen LLM reason over structured data (knowledge graphs, tables, databases) in one unified way, without fine-tuning and without fitting all records in the prompt?",
+ "hypothesis": "Giving the LLM specialised read interfaces to the structured data, and iterating an invoking-linearization-generation loop, lets it concentrate on reasoning and improves zero-shot and few-shot performance over feeding it the data directly.",
+ "contributions": [
+  "An Iterative Reading-then-Reasoning (IRR) framework, StructGPT, with an invoking-linearization-generation procedure.",
+  "Specialised read interfaces for KG (2), table (3) and database (2).",
+  "Experiments on 8 datasets across KGQA, TableQA and Text-to-SQL, with error analysis."
+ ],
+ "method": {
+  "summary": "A frozen LLM (text-davinci-003 or gpt-3.5-turbo, June versions) is wrapped in a loop. At each step an interface reads a small slice of the structured data, the slice is linearized to text, and the LLM either selects useful items (relations, columns, rows, tables) or generates the answer or SQL. No parameters are trained.",
+  "task": "KG question answering, table question answering, Text-to-SQL",
+  "trains": false,
+  "datasets": [
+   {"name": "WebQSP", "role": "eval", "size": null, "split": null, "source": "Yih et al., 2016; Freebase, answers up to 2 hops", "preprocessing": "topic entity assumed already linked (e.g. Google Knowledge Graph Search API or ELQ)"},
+   {"name": "MetaQA (1hop, 2hop, 3hop)", "role": "eval", "size": null, "split": null, "source": "Zhang et al., 2018; movie KG based on OMDb, up to 3 hops", "preprocessing": "topic entity assumed linked"},
+   {"name": "WikiSQL (weakly supervised)", "role": "eval", "size": null, "split": null, "source": "Zhong et al., 2017", "preprocessing": null},
+   {"name": "WikiTableQuestions (WTQ)", "role": "eval", "size": null, "split": null, "source": "Pasupat and Liang, 2015", "preprocessing": null},
+   {"name": "TabFact", "role": "eval", "size": null, "split": null, "source": "Chen et al., 2020; table fact verification", "preprocessing": null},
+   {"name": "Spider", "role": "eval", "size": "1034 evaluation samples, 20 databases", "split": "evaluation set", "source": "Yu et al., 2018", "preprocessing": null},
+   {"name": "Spider-SYN", "role": "eval", "size": null, "split": null, "source": "Gan et al., 2021; synonyms substituted in questions", "preprocessing": null},
+   {"name": "Spider-Realistic", "role": "eval", "size": null, "split": null, "source": "Deng et al., 2021; questions that name columns explicitly removed", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "text-davinci-003 (June version)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "gpt-3.5-turbo / ChatGPT (June version; August version in Appendix A)", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Supervised baselines: KV-Mem, GraftNet, EmbedKGQA, NSM, UniKGQA, MAPO, TAPAS, UnifiedSKG (T5-3B), TAPEX, DATER, RAT-SQL+BERT-Large, TKK-Large, T5-3B+PICARD, RASAT+PICARD, RESDSQL-3B+NatSQL", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers copied from earlier papers, not rerun"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Two prompt patterns, rewritten per dataset: selection ('Here are [Y]. Which [X] are most relevant to answer the question [Q]') and generation ('Based on [Y], please generate [Z] for the question [Q]'). Few-shot uses 15 exemplars for WebQSP and 32 for MetaQA, TableQA and Text-to-SQL. Zero-shot baselines use the same instruction prompt with no KG (KGQA) or with the whole table or DB schema (TableQA, Text-to-SQL), with no special treatment of over-length input.",
+   "retrieval": "Interfaces: KG Extract_Neighbor_Relations(e), Extract_Triples(e,{r}); Table Extract_Column_Name(T), Extract_Columns(T,{c}), Extract_SubTable(T,{c},{j}); DB Extract_Table&Column_Name(D), Extract_Tables_Information({T}). KGQA runs two sequential invocations per hop, multi-hop adds an LLM sufficiency check before continuing; TableQA runs three; Text-to-SQL runs two.",
+   "parameters": {"kg_linearization": "relations and triples concatenated into one sentence with separation and boundary symbols", "table_linearization": "cells converted to triples then row-wise, e.g. 'row 1: (year, 1896), (city, Athens)', rows joined by a separator", "max_iterations": null},
+   "other": {"manual_check": "For KGQA, a manual double-check judges whether wrong answers are included when the LLM returns several answers (following Tan et al., 2023)."}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Hits@1", "definition": "whether the top-1 predicted answer is correct (KGQA), with a manual check for multiple answers", "unit": "%", "higher_is_better": true},
+    {"name": "Denotation accuracy", "definition": "set-level equivalence of predicted and gold answer (WTQ, WikiSQL)", "unit": "%", "higher_is_better": true},
+    {"name": "Accuracy", "definition": "correctness of the true/false prediction (TabFact)", "unit": "%", "higher_is_better": true},
+    {"name": "Execution accuracy (EX)", "definition": "whether the execution results of predicted and gold SQL are the same (Spider variants)", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Direct ChatGPT and Davinci-003 (zero-shot, same instruction prompt)", "full-data supervised models listed under models"],
+   "protocol": "Single run per cell as printed; no seeds, variance or significance tests are stated. Error analysis: 100 randomly sampled error cases from each of WebQSP, WTQ and Spider, classified manually into five categories."
+  },
+  "availability": {"code": "https://github.com/RUCAIBox/StructGPT", "weights": null, "data": "codes and data stated as publicly available at the same URL"},
+  "prompts": [
+   {"purpose": "KGQA relation selection (instruction fragment)", "text": "provide only one relevant relation that's present in the candidate", "where": "Section 5.4 case study and Appendix B, Fig 2 and Fig 4"},
+   {"purpose": "KGQA answer generation (instruction fragment)", "text": "you just need to provide only one answer entity", "where": "Section 5.4, Fig 2"},
+   {"purpose": "TableQA column selection (fragment)", "text": "which columns are most relevant to answering the question?", "where": "Appendix B"},
+   {"purpose": "Text-to-SQL table selection (fragment)", "text": "which tables do you need to complete the SQLite SQL query?", "where": "Appendix B"},
+   {"purpose": "Text-to-SQL generation (fragment)", "text": "complete sqlite SQL query only with no explanation", "where": "Appendix B"}
+  ],
+  "evidence": [
+   {"field": "inference.prompting", "quote": "Note that our used prompts are not always consistent with the two examples, as we have rewritten them to better adapt", "where": "footnote 1, Section 4.3"},
+   {"field": "models", "quote": "In our experiment, we use the June version of Davinci-003", "where": "footnote 3, Section 5.3"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "StructGPT raises ChatGPT zero-shot Hits@1 on WebQSP from 61.2 to 72.6.",
+   "kind": "measured", "source": null, "metric": "Hits@1", "value": "72.6", "unit": "%", "baseline_value": "61.2", "n": null,
+   "setup": "WebQSP, Freebase, ChatGPT (gpt-3.5-turbo, June version), zero-shot, topic entity pre-linked; baseline is ChatGPT answering without the KG",
+   "quote": null, "table": "Table 1, row ChatGPT + IRR (ours), column WQSP (baseline row ChatGPT, 61.2)", "note": "Intro says an increase of 11.4% of Hits@1 on WebQSP (72.6 - 61.2).", "where": "Table 1"
+  },
+  {
+   "claim": "On MetaQA-3hop ChatGPT zero-shot goes from 43.2 to 80.2 with IRR, and to 87.0 few-shot, still far below UniKGQA at 99.1.",
+   "kind": "measured", "source": null, "metric": "Hits@1", "value": "80.2", "unit": "%", "baseline_value": "43.2", "n": null,
+   "setup": "MetaQA-3hop, movie KG, ChatGPT June version, zero-shot with IRR; few-shot uses 32 exemplars; UniKGQA copied from Jiang et al. (2023)",
+   "quote": null, "table": "Table 1, row ChatGPT + IRR (ours), column MQA 3hop (baseline 43.2; few-shot 87.0; UniKGQA 99.1)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "On WebQSP the zero-shot StructGPT result (72.6) stays below the supervised UniKGQA (75.1) and the few-shot ChatGPT result (69.6) is lower than zero-shot.",
+   "kind": "measured", "source": null, "metric": "Hits@1", "value": "69.6", "unit": "%", "baseline_value": "72.6", "n": null,
+   "setup": "WebQSP, ChatGPT + IRR few-shot (15 exemplars) vs zero-shot",
+   "quote": null, "table": "Table 1, row ChatGPT + IRR (ours, few-shot), column WQSP (UniKGQA 75.1)", "note": "Few-shot exemplars did not help on WebQSP for either LLM (Davinci 71.9 to 71.0), although the text says exemplars further improve performance.", "where": "Table 1"
+  },
+  {
+   "claim": "ChatGPT with no KG reaches 61.2 on WebQSP, close to supervised GraftNet at 66.4.",
+   "kind": "measured", "source": null, "metric": "Hits@1", "value": "61.2", "unit": "%", "baseline_value": "66.4", "n": null,
+   "setup": "WebQSP, ChatGPT June version, zero-shot, no KG",
+   "quote": "(i.e., 61.2 of ChatGPT v.s. 66.4 of GraftNet", "table": null, "note": null, "where": "Section 5.4, KGQA"
+  },
+  {
+   "claim": "The dominant WebQSP failure is selection error, because the model must choose among thousands of relations.",
+   "kind": "measured", "source": null, "metric": "share of sampled errors", "value": "74", "unit": "%", "baseline_value": null, "n": "100 randomly sampled error cases",
+   "setup": "WebQSP, 100 randomly sampled errors, manually classified into five categories (selection, reasoning, generation format, hallucination, other); model version presumably the June ChatGPT (inferred, not stated)",
+   "quote": "the selection error is the major error type (74%)", "table": null, "note": "Fig 3 text is garbled in extraction; the other WebQSP shares (2%, 8%, 3%, 13%) cannot be mapped to categories with certainty.", "where": "Section 5.4, Error Analysis, Fig 3"
+  },
+  {
+   "claim": "In Spider the dominant error is reasoning error.",
+   "kind": "measured", "source": null, "metric": "share of sampled errors", "value": "62", "unit": "%", "baseline_value": null, "n": "100 randomly sampled error cases",
+   "setup": "Spider Text-to-SQL, 100 sampled errors",
+   "quote": "In Spider, reasoning error occurs more (62%)", "table": null, "note": "Fig 3 text shows 63% for the largest Spider slice; text says 62%.", "where": "Section 5.4, Error Analysis"
+  },
+  {
+   "claim": "On TabFact ChatGPT zero-shot improves from 82.9 to 87.1 with IRR.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "87.1", "unit": "%", "baseline_value": "82.9", "n": null,
+   "setup": "TabFact, ChatGPT June, zero-shot IRR vs full table in prompt",
+   "quote": null, "table": "Table 2, row ChatGPT + IRR (ours), column TabFact (baseline 82.9)", "note": "Intro states +4.2.", "where": "Table 2"
+  },
+  {
+   "claim": "Few-shot ChatGPT+IRR on WTQ reaches 52.2 while DATER, a supervised/prompted baseline, has 65.9.",
+   "kind": "measured", "source": null, "metric": "denotation accuracy", "value": "52.2", "unit": "%", "baseline_value": "43.3", "n": null,
+   "setup": "WTQ, ChatGPT June, 32 exemplars; zero-shot IRR is 48.4",
+   "quote": null, "table": "Table 2, row ChatGPT + IRR (ours, few-shot), column WTQ (DATER 65.9)", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Davinci-003 with zero-shot IRR gets worse on TabFact (80.7 to 76.5).",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "76.5", "unit": "%", "baseline_value": "80.7", "n": null,
+   "setup": "TabFact, Davinci-003 June, zero-shot IRR vs full table",
+   "quote": null, "table": "Table 2, row Davinci-003 + IRR (ours), column TabFact", "note": "Contradicts the text claim that the method consistently improves both LLMs on all three datasets.", "where": "Table 2"
+  },
+  {
+   "claim": "On Spider ChatGPT execution accuracy goes from 70.1 to 74.8 zero-shot with IRR.",
+   "kind": "measured", "source": null, "metric": "execution accuracy", "value": "74.8", "unit": "%", "baseline_value": "70.1", "n": null,
+   "setup": "Spider, ChatGPT June, full schema in the baseline prompt",
+   "quote": null, "table": "Table 3, row ChatGPT + IRR (ours), column Spider (baseline 70.1)", "note": "Intro states +4.7; few-shot 77.8; best supervised RESDSQL-3B+NatSQL 84.1.", "where": "Table 3"
+  },
+  {
+   "claim": "Davinci-003 gains only 0.7 on Spider with zero-shot IRR (68.8 to 69.5).",
+   "kind": "measured", "source": null, "metric": "execution accuracy", "value": "69.5", "unit": "%", "baseline_value": "68.8", "n": null,
+   "setup": "Spider, Davinci-003 June, zero-shot IRR",
+   "quote": null, "table": "Table 3, row Davinci-003 + IRR (ours), column Spider", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "The ChatGPT version change from June to August moved the no-IRR baseline by up to 5.1 points (Spider 70.1 to 75.2) and WTQ down by 2.2 (43.3 to 41.1); IRR still improves each August score.",
+   "kind": "measured", "source": null, "metric": "execution accuracy (Spider)", "value": "75.2", "unit": "%", "baseline_value": "70.1", "n": null,
+   "setup": "Spider, ChatGPT August vs June; with IRR August gives 77.1 on Spider, 75.3 on WebQSP, 50.4 on WTQ",
+   "quote": null, "table": "Table 4, row ChatGPT (August), column Spider (June baseline 70.1)", "note": "The 5.1 difference is derived (75.2 - 70.1), not printed. WebQSP baseline 61.2 to 62.1; WTQ 43.3 to 41.1.", "where": "Appendix A, Table 4"
+  }
+ ],
+ "limits": [
+  "Authors concede: only two instruction-following LLMs (ChatGPT, Davinci-003) are used; weaker instruction followers are untested.",
+  "Authors concede: only QA over structured data is evaluated, not data-to-text or formal-language-to-text.",
+  "Authors concede: answer-format control is hard and format errors remain.",
+  "Topic entity must already be linked to the KG; linking is outside the method.",
+  "Closed, versioned models: the June to August ChatGPT update changed baselines by several points (Appendix A).",
+  "Single runs; no variance, seeds, decoding parameters, max iterations, token or cost figures are reported.",
+  "Supervised baseline numbers are copied from other papers, and the KGQA metric includes a manual double-check.",
+  "Zero-shot IRR hurt Davinci-003 on TabFact (80.7 to 76.5), against the text's claim of consistent gains.",
+  "Evaluated KGQA only up to 3 hops on MetaQA and 2 on WebQSP; no large-scale latency or cost comparison."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Iterative Reading-then-Reasoning (IRR)", "definition": "construct specialized interfaces to collect relevant evidence from structured data (reading), and let LLMs concentrate on the reasoning task based on the collected information (reasoning)", "where": "Abstract"},
+  {"term": "invoking-linearization-generation", "definition": "invoke an interface to extract evidence, linearize it into a textual prompt, and feed the prompt into the LLM for generation (selecting useful data or predicting the answer)", "where": "Section 4.3"}
+ ],
+ "lineage": [
+  {"work": "Toolformer (Schick et al., 2023) and WebGPT (Nakano et al., 2021)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "tool manipulation strategy that inspired the interfaces", "quote": null},
+  {"work": "UnifiedSKG (Xie et al., 2022)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "unified text-to-text fine-tuning of T5 over structured data; StructGPT needs no tuning", "quote": null},
+  {"work": "UniKGQA (Jiang et al., 2023)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "supervised KGQA baseline, 75.1 WebQSP, 99.1 MetaQA-3hop", "quote": null},
+  {"work": "GraftNet (Sun et al., 2018)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "supervised KGQA baseline and source of the topic-entity setup", "quote": null},
+  {"work": "Tan et al., 2023", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "KGQA baseline protocol (LLM without KG) and manual double-check of Hits@1", "quote": null},
+  {"work": "Pasupat and Liang, 2015", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "triple-style table linearization; also WTQ data", "quote": null},
+  {"work": "text-davinci-003 and gpt-3.5-turbo", "year": 2022, "arxiv": null, "relation": "evaluates", "note": "June versions; August ChatGPT in Appendix A", "quote": null},
+  {"work": "WebQSP, MetaQA, WikiSQL, WTQ, TabFact, Spider, Spider-SYN, Spider-Realistic", "year": null, "arxiv": null, "relation": "uses-data", "note": "eight evaluation datasets", "quote": null},
+  {"work": "DATER (Ye et al., 2023)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "table decomposition with LLMs; 65.9 WTQ, 93.0 TabFact", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "The overview of the proposed iterative reading-then-reasoning approach.", "page": 2, "why": "Shows the seven interfaces across KG, table and DB and the loop in one picture."},
+  {"figure": "Fig 2", "caption": "Case study of our method on WebQSP.", "page": 6, "why": "Walks one question through relation selection then triple extraction."},
+  {"figure": "Fig 3", "caption": "Proportions of different error types in three datasets over different types of structured data.", "page": 7, "why": "Pie charts of error categories for WebQSP, WikiSQL and Spider."},
+  {"figure": "Table 4", "caption": "Results of different version of ChatGPT for WebQSP, WTQ, and Spider.", "page": 12, "why": "Shows baseline drift between June and August."}
+ ],
+ "code": [],
+ "problems": [
+  "Fig 3 labels are garbled in extracted text: pie charts are captioned for three datasets in the text (WebQSP, WTQ, Spider) but the chart text says WikiSQL (TableQA). The text says WTQ in the error-analysis setup but 'In WikiSQL' in the discussion.",
+  "Spider reasoning error printed as 62% in text and 63% in the figure.",
+  "No embedded instructions found."
+ ]
+}

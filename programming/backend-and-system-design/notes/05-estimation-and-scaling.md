@@ -88,7 +88,7 @@ The 2 ms of CPU per request is another assumption, and it's the weakest. Measuri
 
 ## What things cost, on this machine
 
-Published latency tables go out of date and were measured on somebody else's hardware. It's more useful to get figures you can reproduce. These were measured on an Apple M4 Pro with CPython 3.14.
+Published latency tables go out of date and were measured on somebody else's hardware. It's more useful to get figures you can reproduce. These were measured on an Apple M4 Pro with CPython 3.14. The tables report p50 and p99, the latency that 50% and 99% of requests beat; [chapter 7](07-reliability-under-load.md#measuring-percentiles-and-histograms) says why the p99 is the number to watch.
 
 ```python
 import fcntl, json, os, sqlite3, tempfile, time

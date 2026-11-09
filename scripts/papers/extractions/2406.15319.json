@@ -1,19 +1,543 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2406.15319",
  "pdf": "generative-ai/02-rag-retrieval/sources/jiang-2024-longrag.pdf",
  "bib": {
   "title": "LongRAG: Enhancing Retrieval-Augmented Generation with Long-context LLMs",
-  "first_author": "Ziyan Jiang",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Ziyan Jiang",
+   "Xueguang Ma",
+   "Wenhu Chen"
+  ],
+  "first_author": "Jiang",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2406.15319",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 60265,
+  "chars_total": 60265,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: LongRAG: Enhancing Retrieval-Augmented Generation with Long-context LLMs. Ziyan Jiang, Xueguang Ma, Wenhu Chen (Univ. of Waterloo). arXiv 2406.15319v3, 1 Sep 2024 (preprint, no venue printed). Filename says 2024.\n\nCOVERAGE: 60,017 of 60,017 chars read (all 19 pages: body, appendix A.1-A.4, references skimmed). Figures 3 and 4 are image-only, so their curves were not read; only the captions and prose were. Extraction was clean.\n\nCLAIMS (ranked)\n- Grouping short docs into ~4K-token retrieval units shrinks the NQ corpus about 30x and raises top-1 answer recall by about 20 points.\n  number: 22M to 600K units; AR@1 52.24 to 71.69\n  setup: NQ, Wikipedia Dec 2018. Retriever is bge-large-en-v1.5 via Tevatron. Passage (~120 tokens) vs grouped docs (avg ~6K tokens, grouped by hyperlinks). Answer recall at the unit level.\n  quote: \"Employing a long-context retriever (with an average number of tokens for each retrieval unit up to 6K) compresses the corpus size by up to 30 times (from 22M to 600K), enhancing top-1 answer recall by approximately 20 points (from 52.24 to 71.69).\"\n  where: Table 2 caption, p.6\n- Eight grouped-document units match 100 passages on recall, which is about 10x fewer units.\n  number: grouped k=8 AR 88.53 on 50K test-set tokens; passage k=100 AR 89.92 on 14K tokens; passage k=200 AR 91.30\n  setup: NQ, same as above\n  quote: \"8 retrieval units at the grouped document level can achieve similar recall as 100 retrieval units at the passage level.\"\n  where: p.7 (Table 2 rows)\n- HotpotQA shows the same effect. Document-level k=2 gives R 30.01 and AR 47.75. Grouped k=2 gives R 56.30 and AR 72.49. Grouped k=8 gives R 74.71, close to document k=100 at R 74.84.\n  number: corpus 5.2M to 500K\n  setup: HotpotQA fullwiki dev set, abstracts only, so no passage level is tested.\n  quote: \"Grouped Documents 500K 2 1K 8K 56.30 72.49\" and \"Document 5.2M 2 130 200 30.01 47.75\"\n  where: Table 3, p.7\n- Recall is not the same as end quality, and short units cost accuracy. Past a turning point, more units hurt the reader. The best reader context is about 30K tokens. The turning point falls at 100-200 units for passages, 5-10 for documents and 4-8 for grouped documents. Passage-level recall@200 is 91% but end performance dips from hard negatives.\n  number: 91% (recall@200); ~30K tokens; the turning-point ranges above\n  setup: NQ and HotpotQA, 200 test cases, 40K-token recall budget. The curves are in Fig 3 and were not read.\n  quote: \"In general, the most suitable context length fed into the reader is around 30K tokens.\"\n  quote2: \"the end performance does not increase monotonically with the recall score\"\n  where: p.2 (intro) and p.10 (3.5)\n- Whole-document units beat many 200-token chunks on long-document QA.\n  number: Qasper F1 22.6 (100 passages) vs 26.3 (1 doc). MultiFieldQA-en F1 51.3 (100 passages) vs 57.5 (5 docs). Abstract headline: 25.9 and 57.5, versus a previous 22.5 and 51.2.\n  setup: Qasper (avg 4.7K tokens, 371 cases) and MultiFieldQA-en (6.9K, 150 cases). The authors refactored both from single-doc QA into retrieve-then-read tasks. Reader is GPT-4o. Compared with 200-token passages.\n  quote: \"On the Qasper dataset, gathering 100 short retrieval units of 200 tokens each into the reader achieves a 22.6% F1 score, while using a single long retrieval unit of 5K tokens achieves a 26.3% F1 score.\"\n  where: 3.4, p.8\n  Note: the abstract says 25.9 for Qasper, while the text and Table 6 say 26.3 for k=1 and 25.9 for k=2. This is an internal inconsistency to flag. Table 6 shows Qasper falls from 26.3 (k=1) to 21.6 (k=10), so more long units hurt.\n- Embed a long unit as a max over small chunks (MaxP), not as one long vector.\n  number: BGE-Large with 512-token chunks AR@1 71.7%; E5-Mistral-7B on 4000-token chunks 54.2%; E5-Mistral-7B on the whole grouped unit 23.4%\n  setup: NQ grouped units (~6K tokens). sim(q,g) ≈ max over g′⊆g of E_Q(q)·E_C(g′), after Dai & Callan 2019.\n  quote: \"Using a general embedding model and approximating by maximizing the similarity scores between the query and all chunks within the retrieval unit is better than using the existing long embedding model to encode the entire context.\"\n  where: Table 4, p.7\n- End-to-end QA with no training and no reranker, top 4-8 units.\n  number: NQ EM 62.7 (GPT-4o, 4 units), 58.6 (Gemini-1.5-Pro). HotpotQA EM 64.3 (GPT-4o, 8 units), 57.5 (Gemini). For comparison, Atlas is 64.0 on NQ, MDR is 62.3 on HotpotQA, and closed-book Claude-3-Opus is 49.2 on NQ.\n  setup: the \"refined EM\" described below; baselines use standard EM.\n  quote: \"LongRAG (GPT-4o; Recall 4 units) 62.7\" and \"LongRAG (GPT-4o; Recall 8 units) 64.3\"\n  where: Table 5, p.8\n- Rule for unit construction. Docs over ~4K tokens are kept whole. Docs under ~1K are grouped by relatedness (hyperlinks). Typical k is about 100+ for passages, about 10 for documents and 4-8 for grouped documents.\n  number: 4K threshold; k values as stated\n  setup: NQ-style Wikipedia.\n  quote: \"If the original document is already long (e.g., longer than 4K tokens), we treat the entire document as a single unit. If the original document is relatively short (e.g., shorter than 1K tokens), we group related documents together to form a single unit.\"\n  where: 2.1, p.4\n- Reader choice matters. On 200 NQ questions, GPT-4o is best at 62% (the figure text reads 59.5, 61.5, 62, 61, 60, 51 across the six readers; the label-to-model mapping is uncertain). DeepSeek-V2-Chat is clearly worse at 51%.\n  quote: \"Deepseek-V2-Chat is one of the best open-source LLMs, but its performance degrades significantly compared to the previous five black-box LLMs.\"\n  where: Fig 4 and 3.5, p.10\n- Two-turn reading works better on long context. Turn 1 uses no examples and gives a long answer. Turn 2 uses 8-shot extraction of a short answer.\n  quote: \"we empirically find that using a similar prompt as for short contexts, where the model extracts the final answer directly from the long context, often leads to decreased performance.\"\n  where: 2.2 and A.1, pp.5 and 16\n\nLIMITS\n- The \"refined EM\" is more lenient than standard EM. A prediction counts if it is under 5 tokens and the ground truth is a substring of it, or the reverse. The authors say they checked it by hand. They only \"believe\" the difference is not significant for the baselines, so the comparison to Atlas and MDR is not strictly like for like.\n- Unit-level ablations use only 200 test cases.\n- Qasper and MultiFieldQA retrieval quality was not measured. They are not extractive tasks, so only end F1 is compared.\n- Grouping relies on Wikipedia hyperlinks. The authors say any relatedness function would work, but only hyperlinks were tested.\n- Long embedding models are weak (Table 4). Whole-unit encoding is the bottleneck, and the authors expect it to improve.\n- The framework depends on proprietary long-context readers. Open-source DeepSeek-V2 falls well behind.\n- No cost or latency is reported for 30K-token reads, and no head-to-head against a reranked top-k pipeline.\n- Dated: the readers are GPT-4o, Gemini-1.5-Pro and Claude-3-Opus (2024), and the embedder is bge-large-en-v1.5. The 512-token encoder limit has since eased, since the related work mentions 32k embedding models.\n\nBUILDS ON\n- Chen et al., 2017 (DrQA), Lewis et al., 2020 (RAG) and Karpukhin et al., 2020 (DPR): 100-word passage units.\n- Dai & Callan, 2019: MaxP scoring.\n- Izacard & Grave, 2020b (FiD): top-100/200 passages plus a reranker.\n- Xiong et al., 2020b (MDR) and Izacard et al., 2022 (Atlas): baselines.\n- Xiao et al., 2023 (BGE), Gao et al., 2022 (Tevatron) and Johnson et al., 2019 (FAISS): retrieval tooling.\n- Saad-Falcon et al., 2024 (LoCoV1): the design for refactoring Qasper and MultiFieldQA into RAG tasks.\n- Bai et al., 2023 (LongBench): MultiFieldQA.\n- Khalifa et al., 2022: the AR metric for HotpotQA.\n\nCODE\n- Algorithm 1, group documents (p.18). Sort D by degree ascending. For each d, find the groups containing any related doc r in adj[d]. Start g_new={d}. Sort those related groups by size. Merge each one while |g_new|+|g|<=S (S is the max tokens per group), removing the merged group from G. Add g_new to G.\n- Similarity (p.4): sim(q,g) ≈ max_{g′⊆g} E_Q(q)^T E_C(g′). Aggregate: C_F = Concat(g1..gk).\n\nFIGURES\n- Fig 1 (p.2): traditional RAG vs LongRAG pipeline. Long retriever and long reader, no ranker.\n- Fig 2 (p.4): hyperlink grouping, shown on a multi-hop HotpotQA example.\n- Fig 3 (p.9): unit size and number of units vs EM, and recall vs EM, for NQ and HotpotQA. Key for the \"more recall is not better\" point. Image-only and not read.\n- Fig 4 (p.10): six readers on NQ.\n\nPROBLEMS: No embedded instructions found. The Fig 3 data is image-only. The Fig 4 label order is ambiguous. The abstract's Qasper 25.9 differs from the text's 26.3. The pypdf extraction merges some words in the abstract and the references. The reference list was skimmed only.\n\nExtracted text is cached at /tmp/longrag.txt."
+ "type": "empirical",
+ "question": "Does rebalancing RAG toward long retrieval units and a long-context reader beat retrieving many short passages?",
+ "hypothesis": "Heavy-retriever/light-reader RAG is suboptimal; with long-context LLMs, long units and few retrieved items reduce hard negatives and preserve context.",
+ "contributions": [
+  "Long retrieval unit (4K+ tokens by grouping or whole documents)",
+  "Long retriever returning only 1-8 units without re-ranking",
+  "Long reader prompting an off-the-shelf long-context LLM zero-shot",
+  "Ablations on unit size, recall vs EM, and reader model"
+ ],
+ "method": {
+  "summary": "Wikipedia documents are grouped by hyperlinks into ~4K-token units (or whole long documents used as units). bge-large-en-v1.5 scores a unit by the max over chunk scores; the top 1-8 units are concatenated (~30K tokens) and fed to GPT-4o or Gemini-1.5-Pro in a two-turn prompt. Nothing is trained.",
+  "task": "open-domain QA (NQ, HotpotQA, Qasper, MultiFieldQA-en)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "NQ",
+    "role": "eval",
+    "size": "3,610 test questions; 3M docs / 22M passages; avg doc 800 tokens",
+    "split": "test",
+    "source": "Wikipedia dump Dec 20, 2018",
+    "preprocessing": "Grouped into 600K units via hyperlink grouping (Algorithm 1)"
+   },
+   {
+    "name": "HotpotQA",
+    "role": "eval",
+    "size": "7,405 dev questions; 5.2M docs; avg doc 130 tokens",
+    "split": "dev, fullwiki",
+    "source": "Wikipedia abstract paragraphs, Oct 1 2017 dump",
+    "preprocessing": "Grouped into 500K units"
+   },
+   {
+    "name": "Qasper",
+    "role": "eval",
+    "size": "371 test cases; 416 documents; avg 4.7K tokens",
+    "split": null,
+    "source": "scientific papers",
+    "preprocessing": "Refactored from single-document QA into retrieve-then-answer, like LoCoV1"
+   },
+   {
+    "name": "MultiFieldQA-en",
+    "role": "eval",
+    "size": "150 test cases; 150 documents; avg 6.9K tokens",
+    "split": null,
+    "source": "LongBench; legal, government reports, encyclopedias, papers",
+    "preprocessing": "Refactored like Qasper"
+   }
+  ],
+  "models": [
+   {
+    "name": "bge-large-en-v1.5",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense bi-encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512-token chunks",
+    "other": {}
+   },
+   {
+    "name": "E5-Mistral-7B",
+    "role": "retriever",
+    "params": "7B",
+    "architecture": "long embedding model (ablation only)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o",
+    "role": "proposed",
+    "params": null,
+    "architecture": "long-context LLM reader",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "main reader"
+    }
+   },
+   {
+    "name": "Gemini-1.5-Pro",
+    "role": "proposed",
+    "params": null,
+    "architecture": "long-context LLM reader",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4-Turbo, Claude-3-Opus, Claude-3.5-Sonnet, DeepSeek-V2-Chat",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "alternate readers (Fig 4, 200 NQ cases)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Two-turn chat: turn 1 zero-shot with full long context gives a long answer; turn 2 uses 8-shot examples to extract a short answer. Closed-book baselines use 16-shot.",
+   "retrieval": "Tevatron + FAISS exact inner-product index; unit score = max over chunk scores (MaxP); top k concatenated; no re-ranker. k: 4-8 grouped units, ~10 documents, ~100+ passages on NQ.",
+   "parameters": {
+    "max_group_tokens_S": "4K (units at least 4K tokens)",
+    "chunk_size": "512 tokens (main), 4K, or whole unit in Table 4",
+    "k_NQ": "4 (GPT-4o/Gemini main)",
+    "k_HotpotQA": "8",
+    "grouping": "Algorithm 1: sort docs by hyperlink degree ascending, merge related groups while size <= S"
+   },
+   "other": {
+    "reader_context": "about 30K tokens",
+    "note": "Temperature, decoding, max tokens, seeds not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Answer Recall (AR)",
+     "definition": "Answer string present in any retrieved unit that goes to the reader",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall (R)",
+     "definition": "HotpotQA: both gold documents are in the retrieved set",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM (refined)",
+     "definition": "Exact match if prediction under five tokens and ground truth is a substring of prediction or vice versa",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "token-level F1 (Qasper, MultiFieldQA-en)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Closed-book GPT-4-Turbo, Gemini-1.5-Pro, Claude-3-Opus (16-shot)",
+    "Fully-supervised RAG (REALM, DPR, RAG, RETRO, RePAQ, FiD, EMDR2, FiD-KD, R2-D2, Atlas; DrKIT, MDR, HGN, AISO, COS etc.)",
+    "No-fine-tuning RAG (REPLUG, DSP, PromptRank)",
+    "Passage-level RAG on the same retriever"
+   ],
+   "protocol": "Single run per setting, no seeds or significance tests reported; ablations use 200 test cases; baseline numbers are quoted from earlier papers."
+  },
+  "availability": {
+   "code": "Project website https://tiger-ai-lab.github.io/LongRAG/ (no repo link stated in text)",
+   "weights": null,
+   "data": "public datasets; grouped corpus release not stated"
+  },
+  "prompts": [
+   {
+    "purpose": "LongRAG turn 1",
+    "text": "Go through the following context and then answer the question. The context is a list of Wikipedia documents, ordered by title: . . . . Each Wikipedia document contains a title field and a text field. The context is: \"Title\": . . . \"Text\": . . . Find the useful documents from the context, then answer the question: when did the philadelphia eagles play in the super bowl last. Answer the question directly. Your response should be very concise.",
+    "where": "Table 7, Appendix A.1"
+   },
+   {
+    "purpose": "LongRAG turn 2",
+    "text": "You have been provided with a question and its long answer. Your task is to derive a very concise short answer from the given long answer. It's important to ensure that the output short answer remains as simple as possible. Here a few examples: \"Question\": . . . \"Long Answer\": . . . \"Short Answer\": . . .",
+    "where": "Table 7, Appendix A.1"
+   },
+   {
+    "purpose": "Closed-book 16-shot",
+    "text": "Here are some examples of questions and their corresponding answer, each with a \"Question\" field and an \"Answer\" field. Answer the question directly and don't output other thing.",
+    "where": "Table 7"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Zero-shot LongRAG with GPT-4o reaches 62.7 EM on NQ and 64.3 EM on HotpotQA with no training.",
+   "kind": "measured",
+   "metric": "EM",
+   "value": "62.7 (NQ), 64.3 (HotpotQA)",
+   "unit": "%",
+   "setup": "NQ test (3,610 q) with top-4 grouped units; HotpotQA fullwiki dev (7,405 q) with top-8 units; GPT-4o reader, bge-large-en-v1.5 retriever, refined EM",
+   "quote": "LongRAG achieves an EM of 62.7% on NQ and 64.3% on HotpotQA, which are on par",
+   "note": "Refined EM (Appendix A.2) is more lenient than standard EM and is applied to LongRAG; baselines are quoted with their own EM.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Grouping NQ passages into long units shrinks the corpus from 22M to 600K units and lifts top-1 answer recall from 52.24 to 71.69.",
+   "kind": "measured",
+   "metric": "AR@1",
+   "value": "71.69",
+   "unit": "%",
+   "baseline_value": "52.24",
+   "setup": "NQ, Wikipedia Dec 2018; passage (22M units, ~120 tok) vs grouped documents (600K units, ~4K corpus avg / 6K test avg); bge-large-en-v1.5 with MaxP over 512-token chunks",
+   "table": "Table 2, rows Passage / Grouped Documents, 1 retrieval unit, column Answer Recall (AR)",
+   "where": "Table 2"
+  },
+  {
+   "claim": "8 grouped-document units give AR 88.53 on NQ, about what 100 passages give (89.92).",
+   "kind": "measured",
+   "metric": "AR",
+   "value": "88.53",
+   "unit": "%",
+   "baseline_value": "89.92",
+   "setup": "NQ test set; 8 grouped units (~50K tokens on test set) vs 100 passages (~14K tokens)",
+   "table": "Table 2, row Grouped Documents 8, column AR; row Passage 100",
+   "where": "Table 2"
+  },
+  {
+   "claim": "On HotpotQA, grouping cuts the corpus from 5.2M to 500K and lifts Recall@2 from 30.01 to 56.30 and AR@2 from 47.75 to 72.49.",
+   "kind": "measured",
+   "metric": "Recall (R) at 2 units",
+   "value": "56.30",
+   "unit": "%",
+   "baseline_value": "30.01",
+   "setup": "HotpotQA fullwiki, bge-large-en-v1.5; document vs grouped-document units",
+   "table": "Table 3, rows Document 2 / Grouped Documents 2, column Recall (R)",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Encoding a long unit as the max over 512-token chunk scores beats encoding it whole with a long-embedding model (71.7 vs 23.4 AR@1).",
+   "kind": "measured",
+   "metric": "AR@1",
+   "value": "71.7",
+   "unit": "%",
+   "baseline_value": "23.4",
+   "setup": "NQ, grouped units; BGE-Large 512-token chunks vs E5-Mistral-7B on the entire grouped unit (4000-token chunks gives 54.2)",
+   "table": "Table 4, rows BGE-Large 512-tokens chunk and E5-Mistral-7B entire grouped retrieval unit, column AR@1",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Gemini-1.5-Pro as reader gets 58.6 EM on NQ and 57.5 on HotpotQA, below GPT-4o.",
+   "kind": "measured",
+   "metric": "EM",
+   "value": "58.6 (NQ), 57.5 (HotpotQA)",
+   "unit": "%",
+   "setup": "Same retrieval as the GPT-4o run; NQ 4 units, HotpotQA 8 units",
+   "table": "Table 5, rows LongRAG (Gemini-1.5-Pro)",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Closed-book 16-shot baselines on NQ: GPT-4-Turbo 41.2, Gemini-1.5-Pro 47.8, Claude-3-Opus 49.2 EM; fully-supervised Atlas is 64.0.",
+   "kind": "measured",
+   "metric": "EM",
+   "value": "64.0 (Atlas, reported)",
+   "unit": "%",
+   "setup": "NQ test; Atlas figure quoted from Izacard et al. 2022",
+   "table": "Table 5, NQ, row Atlas, column EM",
+   "source": "Izacard et al., 2022 (Atlas)",
+   "where": "Table 5"
+  },
+  {
+   "claim": "On Qasper, one 5K-token document unit gives 26.3 F1 versus 22.6 F1 for 100 passages of 200 tokens.",
+   "kind": "measured",
+   "metric": "F1",
+   "value": "26.3",
+   "unit": "%",
+   "baseline_value": "22.6",
+   "setup": "Qasper (371 test cases, 416 docs) refactored to RAG; Document, 1 unit vs Passage, 100 units",
+   "table": "Table 6, row Document 1, column Qasper; row Passage 100",
+   "note": "Abstract and intro say 25.9 F1 on Qasper (previously 22.5) and 57.5 on MultiFieldQA-en (previously 51.2); Table 6 and Sec 3.4 give 26.3/22.6 and 57.5/51.3. 25.9 matches Document with 2 units.",
+   "where": "Table 6, Sec 3.4"
+  },
+  {
+   "claim": "On MultiFieldQA-en, 5 long document units give 57.5 F1 versus 51.3 F1 for 100 passages.",
+   "kind": "measured",
+   "metric": "F1",
+   "value": "57.5",
+   "unit": "%",
+   "baseline_value": "51.3",
+   "setup": "MultiFieldQA-en (150 cases) refactored to RAG; Document 5 units vs Passage 100 units",
+   "table": "Table 6, row Document 5, column MutilfieldQA-en; row Passage 100",
+   "quote": "on MultiFieldQA-en (previously 51.2%)",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Passage-level retrieval has high recall at 200 units (91%) yet end EM dips because of hard negatives; long units show no such drop.",
+   "kind": "measured",
+   "metric": "recall@200 (passage)",
+   "value": "91",
+   "unit": "%",
+   "setup": "NQ, 40K recall-token budget, 200 test cases (Fig 3)",
+   "quote": "reach a marvelously high recall score (91% for recall@200). However, the end performance dips significantly",
+   "where": "Intro, Sec 3.5, Fig 3"
+  },
+  {
+   "claim": "The best context fed to the reader is around 30K tokens; past a turning point more units hurt.",
+   "kind": "measured",
+   "metric": "context length",
+   "value": "30K",
+   "unit": "tokens",
+   "setup": "NQ ablation on 200 test cases; turning point 100-200 passages, 5-10 documents, 4-8 grouped units",
+   "quote": "context length fed into the reader is around 30K tokens.",
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "Open-source DeepSeek-V2-Chat is a much weaker long reader than the five black-box LLMs; GPT-4o is best.",
+   "kind": "measured",
+   "setup": "NQ, 200 test cases, six readers (Fig 4 values 59.5, 61.5, 62, 61, 60, 51 percent, bar-to-model mapping not recoverable from text)",
+   "quote": "performance degrades significantly compared to the previous five black-box LLMs.",
+   "where": "Sec 3.5, Fig 4"
+  },
+  {
+   "claim": "Reading a long retrieved context with the short-context prompt lowers performance; a two-turn long-answer then short-answer prompt works best.",
+   "kind": "claim",
+   "setup": "Authors say empirical, no numbers",
+   "quote": "often leads to decreased performance",
+   "where": "Sec 2.2"
+  }
+ ],
+ "limits": [
+  "No training; depends on closed long-context LLMs, and open-source DeepSeek-V2-Chat degrades a lot.",
+  "Authors concede long-embedding models are weak: encoding a 6K unit whole gives AR@1 23.4 so MaxP chunking is used, and future long embedders should help.",
+  "Refined EM is lenient and applied to LongRAG, while baselines are quoted with their own metrics; Qasper and MultiFieldQA-en not compared to prior models.",
+  "Readers, decoding settings, cost and latency not reported; ablations on only 200 NQ cases; single runs.",
+  "Grouping uses Wikipedia hyperlinks, so it is not shown on corpora without link structure."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Long retrieval unit",
+   "definition": "entire documents or grouped related documents forming units of more than 4K tokens",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Answer Recall",
+   "definition": "the recall of the answer string in all the retrieved documents that we plan to use in the reader",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dense Passage Retrieval",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "baseline",
+   "note": "100-word passage design that LongRAG revisits",
+   "quote": null
+  },
+  {
+   "work": "RAG (Lewis et al.)",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "baseline",
+   "note": "retriever-reader paradigm",
+   "quote": null
+  },
+  {
+   "work": "Fusion-in-Decoder",
+   "year": 2020,
+   "arxiv": "2007.01282",
+   "relation": "baseline",
+   "note": "reads top-100/200 units",
+   "quote": null
+  },
+  {
+   "work": "Atlas",
+   "year": 2022,
+   "arxiv": "2208.03299",
+   "relation": "baseline",
+   "note": "strongest fully-trained NQ baseline, 64.0 EM",
+   "quote": null
+  },
+  {
+   "work": "MDR",
+   "year": 2020,
+   "arxiv": "2009.12756",
+   "relation": "baseline",
+   "note": "HotpotQA baseline, 62.3 EM",
+   "quote": null
+  },
+  {
+   "work": "MaxP (Dai & Callan)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "max over chunk scores for unit similarity",
+   "quote": null
+  },
+  {
+   "work": "Tevatron",
+   "year": 2022,
+   "arxiv": "2203.05765",
+   "relation": "uses-method",
+   "note": "retrieval toolkit",
+   "quote": null
+  },
+  {
+   "work": "BGE / C-Pack",
+   "year": 2023,
+   "arxiv": "2309.07597",
+   "relation": "uses-method",
+   "note": "bge-large-en-v1.5 embedder",
+   "quote": null
+  },
+  {
+   "work": "Gemini 1.5",
+   "year": 2024,
+   "arxiv": "2403.05530",
+   "relation": "evaluates",
+   "note": "reader",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": "1809.09600",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Qasper",
+   "year": 2021,
+   "arxiv": "2105.03011",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "LongBench",
+   "year": 2023,
+   "arxiv": "2308.14508",
+   "relation": "uses-data",
+   "note": "MultiFieldQA-en",
+   "quote": null
+  },
+  {
+   "work": "LoCo / M2-BERT",
+   "year": 2024,
+   "arxiv": "2402.07440",
+   "relation": "related",
+   "note": "RAG refactoring of single-document QA follows LoCoV1",
+   "quote": null
+  },
+  {
+   "work": "LongEmbed / E5-Mistral",
+   "year": 2024,
+   "arxiv": "2404.12096",
+   "relation": "evaluates",
+   "note": "long embedding model in Table 4",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Traditional RAG vs. LongRAG",
+   "page": 2,
+   "why": "Shows the heavy-retriever/light-reader imbalance in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "LongRAG example (grouped Wikipedia docs via hyperlinks)",
+   "page": 4,
+   "why": "Concrete multi-hop example of grouped units"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Retrieval unit size and number of units vs performance on NQ and HotpotQA, 200 test cases",
+   "page": 9,
+   "why": "Shows turning points and EM not tracking recall (curves are image-only)"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Different readers of LongRAG on NQ",
+   "page": 10,
+   "why": "Reader comparison (bars image-only)"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.1",
+   "snippet": "sim(q, g) = EQ(q)T EC(g) ≈ max_{g′⊆g}(EQ(q)T EC(g′))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Fig 3 and Fig 4 are images; Fig 4 numbers read from text label order, model mapping unrecoverable.",
+  "Abstract Qasper numbers (25.9 vs 22.5) differ from Table 6/Sec 3.4 (26.3 vs 22.6; 22.5/51.2 vs 51.3).",
+  "No embedded instructions found."
+ ]
 }

@@ -1,0 +1,153 @@
+{
+ "schema": 1,
+ "key": "2301.13688",
+ "pdf": "generative-ai/05-RL/sources/longpre-2023-flan-collection.pdf",
+ "bib": {
+  "title": "The Flan Collection: Designing Data and Methods for Effective Instruction Tuning",
+  "authors": ["Shayne Longpre","Le Hou","Tu Vu","Albert Webson","Hyung Won Chung","Yi Tay","Denny Zhou","Quoc V. Le","Barret Zoph","Jason Wei","Adam Roberts"],
+  "first_author": "Longpre",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2301.13688",
+  "doi": null
+ },
+ "read": {"by": "source-reader", "at": "2026-11-09", "chars_read": 70820, "chars_total": 70820, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Which design decisions in the Flan 2022 instruction tuning collection and recipe account for its advantage over other public instruction tuning collections?",
+ "hypothesis": "The authors expected a trade-off between zero-shot and few-shot performance when mixing prompt settings in training (particularly for small models); they found the opposite.",
+ "contributions": [
+  "Show that training with mixed zero- and few-shot prompts yields much better performance in both settings (Section 3.2).",
+  "Measure critical techniques: scaling tasks (3.3), input inversion (3.4), chain-of-thought training data, and balancing data sources (3.5).",
+  "Demonstrate these choices yield 3-17% Held-Out task improvements over existing open source instruction tuning collections (Figure 1).",
+  "Demonstrate Flan-T5 is a stronger and more computationally-efficient starting checkpoint for single-task finetuning (Section 4).",
+  "Open source the Flan 2022 task collection, templates and methods."
+ ],
+ "method": {
+  "summary": "Ablates the Flan 2022 recipe by finetuning prefix-LM-adapted T5-LM XL (3B) on the Flan 2022 collection with one component removed at a time, and on rival public collections (Flan 2021, P3++, Super-Natural Instructions). Further runs vary the few-shot template fraction, the number of tasks and model size, and test Flan-T5 vs T5 as a starting point for single-task finetuning.",
+  "task": "instruction tuning of language models (supervised multi-task finetuning on templatized NLP tasks); no RLHF or human feedback",
+  "trains": true,
+  "datasets": [
+   {"name": "Flan 2022 collection", "role": "train", "size": "1873 tasks (text also says 1836 and 1800+ tasks)", "split": null, "source": "Flan 2021 (Muffin, incl. new dialog and program synthesis tasks), P3++ (T0-SF is the part not in Flan 2021), Super-Natural Instructions, CoT, dialog, program synthesis; released at github.com/google-research/FLAN/tree/main/flan/v2", "preprocessing": "Templatized with zero-shot, few-shot (2, 3 or 5 exemplars) and CoT templates; input inversion at 30% rate; MMLU tasks removed from Super-Natural Instructions"},
+   {"name": "Held-In suite (BoolQ, ARC Easy, ARC Challenge, AI2 Middle School Science, ANLI R1-R3, RTE)", "role": "eval", "size": "8 tasks (4 QA, 4 NLI)", "split": "validation sets", "source": "contained in Flan 2022 finetuning collection", "preprocessing": null},
+   {"name": "CoT suite (GSM8K, StrategyQA, SVAMP, Asdiv, CommonsenseQA)", "role": "eval", "size": "5 datasets", "split": "validation sets", "source": null, "preprocessing": "prompts request step-by-step explanations in targets"},
+   {"name": "MMLU", "role": "eval", "size": "57 tasks", "split": null, "source": "Hendrycks et al. 2020", "preprocessing": null},
+   {"name": "BBH (BIG-Bench Hard)", "role": "eval", "size": "23 tasks", "split": null, "source": "Suzgun et al. 2022", "preprocessing": "also evaluated with CoT inputs (BBH-CoT)"},
+   {"name": "Single-task finetuning sets (Held-In: ANLI, ARC, BoolQ, CosmosQA, RTE, SQuAD v2, AI2 Science; Held-Out: WANLI, MedNLI, CondaQA, PubmedQA, CxC)", "role": "both", "size": null, "split": "1024 training examples held out for validation where no validation split; original validation set used as test where no test split", "source": null, "preprocessing": "PubmedQA: unlabeled and artificially generated QA not used; CxC: text-text portion only"}
+  ],
+  "models": [
+   {"name": "Flan-T5 XL (T5-XL Flan 2022)", "role": "proposed", "params": "3B", "architecture": "encoder-decoder T5, prefix language model adapted T5-LM", "init_from": "T5-LM (Lester et al., 2021)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"sizes_in_task_scaling": "Small, Base, Large, XL, XXL (XXL = 11B per text)"}},
+   {"name": "T5-XL Flan 2021, P3++, Super-Natural Instructions", "role": "baseline", "params": "3B", "architecture": "T5-LM XL finetuned on each collection", "init_from": "T5-LM", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "OPT-IML-Max 30B / 175B, GLM-130B", "role": "baseline", "params": "30B / 175B / 130B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers reported from Iyer et al. 2022 and Zeng et al. 2022, not rerun"}}
+  ],
+  "training": {
+   "objective": "supervised finetuning on templatized instruction data (details deferred to Chung et al. 2022)",
+   "optimizer": null,
+   "lr": "single-task finetuning: constant 0.001; instruction tuning: not stated here",
+   "lr_schedule": "single-task finetuning: constant",
+   "warmup": null,
+   "batch_size": "single-task finetuning: 128 length-512 sequences; instruction tuning: not stated",
+   "steps": "single-task finetuning: 100,000 steps; instruction tuning: not stated",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "single-task finetuning: 512",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "single-task finetuning: 0.1",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "single-task finetuning: average over 3 random seeds for tasks with less than 1K training examples",
+   "other": {
+    "framework": "T5X (Roberts et al., 2022)",
+    "instruction_tuning_setup": "follows Chung et al. (2022); the hyperparameters are not restated",
+    "few_shot_exemplars_in_templates": "2, 3, or 5",
+    "input_inversion_rate": "30% (3 inverted examples per 10 regular examples)",
+    "mixture_weights": "informed by leave-one-source-out experiments plus practitioner intuition; exact weights not given (Flan 2022 mixture 46% Flan 2021/Muffin, 28% PromptSource/P3, 25% Super-Natural Instructions per Section 3.6)",
+    "task_scaling_subsets": "8, 25, 50, 100, 200, 400, 800, all 1873 randomly selected tasks, Held-In tasks always included",
+    "single_task_checkpointing": "checkpoint every 20 steps, report test performance at best validation checkpoint",
+    "experiment_version": "slightly earlier version of the released collection (minor template improvements)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Zero-shot and few-shot evaluation; BBH also with CoT inputs; few-shot k at evaluation not stated",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Held-In score", "definition": "mean accuracy across the 8 QA and NLI tasks", "unit": "%", "higher_is_better": true},
+    {"name": "CoT score", "definition": "mean accuracy across 5 CoT datasets", "unit": "%", "higher_is_better": true},
+    {"name": "MMLU / BBH / BBH-CoT", "definition": "mean over tasks, reported as zero-shot / few-shot", "unit": "%", "higher_is_better": true},
+    {"name": "Per-dataset metrics in single-task finetuning", "definition": "Acc, 3-class F1 (ANLI), 4-class F1 (AI2 Mid. Science), AUC-ROC (BoolQ, RTE), F1 (SQuAD v2, PubmedQA), Spearman (CxC)", "unit": "% or correlation", "higher_is_better": true}
+   ],
+   "baselines": ["T5-XL Flan 2021","T5-XL P3++","T5-XL Super-Natural Instructions","OPT-IML-Max 30B and 175B (reported)","GLM-130B (reported)","T5 finetuned directly on target task"],
+   "protocol": "Ablations removing one method at a time on T5-XL; single run per ablation (no seeds or significance tests stated); single-task finetuning uses 3 seeds only for tasks under 1K examples"
+  },
+  "availability": {"code": "https://github.com/google-research/FLAN/tree/main/flan/v2 (data generation code)", "weights": "Flan-T5 models stated as available in other sizes; not detailed", "data": "Flan 2022 collection of datasets, templates and methods released"},
+  "prompts": [],
+  "evidence": [
+   {"field": "models.params", "quote": "using the XL (3B) size for all models for consistency", "where": "Section 3, Experimental Setup"}
+  ]
+ },
+ "results": [
+  {"claim": "Flan-T5 XL outperforms prior public instruction tuning collections across evaluation settings by 3-17%+.", "kind": "measured", "source": null, "metric": "margin over next best", "value": "3-17%+", "unit": "% absolute", "baseline_value": null, "n": null, "setup": "T5-XL (3B) finetuned on each collection; Held-In, CoT, MMLU, BBH", "quote": "3-17%+ across evaluation settings", "table": null, "note": null, "where": "Abstract"},
+  {"claim": "Adding just 10% few-shot prompt templates to training improves zero-shot results by 2%+ (mixed prompt settings).", "kind": "measured", "source": null, "metric": "zero-shot accuracy gain", "value": "2%+", "unit": "% absolute", "baseline_value": null, "n": null, "setup": "T5-XL on Flan 2022; zero-shot-only vs mix", "quote": "adding just 10% few-shot prompts improves zero-shot prompting results by 2%+", "table": null, "note": null, "where": "Section 1"},
+  {"claim": "Removing few-shot templates drops few-shot MMLU from 52.4 to 38.7 (zero-shot 50.3 to 47.3).", "kind": "measured", "source": null, "metric": "MMLU few-shot accuracy", "value": "38.7", "unit": "%", "baseline_value": "52.4", "n": null, "setup": "T5-XL Flan 2022 minus few-shot templates, zero-shot / few-shot", "quote": null, "table": "Table 1, row - Few Shot Templates, column MMLU (47.3 / 38.7) vs row T5-XL Flan 2022 (50.3 / 52.4)", "note": null, "where": "Table 1"},
+  {"claim": "Flan 2022 improves MMLU by +4.2 zero-shot and +17.6 few-shot, and BBH by +8.5 few-shot, over the next best T5-XL collection.", "kind": "measured", "source": null, "metric": "MMLU gain", "value": "+4.2 / +17.6", "unit": "points (zero-shot / few-shot)", "baseline_value": null, "n": null, "setup": "T5-XL vs next best T5-XL collection", "quote": null, "table": "Table 1, row Flan 2022 - Next Best T5-XL, columns MMLU (+4.2 / +17.6) and BBH (-1.9 / +8.5)", "note": "Intro says 4.2%+ for MMLU and 8.5% for BBH; zero-shot BBH is -1.9", "where": "Table 1"},
+  {"claim": "Flan-T5 XL (50.3 / 52.4 on MMLU) beats OPT-IML-Max 175B (49.1 / 47.1) despite being 58x smaller.", "kind": "measured", "source": null, "metric": "MMLU zero-shot / few-shot", "value": "50.3 / 52.4", "unit": "%", "baseline_value": "49.1 / 47.1", "n": null, "setup": "OPT-IML numbers are as reported by Iyer et al. 2022", "quote": null, "table": "Table 1, rows T5-XL Flan 2022 and OPT-IML-Max 175B, column MMLU", "note": null, "where": "Table 1; Section 3.1 says larger models are 10x (30B) and 58x (175B)"},
+  {"claim": "Removing CoT data drops zero-shot CoT score from 35.8 to 28.8 and BBH-CoT from 33.9 to 18.2.", "kind": "measured", "source": null, "metric": "CoT / BBH-CoT zero-shot", "value": "28.8", "unit": "%", "baseline_value": "35.8", "n": null, "setup": "T5-XL Flan 2022 minus CoT", "quote": null, "table": "Table 1, row - CoT, column CoT (28.8 / 24.6) vs row T5-XL Flan 2022 (35.8 / 34.1)", "note": null, "where": "Table 1"},
+  {"claim": "Removing input inversion hurts held-out MMLU zero-shot from 50.3 to 41.7 and BBH from 26.2 to 18.4, but leaves Held-In unchanged.", "kind": "measured", "source": null, "metric": "MMLU zero-shot", "value": "41.7", "unit": "%", "baseline_value": "50.3", "n": null, "setup": "T5-XL, input inversion at 30% rate", "quote": null, "table": "Table 1, row - Input Inversion, column MMLU (41.7 / 41.2)", "note": null, "where": "Table 1, Section 3.4"},
+  {"claim": "Removing mixture balancing lowers BBH zero-shot from 26.2 to 15.1 and Held-In from 73.8 to 71.2.", "kind": "measured", "source": null, "metric": "BBH zero-shot", "value": "15.1", "unit": "%", "baseline_value": "26.2", "n": null, "setup": "T5-XL Flan 2022 minus mixture balancing", "quote": null, "table": "Table 1, row - Mixture Balancing, column BBH (15.1 / 24.3)", "note": null, "where": "Table 1"},
+  {"claim": "In leave-one-source-out runs, dropping CoT collapses the CoT score from 41.4 to 29.1; dropping Flan 2021 drops Held-In from 64.9 to 55.3.", "kind": "measured", "source": null, "metric": "CoT score", "value": "29.1", "unit": "%", "baseline_value": "41.4", "n": null, "setup": "equal-weighted mixture minus one source, T5-XL", "quote": null, "table": "Table 2, row All - CoT, column CoT; baseline row All (Equal)", "note": "Weighted mixture (66.4 / 40.1 / 48.1) beats equal on Held-In and MMLU but not CoT", "where": "Table 2"},
+  {"claim": "Held-Out MMLU rises log-linearly with number of tasks, best with all tasks; Held-In peaks around 200 tasks then declines (larger models peak later).", "kind": "measured", "source": null, "metric": "task scaling", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "T5-LM Small to XXL, task subsets 8 to 1873 (Fig 4)", "quote": null, "table": null, "note": "Text says all 1873 tasks in setup and all 1836 tasks in results", "where": "Section 3.3, Fig 4"},
+  {"claim": "Flan-T5 converges faster and higher than T5 in single-task finetuning; sometimes without any finetuning it beats finetuned T5.", "kind": "measured", "source": null, "metric": "single-task finetuning accuracy", "value": null, "unit": null, "baseline_value": null, "n": 5, "setup": "5 held-out tasks (WANLI, MedNLI, CondaQA, PubmedQA, CxC), XL size, up to 200 steps plotted", "quote": null, "table": null, "note": "Per-task deltas only in Fig 5 (e.g. +16.7), not given in text", "where": "Section 4, Fig 5, Fig 6"},
+  {"claim": "About 94% of OPT-IML's tasks (2067/2207) are also in Flan 2022, so task diversity is not the main difference.", "kind": "measured", "source": null, "metric": "task overlap", "value": "94%", "unit": "%", "baseline_value": null, "n": 2207, "setup": "using OPT-IML's definition of task, no deduplication across collections", "quote": "94%(2067/2207)", "table": null, "note": null, "where": "Section 3.6"},
+  {"claim": "Flan 2022 and OPT-IML mixtures weight Flan 2021 at 46% vs 20%, PromptSource/P3 28% vs 45%, Super-Natural Instructions 25% vs 25%.", "kind": "measured", "source": null, "metric": "Flan 2021 mixture weight", "value": "46%", "unit": "% of mixture", "baseline_value": "20%", "n": null, "setup": "Flan 2022 vs OPT-IML; 46% is Muffin (Flan 2021 plus dialog and program synthesis)", "quote": "Flan 2021 (46% vs 20%), PromptSource/P3 (28% vs 45%), and Super-Natural Instructions (25% vs 25%)", "table": null, "note": null, "where": "Section 3.6, footnote 6"},
+  {"claim": "Input inversions are mixed in at a 30% rate.", "kind": "measured", "source": null, "metric": "inversion rate", "value": "30%", "unit": "% of regular examples", "baseline_value": null, "n": null, "setup": "Dialog, program synthesis and CoT tasks inverted; chosen for simplicity", "quote": "These inversions are mixed in with the existing tasks at a rate of 30%", "table": null, "note": null, "where": "Appendix B"}
+ ],
+ "limits": [
+  "Instruction tuning only: the paper studies no human feedback or RLHF, and cites the alignment tax of human feedback tuning only as motivation for its scope.",
+  "Mixture weights were set by leave-one-source-out ablation plus practitioner intuition; the authors leave more sophisticated search to future work.",
+  "Task scaling assumes all tasks counted equally; authors caution that gains beyond 1800 tasks need task diversity and quality.",
+  "No dedicated experiments isolate template variety versus OPT-IML's differences; comparison with OPT-IML relies on its reported numbers.",
+  "Experiments used a slightly earlier version of the released collection.",
+  "Instruction tuning hyperparameters (optimizer, lr, steps, batch, hardware) are deferred to Chung et al. 2022; results are single runs for ablations with no variance reported.",
+  "Only T5-family XL models were ablated; not evaluated on open-ended or human preference tasks."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "T0-SF", "definition": "the subset of P3++ that is not in Flan 2021 (SF stands for sans Flan)", "where": "footnote 4"},
+  {"term": "Input inversion", "definition": "gives a model the answer y and trains it to generate the question x, enriching task variety from the (x, y) pairs", "where": "Section 3.4"},
+  {"term": "Held-In / Held-Out", "definition": "Held-In tasks are represented in the training collection; Held-Out (MMLU, BBH) are not part of Flan 2022 finetuning", "where": "Section 3 setup"}
+ ],
+ "lineage": [
+  {"work": "Scaling instruction-finetuned language models (Chung et al.)", "year": 2022, "arxiv": "2210.11416", "relation": "extends", "note": "Flan 2022 first implemented there; this work ablates its methods at fixed T5-XL size", "quote": null},
+  {"work": "Finetuned language models are zero-shot learners (Flan 2021)", "year": 2021, "arxiv": "2109.01652", "relation": "baseline", "note": "component and baseline collection", "quote": null},
+  {"work": "T0 / Multitask prompted training enables zero-shot task generalization (Sanh et al.)", "year": 2021, "arxiv": "2110.08207", "relation": "baseline", "note": "P3++ baseline", "quote": null},
+  {"work": "Super-Natural Instructions (Wang et al.)", "year": 2022, "arxiv": "2204.07705", "relation": "baseline", "note": "component and baseline collection", "quote": null},
+  {"work": "OPT-IML (Iyer et al.)", "year": 2022, "arxiv": "2212.12017", "relation": "baseline", "note": "concurrent closest comparison; numbers quoted", "quote": null},
+  {"work": "MetaICL (Min et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "noisy-channel input inversion", "quote": null},
+  {"work": "Training language models to follow instructions with human feedback (Ouyang et al.)", "year": 2022, "arxiv": "2203.02155", "relation": "related", "note": "InstructGPT mixed prompt templates without examining it; alignment tax", "quote": null},
+  {"work": "The Power of Scale for Parameter-Efficient Prompt Tuning (Lester et al.)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "source of T5-LM prefix-LM adapted checkpoint", "quote": null},
+  {"work": "T5X (Roberts et al.)", "year": 2022, "arxiv": "2203.17189", "relation": "uses-method", "note": "training framework", "quote": null},
+  {"work": "MMLU (Hendrycks et al.)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "held-out eval", "quote": null},
+  {"work": "BIG-Bench Hard (Suzgun et al.)", "year": 2022, "arxiv": "2210.09261", "relation": "uses-data", "note": "held-out eval", "quote": null},
+  {"work": "ExT5 (Aribandi et al.)", "year": 2021, "arxiv": "2111.10952", "relation": "related", "note": "corroborated for faster convergence of multitask-tuned checkpoints", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Comparing public instruction tuning collections on Held-In, Held-Out (BBH and MMLU), and CoT evaluation suites.", "page": 1, "why": "summary of Flan 2022 gains over Flan 2021, P3++, SNI and OPT-IML-Max 175B"},
+  {"figure": "Figure 3", "caption": "Training jointly with zero-shot and few-shot prompt templates improves performance on both Held-In and Held-Out tasks.", "page": 6, "why": "shows the curve over percent few-shot templates, peak between 10-90%"},
+  {"figure": "Figure 4", "caption": "Performance scaling laws for the number of finetuning tasks and model sizes.", "page": 7, "why": "task count vs accuracy by model size"},
+  {"figure": "Figure 5", "caption": "Flan-T5 outperforms T5 on single-task finetuning.", "page": 9, "why": "per-task gains over direct T5 finetuning"},
+  {"figure": "Figure 6", "caption": "Flan-T5 convergences faster than T5 on single-task finetuning for each of 5 Held-Out tasks.", "page": 10, "why": "convergence curves"}
+ ],
+ "code": [],
+ "problems": ["Task count printed as 1873 (setup) and 1836 (results text) and 1800+ elsewhere.", "Text extraction scrambles figure axes and Table 3 check marks (which datasets are in which suite) so those columns were taken from section text.", "No embedded instructions found."]
+}

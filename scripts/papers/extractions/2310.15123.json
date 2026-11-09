@@ -1,19 +1,210 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.15123",
  "pdf": "ai-engineering/01-prompt-engineering/sources/saha-2023-branch-solve-merge-improves-large.pdf",
  "bib": {
   "title": "Branch-Solve-Merge Improves Large Language Model Evaluation and Generation",
-  "first_author": "Swarnadeep Saha",
-  "year": "2023",
-  "venue": null,
+  "authors": ["Swarnadeep Saha", "Omer Levy", "Asli Celikyilmaz", "Mohit Bansal", "Jason Weston", "Xian Li"],
+  "first_author": "Saha",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2310.15123",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 76527,
+  "chars_total": 76527,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed for lineage only"
  },
- "legacy_report": "SOURCE: \"Branch-Solve-Merge Improves Large Language Model Evaluation and Generation\", Swarnadeep Saha, Omer Levy, Asli Celikyilmaz, Mohit Bansal, Jason Weston, Xian Li (UNC Chapel Hill and Meta). arXiv:2310.15123v2, 7 Jun 2024. The PDF carries no venue line, so treat it as a preprint (the Oct 2023 first version dates it; the filename says 2023).\nCOVERAGE: 76,531 of 76,531 chars read, 19 of 19 pages, in three extraction passes. That includes the appendices, tables 7-11, figures 2-7 and the algorithm. The references were skimmed for origins. Extraction is clean. There are no embedded instructions.\n\nNOTE CONTEXT: Note 06 (line 55) already has two chain examples (MathPrompter, SymbCoT). It has no mention of BSM, branch/solve/merge, or parallel decomposition. BSM is a new shape for it: fan-out into parallel sub-tasks and then merge, a variant of sectioning/parallelization. It is not a sequential chain.\n\nCLAIMS (ranked)\n1. BSM is a fixed three-prompt program. A branch prompt has the LLM itself plan k parallel sub-tasks, a solve prompt handles each independently, and a merge prompt fuses the results.\n number: none (a design claim)\n setup: all modules are zero-shot prompts to the same base LLM. The LLM decides both the sub-problems and the branching factor.\n quote: \"the LLM itself decides (generates) the sub-problems and the corresponding branching factor.\"\n where: p.3 (Sec 3.1); the abstract says \"plan a decomposition of the task into multiple parallel sub-tasks, independently solve them, and fuse the solutions\"\n\n2. Branching beats sampling the same problem several times at similar compute. Self-consistency is a special case of BSM (same problem sampled k times, merged by majority vote).\n number: Agreement 0.55 for BSM vs 0.52 for Self-Consistency, 0.43 for Plan&Solve, 0.43/0.45 for zero-shot relative/absolute. Position bias (PB) 17.33 vs 35.66 for SC. Length bias (LB) 39.09 vs 48.12.\n setup: MT-Bench \"writing\" category, 300 response pairs, LLaMA-2-70B-chat, greedy decoding. Self-consistency samples at temperature 0.7 with the same number of generations as BSM's branching factor.\n quote: \"both approaches leverage similar amounts of compute in generating multiple solutions – but branching and solving the differing sub-problems provides superior results to solving the same problem multiple times.\"\n Table 1 row: \"BSM 0.55 17.33 39.09 0.60 14.66 39.46 0.50 20.00 39.13\"\n where: p.5, Table 1\n\n3. Plan&Solve (plan, then solve everything in one call) is the ablation for independent solving. BSM's gain over it is up to 12% absolute, and Plan&Solve is no better than zero-shot.\n number: up to 12% absolute over Plan&Solve (overall agreement 0.43 vs 0.55)\n setup: as in claim 2.\n quote: \"it obtains up to 12% absolute improvement over Plan&Solve, which specifically shows the utility of branching into and solving independent sub-problems.\"\n where: p.5\n\n4. Headline: BSM raises LLM-human agreement by up to 26% absolute and cuts position bias by up to 50%. It lets LLaMA-2-70B-chat match or beat GPT-4 on several MT-Bench domains.\n number: STEM agreement 0.46 to 0.72 (+26) vs GPT-4 0.72. Writing PB 51.66 to 17.33 (relative zero-shot to BSM).\n setup: LLaMA-2-70B-chat. BSM beats zero-shot in every domain table. Matches or approaches GPT-4 on 3 of 4 domains in Table 5 (Extraction is far below: 0.55 vs 0.71).\n quote: \"BSM improves LLM-human agreement by up to absolute 26% and even matches or outperforms GPT-4 on many domains.\"\n Table 5 STEM: \"BSM (w/ LLaMA-2-70B-c) 0.72 10.33 44.68 ... GPT-4 0.72 13.66 46.80\"\n where: p.2 intro, p.6 Table 5, p.9 App A.2\n\n5. BSM improves every base model, with the smallest gain on the strongest. The biggest gain is on turn-2 (long-context) questions.\n number: Writing agreement: LLaMA-2-7B 0.39 to 0.41; Vicuna-33B 0.51 to 0.56; LLaMA-2-70B 0.43 to 0.55; GPT-4 0.59 to 0.62. Turn-2 gains up to 16%.\n setup: MT-Bench writing, zero-shot vs BSM, same base model.\n quote: \"Even though zero-shot GPT-4 is the state-of-the-art LLM-based evaluator, applying BSM obtains a further improvement of 3%.\"\n Table 3 caption: \"BSM improves agreement for all models and reduces biases for all models except GPT-4.\"\n where: p.6 Table 3\n\n6. Reference-based categories. BSM beats zero-shot, and on math beats GPT-4 on all metrics.\n number: Coding 0.47 to 0.61 (PB 52.33 to 25.66). Reasoning 0.47 to 0.57. Math 0.52 to 0.64 (PB 17.66), vs GPT-4 0.62 (PB 19.00).\n setup: reference answers are generated once by GPT-4 and appended to the prompt. The paper states that curating these answers once is a key assumption.\n quote: \"On Math, it even outperforms the state-of-the-art GPT-4 evaluator, outperforming on all metrics.\"\n where: p.6 Table 4\n\n7. Constrained story generation (10 concepts, 100 samples): BSM raises constraint satisfaction and wins on coherence.\n number: All Present (AP) 28.0 vs 22.0 zero-shot on 70B. 23.0 vs 15.0 on 7B. Missing Concepts (MC) 14.7 vs 27.2 on 70B. GPT-4 judge prefers BSM stories 93% of the time (vs zero-shot, 70B).\n setup: CommonGen-hard-style task from Self-Refine data, LLaMA-2-7B-chat and 70B-chat, greedy decoding. Branch splits the concepts into two groups and picks a shared topic. Solve writes one story per group. Merge fuses the two stories. Pairwise GPT-4 judging is run twice with order swapped, and a verdict counts only if consistent.\n quote: \"stories generated by BSM are preferred a substantial 93% of the time by GPT-4.\"\n Table 6: \"BSM 23.0 15.5 28.0 14.7\"\n where: p.7\n\n8. Even with BSM the task is mostly unsolved: 72% of stories still miss a concept. Most omissions occur inside solve, not merge.\n number: 72% of 70B BSM stories miss at least one concept (AP 28.0 means 72%). Of those, 60 points are omissions at solve and 12 at merge.\n setup: LLaMA-2-70B-chat. The 60% and 12% are shares of all stories (they sum to 72%).\n quote: \"out of 72% of the BSM stories (with LLaMA-2-70B-chat) where at least one concept is missing, a significant 60% of these belong to the first category (i.e., concept omission in the ‘solve’ module) versus only 12% belong to the second category\"\n Model scale had little effect: \"the scale of the model has little impact on constraint satisfaction.\"\n where: p.7 and App B, p.10\n\n9. Branching factor (BF): agreement saturates around 4 branches, position bias keeps falling as branches are added.\n number: BF 2/3/4/5 agreement 0.50/0.52/0.53/0.52. PB 22/19/19/12.\n setup: 100 writing samples, LLaMA-2-70B-chat. The prompt caps the plan at \"up to five factors\".\n quote: \"We observe highest agreement at a branching factor of 4, after which the result mostly saturates.\"\n where: App A.2, Table 10, p.10\n\n10. Adding self-consistency inside each branch (BSM+SC, 5 samples at temperature 0.7 per branch) gives no agreement gain and only a small bias gain. Branches are already granular.\n number: agreement 0.55 for both. PB 17.33 to 15.33.\n setup: LLaMA-2-70B-chat, writing.\n quote: \"While agreement scores do not improve further, we observe a 2% reduction in position bias.\"\n where: p.9, Table 8\n\n11. The scale used in the solve prompt matters little. 1-5 gives agreement 0.52 and PB 12.00. 1-10 gives 0.50 and PB 18.00. Position bias rises slightly on the 1-10 scale.\n setup: 100 writing samples, 70B.\n where: App A.2, Table 11\n\n12. Self-enhancement check: GPT-4 as judge on pairs where GPT-4 wrote one response.\n number: agreement 0.51 to 0.54 (3 points). PB goes 6.33 to 7.33 and LB 36.36 to 34.54.\n quote: \"We observe a 3% better correlation with humans, suggesting that BSM improves evaluation even when the LLM judges its own outputs.\"\n caveat: the paper says this \"does not necessarily compute whether an evaluator has less SB\".\n where: p.5, Table 2\n\n13. Position bias is handled by running the whole program twice with response order swapped. Answer A or B only if both runs agree, otherwise tie. All baselines get the same treatment.\n number: none (2 runs per judgment)\n quote: \"The final judgment is either ‘A’ or ‘B’ if and only if the judgement is consistent for both orders, otherwise it is a ‘tie’.\"\n where: p.4 (Sec 3.2), Algorithm 1 p.12\n\n14. Merge for evaluation is a plain sum of per-branch scores, not an LLM call. A neural merge exists but was not used in the reported results.\n quote: \"we find that the non-neural merge of summing up the criterion-wise evaluations is simple and works well in practice, hence all our experimental results are reported with that method.\"\n where: p.9 (App A.1)\n\n15. Branches adapt by domain from one fixed branch prompt, with no human-written plans. Writing branches: Clarity, Relevance, Creativity, Accuracy. Coding branches: Efficiency, Correctness, Code Readability, Time Efficiency.\n quote: \"We observe almost no overlap between the branch names of coding questions and writing questions.\"\n where: p.6\n\nLIMITS\n- Authors concede (p.7): safety, toxicity and bias are not evaluated. Length bias is hard to isolate, since humans also prefer longer answers. Recursive or multi-level BSM is not explored because of cost. Efficiency gains from parallelism are not measured: \"in this work, we instead focused on improving the task performance.\"\n- No cost figure is given. BSM needs k solve calls plus a branch call, and doubles that for the order-swapped second run. Compute is matched only against self-consistency, and only on the number of generations. Wall-clock, tokens and dollars are not reported.\n- The main table is the single \"writing\" category. Per-domain samples are about 300 pairs (the 100-sample ablations are smaller). No confidence intervals or seeds are reported, and greedy decoding is used throughout.\n- Position bias is lower partly because the tie rule makes disagreement into ties. This applies to the baselines too.\n- Merge for evaluation is a sum, so \"merge\" there is a non-LLM aggregator.\n- The story task has 100 samples. The judge is GPT-4 alone, and BSM stories are fused from two paragraphs, which may favour them.\n- BSM gains little on GPT-4 (+3 points), and bias gets no better for GPT-4 (Table 3 caption).\n- Models are 2023-era (LLaMA-2, Vicuna, GPT-4), so absolute numbers are dated.\n- Reference-based evaluation relies on GPT-4 reference answers.\n- Dated: the paper contrasts itself with sequential-decomposition prompting for reasoning (least-to-most, plan-and-solve), noting that \"most of these works typically focus on reasoning problems ... that benefit from sequential decompositions.\"\n\nBUILDS ON (as printed)\n- Schlag et al., 2023 (LLM programs) and Dohan et al., 2022 (language model cascades).\n- Wang et al., 2022 (self-consistency).\n- Wang et al., 2023a (plan-and-solve).\n- Zhou et al., 2022 (least-to-most) and Khot et al., 2022 (decomposed prompting).\n- Ning et al., 2023 (skeleton-of-thought, parallel decoding).\n- Besta et al., 2023 and Lei et al., 2023 (graph of thoughts).\n- Zheng et al., 2023 (MT-Bench and LLM-as-judge).\n- Lin et al., 2020 (CommonGen) and Madaan et al., 2023 (Self-Refine, the hard variant).\n- Liu et al., 2023 (G-Eval, hand-designed evaluation plans).\n\nCODE (verbatim, Fig 4/6, p.12-13)\n- Branch prompt, evaluation: \"...Your task is to propose an evaluation plan that can be executed to compare the two responses. The evaluation plan should consist of a list of up to five factors that one should consider such as helpfulness, relevance, accuracy, etc. In each line, write an evaluation criterion along with a short descrition of how we should evaluate that criterion.\"\n- Solve prompt: \"...evaluate and score the quality of the responses based on a single evaluation criterion displayed below. Make sure to evaluate only based on the criterion specified and none other. In the first line, provide a score between 1 to 5 for Assistant A's response. In the second line, provide a score between 1 to 5 for Assistant B's response.\"\n- Story branch prompt: \"...first propose a story topic and then divide the concepts into two groups such that the story generated from each group of concepts can be combined together to form a longer story. Make sure that you do not leave out any concepts.\"\n- Story merge prompt: \"Given two groups of concepts and two stories containing those concepts, combine the two stories into a concise and coherent story consisting of a single paragraph. Make sure that the combined story does not miss any concept from the two groups.\"\n- Consistency rule (Algorithm 1): \"if y(A,B) = A & y(B,A) = B then y ← A ... else y ← tie\"\n\nFIGURES\n- Fig 1 (p.2): BSM pairwise evaluation of two responses to a Hawaii travel-blog prompt with LLaMA-2-70B-chat. Branch makes criteria (Relevance, Clarity, Accuracy, Originality), each solved with a 1-5 score per response, then merged into a verdict. It is the clearest picture of the fan-out and merge shape and the best candidate for the note.\n- Fig 3 (p.12): story generation. 10 concepts are split into two groups plus a topic, one story is written per group, and the two are merged. A compact worked example of constraint splitting.\n- Fig 2 (p.11): generated branches for a turn-2 writing question and a coding question. It shows the plan adapting to the task.\n- Fig 4-6: the prompts (see CODE).\n- Table 1 and Table 10 are the quantitative pieces worth a small table.\n\nPROBLEMS: none. Text extraction was clean, with only minor ligature or spacing artifacts. The PDF contained no instructions aimed at the reader."
+ "type": "empirical",
+ "question": "Can a prompted decomposition into parallel sub-tasks (branch, solve, merge) improve LLM-as-judge correctness and consistency and constrained text generation over zero-shot, plan&solve and self-consistency?",
+ "hypothesis": "Multi-faceted tasks fail because LLMs cannot plan or decompose; branching into parallel sub-problems, solving each independently and fusing them should improve correctness and reduce biases.",
+ "contributions": [
+  "BRANCH-SOLVE-MERGE (BSM), an LLM program of branch, solve and merge modules, each a prompt to the same base LLM",
+  "Application to pairwise LLM response evaluation on MT-Bench, improving human agreement and reducing position and length bias",
+  "Application to constrained story generation (10 concepts), improving constraint satisfaction and coherence"
+ ],
+ "method": {
+  "summary": "A fixed LLM program with three zero-shot prompts to one base LLM. Branch generates a plan of sub-problems (up to five evaluation criteria, or two concept groups plus a story topic), solve handles each branch independently, merge fuses results (sum of criterion scores for evaluation; an LLM fuse of two stories for generation). Evaluation runs twice with response order swapped and returns a tie if the two verdicts disagree.",
+  "task": "pairwise LLM response evaluation (LLM-as-judge) and constrained story generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MT-Bench",
+    "role": "eval",
+    "size": "2400 LLM responses and 3000 expert human judgements; 80 instructions from 8 domains, two turns each; 6 models give 15 response pairs, 300 pair samples per category",
+    "split": "per category: writing (main), roleplay, extraction, reasoning, math, coding, STEM, humanities",
+    "source": "Zheng et al., 2023",
+    "preprocessing": "reference-based categories (coding, reasoning, math) append a GPT-4 generated answer to the prompt; Table 7 uses a random subset of 100 samples; Tables 10 and 11 use 100 writing samples"
+   },
+   {
+    "name": "Constrained story generation (CommonGen-Hard variant)",
+    "role": "eval",
+    "size": "100 samples, 10 concepts each",
+    "split": null,
+    "source": "harder variant of CommonGen (Lin et al., 2020), concepts from Madaan et al., 2023 commongen_hard.jsonl",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {"name": "LLaMA-2-7B-chat", "role": "proposed", "params": "7B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "base LLM for BSM"}},
+   {"name": "Vicuna-33B", "role": "proposed", "params": "33B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "base LLM for BSM, evaluation only"}},
+   {"name": "LLaMA-2-70B-chat", "role": "proposed", "params": "70B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "main base LLM"}},
+   {"name": "GPT-4", "role": "proposed", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "base LLM for BSM in evaluation; also reference-answer generator and story-quality judge"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy decoding for all BSM modules; self-consistency baseline samples at temperature 0.7",
+   "temperature": "0.7 for self-consistency and BSM+SC only; greedy otherwise",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "BSM: 1 solution per branch, 2 runs per item (original and swapped order). Self-consistency: same number of samples as the branching factor; majority vote per encoding order. BSM+SC: 5 evaluations per branch, averaged. Seeds not stated.",
+   "prompting": "zero-shot, module-specific instructions only, no demonstrations",
+   "retrieval": null,
+   "parameters": {
+    "max_branching_factor": "up to five evaluation criteria (varied 2 to 5 in Table 10; best agreement at 4)",
+    "merge_for_evaluation": "non-neural sum of criterion scores used for all reported results; neural LLM merge also defined",
+    "score_scale": "1-5 (1-10 in Table 11)",
+    "story_branches": "two concept groups and one shared story topic"
+   },
+   "other": {"hardware": "AWS cluster of 8 A100 GPUs"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "LLM-Human Agreement (Ag)", "definition": "agreement of LLM verdict with human votes, in [0,1], for turn-1, turn-2 and overall", "unit": "fraction", "higher_is_better": true},
+    {"name": "Position Bias (PB)", "definition": "fraction of samples where the judgment changes with the encoding order of responses", "unit": "%", "higher_is_better": false},
+    {"name": "Length Bias (LB)", "definition": "fraction of samples where humans prefer the shorter response but the evaluator does not", "unit": "%", "higher_is_better": false},
+    {"name": "All Present (AP)", "definition": "fraction of stories with no missing concept", "unit": "%", "higher_is_better": true},
+    {"name": "Missing Concepts (MC)", "definition": "average percentage of missing concepts; a concept is missing if it appears in no word form", "unit": "%", "higher_is_better": false},
+    {"name": "GPT-4 pairwise story preference", "definition": "pairwise GPT-4 judgment run twice with order swapped, preferring a story only if both agree", "unit": "% of comparisons", "higher_is_better": true}
+   ],
+   "baselines": ["Zero-shot relative evaluator", "Zero-shot absolute evaluator", "Plan&Solve (Wang et al., 2023a)", "Self-Consistency (Wang et al., 2022)", "GPT-4 zero-shot"],
+   "protocol": "No significance tests or multiple seeds reported. Agreement uses each human vote independently (Table 9 recomputes with majority vote). Self-enhancement checked only as agreement on the subset where one response comes from GPT-4."
+  },
+  "availability": {"code": null, "weights": null, "data": "MT-Bench public; CommonGen-hard file from the self-refine repository"},
+  "prompts": [
+   {"purpose": "Branch, LLM evaluation, turn 1", "text": "We want to evaluate the quality of the responses provided by two AI assistants to the user question displayed below. Your task is to propose an evaluation plan that can be executed to compare the two responses. The evaluation plan should consist of a list of up to five factors that one should consider such as helpfulness, relevance, accuracy, etc. In each line, write an evaluation criterion along with a short descrition of how we should evaluate that criterion.\nUser Question: {question1}\nEvaluation Plan:", "where": "Fig 4"},
+   {"purpose": "Solve, LLM evaluation, turn 1", "text": "You are given a user question and responses provided by two AI assistants. Your task is to evaluate and score the quality of the responses based on a single evaluation criterion displayed below. Make sure to evaluate only based on the criterion specified and none other. In the first line, provide a score between 1 to 5 for Assistant A's response. In the second line, provide a score between 1 to 5 for Assistant B's response.\n[User Question]\n{question1}\n[The Start of Assistant A's Answer]\n{answer_a}\n[The End of Assistant A's Answer]\n[The Start of Assistant B's Answer]\n{answer_b}\n[The End of Assistant B's Answer]\n[Evaluation Criterion]\n{eval_criterion}\n[End of Evaluation Criterion]\nEvaluation of {criterion_name}:", "where": "Fig 5"},
+   {"purpose": "Branch, story generation", "text": "Given a set of concepts, we want to write a concise and coherent story consisting of a few sentences using those concepts. In order to do so, you task is to first propose a story topic and then divide the concepts into two groups such that the story generated from each group of concepts can be combined together to form a longer story. Make sure that you do not leave out any concepts.\nConcepts: {concepts}", "where": "Fig 6"},
+   {"purpose": "Solve, story generation", "text": "Write a concise and coherent story on the following topic consisting of a single paragraph. Make sure to include all the following concepts in the story.\nConcepts: {concepts}\nStory Topic: {story_topic}", "where": "Fig 6"},
+   {"purpose": "Merge, story generation", "text": "Given two groups of concepts and two stories containing those concepts, combine the two stories into a concise and coherent story consisting of a single paragraph. Make sure that the combined story does not miss any concept from the two groups.\nGroup 1 Concepts: {concepts1}\nStory 1: {story1}\nGroup 2 Concepts: {concepts2}\nStory 2: {story2}", "where": "Fig 6"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters.merge_for_evaluation", "quote": "the non-neural merge of summing up the criterion-wise evaluations is simple and works well in practice", "where": "Appendix A.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "BSM with LLaMA-2-70B-chat raises overall human agreement on MT-Bench writing questions from 0.43 (zero-shot relative) to 0.55 and cuts position bias from 51.66 to 17.33.",
+   "kind": "measured", "source": null, "metric": "Ag overall", "value": "0.55", "unit": "fraction", "baseline_value": "0.43", "n": 300,
+   "setup": "MT-Bench writing, LLaMA-2-70B-chat base, both response orders; baselines relative 0.43, absolute 0.45, Plan&Solve 0.43, Self-Consistency 0.52",
+   "table": "Table 1, row BSM, column Overall Ag (PB 17.33)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "Authors state BSM improves human agreement by up to an absolute 26% over zero-shot and self-consistency baselines with LLaMA-2-70B-chat.",
+   "kind": "measured", "source": null, "metric": "Ag improvement", "value": "26%", "unit": "absolute %", "baseline_value": null, "n": null,
+   "setup": "MT-Bench, LLaMA-2-70B-chat, largest gain across domains (STEM: 0.46 to 0.72)",
+   "quote": "BSM with LLaMA-2-70B-chat improves LLM- human agreement by up to absolute 26%", "note": "Quote reflowed from line breaks; STEM row of Table 5 shows 0.72 vs 0.46", "where": "Intro"
+  },
+  {
+   "claim": "BSM beats self-consistency at similar compute (0.55 vs 0.52 agreement, PB 17.33 vs 35.66).",
+   "kind": "measured", "source": null, "metric": "Ag overall", "value": "0.52", "unit": "fraction", "baseline_value": "0.55", "n": 300,
+   "setup": "writing, LLaMA-2-70B-chat; self-consistency samples as many generations as BSM's branching factor, temperature 0.7; value is the self-consistency baseline, BSM is 0.55",
+   "table": "Table 1, row Self-Consistency, column Overall Ag (PB 35.66)", "note": null, "where": "Table 1"
+  },
+  {
+   "claim": "BSM improves agreement for every base LLM on writing questions, and GPT-4 gains 3 points (0.59 to 0.62), with no position-bias reduction for GPT-4 (17.33 to 17.00).",
+   "kind": "measured", "source": null, "metric": "Ag overall", "value": "0.62", "unit": "fraction", "baseline_value": "0.59", "n": 300,
+   "setup": "writing; LLaMA-2-7B 0.39 to 0.41, Vicuna-33B 0.51 to 0.56, LLaMA-2-70B 0.43 to 0.55",
+   "quote": "applying BSM obtains a further improvement of 3%", "note": null, "where": "Table 3 and Sec 4.1.2"
+  },
+  {
+   "claim": "With reference answers, BSM LLaMA-2-70B-chat beats zero-shot on coding, reasoning, math and beats GPT-4 on math (0.64 vs 0.62).",
+   "kind": "measured", "source": null, "metric": "Ag overall (Math)", "value": "0.64", "unit": "fraction", "baseline_value": "0.52", "n": 300,
+   "setup": "MT-Bench Math, GPT-4 generated reference answer fed to solve module; GPT-4 evaluator 0.62",
+   "table": "Table 4, row BSM (w/ LLaMA-2-70B-c), column Math Ag", "note": null, "where": "Table 4"
+  },
+  {
+   "claim": "On STEM, BSM LLaMA-2-70B-chat matches GPT-4 agreement (0.72) with lower position bias (10.33 vs 13.66).",
+   "kind": "measured", "source": null, "metric": "Ag overall (STEM)", "value": "0.72", "unit": "fraction", "baseline_value": "0.46", "n": 300,
+   "setup": "MT-Bench STEM, LLaMA-2-70B-chat; GPT-4 also 0.72",
+   "table": "Table 5, Stem, row BSM (w/ LLaMA-2-70B-c), column Overall Ag", "note": null, "where": "Table 5"
+  },
+  {
+   "claim": "On the subset where GPT-4 judges its own response, BSM agreement is 0.54 vs 0.51 zero-shot.",
+   "kind": "measured", "source": null, "metric": "Ag", "value": "0.54", "unit": "fraction", "baseline_value": "0.51", "n": null,
+   "setup": "MT-Bench writing subset where one response is GPT-4's; not a direct measure of self-enhancement bias per the authors",
+   "table": "Table 2, row BSM (w/ GPT-4), column Ag", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "On constrained story generation with LLaMA-2-70B-chat, BSM reaches 28.0 All-Present and 14.7 missing concepts vs zero-shot 22.0 and 27.2.",
+   "kind": "measured", "source": null, "metric": "All Present", "value": "28.0", "unit": "%", "baseline_value": "22.0", "n": 100,
+   "setup": "100 stories of 10 concepts, greedy decoding; LLaMA-2-7B-chat BSM AP 23.0 vs zero-shot 15.0",
+   "table": "Table 6, row BSM, column LLaMA-2-70B-chat AP", "note": null, "where": "Table 6"
+  },
+  {
+   "claim": "GPT-4 prefers BSM stories over zero-shot stories 93% of the time.",
+   "kind": "measured", "source": null, "metric": "GPT-4 pairwise preference", "value": "93%", "unit": "% of comparisons", "baseline_value": null, "n": 100,
+   "setup": "LLaMA-2-70B-chat, order swapped and counted only when consistent",
+   "quote": "stories generated by BSM are preferred a substantial 93% of the time by GPT-4", "note": "Quote reflowed from line breaks", "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "Even BSM with LLaMA-2-70B-chat omits at least one concept in 72% of stories; 60% of the failures arise in the solve module and 12% in merge.",
+   "kind": "measured", "source": null, "metric": "stories with a missing concept", "value": "72%", "unit": "%", "baseline_value": null, "n": 100,
+   "setup": "LLaMA-2-70B-chat BSM, 10 concepts",
+   "quote": "omits at least one concept for 72% of the samples", "note": "Quote reflowed from line breaks", "where": "Sec 4.2.2 and Appendix B"
+  },
+  {
+   "claim": "Maximum branching factor 4 gives the highest agreement (0.53); position bias keeps falling to 12.00 at BF 5.",
+   "kind": "measured", "source": null, "metric": "Ag overall", "value": "0.53", "unit": "fraction", "baseline_value": "0.50", "n": 100,
+   "setup": "100 writing samples, LLaMA-2-70B-chat; BF 2 is 0.50",
+   "table": "Table 10, row BF 4, column Overall Ag", "note": null, "where": "Table 10"
+  },
+  {
+   "claim": "Adding self-consistency inside each branch (BSM+SC, 5 samples, temperature 0.7) leaves agreement at 0.55 and lowers position bias from 17.33 to 15.33.",
+   "kind": "measured", "source": null, "metric": "PB overall", "value": "15.33", "unit": "%", "baseline_value": "17.33", "n": 300,
+   "setup": "writing, LLaMA-2-70B-chat",
+   "table": "Table 8, row BSM + SC, column Overall PB", "note": null, "where": "Table 8"
+  }
+ ],
+ "limits": [
+  "Authors do not evaluate safety, toxicity or bias of generations.",
+  "Length bias is hard to measure in isolation; humans also prefer longer responses.",
+  "Recursive or multi-level BSM is not explored because of cost.",
+  "Efficiency gains from parallel decomposition are not measured; no token or latency cost is reported, although BSM makes many more LLM calls (branch + k solves + merge, twice per item) than zero-shot.",
+  "BSM does not reduce position bias for GPT-4 (17.33 to 17.00 only) and the GPT-4 agreement gain is 3 points on one category; no significance tests, single greedy run, no seeds.",
+  "Self-enhancement bias is only approximated by agreement on a subset.",
+  "Constrained generation uses only 100 samples and two LLaMA-2 models; scale gives little help and 72% of BSM stories still miss a concept.",
+  "Reference-based evaluation depends on GPT-4 reference answers being curated once.",
+  "Models studied (LLaMA-2, Vicuna, GPT-4 of 2023) have dated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LLM program", "definition": "an algorithm that breaks a problem into multiple steps, each parameterized with a different prompt to an underlying LLM", "where": "Sec 2"},
+  {"term": "branching factor", "definition": "k, the number of sub-problems generated by the branch module, decided by the LLM itself", "where": "Sec 3.1"}
+ ],
+ "lineage": [
+  {"work": "Language Model Cascades / LLM programs (Schlag et al., 2023; Dohan et al., 2022)", "year": 2023, "arxiv": null, "relation": "extends", "note": "BSM is framed as an LLM program", "quote": null},
+  {"work": "Graph of Thoughts (Besta et al., 2023)", "year": 2023, "arxiv": "2308.09687", "relation": "related", "note": "BSM execution trace is a graph; uses a fixed program", "quote": null},
+  {"work": "Plan-and-Solve prompting (Wang et al., 2023a)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "plans then solves all branches in one call", "quote": null},
+  {"work": "Self-Consistency (Wang et al., 2022)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "framed as a special case of BSM", "quote": null},
+  {"work": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena (Zheng et al.)", "year": 2023, "arxiv": "2306.05685", "relation": "uses-data", "note": "MT-Bench data and agreement metric", "quote": null},
+  {"work": "CommonGen (Lin et al., 2020) / Self-Refine (Madaan et al., 2023)", "year": 2020, "arxiv": "2303.17651", "relation": "uses-data", "note": "hard 10-concept variant from the self-refine repository", "quote": null},
+  {"work": "Skeleton-of-Thought (Ning et al., 2023)", "year": 2023, "arxiv": null, "relation": "related", "note": "parallel decomposition for efficiency", "quote": null},
+  {"work": "LLaMA-2 (Touvron et al., 2023), Vicuna (Chiang et al., 2023), GPT-4 (OpenAI, 2023b)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "base LLMs", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An illustration of BRANCH-SOLVE-MERGE with LLaMA-2-70B-chat for pairwise evaluation of LLM responses.", "page": 2, "why": "Shows branch (criteria), parallel solve, merge in one picture"},
+  {"figure": "Fig 3", "caption": "An illustration of BSM with LLaMA-2-70B-chat for constrained story generation.", "page": null, "why": "Concept split, shared topic and merged story"},
+  {"figure": "Algorithm 1", "caption": "BRANCH-SOLVE-MERGE: LLM Program for LLM Evaluation", "page": null, "why": "Swap-order consistency logic that produces ties"}
+ ],
+ "code": [],
+ "problems": [
+  "No venue line in the PDF (arXiv v2, 7 Jun 2024); recorded as preprint.",
+  "Text extraction flattens tables to one value per line; table cells read in column order.",
+  "No embedded instructions found."
+ ]
 }

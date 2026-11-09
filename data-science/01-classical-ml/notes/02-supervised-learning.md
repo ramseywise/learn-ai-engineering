@@ -192,7 +192,7 @@ The book's text defines $C$ as a budget on total slack (large $C$: wide margin, 
 
 **Confounding in a logistic fit.** On ISLP's simulated `Default` data (10,000 customers, 3.33% default) the coefficient on `student` is +0.40 alone (4.31% default for students against 2.92% for others) and -0.65 once `balance` is in the model. Students carry higher balances, and at the same balance and income a student is less likely to default (0.058 against 0.105 at balance $1,500). Read a coefficient as "holding the others fixed", never as the marginal effect (*ISLP*, ch. 4).
 
-**Multiclass.** Linear classifiers are binary by nature. One-vs-rest trains one classifier per class and predicts the class with the highest score. `LogisticRegression` uses a true multinomial (softmax) loss by default.
+**Multiclass.** Linear classifiers are binary by nature. One-vs-rest trains one classifier per class and predicts the class with the highest score. `LogisticRegression` uses a true multinomial (softmax) loss by default; softmax is defined in [DS 02/01](../../02-deep-learning/notes/01-neural-networks-fundamentals.md#the-forward-pass).
 
 | | |
 |---|---|
@@ -426,7 +426,7 @@ print(agree.all())
 True
 ```
 
-A probability is only as good as the model's **calibration**: an overfit model reports 1.0 on points it gets wrong. You need these scores to move the decision threshold, which [04](04b-thresholds-pr-roc-and-calibration.md#threshold-precisionrecall-and-roc) does, and [04](04b-thresholds-pr-roc-and-calibration.md#calibration-is-a-08-really-80) shows how to check them. Niculescu-Mizil and Caruana compared ten learners' probabilities and found boosted trees and SVMs distort them in a sigmoid shape while logistic regression does not ([doi:10.1145/1102351.1102430](https://doi.org/10.1145/1102351.1102430), ICML 2005).
+A probability is only as good as the model's **calibration**: an overfit model reports 1.0 on points it gets wrong. You need these scores to move the decision threshold, which [04b](04b-thresholds-pr-roc-and-calibration.md#threshold-precisionrecall-and-roc) does, and [04b](04b-thresholds-pr-roc-and-calibration.md#calibration-is-a-08-really-80) shows how to check them. Niculescu-Mizil and Caruana compared ten learners' probabilities and found boosted trees and SVMs distort them in a sigmoid shape while logistic regression does not ([doi:10.1145/1102351.1102430](https://doi.org/10.1145/1102351.1102430), ICML 2005).
 
 ---
 
@@ -527,7 +527,7 @@ After 1,500 iterations gradient descent has not quite reached the closed-form an
 | Reading coefficients as causes | A correlated feature flips sign between fits | Check stability across resamples; see [interpretability](08-model-interpretability.md) |
 | A convergence warning ignored | Coefficients differ with solver or seed | Scale first, or raise `max_iter` until the warning goes |
 | Trees on trending time data | Forecast flatlines at the last training value | Model the trend with a linear part, or difference the target |
-| Trusting `predict_proba` from an overfit model | Probabilities of 1.0 on wrong answers | Check calibration ([04](04b-thresholds-pr-roc-and-calibration.md#calibration-is-a-08-really-80)) |
+| Trusting `predict_proba` from an overfit model | Probabilities of 1.0 on wrong answers | Check calibration ([04b](04b-thresholds-pr-roc-and-calibration.md#calibration-is-a-08-really-80)) |
 
 ## Try it
 

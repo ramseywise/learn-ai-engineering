@@ -1,19 +1,710 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2310.03214",
  "pdf": "generative-ai/08-eval/sources/vu-2023-freshllms.pdf",
  "bib": {
-  "title": "FreshLLMs: Refreshing Large Language Models with Search Engine Augmentation",
-  "first_author": "Tu Vu",
-  "year": "2023",
-  "venue": null,
+  "title": "FRESHLLMS: REFRESHING LARGE LANGUAGE MODELS WITH SEARCH ENGINE AUGMENTATION",
+  "authors": [
+   "Tu Vu",
+   "Mohit Iyyer",
+   "Xuezhi Wang",
+   "Noah Constant",
+   "Jerry Wei",
+   "Jason Wei",
+   "Chris Tar",
+   "Yun-Hsuan Sung",
+   "Denny Zhou",
+   "Quoc Le",
+   "Thang Luong"
+  ],
+  "first_author": "Vu",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2310.03214",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-05",
-  "session": "fc304ee6-e968-4b41-92f4-0e9c2a977b0c"
+  "at": "2026-11-09",
+  "chars_read": 82049,
+  "chars_total": 82049,
+  "engine": "pymupdf",
+  "skipped": null
  },
- "legacy_report": "SOURCE: \"FreshLLMs: Refreshing Large Language Models with Search Engine Augmentation\", Tu Vu, Mohit Iyyer, Xuezhi Wang, Noah Constant, Jerry Wei, Jason Wei, Chris Tar, Yun-Hsuan Sung, Denny Zhou, Quoc Le, Thang Luong. Venue as printed: \"Preprint\" (arXiv:2310.03214v2 [cs.CL], 22 Nov 2023). First author Tu Vu: Google. Other affiliations printed: University of Massachusetts Amherst, OpenAI.\n\nCOVERAGE: 26 of 26 pages, all 83,152 extracted chars, including Appendices A-H and Tables 2-5. References (pp. 10-13) skimmed. Figures 2, 8, 9 and 10 are images, so only their captions were read.\n\nCLAIMS (all model results: benchmarked April 26, 2023, temperature 0, 500-question test set, graded by the authors)\n\n- claim: FreshQA has 600 questions in four categories (never-, slow-, fast-changing, false-premise), each written at one-hop or multi-hop difficulty.\n  number: 600; test 125 per type (500), dev 25 per type (100), 15 demonstrations\n  setup: written by NLP researchers (authors and colleagues) and Upwork freelancers at $2 per example; every example manually reviewed; dev set unused in the paper\n  quote: \"a test set consisting of 125 questions for each of the four broad question types (500 total examples) and a development set comprising 25 questions for each question type (100 total examples)\"\n  where: p3\n\n- claim: Answers stay current through manual updates by the maintainers, and the design limits how often that is needed.\n  number: questions changing more than weekly excluded\n  setup: annotators also gave the year the answer last changed and a supporting URL; questions can move category over time\n  quote: \"we excluded questions whose answers are likely to change more frequently than once per week, and additionally incorporated the expected next review date for each question.\"\n  where: p3\n\n- claim: RELAXED credits a correct primary answer; STRICT also requires every claim to be accurate and current. The gap between them is the hallucination measure.\n  number: more than 50K judgements; two-author agreement 99% RELAXED, 96% STRICT\n  setup: agreement measured on only 100 randomly sampled answers (50 valid-premise, 50 false-premise). STRICT agreement on false-premise items is 92.0 (Table 2)\n  quote: \"Two authors independently evaluated a subset of 100 answers in both modes and had an agreement of 99% for RELAXED and 96% for STRICT\"\n  where: p4; Table 2, p17\n\n- claim: FreshEval, a few-shot LLM judge, agrees with the human raters about as well as they agree with each other.\n  number: 96.5% RELAXED, 96% STRICT (average over two raters)\n  setup: same 100 answers; separate prompts per mode; given question, valid answers and response; adding retrieved evidence did not help; lowest cell is 90.0 (STRICT, false-premise, vs Rater 2)\n  quote: \"achieving an average agreement of 96.5% with human evaluations for RELAXED and 96% for STRICT\"\n  where: p4; Table 2, p17\n\n- claim: Without search, every model is weak overall and worst on fast-changing questions.\n  number: overall 0.8-32.0% STRICT, 0.8-46.4% RELAXED. GPT-4 STRICT by category: fast 12.0, slow 4.0, never 64.3, false-premise 33.9, all 28.6. RELAXED: 14.4, 35.2, 69.0, 66.9, all 46.4. ChatGPT STRICT: 7.2, 16.0, 61.9, 42.7, all 32.0\n  setup: T5 770M to PaLM 540B, plus Codex, GPT-3.5, ChatGPT, GPT-4\n  quote: \"overall accuracy ranges from 0.8% to 32.0% under STRICT , and 0.8% to 46.4% under RELAXED\"\n  where: p5; Tables 3-4, pp21-22\n\n- claim: False-premise accuracy does not improve with model size for T5 and PaLM.\n  number: 0.0-1.6%; OpenAI models 25.8-42.7% STRICT, 32.3-66.9% RELAXED\n  setup: as above\n  quote: \"using larger models does not increase accuracy for T5 and PALM (“flat scaling”), with performance within the range of 0.0% to 1.6%\"\n  where: p5\n\n- claim: FreshPrompt (Google Search evidence sorted oldest to newest, plus few-shot demonstrations, one LLM call) lifts GPT-4 sharply and shrinks the STRICT-RELAXED gap.\n  number: GPT-4 28.6 to 75.6 STRICT, 46.4 to 77.8 RELAXED; gap 17.8 to 2.2. GPT-3.5 26.0 to 56.0 STRICT. Comparators STRICT: Perplexity 52.2, GPT-3.5 + Self-Ask 41.6, Google Search alone 39.6\n  setup: GPT-4 with 10 evidences and 5 demonstrations; GPT-3.5 with 5 evidences\n  quote: \"GPT-4 + FRESH PROMPT achieves absolute accuracy improvements of 47% and 31.4% over GPT-4 under STRICT and RELAXED , respectively.\"\n  where: p7, Table 1; Table 5, p26\n\n- claim: The number of evidences matters most; more demonstrations do not help.\n  number: STRICT 61.4 (1 evidence), 70.6 (5), 75.6 (10), 77.6 (15); 15 demonstrations gives 74.6\n  setup: GPT-4\n  quote: \"increasing this number from 1 to 5, 10, and 15 leads to corresponding overall accuracy improvements of +9.2%, +14.2%, and +16.2%\"\n  where: p8\n\n- claim: An explicit premise-check instruction helps false-premise questions but costs GPT-3.5 heavily elsewhere.\n  number: false-premise +23.4 (GPT-3.5) and +6.4 (GPT-4) STRICT; GPT-3.5 overall down 20.8 (56.0 to 35.2)\n  setup: FreshPrompt plus \"Please check if the question contains a valid premise before answering\"\n  quote: \"decreasing overall accuracy by 20.8% and 21% under STRICT and RELAXED , respectively\"\n  where: p8\n\n- claim: Chain-of-thought raises RELAXED accuracy but hallucinates more under STRICT.\n  number: PaLM 540B on pre-2022 knowledge: few-shot +36.1, CoT +26.9 STRICT\n  setup: 5-shot TriviaQA demonstrations\n  quote: \"FEW-SHOT obtains better results under STRICT , as COT introduces more room for hallucination\"\n  where: p5\n\nLIMITS\n- Conceded: answers go stale between maintainer updates; Google Search only; one query per question; simple English questions; no comparison with fine-tuning; Lazaridou et al. (2022) not compared, for cost.\n- Not shown: no confidence intervals, with 125 questions per category. All grading was done by the authors, who also built the method. The agreement figures rest on 100 answers and are raw agreement, with no chance-corrected statistic. The model behind FreshEval is not named in the extracted text. The update cadence is \"regular\", never specified. The split between researcher-written and freelancer-written questions is not given. Models \"may still provide accurate answers\" to fast-changing questions by luck (footnote 6).\n- Dated: a single snapshot from April 26, 2023 of models since superseded; footnote 7 says newer versions can browse. ChatGPT and GPT-4 showed knowledge past their stated cutoff (Appendix E).\n\nBUILDS ON: Self-Ask (Press et al., 2022); Lazaridou et al. (2022) internet-augmented few-shot prompting; Liu et al. (2023a) for evidence ordering; chain-of-thought (Wei et al., 2022). Benchmarks cited as prior: TimeQA (Chen et al., 2021b), SituatedQA (Zhang & Choi, 2021), StreamingQA (Liska et al., 2022), RealTimeQA (Kasai et al., 2022), CREPE (Yu et al., 2023c), (QA)2 (Kim et al., 2023).\n\nCODE: none. The FreshEval prompt instructions are printed verbatim in Figures 5-6 (pp18-19).\n\nFIGURES: Figure 4, p16, \"FRESH QA sample evaluation.\" Fifteen worked examples showing the RELAXED and STRICT verdict for each grading rule, which conveys the protocol faster than the prose. The verdict columns are icons and did not extract, so check them against the image. Alternative: Figure 1, p2, two example questions per category.\n\nPROBLEMS\n- No instructions aimed at the reader. Figures 5-7 contain grader prompts, which I treated as content.\n- The introduction says \"32.6% and 49.0%\" for the best variant (15 evidences), while section 4.3 says 47% and 31.4% for the default. Both match the tables, but the mode order is reversed between the two sentences.\n- The setup tuple is printed with five names and four values: \"(o, r, a, n, m) = (10, 2, 2, 5)\". m = 5 is stated separately.\n- Figure 7's text extracted out of order.\n\nPaths: /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/sources/vu-2023-freshllms.pdf; /Users/ramsey-wise/workspace/learn-ai-engineering/generative-ai/08-eval/notes/03-eval-datasets.md (no FreshQA mention at present)."
+ "type": "benchmark",
+ "question": "How factual are LLMs on questions that need current or changing world knowledge or that carry false premises, and can search-engine results placed in the prompt fix it?",
+ "hypothesis": "Plainly implied: grounding the prompt in up-to-date search results, in order and in number, raises factuality over parametric knowledge alone.",
+ "contributions": [
+  "FRESHQA, a dynamic QA benchmark with never-, slow-, fast-changing and false-premise questions, to be updated regularly",
+  "Benchmark of closed and open LLMs with a two-mode (RELAXED/STRICT) human evaluation of more than 50K judgements",
+  "FRESHPROMPT, a few-shot in-context method that injects Google Search evidence, with sensitivity and ablation analyses"
+ ],
+ "method": {
+  "summary": "600 human-written questions (500 test, 100 dev, 15 demos) are answered by LLMs at temperature 0 with no retrieval, then by GPT-3.5 and GPT-4 with FRESHPROMPT (Google Search results formatted oldest to newest plus 5 few-shot demonstrations with reasoning). Authors judge each response under RELAXED (primary answer correct) and STRICT (no hallucination or outdated claim); all models were run on 26 April 2023.",
+  "task": "open-domain question answering on time-sensitive and false-premise questions; search-augmented prompting",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "FRESHQA",
+    "role": "eval",
+    "size": "600 questions: test 500 (125 per type), dev 100 (25 per type), 15 demonstration examples; remainder discarded",
+    "split": "test set used; dev reserved for future work and not used in this paper",
+    "source": "NLP researchers and Upwork freelancers ($2 per example); released at github.com/freshllms/freshqa",
+    "preprocessing": "manual review for well-formedness, duplicate and invalid removal, answer and URL verification, supplementary valid answers added; questions whose answers change more often than weekly excluded; next review date recorded"
+   },
+   {
+    "name": "TriviaQA 5-shot demonstrations (as used in Sun et al. 2023)",
+    "role": "eval",
+    "size": "5 demonstrations",
+    "split": null,
+    "source": "Joshi et al. 2017",
+    "preprocessing": "used as few-shot and CoT prompt for the baseline models"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (gpt-4)",
+    "role": "proposed",
+    "params": "N/A",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "api": "2023-03-15-preview API in Azure OpenAI Service",
+     "knowledge_cutoff": "2021+"
+    }
+   },
+   {
+    "name": "GPT-3.5 (text-davinci-003)",
+    "role": "proposed",
+    "params": "N/A",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "knowledge_cutoff": "2021"
+    }
+   },
+   {
+    "name": "ChatGPT (gpt-3.5-turbo)",
+    "role": "evaluated",
+    "params": "N/A",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Codex (code-davinci-002)",
+    "role": "evaluated",
+    "params": "N/A",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM / PaLMChilla / Flan-PaLM",
+    "role": "evaluated",
+    "params": "540B, 62B, 8B (PaLM); 62B (PaLMChilla); 540B (Flan-PaLM)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5 / Flan-T5",
+    "role": "evaluated",
+    "params": "770M (Large), 3B (XL), 11B (XXL); Flan-T5 XXL 11B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Google Search (answer box or top-1 snippet)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Perplexity.ai (concise answers)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GPT-3.5 plus Bing Search at evaluation time",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Self-Ask on GPT-3.5 and GPT-4",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "authors' few-shot prompt reused; only the final answer is evaluated"
+    }
+   },
+   {
+    "name": "FreshEval judge (LLM)",
+    "role": "judge",
+    "params": null,
+    "architecture": "few-shot LLM judge",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "which LLM is the judge is not stated in the text"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy: most likely token at each step",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "256 tokens for all models (Section 3 experiments)",
+   "samples": "one response per question; one run on 26 April 2023; no seeds stated",
+   "prompting": "baselines: non-chat models get 'Q: <question>\\nA: '; few-shot and CoT use the 5-shot TriviaQA demonstrations. FRESHPROMPT: question, then retrieved evidences sorted oldest to newest, then reasoning and answer; m=5 demonstrations at the start; ChatGPT and GPT-4 are given the current date.",
+   "retrieval": "Google Search via SerpApi, query = question verbatim, one query per question; evidences: o organic results, r related questions, a crowdsourced QA items, plus answer box and knowledge graph snippets; keep top n by date (closest to end of prompt)",
+   "parameters": {
+    "(o, r, a, n, m) GPT-3.5": "(10, 2, 2, 5)",
+    "(o, r, a, n, m) GPT-4": "(10, 3, 3, 10)",
+    "demonstrations m": "5",
+    "evidence order": "oldest to newest",
+    "premise check text": "Please check if the question contains a valid premise before answering"
+   },
+   "other": {
+    "note": "the OpenAI API is non-deterministic even at temperature 0; PPLX.AI decoding not controllable"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "RELAXED accuracy",
+     "definition": "response credited if the primary answer is correct; ill-formed, hallucinated or outdated extra information that does not impact the primary answer is allowed; false-premise questions need an explicit rebuttal",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "STRICT accuracy",
+     "definition": "as RELAXED, but any hallucination, however minor, gets no credit; 'knowledge cutoff' hedges accepted only if the knowledge is evidently unchanged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "STRICT-RELAXED gap",
+     "definition": "difference between the two modes, read as a measure of hallucination",
+     "unit": "points",
+     "higher_is_better": false
+    },
+    {
+     "name": "Agreement with human raters",
+     "definition": "exact accuracy between two raters or between FreshEval and a rater on 100 sampled answers (50 valid-premise, 50 false-premise) per mode",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "vanilla GPT-3.5 and GPT-4",
+    "Google Search",
+    "Perplexity.ai",
+    "Self-Ask",
+    "T5, PaLM, Flan, Codex, ChatGPT without retrieval"
+   ],
+   "protocol": "Authors judged every response by hand (more than 50K judgements); two authors double-rated 100 answers per mode. Accuracy broken down by fast, slow, never, false-premise, before 2022 vs since 2022, one-hop vs multi-hop. No significance tests or seeds."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "github.com/freshllms/freshqa (stated in abstract); updated regularly"
+  },
+  "prompts": [
+   {
+    "purpose": "FreshEval RELAXED judge instruction",
+    "text": "Please evaluate the response to each given question under a relaxed evaluation, where hallucinations, outdated information, and ill-formed answers are allowed, as long as the primary answer is accurate. Please credit the response only if it provides a confident and definitive answer, or the correct answer can be obviously inferred from the response. The primary or final answer when standing alone must be accurate. Any additional information that is provided must not contradict the primary answer or reshape one's perception of it. For false-premise questions, the response must point out the presence of a false premise to receive credit.",
+    "where": "Appendix B, Figure 5 (instruction truncated here; demonstrations omitted in paper)"
+   },
+   {
+    "purpose": "FreshEval STRICT judge instruction",
+    "text": "Please evaluate the response to each given question under a strict evaluation, where no hallucinations, outdated information, or ill-formed answers are allowed. Please credit the response only if it provides a confident and definitive answer, or the correct answer can be obviously inferred from the response.",
+    "where": "Appendix B, Figure 6 (opening of instruction; demonstrations omitted in paper)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "Unless otherwise specified, we use (o, r, a, n, m) = (10, 2, 2, 5) for GPT-3.5,",
+    "where": "Section 4.2"
+   },
+   {
+    "field": "inference.max_tokens",
+    "quote": "generate a maximum number of 256 tokens for all models",
+    "where": "Appendix C"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Without retrieval, all benchmarked LLMs score low overall on FRESHQA, up to 32.0% under STRICT and 46.4% under RELAXED.",
+   "kind": "measured",
+   "metric": "overall accuracy, best model",
+   "value": "46.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "FRESHQA test set, models run 26 April 2023 at temperature 0, no search; RELAXED best is GPT-4, STRICT best is ChatGPT",
+   "quote": "overall accuracy ranges from 0.8% to 32.0% under STRICT, and 0.8% to 46.4%",
+   "table": null,
+   "note": "Table 3 STRICT: ChatGPT 32.0; Table 4 RELAXED: GPT-4 46.4",
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "GPT-4 + FRESHPROMPT improves over vanilla GPT-4 by 47 points STRICT and 31.4 points RELAXED (default settings).",
+   "kind": "measured",
+   "metric": "absolute overall accuracy gain",
+   "value": "47",
+   "unit": "points (STRICT)",
+   "baseline_value": "28.6",
+   "n": 500,
+   "setup": "FRESHQA test, GPT-4 with (o,r,a,n,m) = (10,3,3,10), Google Search evidence; STRICT 75.6 vs 28.6",
+   "quote": "accuracy improvements of 47% and 31.4% over GPT-4 under STRICT and RELAXED, respectively.",
+   "table": null,
+   "note": "Intro quotes 32.6% and 49.0% for the best variant (15 evidences) over vanilla GPT-4 under RELAXED and STRICT.",
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "The best variant, GPT-4 with 15 retrieved evidences, reaches 77.6% STRICT and 79.0% RELAXED.",
+   "kind": "measured",
+   "metric": "overall accuracy",
+   "value": "77.6",
+   "unit": "% (STRICT)",
+   "baseline_value": "28.6",
+   "n": 500,
+   "setup": "FRESHQA test, GPT-4 + FRESHPROMPT with 15 evidences, 5 demonstrations",
+   "quote": "overall accuracies of 77.6% and 79.0% under STRICT and RELAXED, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Tables 1 and 5"
+  },
+  {
+   "claim": "FRESHPROMPT shrinks the STRICT to RELAXED gap of GPT-4, showing fewer outdated and hallucinated answers.",
+   "kind": "measured",
+   "metric": "STRICT-RELAXED gap",
+   "value": "2.2",
+   "unit": "points",
+   "baseline_value": "17.8",
+   "n": 500,
+   "setup": "GPT-4 vs GPT-4 + FRESHPROMPT default",
+   "quote": "The reduction in the absolute accuracy gap between STRICT and RELAXED (from 17.8% to 2.2%)",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "GPT-3.5 + FRESHPROMPT beats Perplexity.ai and Self-Ask under STRICT, but Perplexity.ai is 4.2 points ahead under RELAXED.",
+   "kind": "measured",
+   "metric": "overall accuracy difference",
+   "value": "3.8",
+   "unit": "points over PPLX.AI (STRICT)",
+   "baseline_value": "52.2",
+   "n": 500,
+   "setup": "GPT-3.5 + FRESHPROMPT 56.0 vs PPLX.AI 52.2 vs Self-Ask 41.6 STRICT; RELAXED 62.0 vs 66.2",
+   "quote": "by +3.8% and +14.4% under STRICT.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Table 1"
+  },
+  {
+   "claim": "GPT-4 + Self-Ask scores 47.8 STRICT, far below GPT-4 + FRESHPROMPT.",
+   "kind": "measured",
+   "metric": "overall accuracy STRICT",
+   "value": "47.8",
+   "unit": "%",
+   "baseline_value": "75.6",
+   "n": 500,
+   "setup": "FRESHQA test, GPT-4 with the Self-Ask authors' few-shot prompt, final answer only",
+   "quote": null,
+   "table": "Table 1, row GPT-4 + SELF-ASK, column all",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Evidence count matters most: going from 1 to 5, 10, 15 evidences adds +9.2, +14.2, +16.2 points STRICT.",
+   "kind": "measured",
+   "metric": "overall accuracy gain vs 1 evidence",
+   "value": "16.2",
+   "unit": "points (15 evidences, STRICT)",
+   "baseline_value": "61.4",
+   "n": 500,
+   "setup": "GPT-4 + FRESHPROMPT, 5 demonstrations; 1 evidence 61.4, 5 evidences 70.6, 10 75.6, 15 77.6",
+   "quote": "overall accuracy improvements of +9.2%, +14.2%, and +16.2%, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Table 1"
+  },
+  {
+   "claim": "Evidence order helps by up to 2.2 points; random order is worst.",
+   "kind": "measured",
+   "metric": "overall accuracy, random vs time/search order",
+   "value": "2.2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "GPT-4, snippets only; STRICT time order 74.8, search order 74.0, random 72.4",
+   "quote": "with up to a +2.2% higher overall accuracy in STRICT and RELAXED",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Removing the answer box costs 1.4 points STRICT; removing it and related-question evidence costs 3.2.",
+   "kind": "measured",
+   "metric": "overall accuracy loss",
+   "value": "3.2",
+   "unit": "points (STRICT)",
+   "baseline_value": "75.6",
+   "n": 500,
+   "setup": "GPT-4 + FRESHPROMPT ablation",
+   "quote": "Removing the answer box decreases",
+   "table": "Table 1, rows w/o ANSWER BOX and w/o ANSWER BOX & RELEVANT INFO, column all (74.2, 72.4)",
+   "note": "text: 'FRESHPROMPT's overall accuracy by 3.2% (3.0% under RELAXED)'",
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Increasing demonstrations from 5 to 15 slightly hurts GPT-4 (1 point STRICT).",
+   "kind": "measured",
+   "metric": "overall accuracy change",
+   "value": "-1",
+   "unit": "points (STRICT)",
+   "baseline_value": "75.6",
+   "n": 500,
+   "setup": "GPT-4 + FRESHPROMPT, 15 vs 5 demonstrations (74.6 vs 75.6)",
+   "quote": "(1% decrease in overall accuracy under STRICT)",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "Verbose demonstration answers lower STRICT accuracy by 2.6 points via more hallucination.",
+   "kind": "measured",
+   "metric": "overall accuracy change",
+   "value": "-2.6",
+   "unit": "points (STRICT)",
+   "baseline_value": "75.6",
+   "n": 500,
+   "setup": "GPT-4 + FRESHPROMPT, manually rewritten verbose demonstrations (73.0)",
+   "quote": "decrease of 2.6% in overall accuracy under STRICT)",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "An explicit premise check lifts false-premise accuracy but hurts GPT-3.5 elsewhere.",
+   "kind": "measured",
+   "metric": "false-premise STRICT accuracy gain",
+   "value": "23.4",
+   "unit": "points (GPT-3.5, STRICT)",
+   "baseline_value": "36.3",
+   "n": 125,
+   "setup": "FRESHPROMPT + 'Please check if the question contains a valid premise before answering'; GPT-3.5 gain +23.4 STRICT, GPT-4 +6.4; GPT-3.5 overall drops 56.0 to 35.2",
+   "quote": "premise check to GPT-3.5 and GPT-4 yields +23.4% and +6.4% respective accuracy improvement",
+   "table": null,
+   "note": "n=125 is inferred: 125 false-premise test questions",
+   "where": "Section 4.3, Table 1"
+  },
+  {
+   "claim": "Models of any size are flat on false-premise questions among T5 and PaLM, 0.0 to 1.6%.",
+   "kind": "measured",
+   "metric": "false-premise accuracy",
+   "value": "1.6",
+   "unit": "% (max)",
+   "baseline_value": null,
+   "n": 125,
+   "setup": "T5 and PaLM families, STRICT/RELAXED, no search",
+   "quote": "with performance within the range of 0.0% to 1.6%.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "GPT-4 under RELAXED handles false-premise questions best, 66.9% overall and 83.9% for pre-2022 knowledge.",
+   "kind": "measured",
+   "metric": "false-premise RELAXED accuracy, pre-2022",
+   "value": "83.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 without search, FRESHQA test",
+   "quote": "83.9% on questions about knowledge before 2022.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "GPT-4 never exceeds 15% on fast-changing questions without retrieval and refuses 60% of them (ChatGPT 16%).",
+   "kind": "measured",
+   "metric": "fast-changing accuracy ceiling",
+   "value": "15",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 125,
+   "setup": "no search, both modes; refusal rate counted by authors",
+   "quote": "(refusing to answer 60% of the time) compared to CHATGPT (16%).",
+   "table": null,
+   "note": null,
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "CoT and few-shot raise PaLM 540B on pre-2022 questions but CoT adds hallucination under STRICT.",
+   "kind": "measured",
+   "metric": "accuracy gain over zero-shot, pre-2022 valid-premise, STRICT",
+   "value": "36.1",
+   "unit": "points (few-shot); CoT +26.9",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM 540B, 5-shot TriviaQA demonstrations",
+   "quote": "COT yields +36.1% and +26.9% respective accuracy improvement over zero-shot prompting with",
+   "table": null,
+   "note": "+21.9% and +29.7% under RELAXED",
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "Two authors agreed 99% (RELAXED) and 96% (STRICT) on 100 answers per mode; FreshEval agrees 96.5% and 96% on average with humans.",
+   "kind": "measured",
+   "metric": "inter-rater agreement",
+   "value": "96.5",
+   "unit": "% (FreshEval vs humans, RELAXED)",
+   "baseline_value": "99",
+   "n": 100,
+   "setup": "100 sampled answers per mode (50 valid, 50 false premise); exact accuracy",
+   "quote": "achieving an average agreement of 96.5% with",
+   "table": null,
+   "note": "Table 2: Rater 1 vs 2 RELAXED 99.0, STRICT 96.0; FreshEval vs Rater 1 97.0 and 97.0; vs Rater 2 96.0 and 95.0. Table 2 'ALL' of 97.5 for raters.",
+   "where": "Section 2.2, Appendix B, Table 2"
+  }
+ ],
+ "limits": [
+  "Answers need regular manual updating; between updates some answers go stale.",
+  "FRESHPROMPT relies on Google Search; behaviour with search engines lacking answer boxes is unknown.",
+  "Only one search query per question, no decomposition.",
+  "Questions are simple English; multilingual and long-form QA untested.",
+  "In-context learning may underperform fine-tuning on new knowledge.",
+  "Judging was by the authors only; single run at temperature 0 on one date; no confidence intervals; test set 500 questions (125 per type).",
+  "Models served by APIs change over time and are non-deterministic; Perplexity.ai decoding not controlled.",
+  "Lazaridou et al. 2022 not compared because of its 50-call inference cost.",
+  "Results date from April 2023 model versions; GPT-4 and ChatGPT now browse the web (footnote 7)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "never-changing / slow-changing / fast-changing / false-premise",
+   "definition": "never-changing: the answer almost never changes; slow-changing: typically changes over several years; fast-changing: typically changes within a year or less; false-premise: questions whose premises are factually incorrect and must be rebutted",
+   "where": "Figure 1"
+  },
+  {
+   "term": "RELAXED / STRICT evaluation",
+   "definition": "RELAXED measures only whether the main answer is correct; STRICT measures whether all claims are factual and up-to-date (no hallucination)",
+   "where": "Section 1, 2.2"
+  },
+  {
+   "term": "FRESHEVAL",
+   "definition": "an automatic metric that uses few-shot in-context learning to teach an LLM to judge model responses",
+   "where": "Section 2.2, Appendix B"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-Ask (Press et al., Measuring and narrowing the compositionality gap)",
+   "year": 2022,
+   "arxiv": "2210.03350",
+   "relation": "baseline",
+   "note": "search-augmented decomposition baseline",
+   "quote": null
+  },
+  {
+   "work": "Internet-augmented language models through few-shot prompting (Lazaridou et al.)",
+   "year": 2022,
+   "arxiv": "2203.05115",
+   "relation": "extends",
+   "note": "similar Google Search insertion; not compared for inference cost",
+   "quote": null
+  },
+  {
+   "work": "Perplexity.ai",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "commercial answer engine",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "demonstrations include CoT reasoning over evidences",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": "2307.03172",
+   "relation": "uses-method",
+   "note": "motivation for sorting evidences oldest to newest",
+   "quote": null
+  },
+  {
+   "work": "TimeQA (Chen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "20K timestamped QA pairs",
+   "quote": null
+  },
+  {
+   "work": "SituatedQA (Zhang and Choi)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "9K temporally situated questions",
+   "quote": null
+  },
+  {
+   "work": "StreamingQA (Liska et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "146K questions over timestamped news",
+   "quote": null
+  },
+  {
+   "work": "RealtimeQA (Kasai et al.)",
+   "year": 2022,
+   "arxiv": "2207.13332",
+   "relation": "related",
+   "note": "weekly multiple-choice news questions",
+   "quote": null
+  },
+  {
+   "work": "CREPE (Yu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "false-presupposition QA",
+   "quote": null
+  },
+  {
+   "work": "(QA)2 (Kim et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "602 questions with questionable assumptions",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA (Joshi et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "5-shot demonstrations for baselines",
+   "quote": null
+  },
+  {
+   "work": "PaLM, Flan, T5, Codex, GPT-3.5, ChatGPT, GPT-4",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "benchmarked models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "FRESHQA exemplars. Our questions are broadly divided into four main categories based on the nature of the answer",
+   "page": 2,
+   "why": "shows the four question types with examples"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Accuracy of different LLMS on FRESHQA under RELAXED and STRICT (no hallucination) evaluations.",
+   "page": 5,
+   "why": "flat scaling on fast-changing and false-premise questions"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "FRESHPROMPT's format.",
+   "page": 6,
+   "why": "the evidence template and demonstration layout"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "FRESHQA sample evaluation.",
+   "page": 16,
+   "why": "15 worked examples of the RELAXED/STRICT rubric"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "FreshEval prompt entries hold only the opening instruction; full prompts with demonstrations are in Figures 5 and 6.",
+  "Table cells are extracted one per line; the column mapping was inferred from the caption order.",
+  "Intro says 32.6% and 49.0% for the best GPT-4 variant, Section 4.3 says 47% and 31.4% for the default; both are correct for different variants.",
+  "Section 4.3 states a 58.1% vs 41.1% false-premise figure; Table 5 agrees.",
+  "No embedded instructions found."
+ ]
 }

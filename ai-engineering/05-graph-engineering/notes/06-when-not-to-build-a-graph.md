@@ -46,6 +46,8 @@ Sakana AI's **Fugu** report ([arXiv:2606.21228](https://arxiv.org/abs/2606.21228
 
 **Archon** ([arXiv:2409.15254](https://arxiv.org/abs/2409.15254), Saad-Falcon et al., 2024, preprint v6 2025-06) searches instead of training, and over a deliberately narrow space: a linear stack of generate, critique, rank, fuse, verify and unit-test layers, 9,576 valid configurations, found by Bayesian optimisation on a 20% dev split. On seven benchmarks (held-out 80%) its task-specific architectures used 39–44 calls against 52 for ADAS and 48 for AFlow and scored higher (CodeContests 41.4% vs. ADAS 23.7% and AFlow 21.1%; MT-Bench 79.5% vs. 66.3% and 62.4%). A generalised architecture kept 91.7–94.2% of its task-specific score on unseen tasks, against 66.8–73.8% for generalised ADAS and AFlow. How those two baselines were run and tuned is not detailed, the judges were GPT-4-class models, and the main text and appendix disagree on some component gains. It costs up to 5x a single call and helps little with 7B models, so a constrained search space is a cheap first step before generating topologies.
 
+Searching for a topology with a meta-agent (ADAS) and learned codebooks of fixed graphs are covered in [05b](05b-running-multi-agent-systems.md#searching-for-the-topology-adas); this note keeps the argument for how little structure to commit to.
+
 ---
 
 ## What fan-out costs

@@ -1,0 +1,881 @@
+{
+ "schema": 1,
+ "key": "2409.02060",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/muennighoff-2024-olmoe.pdf",
+ "bib": {
+  "title": "OLMoE: Open Mixture-of-Experts Language Models",
+  "authors": [
+   "Niklas Muennighoff",
+   "Luca Soldaini",
+   "Dirk Groeneveld",
+   "Kyle Lo",
+   "Jacob Morrison",
+   "Sewon Min",
+   "Weijia Shi",
+   "Pete Walsh",
+   "Oyvind Tafjord",
+   "Nathan Lambert",
+   "Yuling Gu",
+   "Shane Arora",
+   "Akshita Bhagia",
+   "Dustin Schwenk",
+   "David Wadden",
+   "Alexander Wettig",
+   "Binyuan Hui",
+   "Tim Dettmers",
+   "Douwe Kiela",
+   "Ali Farhadi",
+   "Noah A. Smith",
+   "Pang Wei Koh",
+   "Amanpreet Singh",
+   "Hannaneh Hajishirzi"
+  ],
+  "first_author": "Muennighoff",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2409.02060",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 184008,
+  "chars_total": 184008,
+  "engine": "pymupdf",
+  "skipped": "Reference list (pp. 26-43) skimmed for lineage only; figure-only axis text in Appendix G (Figs 30-36) not read in detail (captions read)."
+ },
+ "type": "empirical",
+ "question": "How well can a fully open sparse Mixture-of-Experts LM (1B active, 7B total parameters) perform, and which MoE and general pretraining design choices matter?",
+ "hypothesis": "Fine-grained, token-choice, dropless MoE routing with auxiliary losses trains faster than dense LMs of equal active parameters and enables a state-of-the-art model in the ~1B-active cost regime (implied by the design experiments).",
+ "contributions": [
+  "OLMoE-1B-7B (5.1T tokens) and OLMoE-1B-7B-Instruct, state of the art among models with similar active parameters",
+  "Controlled experiments on MoE design choices (granularity, shared experts, EC vs TC, upcycling, LBL, z-loss) and general pretraining choices",
+  "Analysis of router saturation, expert co-activation, domain and vocabulary specialization",
+  "Open release of weights, data, code and logs (244 intermediate checkpoints)"
+ ],
+ "method": {
+  "summary": "A decoder-only transformer with 16 layers, each FFN replaced by 64 fine-grained experts (FFN dim 1,024) with 8 activated per token via dropless token-choice routing, trained from scratch on 5.133T tokens of OLMoE-Mix (DCLM-Baseline plus Dolma 1.7 parts) with load-balancing and router z-loss. Then SFT and DPO (or KTO) to make OLMoE-1B-7B-Instruct. Design choices are ablated one at a time at small token budgets.",
+  "task": "next-token pretraining of a sparse MoE LM; instruction and preference tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OLMoE-Mix (DCLM-Baseline)",
+    "role": "pretrain",
+    "size": "3,860B words / 3,380B GPT-NeoX tokens / 16,700M docs / 2,950 GB UTF-8",
+    "split": null,
+    "source": "DCLM [90]",
+    "preprocessing": "Filter removing documents with a sequence of 32 or more repeated n-grams (n-gram = 1 to 13 tokens)"
+   },
+   {
+    "name": "OLMoE-Mix (StarCoder)",
+    "role": "pretrain",
+    "size": "101B words / 63.9B tokens / 325M docs / 78.7 GB",
+    "split": null,
+    "source": "StarCoder via Dolma 1.7",
+    "preprocessing": "Also drop documents from repos with <2 GitHub stars, most frequent word >30% of doc, or top-2 words >50%"
+   },
+   {
+    "name": "OLMoE-Mix (peS2o, arXiv, OpenWebMath, Algebraic Stack, Wikipedia & Wikibooks)",
+    "role": "pretrain",
+    "size": "Total mix: 4,060B words, 3,530B tokens(table col 'GPT-NeoX tokens'), 17,400M docs, 3,080 GB; peS2o 57.2/51.3/268/38.8, arXiv 21.1/23.5/88.8/1.55, OpenWebMath 12.7/10.2/42.4/2.91, Algebraic Stack 12.6/9.6/39.3/2.83, Wikipedia 3.69/3.16/16.2/6.17",
+    "split": null,
+    "source": "Dolma 1.7 [163], RedPajama arXiv, OpenWebMath, Algebraic Stack",
+    "preprocessing": "Same repeated n-gram filter; reshuffled each epoch; 1.3 epochs total"
+   },
+   {
+    "name": "SFT mix (Tulu 2 SFT Mix, No Robots, CodeFeedback-Filtered-Instruction, MetaMathQA, Daring Anteater advanced subset)",
+    "role": "train",
+    "size": "326,154 + 9,500 + 156,526 + 98,750 + 17,082 samples",
+    "split": null,
+    "source": "public instruction datasets (Table 3)",
+    "preprocessing": "SFT samples filtered to <4096 tokens"
+   },
+   {
+    "name": "UltraFeedback (binarized, filtered for TruthfulQA contamination)",
+    "role": "train",
+    "size": "60,800 samples",
+    "split": null,
+    "source": "Cui et al. 2023",
+    "preprocessing": "binarized, filtered for TruthfulQA contamination"
+   }
+  ],
+  "models": [
+   {
+    "name": "OLMoE-1B-7B",
+    "role": "proposed",
+    "params": "6.9B total, 1.3B active",
+    "architecture": "decoder-only transformer, dropless token-choice MoE in every layer, 64 experts, top-8, SwiGLU, RoPE (theta 10,000), QK-Norm, RMSNorm, full attention, no biases, no weight tying",
+    "init_from": "scratch (truncated normal init, std 0.02, cut-off +-0.06)",
+    "tokenizer": null,
+    "vocab": "50,304",
+    "layers": 16,
+    "hidden": "2,048",
+    "heads": 16,
+    "context": "4,096",
+    "other": {
+     "ffn_dim_per_expert": "1,024",
+     "vocab_params": "103M",
+     "LBL_weight": "0.01",
+     "router_z_loss_weight": "0.001"
+    }
+   },
+   {
+    "name": "OLMoE-1B-7B-Instruct",
+    "role": "proposed",
+    "params": "6.9B total, 1.3B active",
+    "architecture": "OLMoE-1B-7B + SFT + DPO",
+    "init_from": "annealed OLMoE-1B-7B checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Dense baselines and MoEs compared (Llama2-7B, OLMo-7B/1B, Mistral-7B, DCLM-7B/1B, Llama3.1-8B, Gemma2, OpenMoE-3B-9B, DeepSeek-3B-16B, JetMoE-2B-9B, Qwen1.5-3B-14B, Pythia-1B, TinyLlama-1B, StableLM-2B, Llama3.2-1B)",
+    "role": "baseline",
+    "params": "1B-9B active",
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "jetmoe": "2.2B active/8.5B total, 24 layers, FFN 5,632, 8 experts top-2",
+     "openmoe": "2.6B active/8.7B total, 32 layers, 32 experts top-2, every 6th layer MoE",
+     "olmo_1b_0724": "1.3B, 16 layers, FFN 8,192, non-parametric LN"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = L_CE + alpha*L_LB + beta*L_RZ; alpha=0.01 (load balancing), beta=0.001 (router z-loss) (Eq. 2)",
+   "optimizer": "AdamW, beta1 0.9, beta2 0.95, epsilon 1.0E-08; global gradient clip 1.0; ZeRO via PyTorch FSDP",
+   "lr": "peak 4.0E-04, minimum 4.0E-05 (Table 10)",
+   "lr_schedule": "cosine, then linear decay to 0 over the final 100B annealing tokens (reshuffled data)",
+   "warmup": "2,500 steps",
+   "batch_size": "1,024 samples (~4M tokens)",
+   "steps": "inferred: step 1,200,000 annealed checkpoint named in Table 13 caption",
+   "epochs": "1.3",
+   "tokens": "5.133T total (5,033B pretraining + 100B annealing)",
+   "seq_len": "4,096",
+   "precision": "mixed precision; gradient reduce and optimizer state in FP32; load balancing loss computed in BF16",
+   "weight_decay": "0.1 (applied to all params including embeddings and RMSNorm)",
+   "dropout": null,
+   "regularisation": "QK-Norm; router z-loss; load-balancing loss; gradient clipping 1.0",
+   "hardware": "256 H100 GPUs, NVLink within node, InfiniBand across nodes",
+   "compute": "approx 3 x 10^22 FLOPs (6*N*D with N=1B active, D=5T)",
+   "wall_clock": "approximately 10 days",
+   "seeds": null,
+   "other": {
+    "adaptation_SFT": "Open Instruct; token-level loss aggregation; BF16; global batch 128 (4 nodes x 8 H100, per-device 2, grad accum 2); 2 epochs; constant LR 2.0E-5; 32 H100 for 33 hours; Adam",
+    "adaptation_DPO": "global batch 32 (per-device 1); 3 epochs; LR 5.0E-7; beta 0.1; 32 H100 for 14 hours; Adam",
+    "adaptation_KTO": "same as DPO but RMSProp, 1.3 epochs (5,000 steps); 8 H100 for 30 hours",
+    "adaptation_LBL": "Appendix B text says load balancing loss is included during SFT and DPO, but Sec 4.3 and Table 7 say it is not used in adaptation (final models are the no-LBL rows)",
+    "ablation_budget": "design ablations run 10B-130B tokens up to ~750B tokens (read from figure x-axes); MoE vs dense on 128 H100 GPUs",
+    "checkpoints": "intermediate checkpoints every 5000 steps"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration; HumanEval Pass@10 per Table 5",
+   "prompting": "Pretrained model: 5-shot OLMES. Adapted model: 0-shot except GSM8k 8-shot CoT and BBH 3-shot",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "OLMES accuracy",
+     "definition": "OLMES standard: max(MCF,CF) formulation, 5-shot, per-task probability normalization (pmi/char/none)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MMLU Var",
+     "definition": "MMLU in cloze format with 0-5 shots pooled to give a smoother signal during pretraining",
+     "unit": "% acc",
+     "higher_is_better": true
+    },
+    {
+     "name": "In-loop 0-shot CF accuracy",
+     "definition": "HellaSwag, ARC, PIQA, COPA, WinoGrande etc. ranking answer strings by LM probability, none or char normalization",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Adaptation suite",
+     "definition": "MMLU 0-shot EM, GSM8k 8-shot CoT EM, BBH 3-shot EM, HumanEval Pass@10, AlpacaEval 1.0 % win, XSTest F1, IFEval loose acc; Avg is the mean",
+     "unit": "mixed",
+     "higher_is_better": true
+    },
+    {
+     "name": "Router saturation / expert co-activation / domain specialization / vocabulary specialization",
+     "definition": "Eqs. 5-8 over routing decisions on a random 0.5% of C4 validation data",
+     "unit": "%",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "OLMo-1B/7B (0724)",
+    "Llama2-7B",
+    "Mistral-7B",
+    "DCLM-1B/7B",
+    "Llama3.1-8B",
+    "Gemma2",
+    "JetMoE-2B-9B",
+    "DeepSeek-3B-16B",
+    "Qwen1.5-3B-14B",
+    "OpenMoE-3B-9B",
+    "dense 1.3B model trained under same config (Fig 4)"
+   ],
+   "protocol": "All baseline evaluations run by the authors. Single runs, no seeds or confidence intervals stated. Ablations vary one hyperparameter at a time; models are not comparable across experiments."
+  },
+  "availability": {
+   "code": "github.com/allenai/OLMoE (Apache 2.0)",
+   "weights": "hf.co/allenai/OLMoE-1B-7B-0924 (Apache 2.0)",
+   "data": "hf.co/datasets/allenai/OLMoE-mix-0924 (ODC-By 1.0); logs on wandb"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "For the final 100B tokens, we decay the learning rate linearly from 5.0E-04 to 0.",
+    "where": "Appendix B"
+   },
+   {
+    "field": "training.tokens",
+    "quote": "We shuffle all samples randomly at the beginning of each epoch and train for a total of 5.133T tokens",
+    "where": "Table 10"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "OLMoE-1B-7B has 6.9B total and 1.3B active parameters and is pretrained on 5.1T tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.1T tokens",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pretraining, OLMoE-Mix",
+   "quote": "we pretrain OLMOE-1B-7B for 5.1 trillion tokens with 6.9B total parameters, of which only 1.3B are activated",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "In a controlled setup the MoE reaches the dense model's performance with about 3x fewer tokens (FLOPs).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~3x fewer tokens",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1.3B dense vs 1.3B-active/6.9B-total MoE (64 experts, 8 active, FFN 1,024 vs 8,192), 128 H100s, 130B tokens, same config",
+   "quote": "our MoE reaches the performance of the dense model with ∼3× fewer tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.1, Fig 4"
+  },
+  {
+   "claim": "Because of memory overhead the MoE trains only about 2x faster in wall-clock than the dense model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "23,600 vs 37,500",
+   "unit": "tokens/s/GPU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as Fig 4; 23,600 vs 37,500 tokens/s/GPU",
+   "quote": "23,600 tokens per second per GPU for the MoE vs. 37,500 for dense",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.1"
+  },
+  {
+   "claim": "OLMoE-1B-7B scores 54.1 MMLU, best among models with ~1B active parameters, above DCLM-1B at 48.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": 54.1,
+   "unit": "% MMLU",
+   "baseline_value": 48.5,
+   "n": null,
+   "setup": "Table 4, 5-shot OLMES, all runs by authors",
+   "quote": "OLMOE-1B-7B 1.3B 54.1 80.0 62.1 84.2 79.8 70.2",
+   "table": "Table 4, row OLMOE-1B-7B, column MMLU; baseline row DCLM-1B",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "OLMoE-1B-7B outperforms Llama2-7B (46.2 MMLU) but falls short of Llama3.1-8B (66.9) despite 6-7x less compute per forward pass.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6-7x",
+   "unit": "x less compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4",
+   "quote": "despite requiring ∼6–7× less compute per forward pass, OLMOE-1B-7B outperforms some dense LMs with 7B parameters such as Llama2-7B",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "OLMoE-1B-7B matches or beats OLMo-7B at end of training with less than half the training FLOPs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "<0.5x FLOPs",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 downstream tasks vs FLOPs",
+   "quote": "despite OLMOE-1B-7B having used less than half as many FLOPs for training and using only 1B active parameters",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "OLMoE-1B-7B-Instruct (SFT+DPO) has the highest average (57.7) among benchmarked adapted models, above Qwen1.5-3B-14B Chat (57.3) and DeepSeek-3B-16B Chat (57.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 57.7,
+   "unit": "Avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5; Avg over 7 tasks",
+   "quote": "OLMOE-1B-7B 49.8 3.0 33.6 22.4 - 59.7 16.6 - +SFT 51.4 40.5 38.0 51.6 69.2 84.1 43.3 54.0 +DPO 51.9 45.5 37.0 54.8 84.0 82.6 48.1 57.7",
+   "table": "Table 5, row OLMOE-1B-7B +DPO, column Avg",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "SFT gives more than a 10x GSM8k gain (3.0 to 40.5 EM) attributed to added math data.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": ">10x",
+   "unit": "x GSM8k",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5, 8-shot CoT",
+   "quote": "We observe a >10× gain on GSM8k, likely due to our inclusion of additional math data",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "AlpacaEval 1.0 win rate of 84% after DPO exceeds much larger dense models such as Llama2-13B-Chat.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 84.0,
+   "unit": "% win",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5",
+   "quote": "The 84% score on AlpacaEval",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Fine-grained experts: 32 experts/4 active vs 8 experts/1 active improves HellaSwag and MMLU by about 10% at ~130B tokens; going to 64 experts/8 active adds only 1-2% more.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~10%",
+   "unit": "HellaSwag/MMLU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5, equal active and total params and FLOPs, 130B tokens",
+   "quote": "we observe an improvement of around 10% on HellaSwag",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.2"
+  },
+  {
+   "claim": "The 64-choose-8 configuration allows 4,426,165,368 expert combinations per layer.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 4426165368,
+   "unit": "combinations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "combinatorics",
+   "quote": "((64 8 ) = 4, 426, 165, 368 com-",
+   "table": null,
+   "note": "Text is garbled in extraction; the paper prints C(64,8) = 4,426,165,368.",
+   "where": "Sec 4.1.2"
+  },
+  {
+   "claim": "A shared expert does not help: 1 shared + 31 routed (3 active) is slightly worse than 32 routed (4 active).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6, same active/total params and FLOPs",
+   "quote": "While both settings lead to similar performance, sharing an expert performs slightly worse.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.3"
+  },
+  {
+   "claim": "Token choice beats expert choice at the same token budget, but EC is about 20% faster.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "29,400 vs 24,400",
+   "unit": "tokens/s/device",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7, 8-expert MoE every 2nd layer, TC top-2 vs EC capacity 2; 29,400 vs 24,400 tokens/s/device",
+   "quote": "EC runs around 20% faster at 29,400 tokens per second per device versus 24,400 for TC",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.4"
+  },
+  {
+   "claim": "Sparse upcycling of OLMo-1B (0724) at 2T tokens is caught up by an MoE from scratch after ~500B tokens, i.e. 25% of the dense model's compute budget (not 120% as in Komatsuzaki et al.).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "25%",
+   "unit": "of dense compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 8, 8 experts top-2, 610B additional tokens; config lacks QK-Norm and truncated-normal init",
+   "quote": "Thus, it only requires 25% of the compute budget of the original dense model to catch up as opposed to the 120% reported in Komatsuzaki et al.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.5"
+  },
+  {
+   "claim": "Load balancing loss improves training and validation loss; without it the first-layer router sends almost all tokens to one or two of 8 experts (others are dead weights).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 9/10, first 10B tokens, 8-expert layer, weight 0.01",
+   "quote": "“dead weights” that take up GPU memory but are not used",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.6"
+  },
+  {
+   "claim": "Router z-loss (weight 0.001) improves stability and quality at a throughput cost of about 2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~2%",
+   "unit": "throughput loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 11, up to ~750B tokens",
+   "quote": "despite it reducing throughput by ∼2%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1.7"
+  },
+  {
+   "claim": "Truncated normal init is more stable and better than normal init; the normal-init run diverges at around 450B tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "450B",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 13, std 0.02, cutoff +-0.06",
+   "quote": "The difference between the two initializations only becomes clear at around 450 billion tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "Parametric RMSNorm beats non-parametric LayerNorm (fewer gradient spikes) despite a 15% throughput reduction; QK-Norm costs almost 10% throughput.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15%",
+   "unit": "throughput loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 14, 16, 18",
+   "quote": "despite RMSNorm lowering our training throughput by 15%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.3, 4.2.5"
+  },
+  {
+   "claim": "Lowering AdamW epsilon from 1e-5 to 1e-8 significantly improves performance while remaining stable.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 19, ~30B tokens",
+   "quote": "decreasing eps to the recommended default of 1E-08 [83] significantly improves performance while the run remains stable",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.6"
+  },
+  {
+   "claim": "OLMoE-Mix (DCLM-based) gives clear gains over Dolma 1.7 on HellaSwag, MMLU Var and ARC-C; adding Reddit or FLAN gives no consistent gains.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 12, 26, 130B tokens",
+   "quote": "We find that OLMOE-MIX leads to clear gains on all three downstream metrics, especially MMLU.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.1"
+  },
+  {
+   "claim": "Adaptation without load-balancing loss scores higher (SFT avg 54.0 vs 52.8; DPO 57.7 vs 57.1); post-annealing checkpoint is better (DPO 57.7 vs 56.3). KTO matches DPO on average (57.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 57.7,
+   "unit": "Avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 7",
+   "quote": "not using it leads to better performance (54.0 vs. 52.8 after instruction tuning (SFT) and 57.7 vs. 57.1 after preference tuning (DPO))",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Table 7"
+  },
+  {
+   "claim": "Routing saturates early: after 1% of pretraining (5000 steps, 20B tokens) up to ~60% of top-8 routing matches the final checkpoint; ~80% at 40% of pretraining. Random is 12.5% for k=8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~60%",
+   "unit": "top-8 saturation at 1% of training",
+   "baseline_value": null,
+   "n": null,
+   "setup": "C4 val 0.5%, Eq. 5",
+   "quote": "up to ∼60% of routing to the top-8 activated experts has already saturated",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 20"
+  },
+  {
+   "claim": "Experts show little co-activation within a layer and strong domain specialization; Mixtral-8x7B shows close to uniform routing (no domain specialization).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figs 21, 22; C4 val and domain corpora",
+   "quote": "exhibits little domain specialization across both unique and generic domains.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2-5.3"
+  },
+  {
+   "claim": "Vocabulary specialization is higher in later layers; layer-7 expert 27 specializes ~90% on non-alphabetic tokens (Cyrillic, Devanagari).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~90%",
+   "unit": "specialization",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 23, Table 8, k=1",
+   "quote": "At ∼90%, expert 27 specializes the most",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "OLMoE-1B-7B-0125 improves OLMES average by +1.6 and MMLU by +2.1 over 0924; post-training with Tulu 3 gives a 10-point gain on the benchmark average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.6,
+   "unit": "OLMES avg points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix I, Tables 16, 17; new DOLMINO 100B-token anneal",
+   "quote": "the new model is a notable improvement over the previous iteration being better on average (+1.6) and notable datasets like MMLU (+2.1).",
+   "table": null,
+   "note": null,
+   "where": "Appendix I"
+  },
+  {
+   "claim": "Layer-shared MoE performs similarly to a dense LM and reduces training throughput ~20%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "~20%",
+   "unit": "throughput loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 29, 8 experts equal to layers",
+   "quote": "Sharing also reduces throughput by around 20% during training",
+   "table": null,
+   "note": null,
+   "where": "Appendix F"
+  },
+  {
+   "claim": "Adding noise to the upcycled checkpoint did not help; no-noise variant slightly better after 700B tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 28, 50% of MLP replaced by N(0,0.02)",
+   "quote": "after 700 billion tokens, the no noise variant still performs slightly better",
+   "table": null,
+   "note": null,
+   "where": "Appendix F"
+  }
+ ],
+ "limits": [
+  "Only 1B active params; falls behind dense models with >7x the active params such as Llama3.1-8B (authors, App H)",
+  "Trained for 5T tokens; no larger-scale or longer-training test of overtraining for MoEs (token multiplier ~5,000)",
+  "Text-only, predominantly English, evaluated only on English",
+  "Design ablations vary one hyperparameter at small token budgets; authors concede results may change under different configurations and cannot guarantee each hyperparameter choice (Sec 4)",
+  "Models are not comparable across experiments because the base model changes; upcycling and some ablations used suboptimal settings (no QK-Norm, normal init)",
+  "No seeds or confidence intervals; single runs",
+  "Inconsistencies: LR given as 5.0E-04 (App B text) vs peak 4.0E-04 (Table 10); App B says LBL used in adaptation but Sec 4.3 says it is not; v2 change log says max LR corrected to 4.0E-05 while Table 10 gives peak 4.0E-04",
+  "Superseded by OLMoE-1B-7B-0125 (Appendix I)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "router saturation",
+   "definition": "proportion of expert activations at some intermediary checkpoint t that matches the expert IDs activated at some final checkpoint over the same dataset",
+   "where": "Sec 5.1, Eq. 5"
+  },
+  {
+   "term": "expert co-activation",
+   "definition": "proportion of times two specific experts are simultaneously activated out of the total number of activations of one of those experts",
+   "where": "Sec 5.2, Eq. 6"
+  },
+  {
+   "term": "domain specialization",
+   "definition": "proportion of tokens from a particular domain D that get routed to a particular expert",
+   "where": "Sec 5.3, Eq. 7"
+  },
+  {
+   "term": "vocabulary specialization",
+   "definition": "proportion of tokens with a token ID x that are routed to one particular expert out of all experts in that layer",
+   "where": "Sec 5.4, Eq. 8"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OLMo (Groeneveld et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Training setup and eval harness base; changes listed in Appendix B",
+   "quote": null
+  },
+  {
+   "work": "DeepSeekMoE (Dai et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Fine-grained experts; shared-expert result contradicts its claim",
+   "quote": null
+  },
+  {
+   "work": "Zhou et al. Expert Choice routing",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "TC with dropless beats EC here",
+   "quote": null
+  },
+  {
+   "work": "Komatsuzaki et al. Sparse upcycling",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Finds from-scratch catches up at 25% rather than 120% of dense compute",
+   "quote": null
+  },
+  {
+   "work": "Zoph et al. ST-MoE (router z-loss)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Router z-loss",
+   "quote": null
+  },
+  {
+   "work": "Shazeer et al. sparsely-gated MoE",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Load balancing loss, token-choice routing",
+   "quote": null
+  },
+  {
+   "work": "Gale et al. dropless MoE (MegaBlocks)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Dropless routing",
+   "quote": null
+  },
+  {
+   "work": "DCLM (Li et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "DCLM-Baseline main pretraining data",
+   "quote": null
+  },
+  {
+   "work": "Dolma 1.7 (Soldaini et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "StarCoder, peS2o, Wikipedia components",
+   "quote": null
+  },
+  {
+   "work": "OLMES (Gu et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Evaluation standard",
+   "quote": null
+  },
+  {
+   "work": "DPO (Rafailov et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Preference tuning",
+   "quote": null
+  },
+  {
+   "work": "Open Instruct / Tulu 2 (Ivison et al.; Wang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SFT/DPO recipe",
+   "quote": null
+  },
+  {
+   "work": "Muennighoff et al. data-constrained scaling",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Justifies 1.3 epochs",
+   "quote": null
+  },
+  {
+   "work": "Mixtral, JetMoE, OpenMoE, Qwen1.5-MoE, DeepSeek-MoE, Llama2/3, Gemma2, Mistral-7B",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Baselines in Tables 4-5",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Performance, cost, and degree of openness of open MoE and dense LMs.",
+   "page": 1,
+   "why": "MMLU vs active parameters plus openness matrix in one view."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of the architecture of dense LMs and MoE models like OLMoE.",
+   "page": 4,
+   "why": "Shows the FFN replaced by router plus experts."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "MoE vs. Dense: ~3x fewer tokens, ~2x faster training.",
+   "page": 9,
+   "why": "Core efficiency evidence."
+  },
+  {
+   "figure": "Fig 20",
+   "caption": "Router saturation during pretraining.",
+   "page": 19,
+   "why": "Shows routing settles within 1% of training."
+  },
+  {
+   "figure": "Fig 22",
+   "caption": "Domain specialization of OLMoE-1B-7B vs Mixtral-8x7B.",
+   "page": 21,
+   "why": "Contrasts specialization in a from-scratch MoE with upcycled Mixtral."
+  },
+  {
+   "figure": "Table 10",
+   "caption": "Pretraining hyperparameters of OLMoE-1B-7B and comparable models.",
+   "page": 46,
+   "why": "Full recipe comparison with JetMoE, OpenMoE, OLMo-1B."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "MoE module(x) = sum_{i in Top-k(r(x))} softmax(r(x))_i E_i(x)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 2",
+   "snippet": "L = L_CE + alpha L_LB + beta L_RZ",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 3",
+   "snippet": "L_LB = N_E * sum_{i=1}^{N_E} f_i * P_i",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 4",
+   "snippet": "L_RZ(x) = (1/B) sum_{i=1}^{B} (log sum_{j=1}^{N_E} exp(x_j^(i)))^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction garbles tables and equations (binomials, Table 8); numbers cross-checked against surrounding text.",
+  "Paper-internal inconsistencies: LR 5.0E-04 (App B text) vs 4.0E-04 (Table 10) vs 4.0E-05 (change log); LBL in adaptation (App B vs Sec 4.3).",
+  "Tokenizer name not stated; no decoding settings for generation evals; no seeds.",
+  "No embedded instructions found."
+ ]
+}

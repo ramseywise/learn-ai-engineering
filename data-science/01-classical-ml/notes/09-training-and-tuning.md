@@ -100,7 +100,7 @@ boosting  train acc 0.888  val acc 0.868  train AUC 0.949  val AUC 0.925
 
 The dummy always predicts "under 50K" and gets 0.759 accuracy, the share of people under 50K. Its AUC of 0.500 says it ranks no better than a coin.
 
-Logistic regression's validation AUC here is 0.906. [Note 04](04b-thresholds-pr-roc-and-calibration.md#the-running-example-adult-census) reports 0.901 for the same model on the test rows. Those are different rows, and a gap of 0.005 is within the range the folds below will show.
+Logistic regression's validation AUC here is 0.906. [Note 04b](04b-thresholds-pr-roc-and-calibration.md#the-running-example-adult-census) reports 0.901 for the same model on the test rows. Those are different rows, and a gap of 0.005 is within the range the folds below will show.
 
 ## Reading performance during training
 
@@ -476,7 +476,7 @@ L2 C=10        |w|   9.27  AUC 0.8978
 L2 C=1000      |w|  19.37  AUC 0.8912
 ```
 
-The two lists trace one path, with $|w|$ the size of the weights. Gradient descent at step 1,000 has size 3.88 and AUC 0.9013. The L2 fit at `C=1` has size 4.88 and AUC 0.9016. Training time and penalty strength are two handles on one thing. Prechelt, [*Early Stopping, But When?*](https://page.mi.fu-berlin.de/prechelt/Biblio/stop_tricks1997.pdf) (Neural Networks: Tricks of the Trade, 1998), says the same of networks: stopping works by limiting the effective size of each dimension, as weight decay does.
+The two lists trace one path, with $|w|$ the size of the weights. Gradient descent ([note 02](02-supervised-learning.md#vectors-matrix-products-and-the-gradient)) at step 1,000 has size 3.88 and AUC 0.9013. The L2 fit at `C=1` has size 4.88 and AUC 0.9016. Training time and penalty strength are two handles on one thing. Prechelt, [*Early Stopping, But When?*](https://page.mi.fu-berlin.de/prechelt/Biblio/stop_tricks1997.pdf) (Neural Networks: Tricks of the Trade, 1998), says the same of networks: stopping works by limiting the effective size of each dimension, as weight decay does.
 
 The practical knob is **patience**, the rounds without improvement to wait before giving up. It exists because real validation curves wobble. Prechelt shows one with 16 local minima before overfitting truly starts, and across 1,296 runs on 12 problems, slower stopping rules bought about 4% lower test error for about four times the training.
 

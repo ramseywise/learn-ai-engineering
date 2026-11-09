@@ -1,19 +1,750 @@
 {
- "schema": 0,
+ "_comment": "Schema 1.",
+ "schema": 1,
  "key": "2407.01489",
  "pdf": "ai-engineering/04-loop-engineering/sources/xia-2024-agentless.pdf",
  "bib": {
   "title": "Agentless: Demystifying LLM-based Software Engineering Agents",
-  "first_author": "Chunqiu Steven Xia",
-  "year": "2024",
-  "venue": null,
+  "authors": [
+   "Chunqiu Steven Xia",
+   "Yinlin Deng",
+   "Soren Dunn",
+   "Lingming Zhang"
+  ],
+  "first_author": "Xia",
+  "year": 2024,
+  "venue": "preprint",
   "arxiv": "2407.01489",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 96926,
+  "chars_total": 96926,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage; no appendix in the paper."
  },
- "legacy_report": "SOURCE: \"Agentless: Demystifying LLM-based Software Engineering Agents\", Chunqiu Steven Xia, Yinlin Deng, Soren Dunn, Lingming Zhang (UIUC). arXiv:2407.01489v2, 29 Oct 2024 (preprint).\n\nCOVERAGE: 25 of 25 pages (97,017 chars extracted cleanly). I read abstract, intro, related work, Sections 3 to 8 and all tables and figures text. The references (pp. 19-25) were skimmed only. There is no appendix. I read Section 3 mainly via the Fig. 1 overview and the opening of 3.1. The detail of 3.1.1-3.1.3 (embedding filter, skeleton format) came from the ablation text, not read line by line. File: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/04-loop-engineering/sources/xia-2024-agentless.pdf\n\nCLAIMS (ranked)\n- claim: A fixed three-phase pipeline (localize, repair, validate), where the LLM never chooses the next action or uses tools, scored 32.00% on SWE-bench Lite at $0.70 per issue. That was the top open-source result in this paper's table.\n  number: 96/300 (32.00%), $0.70, 78,166 avg tokens\n  setup: SWE-bench Lite, 300 problems, GPT-4o (gpt-4o-2024-05-13), compared against 26 agent baselines (Oct 2024 leaderboard numbers).\n  quote: \"AGENTLESS is able to solve 96 out of 300 problems (32.00%). While this is not the highest percentage of problems solved on SWE-bench Lite, AGENTLESS is extremely competitive compared with prior agent-based approaches\" and \"AGENTLESS only costs on average $0.70, which is less than most prior agent-based approaches.\"\n  where: p10-11, Table 1\n\n- claim: Cost comparison from Table 1 rows, same benchmark: SWE-agent costs far more per issue and tokens for lower resolve rates. Costs are listed for only some tools.\n  number: SWE-agent Claude 3.5 S 69 (23.00%) $1.62, 521,208 tokens; SWE-agent GPT-4o 55 (18.33%) $2.53, 498,346 tokens; CodeR GPT-4 85 (28.33%) $3.34, 323,802 tokens; AutoCodeRover GPT-4 57 (19.00%) $0.45; Moatless Claude 3.5 S 80 (26.67%) $0.17; RAG GPT-4 8 (2.67%) $0.13\n  setup: SWE-bench Lite; baselines use their own models, so models differ across rows.\n  quote: \"SWE-agent [101] Claude 3.5 S 69 (23.00%) $1.62 521,208\" and \"GPT-4o 55 (18.33%) $2.53 498,346\"\n  where: p10, Table 1\n\n- claim: The authors argue agents have three weaknesses, namely complex tool design, delegated decision planning, and limited self-reflection. Agent runs take 30-40 turns, which makes them hard to debug.\n  number: \"upwards of 30 or 40 turns\"\n  setup: argument in the intro, not measured.\n  quote: \"an agent can take upwards of 30 or 40 turns, which makes it extremely difficult to both understand the decisions made by the agents and also debug the exact turns where an incorrect decision is made.\"\n  where: p2\n\n- claim: Hierarchical localization beats giving the model more context. Going straight from file level to edit locations is worse and costlier, and full files are worse than skeletons.\n  number: Related-element step: complete file 53.67% contains-GT, 778 LoC, $0.15; skeleton 58.33%, 698 LoC, $0.02. Edit location: direct from file level 47.00%, $0.18; default multi-samples 49.67% (4 samples), $0.07. Files: prompting 78.67%, embedding with filter 70.33%, combined 81.67%.\n  setup: SWE-bench Lite, GPT-4o. The \"Contains GT\" metric is the share of problems whose ground-truth edit location stays in the location set.\n  quote: \"by directly going from file-level to the edit locations, both the cost and performance are worse. The reason is that the model can become confused when providing a large context, demonstrating the importance of our hierarchical localization design.\" Also: \"The reason is most likely that LLMs cannot handle long context very well, so providing the entire file contents can confuse the model.\"\n  where: p12-13, Table 2\n\n- claim: Sampling many patches and picking one with tests, instead of running a loop, drives the result. Repair from 4 separate edit-location sets (10 patches each, 40 total) beats a greedy location set or merging the sets. Gains plateau at about 40 samples.\n  number: Greedy location 88 (29.33%) $0.22; merged 85 (28.33%) $0.24; 4x10 samples 96 (32.00%) $0.29. A single greedy sample per location set already gives 80 fixes.\n  setup: SWE-bench Lite, GPT-4o, temperature 0.8 for samples, context window ±10 lines.\n  quote: \"The performance can be further improved by considering each sampled locations separately (to generate 10 candidate patches each) when performing repair to achieve 96 fixes.\" and \"the performance plateaus at around 40 samples where adding additional candidate patches does not improve performance.\"\n  where: p13-14, Table 3, Fig 6\n\n- claim: Selection by tests is the biggest single gain. Majority vote gives 77; adding regression tests gives 81; adding LLM-generated reproduction tests gives 96.\n  number: 77 (25.67%) $0.00; 81 (27.00%) $0.01; 96 (32.00%) $0.25\n  setup: SWE-bench Lite, GPT-4o. Cost is the incremental cost of each selection step.\n  quote: \"the most significant performance improvement was achieved by incorporating additional filtering based on the generated reproduction tests, resulting in the final AGENTLESS performance of 96 fixes.\"\n  where: p14, Table 4\n\n- claim: Selection headroom is large. If any sampled patch counts, 126 issues (42.0%) are solvable, so better re-ranking is the main upside.\n  number: 126 (42.0%) vs 96 submitted\n  quote: \"if we consider all patch samples (instead of only selecting one patch) for each issue, the total number of possible issues that AGENTLESS can solve is 126 (42.0%).\"\n  setup: SWE-bench Lite, 40 samples, GPT-4o.\n  where: p14\n\n- claim: Generated reproduction tests are unreliable as verifiers. Only 94 of the 213 that reproduced the issue also passed after the ground-truth patch. The pipeline guards against this by requiring regression tests first, then falling back to regression-only selection.\n  number: 213 reproduce the issue; 94 also verify the ground-truth fix (of 300)\n  setup: SWE-bench Lite, 40 test samples per issue. The ground truth patch was used only to evaluate test quality, not for selection.\n  quote: \"AGENTLESS is able to produce 213 reproduction tests that output the required reproduction message when evaluated on the original repository.\" ... \"We found that only 94 tests correctly output the Issues resolved message after applying the ground truth patches.\"\n  where: p11-12\n\n- claim: Reproduction test count matters. One greedy test per issue gives about 100 selected tests and 90 fixes; 40 per issue gives 96 fixes.\n  number: 1 test: ~100 selected tests, 90 fixes; 40 tests: 96 fixes\n  quote: \"when we only generate one reproduction test (i.e., using the greedy output) per issue, we only produce 100 selected tests for all 300 issues in SWE-bench Lite with the repair performance being 90.\"\n  setup: SWE-bench Lite, GPT-4o.\n  where: p14, Fig 7\n\n- claim: Agents win when no location clue is given. Agentless matches closed-source agents when location is given (natural language, stack trace, keywords), but they do better when it is absent. Agentless keeps a high solve rate on issues with reproducible examples, where agents drop.\n  number: none (read off Fig. 9 bars)\n  setup: SWE-bench Lite-S, selected top open and closed-source tools.\n  quote: \"the closed-source agent tools perform better compared to AGENTLESS in the case where no location clue is provided. This highlights an advantage of agent-based tools in solving these more complex problems where they are able to use complex code search tools.\"\n  where: p17-18, Fig 9\n\n- claim: Agentless holds up on a cleaner benchmark. On SWE-bench Verified it scores 38.80%, the best among GPT-4o tools there. It is second among open-source approaches and below the Claude 3.5 Sonnet tools.\n  number: 194/500 (38.80%); SWE-agent GPT-4o 116 (23.20%); AutoCodeRover-v2 GPT-4o 192 (38.40%); Tools Claude 3.5 Sonnet (20241022) 245 (49.00%)\n  setup: SWE-bench Verified, 500 problems, GPT-4o.\n  quote: \"AGENTLESS ... is able to solve 194 out of 500 problems (38.80%).\" and \"AGENTLESS performs the best among all techniques that use GPT-4o as the LLM.\"\n  where: p18, Table 6\n\n- claim: SWE-bench Lite has flawed problems. 249 problems remain in Lite-S after removing them. Rankings stay about the same (Agentless 9th on both).\n  number: 4.3% exact patch in issue, 10.0% not enough info, 5.0% misleading, 9.7% complete steps in NL; Lite-S = 249 problems; Agentless 84 (33.73%)\n  setup: manual classification of all 300 Lite problems by the authors.\n  quote: \"SWE-bench Lite contains problems with exact ground truth patch in the description (4.3%), problems with missing critical information needed to solve the issue (10.0%), and problems that include misleading solutions in the issue description (5.0%).\"\n  where: p3, p15-17, Table 5\n\n- claim: Localization accuracy tracks solve rate. A commercial tool has high file-level location but a low solve rate.\n  number: OpenCSG StarShip file-level 90.7% in table (text says 90.0%), solve rate 23.67%; Agentless line/function/file 35.3% / 52.0% / 69.7%\n  quote: \"the percentage of patches with correct locations correlates heavily with the solve rate.\"\n  setup: SWE-bench Lite. The text and the table disagree on StarShip (90.0% vs 90.7%).\n  where: p11\n\n- claim: Agentless unique fixes are few: 2 issues no open-source tool solves, 1 against closed-source tools. The authors attribute this to derived tools (Isoform, RepoGraph, MarsCode). The paper says OpenAI adopted Agentless as the default scaffold for GPT-4o and o1 reports.\n  number: 2 unique (open-source); 1 unique (closed-source)\n  quote: \"AGENTLESS is able to fix 2 issues that no other tools can resolve\"\n  where: p11-12\n\nSetup details worth keeping: 3 files, then classes and functions, then edit locations (4 samples); ±10 lines context; Search/Replace diff format; temperature 0.8; embeddings text-embedding-3-small, chunk 512 (p9).\n\nLIMITS\n- Only GPT-4o was used for Agentless; the baselines use other models, so comparisons are not controlled. The paper also notes that closed-source baselines give no trajectories.\n- Benchmarks are SWE-bench Lite and Verified (Python, bug-fix issues). The authors concede generalization is untested.\n- Possible training-data leakage of SWE-bench patches into GPT-4o, which they cannot rule out.\n- Agents beat it when the issue has no location hint.\n- The headline \"highest among open-source\" is true only for Oct 2024 numbers. Table 6 shows Claude 3.5 Sonnet tool setups at 49.0% on Verified, so the result has dated. Table 1 shows closed-source tools at up to 43%.\n- Cost figures exist for only some baselines; PASS_TO_PASS tests were not used, as requested by the SWE-bench maintainers (using them would give 98 fixes per the footnote, \"will be 98\" in the text).\n- The paper does not compare agent and agentless at a matched model and budget.\n\nBUILDS ON: Aider (Search/Replace diff format and repo map, [37]); SWE-bench (Jimenez et al. [44]) and SWE-bench Lite; IR-based fault localization (Zhou, Zhang, Lo 2012); sample-many-patches LLM program repair (Xia et al. [94-96]); reproduction-test generation from SpecRover [81] and CodeR [30]; Generate-and-Validate repair [62]; SWE-agent [101], AutoCodeRover [108], Moatless [15] and Devin [7] as the agent baselines.\n\nCODE: Fig. 4 reproduction-test template (p8): the test prints \"Issue reproduced\", \"Issue resolved\" or \"Other issues\". Selection order (p8): run regression tests, keep the patches with the fewest failures, keep those that print \"Issue resolved\" on the reproduction test (else fall back), then majority vote on AST-normalized diffs. No other code worth keeping.\n\nFIGURES\n- Fig 1 (p5): pipeline overview, 10 numbered steps from repo tree through file, class/function and edit-location localization, patch sampling, reproduction tests, filter and rank. Best single picture of a fixed pipeline versus a loop.\n- Fig 6 (p14): issues fixed vs number of patch samples, plateau at about 40; shows the sampling-budget curve.\n- Fig 7 (p14): selected and plausible reproduction tests vs samples.\n- Fig 9 (p17): solve rate by issue category; shows where agents still win (no location clue).\n- Fig 5 (p11): Venn of unique fixes. Fig 2 (p7): file skeleton format. Fig 3 (p7): Search/Replace edit format. Fig 8 (p15): classification breakdown of Lite.\n\nPROBLEMS: Table and figure text extraction is jumbled in places (Table 1 line breaks, Table 2 last rows, Fig 5 Venn numbers). I did not read Fig 5 numbers. Table 2 \"Multi-samples\" row lists extra values (49.33%, 48.33%) that could not be mapped to their labels. No embedded instructions found. The Fig 6 values were not extractable beyond the text claims (80 at one sample, 96 final, 126 upper bound)."
+ "type": "empirical",
+ "question": "Do software-engineering issue-resolution systems really need autonomous LLM agents, or does a fixed localize-repair-validate pipeline do as well?",
+ "hypothesis": "A simple fixed pipeline without LLM-chosen actions or tools can match agent-based approaches at lower cost.",
+ "contributions": [
+  "An agentless approach: hierarchical localization, multi-sample diff patches, reproduction and regression test based selection",
+  "Evaluation on SWE-bench Lite against 26 agent-based approaches plus ablations",
+  "SWE-bench Lite-S, a filtered benchmark of 249 problems after manual classification"
+ ],
+ "method": {
+  "summary": "Agentless runs three fixed phases with GPT-4o: hierarchical localization (files, then classes/functions, then edit lines), sampling of Search/Replace patches, and patch selection using regression tests, an LLM-generated reproduction test and majority voting. The LLM never chooses actions or uses tools; all control flow is hand-written.",
+  "task": "Repository-level issue resolution (SWE-bench Lite)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SWE-bench Lite",
+    "role": "eval",
+    "size": "300 problems",
+    "split": "all 300",
+    "source": "Jimenez et al. SWE-bench subset [23]",
+    "preprocessing": "Official eval setup modified so arbitrary regression and reproduction tests can be run; PASS_TO_PASS list not used"
+   },
+   {
+    "name": "SWE-bench Lite-S",
+    "role": "eval",
+    "size": "249 problems",
+    "split": "Lite minus exact-patch, misleading-solution, and insufficient-info issues",
+    "source": "Authors' manual classification of Lite",
+    "preprocessing": null
+   },
+   {
+    "name": "SWE-bench Verified",
+    "role": "eval",
+    "size": "500 problems",
+    "split": "all",
+    "source": "OpenAI [34]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-4o-2024-05-13",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-embedding-3-small",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "embedding chunks via LlamaIndex"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Greedy by default; sampling for extra candidates (1 greedy + n-1 sampled)",
+   "temperature": "0.8 when sampling",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "4 edit-location sets per issue (sampled); 10 patches per set (1 greedy + 9 sampled) = 40 patches; 40 reproduction tests (1 greedy + 39 sampled). Single run per issue; no seeds stated.",
+   "prompting": "Zero/example-based prompts per step; reproduction test step gets one example test for format. Prompt text not in paper.",
+   "retrieval": "LlamaIndex, text-embedding-3-small, chunk size 512, overlap 0, cosine similarity; LLM first filters irrelevant folders; final files = top N common to prompting and embedding lists",
+   "parameters": {
+    "top_N_files": "3",
+    "classes_functions": "unrestricted number, greedy",
+    "edit_location_samples": "4",
+    "patch_context_window": "+-10 lines around each edit location",
+    "patches_per_location_set": "10",
+    "total_patches": "40",
+    "reproduction_tests": "40",
+    "patch_format": "Search/Replace diff",
+    "normalisation": "parse with Python ast, unparse, strip docstrings, diff old vs new",
+    "selection": "fewest regression failures, then must print Issue resolved, fall back to regression only, then majority vote on normalised patches"
+   },
+   "other": {
+    "tool_use": "none",
+    "llm_decides_next_action": "no"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "% Resolved",
+     "definition": "Share of benchmark problems whose submitted patch passes the benchmark tests",
+     "unit": "% (count of 300)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Avg. $ Cost",
+     "definition": "Average inference cost per issue",
+     "unit": "$",
+     "higher_is_better": false
+    },
+    {
+     "name": "Avg. # Tokens",
+     "definition": "Average input plus output tokens per issue",
+     "unit": "tokens",
+     "higher_is_better": false
+    },
+    {
+     "name": "% Correct Location",
+     "definition": "Patch edits a superset of the ground-truth locations, at line, function, file level",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Contains GT",
+     "definition": "Percent of problems whose ground-truth edit locations remain in the location set after a localization step",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "26 agent-based approaches (SWE-agent, AutoCodeRover, Moatless, OpenDevin, Aider, SpecRover, CodeR, many closed-source)",
+    "RAG baseline with BM25 (SWE-bench) for GPT-4, GPT-3.5, Claude-2, Claude 3 Opus"
+   ],
+   "protocol": "Baseline numbers taken from leaderboard or official papers, not rerun. One run, no variance or significance test reported."
+  },
+  "availability": {
+   "code": "https://github.com/OpenAutoCoder/Agentless",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.total_patches",
+    "quote": "This results in a total of 40 patches per bug.",
+    "where": "Section 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Agentless resolves 96 of 300 SWE-bench Lite issues, the highest of all open-source approaches in the paper's table",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "32.00",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.1",
+   "quote": "AGENTLESS is able to achieve the highest performance of 32.00% (96 / 300) on SWE-bench Lite"
+  },
+  {
+   "claim": "Average cost per issue",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. $ Cost",
+   "value": "0.70",
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.1",
+   "quote": "AGENTLESS only costs on average $0.70, which is less than most prior agent-based approaches"
+  },
+  {
+   "claim": "Average tokens per issue for Agentless",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. # Tokens",
+   "value": "78,166",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row AGENTLESS, column Avg. # Tokens"
+  },
+  {
+   "claim": "SWE-agent with GPT-4o costs more and resolves fewer issues",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "18.33",
+   "unit": "% resolved",
+   "baseline_value": "32.00",
+   "n": null,
+   "setup": "SWE-bench Lite, SWE-agent GPT-4o, as reported on leaderboard/paper",
+   "note": "Cost $2.53 and 498,346 tokens for the same row",
+   "where": "Table 1",
+   "table": "Table 1, row SWE-agent GPT-4o, columns % Resolved 55 (18.33%), Avg. $ Cost $2.53, tokens 498,346"
+  },
+  {
+   "claim": "SWE-agent with Claude 3.5 Sonnet: 23.00% at $1.62 and 521,208 tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "23.00",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite, baseline as reported",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SWE-agent Claude 3.5 S, column % Resolved 69 (23.00%); $1.62; 521,208"
+  },
+  {
+   "claim": "Best listed result on SWE-bench Lite is CodeStory Aide (closed source), so Agentless is not the top overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "43.00",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite, GPT-4o + Claude 3.5 Sonnet, closed source, reported",
+   "note": null,
+   "where": "5.1",
+   "quote": "While this is not the highest percentage of problems solved on SWE-bench Lite",
+   "table": "Table 1, row CodeStory Aide, column % Resolved"
+  },
+  {
+   "claim": "Patch selection ablation: majority voting alone",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "77",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.3",
+   "table": "Table 4, row Majority voting, column Performance 77 (25.67%), $0.00"
+  },
+  {
+   "claim": "Adding regression tests to selection",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "81",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.3",
+   "table": "Table 4, row +Regression test, 81 (27.00%), $0.01"
+  },
+  {
+   "claim": "Adding reproduction tests gives the largest gain (96, 32.00%, extra $0.25)",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "96",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.3",
+   "quote": "the most significant performance improvement was achieved by incorporating additional filtering based on the generated reproduction tests, resulting in the final AGENTLESS performance of 96 fixes",
+   "table": "Table 4, row +Reproduction test, 96 (32.00%), $0.25"
+  },
+  {
+   "claim": "Repair with greedy location only (40 samples)",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "88",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.2",
+   "table": "Table 3, row Greedy location (40 samples), 88 (29.33%), $0.22"
+  },
+  {
+   "claim": "Repair with merged multi-sample locations (40 samples)",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "85",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.2",
+   "table": "Table 3, row Multi-samples merged, 85 (28.33%), $0.24"
+  },
+  {
+   "claim": "Default: 4 location samples x 10 patches each",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "96",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.2",
+   "table": "Table 3, row Multi-samples (4 x 10 samples), 96 (32.00%), $0.29"
+  },
+  {
+   "claim": "Upper bound if any of the sampled patches counted (oracle selection)",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues solvable by any sample",
+   "value": "126",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.2 Fig 6",
+   "quote": "the total number of possible issues that AGENTLESS can solve is 126 (42.0%)"
+  },
+  {
+   "claim": "Performance plateaus around 40 patch samples; one greedy sample per location set already fixes 80",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "80",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite (300 issues), Agentless with gpt-4o-2024-05-13, 40 patches and 40 reproduction tests per issue",
+   "note": null,
+   "where": "5.2.2 Fig 6",
+   "quote": "AGENTLESS can already achieve a significant number of correct fixes of 80"
+  },
+  {
+   "claim": "File-level localization: prompting-based alone contains the ground-truth file",
+   "kind": "measured",
+   "source": null,
+   "metric": "Contains GT",
+   "value": "78.67",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite, top 3 files, greedy",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row File level Prompting-based, Contains GT"
+  },
+  {
+   "claim": "File-level localization: combined prompting and embedding",
+   "kind": "measured",
+   "source": null,
+   "metric": "Contains GT",
+   "value": "81.67",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite, top 3 files",
+   "note": "Text prints 81.7%, table 81.67%",
+   "where": "5.2.1",
+   "quote": "obtain 81.7% correct file localization",
+   "table": "Table 2, row Combined, Contains GT; $0.06"
+  },
+  {
+   "claim": "Embedding-based file localization with irrelevant-folder filtering",
+   "kind": "measured",
+   "source": null,
+   "metric": "Contains GT",
+   "value": "70.33",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Embedding-based (w/ irrelevant filtering), Contains GT; $0.04. Without filtering 67.67%, $0.05"
+  },
+  {
+   "claim": "Skeleton format beats complete file for related-element localization and is much cheaper",
+   "kind": "measured",
+   "source": null,
+   "metric": "Contains GT",
+   "value": "58.33",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, rows Skeleton format 58.33% LoC 698 $0.02 vs Complete file 53.67% LoC 778 $0.15"
+  },
+  {
+   "claim": "Going directly from file level to edit locations is worse and costlier than hierarchical",
+   "kind": "measured",
+   "source": null,
+   "metric": "Contains GT",
+   "value": "47.00",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWE-bench Lite",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Direct from file-level 47.00%, $0.18, vs Greedy 50.67%, $0.06"
+  },
+  {
+   "claim": "Only 94 of 213 generated reproduction tests that reproduce the issue also output Issue resolved after applying the ground-truth patch",
+   "kind": "measured",
+   "source": null,
+   "metric": "plausible reproduction tests",
+   "value": "94",
+   "unit": "tests",
+   "baseline_value": null,
+   "n": 213,
+   "setup": "SWE-bench Lite, 300 issues, 40 candidate tests",
+   "note": null,
+   "where": "5.1.3",
+   "quote": "We found that only 94 tests correctly output the Issues resolved message after applying the ground truth patches."
+  },
+  {
+   "claim": "Number of issues with a reproduction test that outputs Issue reproduced on original repo",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "213",
+   "unit": "tests",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite",
+   "note": null,
+   "where": "5.1.3",
+   "quote": "AGENTLESS is able to produce 213 reproduction tests that output the required reproduction message"
+  },
+  {
+   "claim": "Using the benchmark's PASS_TO_PASS regression list would raise performance to 98 (not used)",
+   "kind": "measured",
+   "source": null,
+   "metric": "issues resolved",
+   "value": "98",
+   "unit": "issues",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "SWE-bench Lite",
+   "note": null,
+   "where": "footnote 1, p9",
+   "quote": "the performance on SWE-bench Lite will be 98"
+  },
+  {
+   "claim": "Share of SWE-bench Lite issues whose description contains the exact ground-truth patch",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "Manual classification of 300 issues",
+   "note": null,
+   "where": "1, 6.1",
+   "quote": "problems with exact ground truth patch in the description (4.3%)"
+  },
+  {
+   "claim": "Share with insufficient information",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "Manual classification of 300 issues",
+   "note": null,
+   "where": "1, 6.1",
+   "quote": "problems with missing critical information needed to solve the issue (10.0%)"
+  },
+  {
+   "claim": "Share with misleading solution in description",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 300,
+   "setup": "Manual classification of 300 issues",
+   "note": null,
+   "where": "1, 6.1",
+   "quote": "problems that include misleading solutions in the issue description (5.0%)"
+  },
+  {
+   "claim": "SWE-bench Lite-S has 249 problems; Agentless resolves 84 (33.73%), rank 9",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "33.73",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 249,
+   "setup": "SWE-bench Lite-S, 249 problems",
+   "note": null,
+   "where": "6.2",
+   "quote": "We refer to our subset of 249 problems as SWE-bench Lite-S.",
+   "table": "Table 5, row AGENTLESS, Lite-S % Resolved 84 (33.73%), rank 9"
+  },
+  {
+   "claim": "SWE-bench Verified: Agentless resolves 194 of 500",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "38.80",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "SWE-bench Verified, GPT-4o",
+   "note": null,
+   "where": "6.3",
+   "quote": "solve 194 out of 500 problems (38.80%)"
+  },
+  {
+   "claim": "On SWE-bench Verified Agentless is best among GPT-4o techniques and second among open-source",
+   "kind": "measured",
+   "source": null,
+   "metric": "% Resolved",
+   "value": "38.80",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "6.3",
+   "quote": "AGENTLESS performs the best among all techniques that use GPT-4o as the LLM"
+  },
+  {
+   "claim": "Closed-source agents beat Agentless when the issue gives no location clue",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Lite-S, Fig 9c, read qualitatively",
+   "note": null,
+   "where": "6.2",
+   "quote": "perform better compared to AGENTLESS in the case where no location clue is provided"
+  }
+ ],
+ "limits": [
+  "Data leakage of ground-truth patches into GPT-4o training data cannot be ruled out (authors concede, 7)",
+  "Only evaluated on SWE-bench family (Python issues); authors plan other benchmarks",
+  "Not the top overall: closed-source tools beat it on Lite (CodeStory Aide 43.00%)",
+  "Baseline numbers are copied from leaderboards; closed-source entries have no trajectories to verify",
+  "Reproduction tests are weak: 94 of 213 plausible; selection of the right patch leaves a gap to the 126 upper bound",
+  "Weaker than agents when the issue gives no location clue",
+  "Single run, no seeds or confidence intervals; no prompts given in the paper",
+  "Costs and rankings are from 2024 and with GPT-4o; leaderboard has since moved",
+  "Cost figures missing for most baselines (dash in Table 1)",
+  "Table 1 prints OpenCSG StarShip file-level 90.7% but text says 90.0%"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Agentless",
+   "definition": "an approach with a fixed three-phase process of localization, repair and patch validation, without letting the LLM decide future actions or operate with complex tools",
+   "where": "Abstract"
+  },
+  {
+   "term": "Search/Replace edit",
+   "definition": "a simple diff format with a search snippet (original code) and a replace snippet",
+   "where": "3.2"
+  },
+  {
+   "term": "skeleton format",
+   "definition": "a compressed file view listing headers of classes and functions (plus class fields, method signatures, class/module comments)",
+   "where": "3.1.2"
+  },
+  {
+   "term": "reproduction test",
+   "definition": "an LLM-written test that prints Issue reproduced, Issue resolved or Other issues",
+   "where": "3.3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SWE-bench",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark; also source of BM25 RAG baseline",
+   "quote": null
+  },
+  {
+   "work": "SWE-bench Lite",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "300-problem subset",
+   "quote": null
+  },
+  {
+   "work": "Aider",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Search/Replace diff format",
+   "quote": null
+  },
+  {
+   "work": "SWE-agent",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "agent-computer interface baseline",
+   "quote": null
+  },
+  {
+   "work": "AutoCodeRover",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "agent with code-search APIs",
+   "quote": null
+  },
+  {
+   "work": "SpecRover",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "also generates reproduction tests",
+   "quote": null
+  },
+  {
+   "work": "Moatless, OpenDevin, Devin, CodeR, MASAI, RepoGraph",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "agent baselines; RepoGraph and Isoform built on early Agentless",
+   "quote": null
+  },
+  {
+   "work": "SWE-bench Verified (OpenAI)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "authors say it confirms their filtering idea; OpenAI used Agentless as default scaffold",
+   "quote": null
+  },
+  {
+   "work": "Xia and Zhang LLM-based program repair (sample many patches)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multi-sample patch generation",
+   "quote": null
+  },
+  {
+   "work": "LlamaIndex",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "embedding retrieval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of AGENTLESS.",
+   "page": 6,
+   "why": "Shows all 10 steps of the fixed pipeline at once"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "File skeleton format.",
+   "page": 7,
+   "why": "Shows the compressed file view"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Search/Replace edit format.",
+   "page": 7,
+   "why": "Shows the patch format"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Repair performance as the number of patch samples increases.",
+   "page": 14,
+   "why": "Plateau near 40 samples"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Reproduction test and repair results as number of samples increases.",
+   "page": 14,
+   "why": "Selected vs plausible tests"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 3, p7",
+   "snippet": "<<<<<<< SEARCH\nfrom flask import Flask\n=======\nimport math\nfrom flask import Flask\n>>>>>>> REPLACE",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No appendix and no prompt text in the paper",
+  "Figure-only numbers (Fig 5 Venn, Fig 9 solve rates) not recorded",
+  "Table 2 multi-sample rows have extra unlabelled rows in text layer"
+ ]
 }

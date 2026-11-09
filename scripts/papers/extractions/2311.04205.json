@@ -1,19 +1,693 @@
 {
- "schema": 0,
+ "schema": 1,
  "key": "2311.04205",
  "pdf": "ai-engineering/01-prompt-engineering/sources/deng-2023-rephrase-respond.pdf",
  "bib": {
   "title": "Rephrase and Respond: Let Large Language Models Ask Better Questions for Themselves",
-  "first_author": "Yihe Deng",
-  "year": "2023",
-  "venue": null,
+  "authors": [
+   "Yihe Deng",
+   "Weitong Zhang",
+   "Zixiang Chen",
+   "Quanquan Gu"
+  ],
+  "first_author": "Deng",
+  "year": 2023,
+  "venue": "preprint",
   "arxiv": "2311.04205",
   "doi": null
  },
  "read": {
   "by": "source-reader",
-  "at": "2026-11-06",
-  "session": "5eef039a-460d-4d81-a228-42e2eb469029"
+  "at": "2026-11-09",
+  "chars_read": 84433,
+  "chars_total": 84433,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; Fig 4/5/7 bar values are unlabeled number clouds in the text layer."
  },
- "legacy_report": "SOURCE: \"Rephrase and Respond: Let Large Language Models Ask Better Questions for Themselves\", Yihe Deng, Weitong Zhang, Zixiang Chen, Quanquan Gu (UCLA). arXiv:2311.04205v2 (18 Apr 2024), labelled \"Preprint\". Original 2023.\n\nCOVERAGE: All 25 pages, 84,396 chars, read in full (body, Appendix A, B, C tables of I/O examples). Reference list skimmed only. The tool-result dump was cut at 40k chars, so I re-extracted the rest. The last pages (Tables 17-22) are per-task I/O examples. I read them but they hold no new numbers. Caveat: the extraction rendered Figure 4/5/7 as unlabeled number clouds. Only Table 1 and the in-text numbers are reliable for per-task values. Figures 5/7 values are not usable.\n\nCLAIMS (ranked)\n- RaR (one prompt: rephrase and answer) lifts GPT-4 average zero-shot accuracy over 10 tasks from 64.95 to 89.77.\n  number: 64.95 -> 89.77 avg (+24.8 points)\n  setup: GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks, most with 105-220 sampled questions. Tasks: Even day/month/year, Compare age, CSQA, Dates, Sports, Last letter (2), Last letter (4), Coin flip.\n  quote: \"Original 54.29 58.10 57.14 98.44 84.09 69.92 79.55 52.05 21.36 74.55 64.95 / RaR 93.33 83.96 89.52 100 85.45 75.88 84.54 99.09 86.82 99.09 89.77\"\n  where: Table 1, p6\n- Biggest gains are on tasks with ambiguous or poorly posed questions. Well-posed ones barely move. Last letter (4) goes 21.36 -> 86.82, Last letter (2) 52.05 -> 99.09, Coin flip 74.55 -> 99.09, Even day 54.29 -> 93.33. CSQA goes only 84.09 -> 85.45, and Compare age 98.44 -> 100.\n  number: see left\n  quote: \"A larger margin indicates a less well-designed question. For tasks such as CSQA where the question quality is good enough, our method still offers a marginal improvement.\"\n  where: Fig 4 caption, p6; Table 1\n- The gain does not depend on the exact wording. Four paraphrased RaR prompts all beat baseline, averaging 87.17 to 88.97 versus 89.77 for the main prompt. Deviations are -0.8 to -2.6.\n  quote: \"RaR1 94.29 82.08 ... 87.85(−1.92) ... RaR3 85.71 ... 87.17(−2.6)\"\n  where: Table 1, p6. Note that RaR3 is worse than the main prompt by 2.6 and, on Even day, lower than the other variants (85.71).\n- Gains scale with model strength. With Two-step RaR, GPT-4-0613 gains most, GPT-3.5-turbo-0613 less, Vicuna-13b-v1.5 modestly. GPT-3.5 and Vicuna get slightly worse on some tasks, such as Sports.\n  quote: \"On certain tasks such as Sports, GPT-3.5 and Vicuna even exhibit slightly diminished performance.\" and \"all models can benefit from rephrasing questions, with more advanced models expected to gain a larger improvement.\"\n  where: Sec 4.3, p6-7. Vicuna's Last letter (4) is excluded because of near-zero accuracy. Per-task numbers are not recoverable from the extraction.\n- Two-step RaR transfers: questions rephrased by GPT-4 help the weaker Vicuna-13b-v1.5 more than its own rephrasings do.\n  number: Even day 58.10 -> 61.90; Even month 56.19 -> 60.95; CSQA 51.36 -> 55.00; Sports 65.00 -> 73.64; Dates 32.79 -> 37.67; Last letter (2) 5.45 -> 10.45\n  quote: \"Vicuna-rephrased 58.10 56.19 51.36 65.00 32.79 5.45 / GPT-4-rephrased 61.90 60.95 55.00 73.64 37.67 10.45\"\n  where: Table 2, p8. Even year was dropped because Vicuna's rephrasings were already as clear as GPT-4's. Absolute accuracies stay low.\n- Zero-shot CoT (\"Let's think step by step\") can fail where RaR helps. GPT-4 on Chinese Idiom (infer the masked first character) scores 32.38 original, 31.43 zero-shot CoT, 35.24 RaR. The authors attribute the CoT drop to hallucination in the intermediate steps.\n  quote: \"Chinese Idiom Accuracy (%) 32.38 31.43 35.24\"\n  where: Table 3, p8. These gaps are small on a 105-item set, and the paper gives no significance test.\n- StereoSet (220 inter-sentence samples), GPT-4: Language Modeling Score 84.09 original, 84.09 CoT, 97.73 RaR. Fair Score (picking neither stereotype option) 6.82 original, 35.00 CoT, 42.27 RaR.\n  quote: \"StereoSet Language Modeling Score (%) 84.09 84.09 97.73Fair Score (%) 6.82 35.00 42.27\"\n  where: Table 3, p8. \"Fair Score\" is the authors' own metric, added because GPT-4 sometimes said neither option could be concluded.\n- RaR combined with few-shot CoT rescues flawed exemplars. Exemplars were Wei et al. 2022's last-letter examples with the reasoning altered to \"first letter\" while keeping the answers. GPT-4 follows the bad logic. Adding RaR (the rephrase step also repairs the examples) restores accuracy.\n  number: one-shot 89.04 / 78.18 (last letter 2 / 4) -> RaR+one-shot 100 / 93.64; four-shot 87.21 / 52.27 -> RaR+four-shot 100 / 95.45\n  quote: \"Four-shot CoT 87.21 52.27 / RaR+Four-shot CoT 100 95.45\"\n  where: Table 4, p9. Tables 7-8 give the exemplars. The flaws were deliberately injected.\n- RaR is complementary to zero-shot CoT: combine by adding \"let's think step by step\" to the RaR prompt. This is asserted. No separate combined table for zero-shot CoT appears in the text I read.\n  where: Sec 6.1, p8\n- Weak models rephrase badly. GPT-3.5 misread \"even month\" as even number of days and added a wrong \"recent game\" constraint. In 45/220 Sports and 21/369 Dates questions it appended \"Please rephrase...\", so the answer was just another rephrase. The authors deleted all sentences containing \"rephrase\" for GPT-3.5 on those two datasets. Vicuna changed \"yesterday\" to \"today\".\n  quote: \"GPT-3.5 tends to introduce the following phrase to rephrased questions in Sports (45 out of 220) and Dates (21 out of 369)\"\n  where: App B.1, p15-16\n- Iterating the rephrase: repeated Two-step rephrasing by GPT-4 converges toward a consistent clarification of \"even day\" by the third round, and questions get more elaborate. Demonstrated on one example question (Table 10). No accuracy numbers.\n  where: App B.2, p16-17\n- Motivating example: GPT-4 misreads \"even month\" in several ways (Feb is \"odd\" for irregular days; even/odd means days in the month). Fig 2 says self-rephrased questions answer the 105-celebrity task far better. No numbers are quoted in the text for Fig 2.\n  where: Fig 1-2, p2\n\nPROMPT TEMPLATES (verbatim)\n- 1-step RaR (eq 3.1): \"{question}\"\\nRephrase and expand the question, and respond.\n- Variants: \"Reword and elaborate on the inquiry, then provide an answer.\" / \"Reframe the question with additional context and detail, then provide an answer.\" / \"Modify the original question for clarity and detail, then offer an answer.\" / \"Restate and elaborate on the inquiry before proceeding with a response.\"\n- Two-step, step 1 (rephraser): \"{question}\"\\nGiven the above question, rephrase and expand it to help you do better answering. Maintain all information in the original question.\n- Two-step, step 2 (responder): (original) {question}\\n(rephrased) {rephrased question}\\nUse your answer for the rephrased question to answer the original question.\n- RaR+CoT: add \"let's think step by step\" to 3.1.\n- Format suffixes appended to both baseline and RaR (Table 6): Dates \"Final answer format should be MM/DD/YYYY.\"; CSQA and StereoSet \"Select the *single* most sensible answer.\"; Sports and Coin flip \"Answer the Yes or No question.\"\n- Task data details: Even day/month/year 105 questions each, Compare age 104, CSQA 220, Dates 369 (full set, no choices given), Last letter (2)/(4), Coin flip and Sports 220 each. Coin flip has \"Flip means reverse.\" appended.\n\nLIMITS\n- Models are GPT-4 (Oct 2023), GPT-4-0613, GPT-3.5-turbo-0613 and Vicuna-13b-v1.5, all long dated. Nothing on reasoning models or modern models.\n- Small samples (105-220 per task, random subsets). No confidence intervals, seeds or significance tests. Single runs are implied.\n- The Even day/month/year and Compare age data were generated by GPT-4 itself, not from an open benchmark (footnote 1: \"As the data are not open-sourced, we let GPT-4 generate 105 famous individuals with their birth dates and 105 Chinese idioms in its knowledge.\"). The ground truth was not independently verified in the text.\n- Scoring is exact-match plus manual checking. The sports/coin-flip tasks add a format suffix.\n- Dates is the harder no-choices version, so it is not comparable to published numbers.\n- The authors concede weaker models gain little or lose on some tasks. Vicuna's self-rephrasing is poor. They say more exploration is needed on its capability.\n- Cost, latency and extra tokens are not measured. 1-step RaR makes outputs longer. Two-step adds a call.\n- Comparison to CoT is narrow: zero-shot CoT is tested on only two extra tasks (Chinese Idiom, StereoSet), and the main 10-task table has no CoT column. The conclusion mentions \"mathematical formulation\" comparisons with CoT, but I found none in the extracted text.\n- Not tested against self-consistency or other prompt-optimisation methods. Compared only in prose with APE-style iterative methods.\n- Table 13's headline example shows Two-step RaR still failing on some items (Obama, Kahlo). Table 12 shows 1-step RaR failing on da Vinci while giving a self-contradicting answer (\"Yes... odd-numbered day\").\n\nBUILDS ON (as printed)\nAllen-Zhu & Li 2023 (Physics of language models 3.2; tasks and motivating example); Kojima et al. 2022 (zero-shot CoT); Wei et al. 2022 (few-shot CoT, last-letter exemplars); Zhou et al. 2022b (APE) and Pryzant et al. 2023 (iterative prompt refinement, contrasted); Sorensen et al. 2022; Madaan et al. 2023 (Self-Refine) and Shinn et al. 2023 (contrasted: post-hoc self-correction); Huang et al. 2023 and Stechly et al. 2023 (self-correction limits); Weston & Sukhbaatar 2023 (System 2 Attention, concurrent); Yu et al. 2023a and Prasad et al. 2023 (concurrent rephrasing); Pawelczyk et al. 2023 (bad few-shot examples); Turpin et al. 2023 (CoT reliability); Nadeem et al. 2021 (StereoSet); Shaikh et al. 2022 (prompt format for StereoSet); Druckman 2001 (framing, for \"frames in thought\"); Talmor et al. 2019 (CSQA); bench authors 2023 (Dates, Sports); Fortes 2023 (last letter data); Zhou et al. 2023 (Foresee and Reflect).\n\nCODE: none, beyond the prompt templates above.\n\nFIGURES (p numbers as printed)\n- Fig 1 (p2): GPT-4 gives contradictory justifications for \"even month\". Shows ambiguity as the failure cause.\n- Fig 2 (p2): original vs self-rephrased question for even day, month and year. It shows what a rephrase looks like, e.g. listing \"2nd, 4th, 6th, 8th\".\n- Fig 3 (p5): RaR demo on \"Edgar Bob\" last letters. Shows the single-prompt shape.\n- Fig 4 (p6): bar chart of GPT-4 original vs RaR over 10 tasks. Same data as Table 1.\n- Fig 5 / Fig 7 (p7, p15): GPT-4-0613, GPT-3.5, Vicuna with Two-step RaR. Numbers are garbled in the extraction.\n- Fig 6 (p9): a bad few-shot exemplar (first-letter logic) misleads GPT-4, and RaR repairs it. Best single picture of the exemplar-repair claim.\n\nPROBLEMS: Figures 4, 5 and 7 come out as unordered numbers, so per-model per-task values (Fig 5/7) are not reliably readable and I omitted them. Two-step prompt references in App B.2 appear as \"(??)\" (broken cross-reference). The paper's text contains no embedded instructions. Source path: /Users/ramsey-wise/workspace/learn-ai-engineering/ai-engineering/01-prompt-engineering/sources/deng-2023-rephrase-respond.pdf"
+ "type": "empirical",
+ "question": "Can an LLM be made to answer better by first rephrasing and expanding the human's question itself, removing ambiguity between human and LLM framing?",
+ "hypothesis": "LLMs have their own frames of thought that differ from humans', so questions that look clear to humans are misread; letting the LLM rephrase before answering aligns the frames and improves accuracy.",
+ "contributions": [
+  "RaR: rephrase and respond in a single prompt",
+  "Two-step RaR: a rephrasing LLM passes original and rephrased question to a (possibly different) responding LLM",
+  "Comparison with zero-shot and few-shot CoT, showing RaR is complementary"
+ ],
+ "method": {
+  "summary": "Zero-shot prompting study. One-step RaR appends 'Rephrase and expand the question, and respond.' to the question; Two-step RaR first generates a rephrasing and then answers using original plus rephrased question. Evaluated on 10 tasks with GPT-4, then GPT-4-0613, GPT-3.5-turbo-0613 and Vicuna-13b-v1.5, plus CoT comparisons.",
+  "task": "zero-shot question answering / reasoning prompting",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Even day / month / year (Knowledge Classification)",
+    "role": "eval",
+    "size": "105 questions each",
+    "split": null,
+    "source": "Allen-Zhu & Li (2023) task; data not open-sourced so GPT-4 generated 105 famous individuals with birth dates",
+    "preprocessing": null
+   },
+   {
+    "name": "Compare age (Knowledge Comparison)",
+    "role": "eval",
+    "size": "104 questions",
+    "split": null,
+    "source": "same pool of individuals",
+    "preprocessing": null
+   },
+   {
+    "name": "CSQA",
+    "role": "eval",
+    "size": "220 sampled",
+    "split": null,
+    "source": "Talmor et al. 2019",
+    "preprocessing": "format prompt 'Select the *single* most sensible answer.'"
+   },
+   {
+    "name": "Date Understanding (Big-bench)",
+    "role": "eval",
+    "size": "369 (entire dataset)",
+    "split": null,
+    "source": "bench authors 2023",
+    "preprocessing": "harder version without answer choices; 'Final answer format should be MM/DD/YYYY.'"
+   },
+   {
+    "name": "Last Letter Concatenation (2 and 4 names)",
+    "role": "eval",
+    "size": "220 each",
+    "split": null,
+    "source": "Fortes 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Coin Flip",
+    "role": "eval",
+    "size": "220",
+    "split": null,
+    "source": "huggingface skrishna/coin_flip",
+    "preprocessing": "added 'Flip means reverse.'; 'Answer the Yes or No question.'"
+   },
+   {
+    "name": "Sports Understanding (Big-bench)",
+    "role": "eval",
+    "size": "220",
+    "split": null,
+    "source": "bench authors 2023",
+    "preprocessing": "'Answer the Yes or No question.'"
+   },
+   {
+    "name": "Chinese Idiom (first-letter inference)",
+    "role": "eval",
+    "size": "105 idioms (footnote 1)",
+    "split": null,
+    "source": "GPT-4-generated, task from Allen-Zhu & Li (2023)",
+    "preprocessing": null
+   },
+   {
+    "name": "StereoSet (inter-sentence)",
+    "role": "eval",
+    "size": "220 sampled",
+    "split": null,
+    "source": "Nadeem et al. 2021",
+    "preprocessing": "prompt format of Shaikh et al. 2022"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (API, accessed 10/01-10/30 2023)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-turbo-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-13b-v1.5",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "fine-tuned LLaMA-2",
+    "init_from": "LLaMA-2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Zero-shot; one-step RaR prompt (3.1); Two-step RaR uses a rephrase prompt then a respond prompt; format prompts of Table 6 appended to both original and RaR questions. Few-shot CoT only in Sec 6.2.",
+   "retrieval": null,
+   "parameters": {
+    "rar_variants": "4 paraphrases of the RaR prompt (Sec 3)",
+    "rephrase_rounds": "1 (3 in App B.2)",
+    "gpt35_postprocessing": "all sentences containing 'rephrase' removed for GPT-3.5 on Sports and Dates"
+   },
+   "other": {
+    "note": "Number of runs, seeds, temperature not stated."
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "Exact-match: answer correct if it contains the exact correct word and no incorrect responses; then verified and corrected by manual inspection",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "StereoSet Language Modeling Score",
+     "definition": "whether the LLM selects related options over unrelated ones",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "StereoSet Fair Score",
+     "definition": "proportion of responses choosing neither related option (judged that nothing can be concluded)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "original question (no rephrasing)",
+    "four RaR prompt variants",
+    "zero-shot CoT ('Let's think step by step.')",
+    "one-shot and four-shot CoT (Wei et al. 2022), also with flawed examples",
+    "Vicuna self-rephrasing vs GPT-4 rephrasing"
+   ],
+   "protocol": "Single reported accuracy per cell; no seeds, runs or confidence intervals stated. Subsets of 220 drawn at random for tasks other than Dates (entire dataset)."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "inferred: tasks are public except the Allen-Zhu & Li-style sets, which the authors regenerated with GPT-4 (footnote 1); no release stated"
+  },
+  "prompts": [
+   {
+    "purpose": "One-step RaR",
+    "text": "\"{question}\"\\nRephrase and expand the question, and respond.",
+    "where": "Sec 3, eq (3.1)"
+   },
+   {
+    "purpose": "RaR variant 1",
+    "text": "Reword and elaborate on the inquiry, then provide an answer.",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "RaR variant 2",
+    "text": "Reframe the question with additional context and detail, then provide an answer.",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "RaR variant 3",
+    "text": "Modify the original question for clarity and detail, then offer an answer.",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "RaR variant 4",
+    "text": "Restate and elaborate on the inquiry before proceeding with a response.",
+    "where": "Sec 3"
+   },
+   {
+    "purpose": "Two-step RaR, step 1 (rephrase)",
+    "text": "\"{question}\"\nGiven the above question, rephrase and expand it to help you do better answering.\nMaintain all information in the original question.",
+    "where": "Sec 5"
+   },
+   {
+    "purpose": "Two-step RaR, step 2 (respond)",
+    "text": "(original) {question}\n(rephrased) {rephrased question}\nUse your answer for the rephrased question to answer the original question.",
+    "where": "Sec 5"
+   },
+   {
+    "purpose": "Format prompts appended to original and RaR",
+    "text": "Date: Final answer format should be MM/DD/YYYY. CSQA and StereoSet: Select the *single* most sensible answer. Sports and Coin flip: Answer the Yes or No question.",
+    "where": "Table 6"
+   },
+   {
+    "purpose": "Combine with zero-shot CoT",
+    "text": "add 'let's think step by step' to (3.1)",
+    "where": "Sec 6.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "datasets Chinese Idiom size",
+    "quote": "we let GPT-4 generate 105 famous individuals with their birth dates and 105 Chinese idioms in its knowledge.",
+    "where": "footnote 1, p5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RaR lifts GPT-4 average zero-shot accuracy over 10 tasks from 64.95 to 89.77.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "89.77",
+   "unit": "%",
+   "baseline_value": "64.95",
+   "n": null,
+   "setup": "GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks (Table 5), single prompt '\"{question}\"\\nRephrase and expand the question, and respond.', exact-match accuracy with manual check",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row RaR, column Avg (Original row: 64.95)"
+  },
+  {
+   "claim": "Last letter (4) rises from 21.36 to 86.82 with RaR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "86.82",
+   "unit": "%",
+   "baseline_value": "21.36",
+   "n": "220",
+   "setup": "GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks (Table 5), single prompt '\"{question}\"\\nRephrase and expand the question, and respond.', exact-match accuracy with manual check; Last letter (4), 220 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, column Last (4), rows Original and RaR"
+  },
+  {
+   "claim": "Last letter (2) rises from 52.05 to 99.09 with RaR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "99.09",
+   "unit": "%",
+   "baseline_value": "52.05",
+   "n": "220",
+   "setup": "GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks (Table 5), single prompt '\"{question}\"\\nRephrase and expand the question, and respond.', exact-match accuracy with manual check; 220 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, column Last (2)"
+  },
+  {
+   "claim": "Even day rises from 54.29 to 93.33 with RaR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "93.33",
+   "unit": "%",
+   "baseline_value": "54.29",
+   "n": "105",
+   "setup": "GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks (Table 5), single prompt '\"{question}\"\\nRephrase and expand the question, and respond.', exact-match accuracy with manual check; 105 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, column Day"
+  },
+  {
+   "claim": "CSQA, a well-posed task, improves only marginally (84.09 to 85.45).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "85.45",
+   "unit": "%",
+   "baseline_value": "84.09",
+   "n": "220",
+   "setup": "GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks (Table 5), single prompt '\"{question}\"\\nRephrase and expand the question, and respond.', exact-match accuracy with manual check; 220 questions",
+   "note": null,
+   "where": "Fig 4 caption; Table 1 column CSQA",
+   "quote": "For tasks such as CSQA where the question quality is good enough, our method still offers a marginal improvement."
+  },
+  {
+   "claim": "Compare age is already 98.44 and goes to 100 with RaR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "100",
+   "unit": "%",
+   "baseline_value": "98.44",
+   "n": "104",
+   "setup": "GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks (Table 5), single prompt '\"{question}\"\\nRephrase and expand the question, and respond.', exact-match accuracy with manual check; 104 questions",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, column Age"
+  },
+  {
+   "claim": "Four paraphrased RaR prompts all beat the baseline; averages 87.17 to 88.97, i.e. 0.8 to 2.6 below the main prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "87.17-88.97",
+   "unit": "% avg accuracy",
+   "baseline_value": "64.95",
+   "n": null,
+   "setup": "GPT-4 (API accessed 10/01-10/30 2023), zero-shot, 10 tasks (Table 5), single prompt '\"{question}\"\\nRephrase and expand the question, and respond.', exact-match accuracy with manual check; prompt variants RaR1-RaR4 listed in Sec 3",
+   "note": null,
+   "where": "Sec 4.2, Table 1",
+   "quote": "a consistent enhancement relative to the baseline results is observed across all variations.",
+   "table": "Table 1, rows RaR1-RaR4, column Avg: 87.85(-1.92), 88.97(-0.8), 87.17(-2.6), 88.70(-1.07)"
+  },
+  {
+   "claim": "With Two-step RaR, more advanced models gain more; GPT-3.5 and Vicuna even lose slightly on some tasks such as Sports.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4-0613, GPT-3.5-turbo-0613, Vicuna-13b-v1.5, Two-step RaR, self-rephrasing; Last letter (4) dropped for Vicuna (near-zero accuracy)",
+   "note": "Per-task values are only in Fig 5/Fig 7, which extract as unlabeled number clouds; no per-model number is recorded.",
+   "where": "Sec 4.3, Fig 5",
+   "quote": "On certain tasks such as Sports, GPT-3.5 and Vicuna even exhibit slightly di-\nminished performance."
+  },
+  {
+   "claim": "GPT-4-rephrased questions beat Vicuna's own rephrasings for Vicuna-13b-v1.5 on Sports (65.00 to 73.64).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.64",
+   "unit": "%",
+   "baseline_value": "65.00",
+   "n": "220",
+   "setup": "Vicuna-13b-v1.5 responds, Two-step RaR, Sports 220 questions",
+   "note": null,
+   "where": "Table 2, Sec 5",
+   "table": "Table 2, column Sports, rows Vicuna-rephrased and GPT-4-rephrased"
+  },
+  {
+   "claim": "GPT-4-rephrased questions for Vicuna: Last letter (2) 5.45 to 10.45, Dates 32.79 to 37.67, Even day 58.10 to 61.90.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "10.45",
+   "unit": "%",
+   "baseline_value": "5.45",
+   "n": null,
+   "setup": "Vicuna-13b-v1.5 responds, Two-step RaR",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, columns Last letter (2), Dates, Even day"
+  },
+  {
+   "claim": "Zero-shot CoT slightly hurts GPT-4 on Chinese Idiom (32.38 to 31.43) while RaR gives 35.24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "35.24",
+   "unit": "%",
+   "baseline_value": "32.38",
+   "n": "105",
+   "setup": "GPT-4, Chinese Idiom (infer first character; 105 idioms generated by GPT-4 per footnote 1), zero-shot",
+   "note": "n=105 idioms is from footnote 1 (GPT-4 generated 105 Chinese idioms); Table 5 does not list this task.",
+   "where": "Table 3, Sec 6.1",
+   "table": "Table 3, row Chinese Idiom, columns Original/Zero-shot CoT/RaR"
+  },
+  {
+   "claim": "On StereoSet, RaR raises GPT-4 Language Modeling Score from 84.09 to 97.73; zero-shot CoT leaves it at 84.09.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Language Modeling Score",
+   "value": "97.73",
+   "unit": "%",
+   "baseline_value": "84.09",
+   "n": "220",
+   "setup": "GPT-4, StereoSet inter-sentence, 220 sampled examples, prompt format of Shaikh et al. (2022)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row StereoSet Language Modeling Score"
+  },
+  {
+   "claim": "StereoSet Fair Score: Original 6.82, zero-shot CoT 35.00, RaR 42.27.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fair Score",
+   "value": "42.27",
+   "unit": "%",
+   "baseline_value": "6.82",
+   "n": "220",
+   "setup": "GPT-4, StereoSet, 220 examples; Fair Score = share of responses choosing neither related option",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row StereoSet Fair Score"
+  },
+  {
+   "claim": "A flawed one-shot CoT example (first letter instead of last) drops Last letter (4) to 78.18; RaR+one-shot gives 93.64.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "93.64",
+   "unit": "%",
+   "baseline_value": "78.18",
+   "n": null,
+   "setup": "GPT-4, Wei et al. examples with intermediate steps changed to 'first letter'",
+   "note": null,
+   "where": "Table 4, Sec 6.2",
+   "table": "Table 4, row One-shot CoT vs RaR+One-shot CoT, column Last letter (4)"
+  },
+  {
+   "claim": "With four flawed examples Last letter (4) falls to 52.27 and RaR+four-shot recovers to 95.45.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "95.45",
+   "unit": "%",
+   "baseline_value": "52.27",
+   "n": null,
+   "setup": "GPT-4, four-shot CoT with flawed examples",
+   "note": null,
+   "where": "Table 4, Sec 6.2",
+   "quote": "drops to only 52.27%",
+   "table": "Table 4, row Four-shot CoT vs RaR+Four-shot CoT, column Last letter (4)"
+  },
+  {
+   "claim": "Last letter (2) with flawed shots: one-shot 89.04, four-shot 87.21; with RaR both 100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "100",
+   "unit": "%",
+   "baseline_value": "87.21",
+   "n": null,
+   "setup": "GPT-4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, column Last letter (2)"
+  },
+  {
+   "claim": "Iterating self-rephrasing by GPT-4 converges to a consistent explanation of 'even day' by the third rephrasing, while the question grows more elaborate.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, Two-step RaR prompt applied 3 times, one example question (Abraham Lincoln), two runs shown",
+   "note": "Anecdotal: one question.",
+   "where": "App B.2, Table 10",
+   "quote": "by the third rephrasing, it converges to a consistent explanation of “even day”."
+  },
+  {
+   "claim": "GPT-3.5 appends 'Please rephrase and provide additional details...' to rephrasings in 45 of 220 Sports and 21 of 369 Dates questions, so those sentences were removed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "45/220 and 21/369",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5-turbo-0613 self-rephrasing",
+   "note": null,
+   "where": "App B.1",
+   "quote": "Sports (45 out of 220) and Dates (21 out of 369)"
+  },
+  {
+   "claim": "Motivating example: GPT-4's answers to 'even month' questions show several ambiguities (even/odd by days in month, etc.).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4, hand-picked examples, Fig 1/Fig 2 (105 celebrities)",
+   "note": "Fig 2 bar values are not in the extracted text.",
+   "where": "Fig 1, Fig 2, p2",
+   "quote": "We can observe a marked improvement of accuracy in\nanswering these rephrased questions over the query of 105 celebrities for this task."
+  }
+ ],
+ "limits": [
+  "Most tasks have only 104-369 questions; no seeds, repeated runs or confidence intervals reported.",
+  "Decoding settings (temperature, max tokens) not stated; GPT-4 API versions are dated (accessed Oct 2023).",
+  "Several datasets were generated by GPT-4 itself and not released; rephrasing is judged by accuracy only, correctness of rephrasings not measured systematically.",
+  "Per-model, per-task results for GPT-3.5 and Vicuna are only given in figures (Fig 5, 7).",
+  "Authors concede Vicuna's self-rephrased questions are low quality and more exploration is needed; GPT-3.5 and Vicuna sometimes get worse.",
+  "Conclusion mentions comparison with CoT 'through mathematical formulation', which does not appear in the text read.",
+  "RaR doubles or lengthens output tokens; cost not discussed."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Rephrase and Respond (RaR)",
+   "definition": "prompts an LLM to first rephrase and clarify the question before answering it, in a single query",
+   "where": "Sec 1, 7"
+  },
+  {
+   "term": "Two-step RaR",
+   "definition": "a rephrasing LLM first rephrases the question and then passes the original and rephrased questions together to a responding LLM",
+   "where": "Abstract, Sec 5"
+  },
+  {
+   "term": "Fair Score",
+   "definition": "proportion of StereoSet responses that choose neither related option",
+   "where": "App A"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Physics of language models: Part 3.2, knowledge manipulation (Allen-Zhu & Li)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of the even day/month/year, compare age and Chinese Idiom tasks and the motivating example",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero-shot CoT compared and combined",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "few-shot CoT examples reused with flawed variants",
+   "quote": null
+  },
+  {
+   "work": "Large language models are human-level prompt engineers (Zhou et al.)",
+   "year": 2022,
+   "arxiv": "2211.01910",
+   "relation": "related",
+   "note": "iterative prompt refinement, contrasted as expensive",
+   "quote": null
+  },
+  {
+   "work": "Automatic prompt optimization with gradient descent and beam search (Pryzant et al.)",
+   "year": 2023,
+   "arxiv": "2305.03495",
+   "relation": "related",
+   "note": "iterative prompt refinement",
+   "quote": null
+  },
+  {
+   "work": "System 2 Attention (Weston & Sukhbaatar)",
+   "year": 2023,
+   "arxiv": "2311.11829",
+   "relation": "related",
+   "note": "concurrent, regenerates the query",
+   "quote": null
+  },
+  {
+   "work": "Rephrase, augment, reason (Prasad et al.)",
+   "year": 2023,
+   "arxiv": "2310.05861",
+   "relation": "related",
+   "note": "concurrent, rephrasing for vision-language models",
+   "quote": null
+  },
+  {
+   "work": "Large language models cannot self-correct reasoning yet (Huang et al.)",
+   "year": 2023,
+   "arxiv": "2310.01798",
+   "relation": "related",
+   "note": "self-correction limits",
+   "quote": null
+  },
+  {
+   "work": "CommonsenseQA / Big-bench / Last Letter (Fortes) / Coin flip / StereoSet",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation datasets",
+   "quote": null
+  },
+  {
+   "work": "Vicuna (Chiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Vicuna-13b-v1.5",
+   "quote": null
+  },
+  {
+   "work": "On second thought, let's not think step by step! (Shaikh et al.)",
+   "year": 2022,
+   "arxiv": "2212.08061",
+   "relation": "related",
+   "note": "zero-shot CoT bias; StereoSet prompt format",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Motivating examples of our study. We can observe several ambiguities in the question for LLMs.",
+   "page": 2,
+   "why": "shows how GPT-4 reads 'even month' differently than humans"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Demonstration of RaR: one single prompt to improve LLM's response quality.",
+   "page": 5,
+   "why": "one-call rephrase+respond example"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Accuracy (%) comparison of different prompts using GPT-4.",
+   "page": 6,
+   "why": "per-task gain bars (values in Table 1)"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 4/5/7 values appear as unlabeled number clouds in the text layer; only tables and in-text numbers used.",
+  "Appendix B.2 refers to prompt '(??)' (broken cross-reference).",
+  "Text says 'Chinese Idiom' size only in footnote 1; Table 5 omits it.",
+  "No embedded instructions found."
+ ]
 }

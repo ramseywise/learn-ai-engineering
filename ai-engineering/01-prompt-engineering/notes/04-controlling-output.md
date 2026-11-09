@@ -41,7 +41,7 @@ Every token *before* the solution costs latency and money. Nothing after the rec
 | Preamble type | What to do |
 |---|---|
 | **Structural boilerplate** (an opening `{`, a heading) | Put it in the *prompt*. Cheaper, and it guarantees the format |
-| **Reasoning** | Let it run long — this is CoT, and it buys correctness ([03](03b-chain-of-thought-and-reasoning.md#chain-of-thought)) |
+| **Reasoning** | Let it run long — this is CoT, and it buys correctness ([3b](03b-chain-of-thought-and-reasoning.md#chain-of-thought)) |
 | **Fluff** (disclaimers, "Great question!") | Mostly an RLHF habit, though models without RLHF occasionally do it too. Few-shot examples that skip the intro, or an explicit "answer directly" instruction. Failing that, give it a slot: `1. [answer] 2. [caveats] 3. [background]`, then parse slot 1. A slot doesn't always kill the intro (the book shows ChatGPT adding one against explicit instructions), so parse defensively |
 
 ---
@@ -65,7 +65,7 @@ Caveats:
 
 **Best-of-n:** generate n completions at moderate temperature (most APIs take an `n` parameter; OpenAI's maxed out at 128, and the book notes n = 128 doesn't take much longer than n = 1, since the completions run in parallel) and keep the one with the best logprob score ([below](#logprobs-reading-confidence)). The book's rule of thumb, which it calls "completely unscientific": `temperature ≈ sqrt(n) / 10`, so 0.2 for n = 4. At temperature 0, the n completions are identical.
 
-**Beam search** is the decoding-side cousin: instead of committing token by token, it keeps several candidate continuations alive and looks a few tokens ahead so the model doesn't paint itself into a corner. Output is more globally coherent, but compute is much higher, so hosted APIs rarely expose it. Best-of-n is the version you control.
+**Beam search** keeps several candidate continuations alive and looks ahead. Hosted APIs rarely expose it, so best-of-n is the version you control. How temperature, top-p and beam search work is in [GA 01/04 — decoding](../../../generative-ai/01-llm-fundamentals/notes/04-decoding-and-inference-behaviour.md#decoding).
 
 ---
 
@@ -120,7 +120,7 @@ flowchart LR
 5. **Constrain it** — JSON mode or schema-constrained decoding (OpenAI Structured Outputs, Anthropic structured outputs, `strict` tool schemas). The decoder can't emit tokens that break the schema.
 6. **Route it through a tool** — define a tool whose parameters *are* your output schema and require the model to call it ([05](05-tools-and-function-calling.md)).
 
-A schema guarantees **shape, not truth**: a valid JSON object can still hold hallucinated values. Validate the content as well ([09](09-evaluating-prompts.md)).
+A schema guarantees **shape, not truth**: a valid JSON object can still hold hallucinated values. Validate the content as well ([08](08-evaluating-prompts.md)).
 
 Rung 5 works by masking: at each step the decoder sets the probability of every token that would break a regex or grammar to zero, then samples. The naive version scans the whole vocabulary each step. Outlines precomputes, for each state of the regex's state machine, which tokens are allowed, so the per-step lookup is O(1) on average instead of O(N) in vocabulary size (about 50k for GPT-2). The paper's one timing test (GPT-2, one regex, one sample per length, against one library) shows the other library's runtime growing with generated length while Outlines stays flat. It measures no accuracy effect of masking, and its own GPT-2-medium demo returned a valid but wrong yes/no answer ("Is 1+1=2? Always"), which is the shape-not-truth point again ([arXiv:2307.09702](https://arxiv.org/abs/2307.09702) (Willard & Louf, 2023, preprint)).
 
@@ -173,7 +173,7 @@ The trade-offs, in rough order: **intelligence → speed → cost → ease of us
 - Match the model to the step, not the app: a small fast model for autocomplete, classification or routing; a frontier model for multistep reasoning; an open-weight model when data can't leave your infrastructure or you need logprobs the API hides.
 - Put an abstraction layer between your code and the provider (for example [LiteLLM](https://docs.litellm.ai/)).
 - Prototype on a slightly bigger model than you think you can afford. Prices fall, and your prompts will already be tuned for it.
-- A prompt tuned for one model is not portable. Re-run your evals when you switch ([09](09-evaluating-prompts.md)).
+- A prompt tuned for one model is not portable. Re-run your evals when you switch ([08](08-evaluating-prompts.md)).
 
 ---
 
@@ -187,7 +187,7 @@ Fine-tuning is prompt engineering by other means — moving what's in the prompt
 | LoRA (parameter-efficient) | *Which* existing behaviors to use; formats; priors | Hundreds–thousands | Days |
 | Soft prompting | What a static prompt would say | Hundreds | Hours |
 
-- **LoRA** freezes the base weights and trains small [low-rank](../../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) "diff" matrices. They're cheap to store, so one deployment can serve many LoRAs, one per customer or task. LoRA doesn't teach new tricks; it teaches *which* existing ones to use. It's good at shifting *priors*. In the book's example, a European travel app can bake "the customer is European" into the weights instead of stating it in every prompt. Trained on outcome data, it also picks up priors nobody wrote down: budget-conscious users reject "Monaco" but book after "Prague" suggestions.
+- **LoRA** trains small low-rank "diff" matrices on frozen weights (how it works: [GA 01/09 — PEFT](../../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md#parameter-efficient-fine-tuning)). One deployment can serve many LoRAs, one per customer or task. It doesn't teach new tricks, it teaches *which* existing ones to use, so it shifts *priors*. In the book's example, a European travel app can bake "the customer is European" into the weights instead of stating it in every prompt.
 - **Data.** Training documents should show successful interactions: factually correct, using only the background you want learned, in the target format. Sources: write them, hire contractors, synthesize them ([11](11-applications.md#synthetic-data-generation)), or mine telemetry for successes (accepted suggestions, likes) or logs of humans doing the task you're automating. Whether you can get them decides whether fine-tuning is worth it. **Loss masking**, where the framework supports it, trains only on the answer part of each document, not on the prompt part.
 - **Trade-off.** Fine-tuning usually weakens the model on generic documents while sharpening it on yours.
 - **Soft prompting** uses [gradient descent](../../../data-science/01-classical-ml/notes/02-supervised-learning.md#vectors-matrix-products-and-the-gradient) over a few dozen example outputs to find an input *embedding* that reliably puts the model in the right "state of mind": a prompt made of vectors instead of words. It's the cheapest and fastest option, but many frameworks don't offer it. It is also weak on smaller models: Lester et al. ([arXiv:2104.08691](https://arxiv.org/abs/2104.08691) (Lester et al., EMNLP 2021)) found that **prompt tuning matched full model tuning on SuperGLUE only at T5-XXL (11B)** and lagged well behind it at smaller sizes ([PEFT lineage](../../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md#parameter-efficient-fine-tuning)).
@@ -201,6 +201,19 @@ Fine-tuning is prompt engineering by other means — moving what's in the prompt
 > *Image Source: Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), Fig. 1-13*
 
 Reach for it when the static part of your prompt is long, stable, and still not followed reliably — or when you have outcome data encoding preferences you can't articulate. The payoff: after continued pre-training or LoRA you can typically **drop the static context entirely** — instructions and examples now live in the weights, so prompts get shorter, cheaper and faster. Then **make the prompt look like the start of your fine-tuning documents**. If it resembles pre-training data instead, the model follows the old path (a modified Little Red Riding Hood principle).
+
+---
+
+## Code as the output format
+
+<details><summary>Prompting a code model to finish a Python class</summary>
+
+**The format can be code.** Madaan et al. wrote each target graph (a script of steps, an explanation graph) as a Python class, with the input as an attribute or comment, and prompted a code model to finish the class. With 15 examples, Codex (code-davinci-002) scored 25.24 BLEU on ProScript script generation against 23.80 for T5 fine-tuned on all 3,500 training examples. On ExplaGraphs structural accuracy, 30 examples gave 45.20 against 38.19 for T5 on 1,500. Neither piece alone was enough: with the same text-davinci model, text and code prompts scored 33.16 and 33.00, and Codex with a text prompt 38.02 (Table 5). The format has to be designed per task, and Codex is closed and since retired ([arXiv:2210.07128](https://arxiv.org/abs/2210.07128) (Madaan et al., EMNLP 2022)).
+
+![A script graph for serving potpies drawn as boxes with arrows, next to the same graph written as a Python Tree class with Node objects and children lists](../sources/images/madaan-cocogen-fig1.png)
+*Image Source: Madaan et al., [Language Models of Code are Few-Shot Commonsense Learners](https://arxiv.org/abs/2210.07128) (2022), Fig. 1 (a, b)*
+
+</details>
 
 ---
 
