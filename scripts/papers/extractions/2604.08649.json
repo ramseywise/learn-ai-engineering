@@ -1,0 +1,257 @@
+{
+ "schema": 1,
+ "key": "2604.08649",
+ "pdf": "data-science/sources/ostroukhov-2026-pragma.pdf",
+ "bib": {
+  "title": "PRAGMA: Revolut Foundation Model",
+  "authors": ["Maxim Ostroukhov", "Ruslan Mikhailov", "Vladimir Iashin", "Artem Sokolov", "Andrei Akshonov", "Vitaly Protasov", "Andrey Goncharov", "Dmitrii Beloborodov", "Vince Mullin", "Roman Y. Enzmann", "Georgios Kolovos", "Jason Renders", "Pavel Nesterov", "Anton Repushko"],
+  "first_author": "Ostroukhov",
+  "year": 2026,
+  "venue": "preprint (arXiv:2604.08649v2 [cs.LG], 24 Aug 2026)",
+  "arxiv": "2604.08649",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-09",
+  "chars_read": 74838,
+  "chars_total": 74838,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for lineage only. No appendix exists in the paper (20 pages, body then references)."
+ },
+ "type": "empirical",
+ "question": "Can one masked-modelling encoder pre-trained on heterogeneous multi-source banking event histories plus profile state serve as a general representation layer across credit, fraud, engagement, recommendation, LTV and recurrence tasks?",
+ "hypothesis": "Banking event sequences admit transferable representations in the way text and vision do, so a single pre-trained backbone (linear probe or LoRA) beats task-specific pipelines.",
+ "contributions": [
+  "PRAGMA, a family of encoder-style foundation models for multi-source banking user histories, 10M to 1B parameters, with key-value-time tokenisation and a two-branch design (profile-state and event encoders feeding a history encoder).",
+  "A pre-training recipe for long irregular histories: masked modelling, sequence packing, dynamic batching; LoRA fine-tuning of the pre-trained backbone matches or beats full training from scratch.",
+  "Evaluation of one backbone on six downstream tasks (credit scoring, fraud, LTV, communication engagement, recurrent transactions, product recommendation) plus ablations, an uplift task and an AML failure case."
+ ],
+ "method": {
+  "summary": "Each user record (event history plus profile state, each a timestamp and key-value pairs) is tokenised into key, value and time components, encoded by a profile-state encoder, a per-event encoder and a history encoder, and pre-trained with BERT-style masking at token, event and key level. Downstream use is a frozen-embedding linear probe or LoRA fine-tuning; all results are relative deltas only.",
+  "task": "masked-modelling pretraining of an encoder on banking event sequences; downstream binary/multi-label classification and uplift",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Revolut pre-training corpus (internal, pseudonymised)",
+    "role": "pretrain",
+    "size": "26 M user records, 111 countries, 24 B events, 207 B tokens",
+    "split": "null: no pre-training train/eval split is stated; time range is 25 months from 2023 to 2025",
+    "source": "internal; not released; no licence stated",
+    "preprocessing": "No outlier removal or vocabulary pruning. Events truncated to 24 tokens (affects 0.01% of events); profile state to 200 tokens; users with zero events dropped; users with more than 6,500 events subsampled to the most recent."
+   },
+   {
+    "name": "Internal downstream benchmarks (credit scoring, communication engagement, external fraud, product recommendation, recurrent transactions, LTV, uplift, AML)",
+    "role": "eval",
+    "size": "null: no downstream dataset sizes given",
+    "split": "pre-defined train, validation and test folds per task; whether temporal or by user is not stated",
+    "source": "internal; record = profile ID + evaluation point",
+    "preprocessing": "Event history and profile attributes gathered directly preceding the evaluation point; collection mirrors pre-training."
+   }
+  ],
+  "models": [
+   {
+    "name": "PRAGMA-S",
+    "role": "proposed",
+    "params": "10 M",
+    "architecture": "encoder-only Transformer, three encoders (profile, event, history)",
+    "init_from": null,
+    "tokenizer": "key-value-time; ~60 key tokens; ~28 k value tokens; BPE-style for text",
+    "vocab": "~60 keys + ~28 k values",
+    "layers": "profile 1, event 5, history 2",
+    "hidden": "d_model 192, d_ffn 768",
+    "heads": "3",
+    "context": "up to 6,500 events per user, 24 tokens per event, 200 profile tokens",
+    "other": {}
+   },
+   {
+    "name": "PRAGMA-M",
+    "role": "proposed",
+    "params": "100 M",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "same",
+    "layers": "profile 3, event 16, history 6",
+    "hidden": "d_model 512, d_ffn 2048",
+    "heads": "8",
+    "context": "same",
+    "other": {"Table 1 column reading": "columns Profile/Event/History are depths of the three encoders per the caption; Heads column last. Read from Table 1 text order (S: 1,5,2,3; M: 3,16,6,8; L: 9,45,18,16)."}
+   },
+   {
+    "name": "PRAGMA-L",
+    "role": "proposed",
+    "params": "1 B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "same",
+    "vocab": "same",
+    "layers": "profile 9, event 45, history 18",
+    "hidden": "d_model 1024, d_ffn 4096",
+    "heads": "16",
+    "context": "same",
+    "other": {}
+   },
+   {
+    "name": "PRAGMA-M + Nemotron-1B-v2 text encoder",
+    "role": "evaluated",
+    "params": "null",
+    "architecture": "PRAGMA-M with frozen Nemotron-1B-v2 mapping whole text value to one vector, one-layer trainable projection; MLM on text fields replaced by MSE reconstruction of the text embedding",
+    "init_from": "Nemotron-1B-v2 (frozen)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"training latency": "about 18% higher than PRAGMA-M"}
+   },
+   {
+    "name": "task-specific baselines",
+    "role": "baseline",
+    "params": "null",
+    "architecture": "null: described only as 'existing task-specific baselines' / 'production baseline' / 'internal uplift baseline'; AML baseline uses cross-record network-level features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "BERT-style MLM; cross-entropy with label smoothing; MLM head takes concat of Event Encoder token output, History Encoder [EVT] output and History Encoder [USR] output (3d projected to d) matched against embedding table. Masking: token-level 15%, event-level 10%, semantic-type (key) level 10%; a small fraction of selected positions replaced by [UNK] (no loss, acts as input dropout).",
+   "optimizer": "Muon combined with AdamW",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "dynamic batching with a fixed token budget fitting GPU memory (value not given)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "207 B tokens in corpus (epochs/passes not stated)",
+   "seq_len": "up to 6,500 events per user; 24 tokens per event; 200 profile tokens",
+   "precision": "bf16 mixed precision",
+   "weight_decay": null,
+   "dropout": "0.1",
+   "regularisation": "label smoothing (value not given); GELU, pre-norm LayerNorm",
+   "hardware": "S and M: 16x NVIDIA H100; L: 32x NVIDIA H100",
+   "compute": null,
+   "wall_clock": "S about 2 days; M and L each roughly 2 weeks",
+   "seeds": null,
+   "other": {
+    "sequence packing": "varlen attention kernel (Dao et al., 2022) over flat event-token buffer; 2-5x throughput vs padded baseline",
+    "storage": "LMDB user index + Parquet event shards partitioned by event count",
+    "LoRA": "QKV projections and MLP layers; rank 8, alpha 8 default; sweep {4, 8, 16} on smaller datasets; ~2-4% trainable params; Adam; 12 hours to a few days, about one-eighth of pre-training wall-clock",
+    "probe": "logistic/linear regression, L-BFGS, standard-scaled embeddings; [USR], final [EVT], or both",
+    "positional": "static sine/cosine within-field positions; RoPE over log-seconds for profile and history encoders; calendar features (hour of day, day of week, day of month) as sin/cos through 2 MLP layers added to event embedding"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "null: runs, seeds and confidence intervals not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {"serving": "PRAGMA reads a user's recent events from a shared event bus with relaxed delivery guarantees; staleness test drops recent events within a window equal to the 99.9th percentile of propagation delays. No latency or throughput figures given."}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "ROC-AUC / PR-AUC", "definition": "credit, comm. engagement, LTV", "unit": "relative % vs task baseline: (x/baseline - 1)%", "higher_is_better": true},
+    {"name": "Precision / Recall", "definition": "external fraud; operating point not stated", "unit": "relative %", "higher_is_better": true},
+    {"name": "mAP", "definition": "product recommendation, multi-label", "unit": "relative %", "higher_is_better": true},
+    {"name": "macro F1", "definition": "recurrent transactions", "unit": "relative %", "higher_is_better": true},
+    {"name": "F0.5", "definition": "AML", "unit": "relative %", "higher_is_better": true},
+    {"name": "AUUC and SNIPS", "definition": "uplift via meta-learner (Kunzel et al., 2019); SNIPS per Swaminathan 2015", "unit": "relative %", "higher_is_better": true}
+   ],
+   "baselines": ["task-specific production/internal models (unspecified)", "PRAGMA-M trained from scratch", "embedding-only probe on same backbone", "event-only PRAGMA-S (no profile state)", "LoRA-tuned PRAGMA-M (for Nemotron)"],
+   "protocol": "Only relative deltas reported, absolute metrics withheld as commercially sensitive. Single numbers; no seeds, variance or significance tests."
+  },
+  "availability": {"code": null, "weights": null, "data": "not released; internal data, all example records synthetic"},
+  "prompts": [],
+  "evidence": [
+   {"field": "results (Table 2)", "quote": "Left: LoRA-adapted PRAGMA backbones are compared against task-specific baselines across scales (S/M/L). Middle: Within each model size (S/M/L), LoRA is compared against embedding-only probes on the same backbone. Right: At PRAGMA-M, LoRA fine-tuning of the pre-trained backbone is compared against training PRAGMA-M from scratch.", "where": "Table 2 caption; extracted columns appear in order: S, M, L LoRA vs baseline | S, M, L LoRA vs Emb | M LoRA vs Scratch"}
+  ]
+ },
+ "results": [
+  {"claim": "PRAGMA-L LoRA gains over the task-specific baseline in credit-scoring PR-AUC.", "kind": "measured", "source": null, "metric": "PR-AUC (relative)", "value": "+130.2 %", "unit": "% relative to task baseline", "baseline_value": null, "n": null, "setup": "Credit scoring (default within 12 months), PRAGMA-L, LoRA, internal data, absolute metric withheld", "quote": "PR-AUC increases by 130.2 % in Credit Scoring and 79.4 % in Communication Engagement", "table": "Table 2, row Credit scoring PR-AUC, column L LoRA vs baseline", "note": null, "where": "3.3"},
+  {"claim": "Credit-scoring PR-AUC rises with scale S to M to L.", "kind": "measured", "source": null, "metric": "PR-AUC (relative)", "value": "+70.3 % / +98.0 % / +130.2 %", "unit": "% vs task baseline", "baseline_value": null, "n": null, "setup": "LoRA, PRAGMA-S/M/L", "quote": "PR-AUC rises from +70.3 % at S to +98.0 % at M and +130.2 % at L", "table": null, "note": "ROC-AUC +6.2/+10.1/+12.4 %", "where": "3.3.1"},
+  {"claim": "Credit-scoring ROC-AUC gain for PRAGMA-L.", "kind": "measured", "source": null, "metric": "ROC-AUC (relative)", "value": "+12.4 %", "unit": "% vs task baseline", "baseline_value": null, "n": null, "setup": "Credit scoring, PRAGMA-L LoRA", "quote": "ROC-AUC gains are more tempered but remain substantial at +12.4 % and +20.4 % for the same tasks, respectively", "table": null, "note": null, "where": "3.3"},
+  {"claim": "LoRA on pre-trained PRAGMA-M beats the same architecture trained from scratch, most on communication engagement.", "kind": "measured", "source": null, "metric": "PR-AUC / ROC-AUC (relative)", "value": "+18.6 % / +5.0 %", "unit": "% vs scratch", "baseline_value": null, "n": null, "setup": "Comm. engagement (small dataset), PRAGMA-M LoRA vs scratch", "quote": "LoRA achieves +18.6 % in PR-AUC and +5.0 % in ROC-AUC", "table": null, "note": "Other scratch deltas: credit PR-AUC +13.0 %, ROC-AUC +1.6 %; product rec mAP +10.3 %; fraud precision +8.0 %, recall +17.0 %; recurrent F1 +0.6 %; LTV PR-AUC +0.4 %, ROC-AUC +0.3 %", "where": "3.3.2, Table 2 right block"},
+  {"claim": "LoRA fine-tuning beats frozen-embedding linear probe in every task and size; fraud precision gain over probe.", "kind": "measured", "source": null, "metric": "precision (relative)", "value": "+30.8 % / +29.8 % / +23.8 %", "unit": "% LoRA vs embedding probe (S/M/L)", "baseline_value": null, "n": null, "setup": "External fraud, LoRA vs frozen embeddings + linear probe", "quote": "the LoRA-tuned variants consistently outperform the embedding-only baselines", "table": "Table 2, row External fraud Precision, middle block (S, M, L)", "note": "Recall: +27.4/+24.5/+13.3 %. Product rec mAP: +57.2/+68.4/+68.1 %. Comm. engagement PR-AUC: +72.9/+49.7/+54.1 %. Credit PR-AUC +18.0/+20.4/+10.3 %, ROC-AUC +0.2/+2.4/+1.5 %. LTV PR-AUC +3.6/+2.4/+2.9 %. Recurrent F1 +4.5/+3.2/+2.3 %.", "where": "3.4.1"},
+  {"claim": "Fraud recall and precision vs the task baseline with LoRA.", "kind": "measured", "source": null, "metric": "recall (relative)", "value": "+33.4 % / +66.4 % / +64.7 %", "unit": "% vs baseline (S/M/L)", "baseline_value": null, "n": null, "setup": "External fraud, LoRA; precision +0.3/+12.3/+16.7 %; operating point not stated", "quote": "Precision and recall as the primary offline metrics.", "table": "Table 2, row External fraud Recall, left block (S, M, L)", "note": "Quote for metric definition only; no operating point or threshold given.", "where": "3.2, Table 2"},
+  {"claim": "Product recommendation mAP vs baseline with LoRA.", "kind": "measured", "source": null, "metric": "mAP (relative)", "value": "+10.6 % / +31.5 % / +40.5 %", "unit": "% vs baseline (S/M/L)", "baseline_value": null, "n": null, "setup": "Product recommendation conditioned on a communication, multi-label", "quote": "evaluated using mean average precision (mAP) as the primary offline metric", "table": "Table 2, row Product rec. mAP, left block", "note": null, "where": "Table 2"},
+  {"claim": "Recurrent transactions and LTV gains over baseline are small and flat across scale; LTV is negative at S.", "kind": "measured", "source": null, "metric": "F1; PR-AUC/ROC-AUC (relative)", "value": "+5.2 / +5.8 / +5.6 % F1", "unit": "% vs baseline", "baseline_value": null, "n": null, "setup": "LoRA, S/M/L; LTV PR-AUC -1.2/+0.3/+1.8 %, ROC-AUC -0.8/+0.9/+2.6 %", "quote": "Recurrent Transactions remains nearly flat across scales (+5.2/+5.8/+5.6 % F1 for S/M/L)", "table": null, "note": null, "where": "3.3.1"},
+  {"claim": "Removing profile state hurts fraud most (PRAGMA-S, full vs event-only).", "kind": "measured", "source": null, "metric": "recall / precision (relative)", "value": "+85.6 % recall, +46.8 % precision", "unit": "% full vs event-only", "baseline_value": null, "n": null, "setup": "PRAGMA-S, profile branch removed", "quote": "Credit Scoring benefits substantially, with a +31.8 % relative gain in PR-AUC and +4.9 % in ROC-AUC.", "table": "Table 3, rows External fraud Precision (+46.8 %) and Recall (+85.6 %)", "note": "Fraud numbers appear only in Table 3, not in section text. Others: product rec mAP +3.5 %, LTV PR-AUC +2.2 %, ROC-AUC +2.0 %, recurrent F1 +2.4 %, comm. engagement PR-AUC -3.0 %, ROC-AUC +1.3 %. Whether event-only variant was retrained from scratch and with which adaptation is not stated.", "where": "3.4.3"},
+  {"claim": "Frozen Nemotron text encoder helps credit scoring but hurts product recommendation.", "kind": "measured", "source": null, "metric": "PR-AUC (relative)", "value": "+16.1 %", "unit": "% vs LoRA-tuned PRAGMA-M", "baseline_value": null, "n": null, "setup": "PRAGMA-M + Nemotron-1B-v2, credit scoring", "quote": "Credit Scoring shows the clearest upside, with +16.1 % relative PR-AUC and +2.8 % ROC-AUC under Nemotron.", "table": null, "note": "Product rec mAP -6.4 %; fraud precision +3.8 %, recall -0.7 %; LTV +0.8/+0.6 %; recurrent F1 +0.1 %; about 18% training latency cost.", "where": "3.4.5, Table 5"},
+  {"claim": "Uplift: PRAGMA-L as frozen features in a meta-learner greatly raises AUUC over the internal baseline.", "kind": "measured", "source": null, "metric": "AUUC (relative)", "value": "+163.7 %", "unit": "% vs internal uplift baseline", "baseline_value": null, "n": null, "setup": "Communication engagement uplift, same meta-learner, PRAGMA-L frozen; SNIPS +10.8 %", "quote": "achieving a relative AUUC increase of 163.7 % over the internal baseline", "table": null, "note": null, "where": "3.4.4, Table 4"},
+  {"claim": "Dropping recent events within the 99.9th-percentile propagation delay changes fraud precision and recall by at most 0.2%.", "kind": "measured", "source": null, "metric": "relative change", "value": "0.2 %", "unit": "% relative to full sequence", "baseline_value": null, "n": null, "setup": "External fraud, staleness window = 99.9th percentile of observed delays; credit: no more than 0.9 % drop", "quote": "neither precision nor recall drops by more than 0.2 % relative to the full sequence", "table": null, "note": "Model size not stated for this test.", "where": "3.4.2"},
+  {"claim": "AML: PRAGMA embeddings with a linear probe markedly underperform the network-aware production baseline.", "kind": "measured", "source": null, "metric": "F0.5 (relative)", "value": "-47.1 %", "unit": "% vs baseline", "baseline_value": null, "n": null, "setup": "AML, linear probe on PRAGMA-L embeddings", "quote": "PRAGMA suffers a 47.1 % drop in F0.5 compared to the network-aware baseline", "table": null, "note": null, "where": "3.4.6, Table 6"},
+  {"claim": "Sequence packing with dynamic batching speeds pre-training throughput versus padding.", "kind": "measured", "source": null, "metric": "throughput", "value": "2-5x", "unit": "x vs padded baseline", "baseline_value": null, "n": null, "setup": "varlen attention, shard-based batching; depends on sequence-length distribution", "quote": "yields a 2–5× throughput improvement, depending on the sequence length distribution in the dataset", "table": null, "note": "Text reads '2–5×' (confirmed).", "where": "2.4"},
+  {"claim": "Pre-training corpus size.", "kind": "measured", "source": null, "metric": "corpus", "value": "26 M users, 111 countries, 24 B events, 207 B tokens", "unit": null, "baseline_value": null, "n": null, "setup": "25 months, 2023 to 2025", "quote": "26 M user records spanning 111 countries, accumulating 24 B events that total 207 B tokens", "table": null, "note": null, "where": "2.1"}
+ ],
+ "limits": [
+  "Absolute metrics withheld as commercially sensitive; every result is a relative delta (x/baseline - 1)%, so no result can be reproduced or placed on a common scale.",
+  "Baselines are internal, unnamed 'task-specific' production models; their architecture, features and tuning are not described, so gains of +130% PR-AUC cannot be interpreted.",
+  "Data, code and weights not released; no licence stated in the text.",
+  "No operating points, thresholds or alert rates for fraud; only relative precision and recall.",
+  "No online or A/B results; evaluation is offline only. Serving is described only in terms of event staleness (no latency or cost numbers).",
+  "No seeds, variances, confidence intervals or significance tests; the non-monotone scaling in comm. engagement ROC-AUC (+19.6/+17.4/+20.4) is within unknown noise.",
+  "Pre-training split (temporal or by user) and downstream dataset sizes not stated; downstream folds are 'pre-defined'.",
+  "Scratch comparison is only at PRAGMA-M; no model-size scaling law or data-scaling ablation; no masking-variant ablation (the three masking types are not ablated).",
+  "Learning rate, schedule, warmup, batch size and steps not given.",
+  "Authors concede AML is a failure: isolated per-record embeddings miss cross-record network structure. Text encoder variant adds about 18% training latency and hurts product rec.",
+  "Authors are Revolut and NVIDIA employees; results are company-internal."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "profile state", "definition": "a set of descriptive key-value pairs in an event-like format, e.g. Plan: metal, timestamped at the evaluation point (or cut-off date during pre-training)", "where": "2.1.2"},
+  {"term": "life-long events", "definition": "key-value pairs that, unlike regular profile attributes, each carry an individual timestamp recording a first occurrence, e.g. Lifelong: first_topup", "where": "2.1.2"},
+  {"term": "evaluation point", "definition": "designated cut-off date up to which the event history is aggregated", "where": "Fig 2"}
+ ],
+ "lineage": [
+  {"work": "BERT (Devlin et al., 2019)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "MLM objective and [USR]/[EVT] token convention", "quote": "PRAGMA is pre-trained with an MLM objective following BERT"},
+  {"work": "nuFormer (Braithwaite et al., Your spending needs attention)", "year": 2025, "arxiv": "2507.23267", "relation": "related", "note": "decoder pre-trained on transactions, adds DCNv2 tabular network at fine-tuning; closest competitor", "quote": null},
+  {"work": "TransactionGPT (Dou et al.)", "year": 2025, "arxiv": "2511.08939", "relation": "related", "note": "3D-Transformer, autoregressive over payment histories", "quote": null},
+  {"work": "BERT4Rec (Sun et al., 2019)", "year": 2019, "arxiv": null, "relation": "related", "note": "bidirectional masked item prediction for recommendation (CIKM 2019)", "quote": null},
+  {"work": "SASRec (Kang and McAuley, 2018)", "year": 2018, "arxiv": null, "relation": "related", "note": "self-attentive sequential recommendation (ICDM)", "quote": null},
+  {"work": "TabPFN (Hollmann et al., 2023; Nature 2025) and TabPFN-2.5", "year": 2025, "arxiv": "2511.08667", "relation": "related", "note": "tabular FM pre-trained on synthetic data; PRAGMA uses self-supervision on real ledgers (arXiv id is for TabPFN-2.5)", "quote": null},
+  {"work": "FT-Transformer (Gorishniy et al., 2021), TabTransformer (Huang et al., 2020), SAINT (Somepalli et al., 2021)", "year": 2021, "arxiv": "2106.01342", "relation": "related", "note": "fixed-schema tabular Transformers (arXiv id is SAINT; TabTransformer is 2012.06678)", "quote": null},
+  {"work": "Embeddings for numerical features (Gorishniy et al., 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "periodic embeddings, but periods fixed to calendar cycles", "quote": null},
+  {"work": "LoRA (Hu et al., 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "downstream adaptation", "quote": null},
+  {"work": "Muon (Jordan 2024; Liu et al. 2025)", "year": 2025, "arxiv": "2502.16982", "relation": "uses-method", "note": "pre-training optimiser with AdamW", "quote": null},
+  {"work": "RoPE (Su et al., 2024)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "encodes log-seconds time coordinates", "quote": null},
+  {"work": "FlashAttention (Dao et al., 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "varlen attention kernel for packing", "quote": null},
+  {"work": "NV-Retriever / Nemotron-1B-v2 (de Souza P. Moreira et al.)", "year": 2024, "arxiv": "2407.15831", "relation": "uses-method", "note": "frozen text encoder variant", "quote": null},
+  {"work": "Generative Recommenders (Zhai et al.)", "year": 2024, "arxiv": "2402.17152", "relation": "related", "note": "trillion-parameter sequential transducers", "quote": null},
+  {"work": "ARGUS (Khrylchenko et al.)", "year": 2025, "arxiv": "2507.15994", "relation": "related", "note": "recommender Transformer scaled to 1B", "quote": null},
+  {"work": "TransAct / TransAct V2 (Xia et al.)", "year": 2025, "arxiv": "2506.02267", "relation": "related", "note": "Pinterest user-action models", "quote": null},
+  {"work": "FinBERT, BloombergGPT, FinGPT, Time-LLM, Chronos", "year": 2023, "arxiv": "2303.17564", "relation": "related", "note": "text- or time-series financial FMs (id is BloombergGPT; FinBERT 2006.08097)", "quote": null},
+  {"work": "Meta-learners (Kunzel et al., 2019)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "uplift estimation framework", "quote": null},
+  {"work": "Revolut internal pre-training and downstream datasets", "year": 2026, "arxiv": null, "relation": "uses-data", "note": "not public", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "A single architecture from 10M to 1B parameters that outperforms task-specific models across tasks.", "page": 1, "why": "Radar-style summary of relative gains per task and size."},
+  {"figure": "Fig 2", "caption": "Event timeline overview. ... Both events and attributes share a uniform representation: a timestamp and a set of key-value pairs.", "page": 3, "why": "Shows record = events + profile state + life-long events with synthetic examples."},
+  {"figure": "Fig 3", "caption": "Tokenisation overview. A raw event record is decomposed into a temporal coordinate, semantic types (keys), and values. ...", "page": 5, "why": "Best single diagram of the key/value/time scheme: percentile buckets (perc_24, perc_0), categorical single tokens, BPE pieces (met, al, plan), log-seconds plus calendar features."},
+  {"figure": "Fig 4", "caption": "PRAGMA backbone overview. ... A Profile State Encoder maps profile state ... into a [USR] embedding, while an Event Encoder independently maps the tokens of each event into an [EVT] embedding and adds calendar features. A History Encoder then contextualises the sequence ...", "page": 6, "why": "Architecture: three-encoder hierarchy and fusion."},
+  {"figure": "Fig 5", "caption": "Comparison of text embeddings with PRAGMA (left) and a version using pre-trained Nemotron-1B-v2 (right).", "page": 13, "why": "Text-value path: BPE lookup vs one frozen embedding per string."},
+  {"figure": "Table 2", "caption": "Left: LoRA vs task-specific baselines (S/M/L). Middle: LoRA vs embedding probes. Right: PRAGMA-M LoRA vs scratch.", "page": 10, "why": "Core result table covering probe, LoRA and scratch in one place (note extracted text prints Emb columns as dashes)."}
+ ],
+ "code": [
+  {"where": "2.2 Temporal Information", "snippet": "8·ln(1+t/8)", "verbatim": true},
+  {"where": "2.3.1 Eq. 1", "snippet": "x = PosEmb(E(k) + E(v)), x in R^{n x d}", "verbatim": false}
+ ],
+ "problems": [
+  "No appendix and no stated licence in the PDF text; licence could not be determined from the paper.",
+  "Table 2 text extraction interleaves columns; the S/M/L LoRA-vs-baseline, LoRA-vs-Emb and M LoRA-vs-Scratch blocks were assigned by cross-checking with section 3.3 and 3.4.1 prose (e.g. +20.4 % credit PR-AUC peak at M; +18.6 % comm. engagement vs scratch).",
+  "Table 1 column labels (Profile/Event/History) are depths of the three encoders per its caption; the numeric columns come out as S: 1,5,2,3; M: 3,16,6,8; L: 9,45,18,16.",
+  "Parameter counts per encoder branch not stated; LoRA trainable share given only as ~2-4%.",
+  "Section 2.3 says 'Event Encoder ... outputs ... [EVT]' and text of 3.1.2 says LoRA overhead '2-4 %', consistent. Some sections of 3.4.3 say fraud 'particularly valuable' in conclusion while text of 3.4.3 omits fraud numbers (only Table 3).",
+  "No embedded instructions found."
+ ]
+}

@@ -100,6 +100,7 @@ cleaned: 2026-11-01
 
 | Paper | Why read it | Local | Maps to |
 |---|---|---|---|
+| Ostroukhov et al., [*PRAGMA: Revolut Foundation Model*](https://arxiv.org/abs/2604.08649) (Aug 2026) ⚑ | A masked-modelling encoder over banking events: key, value and time tokens, 26M users, 207B tokens. LoRA beat a frozen probe on six tasks and scratch at 100M; credit PR-AUC +130.2% over the task baseline at 1B, AML 47.1% below. Relative numbers only, baselines unnamed. arXiv v2, read in full | [PDF](../sources/ostroukhov-2026-pragma.pdf) | [05b](notes/05b-transformer-encoders.md#a-token-is-a-design-choice) |
 | Simonyan and Zisserman, [*Very Deep Convolutional Networks for Large-Scale Image Recognition*](https://arxiv.org/abs/1409.1556) (ICLR 2015) | Depth with 3×3 filters only: top-1 val error 29.6% at 11 layers to 25.5% at 19, then flat. 7.3% top-5 test with 7 nets (second place); 6.8% with two nets after the deadline. Single runs. Read in full | [PDF](../sources/simonyan-2014-very-deep-convolutional-networks-large.pdf) | [04](notes/04-convolutional-networks.md#residual-networks) |
 
 ## Courses and videos
