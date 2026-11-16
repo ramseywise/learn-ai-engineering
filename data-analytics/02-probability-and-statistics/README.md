@@ -1,4 +1,4 @@
-# 02 — Probability and Statistics
+# Probability and statistics
 
 > Every analytics decision is a claim about data you have not seen. This pillar is how to make that claim honestly.
 > Jump to: [Reading order](#reading-order) · [Rules of thumb](#rules-of-thumb) · [Deck and practice](#deck-and-practice) · [References](references.md)

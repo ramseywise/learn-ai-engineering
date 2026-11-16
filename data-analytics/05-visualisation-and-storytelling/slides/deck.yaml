@@ -17,12 +17,68 @@ deck:
     choose the right form, draw it in Python, make it explorable, rebuild it in JavaScript, and then get a decision made.
 
 parts:
+  - title: What the dashboard missed
+    overview: true
+    summary: The question · Six steps · What you will be able to do
+    notes: >-
+      Before any library, here is the one question this lecture keeps asking and the six steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Revenue grew and the dashboard stayed green. What did it miss?
+        recall: Where do most analyses fail, according to this lecture?
+        kicker: The idea
+        statement: "Fernhill cut its email budget in January 2025. Revenue kept growing and the dashboard stayed green."
+        attribution: Fernhill Home, a fictional online homewares retailer
+        takeaway: Most analyses fail in the last metre, when a finding reaches someone with ten minutes and a chart they cannot read.
+        source: README.md
+        notes: >-
+          We follow one dataset through every part. Each part opens on a result that looks fine, states the rule behind it, applies it to Fernhill and ends on the usual mistake.
+
+      - layout: flow
+        beat: fundamentals
+        title: Six steps from a chart to a decision
+        card: false
+        recall: Which step of this lecture asks what a dashboard should be built on?
+        answer: The last step, Stack (BI, Python app or full stack), which asks what the dashboard should be built on.
+        steps:
+          - {label: Choose, sub: "which chart fits the question"}
+          - {label: Draw, sub: "static, in Python"}
+          - {label: Explore, sub: "interactive, in plotly"}
+          - {label: Underneath, sub: "D3, Vega-Lite, Plot"}
+          - {label: Decide, sub: "dashboard and sentence"}
+          - {label: Stack, sub: "BI, Python app, full stack", accent: "D4621A"}
+        bullets:
+          - "Each step states **the idea**, gives **the principle**, then **applies** it to Fernhill."
+          - "Each step ends on the mistake it usually produces."
+        takeaway: The steps run from choosing a chart to getting a decision made, and the last one asks what the dashboard should be built on.
+        source: README.md
+        notes: >-
+          Parts one to four are about the chart. Part five covers the dashboard and the single chart and sentence that gets the budget restored. Part six moves to Fernhill's customer segments and measures the cost of each stack.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        card: false
+        recall: Name four things this lecture teaches you to do with a chart.
+        answer: "Choose the right chart for the question, draw it honestly, explore it interactively, and decide: pair a growth metric with a health metric and write the sentence that gets a decision made."
+        cards:
+          - {title: Choose, body: "Name the question before the chart type, use position on a common scale, and avoid dual axes and truncated bars."}
+          - {title: Draw, body: "Remove clutter, label lines directly and colour by job, with the finding as the title."}
+          - {title: Explore, body: "Keep anything essential visible without hover, and start with Altair, plotly or seaborn before D3."}
+          - {title: Decide, accent: "D4621A", body: "Pair a growth metric with a health metric, pick the stack by the situation, and write the sentence that gets a decision made."}
+        takeaway: You will be able to pick a chart for a question, draw it honestly, ship it, and argue from it to a decision.
+        source: README.md
+        notes: >-
+          These are the README's rules of thumb, which the parts that follow work through on Fernhill's data.
+
   - title: Choosing the form
     summary: Why plot · The grammar · Encoding accuracy · Two honest lies
     notes: >-
       Before any library, we need a way to think about what a chart is and which one fits the question.
     slides:
       - layout: image
+        beat: problem
         title: Summary statistics agree. The data does not.
         kicker: The problem
         image: ../../sources/images/viz-anscombe-quartet.png
@@ -33,10 +89,12 @@ parts:
         takeaway: Plot before you summarise, because identical statistics can hide completely different data.
         source: notes/01-grammar-and-chart-choice.md
         recall: What does Anscombe's quartet show about summary statistics?
+        answer: Four datasets can share the same means, variances, correlation and fit yet tell four different stories, so identical statistics can hide completely different data. Plot before you summarise.
         notes: >-
           This is the oldest argument for plotting. So if we must plot, how do we decide what to draw?
 
       - layout: flow
+        beat: fundamentals
         title: A chart is a set of independent decisions
         kicker: The grammar of graphics
         steps:
@@ -51,10 +109,12 @@ parts:
         takeaway: The grammar treats a chart as data, encodings, scales, marks and facets, so you can change one part at a time.
         source: notes/01-grammar-and-chart-choice.md
         recall: What are the independent parts of a chart in the grammar of graphics?
+        answer: Data, encoding, scale, mark and facet. Because they are independent, you can change one part at a time.
         notes: >-
           Swap the mark and keep everything else, and you have a different chart with the same mapping.
 
       - layout: code
+        beat: practice
         title: Change one word and it is a different chart
         lang: python
         code: |-
@@ -69,10 +129,12 @@ parts:
         takeaway: In a grammar-based library the mark is one independent choice, so comparing forms costs a single word.
         source: notes/01-grammar-and-chart-choice.md
         recall: In Altair, what do you change to compare a line with bars on the same encodings?
+        answer: "Only the mark: swap mark_line() for mark_bar() or mark_circle(). The data and encodings stay the same, so comparing forms costs a single word."
         notes: >-
           This is a compressed form of the code in practice/ch01_grammar_and_choice.py, which adds styling and titles.
 
       - layout: table
+        beat: fundamentals
         title: Choose the chart by the question
         kicker: Then check the encoding
         header: ["The question", "Reach for", "Why"]
@@ -86,11 +148,13 @@ parts:
         takeaway: Name the question first, then choose the form whose encoding answers it most accurately.
         source: notes/01-grammar-and-chart-choice.md
         recall: How do you choose a chart form?
+        answer: Name the question first (change over time, biggest category, share, distribution, relationship), then choose the form whose encoding answers it most accurately, such as a line, sorted bars, histogram or scatter.
         notes: >-
           Cleveland and McGill's experiments order the encodings: position on a common scale first, then length, angle
           and slope, then area, then shading. That ranking is why bars usually beat pies.
 
       - layout: compare
+        beat: pitfalls
         title: Two ways an honest dataset gets misrepresented
         kicker: Honest data, misleading chart
         emphasis: none
@@ -109,6 +173,7 @@ parts:
         takeaway: Dual axes and truncated bars both let a scale choice manufacture the message, so use panels and zero baselines.
         source: notes/01-grammar-and-chart-choice.md
         recall: How do dual-axis charts and truncated bars each mislead, and what is the fix?
+        answer: Dual axes get crossing points from two arbitrary scales, and truncated bars make a bar's length exaggerate the gap (about 13% looks like about 460%). Use two panels or an index, and start bars at zero.
         notes: >-
           Neither chart contains a false number. The distortion comes entirely from the scale.
 
@@ -118,6 +183,7 @@ parts:
       Now we draw it. A static chart is still what most decisions see, in a memo or a slide.
     slides:
       - layout: image
+        beat: problem
         title: The default chart is correct and tells you nothing
         kicker: The problem
         image: ../../sources/images/viz-matplotlib-default-chart.png
@@ -128,10 +194,12 @@ parts:
         takeaway: Default styling draws the data correctly but leaves every decision about emphasis to the reader.
         source: notes/02-matplotlib-and-seaborn.md
         recall: What is wrong with a default matplotlib chart even though the data is right?
+        answer: Its box, ticks and legend compete with the data and the key event is not marked, so every decision about emphasis is left to the reader.
         notes: >-
           Nothing here is false. It simply does not help you see anything.
 
       - layout: steps
+        beat: fundamentals
         title: Remove first, then direct attention
         kicker: Declutter in order
         steps:
@@ -143,10 +211,12 @@ parts:
         takeaway: Every element must earn its place, and one shared style module keeps those choices from drifting.
         source: notes/02-matplotlib-and-seaborn.md
         recall: How do you decide what stays on a chart, and keep those choices consistent?
+        answer: "Make every element earn its place: remove spines, heavy gridlines and ticks, label lines directly and mark the event. Set the style once in a shared module (rcParams, fixed colour per entity) so it cannot drift."
         notes: >-
           Make the choices once in practice/chartstyle.py, not chart by chart.
 
       - layout: image
+        beat: practice
         title: Small multiples show what four tangled lines hid
         kicker: Same data, one panel per channel
         image: ../../sources/images/viz-small-multiples-repeat-rate.png
@@ -157,10 +227,12 @@ parts:
         takeaway: Small multiples showed Fernhill's repeat rate dropping in every channel at the same moment, which four tangled lines on one chart hid.
         source: notes/02-matplotlib-and-seaborn.md
         recall: What did small multiples reveal about Fernhill's repeat rate that a single chart hid?
+        answer: The repeat rate drops in every channel at the same moment, so the fall is not only a change in channel mix.
         notes: >-
           The whole of chapter five depends on this view: the fall is within every channel as well as in the mix.
 
       - layout: code
+        beat: practice
         title: Put the choices in one place so they cannot drift
         lang: python
         code: |-
@@ -178,10 +250,12 @@ parts:
         takeaway: Set matplotlib's rcParams once in a shared module and draw through ax, so styling stays consistent across charts.
         source: notes/02-matplotlib-and-seaborn.md
         recall: How do you apply one consistent style across all your matplotlib charts?
+        answer: Set rcParams once in a shared module such as chartstyle.py and draw through ax methods rather than plt, so styling stays consistent across charts.
         notes: >-
           A compressed form of practice/chartstyle.py, which has more settings.
 
       - layout: compare
+        beat: fundamentals
         title: Matplotlib draws. Seaborn does the statistics.
         emphasis: none
         left:
@@ -199,9 +273,27 @@ parts:
         takeaway: Use seaborn for statistical views from tidy data, then adjust the matplotlib objects it returns.
         source: notes/02-matplotlib-and-seaborn.md
         recall: How do seaborn and matplotlib relate?
+        answer: "Seaborn is built on matplotlib: it takes tidy data and column names, adds grouping, intervals and facets, and returns matplotlib objects you then adjust. They are not rivals."
         notes: >-
           Seaborn is built on matplotlib, so the two are not rivals. Heatmaps need care with colour too: use a diverging
           scale only where a midpoint means something.
+
+      - layout: table
+        beat: pitfalls
+        title: Four habits that quietly break a chart
+        recall: Which four habits break a matplotlib chart, and what fixes each?
+        answer: "Mixing plt and ax: start with fig, ax = plt.subplots(). Seaborn choosing order: pass order= and hue_order=. Colour following rank: fix one mapping. Wrong save size: set figsize and dpi."
+        header: [Habit, What goes wrong, Fix]
+        widths: [3, 5, 4]
+        rows:
+          - ["Mixing `plt.` and `ax.`", "It works until a second panel appears", "Use `fig, ax = plt.subplots()` from the first line"]
+          - ["Letting seaborn choose the order", "A filter or a refresh can reorder or recolour the chart", "Pass `order=` and `hue_order=`"]
+          - ["Colour that follows rank", "Paid social is blue in one chart and orange in the next, so readers learn the wrong thing", "Fix one mapping, such as `CHANNEL_COLOUR`"]
+          - ["Saving at the wrong size", "Scaling a small PNG up in a slide makes the chart look blurred", "Set `figsize` for the final size and `dpi` for the pixels"]
+        takeaway: A chart can draw correctly and still mislead, so fix the axes object, the category order, the colour mapping and the size before you reuse it.
+        source: notes/02-matplotlib-and-seaborn.md
+        notes: >-
+          These are four of the chapter's seven pitfalls. The others are forgetting to close figures in a loop, passing ax to a figure-level seaborn function, and a title that repeats the axes.
 
   - title: Interactive charts
     summary: When it earns its cost · Plotly · Export · Linked views
@@ -209,6 +301,7 @@ parts:
       Hover and zoom feel powerful. They also hand work to the reader, so the first question is whether they will do it.
     slides:
       - layout: statement
+        beat: problem
         title: Who will actually drag that slider?
         kicker: The problem
         statement: "Overview first, zoom and filter, then details on demand."
@@ -221,6 +314,7 @@ parts:
           her own channel next week might.
 
       - layout: table
+        beat: fundamentals
         title: Match the medium to the reader
         header: ["Your reader", "Their question", "Medium"]
         widths: [3, 4, 3]
@@ -232,10 +326,12 @@ parts:
         takeaway: If you can state the finding, state it. Use interaction for readers with their own questions.
         source: notes/03-plotly-and-interactive.md
         recall: When is an interactive chart the wrong choice?
+        answer: "When you can state the finding: then state it, for example in a static chart with the answer in the title. Interaction suits readers with their own questions, such as an analyst checking their segment."
         notes: >-
           Notice what is missing: using interaction simply because it is available.
 
       - layout: code
+        beat: practice
         title: A plotly figure is a dictionary until the browser reads it
         lang: python
         code: |-
@@ -252,10 +348,12 @@ parts:
         takeaway: Plotly figures are JSON rendered by plotly.js, so any tooltip field must ship in the page and be templated.
         source: notes/03-plotly-and-interactive.md
         recall: What is a plotly figure under the hood, and why does custom_data matter?
+        answer: It is JSON that plotly.js renders in the browser. custom_data ships extra fields such as sessions and orders with the page so a hovertemplate can show them instead of default column names.
         notes: >-
           The default hover text is what every unconfigured plotly chart shows. Fixing it is most of the work.
 
       - layout: image
+        beat: practice
         title: Export a static copy every time
         kicker: Hover cannot be printed
         image: ../../sources/images/viz-plotly-revenue-by-channel.png
@@ -266,10 +364,12 @@ parts:
         takeaway: Ship inline HTML for email, CDN HTML for hosted pages, and always a static copy because hover cannot print.
         source: notes/03-plotly-and-interactive.md
         recall: How should you ship a plotly chart for email, a hosted page and print?
+        answer: Use inline HTML for email, CDN HTML for hosted pages, and always export a static copy such as a PNG, because hover cannot be printed.
         notes: >-
           The data ships in the page either way, which is why a static plotly file cannot filter ten million rows.
 
       - layout: compare
+        beat: fundamentals
         title: One rich chart, or several linked views?
         emphasis: none
         left:
@@ -287,8 +387,24 @@ parts:
         takeaway: Use plotly for one rich chart and Altair for linked views, since its selections are part of the grammar.
         source: notes/03-plotly-and-interactive.md
         recall: When do you use plotly and when Altair?
+        answer: Use plotly for one rich single chart with hover. Use Altair for linked views, since its selections are declared parameters in the grammar, but note it raises MaxRowsError above 5,000 rows.
         notes: >-
           When the user's choice must trigger a new query, you have outgrown a static file and need a server.
+
+      - layout: cards
+        beat: pitfalls
+        title: Four ways an interactive chart fails its reader
+        recall: Which four mistakes make an interactive chart fail, and what fixes each?
+        answer: "Finding hidden behind hover: put it in the title. Default hover text: write a template. CDN file in email: embed the library. Every point shipped: aggregate first and use go.Scattergl for large scatters."
+        cards:
+          - {title: Finding behind hover, body: "If the reader must discover the point, most will not. Put it in the title, and let hover add details."}
+          - {title: Default hover text, body: "It shows column names and looks unfinished. Write a template."}
+          - {title: A CDN file in email, body: "It opens blank on a plane or behind a strict firewall. For attachments, embed the library."}
+          - {title: Every point shipped, accent: "D4621A", body: "The file grows with the rows. Aggregate first, and use `go.Scattergl` for a large scatter."}
+        takeaway: An interactive chart fails when the finding hides behind hover, so state it in the title, template the hover text, embed the library for email and aggregate before shipping.
+        source: notes/03-plotly-and-interactive.md
+        notes: >-
+          These are four of the chapter's seven pitfalls. The others are relying on the mouse on touch screens, forgetting the static version, and leaving hovermode at its default on many series.
 
   - title: JavaScript underneath
     summary: Three levels · The data join · One chart three ways
@@ -296,6 +412,7 @@ parts:
       Everything interactive so far ran as JavaScript. Now we meet that layer and see what writing it directly buys.
     slides:
       - layout: statement
+        beat: problem
         title: What happens when no library has your chart?
         kicker: The problem
         statement: "D3 has no barChart(). It binds data to document elements and gives you the geometry."
@@ -307,6 +424,7 @@ parts:
           Sooner or later someone asks for a chart no library offers, or one that has to live inside a web product.
 
       - layout: flow
+        beat: fundamentals
         title: Three levels, and each one decides more for you
         steps:
           - {label: D3, sub: "scales, joins, shapes"}
@@ -316,10 +434,12 @@ parts:
         takeaway: D3, Vega-Lite and Plot sit at different levels of abstraction, and Altair is a Python route to Vega-Lite.
         source: notes/04-javascript-d3-vega-lite-observable-plot.md
         recall: What is the relationship between Altair and Vega-Lite?
+        answer: "Altair is a Python route to Vega-Lite: it generates Vega-Lite JSON specs, which the browser then renders to SVG or Canvas."
         notes: >-
           We draw the same Fernhill chart at each level to feel the difference.
 
       - layout: code
+        beat: fundamentals
         title: The data join is the idea that makes D3 D3
         lang: javascript
         code: |-
@@ -334,11 +454,13 @@ parts:
         takeaway: The D3 data join makes page elements match a list of data, creating and removing them as the data changes.
         source: notes/04-javascript-d3-vega-lite-observable-plot.md
         recall: What does the D3 data join do?
+        answer: "It makes page elements match a list of data: needed elements are created, extras are removed, and the page updates as the data changes."
         notes: >-
           A simplified form of step 3 in practice/js/repeat_chart.mjs. Once you see charts as a list of data and a matching
           list of elements, the rest of D3 stops looking like a pile of method chains.
 
       - layout: image
+        beat: practice
         title: The same chart, written by hand in D3
         kicker: 67 lines of chart code
         image: ../../sources/images/viz-js-d3-repeat-rate.png
@@ -349,10 +471,12 @@ parts:
         takeaway: With D3 every element is your code, including large invisible hover targets that thin lines cannot provide.
         source: notes/04-javascript-d3-vega-lite-observable-plot.md
         recall: Why does the D3 chart draw invisible circles?
+        answer: Hover on thin lines is hard to hit, so D3 adds large invisible circles as hover targets. With D3 every element, including these, is your own code.
         notes: >-
           You can test the hover without a browser by firing events under jsdom, but jsdom has no layout, so text measuring needs a real browser.
 
       - layout: table
+        beat: fundamentals
         title: Climb down the ladder only when you must
         header: ["", "D3", "Vega-Lite", "Plot"]
         widths: [2, 3, 3, 3]
@@ -364,8 +488,24 @@ parts:
         takeaway: Use Altair or plotly while you can, Vega-Lite for embedded specs, Plot for speed, and D3 when design justifies it.
         source: notes/04-javascript-d3-vega-lite-observable-plot.md
         recall: When would you pick D3 over Vega-Lite?
+        answer: When the design justifies it, for a new chart form no library offers. D3 is good at new forms but costs the most code (67 lines against 33 for Vega-Lite here).
         notes: >-
           The line counts are this one chart as written, including styling, and are an illustration rather than a benchmark.
+
+      - layout: bullets
+        beat: pitfalls
+        title: Four ways hand-written chart code breaks
+        recall: Which four things break hand-written D3 chart code, and what fixes each?
+        answer: "Local time versus UTC: use scaleUtc and utcFormat. jsdom has no layout: test text measuring in a real browser. No xmlns on standalone SVG: set it. file:// blocks modules: serve the folder."
+        bullets:
+          - "**Local time versus UTC:** `d3.scaleTime` and many formatters work in local time, so labels drift by a day or a month. Use `scaleUtc` and `utcFormat` throughout."
+          - "**jsdom has no layout engine:** `getBBox()` and text measuring do not work, so a chart that measures its own labels needs a real browser."
+          - "**No `xmlns` on standalone SVG:** a browser does not need it, but `resvg` and other SVG tools do."
+          - "**`file://` and modules:** browsers refuse ES module imports from local files, so serve the folder."
+        takeaway: Hand-written chart code fails in the environment around it, so use UTC throughout, set xmlns, test in a real browser and serve the folder.
+        source: notes/04-javascript-d3-vega-lite-observable-plot.md
+        notes: >-
+          These are four of the chapter's seven pitfalls. The others are reaching for D3 first, colouring text like the series, and hit targets as thin as the mark.
 
   - title: Dashboards and the decision
     summary: Monitoring · Streamlit and BI tools · The Big Idea · Sizing · Story
@@ -373,6 +513,7 @@ parts:
       Two different jobs: something people monitor, and telling someone what you found so that they act.
     slides:
       - layout: image
+        beat: problem
         title: Fernhill's revenue tile was green the whole time
         kicker: The problem
         image: ../../sources/images/viz-streamlit-dashboard.png
@@ -383,10 +524,12 @@ parts:
         takeaway: Pair a growth metric with a health metric, because anything you can raise by spending looks fine alone.
         source: notes/05-dashboards-and-storytelling.md
         recall: Why pair a growth metric with a health metric?
+        answer: Anything you can raise by spending looks fine alone. Fernhill's revenue was up 6.5% while its repeat rate fell 11.3 points, so the health metric exposes what the growth metric hides.
         notes: >-
           The dashboard did not lie. It answered the question it was built to answer.
 
       - layout: code
+        beat: fundamentals
         title: A Streamlit dashboard is a script that reruns
         lang: python
         code: |-
@@ -405,10 +548,12 @@ parts:
         takeaway: Streamlit reruns the whole script on every widget change, so widgets are plain values and caching is essential.
         source: notes/05-dashboards-and-storytelling.md
         recall: How does Streamlit's execution model work?
+        answer: Each widget change reruns the whole script top to bottom, so widgets are plain values and expensive work such as loading data should be cached with st.cache_data.
         notes: >-
           A compressed form of practice/dashboard_app.py. No callbacks to wire up.
 
       - layout: cards
+        beat: fundamentals
         title: Ask who will change it in six months
         cards:
           - {title: Streamlit, body: "Python in git, with code review and tests. For bespoke tools maintained by people who write Python."}
@@ -417,10 +562,12 @@ parts:
         takeaway: Pick the dashboard tool by who maintains it, because a Streamlit app owned by non-coders becomes a ticket queue.
         source: notes/05-dashboards-and-storytelling.md
         recall: When would you choose a BI tool over Streamlit?
+        answer: "When people who do not write Python must maintain it, such as the marketing team: Metabase or Looker Studio suit standard reporting, whereas a Streamlit app owned by non-coders becomes a ticket queue."
         notes: >-
           Six months from now, if the marketing team wants to edit it, you want them able to.
 
       - layout: statement
+        beat: problem
         title: Write the sentence before you open a slide tool
         kicker: Who, what, how, then the Big Idea
         statement: "Cutting the email budget saved £120k a year and has cost us several times that in margin, so we should restore it and test the effect with a holdout."
@@ -432,6 +579,7 @@ parts:
           Before any chart: who is the audience, what must they know or do, and only then how data supports it. Priya, the CMO, is the audience.
 
       - layout: image
+        beat: fundamentals
         title: One line, one event, and the answer as the title
         kicker: The explanatory version
         image: ../../sources/images/viz-story-explanatory-repeat-rate.png
@@ -442,10 +590,12 @@ parts:
         takeaway: An explanatory chart keeps one series, marks the event, and states the finding in the title.
         source: notes/05-dashboards-and-storytelling.md
         recall: What makes a chart explanatory rather than exploratory?
+        answer: It keeps a single series, marks the one event, and states the finding as a sentence in the title, instead of leaving the reader to discover it.
         notes: >-
           Hold channel rates at 2024 levels and apply the 2025 mix, which gives the mix effect. The remainder is within-channel.
 
       - layout: flow
+        beat: practice
         title: Say the size, the assumptions, and what you do not know
         kicker: Worked sizing
         steps:
@@ -459,8 +609,24 @@ parts:
         takeaway: Report the break-even as well as the estimate, so the reader can see the decision survives its assumptions.
         source: notes/05-dashboards-and-storytelling.md
         recall: Why report the break-even as well as the estimate?
+        answer: So the reader can see the decision survives its assumptions. Here the assumed 40% margin loses about £547k, and the break-even margin is only 8.8%, so the conclusion holds across plausible margins.
         notes: >-
           The margin and revenue-per-repeat figures are assumptions in the code, and Fernhill is synthetic with this effect built in.
+
+      - layout: bullets
+        beat: pitfalls
+        title: Four ways a dashboard or a story loses its reader
+        recall: Which four mistakes lose the reader of a dashboard or a story, and what fixes each?
+        answer: "Tiles with no comparison: say compared with what. Red and green only: add an arrow and a sign. Buried ask: state the decision first. False precision: say about £550k and show the sensitivity."
+        bullets:
+          - "**Tiles with no comparison:** say compared with what, such as last year, a target or a threshold."
+          - "**Red and green as the only signal:** readers with red-green colour vision deficiency cannot tell them apart. Add an arrow and a sign."
+          - "**Burying the ask:** state the decision you need on the first slide, not after twelve charts of build-up."
+          - "**False precision in a sizing:** say about £550k rather than £546,945, and show the sensitivity."
+        takeaway: A tile needs a comparison and a second signal besides colour, and a story needs its ask first and no more precision than its assumptions allow.
+        source: notes/05-dashboards-and-storytelling.md
+        notes: >-
+          These are four of the chapter's nine pitfalls. The others include a dashboard as the deliverable for a finding, and presenting a before-and-after comparison as causal.
 
   - title: Dashboard stacks
     summary: Three layers · Choosing a stack · What a request costs · Labels · Many points · Colour
@@ -468,17 +634,19 @@ parts:
       The Fernhill analysts have segmented every customer, and the CRM team wants a dashboard by Friday. Which stack, and how do Python results reach a browser?
     slides:
       - layout: statement
-        title: The first draft took ten minutes and has four faults
+        beat: problem
+        title: The CRM team wants a dashboard by Friday
         kicker: The problem
-        statement: "A web endpoint returns the whole customer table, emails included, with no login, and a chart paints four unrelated groups on a numeric scale."
-        attribution: "Fernhill's first draft of the segments dashboard, on 50,000 synthetic customers"
-        takeaway: A dashboard that works on a laptop can still leak, overload and misdraw, so choose the stack and measure the costs.
-        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
-        recall: What is wrong with a first-draft dashboard that returns the customer table and colours by cluster number?
+        statement: "Fernhill's analysts have given every customer a segment, and the CRM team wants to see them on a dashboard by Friday."
+        attribution: "Fernhill's segments dashboard, on 50,000 synthetic customers"
+        takeaway: Before the first line of code, settle which stack the dashboard is built on and how Python results reach a browser.
+        source: notes/06-dashboard-stacks-from-python-to-frontend.md
+        recall: Which two questions must you settle before building the segments dashboard?
         notes: >-
-          This chapter answers the question the draft skipped: which stack should this be built on, and how do Python results reach a browser? You do not need to know React.
+          This chapter answers the question a quick first draft skips: which stack should this dashboard be built on, and how do Python results reach a browser? You do not need to know React. We measure the costs rather than assert them.
 
       - layout: flow
+        beat: fundamentals
         title: Every dashboard does three jobs
         kicker: Where a chart library sits
         steps:
@@ -492,10 +660,12 @@ parts:
         takeaway: A dashboard has analysis, application and presentation layers. Plotly covers only presentation, so "Plotly or Dash?" is not a real choice.
         source: notes/06-dashboard-stacks-from-python-to-frontend.md
         recall: What are the three layers of a dashboard, and which one does Plotly cover?
+        answer: "Analysis, application and presentation. Plotly covers only presentation, so \"Plotly or Dash?\" is not a real choice: Dash is an application layer that draws with Plotly."
         notes: >-
           Dash draws with Plotly, so they do not compete. Keep the three jobs apart and you can change route later without changing the numbers.
 
       - layout: table
+        beat: fundamentals
         title: Python describes the chart, and JavaScript draws it
         kicker: Versions as measured 2 November 2026
         header: ["Python library", "Produces", "Drawn by", "Consequence"]
@@ -509,10 +679,12 @@ parts:
         takeaway: px.scatter sends a JSON figure with every point, and plotly.js draws it, so the library's limits apply even from Python.
         source: notes/06-dashboard-stacks-from-python-to-frontend.md
         recall: What does px.scatter actually send to the browser?
+        answer: A JSON figure that contains every point, which plotly.js then draws, so the library's limits apply even when you write Python.
         notes: >-
           Versions come from practice/ch06_stack_map.py. Altair's documentation says plainly that Altair itself cannot render visualisations. HoloViews draws through Bokeh, Matplotlib or Plotly, so it is the one row here that need not end in JavaScript.
 
       - layout: table
+        beat: fundamentals
         title: Start from the situation, not from what you know
         kicker: Maintenance is our judgement
         header: ["Situation", "Audience", "Maintained by", "Start with"]
@@ -526,10 +698,12 @@ parts:
         takeaway: An internal tool for a named team starts as a Python app such as Streamlit or Dash, and a product feature as FastAPI and React. Go heavier only for a named requirement.
         source: notes/06-dashboard-stacks-from-python-to-frontend.md
         recall: Which stack fits an internal tool for a named team, and which fits a feature in your product?
+        answer: An internal tool for a named team starts as a Python app such as Streamlit or Dash. A feature in your product, for outside users, suits FastAPI and React with TypeScript.
         notes: >-
           Hiring pulls the same way. The team that built the analysis can maintain a Python app. A React front end needs someone who keeps its dependencies and build working after the author moves on.
 
       - layout: cards
+        beat: fundamentals
         title: The full stack in four ideas, without knowing React
         cards:
           - {title: The contract, body: "The JSON shape is the real interface, and the analyst owns it. FastAPI publishes it at /openapi.json."}
@@ -539,10 +713,24 @@ parts:
         takeaway: You can review a React front end by checking its contract, its fetches, and what its types do not guarantee.
         source: notes/06-dashboard-stacks-from-python-to-frontend.md
         recall: How can you review a React front end without knowing React?
+        answer: Check its contract (the JSON shape the analyst owns), its fetches (answers can arrive out of order), and what its types do not guarantee, since TypeScript does not check the answer at run time.
         notes: >-
           The running code is practice/segments_api.py and practice/js/segments_app/main.tsx. A Dash callback's return value works the same way as a React component's.
 
+      - layout: statement
+        beat: problem
+        title: The first draft took ten minutes and has four faults
+        kicker: The problem
+        statement: "A web endpoint returns the whole customer table, emails included, with no login, and a chart paints four unrelated groups on a numeric scale."
+        attribution: "Fernhill's first draft of the segments dashboard, on 50,000 synthetic customers"
+        takeaway: A dashboard that works on a laptop can still leak, overload and misdraw, so choose the stack and measure the costs.
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
+        recall: What is wrong with a first-draft dashboard that returns the customer table and colours by cluster number?
+        notes: >-
+          The next slides take the draft's faults in turn: the route, the download, the labels, the points and the colour.
+
       - layout: code
+        beat: fundamentals
         title: One short route closes the API faults
         kicker: The row-level route
         lang: python
@@ -570,10 +758,12 @@ parts:
         takeaway: Permissions, field lists and row caps belong on the server, where a caller cannot go around them.
         source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Where do permissions, field lists and row caps belong, and why?
+        answer: On the server, because a caller can go around anything kept in the front end. There they are enforced even on a direct call.
         notes: >-
           The draft's faults map to OWASP API Security Top 10, 2023: no login, no per-object permission, every column returned, no limit on rows. The rows contain emails, and the response does not, because response_model filters the output. The demo keys are stand-ins: a real deployment uses single sign-on and verifies a signed token, and a key compiled into a front-end bundle is public. Keyset pagination says "after the last id I saw" rather than "skip 40,000 rows".
 
       - layout: image
+        beat: practice
         title: The draft's data weighs as much as the largest library
         kicker: Fix the data first
         image: ../../sources/images/viz-segments-what-the-browser-downloads.png
@@ -585,10 +775,12 @@ parts:
         takeaway: All 50,000 customers gzip to 1,419 KB, about the same as all of plotly.js at 1,449 KB, so fix the data before choosing a library.
         source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Which is heavier, 50,000 customers as JSON or all of plotly.js, and what does that imply?
+        answer: All of plotly.js is slightly heavier (1,449 KB against 1,419 KB gzipped), so the data is about as large as the biggest library. Fix the data first, before choosing a library.
         notes: >-
           Timings: Apple M4 Pro with 24 GB, Python 3.13.15, FastAPI TestClient, no network and no TLS, measured 2 November 2026; latency is uncompressed, and a real network would add to every row. Dash's first load fetched 21 files, about 1,901 KB if gzipped; our React page 5 files, about 177 KB. That gap matters on phones and hardly at all on office broadband.
 
       - layout: table
+        beat: fundamentals
         title: Refitting on a filter changes what the labels mean
         kicker: Share of customers changing group
         header: ["Refit on", "Well-separated groups", "Overlapping groups"]
@@ -600,10 +792,12 @@ parts:
         takeaway: The objection to refitting is meaning rather than speed, so publish one table and let the filter select rows from it.
         source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Why not refit the clustering when a user filters?
+        answer: Because it changes what the labels mean, not because it is slow. Refitting on spend above the median moved 14.8% of well-separated customers to another group, so publish one table and let filters select rows.
         notes: >-
           One k-means fit took about 49 ms on this laptop, so speed would not settle it. The cluster ids are arbitrary too: a new seed on overlapping data kept the same id for only 49.1% of customers, with ARI 0.994. These groups are planted and simple, so treat the percentages as an illustration.
 
       - layout: table
+        beat: fundamentals
         title: WebGL wins from about 10,000 points on this setup
         kicker: Chrome 156, one M4 Pro, one draw
         header: ["Points", "SVG scatter, ms", "WebGL scattergl, ms"]
@@ -616,10 +810,12 @@ parts:
         takeaway: Use WebGL from about 10,000 points, measured on one M4 Pro, and datashader past about a million or to keep the data on a server. Often you need neither.
         source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: When do you reach for WebGL, and when for datashader?
+        answer: Use WebGL (scattergl) from about 10,000 points, measured on one M4 Pro. Use datashader past about a million points or to keep the data on a server. Often you need neither.
         notes: >-
           Reruns moved the WebGL figures by tens of milliseconds, so read the shape. Plotly's page warns of a limit of about 4 to 8 WebGL figures per page. Datashader needs a running Python process to zoom. For the CRM team, a grid of counts at 2.4 KB gzipped is enough.
 
       - layout: image
+        beat: fundamentals
         title: A numeric id invents a scale
         kicker: Colour categories by name
         image: ../../sources/images/viz-segments-numeric-vs-categorical.png
@@ -631,10 +827,12 @@ parts:
         takeaway: Map each segment name to a fixed colour and a second encoding, so nothing depends on order or on colour alone.
         source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: How should you colour customer segments in Plotly?
+        answer: Map each segment name to a fixed colour and add a second encoding such as shape, so colour does not depend on order of appearance or on colour alone.
         notes: >-
           Accessibility is part of this. WCAG 2.2 asks that colour is not the only means of conveying information, that marks reach 3:1 contrast, that there is a table view, and that everything works without a mouse. We have not tested with a screen reader.
 
       - layout: table
+        beat: practice
         title: "Fernhill's choice: the Python app, behind a login proxy"
         kicker: The same page, built twice
         header: ["", "Dash", "FastAPI and React"]
@@ -646,16 +844,35 @@ parts:
         takeaway: A few internal CRM users make this a Python app job. The React version earns its code when the views reach customers.
         source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
         recall: Why does Fernhill's CRM dashboard belong on the Python app route?
+        answer: Only a few internal CRM users need it, so a Python app (Dash, 42 lines, behind the company login proxy) is enough. The React version earns its extra code when views reach customers.
         notes: >-
           All numbers synthetic. If the same numbers were going into a BI tool the company already pays for, publishing the summary table to it would be cheaper still. Line counts include the kept first draft on the API side.
+
+      - layout: table
+        beat: pitfalls
+        title: Three faults a first draft hides on a laptop
+        recall: Which three faults does a first-draft dashboard hide, and what fixes each?
+        answer: "A list endpoint returning the table: return an aggregate and page rows behind a permission. A secret or cap only in the front end: enforce it on the server. Refitting or keying on cluster number: read named labels from a table."
+        header: [Fault, What goes wrong, Fix]
+        widths: [3.5, 5, 4]
+        rows:
+          - ["A list endpoint that returns the table", "Fine on 200 rows, then half a second to answer and 11 MB to read at 50,000", "Return an aggregate by default, and page the row-level route behind its own permission"]
+          - ["A secret or a cap only in the front end", "Anything in the JavaScript bundle is public, and a dropdown does nothing against a direct call", "Keep credentials and limits on the server"]
+          - ["Refitting on a filter, or keying on a cluster number", "Loyal regulars changes meaning when someone moves a slider", "Read named labels from a table"]
+        takeaway: A first draft can pass a demo and still leak rows, trust the front end and change what a label means, so cap on the server and read labels from a table.
+        source: notes/06b-dashboard-data-path-points-colour-and-worked-example.md
+        notes: >-
+          These are the three pitfalls the second half of the chapter lists. The first half adds a fourth: choosing the stack by what you know.
 
   - title: Wrap-up
     agenda: false
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb for visualisation and story
         recall: What are the rules of thumb for visualisation and storytelling?
+        answer: "Form: name the question, then pick the encoding. Honesty: bars start at zero, no two y-axes. Style: remove, then emphasise. Interaction: keep essentials visible, export a static copy. Dashboards: take the lightest stack. Story: write the sentence first."
         cards:
           - {title: Form, body: "Name the question, then pick the encoding. Position beats length, which beats angle and area."}
           - {title: Honesty, body: "Bars start at zero. Never use two y-axes. Show the window you have."}
@@ -666,6 +883,7 @@ parts:
         takeaway: Name the question, show it honestly, remove the clutter, and state the decision you want in one sentence.
         source: notes/05-dashboards-and-storytelling.md
       - layout: bullets
+        beat: wrap
         title: Where next
         bullets:
           - "**Applied analyses:** worked business questions using these charts."

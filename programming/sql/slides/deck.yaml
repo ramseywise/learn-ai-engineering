@@ -16,10 +16,59 @@ deck:
     then making it correct and fast in a real system.
 
 parts:
+  - title: What a query asks
+    overview: true
+    summary: The question · Three parts · What you will be able to do
+    notes: >-
+      Before any syntax, the one question this track keeps asking and the three parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What does the database do with your question?
+        recall: What question does every part of the SQL track ask?
+        kicker: The idea
+        statement: You describe the rows you want, and the database decides how to fetch them. Every part asks what it will actually do with what you wrote.
+        attribution: SQL describes a result, not a procedure
+        takeaway: SQL is a description of the rows you want, so each part asks whether the database will read it the way you meant.
+        source: README.md
+        notes: >-
+          Most SQL surprises come from the gap between the order you write a query and the order the database runs it. We close that gap in three steps.
+
+      - layout: flow
+        beat: fundamentals
+        title: Three parts from one table to a real system
+        recall: What are the three parts of the SQL track, in order?
+        steps:
+          - {label: Ask, sub: "one table, filtered and grouped"}
+          - {label: Combine, sub: "joins, CTEs, windows"}
+          - {label: Trust, sub: "correct, fast and safe", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the rule**, then **applies** it."
+          - "Each part ends on the mistake it usually produces."
+        takeaway: The parts run from asking one table a question, to combining rows, to making the answer correct, fast and safe.
+        source: README.md
+        notes: >-
+          Every slide in this deck is a flashcard, so the title is the question and the takeaway is the rule that answers it.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things the SQL track teaches you to do.
+        cards:
+          - {title: Query, body: "Write `SELECT … WHERE … ORDER BY`, group and pivot, and reason with three-valued logic."}
+          - {title: Combine, body: "Choose inner, left, self and anti-joins, and use CTEs, recursion and window functions."}
+          - {title: Design, body: "Write DDL with constraints, upserts and transactions."}
+          - {title: Tune, accent: "D4621A", body: "Read `EXPLAIN QUERY PLAN`, order composite indexes, and pass values as parameters."}
+        takeaway: You will be able to write, combine and design queries, and to read the plan that says how fast they will run.
+        source: README.md
+        notes: >-
+          These are the README's outcomes for notes 01 to 09. The capstone puts them together in an open investigation.
+
   - title: Asking a table a question
     summary: Evaluation order · NULL logic · Aggregates · WHERE and HAVING · Pivots
     slides:
       - layout: statement
+        beat: problem
         title: Why can't WHERE see a column alias?
         kicker: The problem
         statement: You write `SELECT` first, and the database evaluates it nearly last. Most "why can't I use that here" errors come from that gap.
@@ -29,6 +78,7 @@ parts:
         notes: Postgres rejects an alias in WHERE. SQLite accepts it as an extension, so don't rely on it if the query may move.
 
       - layout: flow
+        beat: fundamentals
         title: In what order does SQL evaluate a query?
         kicker: Order of evaluation
         steps:
@@ -45,6 +95,7 @@ parts:
         notes: Large OFFSETs get slow because skipped rows are still read. Production APIs page by key instead.
 
       - layout: table
+        beat: fundamentals
         title: What does a comparison with NULL return?
         kicker: Three-valued logic
         header: [Expression, Result]
@@ -60,6 +111,7 @@ parts:
         notes: "COALESCE is standard and returns the first non-NULL. Prefer half-open ranges to BETWEEN for timestamps. `7 / 2` is 3: integer division catches people in every dialect."
 
       - layout: code
+        beat: pitfalls
         title: Why can NOT IN return no rows at all?
         kicker: The NULL trap
         lang: sql
@@ -80,6 +132,7 @@ parts:
         notes: The same logic is why `person != 'lake'` silently drops NULL rows.
 
       - layout: bullets
+        beat: fundamentals
         title: What is the difference between count(*) and count(col)?
         kicker: Aggregates
         bullets:
@@ -93,6 +146,7 @@ parts:
         notes: SQLite accepting a bare column is a silent bug.
 
       - layout: compare
+        beat: fundamentals
         title: When do you filter with WHERE, and when with HAVING?
         kicker: Rows and groups
         emphasis: none
@@ -117,6 +171,7 @@ parts:
         notes: Fewer rows reach the grouping step when the filter is in WHERE.
 
       - layout: code
+        beat: practice
         title: How do you pivot rows into columns portably?
         kicker: Conditional aggregation
         lang: sql
@@ -135,6 +190,7 @@ parts:
     summary: Join kinds · The LEFT JOIN trap · CTEs · Recursion · Window functions
     slides:
       - layout: statement
+        beat: problem
         title: What happens to a row with no partner?
         kicker: The problem
         statement: A join pairs rows that satisfy a condition. The kind of join decides who survives, and the key decides how many rows come out.
@@ -143,6 +199,7 @@ parts:
         notes: Bookings joined to members stays at 4,044 rows because memid is unique in members.
 
       - layout: table
+        beat: fundamentals
         title: Which rows does each join keep?
         kicker: Join kinds
         header: [Join, Keeps]
@@ -159,6 +216,7 @@ parts:
         notes: UNION deduplicates, UNION ALL keeps duplicates and is faster. Rewrite RIGHT JOIN as LEFT JOIN for readability.
 
       - layout: compare
+        beat: pitfalls
         title: How does WHERE undo a LEFT JOIN?
         kicker: The LEFT JOIN trap
         left:
@@ -182,6 +240,7 @@ parts:
         notes: A facility with no bookings still has one row, so count(*) would return 1.
 
       - layout: code
+        beat: practice
         title: Why use a CTE instead of a nested subquery?
         kicker: Common table expressions
         lang: sql
@@ -202,6 +261,7 @@ parts:
         notes: Postgres 12+, DuckDB and SQLite inline CTEs unless you ask for MATERIALIZED. A correlated subquery in principle runs once per outer row, so watch it on large tables.
 
       - layout: flow
+        beat: fundamentals
         title: How does a recursive CTE work?
         kicker: Recursive CTEs
         steps:
@@ -218,6 +278,7 @@ parts:
         notes: A date series plus a LEFT JOIN makes empty days show up as zeros.
 
       - layout: code
+        beat: practice
         title: How do you get the top N rows per group?
         kicker: Window functions
         lang: sql
@@ -235,6 +296,7 @@ parts:
         notes: Add a unique column to the ORDER BY so the result is deterministic.
 
       - layout: table
+        beat: fundamentals
         title: How do row_number, rank and dense_rank differ?
         kicker: Ranking and frames
         header: [Function, "Ranks for 10, 10, 8", Ties]
@@ -252,6 +314,7 @@ parts:
     summary: Constraints · Transactions · Query plans · Composite indexes · Sargable predicates · Parameters
     slides:
       - layout: statement
+        beat: problem
         title: Who should enforce the rules on your data?
         kicker: The problem
         statement: A schema makes promises about its data, an index makes a query fast at a price, and a parameter keeps a value from becoming code. All three belong below your application.
@@ -260,6 +323,7 @@ parts:
         notes: "Data hygiene: atomic values, a stable meaningless key, no redundant data, explicit units."
 
       - layout: cards
+        beat: fundamentals
         title: What does each constraint promise?
         kicker: Constraints
         cards:
@@ -272,6 +336,7 @@ parts:
         notes: The foreign keys pragma is the single most common SQLite surprise.
 
       - layout: compare
+        beat: practice
         title: How do you make writes safe to re-run?
         kicker: Upserts and transactions
         emphasis: none
@@ -300,6 +365,7 @@ parts:
         notes: UPDATE or DELETE without WHERE changes every row. A view is a saved query, so it always reflects current data.
 
       - layout: flow
+        beat: practice
         title: How do you read a query plan?
         kicker: EXPLAIN QUERY PLAN
         steps:
@@ -315,6 +381,7 @@ parts:
         notes: Real plan from clubdata.db. Postgres and DuckDB use EXPLAIN ANALYZE, so compare estimated with actual rows. A big gap means stale statistics.
 
       - layout: table
+        beat: fundamentals
         title: Which queries can use an index on (memid, starttime)?
         kicker: Composite indexes
         header: [Query, "Uses the index?"]
@@ -329,6 +396,7 @@ parts:
         notes: "A B-tree lookup costs O(log n) against a full scan's O(n). Every write also updates every index, and low-selectivity predicates rightly ignore it."
 
       - layout: table
+        beat: pitfalls
         title: What makes a predicate sargable?
         kicker: Sargable predicates
         header: [Not sargable, Rewrite]
@@ -343,6 +411,7 @@ parts:
         notes: Columnar engines such as DuckDB and BigQuery use zone maps rather than B-trees, so read fewer columns and partition instead.
 
       - layout: compare
+        beat: practice
         title: How do values get from Python into SQL safely?
         kicker: Parameters
         left:
@@ -368,6 +437,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What are the SQL rules?
         recall: "How do you handle `NULL`, joins, slow queries and user values?"
         cards:
@@ -380,6 +450,7 @@ parts:
         notes: These condense the ten notes.
 
       - layout: steps
+        beat: wrap
         title: How do you practise all of it at once?
         kicker: Capstone
         steps:

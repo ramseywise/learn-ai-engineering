@@ -15,6 +15,57 @@ deck:
     refund agent, watch it fail in the ways production agents fail, and add one piece of harness for each
     failure. By the end every piece you see in a serious agent will have a reason.
 parts:
+  - title: What surrounds the model
+    overview: true
+    summary: The question · Six parts · What you will be able to do
+    divider: true
+    agenda: true
+    notes: >-
+      Before any piece of harness, here is the one question this lecture keeps asking about the refund agent and the six parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        kicker: The idea
+        title: What must surround a model that works in a demo?
+        statement: "A refund agent works once in a demo. What has to sit around the model so that it holds over many steps, many hours and many agents, and how do we know it still does?"
+        attribution: "The running example: one refund agent, grown from demo to production harness (notes/01)"
+        takeaway: Harness engineering is building everything between the request and the output except the weights, so that an agent that works once keeps working.
+        recall: What question does every part of this lecture ask about the refund agent?
+        source: README.md
+        notes: >-
+          One refund agent stays with us the whole way. Each part opens with the way it fails, states the rule behind the fix, applies the rule to the agent, and ends on the mistake the fix usually produces.
+      - layout: flow
+        beat: fundamentals
+        title: Six parts, from a demo to a system that holds
+        recall: What are the six parts of this lecture, in order?
+        steps:
+          - {label: Why it fails, sub: "steps compound, anatomy"}
+          - {label: What it may touch, sub: "tools, boundaries"}
+          - {label: Knowing it is done, sub: "checks, evaluators"}
+          - {label: Surviving hours, sub: "state, handoffs"}
+          - {label: More agents, sub: "subagents, maturity"}
+          - {label: The next session, sub: "repo, scope", accent: "D4621A"}
+        bullets:
+          - "Notes 01 to 08 take the harness apart as components, and notes 09 and 10 put it into a real repo."
+          - "Each part ends on the mistake the fix usually produces."
+        takeaway: The lecture runs from why a demo fails, through tools, boundaries, checks, long runs and more agents, to the repo a fresh session reads.
+        source: README.md
+        notes: >-
+          The reading order in the README is the same order as the parts: what a harness is, tools and boundaries, verification, long-horizon execution, orchestration, and the repo.
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with an agent.
+        cards:
+          - {title: Diagnose, body: "Restate an agent failure as a missing piece of harness, and ratchet the fix in."}
+          - {title: Constrain, body: "Write a tool description a reader with no docs can use, and match enforcement to the cost of being wrong."}
+          - {title: Verify, body: "Make done checkable with layered checks, a separate evaluator and a ceiling on every retry."}
+          - {title: Sustain, accent: "D4621A", body: "Hand state between sessions, scope work to one feature and add agents only when the task needs them."}
+        takeaway: You will be able to restate a failure as harness, constrain tools, make done checkable and keep an agent going across sessions and agents.
+        source: README.md
+        notes: >-
+          These follow the README's reading order: what a harness is, tool design and boundaries, verification, long-horizon execution, orchestration, and the repo as system of record.
+
   - title: Why the demo fails
     summary: Steps compound · The model is rarely the problem · What a harness contains
     divider: true
@@ -24,6 +75,7 @@ parts:
       that the fix lives outside the model, then the anatomy of what you have to build.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: A reliable step is not a reliable agent
         statement: "A step that works 90% of the time, chained five times, lands near 60%."
@@ -37,6 +89,7 @@ parts:
           many more than five steps. So how do we get reliability? The instinct is a better model. The evidence
           says otherwise.
       - layout: table
+        beat: fundamentals
         kicker: The equation
         title: Agent equals model plus harness, on one refund
         lead: "Agent = LLM + [Context + Tools + Constrain + Verify + Correct]"
@@ -58,6 +111,7 @@ parts:
           refund above the order total, a query confirms it landed, and a timeout retries on its own. Let's see
           what those rows look like in code.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: The harness checks what the model cannot promise
         lang: python
@@ -85,6 +139,7 @@ parts:
           refund is appropriate. But the ceiling, the retry and the confirmation are ordinary code. None of it
           depends on the model behaving. Is this really where the gains are? Here is the measurement.
       - layout: image
+        beat: practice
         kicker: The evidence
         title: Better interfaces beat a better model
         image: ../sources/images/agashe-evolving-agent-interfaces-fig2.png
@@ -102,6 +157,7 @@ parts:
           parameter model went from 5.6 to 21.3 percent, above Opus 4.8 at 20.6, and the cost axis tells the
           rest of the story. So when our refund agent fails, what should we say about it?
       - layout: table
+        beat: pitfalls
         kicker: The reframe
         title: Failures are configuration, not model limits
         header: [Failure, Not this, But this]
@@ -120,6 +176,7 @@ parts:
           each middle cell is a thing you can only complain about. Refusing the middle column is the habit
           this pillar is trying to teach. So what must any harness contain, at minimum?
       - layout: cards
+        beat: fundamentals
         kicker: The minimum
         title: Four parts every harness needs
         cards:
@@ -140,6 +197,7 @@ parts:
           it? For a refund, rollback is a real question, and it is the one teams most often have no answer to.
           The baseline is the one they fake, with a "looks good" in place of a binary check.
       - layout: flow
+        beat: fundamentals
         kicker: How a harness grows
         title: Every failure tightens the ratchet
         steps:
@@ -160,6 +218,7 @@ parts:
           permanent check. That is why a good AGENTS.md reads like a list of past accidents. A line with no
           accident behind it is a guess. Which subsystems are there to choose from?
       - layout: image
+        beat: fundamentals
         kicker: The anatomy
         title: Five subsystems, seen in one small harness
         image: ../sources/images/faldor-gemini-argon-minecraft-fig2.png
@@ -176,6 +235,7 @@ parts:
           can point at each of the five questions in this figure. When something fails, ask which of the five
           owned it. Usually it is feedback, because agents are rarely stuck. They are confidently wrong.
       - layout: steps
+        beat: practice
         kicker: Monday morning
         title: Start from the minimum viable harness
         steps:
@@ -202,19 +262,21 @@ parts:
       to stop it when it shouldn't. Most of what passes for a boundary here turns out to be a polite request.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
-        title: A deny rule on rm is not a boundary
-        statement: "A `Bash(rm:*)` deny rule held against `rm -f`. A file-writing tool overwrote the canary anyway."
-        attribution: "The canary pattern: destroy a file with no rules, then test each route with rules on (notes/04)"
-        takeaway: A command rule covers one spelling of an effect, so enumerate effects and test each route instead of trusting the rule.
-        recall: Why did a deny rule on rm fail to protect the canary file?
-        source: notes/04-execution-boundaries.md
+        title: Rewriting a description changes how well the tool is used
+        statement: "Rewriting only the tool descriptions raised multi-step query success from 33.5 to 41.5."
+        attribution: "Guo et al. (2026, preprint): StableToolBench, GPT-4.1 choosing the tools, guideline-based rewrite (notes/03)"
+        takeaway: Rewriting the descriptions alone lifted multi-step success from 33.5 to 41.5, so the description is part of the tool and not documentation about it.
+        recall: What happened to multi-step success when only the tool descriptions were rewritten?
+        source: notes/03-tool-design.md
         notes: >-
-          Here is a boundary test run properly. The team plants a canary file and tries every way to delete it.
-          The deny rule stops rm. Find with delete got past with no refusal recorded. A file-writing tool
-          overwrote it outright. If this is what happens with a deny rule, we need to think about what the
-          agent can do from the very beginning, starting with how it reads a tool.
+          Before the boundaries, the tools. In one benchmark of multi-step queries, rewriting only the developer
+          descriptions lifted success from 33.5 to 41.5, with the same model choosing the tools. Single-step
+          queries gained almost nothing, 59.2 to 61.6, so the gain is in chains of calls. Who reads a description,
+          and what does that reader see?
       - layout: compare
+        beat: fundamentals
         kicker: Tool design
         title: Write tools for a reader with no documentation
         emphasis: right
@@ -242,6 +304,7 @@ parts:
           name, a description and a schema. So when `process_refund` gets called wrongly, read its description as
           if you knew nothing else. What should that description contain?
       - layout: table
+        beat: fundamentals
         kicker: The contract
         title: Five sections make a tool description work
         header: [Section, Purpose]
@@ -262,6 +325,7 @@ parts:
           cheapest upgrade, moving accuracy from about 72 to 90 percent. Then, before shipping any tool, four
           questions.
       - layout: cards
+        beat: fundamentals
         kicker: Before it ships
         title: Four questions decide how a tool is gated
         cards:
@@ -277,6 +341,7 @@ parts:
           make it so, and a retry on timeout could pay twice. Hence "query before mutate" in the note: check
           whether the first attempt landed. Now, how many tools should the agent see at once?
       - layout: image
+        beat: practice
         kicker: The evidence
         title: Discover tools instead of preloading them
         image: ../sources/images/li-ai-agents-in-depth-fig4-2.svg
@@ -293,6 +358,7 @@ parts:
           thirty percent of a 200 thousand token window, before anyone has said anything. So match in two levels
           and append what you need at the end, so the cache survives; Cursor's tool folder cut tokens by 46.9 percent. Skills are the same idea for procedures.
       - layout: compare
+        beat: practice
         kicker: Worked example
         title: A skill description is routing logic
         level: deep
@@ -322,6 +388,7 @@ parts:
           routing logic, and detail goes in the body where it costs nothing until used. So far we have helped the
           agent choose well. Next, tools that cross a process boundary, write to the world or take minutes.
       - layout: table
+        beat: pitfalls
         kicker: Beyond one call
         title: A third-party MCP server is code you didn't write
         lead: Its tool descriptions sit in the model's context, so they steer it.
@@ -342,6 +409,7 @@ parts:
           third-party, its descriptions are text you did not write sitting in the window. The structural defence is
           to break the lethal triad and gate risky calls, as the execution-boundaries note shows.
       - layout: steps
+        beat: fundamentals
         kicker: Write safety
         title: A tool that writes needs four things before it runs
         steps:
@@ -358,6 +426,7 @@ parts:
           token and commit accepts the token once, so a retry with a spent token is rejected. For a live data store,
           register narrow operations rather than a raw execute_sql, and log every call.
       - layout: compare
+        beat: fundamentals
         kicker: Asynchronous tools
         title: Name the initiation, not the completion
         emphasis: right
@@ -389,7 +458,21 @@ parts:
           tools such as timers and shell monitors need precise trigger conditions and enough context in the payload
           that the agent needs no extra query on waking. How the harness merges those events into the trajectory is
           an orchestration question, covered later. First, what happens when the agent chooses badly.
+      - layout: statement
+        beat: problem
+        kicker: The problem
+        title: A deny rule on rm is not a boundary
+        statement: "A `Bash(rm:*)` deny rule held against `rm -f`. A file-writing tool overwrote the canary anyway."
+        attribution: "The canary pattern: destroy a file with no rules, then test each route with rules on (notes/04)"
+        takeaway: A command rule covers one spelling of an effect, so enumerate effects and test each route instead of trusting the rule.
+        recall: Why did a deny rule on rm fail to protect the canary file?
+        source: notes/04-execution-boundaries.md
+        notes: >-
+          Here is a boundary test run properly. The team plants a canary file and tries every way to delete it.
+          The deny rule stops rm. Find with delete got past with no refusal recorded. A file-writing tool
+          overwrote it outright. A rule names one spelling of an effect, so what matters is what each rule costs when it is wrong.
       - layout: table
+        beat: fundamentals
         kicker: Enforcement
         title: Match the enforcement to the cost of being wrong
         lead: A `CLAUDE.md` line is a request the model can ignore. A pre-tool-use hook is a rule it cannot.
@@ -408,6 +491,7 @@ parts:
           sentence, because a sentence is a request. For the refund agent, the ceiling is never-bucket and a
           large refund is ask-first. Under the rules sits the sandbox they run in.
       - layout: steps
+        beat: fundamentals
         kicker: The sandbox
         title: Climb the isolation ladder to match the risk
         axis: stronger isolation ↓
@@ -424,6 +508,7 @@ parts:
           Real isolation begins with the OS, then containers, then microVMs for untrusted code. Pair each rung
           with quotas on CPU, memory, disk, network and wall clock. And inside the sandbox, hooks do the talking.
       - layout: compare
+        beat: fundamentals
         kicker: Feedback
         title: Hooks stay silent on success and loud on failure
         emphasis: right
@@ -450,6 +535,7 @@ parts:
           real failure is lost. Silent success and a verbose failure make the channel worth reading. That leaves
           the question of what guards the system as a whole.
       - layout: image
+        beat: fundamentals
         kicker: Guardrails
         title: Guard at each point where trust changes
         image: ../sources/images/context-engineering-multi-agent-systems-fig8-2.png
@@ -467,7 +553,7 @@ parts:
           the agent may touch. Next question: when has it finished?
 
   - title: How it knows it is done
-    summary: Three layers of checks · A separate evaluator · One feature at a time · Ceilings
+    summary: Three layers of checks · A separate evaluator · Retries and ceilings · Where checks fail
     divider: true
     agenda: true
     notes: >-
@@ -475,6 +561,7 @@ parts:
       a machine checks, split the checker from the builder, and put a ceiling on every recovery path.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: Agents grade their own work generously
         statement: "Solo run: 20 minutes, $9, core gameplay broken. Full harness: 6 hours, $200, a working game."
@@ -488,6 +575,7 @@ parts:
           and produces a working game. About twenty times the cost, for the difference between broken and
           working. How do we build that checker?
       - layout: steps
+        beat: fundamentals
         kicker: Termination
         title: Three layers of checks before anything is done
         axis: cheap → convincing
@@ -503,6 +591,7 @@ parts:
           runs against a test order, then an end-to-end run confirms the money moved in the database. Run them in
           order, and don't count something as done with a layer skipped. But who runs the third layer?
       - layout: flow
+        beat: fundamentals
         kicker: The split
         title: Separate the builder from the judge
         steps:
@@ -522,6 +611,7 @@ parts:
           instead of reading the code. Look at the money in the second run: 114 dollars of building and ten of QA,
           and those ten dollars found features that were only presentational. Cheap checks can decide a lot.
       - layout: image
+        beat: practice
         kicker: The evidence
         title: An observer checks claims against the record
         image: ../sources/images/faldor-gemini-argon-minecraft-fig14.png
@@ -538,6 +628,7 @@ parts:
           message came from a script branch with no guard. Reports are claims. That is why our refund harness
           reads the database row and not the sentence that says the refund succeeded.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Write the sprint contract before the work
         lang: markdown
@@ -563,25 +654,26 @@ parts:
           Grading criteria beat vibes. The contract gets written before the work, so neither side can move the
           goalposts. Exclusions matter most, because without them the evaluator fails work for things nobody
           asked for. And score each dimension separately, because one score out of ten gives nothing to act on.
-      - layout: flow
-        kicker: Scope
-        title: One feature at a time, passed only by evidence
-        level: deep
-        steps:
-          - {label: not_started, accent: "94A3B8"}
-          - {label: active, sub: "WIP = 1", accent: "1E3A5F"}
-          - {label: passing, sub: via its verification run}
-        bullets:
-          - "`blocked` hangs off active, and a script flips the state"
-          - The agent requests verification and never edits the field
-        takeaway: With one active feature and a script that flips the state, an agent cannot overreach or mark its own work as passing.
-        recall: How do WIP = 1 and script-owned feature states stop overreach and under-finishing?
-        source: notes/10-scope-and-done.md
+      - layout: cards
+        beat: pitfalls
+        kicker: What goes wrong
+        title: Four ways verification quietly fails
+        cards:
+          - {title: Done by declaration, body: "The agent says complete with nothing run. Intercept the exit, so it can only request done and the harness decides."}
+          - {title: Unit tests alone, body: "Both mocked sides pass while a relative path meets a callee that expects an absolute one. Add runtime and system layers."}
+          - {title: A verifier that cries wolf, body: "Valid work keeps getting flagged. Measure false positives, and delete a verifier that does not earn its place."}
+          - {title: Shipping on Pass@k, accent: "D4621A", body: "Pass@k shows the agent can do the task. Pass^k shows it succeeds every time, so ship on Pass^k."}
+        takeaway: A check fails when the agent can bypass it, when it sees too little, when it flags good work, or when it measures capability and not reliability.
+        recall: Name four ways a verification step quietly fails.
+        source: notes/05-verification-loops.md
         notes: >-
-          Agents have two scope failures: they do too much at once and they stop too soon. A feature list fixes
-          both, if it is a real primitive. One active item at a time. Each has a behaviour, a verification and a
-          state. And the agent doesn't own the state field: it asks for verification, and a script flips it. Verified completion rate is verified divided by activated, and it sits at 1.0 between features under WIP = 1.
+          Four ways a check lets you down. The agent can declare itself done with nothing run, so the harness
+          intercepts the exit and adjudicates. Unit tests can pass on both mocked sides while the real call breaks.
+          A verifier can flag valid work until throughput falls, so count its false positives. And Pass@k says the
+          agent can do the task, while Pass^k says it does so every time. Then, when a check fails, what should
+          the harness do next?
       - layout: table
+        beat: fundamentals
         kicker: Recovery
         title: Not every failure is worth retrying
         header: [Failure, Response]
@@ -602,6 +694,7 @@ parts:
           feed the validator's message back on a schema violation, never retry a refusal. And remember the
           refund: retrying a timeout without checking whether the first attempt landed can pay twice.
       - layout: cards
+        beat: practice
         kicker: Monday morning
         title: Every recovery path needs a ceiling
         cards:
@@ -623,7 +716,7 @@ parts:
           consecutive failures, and before it existed one session failed over three thousand times.
 
   - title: How it survives hours
-    summary: State in files · Resets and handoffs · A repo the next session can read
+    summary: State in files · Resets and handoffs · Where long runs drift
     divider: true
     agenda: true
     notes: >-
@@ -631,6 +724,7 @@ parts:
       problem here is amnesia, and the solution is to treat the repo as memory.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: Every context window ends in amnesia
         statement: Progress lives in files, not in the context window.
@@ -643,6 +737,7 @@ parts:
           and the window stops mattering, because any new session can read where things stand. Everything else in
           this part follows from that sentence.
       - layout: compare
+        beat: fundamentals
         kicker: The choice
         title: Compaction keeps a trace, a reset keeps what you wrote
         emphasis: none
@@ -668,6 +763,7 @@ parts:
           loses anything not written down, which forces discipline. The answer depended on the model, and it
           keeps changing, so this is a thing to re-test at each upgrade. Either way, the handoff is what counts.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: A handoff separates verified from assumed
         lang: markdown
@@ -694,6 +790,7 @@ parts:
           assumed. A generated summary blurs them, and then the next session trusts something that never ran.
           Write it at about 60 percent of the window, and exit only with a clean build.
       - layout: flow
+        beat: fundamentals
         kicker: Keep going
         title: A Ralph loop makes stopping early harmless
         steps:
@@ -711,6 +808,7 @@ parts:
           makes that harmless. A hook intercepts the exit and re-injects the original prompt, a fresh context reads
           the files, and work continues until the gate passes. How long can this go?
       - layout: image
+        beat: practice
         kicker: The evidence
         title: State outside the window survived 605 deaths
         image: ../sources/images/faldor-gemini-argon-minecraft-fig1.png
@@ -726,60 +824,36 @@ parts:
           the bottom of the timeline, and six restarts. What the team knew survived because it lived in shared
           notes and chat. The repo plays the same role for coding agents.
       - layout: table
-        kicker: The test
-        title: Five questions a fresh session must answer alone
-        lead: Open a new session with no chat history and ask.
-        header: [Question, Answered by]
-        widths: [4, 6]
+        beat: pitfalls
+        kicker: What goes wrong
+        title: Four ways a long run drifts
+        header: [Mistake, Symptom, Fix]
+        widths: [2.4, 3.8, 3.8]
         rows:
-          - ["What is this system?", "`AGENTS.md`, README"]
-          - ["How is it organized?", "`ARCHITECTURE.md`, module docs"]
-          - ["How do I run it?", "`init.sh`, Makefile, package scripts"]
-          - ["How do I verify it?", "Test, lint and check commands"]
-          - ["Where are we now?", "Progress log, feature list, git history"]
-        takeaway: Every question a fresh session cannot answer gets guessed, and every new session guesses again.
-        recall: "What happens to each question a fresh session cannot answer?"
-        source: notes/09-repo-as-system-of-record.md
+          - [The first session writes features, "Every later session re-learns how to start", "Make Phase 0 its own session, with no feature code"]
+          - [No decision log, "A resumed session reverses a choice or retries a rejected one", "Record what was decided, why, and what was rejected"]
+          - ["\"Clean up later\"", "Debug prints and half-done code spread, because agents copy the repo", "Make clean state part of done"]
+          - [Only per-session cleanup, "Each session is tidy while structure drifts over weeks", "Add a periodic mode, and make cleanup idempotent"]
+        takeaway: Long runs drift when a session's start, its reasons and its mess go unrecorded, so each gets its own artifact.
+        recall: Name four mistakes that make a long-running agent drift.
+        source: notes/06-long-horizon-execution.md
         notes: >-
-          Here is a simple audit you can run today. Open a clean session and ask these five questions. Whatever
-          the repo can't answer gets guessed, and it gets guessed again on every session. That is what makes the
-          repo the system of record. The entry point deserves particular care.
-      - layout: code
-        kicker: The entry file
-        title: AGENTS.md is a router, not a manual
-        lang: markdown
-        code: |-
-          ## Overview
-          Python 3.11 FastAPI backend, PostgreSQL 15.
-          ## Quick start
-          Install: make setup. Test: make test
-          ## Hard constraints
-          - All DB queries use parameterized SQLAlchemy
-          - All PRs pass pytest + mypy --strict + ruff
-          ## Topic docs
-          - docs/api-patterns.md: when adding endpoints
-          - docs/database-rules.md: when touching DB code
-        bullets:
-          - "Root file: start near **60 lines**, topic docs **50–150**"
-          - Red lines at the top or bottom, never the middle
-          - "Each rule records its source, scope and expiry"
-        takeaway: The entry file should route to topic docs and keep hard constraints at its edges, so dead rules can be audited and deleted.
-        recall: What goes in AGENTS.md, and where do the hard constraints go?
-        source: notes/09-repo-as-system-of-record.md
-        notes: >-
-          Treat this as an index. A short overview, the commands, the hard constraints at the top where they
-          won't get lost in the middle, and one line per topic doc saying when to read it. Audit rules like
-          dependencies and delete the dead ones. We have one agent working for hours. When do we need several?
+          Four ways a long run drifts. If the first session writes features, every later one re-learns how to
+          start, so Phase 0 gets its own session. The decision log holds exactly the why that compaction loses.
+          Clean up later never happens, because agents copy the patterns already in the repo. And tidy sessions
+          can still hide drift over weeks, so cleanup also runs on a schedule. We have one agent working for
+          hours. When do we need several?
 
   - title: More agents, and when to stop
     summary: Subagents as firewalls · Protocols first · Maturity · Removing what you built
     divider: true
     agenda: true
     notes: >-
-      Multi-agent is the expensive option. This final part says when it pays, what breaks, how to tell where you
+      Multi-agent is the expensive option. This part says when it pays, what breaks, how to tell where you
       stand, and why the last skill in harness engineering is removing things.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: Added agents multiply cost and new failures
         statement: "A single agent with verification is the correct default. Added agents multiply tokens and bring new ways to fail."
@@ -793,6 +867,7 @@ parts:
           outside evaluator, or the branches really are independent. Without one of those, you add cost and
           failure modes and solve nothing.
       - layout: bullets
+        beat: fundamentals
         kicker: The firewall
         title: A subagent is a context firewall first
         bullets:
@@ -809,6 +884,7 @@ parts:
           orchestrator's window stays clean. Then size each subagent down: minimum context, minimum authority,
           minimum budget. What must exist before any of them can collaborate?
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Define interfaces for handoffs, not vibes
         lang: text
@@ -835,6 +911,7 @@ parts:
           engine, two agents were upgraded to return dicts and the writer still expected strings, so the pipeline
           broke at its last step.
       - layout: table
+        beat: pitfalls
         kicker: What breaks
         title: Multi-agent failures are harness bugs
         header: [Failure, Shape, Mitigation]
@@ -852,6 +929,7 @@ parts:
           schema, a missing barrier or a missing arbiter. And if every component passes while the whole run fails,
           look at the handoffs.
       - layout: image
+        beat: practice
         kicker: The engine
         title: A plan-execute engine, end to end
         image: ../sources/images/context-engineering-multi-agent-systems-fig4-1.png
@@ -868,6 +946,7 @@ parts:
           runs it, and a trace records it. Because the plan is data, a human can check it before anything runs,
           which brings us to the most valuable gate you can add.
       - layout: steps
+        beat: fundamentals
         kicker: The pipeline
         title: Put the human gate on the plan
         steps:
@@ -884,6 +963,7 @@ parts:
           Six stages, with the human at stage three. A missing Approve gate is on the list of the five failure
           modes, because plan errors spread into a lot of fully executed work. Now, where do you stand overall?
       - layout: table
+        beat: fundamentals
         kicker: Where you stand
         title: Stage 3 means verification runs without anyone remembering
         header: [Stage, Name, What exists]
@@ -903,6 +983,7 @@ parts:
           others is claiming a stage you are not at. "We have evals" often means a notebook run by hand. So ask:
           can I point to the code that runs it on every task, with no human remembering to? Most teams claiming stage 3 are at stage 1.
       - layout: flow
+        beat: practice
         kicker: Monday morning
         title: On every model upgrade, try removing scaffolding
         lead: Every component encodes an assumption about what the model cannot do on its own.
@@ -920,13 +1001,121 @@ parts:
         notes: >-
           The final habit is subtraction. Every piece we added today assumed the model couldn't do something.
           Models improve. So on each upgrade, disable a component and run the evals. The refund ceiling stays,
-          because it is an external constraint. The sprint decomposition may well go. PRINCE deleted a verifier that never paid off, with no upgrade needed.
+          because it is an external constraint. The sprint decomposition may well go. PRINCE deleted a verifier that never paid off, with no upgrade needed. One piece is not scaffolding to remove: the repo each new session starts from.
+
+  - title: Where the next session starts
+    summary: What a fresh session sees · The entry file · One feature at a time · Where it goes wrong
+    divider: true
+    agenda: true
+    notes: >-
+      One agent can now run for hours and several can share the work. This last part is about what every new
+      session starts from: a map of the repo and a list of what is left to finish.
+    slides:
+      - layout: statement
+        beat: problem
+        kicker: The problem
+        title: A coding agent sees only three things
+        statement: "A coding agent sees the prompt, the files in the repo and tool output. It never sees the Slack thread or the whiteboard decision."
+        attribution: "If it isn't in the repository, it doesn't exist for the agent (notes/09)"
+        takeaway: Decisions that live outside the repository do not exist for the agent, so the repository is where decision information has to be kept.
+        recall: What does a coding agent see, and where must a decision live to reach it?
+        source: notes/09-repo-as-system-of-record.md
+        notes: >-
+          The last place to put the harness is the repo itself. The agent gets three inputs, and the ticket, the
+          thread and Friday's whiteboard are invisible to it, so the repository is the highest-authority spec it
+          has. The work is not writing more documents. It is putting decision information where the agent will
+          find it. How do we check that it does?
+      - layout: table
+        beat: fundamentals
+        kicker: The test
+        title: Five questions a fresh session must answer alone
+        lead: Open a new session with no chat history and ask.
+        header: [Question, Answered by]
+        widths: [4, 6]
+        rows:
+          - ["What is this system?", "`AGENTS.md`, README"]
+          - ["How is it organized?", "`ARCHITECTURE.md`, module docs"]
+          - ["How do I run it?", "`init.sh`, Makefile, package scripts"]
+          - ["How do I verify it?", "Test, lint and check commands"]
+          - ["Where are we now?", "Progress log, feature list, git history"]
+        takeaway: Every question a fresh session cannot answer gets guessed, and every new session guesses again.
+        recall: "What happens to each question a fresh session cannot answer?"
+        source: notes/09-repo-as-system-of-record.md
+        notes: >-
+          Here is a simple audit you can run today. Open a clean session and ask these five questions. Whatever
+          the repo can't answer gets guessed, and it gets guessed again on every session. That is what makes the
+          repo the system of record. The entry point deserves particular care.
+      - layout: code
+        beat: practice
+        kicker: The entry file
+        title: AGENTS.md is a router, not a manual
+        lang: markdown
+        code: |-
+          ## Overview
+          Python 3.11 FastAPI backend, PostgreSQL 15.
+          ## Quick start
+          Install: make setup. Test: make test
+          ## Hard constraints
+          - All DB queries use parameterized SQLAlchemy
+          - All PRs pass pytest + mypy --strict + ruff
+          ## Topic docs
+          - docs/api-patterns.md: when adding endpoints
+          - docs/database-rules.md: when touching DB code
+        bullets:
+          - "Root file: start near **60 lines**, topic docs **50–150**"
+          - Red lines at the top or bottom, never the middle
+          - "Each rule records its source, scope and expiry"
+        takeaway: The entry file should route to topic docs and keep hard constraints at its edges, so dead rules can be audited and deleted.
+        recall: What goes in AGENTS.md, and where do the hard constraints go?
+        source: notes/09-repo-as-system-of-record.md
+        notes: >-
+          Treat this as an index. A short overview, the commands, the hard constraints at the top where they
+          won't get lost in the middle, and one line per topic doc saying when to read it. Audit rules like
+          dependencies and delete the dead ones. Next, the list of what is left to build.
+      - layout: flow
+        beat: fundamentals
+        kicker: Scope
+        title: One feature at a time, passed only by evidence
+        level: deep
+        steps:
+          - {label: not_started, accent: "94A3B8"}
+          - {label: active, sub: "WIP = 1", accent: "1E3A5F"}
+          - {label: passing, sub: via its verification run}
+        bullets:
+          - "`blocked` hangs off active, and a script flips the state"
+          - The agent requests verification and never edits the field
+        takeaway: With one active feature and a script that flips the state, an agent cannot overreach or mark its own work as passing.
+        recall: How do WIP = 1 and script-owned feature states stop overreach and under-finishing?
+        source: notes/10-scope-and-done.md
+        notes: >-
+          Agents have two scope failures: they do too much at once and they stop too soon. A feature list fixes
+          both, if it is a real primitive. One active item at a time. Each has a behaviour, a verification and a
+          state. And the agent doesn't own the state field: it asks for verification, and a script flips it. Verified completion rate is verified divided by activated, and it sits at 1.0 between features under WIP = 1.
+      - layout: cards
+        beat: pitfalls
+        kicker: What goes wrong
+        title: Four ways a feature list stops being a gate
+        cards:
+          - {title: A progress memo, body: "\"Cart mostly done\" makes a fresh session re-derive everything. The scheduler, verifier and handoff must read the list."}
+          - {title: A movable check, body: "Tests deleted or rules changed mid-implementation. Keep the check outside what the agent edits."}
+          - {title: Loose verification, body: "\"Code compiles\" marks a broken feature passing. Verify what a user sees: POST returns 201 and the item is retrievable."}
+          - {title: Wrong granularity, accent: "D4621A", body: "One feature should finish in one session and be written from the user's side, not \"the whole cart\" and not \"add a field\"."}
+        takeaway: A feature list gates completion only when the harness reads it, the agent cannot edit the check, it names behaviour a user sees, and each item fits one session.
+        recall: Name four ways a feature list stops being a gate.
+        source: notes/10-scope-and-done.md
+        notes: >-
+          Four ways a feature list stops working. A progress memo, cart mostly done, makes the next session
+          re-derive everything, so the list has to be something the scheduler, verifier and handoff reporter read.
+          If the agent can delete tests or change rules halfway, the check has moved with it. Verifying that code
+          compiles is not verifying what a user would see. And granularity: implement the shopping cart never
+          finishes, while add a name field to the Cart model makes the list cost more than the work.
 
   - title: Wrap-up
     agenda: false
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         kicker: Closing
         title: Rules of thumb
         cards:
@@ -951,6 +1140,7 @@ parts:
           failure is a build task. Our refund agent ended up with a framework ceiling, a database check, a
           separate evaluator and a handoff file. The model did not change once.
       - layout: bullets
+        beat: wrap
         kicker: Next
         title: Where to go next
         bullets:

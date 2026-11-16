@@ -14,12 +14,64 @@ deck:
     that corrupts a dashboard, a crash that counts a fare twice, and a dashboard nobody knew cost thirty-six thousand dollars a month.
 
 parts:
+
+  - title: What this lecture asks
+    overview: true
+    summary: The question · From a bucket to a bill · What you will be able to do
+    notes: >-
+      Before any tool, here is the one question this lecture keeps asking and the five steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Where should a year of taxi trips live?
+        kicker: The idea
+        recall: What question does every part of this lecture ask about a year of taxi trips?
+        statement: "One year of New York taxi trips has to be stored, kept correct, read as a stream and paid for. What does each choice of layout, format and engine do to the answer and to the bill?"
+        attribution: Synthetic taxi trips, from a warehouse table to a Kafka topic
+        takeaway: Every part of this lecture takes a storage or streaming choice and shows what it does to correctness and cost.
+        source: README.md
+        notes: >-
+          The running question is what a choice costs and what it quietly breaks. Each part opens with a surprising number, states the rule, applies it to the trips, and ends on the usual mistake.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five steps from a bucket to a bill
+        recall: In what order does this lecture take the trips from storage to cost?
+        steps:
+          - {label: Layout, sub: "columns and partitions"}
+          - {label: A log, sub: "files become a table"}
+          - {label: Lake or warehouse, sub: "the system of record"}
+          - {label: Streams, sub: "exactly once, from where"}
+          - {label: The bill, sub: "bytes, slots, egress", accent: "D4621A"}
+        bullets:
+          - "Each step opens with **the idea**, states **the principle**, then **applies** it to the trips."
+          - "Each step ends on the mistake it usually produces."
+        takeaway: The lecture moves from how one table is laid out, through a log and the lake against the warehouse, to streams and then the bill.
+        source: README.md
+        notes: >-
+          The README tells the same story in prose, in six chapters. The object store chapter sits inside the first step, since the layout argument starts there.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with stored and streamed data.
+        cards:
+          - {title: Lay out, body: "Say why layout decides the bill, and what a bucket does and does not guarantee."}
+          - {title: Read a log, body: "Explain how a log turns a bucket into a table in Delta, Iceberg and Hudi."}
+          - {title: Choose, body: "Say what you gain and give up when the lake is the system of record."}
+          - {title: Price, accent: "D4621A", body: "State what at-least-once, exactly-once and watermarks guarantee, and turn bytes, slots and egress into a number."}
+        takeaway: You will be able to lay data out, trust a table, choose a system of record and price it before the invoice arrives.
+        source: README.md
+        notes: >-
+          These come from the question column of the reading order and the rules of thumb in the README.
+
   - title: Layout decides the bill
     summary: Columns · Partitions · Clusters · Shuffles · Buckets
     notes: >-
       We start with one question over one year of trips, and discover that the answer is the same and the cost is not.
     slides:
       - layout: statement
+        beat: problem
         title: The same question reads 1.6 GB or 106 MB
         kicker: The problem
         statement: "Same query, same answer, 15 times fewer bytes. The only difference was how the data was laid out before anyone asked."
@@ -29,6 +81,7 @@ parts:
         notes: >-
           This is a real measurement from the course's BigQuery module. Partitioning by pickup date let the engine skip every other day. So what is it about the storage that makes skipping possible?
       - layout: compare
+        beat: fundamentals
         title: OLTP and OLAP want opposite layouts
         recall: Why does a column store make SELECT star expensive?
         left:
@@ -49,6 +102,7 @@ parts:
         notes: >-
           On our synthetic year, half the file is one unused text column. Naming two columns reads 33 MB instead of 103 MB, before any partitioning at all.
       - layout: code
+        beat: practice
         title: Sorting lets min and max statistics skip row groups
         recall: "Why does sorted data skip row groups when unsorted data skips none?"
         lang: python
@@ -69,6 +123,7 @@ parts:
         notes: >-
           In an unsorted file each row group spans nearly every zone, so its range rules nothing out. Sort, and each group holds a narrow slice. Partitioning does the same by directory, and that is why the estimator can see it in advance.
       - layout: flow
+        beat: fundamentals
         title: A groupBy pays for the shuffle, so aggregate first
         recall: "What does partial aggregation shrink in a groupBy?"
         steps:
@@ -87,6 +142,7 @@ parts:
         notes: >-
           Spark's physical plan does this for you. A join on two large tables shuffles both; broadcast a small one to avoid it. And if your data fits on one machine, DuckDB has no shuffle to pay for at all.
       - layout: code
+        beat: pitfalls
         title: Small files cost requests and break column pruning
         recall: Why did the same one-column query read 12 times more bytes from 1,000 files?
         lang: text
@@ -107,6 +163,7 @@ parts:
           This is a bucket and not a disk: flat keys, no rename, a charge per request. Moving a 2,500-object directory took 3 list calls and 5,000 copy and delete requests. The block turns DuckDB's external file cache off so each query shows its own requests, and other engines differ. Real S3 adds latency per request.
           At list price, 100,000 files scanned every 15 minutes cost about $232 a month in requests, and one compaction costs $0.08. Small files come from streaming sinks, too many partition columns and per-task writes.
       - layout: table
+        beat: pitfalls
         title: Cold tiers lose money once people scan them
         recall: Why does a table scanned twice a month belong in Standard?
         lead: "1,000 GB kept for a year, in USD, at S3 list prices for us-east-1. A read is one full scan."
@@ -122,6 +179,7 @@ parts:
         notes: >-
           Moving 1 TB of 256 KB objects to Glacier Instant Retrieval costs about $78 in transition fees, around 4 months of the saving. A 10 KB object in Standard-IA is billed as 128 KB, about 7 times what Standard charges for it. Add a lifecycle rule to abort incomplete multipart uploads on every bucket as well, since those parts are invisible to a listing and still billed.
       - layout: table
+        beat: fundamentals
         title: A bucket promises one key at a time
         recall: Why can a reader see half a rewrite when every PUT is atomic?
         header: [Case, What S3 documents]
@@ -145,6 +203,7 @@ parts:
       Our nightly job rewrites June and the spot instance dies. Half of June is new, half is gone, and no error appears.
     slides:
       - layout: statement
+        beat: problem
         title: Nothing in a bucket says which files belong together
         kicker: The problem
         statement: "A job dies halfway through rewriting June. Dashboards keep reading the directory and report a wrong number with no error."
@@ -154,6 +213,7 @@ parts:
         notes: >-
           Armbrust and colleagues report that about half of Databricks' support escalations between 2014 and 2016 came from these cloud storage strategies. It is the vendor's own, anecdotal figure, but the mechanism is easy to reproduce.
       - layout: flow
+        beat: fundamentals
         title: Write files first, then claim the next version
         recall: Which single step makes a commit atomic?
         steps:
@@ -172,6 +232,7 @@ parts:
         notes: >-
           The chapter builds this in sixty lines of pyarrow, and it gives you time travel, conflict detection and crash safety almost by accident. Then we find the same thing in Delta's log on disk.
       - layout: code
+        beat: practice
         title: Delta's log on disk after a delete and a merge
         recall: "What limits Delta time travel, and what kind of decision does that make retention?"
         lang: text
@@ -193,6 +254,7 @@ parts:
         notes: >-
           This is real output from deltalake 1.6.6 on a laptop. Copy-on-write means old files stay until cleanup. Forcing retention to zero makes the log list a version whose files are gone.
       - layout: code
+        beat: pitfalls
         title: Two valid commits can still break a rule
         recall: "How do you keep a rule that spans rows safe under concurrent commits?"
         lang: text
@@ -209,6 +271,7 @@ parts:
         notes: >-
           This is write skew from the transactions chapter of the foundations pillar, in a table format. Both jobs read a true snapshot, the rule held for each, and the result is nobody on duty. The chapter maps each log idea to its database name, with pointers into Designing Data-Intensive Applications chapters 7 and 9.
       - layout: table
+        beat: fundamentals
         title: Three formats, one idea, different structures
         recall: "What do the open table formats share, and how do you choose between them?"
         header: ["", "Delta Lake", "Iceberg", "Hudi"]
@@ -223,6 +286,7 @@ parts:
         notes: >-
           These projects copy each other every release. Statements in the 2020 and 2021 papers about Hudi's single writer describe those releases, so do not repeat them as current fact.
       - layout: compare
+        beat: practice
         title: Copy-on-write pays at write, merge-on-read pays at read
         recall: "What should you know before choosing copy-on-write or merge-on-read, and why?"
         left:
@@ -248,6 +312,7 @@ parts:
       With transactions on the lake, one claim follows: why keep a warehouse at all? We test what can be tested.
     slides:
       - layout: statement
+        beat: problem
         title: Two copies of everything, one always behind
         kicker: The problem
         statement: "The lake holds everything, a warehouse holds a copy for BI, and every ETL step between them is a chance to diverge."
@@ -257,6 +322,7 @@ parts:
         notes: >-
           The paper's staleness survey, 86 percent of analysts on out-of-date data, was sponsored by an ETL vendor and quoted by a lakehouse vendor. Note that, then look at the mechanism.
       - layout: code
+        beat: fundamentals
         title: One copy gives three engines, and one trap
         recall: "What do open files give every engine, and what is the trap?"
         lang: text
@@ -277,6 +343,7 @@ parts:
         notes: >-
           The glob resurrected a million rows, with old file versions still on disk. A warehouse could never make this mistake since it hides its files. That is the data independence the paper admits it gives up.
       - layout: compare
+        beat: pitfalls
         title: Where the warehouse still wins
         recall: What did the crash do to each system?
         left:
@@ -296,6 +363,7 @@ parts:
         notes: >-
           Timings are on one laptop, so read only the ratio. The paper's TPC-DS figure, 3,302 seconds for Delta Engine against 2,996 to 37,283 for four anonymised warehouses, is vendor-run. It shows open formats can be fast enough, not that they are faster for you.
       - layout: flow
+        beat: fundamentals
         title: Medallion layers organise fixes, not detection
         recall: "What do medallion layers tell you, and what do they not?"
         steps:
@@ -312,6 +380,7 @@ parts:
         notes: >-
           This is the convention lakehouse teams use. Keep raw data so you can reprocess, and let each layer depend only on the one before. But a stage silently trusts the one before it unless a test checks, which is the next pillar.
       - layout: table
+        beat: practice
         title: Choose by workload, not by camp
         recall: "What is the real decision behind warehouse versus lakehouse?"
         header: ["Your situation", "Lean", "Why"]
@@ -333,6 +402,7 @@ parts:
       Now the trips arrive one by one. A crash can lose or double a fare, and a tunnel makes an event two minutes late.
     slides:
       - layout: statement
+        beat: problem
         title: One fare, counted zero, one or two times
         kicker: The problem
         statement: "A consumer crashes between saving its output and saving its position. What you counted depends on a choice made months ago."
@@ -342,6 +412,7 @@ parts:
         notes: >-
           First, the log itself. Kafka keeps records and each consumer group keeps a position, so reading removes nothing. Order holds within a partition only. That gives replay, and it gives us this choice.
       - layout: code
+        beat: fundamentals
         title: Nine rides at $10, one crash
         recall: Which order loses money and which invents it?
         lang: text
@@ -360,6 +431,7 @@ parts:
         notes: >-
           Plain Python simulation, so you can see each failure. The practice consumer uses enable_auto_commit true, which commits on a timer and can give either failure. A DuckDB version commits totals and offset in one transaction.
       - layout: cards
+        beat: pitfalls
         title: Exactly-once holds inside a boundary
         recall: "What does exactly-once mean, and where does it stop?"
         cards:
@@ -378,6 +450,7 @@ parts:
         notes: >-
           Kleppmann's framing: effectively-once would be the better name. Ask of any such claim, from where to where?
       - layout: flow
+        beat: fundamentals
         title: A watermark decides when a window closes
         recall: "What is a watermark, and what does late data still need?"
         steps:
@@ -396,6 +469,7 @@ parts:
         notes: >-
           Delivery says whether a record arrives. It does not say when. By processing time, the first minute in our simulation shows 53 rides against a true 60.
       - layout: table
+        beat: practice
         title: Allowed lateness trades loss against delay
         recall: "What does a watermark trade off?"
         header: ["Allowed lateness", "Rides dropped of 600", "Lost"]
@@ -419,6 +493,7 @@ parts:
       Everything has a price. Now we find out what the dashboard has been costing.
     slides:
       - layout: statement
+        beat: problem
         title: A dashboard nobody chose to pay $36,000 a month for
         kicker: The problem
         statement: "SELECT star on a 2 TiB table, 96 times a day, at $6.25 per TiB. A column list and a date filter take it to $571."
@@ -428,6 +503,7 @@ parts:
         notes: >-
           The ratios come from compressed Parquet, and BigQuery bills logical bytes. So direction and scale carry over, and the exact factor needs a dry run on your table.
       - layout: cards
+        beat: fundamentals
         title: Four meters, and only two usually matter
         recall: "Where do you start on warehouse cost, and why not storage?"
         cards:
@@ -446,6 +522,7 @@ parts:
         notes: >-
           Listing used: logical active storage at us-central1 and Premium Tier internet to North America, read on the first of November 2026. A hundred Enterprise slots for eight hours a day cost the same as 231 TiB on demand.
       - layout: code
+        beat: practice
         title: Make cost a test that fails at review
         recall: "What does a byte limit in CI change about finding expensive queries?"
         lang: text
@@ -464,7 +541,25 @@ parts:
         source: notes/05-cost.md
         notes: >-
           A two terabyte table scaled by the measured ratio. The first query is stopped before merge with the fix on the screen.
+
+      - layout: table
+        beat: pitfalls
+        title: Four ways a cost control fails
+        recall: Which common cost controls do not do what they appear to?
+        header: [Control, Why it fails]
+        widths: [4, 6]
+        rows:
+          - ["Comparing list prices", "Price per TiB says nothing until you know bytes scanned"]
+          - ["LIMIT as a cost control", "On a non-clustered table it does not change the data read"]
+          - ["Autoscale without a cap", "Capacity pricing with no maximum is unbounded spend"]
+          - ["Cross-region defaults", "A bucket in one region and a warehouse in another pay on each read"]
+        highlight: [1]
+        takeaway: Each of these looks like a control and is not, so check bytes scanned and set a cap before you trust one.
+        source: notes/05-cost.md
+        notes: >-
+          The chapter lists three more: tuning storage first, materialising tables nobody reads, and quoting a price without its date.
       - layout: flow
+        beat: practice
         title: Fix the top twenty in this order
         recall: "Why tune the query before buying capacity?"
         steps:
@@ -490,6 +585,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb
         cards:
           - title: Layout
@@ -501,6 +597,7 @@ parts:
           - title: Cost
             body: Run the arithmetic first, and put a byte limit in CI.
       - layout: bullets
+        beat: wrap
         title: Where next
         bullets:
           - "**Next pillar:** quality and observability. Everything here assumed the data was right."

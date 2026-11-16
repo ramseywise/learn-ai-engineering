@@ -16,11 +16,61 @@ deck:
     and databases.
 
 parts:
+  - title: What a program gets from outside
+    overview: true
+    summary: The question · Three parts · What you will be able to do
+    notes: >-
+      Before any method, the one question this module keeps asking and the three parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: How does a program use what it did not write?
+        recall: What question does every part of Python Informatics ask?
+        kicker: The idea
+        statement: Text arrives from the network, structured data arrives from an API, and results must outlive the run. Every part asks how to turn that into something the program can trust.
+        attribution: Text, data and storage are the three ways a program meets the world
+        takeaway: A program meets the world as text, as structured data and as stored records, and each part asks how to trust it.
+        source: ../../README.md
+        notes: >-
+          Python Foundations handled values the program made itself. Here the values come from outside, so each one needs checking.
+
+      - layout: flow
+        beat: fundamentals
+        title: Three parts from text to a database
+        recall: What are the three parts of Python Informatics, in order?
+        steps:
+          - {label: Text, sub: "regex and the wire"}
+          - {label: Data, sub: "JSON, XML, APIs"}
+          - {label: Objects and storage, sub: "classes and SQLite", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the rule**, then **applies** it."
+          - "Each part ends on the mistake it usually produces."
+        takeaway: The parts run from raw text and HTTP, to parsed data and APIs, to objects and a database that keeps the results between runs.
+        source: ../../README.md
+        notes: >-
+          Every slide in this deck is a flashcard, so the title is the question and the takeaway is the rule that answers it.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things Python Informatics teaches you to do.
+        cards:
+          - {title: Extract, body: "Pull fields out of text with groups, named groups and non-greedy matches."}
+          - {title: Fetch, body: "Fetch with `urllib` and handle status codes."}
+          - {title: Parse, body: "Walk nested JSON, read XML and follow pagination."}
+          - {title: Store, accent: "D4621A", body: "Write classes with validation, and normalise data into `sqlite3` tables with upserts and joins."}
+        takeaway: You will be able to fetch text, parse it into data, and keep the result in a database.
+        source: ../../README.md
+        notes: >-
+          These are the syllabus outcomes for notes 01 to 05 in the Python track README.
+
   - title: Text and the wire
     summary: Regular expressions · HTTP · Status codes · Timeouts
     slides:
       - layout: statement
+        beat: problem
         title: What does a program get from the outside world?
+        revisits: true
         kicker: The problem
         statement: Mostly text. HTTP/1.1 is text over a socket, and what comes back has to be picked apart before you can use it.
         attribution: Extract with a pattern when the text is messy, and use a parser when it has a format.
@@ -29,6 +79,7 @@ parts:
         notes: py4e starts with a raw socket to show that nothing is magic. In practice use a client library.
 
       - layout: table
+        beat: fundamentals
         title: Which regex syntax covers most needs?
         kicker: Regular expressions
         header: [Pattern, Matches]
@@ -45,6 +96,7 @@ parts:
         notes: Raw strings make sure the backslash reaches the regex engine instead of being a Python escape.
 
       - layout: code
+        beat: practice
         title: What does re.findall return if the pattern has a group?
         kicker: The core calls
         lang: python
@@ -60,6 +112,7 @@ parts:
         notes: Use named groups once there is more than one.
 
       - layout: compare
+        beat: pitfalls
         title: What is the difference between .+ and .+?
         kicker: Greedy vs non-greedy
         recall: What is the difference between greedy and non-greedy matching?
@@ -81,6 +134,7 @@ parts:
         notes: "When not to use regex: fixed delimiters (split), HTML or XML (a parser), email validation (a library)."
 
       - layout: flow
+        beat: fundamentals
         title: What actually goes over the wire in HTTP?
         kicker: Request and response
         steps:
@@ -94,6 +148,7 @@ parts:
         notes: You can type this into a raw socket. Every web API is built on it.
 
       - layout: table
+        beat: fundamentals
         title: What does each status class mean, and which do you retry?
         kicker: Status codes
         header: [Status, Meaning, You do]
@@ -108,6 +163,7 @@ parts:
         notes: urllib raises HTTPError for 4xx and 5xx.
 
       - layout: code
+        beat: practice
         title: What must every network call set?
         kicker: urllib
         lang: python
@@ -124,6 +180,7 @@ parts:
     summary: JSON · XML · Calling an API · Keeping keys safe
     slides:
       - layout: statement
+        beat: problem
         title: What does parsing JSON guarantee you?
         kicker: The problem
         statement: Nothing about the shape. `json.loads` gives you dicts of anything, and the bug shows up three functions later.
@@ -132,6 +189,7 @@ parts:
         notes: Pydantic does that validation, in Python 03 note 05.
 
       - layout: flow
+        beat: fundamentals
         title: How does text become data you can trust?
         kicker: Parse, then validate
         steps:
@@ -145,6 +203,7 @@ parts:
         notes: "`json.dumps(data, indent=2)` goes back to text and `json.dump` writes to a file."
 
       - layout: compare
+        beat: practice
         title: What do find and findall return in ElementTree?
         kicker: XML
         emphasis: none
@@ -169,6 +228,7 @@ parts:
         notes: JSON won for APIs. XML is still around in feeds, office files and enterprise systems.
 
       - layout: steps
+        beat: fundamentals
         title: What are the steps of calling an API?
         kicker: Calling an API
         steps:
@@ -182,6 +242,7 @@ parts:
         notes: The exercise follows pagination over fake pages so it runs offline.
 
       - layout: bullets
+        beat: pitfalls
         title: Where should an API key live?
         kicker: Secrets
         bullets:
@@ -196,6 +257,7 @@ parts:
     summary: Classes and self · Dunder methods · Normalising · Get-or-create · Batched commits
     slides:
       - layout: statement
+        beat: problem
         title: When is a dict in memory no longer enough?
         kicker: The problem
         statement: Several functions passing the same state around want a class. Data that has to outlive the run wants a database.
@@ -204,6 +266,7 @@ parts:
         notes: A module of plain functions is fine otherwise. Not everything has to be an object.
 
       - layout: code
+        beat: fundamentals
         title: What is self?
         kicker: Classes
         lang: python
@@ -224,6 +287,7 @@ parts:
         notes: In a subclass, call super().__init__ so the parent sets up its part. Keep hierarchies shallow.
 
       - layout: table
+        beat: fundamentals
         title: Which dunder method enables which syntax?
         kicker: Dunder methods
         header: [Method, Enables]
@@ -239,6 +303,7 @@ parts:
         notes: For classes that mostly hold data, @dataclass writes __init__, __repr__ and __eq__ for you.
 
       - layout: flow
+        beat: fundamentals
         title: What are the steps of a re-runnable load?
         kicker: The ingest pattern
         steps:
@@ -254,6 +319,7 @@ parts:
         notes: A crawler or geocoder should keep progress in the database, so it resumes after a crash or a rate limit.
 
       - layout: code
+        beat: practice
         title: How do you make get-or-create safe to re-run?
         kicker: Get or create
         lang: python
@@ -269,6 +335,7 @@ parts:
         notes: The UNIQUE constraint is what makes the ignore work. SQL 09 covers parameters in depth.
 
       - layout: bullets
+        beat: pitfalls
         title: How often should you commit during a load?
         kicker: Batched commits
         lead: 2,000 inserts into a one-column SQLite file, on a laptop SSD.
@@ -291,6 +358,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What are the informatics rules?
         recall: "What do you put on every call, parse, query and batch?"
         cards:
@@ -303,6 +371,7 @@ parts:
         notes: The same rules return in Python 03 and in the SQL track.
 
       - layout: bullets
+        beat: wrap
         title: Where do you go after informatics?
         bullets:
           - "**SQL 01**: the Python side of databases ends here, and SQL itself starts"

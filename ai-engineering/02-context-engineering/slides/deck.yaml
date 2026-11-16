@@ -16,6 +16,57 @@ deck:
     the whole way, and it fails in every way the notes describe, so each technique arrives as the fix for
     something we have just watched break.
 parts:
+  - title: What belongs in the window
+    overview: true
+    summary: The question · Four parts · What you will be able to do
+    divider: true
+    agenda: true
+    notes: >-
+      Before any technique, here is the one question this lecture keeps asking about the research agent and the four parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        kicker: The idea
+        title: Which tokens earn a place in the window?
+        statement: "A research agent has a 128K window and 367k characters of search results to read. Which tokens earn a place on each call, and how do we find out when we chose wrong?"
+        attribution: "Li, AI Agents in Depth, Experiment 2-9: tracking OpenAI co-founders' current roles"
+        takeaway: Context engineering is finding the smallest set of high-signal tokens that makes the outcome you want most likely.
+        recall: What question does every part of this lecture ask about the research agent's window?
+        source: README.md
+        notes: >-
+          One agent stays with us the whole way. Each part opens with the way it breaks, states the rule that explains it, applies the rule to the agent, and ends on the mistake it usually produces.
+
+      - layout: flow
+        beat: fundamentals
+        title: Four parts, from a full window to a diagnosis
+        recall: What are the four parts of this lecture, in order?
+        steps:
+          - {label: Why it fills, sub: "attention, anatomy, budget"}
+          - {label: Select and shrink, sub: "retrieval, compaction"}
+          - {label: Keep and split, sub: "memory, structure, sub-agents"}
+          - {label: Find the fault, sub: "failures, evals", accent: "D4621A"}
+        bullets:
+          - "Each part states **the idea**, then **the principle**, then **applies** it to the research agent."
+          - "Each part ends on the mistake the technique usually produces."
+        takeaway: The lecture runs from why the window fills, through what to select, shrink, keep and split, to how to diagnose a wrong answer.
+        source: README.md
+        notes: >-
+          The README groups the same moves as four levers, write, select, compress and isolate, and says to apply them in that order because cost rises left to right.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with a context window.
+        cards:
+          - {title: Assemble, body: "Put stable content first, reserve the output and give every growing part a ceiling."}
+          - {title: Select and shrink, body: "Fetch just in time, compact in stages and keep rules out of the summary."}
+          - {title: Keep and split, body: "Choose a memory format, validate state and isolate work in sub-agents."}
+          - {title: Diagnose, accent: "D4621A", body: "Look in the window before the weights, and ablate to set the budget."}
+        takeaway: You will be able to assemble a window, shrink it, keep what lasts and diagnose a wrong answer by looking in the window first.
+        source: README.md
+        notes: >-
+          These are the groups in the README's rules of thumb: assembling, getting content in, keeping it small, reasoning and multiple agents, and shipping.
+
   - title: Why the window fills
     summary: The agent overflows · What occupies the window · How to budget it
     divider: true
@@ -26,6 +77,8 @@ parts:
       in the window, and how to spend it deliberately.
     slides:
       - layout: statement
+        beat: problem
+        revisits: true
         kicker: The problem
         title: Seven searches overflow a 128K window
         statement: "Seven searches return about 367k characters. A 128K window overflows at iteration 5, and the task fails."
@@ -39,6 +92,7 @@ parts:
           no compression the run overflows at iteration five and fails. The model was never the limit. So why
           not just buy a bigger window? That is the next slide.
       - layout: bullets
+        beat: fundamentals
         kicker: Why not a bigger window
         title: A bigger window divides attention more thinly
         lead: Find the smallest set of high-signal tokens that maximizes the likelihood of the outcome you want.
@@ -61,6 +115,7 @@ parts:
           overflow further out and leaves the quality problem in place. What does that quality problem look
           like when you measure it?
       - layout: image
+        beat: fundamentals
         kicker: The evidence
         title: The effective window depends on the task
         image: ../sources/images/zhang-recursive-language-models-fig1.png
@@ -79,6 +134,7 @@ parts:
           So the useful question is never how big the window is. It is where the knee sits for your task.
           We will measure that knee in the last part.
       - layout: cards
+        beat: pitfalls
         kicker: What rot looks like
         title: Context rot starts long before the limit
         cards:
@@ -100,6 +156,7 @@ parts:
           page, and a stale article nearby pulls the answer the wrong way. Now let's open the window and see
           what is taking up all that room.
       - layout: image
+        beat: fundamentals
         kicker: The anatomy
         title: Six kinds of content compete for one window
         image: ../sources/images/li-ai-agents-in-depth-fig2-1.svg
@@ -119,6 +176,7 @@ parts:
           In our agent the history slot, holding the raw search results, grew until it pushed out everything
           else. The first slot we tune is the one we write by hand, the system prompt.
       - layout: compare
+        beat: fundamentals
         kicker: The system prompt
         title: Write the system prompt at the right altitude
         emphasis: right
@@ -146,6 +204,7 @@ parts:
           catch yourself adding a fourth conditional, stop. That rule probably belongs somewhere other than
           the prompt, which is exactly the question on the next slide.
       - layout: steps
+        beat: fundamentals
         kicker: Where each instruction belongs
         title: Sort content by frequency, stability and enforcement
         axis: always resident → enforced in code
@@ -170,6 +229,7 @@ parts:
           was a runtime injection of the current date, not another sentence of instruction. Where that date lands in the window turns out
           to matter a great deal.
       - layout: image
+        beat: fundamentals
         kicker: Ordering
         title: The cache is a prefix match, so stable goes first
         image: ../sources/images/li-ai-agents-in-depth-fig2-10.svg
@@ -187,6 +247,7 @@ parts:
           better quality on long-document work when the query comes last, so the two pressures agree. Getting
           this wrong has a price, and the next slide shows the bill.
       - layout: table
+        beat: practice
         kicker: What it costs to get wrong
         title: One timestamp nearly doubled the bill
         lead: "`Current time: {{now}}` in a 100k-conversation/day system prompt: TTFT **0.5 s to 3–5 s**, bill nearly doubled."
@@ -208,6 +269,7 @@ parts:
           to five seconds, and the bill nearly doubled. The other rows are the same bug in different clothes.
           Our agent needs the date too, so it goes late. Next, the most useful thing that can go late.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Put a status bar at the end of the window
         lang: xml
@@ -233,6 +295,7 @@ parts:
           pairs, Claude fell from 100 percent to 7.6. Our agent's bar would hold which founders it has
           confirmed. With the layout settled, how much room does each slot get?
       - layout: compare
+        beat: fundamentals
         kicker: The budget
         title: Two rules matter more than any percentage split
         lead: Investments, such as a rule used on every call, go in the stable prefix. Expenses, such as a tool result read once, get cleared.
@@ -262,6 +325,7 @@ parts:
           give every growing thing a ceiling. Our agent had no ceiling on tool results, and that one missing
           number is why it died at iteration five.
       - layout: image
+        beat: pitfalls
         kicker: The frontier
         title: Text edits break the cache, so edit the cache itself
         image: ../sources/images/fu-cache-engineering-agents-fig1.png
@@ -279,6 +343,7 @@ parts:
           percent of API cost and drop entries from the KV cache directly. Most of us have no access to the
           serving stack, so the practical lesson is to batch edits and make them at stable boundaries.
       - layout: code
+        beat: practice
         kicker: Monday morning
         title: Measure what each layer of the prompt buys
         lang: python
@@ -300,16 +365,17 @@ parts:
           per prompt token. That closes the first part. We know why the window fills and how to lay it out.
           Next: what should come in at all?
 
-  - title: What comes in
-    summary: Retrieve when it is needed · Remember what lasts · Give it a structure
+  - title: What comes in, and what shrinks
+    summary: Retrieve when it is needed · Compact the history · Keep the rules
     divider: true
     agenda: true
     notes: >-
-      Our agent's real mistake was loading things before it knew it needed them. This part covers the two
-      ways content enters the window, retrieval from outside and memory from earlier, and the structure that
-      keeps both legible.
+      Our agent's real mistake was loading things before it knew it needed them. This part covers how content
+      enters the window by retrieval, and how the history is made smaller once it has grown. It returns to the
+      overflowing agent and fixes it.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: Guessing relevance up front loads the whole corpus
         statement: "Fifty files at 5,000 tokens is 250,000 tokens. The agent needed three of them."
@@ -322,6 +388,7 @@ parts:
           up front and you spend 250 thousand. Keep an index of paths and read the three you need and you
           spend about 15.5 thousand. The difference is who decides what is relevant, and when.
       - layout: compare
+        beat: fundamentals
         kicker: The shift
         title: Let the model pull what its reasoning asks for
         emphasis: right
@@ -349,6 +416,7 @@ parts:
           turns? Yes, pre-load it. No, keep an identifier and a tool. For our agent the plan is resident and
           the pages are fetched.
       - layout: table
+        beat: fundamentals
         kicker: The choice
         title: Long context, cache, retrieval or tools
         header: [Option, Use when, Costs]
@@ -368,6 +436,7 @@ parts:
           some users may read it. In practice you combine these. Then, when you do retrieve, how many chunks
           should you take?
       - layout: flow
+        beat: fundamentals
         kicker: How much to retrieve
         title: Retrieve wide, rerank hard, send narrow
         steps:
@@ -387,6 +456,7 @@ parts:
           fast first stage gets recall, and a reranker gets precision. The chunks themselves have a problem,
           though, and that is the next slide.
       - layout: image
+        beat: pitfalls
         kicker: The evidence
         title: A chunk out of context does not know what it says
         image: ../sources/images/li-ai-agents-in-depth-fig3-14.svg
@@ -403,8 +473,146 @@ parts:
           Chunking strips the context that made a sentence meaningful. Anthropic's fix has an LLM write a short
           prefix for each chunk at index time. Top-20 retrieval failures fall 49 percent with contextual
           embeddings plus contextual BM25, and 67 percent with a reranker. That handles content from outside.
-          What about what the agent already learned?
+          The next slide shows how little code it takes.
+      - layout: code
+        beat: practice
+        kicker: Worked example
+        title: Contextual retrieval is one cached call per chunk
+        lang: python
+        code: |-
+          PREFIX_PROMPT = """<document>{doc}</document>
+          Here is a chunk from that document:
+          <chunk>{chunk}</chunk>
+          Write one short sentence situating this chunk
+          within the document, to improve search retrieval.
+          Answer with the sentence only."""
+
+          def contextualize(doc, chunks, llm):
+              return [llm(PREFIX_PROMPT.format(doc=doc, chunk=c))
+                      + "\n" + c for c in chunks]
+        bullets:
+          - The document comes first in every call, so the prompt cache hits after the first chunk
+          - "One prefix helps both paths: BM25 gains exact keywords, and the embedding gains the missing context"
+        takeaway: Putting the whole document first in each call turns the cache into the cheap way to give every chunk its context.
+        recall: Why does the contextual-retrieval prompt put the whole document before the chunk?
+        source: notes/04-retrieval.md
+        notes: >-
+          This is the minimal version from the note. The prefix is a single sentence per chunk, written once at index time, so none of the cost lands at query time. But our agent's searches are still enormous, which takes us to shrinking.
+
+      - layout: statement
+        beat: problem
+        kicker: The problem
+        title: Compaction silently deletes your safety rules
+        statement: "Claude Code's /compact on Sonnet 4.6 keeps 53% of safety rules after one round, and 10% after five."
+        attribution: "Zerhoudi et al. (2026), 20 production agent configurations, 50% compression per round"
+        takeaway: A summarizer cannot tell which sentence is a rule, so it compresses rules at the same rate as everything else.
+        recall: What fraction of safety rules survive five rounds of general-purpose compaction, and why so few?
+        source: notes/05-compression-compaction.md
+        notes: >-
+          Compaction is what lets an agent run for hours, so we need it. But look at what it does by default.
+          Over twenty production agent configurations, the /compact prompt keeps 53 percent of safety rules
+          after one round and 10 percent after five. "Don't delete emails until I confirm" is exactly the
+          sentence that goes. So compaction has to be designed.
+      - layout: flow
+        beat: fundamentals
+        kicker: The pipeline
+        title: Compact in stages, cheapest and safest first
+        steps:
+          - {label: Prune, sub: dead branches}
+          - {label: Clear tool output, sub: keep the conclusion}
+          - {label: Extract state, sub: "files, decisions, TODOs"}
+          - {label: Summarize middle, sub: lossy but bounded}
+          - {label: Keep recent, sub: last N turns verbatim}
+        bullets:
+          - "**Trigger at phase boundaries**, not at 95% mid-edit; about 80% occupancy as a backstop"
+          - "**Identifiers verbatim:** UUIDs, hashes, paths. One wrong digit fails the next call"
+          - Compaction rewrites the prefix, so each one pays a full re-prefill
+        takeaway: Compact at a phase boundary and keep recent turns verbatim, because the agent's working state lives in those turns.
+        recall: Why are recent turns kept verbatim, and why are phase boundaries the better trigger?
+        source: notes/05-compression-compaction.md
+        notes: >-
+          The pipeline has five stages and the last matters most. Recent turns stay verbatim because the
+          half-finished edit and the error being debugged live there. Compacting mid-edit at 95 percent forces
+          a summary of an incoherent state, so prefer a natural seam, with about 80 percent as a backstop.
+      - layout: table
+        beat: practice
+        kicker: Worked example
+        title: Six compression strategies, one research task
+        lead: "Back to our agent: a 128K window, seven searches, about 367k characters."
+        header: [Strategy, Result]
+        widths: [4.4, 5.6]
+        highlight: [3]
+        rows:
+          - [No compression, Overflowed at iteration 5. Failed]
+          - [Summarize each result separately, "12 iterations, 277k tokens; repeated facts across pages"]
+          - [One combined summary, "10 iterations, 93k tokens; long inputs truncated at the tail"]
+          - ["**Context-aware** (query and known state in the prompt)", "**7 iterations, 40k tokens**; a 148k-char page to 2k chars"]
+          - [Context-aware plus citations, "223k tokens; lossy content, lossless index to sources"]
+          - ["Adaptive: batch at 80%, `[COMPRESSED]` marker", "175k tokens; full fidelity early on"]
+        takeaway: Compression is understanding, so the compressor needs the task and the known state in its prompt.
+        recall: Which compression strategy finished the OpenAI co-founders task cheapest, and what did its prompt contain?
+        source: notes/05-compression-compaction.md
+        notes: >-
+          This is the payoff for our running example. Same task, same window, six strategies. Summarizing each
+          page separately finishes but repeats facts. The winner tells the compressor the query and what the
+          agent already knows, so it can throw away everything else: seven iterations and forty thousand
+          tokens, and one 148 thousand character page became two thousand with every role change kept.
       - layout: image
+        beat: fundamentals
+        kicker: The fix
+        title: Take the rules out of the summary's hands
+        image: ../sources/images/zerhoudi-compaction-cliff-fig3.png
+        caption: "Zerhoudi, Mitrović & Granitzer, The Compaction Cliff (2026), Fig. 3"
+        bullets:
+          - "Classify each line by type and pin constraints: **0.96** recall over five rounds"
+          - "Wang et al.: a constraint registry appended verbatim, retention **90–95%**"
+          - "Then check deterministically: self-reported 1.00 recall had silently dropped a mean **57%**"
+        takeaway: Pin constraints outside the summary and verify with a deterministic check, because compactors misreport what they kept.
+        recall: How do you stop compaction from dropping constraints, and why is a deterministic check needed?
+        source: notes/05-compression-compaction.md
+        notes: >-
+          Both papers reach the same fix. Keep the rules away from the summarizer. Typed pinning holds 0.96
+          recall over five rounds in this figure, while the plain compactors slide. The surprising part is the
+          check: configurations reporting perfect recall had silently dropped a mean of 57 percent of their
+          constraints. Trust a string comparison here, not the model.
+      - layout: steps
+        beat: fundamentals
+        kicker: Retention
+        title: What survives compaction, in order
+        steps:
+          - title: Architectural decisions
+            accent: "D4621A"
+            text: "\"X over Y because Z\", verbatim. Lose the reason and the agent re-litigates it"
+          - title: User constraints and safety rules
+            accent: "D4621A"
+            text: pinned verbatim, outside the summary
+          - title: Modified files and critical changes
+            text: the diff so far is state, not history
+          - title: Verification status
+            text: which tests ran, pass or fail
+          - title: Unresolved TODOs
+            text: everything not yet done, with rollback notes
+          - title: Tool output
+            accent: "94A3B8"
+            text: deletable. Keep the conclusion
+        takeaway: "40k tokens of test output compress to \"17 passed, 2 failed\", while a one-sentence rationale cannot compress at all."
+        recall: Rank what must survive compaction, and say why tool output comes last.
+        source: notes/05-compression-compaction.md
+        notes: >-
+          The asymmetry is the idea. A forty thousand token test output compresses to one line with
+          essentially no loss. A one-sentence rationale cannot compress at all without losing what makes it
+          useful. So order by what is expensive to regenerate. The window is now small enough, and the agent still
+          needs some things to last beyond it, which is memory.
+  - title: What lasts, and what splits off
+    summary: Remember what lasts · Give it a structure · Reason in isolation · Split into sub-agents
+    divider: true
+    agenda: true
+    notes: >-
+      Some of what the agent learns has to outlast one window, and it needs a store and a shape. Past that, the
+      remaining lever is to move work into a window of its own, which is the most expensive one.
+    slides:
+      - layout: image
+        beat: problem
         kicker: Memory
         title: Memory only matters once it enters a window
         image: ../sources/images/li-ai-agents-in-depth-fig3-3.svg
@@ -423,6 +631,7 @@ parts:
           a contradiction it will resolve arbitrarily. So each write chooses add, update, delete or no-op. The
           format of those facts is the next choice.
       - layout: table
+        beat: fundamentals
         kicker: The format
         title: Match the memory format to the stakes
         header: [Format, Wins, Loses]
@@ -441,6 +650,7 @@ parts:
           questions at about 99 percent against six to forty-three. Mix them according to what is at stake. But
           should you be extracting at all?
       - layout: image
+        beat: pitfalls
         kicker: The evidence
         title: A strong model may do better searching the raw record
         image: ../sources/images/peng-memorytax-fig1.png
@@ -460,6 +670,7 @@ parts:
           author's caveats are serious, so read this as a direction and not a benchmark. Whatever you keep, it
           needs a shape.
       - layout: compare
+        beat: fundamentals
         kicker: Structure
         title: Structure tells the model what each part is
         lead: Structure compresses meaning, not tokens. The model spends less attention working out what it is looking at.
@@ -485,6 +696,7 @@ parts:
           broke. The fix is a closed set of allowed values. And since that state gets re-injected, it has to be
           valid.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Validate at the boundary and feed the error back
         lang: python
@@ -512,117 +724,11 @@ parts:
         notes: >-
           A loop you will write many times. Parse, validate, and on failure hand the validator's message back so
           the retry knows what to fix. Use the provider's structured-output mode when you have it and keep the
-          validator for what it cannot express. So we now choose what comes in. But our agent's searches are
-          still enormous, which takes us to shrinking.
+          validator for what it cannot express. So what the agent keeps now has a shape and a check. Next,
+          reasoning can leave the main window too.
 
-  - title: What shrinks and what splits off
-    summary: Compact the history · Keep the rules · Reason in isolation · Split into sub-agents
-    divider: true
-    agenda: true
-    notes: >-
-      Even with good selection the window still grows. Two levers remain, and they are in order of cost: make
-      content smaller, or move it into its own window. This part returns to the overflowing agent and fixes it.
-    slides:
-      - layout: statement
-        kicker: The problem
-        title: Compaction silently deletes your safety rules
-        statement: "Claude Code's /compact on Sonnet 4.6 keeps 53% of safety rules after one round, and 10% after five."
-        attribution: "Zerhoudi et al. (2026), 20 production agent configurations, 50% compression per round"
-        takeaway: A summarizer cannot tell which sentence is a rule, so it compresses rules at the same rate as everything else.
-        recall: What fraction of safety rules survive five rounds of general-purpose compaction, and why so few?
-        source: notes/05-compression-compaction.md
-        notes: >-
-          Compaction is what lets an agent run for hours, so we need it. But look at what it does by default.
-          Over twenty production agent configurations, the /compact prompt keeps 53 percent of safety rules
-          after one round and 10 percent after five. "Don't delete emails until I confirm" is exactly the
-          sentence that goes. So compaction has to be designed.
-      - layout: flow
-        kicker: The pipeline
-        title: Compact in stages, cheapest and safest first
-        steps:
-          - {label: Prune, sub: dead branches}
-          - {label: Clear tool output, sub: keep the conclusion}
-          - {label: Extract state, sub: "files, decisions, TODOs"}
-          - {label: Summarize middle, sub: lossy but bounded}
-          - {label: Keep recent, sub: last N turns verbatim}
-        bullets:
-          - "**Trigger at phase boundaries**, not at 95% mid-edit; about 80% occupancy as a backstop"
-          - "**Identifiers verbatim:** UUIDs, hashes, paths. One wrong digit fails the next call"
-          - Compaction rewrites the prefix, so each one pays a full re-prefill
-        takeaway: Compact at a phase boundary and keep recent turns verbatim, because the agent's working state lives in those turns.
-        recall: Why are recent turns kept verbatim, and why are phase boundaries the better trigger?
-        source: notes/05-compression-compaction.md
-        notes: >-
-          The pipeline has five stages and the last matters most. Recent turns stay verbatim because the
-          half-finished edit and the error being debugged live there. Compacting mid-edit at 95 percent forces
-          a summary of an incoherent state, so prefer a natural seam, with about 80 percent as a backstop.
-      - layout: table
-        kicker: Worked example
-        title: Six compression strategies, one research task
-        lead: "Back to our agent: a 128K window, seven searches, about 367k characters."
-        header: [Strategy, Result]
-        widths: [4.4, 5.6]
-        highlight: [3]
-        rows:
-          - [No compression, Overflowed at iteration 5. Failed]
-          - [Summarize each result separately, "12 iterations, 277k tokens; repeated facts across pages"]
-          - [One combined summary, "10 iterations, 93k tokens; long inputs truncated at the tail"]
-          - ["**Context-aware** (query and known state in the prompt)", "**7 iterations, 40k tokens**; a 148k-char page to 2k chars"]
-          - [Context-aware plus citations, "223k tokens; lossy content, lossless index to sources"]
-          - ["Adaptive: batch at 80%, `[COMPRESSED]` marker", "175k tokens; full fidelity early on"]
-        takeaway: Compression is understanding, so the compressor needs the task and the known state in its prompt.
-        recall: Which compression strategy finished the OpenAI co-founders task cheapest, and what did its prompt contain?
-        source: notes/05-compression-compaction.md
-        notes: >-
-          This is the payoff for our running example. Same task, same window, six strategies. Summarizing each
-          page separately finishes but repeats facts. The winner tells the compressor the query and what the
-          agent already knows, so it can throw away everything else: seven iterations and forty thousand
-          tokens, and one 148 thousand character page became two thousand with every role change kept.
       - layout: image
-        kicker: The fix
-        title: Take the rules out of the summary's hands
-        image: ../sources/images/zerhoudi-compaction-cliff-fig3.png
-        caption: "Zerhoudi, Mitrović & Granitzer, The Compaction Cliff (2026), Fig. 3"
-        bullets:
-          - "Classify each line by type and pin constraints: **0.96** recall over five rounds"
-          - "Wang et al.: a constraint registry appended verbatim, retention **90–95%**"
-          - "Then check deterministically: self-reported 1.00 recall had silently dropped a mean **57%**"
-        takeaway: Pin constraints outside the summary and verify with a deterministic check, because compactors misreport what they kept.
-        recall: How do you stop compaction from dropping constraints, and why is a deterministic check needed?
-        source: notes/05-compression-compaction.md
-        notes: >-
-          Both papers reach the same fix. Keep the rules away from the summarizer. Typed pinning holds 0.96
-          recall over five rounds in this figure, while the plain compactors slide. The surprising part is the
-          check: configurations reporting perfect recall had silently dropped a mean of 57 percent of their
-          constraints. Trust a string comparison here, not the model.
-      - layout: steps
-        kicker: Retention
-        title: What survives compaction, in order
-        steps:
-          - title: Architectural decisions
-            accent: "D4621A"
-            text: "\"X over Y because Z\", verbatim. Lose the reason and the agent re-litigates it"
-          - title: User constraints and safety rules
-            accent: "D4621A"
-            text: pinned verbatim, outside the summary
-          - title: Modified files and critical changes
-            text: the diff so far is state, not history
-          - title: Verification status
-            text: which tests ran, pass or fail
-          - title: Unresolved TODOs
-            text: everything not yet done, with rollback notes
-          - title: Tool output
-            accent: "94A3B8"
-            text: deletable. Keep the conclusion
-        takeaway: "40k tokens of test output compress to \"17 passed, 2 failed\", while a one-sentence rationale cannot compress at all."
-        recall: Rank what must survive compaction, and say why tool output comes last.
-        source: notes/05-compression-compaction.md
-        notes: >-
-          The asymmetry is the idea. A forty thousand token test output compresses to one line with
-          essentially no loss. A one-sentence rationale cannot compress at all without losing what makes it
-          useful. So order by what is expensive to regenerate. Reasoning can shrink too, by moving out of the
-          main window.
-      - layout: image
+        beat: fundamentals
         kicker: Reasoning
         title: Run each reasoning step as its own isolated call
         image: ../sources/images/ebouky-cognitive-tools-fig1.png
@@ -642,6 +748,7 @@ parts:
           one-prompt version reached only 42, so isolation alone is worth another eleven points. A model
           verdict still has blind spots, though.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Where you can verify with code, do
         lang: python
@@ -669,6 +776,7 @@ parts:
           where the model grades itself above 0.8 is a demo. Before we leave reasoning, a word on a format you
           will run into.
       - layout: code
+        beat: fundamentals
         kicker: Protocols
         title: Protocol shells are prompts with good section headers
         lang: protocol
@@ -696,6 +804,7 @@ parts:
           you write down intent, inputs, process and output. The same four sections in markdown do as well. So
           take the discipline and don't worry about the notation. Now the most expensive lever.
       - layout: compare
+        beat: fundamentals
         kicker: Isolation
         title: A sub-agent buys a clean window at a real price
         emphasis: left
@@ -723,6 +832,7 @@ parts:
           the orchestrator's window and expensive overall: three sub-agents at 80 thousand each is 240 thousand
           real tokens for six thousand visible. So try compression first.
       - layout: compare
+        beat: practice
         kicker: Tools
         title: Tool descriptions and results are context too
         emphasis: right
@@ -762,6 +872,7 @@ parts:
       diagnostic order, the experiment that settles arguments, and a way to decide how much machinery you need.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: A wrong answer is rarely the model's fault
         statement: "The agent reports a founder's old job. The reflex is to swap the model. Print the window first."
@@ -774,6 +885,7 @@ parts:
           a better model. Don't. First look at what was actually sent, because most of these bugs are assembly
           bugs. To read what you see you need names for the failures.
       - layout: table
+        beat: fundamentals
         kicker: The taxonomy
         title: Five failures with five different fixes
         header: [Failure, Mechanism, Signature]
@@ -792,6 +904,7 @@ parts:
           memory as current is poisoning. A long summary about the wrong founder is distraction. Each has a
           different fix, so naming it correctly is most of the work.
       - layout: steps
+        beat: fundamentals
         kicker: The diagnostic
         title: Diagnose in this order, and do not skip step five
         steps:
@@ -814,6 +927,7 @@ parts:
           run the same task with minimal context. If it works, the context was the problem, and if it fails,
           no amount of context work will help. One of the five failures needs its own treatment.
       - layout: steps
+        beat: fundamentals
         kicker: Injection
         title: Layer injection defenses, because only code is a guarantee
         axis: probabilistic → guaranteed
@@ -840,6 +954,7 @@ parts:
           because they all run through the model. The last two run in code, so they hold whatever the model
           was persuaded of. Now that we can name failures, how do we measure the fix?
       - layout: flow
+        beat: fundamentals
         kicker: Evaluation
         title: Instrument each stage, so a failure has an address
         steps:
@@ -861,6 +976,7 @@ parts:
           fact exist, did it come back, did it survive budget and compaction, and did the answer use it? Then
           the length sweep from the start of the talk finds your knee. One experiment settles most arguments.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Ablation settles what stays in the window
         lang: text
@@ -886,6 +1002,7 @@ parts:
           it. A big drop: keep it and protect it from compaction. Now, how much of all this do you actually
           need?
       - layout: table
+        beat: pitfalls
         kicker: How much machinery
         title: Climb the maturity ladder only when you must
         header: [Level, What is in the window, Chapters]
@@ -904,6 +1021,7 @@ parts:
           are really prompt and example problems underneath. So start low and climb on evidence. That gives us
           an order for designing a system from scratch.
       - layout: steps
+        beat: practice
         kicker: Monday morning
         title: Design a context system in this order of questions
         steps:
@@ -929,6 +1047,7 @@ parts:
           results, a context-aware compressor, pinned rules and a date injected late. Last, a warning about
           something you will read.
       - layout: image
+        beat: pitfalls
         kicker: Appendix
         title: Treat the "field theory" of context as metaphor
         image: ../sources/images/wang-attractor-cycles-fig1.png
@@ -952,6 +1071,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         kicker: Closing
         title: Rules of thumb
         cards:
@@ -976,6 +1096,7 @@ parts:
           before you look at the weights. Our agent never needed a better model. It needed a ceiling, a
           compressor that knew the task, and rules that stayed out of the summary.
       - layout: bullets
+        beat: wrap
         kicker: Next
         title: Where to go next
         bullets:

@@ -16,10 +16,59 @@ deck:
     deriving types from types, then async work and untrusted data at the boundary.
 
 parts:
+  - title: What the checker is for
+    overview: true
+    summary: The question · Three parts · What you will be able to do
+    notes: >-
+      Before any syntax, the one question this track keeps asking and the three parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What does the checker know that the runtime does not?
+        recall: What question does every part of the TypeScript track ask?
+        kicker: The idea
+        statement: The checker sees your types and then disappears. Every part asks what is guaranteed while you write, and what only the running program can tell you.
+        attribution: What executes is JavaScript
+        takeaway: Types exist only while you write, so each part asks which promises the checker keeps and which the runtime must.
+        source: README.md
+        notes: >-
+          A Python developer meets the same question with type hints. Here the checker is stricter, and it is still erased before the code runs.
+
+      - layout: flow
+        beat: fundamentals
+        title: Three parts from a runtime to the boundary
+        recall: What are the three parts of the TypeScript track, in order?
+        steps:
+          - {label: Check, sub: "the runtime and the checker"}
+          - {label: Derive, sub: "types from types"}
+          - {label: Trust, sub: "async and the boundary", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the rule**, then **applies** it."
+          - "Each part ends on the mistake it usually produces."
+        takeaway: The parts run from what the checker sees, to deriving types from types, to async work and untrusted data.
+        source: README.md
+        notes: >-
+          Every slide in this deck is a flashcard, so the title is the question and the takeaway is the rule that answers it.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things the TypeScript track teaches you to do.
+        cards:
+          - {title: Map, body: "Translate Python idioms to JavaScript and avoid the `==`, `sort()` and truthiness traps."}
+          - {title: Narrow, body: "Model discriminated unions with an exhaustive `switch`, and use `unknown` not `any`."}
+          - {title: Derive, body: "Write constrained generics and use utility, mapped and conditional types."}
+          - {title: Parse, accent: "D4621A", body: "Run async work in parallel, and parse env, JSON and LLM output into typed values at the boundary."}
+        takeaway: You will be able to write typed code that the checker can verify and that parses what the checker cannot see.
+        source: README.md
+        notes: >-
+          These are the README's outcomes for notes 01 to 09. Note 09 applies them to a tool loop, streaming and structured output.
+
   - title: The runtime and the checker
     summary: Type stripping · JavaScript traps · Shapes · unknown · Narrowing · Tagged unions · Predicates
     slides:
       - layout: statement
+        beat: problem
         title: What is left of your types when the code runs?
         kicker: The problem
         statement: Nothing. The checker runs and disappears, `x as User` checks nothing, and an `interface` produces no code. What executes is JavaScript.
@@ -28,6 +77,7 @@ parts:
         notes: Note 08 covers validating data from outside.
 
       - layout: table
+        beat: fundamentals
         title: Which command checks types, and which runs code?
         kicker: How TS runs
         header: [Command, What happens]
@@ -41,6 +91,7 @@ parts:
         notes: "Numbers are 64-bit floats, and integers are exact only up to 2^53. Use bigint beyond that."
 
       - layout: cards
+        beat: pitfalls
         title: Which JavaScript behaviours catch Python developers?
         kicker: JavaScript traps
         cards:
@@ -55,6 +106,7 @@ parts:
         notes: "`structuredClone` is the deep copy. Most TS code uses plain objects, functions and unions more than class hierarchies."
 
       - layout: compare
+        beat: fundamentals
         title: What is the difference between any and unknown?
         kicker: Everyday types
         emphasis: right
@@ -75,6 +127,7 @@ parts:
         notes: "never is a value that can't exist. void is a function that returns nothing useful. Always set strict: true, which turns on strictNullChecks."
 
       - layout: bullets
+        beat: fundamentals
         title: Does TypeScript check a type's name or its shape?
         kicker: Structural typing
         bullets:
@@ -87,6 +140,7 @@ parts:
         notes: A function's signature is its contract, and the annotation catches accidental changes. Both interface and type are erased at runtime.
 
       - layout: flow
+        beat: fundamentals
         title: How does narrowing work?
         kicker: Follow one value
         steps:
@@ -100,6 +154,7 @@ parts:
         notes: Narrowing also works with instanceof, 'role' in x and Array.isArray. A predicate returning `x is T` is a promise you make, and the checker trusts it unverified.
 
       - layout: code
+        beat: practice
         title: How do you make a switch exhaustive?
         kicker: Discriminated unions
         lang: ts
@@ -123,6 +178,7 @@ parts:
         notes: This is how you model API responses and LLM content blocks.
 
       - layout: code
+        beat: practice
         title: What does a type predicate promise?
         kicker: Type predicates
         recall: "What does `p is Admin` let `filter` return, and who checks the body?"
@@ -145,6 +201,7 @@ parts:
     summary: Generics · keyof · Utility types · Mapped types · Conditional types · When to stop
     slides:
       - layout: statement
+        beat: problem
         title: Why not type the helper as any?
         kicker: The problem
         statement: "`first(xs: any[]): any` works for every array and forgets what it was given. Copying a type by hand for each variant drifts out of date."
@@ -153,6 +210,7 @@ parts:
         notes: Python's TypeVar is the same idea.
 
       - layout: code
+        beat: fundamentals
         title: How do you type a safe property getter?
         kicker: Generics and keyof
         lang: ts
@@ -170,6 +228,7 @@ parts:
         notes: If T is used once, write the concrete type or unknown. Overloads handle a return type that depends on an argument value.
 
       - layout: table
+        beat: practice
         title: Which utility types do you use weekly?
         kicker: Utility types
         header: [Utility, Result, Typical use]
@@ -186,6 +245,7 @@ parts:
         notes: "`A & B` has every property of both, which combines types without repeating fields."
 
       - layout: flow
+        beat: fundamentals
         title: How does a mapped type build a new type?
         kicker: Mapped types
         steps:
@@ -202,6 +262,7 @@ parts:
         notes: "Template literal types build key names: `on${Capitalize<Event>}`."
 
       - layout: compare
+        beat: fundamentals
         title: What do infer and distribution do in a conditional type?
         kicker: Conditional types
         emphasis: none
@@ -224,10 +285,23 @@ parts:
         source: notes/05-type-transformations.md
         notes: Type-level code is real code. Use utility types freely, mapped types sometimes, and deep recursion only in libraries.
 
+      - layout: bullets
+        beat: pitfalls
+        title: When should you stop building types?
+        kicker: Pitfalls
+        bullets:
+          - "**Passing `keyof T` to `Capitalize`.** Keys can be numbers or symbols, so write `string & K`."
+          - "**Repeating fields by hand.** A create payload next to `User` drifts. Derive it with `Omit<User, 'id'>`."
+          - "**Deep conditional recursion in application code.** It is hard to read and debug, and slow to compile."
+        takeaway: Use utility types freely, mapped types sometimes, and deep conditional recursion only in libraries.
+        source: notes/05-type-transformations.md
+        notes: If an application type needs `infer` three levels deep, a simpler runtime design is usually better.
+
   - title: Async and the boundary
     summary: The event loop · Promise.all · Cancellation · Async bugs · Tooling · Zod · LLM responses · Structured output
     slides:
       - layout: statement
+        beat: problem
         title: What makes a network response hard to type?
         kicker: The problem
         statement: It arrives later, it can fail, and `as User` compiles without checking a thing. An LLM API is all of that at once.
@@ -236,6 +310,7 @@ parts:
         notes: Notes 06 to 09 take time and trust one at a time.
 
       - layout: flow
+        beat: fundamentals
         title: In what order does JavaScript run sync code, promises and timers?
         recall: In what order do sync code, promises and timers run?
         kicker: The event loop
@@ -251,6 +326,7 @@ parts:
         notes: A long synchronous loop freezes everything, the same as blocking asyncio's loop in Python 03 note 07.
 
       - layout: compare
+        beat: practice
         title: How do you run two async calls in parallel?
         kicker: Sequential or parallel
         left:
@@ -270,6 +346,7 @@ parts:
         notes: "`await` pauses only the current function. An async function always returns a Promise. `race` does not cancel the loser."
 
       - layout: compare
+        beat: practice
         title: How do you cancel a request on demand?
         kicker: AbortController
         emphasis: right
@@ -292,6 +369,7 @@ parts:
         notes: "`fetch` rejects with an AbortError when aborted. Anthropic's SDK also accepts a signal, so a Stop button can cancel a streaming request."
 
       - layout: table
+        beat: pitfalls
         title: What are the common async bugs?
         recall: "What goes wrong with `forEach` and `race` in async code, and what do you use instead?"
         kicker: Common bugs
@@ -307,6 +385,7 @@ parts:
         notes: "`AbortSignal.timeout(5_000)` cancels the request itself. `for await` handles streams."
 
       - layout: cards
+        beat: fundamentals
         title: What does a modern TypeScript setup need?
         kicker: Modules and tooling
         cards:
@@ -319,6 +398,7 @@ parts:
         notes: "The flags: strict, noUncheckedIndexedAccess, verbatimModuleSyntax, erasableSyntaxOnly, skipLibCheck, noEmit. In ESM use import.meta.dirname. Module augmentation works because interfaces merge."
 
       - layout: code
+        beat: practice
         title: How do you get a type and a runtime check from one definition?
         kicker: Zod
         lang: ts
@@ -337,6 +417,7 @@ parts:
         notes: "Parse at config, HTTP, files, LLM output and tool inputs. `coerce.boolean()` treats \"false\" as true, so use an enum for env flags."
 
       - layout: table
+        beat: fundamentals
         title: What should your loop do for each stop_reason?
         kicker: LLM responses
         header: ["stop_reason", Your loop]
@@ -352,6 +433,7 @@ parts:
         notes: Tool inputs are model output, which makes them untrusted. Validate them, confine file paths and gate anything destructive.
 
       - layout: code
+        beat: practice
         title: Why must you never assume content[0] is text?
         kicker: Content blocks
         lang: ts
@@ -369,6 +451,7 @@ parts:
         notes: Keep prompt-building and block parsing as pure functions, log usage on every response, and pin the model ID in one config value.
 
       - layout: code
+        beat: pitfalls
         title: How do you get JSON that matches a schema from the model?
         kicker: Structured output
         recall: What must you still check after asking for structured output?
@@ -396,6 +479,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What are the TypeScript rules?
         recall: "How do you treat `strict`, `any`, unions and outside data?"
         cards:
@@ -408,6 +492,7 @@ parts:
         notes: These condense the nine notes.
 
       - layout: bullets
+        beat: wrap
         title: Where do you go after TypeScript?
         bullets:
           - "**`ai-engineering`**: every pillar's code is Python or TypeScript"

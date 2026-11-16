@@ -147,25 +147,6 @@ parts:
           This is the bias and variance picture. Too simple a family misses real structure, and too flexible a family
           follows the sample's noise. What we want is the middle, and each family gives us a knob for finding it.
 
-      - layout: table
-        beat: fundamentals
-        title: Each family has one knob that sets its complexity
-        recall: Which model family do you start with to learn the data?
-        header: [Family, Knob, Good at, Fails when]
-        widths: [2, 2, 3, 3]
-        rows:
-          - [kNN, "`n_neighbors`", A quick first baseline, Many features or rows]
-          - [Linear, "`alpha` or `C`", "Many features, fast", Non-linear signal without features]
-          - [Naive Bayes, "`alpha`", Sparse counts in one pass, You need probabilities]
-          - [Decision tree, "`max_depth`", Readable rules, High variance on its own]
-          - [Kernel SVM, "`C` and `gamma`", Small dense data, Large data; needs scaling]
-          - [Small MLP, "Layers and `alpha`", Dense signal given time, Needs scaling and tuning]
-        takeaway: Start with a linear model or kNN to learn the data, and learn one knob per family.
-        source: notes/02-supervised-learning.md
-        notes: >-
-          You don't need every parameter. For each family, know the one that controls complexity and how the family fails.
-          Trees don't need scaling because each split reads one feature's order. Kernel SVMs do, because they use distance. The knob also sets the shape of the boundary: a linear model draws one flat cut, a tree draws axis-aligned boxes, and kernels and kNN draw smooth local curves. That shape is the model's assumption, and no family wins everywhere.
-
       - layout: code
         beat: practice
         level: practice
@@ -189,7 +170,26 @@ parts:
         source: notes/01-statistical-foundations.md
         notes: >-
           The scikit-learn paper names this consistency as a goal of the library. Because the interface is the same, we can
-          swap a family by changing one line. That is what makes trying several families from this table practical.
+          swap a family by changing one line. That is what makes trying several families from the next slide's table practical.
+
+      - layout: table
+        beat: fundamentals
+        title: Each family has one knob that sets its complexity
+        recall: Which model family do you start with to learn the data?
+        header: [Family, Knob, Good at, Fails when]
+        widths: [2, 2, 3, 3]
+        rows:
+          - [kNN, "`n_neighbors`", A quick first baseline, Many features or rows]
+          - [Linear, "`alpha` or `C`", "Many features, fast", Non-linear signal without features]
+          - [Naive Bayes, "`alpha`", Sparse counts in one pass, You need probabilities]
+          - [Decision tree, "`max_depth`", Readable rules, High variance on its own]
+          - [Kernel SVM, "`C` and `gamma`", Small dense data, Large data; needs scaling]
+          - [Small MLP, "Layers and `alpha`", Dense signal given time, Needs scaling and tuning]
+        takeaway: Start with a linear model or kNN to learn the data, and learn one knob per family.
+        source: notes/02-supervised-learning.md
+        notes: >-
+          You don't need every parameter. For each family, know the one that controls complexity and how the family fails.
+          Trees don't need scaling because each split reads one feature's order. Kernel SVMs do, because they use distance. The knob also sets the shape of the boundary: a linear model draws one flat cut, a tree draws axis-aligned boxes, and kernels and kNN draw smooth local curves. That shape is the model's assumption, and no family wins everywhere.
 
       - layout: code
         beat: fundamentals
@@ -246,6 +246,7 @@ parts:
 
       - layout: table
         beat: pitfalls
+        revisits: true
         title: Five ways a first model misleads you
         recall: What do you check before you trust a first score?
         header: [Pitfall, Symptom, Fix]
@@ -327,6 +328,7 @@ parts:
 
       - layout: image
         beat: pitfalls
+        revisits: true
         title: On pure noise, a leaky selection step reports R² 0.90
         recall: How do you stop a fitted step such as feature selection leaking into cross-validation?
         lead: "k-fold cross-validation: cut the rows into k parts, train on k-1, score on the part left out, and rotate."
@@ -441,21 +443,6 @@ parts:
           tuning moved AUC by under 0.003. So tuning is not where the score comes from. Training well is mostly about knowing
           what your number means. Let's see how to get one you can defend.
 
-      - layout: image
-        beat: practice
-        level: practice
-        title: Learning curves name the problem before you touch a knob
-        recall: Does a small train-validation gap mean a good model?
-        lead: Train and validation AUC as rows grow. Low and together is underfitting, far apart is overfitting, high with a small gap is healthy.
-        image: ../../sources/images/training-tuning-learning-curves-adult.png
-        caption: "At 16,000 rows, train then validation: depth-2 tree 0.834, 0.833. Unlimited tree 0.999, 0.760. Boosting 0.953, 0.927."
-        takeaway: "A small gap isn't enough: on adult census a depth-2 tree has a gap of 0.001 and sits nearly 0.1 AUC below boosting."
-        source: notes/09-training-and-tuning.md
-        notes: >-
-          Left panel, underfitting: more rows will not help, you need a richer model or better features. Middle panel,
-          overfitting: the unlimited tree's gap only shrinks from 0.299 to 0.239 with 64 times the rows, so regularise. Right
-          panel, healthy: move on, or add rows if they are cheap. The shaded band is the range over five fits.
-
       - layout: cards
         beat: fundamentals
         level: deep
@@ -477,6 +464,21 @@ parts:
           as training runs, so stopping early keeps them small. Training time and penalty strength are two handles on one
           thing. The subsampling result is one seed on a small sample, so it is a data point, not a law. AdamW multiplies the
           decay by the learning rate, so don't copy a good value between setups.
+
+      - layout: image
+        beat: practice
+        level: practice
+        title: Learning curves name the problem before you touch a knob
+        recall: Does a small train-validation gap mean a good model?
+        lead: Train and validation AUC as rows grow. Low and together is underfitting, far apart is overfitting, high with a small gap is healthy.
+        image: ../../sources/images/training-tuning-learning-curves-adult.png
+        caption: "At 16,000 rows, train then validation: depth-2 tree 0.834, 0.833. Unlimited tree 0.999, 0.760. Boosting 0.953, 0.927."
+        takeaway: "A small gap isn't enough: on adult census a depth-2 tree has a gap of 0.001 and sits nearly 0.1 AUC below boosting."
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          Left panel, underfitting: more rows will not help, you need a richer model or better features. Middle panel,
+          overfitting: the unlimited tree's gap only shrinks from 0.299 to 0.239 with 64 times the rows, so regularise. Right
+          panel, healthy: move on, or add rows if they are cheap. The shaded band is the range over five fits.
 
       - layout: code
         beat: practice
@@ -669,6 +671,35 @@ parts:
           between two regimes, 1.000 against 0.000 for a Gaussian per feature, and 60 noise columns take it from 0.965 to 0.489.
           Those two tables are generated by `practice/isolation_forest.py`.
 
+      - layout: table
+        beat: pitfalls
+        title: The clusters looked sure and added nothing to the ranker
+        kicker: "Case: clustering a music library"
+        recall: With no labels, how do you test whether clusters are useful?
+        lead: "Suggest tracks for a saved playlist: 2,182 tracks, nine audio features, one LightGBM per playlist at AUC 0.870 on audio."
+        header: [Check, Measured, What it means]
+        widths: [3.6, 4, 3.8]
+        rows:
+          - [Raw or scaled columns, "Match to clusters on track length alone: 0.988 raw, 0.072 scaled", "Unscaled, milliseconds are the clustering"]
+          - [Median top posterior, "0.992, with seed agreement of 0.718", "Confident inside one model, not proven right"]
+          - [Add cluster posteriors to the ranker, "AUC -0.001 (95% CI -0.007 to +0.005)", Trees already carve the raw features]
+          - ["Swap audio for map position, genre group, year", "AUC +0.050 (95% CI 0.028 to 0.075)", Losing the audio features cost nothing here]
+        highlight: [2]
+        takeaway: "Test them on a later task: added to one music ranker, cluster features did not raise AUC."
+        source: notes/05-unsupervised-learning.md
+        notes: >-
+          A real project and real data, a personal recommender: a Gaussian mixture narrows the candidates and one LightGBM
+          model per playlist ranks them. Three criteria gave three answers for k: BIC is lowest at 11, silhouette is best at 2 or 3, and seed agreement is best at 2. BIC scores fit with a penalty for extra parameters, and 11 to 13
+          sit within seed noise, and k=13 has a cluster of 11 tracks. Silhouette scores how much closer a point sits to its own cluster than the next one, so it favours k-means by
+          construction. Shuffle each column separately, which destroys any real groups, and silhouette falls from 0.258 to 0.107,
+          but BIC still picks k=7, so a BIC minimum doesn't show that groups exist. The project's k = 8 matches its eight genre
+          groups, which is a product reason, so state it as one. Your columns decide what clusters mean too: match to decade is 0.714 on the project's 47 columns and 0.039 on the nine audio features. Playlist-mean columns scored AUC 1.000, which is a leak: one playlist, identical values.
+          The surprise is that the clusters earned no place in the ranker. Spotify cut audio features from new apps in
+          November 2024, so the lab tested whether losing them hurts, and on this task it doesn't. Two caveats. The same person
+          wrote the genre taxonomy and filed the playlists, which flatters the proxies. And the non-members are tracks saved
+          to other playlists, so this measures filing, not taste. The first row is why we scale, and the leak is why you look
+          at any AUC of 1.000 twice.
+
       - layout: compare
         beat: pitfalls
         level: practice
@@ -733,39 +764,10 @@ parts:
         takeaway: Read the gap to a shuffled-column control and not the peak, because stability and surrogate accuracy don't validate segments either.
         source: notes/05b-clustering-categorical-and-mixed-data.md
         notes: >-
-          Silhouette says 6, Calinski-Harabasz says 2 and Davies-Bouldin says 5, so no index picks the true 4. On the control, Davies-Bouldin improves steadily as k grows with nothing there to find. The gap between the data and control columns carries the message: silhouette 0.243 against 0.110. Stability needs a control too. Gower with PAM is stable at 0.802 across overlapping 80 percent subsamples while recovering the truth at 0.263, so stability says you would get the same answer again, not the right one. A classifier fitted to the cluster labels reaches 0.958 accuracy with groups and still 0.913 with none, so it explains the segments and cannot validate them. The check that matters comes from outside the data: do the segments predict something later better than a one-line rule?
-
-      - layout: table
-        beat: pitfalls
-        title: The clusters looked sure and added nothing to the ranker
-        kicker: "Case: clustering a music library"
-        recall: With no labels, how do you test whether clusters are useful?
-        lead: "Suggest tracks for a saved playlist: 2,182 tracks, nine audio features, one LightGBM per playlist at AUC 0.870 on audio."
-        header: [Check, Measured, What it means]
-        widths: [3.6, 4, 3.8]
-        rows:
-          - [Raw or scaled columns, "Match to clusters on track length alone: 0.988 raw, 0.072 scaled", "Unscaled, milliseconds are the clustering"]
-          - [Median top posterior, "0.992, with seed agreement of 0.718", "Confident inside one model, not proven right"]
-          - [Add cluster posteriors to the ranker, "AUC -0.001 (95% CI -0.007 to +0.005)", Trees already carve the raw features]
-          - ["Swap audio for map position, genre group, year", "AUC +0.050 (95% CI 0.028 to 0.075)", Losing the audio features cost nothing here]
-        highlight: [2]
-        takeaway: "Test them on a later task: added to one music ranker, cluster features did not raise AUC."
-        source: notes/05-unsupervised-learning.md
-        notes: >-
-          A real project and real data, a personal recommender: a Gaussian mixture narrows the candidates and one LightGBM
-          model per playlist ranks them. Three criteria gave three answers for k: BIC is lowest at 11, silhouette is best at 2 or 3, and seed agreement is best at 2. BIC scores fit with a penalty for extra parameters, and 11 to 13
-          sit within seed noise, and k=13 has a cluster of 11 tracks. Silhouette scores how much closer a point sits to its own cluster than the next one, so it favours k-means by
-          construction. Shuffle each column separately, which destroys any real groups, and silhouette falls from 0.258 to 0.107,
-          but BIC still picks k=7, so a BIC minimum doesn't show that groups exist. The project's k = 8 matches its eight genre
-          groups, which is a product reason, so state it as one. Your columns decide what clusters mean too: match to decade is 0.714 on the project's 47 columns and 0.039 on the nine audio features. Playlist-mean columns scored AUC 1.000, which is a leak: one playlist, identical values.
-          The surprise is that the clusters earned no place in the ranker. Spotify cut audio features from new apps in
-          November 2024, so the lab tested whether losing them hurts, and on this task it doesn't. Two caveats. The same person
-          wrote the genre taxonomy and filed the playlists, which flatters the proxies. And the non-members are tracks saved
-          to other playlists, so this measures filing, not taste. The first row is why we scale, and the leak is why you look
-          at any AUC of 1.000 twice. That closes the section: with no labels, every result needs a check from outside it. Next, back to labels.
+          Silhouette says 6, Calinski-Harabasz says 2 and Davies-Bouldin says 5, so no index picks the true 4. On the control, Davies-Bouldin improves steadily as k grows with nothing there to find. The gap between the data and control columns carries the message: silhouette 0.243 against 0.110. Stability needs a control too. Gower with PAM is stable at 0.802 across overlapping 80 percent subsamples while recovering the truth at 0.263, so stability says you would get the same answer again, not the right one. A classifier fitted to the cluster labels reaches 0.958 accuracy with groups and still 0.913 with none, so it explains the segments and cannot validate them. The check that matters comes from outside the data: do the segments predict something later better than a one-line rule? That closes the section: with no labels, every result needs a check from outside it. Next, back to labels.
 
   - title: What the number hides
-    summary: Error costs · Losses · Threshold or SMOTE · Reading errors
+    summary: Error costs · Threshold or SMOTE · Drift · Losses · Reading errors
     notes: >-
       Back to labels, and to the number we said we could defend. What does it hide when the event is rare and the world moves, and which rows are wrong?
     slides:
@@ -814,24 +816,6 @@ parts:
           the rate of good customers declined goes from 1.5 to 9.7 percent, and it pays more at this ratio. The best alpha isn't
           a statistical constant like 5 percent. It comes from the price list. A thin margin of 150 makes the ratio 20:1 and the
           threshold 1/21. We carry both ratios.
-
-      - layout: table
-        beat: fundamentals
-        title: Each loss rewards its own forecast
-        kicker: Gneiting, 2011
-        recall: What are you really choosing when you choose a metric?
-        lead: "Four constant forecasts on one skewed target, 100,000 lognormal draws. Bold marks the lowest loss in each column."
-        header: ["Forecast", "Value", "RMSE", "MAE", "Pinball 0.9", "MAPE"]
-        widths: [3, 1.2, 1.2, 1.2, 1.5, 1.2]
-        rows:
-          - ["The mean", "1.648", "**2.191**", "1.261", "0.631", "1.978"]
-          - ["The median", "0.996", "2.286", "**1.125**", "0.824", "1.125"]
-          - ["90th percentile", "3.586", "2.925", "2.505", "**0.477**", "4.994"]
-          - ["Best for MAPE", "0.367", "2.538", "1.323", "1.174", "**0.684**"]
-        takeaway: Choosing a metric chooses the quantity you forecast, and a metric you tune against also chooses a threshold.
-        source: notes/11-choosing-a-metric.md
-        notes: >-
-          Nothing here is a better model, since all four are one number. Each column has a different winner, and the winner is the forecast built for that column. RMSE picks the mean, MAE the median, pinball its quantile. MAPE's favourite is 0.367, far under the median of 0.996, so about 84 percent of outcomes sit above it. Run practice/metric_map.py for these. The same goes for thresholds. On the 3 percent credit data at 5 to 1 costs, tuned on validation, accuracy's pick declines nobody. Balanced accuracy's declines 27 percent of applicants at 303 per 1,000, twice the 150.5 of approving everyone. MCC's pick is close to the cost-tuned one at 5 to 1, 150.1 against 148.8, and further at 20 to 1, 467.6 against 428.2, because MCC has no cost in it and cannot respond when the ratio changes. So only tune on a metric that holds your costs.
 
       - layout: image
         beat: practice
@@ -906,6 +890,24 @@ parts:
           line. Amounts recorded in thousands are the opposite case, a huge alarm with moderate harm: worst feature PSI 7.706, score PSI 3.291, ROC-AUC 0.753. Stale features show 0.531 only when the coded column is binned by level, and 0.049 with quantile bins, so bin
           coded columns by level. The noise floor here was 0.011, and the 0.1 and 0.25 lines are conventions. In credit scoring
           labels arrive a year late, so input and prediction monitors are what you have.
+
+      - layout: table
+        beat: fundamentals
+        title: Each loss rewards its own forecast
+        kicker: Gneiting, 2011
+        recall: What are you really choosing when you choose a metric?
+        lead: "Four constant forecasts on one skewed target, 100,000 lognormal draws. Bold marks the lowest loss in each column."
+        header: ["Forecast", "Value", "RMSE", "MAE", "Pinball 0.9", "MAPE"]
+        widths: [3, 1.2, 1.2, 1.2, 1.5, 1.2]
+        rows:
+          - ["The mean", "1.648", "**2.191**", "1.261", "0.631", "1.978"]
+          - ["The median", "0.996", "2.286", "**1.125**", "0.824", "1.125"]
+          - ["90th percentile", "3.586", "2.925", "2.505", "**0.477**", "4.994"]
+          - ["Best for MAPE", "0.367", "2.538", "1.323", "1.174", "**0.684**"]
+        takeaway: Choosing a metric chooses the quantity you forecast, and a metric you tune against also chooses a threshold.
+        source: notes/11-choosing-a-metric.md
+        notes: >-
+          Nothing here is a better model, since all four are one number. Each column has a different winner, and the winner is the forecast built for that column. RMSE picks the mean, MAE the median, pinball its quantile. MAPE's favourite is 0.367, far under the median of 0.996, so about 84 percent of outcomes sit above it. Run practice/metric_map.py for these. The same goes for thresholds. On the 3 percent credit data at 5 to 1 costs, tuned on validation, accuracy's pick declines nobody. Balanced accuracy's declines 27 percent of applicants at 303 per 1,000, twice the 150.5 of approving everyone. MCC's pick is close to the cost-tuned one at 5 to 1, 150.1 against 148.8, and further at 20 to 1, 467.6 against 428.2, because MCC has no cost in it and cannot respond when the ratio changes. So only tune on a metric that holds your costs.
 
       - layout: steps
         beat: practice

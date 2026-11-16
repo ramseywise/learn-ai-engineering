@@ -37,18 +37,25 @@ By the end of the course, you can:
 | Labs | Create an analysis, chart, model, or decision brief. | You can combine techniques and defend a result. |
 | Portfolio evidence | Save the unit's required output with assumptions and limits. | You can demonstrate analytical practice. |
 
-## The six pillars
+## Core modules
 
-| Pillar | The analyst's job | What you learn | Portfolio evidence |
+The three every analyst needs, in this order: get the data into a table, reason about it with statistics, and show the result.
+
+| Module | The analyst's job | What you learn | Portfolio evidence |
 |---|---|---|---|
-| [01 Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | Cleaned dataset and validated analysis |
-| [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test and fit regressions, then say what a model claims. | Statistical analysis memo |
-| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading, including by matching and weighting. | Experiment brief or causal-design critique |
-| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests, loss functions and multilevel models. | Diagnosed PyMC decision analysis |
-| [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | Decision-ready visual narrative or dashboard |
-| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation, SQL, survival, journeys, marketing measurement, operations, metric trees and surveys. | End-to-end analysis portfolio |
+| [Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | Cleaned dataset and validated analysis |
+| [Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test and fit regressions, then say what a model claims. | Statistical analysis memo |
+| [Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | Decision-ready visual narrative or dashboard |
 
-Read them in order the first time. Units 01 to 03 are the core sequence. Take Unit 04 after Unit 03; it revisits inference and A/B testing through a Bayesian decision framework. Take Unit 05 before or alongside Unit 06.
+## Advanced topics
+
+Take these after the core. Experimentation comes before Bayesian analysis, which revisits inference and A/B testing as a decision problem. Applied analyses uses all of the others.
+
+| Module | The analyst's job | What you learn | Portfolio evidence |
+|---|---|---|---|
+| [Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading, including by matching and weighting. | Experiment brief or causal-design critique |
+| [Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests, loss functions and multilevel models. | Diagnosed PyMC decision analysis |
+| [Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation, SQL, survival, journeys, marketing measurement, operations, metric trees and surveys. | End-to-end analysis portfolio |
 
 ## Two ways to answer the same question
 
@@ -65,7 +72,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 
 ## Units
 
-### [01 Python for data analysis](01-python-for-data-analysis/README.md)
+### [Python for data analysis](01-python-for-data-analysis/README.md)
 
 **Purpose:** Turn a raw export into a table you can safely analyse. Cleaning, joins, aggregation, time, and charts are correctness problems, not merely API calls ([McKinney](https://wesmckinney.com/book/); [Wickham](https://doi.org/10.18637/jss.v059.i10) on tidy shape).
 
@@ -86,7 +93,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 
 **Key sources:** Wes McKinney, [*Python for Data Analysis*](https://wesmckinney.com/book/) · Jake VanderPlas, [*Python Data Science Handbook*](https://jakevdp.github.io/PythonDataScienceHandbook/) · Wickham, [*Tidy Data*](https://doi.org/10.18637/jss.v059.i10) · [Kaggle Learn: Pandas](https://www.kaggle.com/learn/pandas).
 
-### [02 Probability and statistics](02-probability-and-statistics/README.md)
+### [Probability and statistics](02-probability-and-statistics/README.md)
 
 **Purpose:** Make claims about data you have not seen without overstating what a sample says. This is the vocabulary for later experiments, models, and evaluations.
 
@@ -109,7 +116,28 @@ Name the distribution, fix the sample size before you look, and report effect si
 
 **Key sources:** Bruce & Bruce, *Practical Statistics for Data Scientists* · Downey, [*Think Stats*](https://allendowney.github.io/ThinkStats/) · James et al., [*An Introduction to Statistical Learning with Applications in Python*](https://www.statlearning.com/) · [MIT 18.650](https://ocw.mit.edu/courses/18-650-statistics-for-applications-fall-2016/) · Wasserstein and Lazar, [ASA Statement on p-Values](https://doi.org/10.1080/00031305.2016.1154108).
 
-### [03 Experimentation and causality](03-experimentation-and-causality/README.md)
+### [Visualisation and storytelling](05-visualisation-and-storytelling/README.md)
+
+**Purpose:** Make an analytical result legible and useful. Select encodings, build static and interactive charts, and shape them into an argument without overstating what the data says.
+
+**Learning objectives.** After this unit, you can:
+
+1. Match a question and data type to a chart using perceptually strong encodings and honest scales ([Cleveland and McGill](https://doi.org/10.1080/01621459.1984.10478080)).
+2. Build clear static charts with matplotlib and seaborn, including annotations and uncertainty where needed.
+3. Design interactive charts with useful filtering, tooltips, and accessible fallbacks.
+4. Explain when to use Python plotting libraries, D3, Vega-Lite, or Observable Plot, and implement a small web chart.
+5. Design a dashboard and narrative that give a decision-maker context, evidence, recommendation, and limitations ([Knaflic](https://www.storytellingwithdata.com/books)).
+6. Choose a dashboard stack by audience, interaction, data volume and maintainer, and get Python results to a browser without leaking or overloading ([chapter 6](05-visualisation-and-storytelling/notes/06-dashboard-stacks-from-python-to-frontend.md)).
+
+**Review and practice:** [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) · chapter exercises · runnable [practice scripts and dashboard](05-visualisation-and-storytelling/practice/).
+
+**Mastery lab:** Take one decision from an earlier unit and create a concise visual narrative or dashboard: audience and decision, chart choice, source and transformation notes, recommendation, and the limitation most likely to change it.
+
+**Evidence:** A reviewer can understand the main claim without the code, trace it to a valid measure, and identify the action, uncertainty, and guardrail. Include chart source and an accessible static fallback for interactive work.
+
+**Key sources:** Knaflic, [*Storytelling with Data*](https://www.storytellingwithdata.com/books) · Wilke, [*Fundamentals of Data Visualization*](https://clauswilke.com/dataviz/) · Munzner, [*Visualization Analysis and Design*](https://www.cs.ubc.ca/~tmm/vadbook/) · Cleveland and McGill, [*Graphical Perception*](https://doi.org/10.1080/01621459.1984.10478080) · [Kaggle Learn: Data Visualization](https://www.kaggle.com/learn/data-visualization).
+
+### [Experimentation and causality](03-experimentation-and-causality/README.md)
 
 **Purpose:** Answer whether a change caused an outcome. Learn the discipline that makes an A/B result trustworthy and the assumptions required when randomisation is unavailable.
 
@@ -131,7 +159,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 
 **Key sources:** Kohavi, Tang, and Xu, [*Trustworthy Online Controlled Experiments*](https://experimentguide.com/) · Kohavi et al., [*Controlled Experiments on the Web*](https://doi.org/10.1007/s10618-008-0114-1) · Dmitriev et al., [*A Dirty Dozen*](https://doi.org/10.1145/3097983.3098024) · Cunningham, [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) · [Brady Neal's course](https://www.bradyneal.com/causal-inference-course).
 
-### [04 Bayesian analysis](04-bayesian-analysis/README.md)
+### [Bayesian analysis](04-bayesian-analysis/README.md)
 
 **Purpose:** Revisit inference as a decision problem. Use prior information, posterior uncertainty, diagnostics, and losses to answer what should be done, not only whether a null hypothesis is surprising ([Davidson-Pilon](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers)).
 
@@ -153,28 +181,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 
 **Key sources:** Davidson-Pilon, [*Bayesian Methods for Hackers*](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers) · [McElreath's lectures](https://www.youtube.com/playlist?list=PLDcUM9US4XdPz-KxHM4XHt7uUVGWWVSus) · Gelman et al., [*Bayesian Data Analysis*](https://sites.stat.columbia.edu/gelman/book/) · [Aalto Bayesian Data Analysis](https://avehtari.github.io/BDA_course_Aalto/) · [PyMC examples](https://www.pymc.io/projects/examples/en/latest/gallery.html).
 
-### [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md)
-
-**Purpose:** Make an analytical result legible and useful. Select encodings, build static and interactive charts, and shape them into an argument without overstating what the data says.
-
-**Learning objectives.** After this unit, you can:
-
-1. Match a question and data type to a chart using perceptually strong encodings and honest scales ([Cleveland and McGill](https://doi.org/10.1080/01621459.1984.10478080)).
-2. Build clear static charts with matplotlib and seaborn, including annotations and uncertainty where needed.
-3. Design interactive charts with useful filtering, tooltips, and accessible fallbacks.
-4. Explain when to use Python plotting libraries, D3, Vega-Lite, or Observable Plot, and implement a small web chart.
-5. Design a dashboard and narrative that give a decision-maker context, evidence, recommendation, and limitations ([Knaflic](https://www.storytellingwithdata.com/books)).
-6. Choose a dashboard stack by audience, interaction, data volume and maintainer, and get Python results to a browser without leaking or overloading ([chapter 6](05-visualisation-and-storytelling/notes/06-dashboard-stacks-from-python-to-frontend.md)).
-
-**Review and practice:** [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) · chapter exercises · runnable [practice scripts and dashboard](05-visualisation-and-storytelling/practice/).
-
-**Mastery lab:** Take one decision from an earlier unit and create a concise visual narrative or dashboard: audience and decision, chart choice, source and transformation notes, recommendation, and the limitation most likely to change it.
-
-**Evidence:** A reviewer can understand the main claim without the code, trace it to a valid measure, and identify the action, uncertainty, and guardrail. Include chart source and an accessible static fallback for interactive work.
-
-**Key sources:** Knaflic, [*Storytelling with Data*](https://www.storytellingwithdata.com/books) · Wilke, [*Fundamentals of Data Visualization*](https://clauswilke.com/dataviz/) · Munzner, [*Visualization Analysis and Design*](https://www.cs.ubc.ca/~tmm/vadbook/) · Cleveland and McGill, [*Graphical Perception*](https://doi.org/10.1080/01621459.1984.10478080) · [Kaggle Learn: Data Visualization](https://www.kaggle.com/learn/data-visualization).
-
-### [06 Applied analyses](06-applied-analyses/README.md)
+### [Applied analyses](06-applied-analyses/README.md)
 
 **Purpose:** Do the complete job. Each case begins with a decision and ends with a recommendation, using earlier units to establish a baseline, validate results, and make value concrete.
 

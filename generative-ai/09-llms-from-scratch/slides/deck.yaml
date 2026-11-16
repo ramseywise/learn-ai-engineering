@@ -16,6 +16,56 @@ deck:
     attention. We finish by loading OpenAI's weights into code we wrote ourselves and checking that every logit agrees.
 
 parts:
+  - title: Nothing stays magic
+    overview: true
+    summary: The question · Five parts · What you will be able to do
+    notes: >-
+      Before any code, here is the one question this lecture answers, and the five parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What breaks once you have built the stack?
+        recall: Why does building a language model by hand help you read training failures?
+        kicker: The idea
+        statement: "A first loss of 27 where 3.30 belongs. A BatchNorm over the wrong dimension that raises no error. Can you say why?"
+        attribution: Three chapters built on Karpathy's Neural Networks, Zero to Hero
+        takeaway: "People who have written the stack can read failures that raise no error, because each one has a one-line explanation."
+        source: README.md
+        notes: >-
+          The README's case for the pillar is that most of what breaks in training has a one-line explanation once you have built the thing. We build it.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five parts take the chain rule to GPT-2
+        recall: In what order does this lecture build from the chain rule to GPT-2?
+        steps:
+          - {label: Backprop by hand, sub: "micrograd"}
+          - {label: Models of characters, sub: "counts to an MLP"}
+          - {label: Keeping it trainable, sub: "first loss, BatchNorm"}
+          - {label: Attention, sub: "nanoGPT"}
+          - {label: Reproducing GPT-2, sub: "exact weights, training", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, applies it, then shows **where it fails**."
+          - "Every CPU-sized experiment in the notes is rerun, with its output shown."
+        takeaway: "The parts follow the README's three chapters, and each builds only on what the one before it wrote."
+        source: README.md
+        notes: >-
+          The story in the README is one paragraph. A network is an expression, language modelling starts at counting, attention lets tokens choose, and the same code at full size is GPT-2.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four checks this lecture teaches you to make when you build a model.
+        cards:
+          - {title: Check, body: "Compare the first loss with -log(1/vocab) before you train anything."}
+          - {title: Verify, body: "Compare hand-written gradients and a new architecture's logits against a reference."}
+          - {title: Inspect, body: "Plot saturation, gradient scale and the update-to-data ratio by layer."}
+          - {title: Compare, accent: "D4621A", body: "Use a held-out benchmark, and still ask about leakage."}
+        takeaway: "You will be able to find the failures that raise no error, by checking numbers you can predict before you train."
+        source: README.md
+        notes: >-
+          The abilities are the README's rules of thumb, grouped into four.
+
   - title: Backprop by hand
     summary: Derivatives · Value objects · Topological order · Zeroing
     notes: >-
@@ -23,6 +73,7 @@ parts:
       something. Why bother? Because the failure modes make sense once you have built it.
     slides:
       - layout: statement
+        beat: problem
         title: What does loss.backward() actually do?
         kicker: The problem
         statement: "A network is one big expression, and backward() is the chain rule walked through it in reverse."
@@ -34,6 +85,7 @@ parts:
           input. The question is how to get all of them at once, cheaply.
 
       - layout: code
+        beat: fundamentals
         title: A number that remembers where it came from
         recall: "What does each micrograd operation store, and why is that enough?"
         kicker: Worked example
@@ -58,6 +110,7 @@ parts:
           later. And a + a is the classic bug: with an equals sign, the second write overwrites the first and you get 1.
 
       - layout: flow
+        beat: fundamentals
         title: Forward once, then backward in reverse order
         recall: Why must backward run in reverse topological order?
         steps:
@@ -79,6 +132,7 @@ parts:
           lost. One forward and one backward give every gradient at once.
 
       - layout: table
+        beat: practice
         title: Why backward beats nudging
         recall: "How does the cost of one backward pass compare with nudging each parameter?"
         kicker: Measured
@@ -95,6 +149,7 @@ parts:
           hundred times more, and GPT-2 has 124 million.
 
       - layout: compare
+        beat: pitfalls
         title: Forgetting to zero gradients
         recall: "How can skipped zeroing fool you, and how do you check?"
         kicker: A trap
@@ -122,6 +177,7 @@ parts:
       Everything that a large language model does is already here, at a size you can read.
     slides:
       - layout: statement
+        beat: problem
         title: Can a program make up a new name?
         kicker: The problem
         statement: "Pick a distribution over the following token, sample, repeat. That is all of language modelling."
@@ -133,6 +189,7 @@ parts:
           simplest thing that beats it?
 
       - layout: compare
+        beat: fundamentals
         title: Count it or learn it, and you get the same answer
         recall: "How do counting and gradient descent compare on the bigram model, and why go neural?"
         kicker: Bigrams, two ways
@@ -153,6 +210,7 @@ parts:
           table grows by a factor of 27 per character of context. A network does not.
 
       - layout: code
+        beat: practice
         title: An MLP over a context window
         recall: "How does an embedding let the MLP use three characters without a huge table?"
         kicker: Worked example
@@ -174,6 +232,7 @@ parts:
           0.69 average cosine against 0.30 to consonants, and nobody told it what a vowel is.
 
       - layout: flow
+        beat: practice
         title: What each step of context buys
         recall: "What does more context buy, and how do you check it?"
         kicker: Samples
@@ -193,6 +252,19 @@ parts:
           Read the samples as well as the loss. A bigram remembers one letter, so it writes cexze and momasurailezitynn. Three
           characters of context write rochi, lucan and samiyah. Deeper networks would go further, if they trained.
 
+      - layout: cards
+        beat: pitfalls
+        title: Three quiet mistakes in a character model
+        recall: Which three quiet mistakes does the makemore note warn about?
+        cards:
+          - {title: Normalising the wrong way, body: "`P.sum(1)` without `keepdim=True` gives shape (27,), which broadcasts across rows. It raises no error."}
+          - {title: Training loss as progress, body: "Train falling while dev stays flat is overfitting, not progress."}
+          - {title: The test set as a scoreboard, accent: D4621A, body: "Compare models on dev, and use test only once."}
+        takeaway: "A shape bug raises no error, a falling training loss is not progress, and only dev decides between models, with test used once."
+        source: notes/02-makemore.md
+        notes: >-
+          These come from the note's pitfalls.
+
   - title: Keeping it trainable
     summary: First loss · Saturation · BatchNorm · Trees
     notes: >-
@@ -200,6 +272,7 @@ parts:
       out. The cure comes in three layers, each of which you can measure.
     slides:
       - layout: statement
+        beat: problem
         title: Why does the first loss say 27 when it should say 3.3?
         kicker: The problem
         statement: "A first loss of 27 means the model is confidently wrong before it has seen anything."
@@ -210,7 +283,26 @@ parts:
           It tells you the model's first thousand steps will be spent undoing its init. Fix the output layer and you recover
           those steps. That one change moves the dev loss by 0.04.
 
+      - layout: bullets
+        beat: fundamentals
+        title: What to watch, on five tanh layers
+        recall: "What do you plot per layer, and why isn't the loss curve enough?"
+        kicker: Diagnostics
+        bullets:
+          - "**Saturation:** 21% in layer one, tanh only; 3% with BatchNorm"
+          - "**Gradient scale:** similar across layers, thanks to the 5/3 gain"
+          - "**Update-to-data ratio:** about -2.4 on log10 at lr 0.1, and -3.4 at 0.01"
+        aside:
+          title: Rule of thumb
+          body: A healthy update is about one thousandth of the data, or -3 on a log10 scale.
+        takeaway: Plot saturation, gradient scale and update ratio per layer, since a loss curve cannot explain any failure.
+        source: notes/02-makemore.md
+        notes: >-
+          A loss can look fine while half a layer is dead. These three plots tell you which. Our run brackets the guideline
+          between the two rates that the training schedule uses.
+
       - layout: table
+        beat: practice
         title: Each fix, measured against the same split
         recall: "On this shallow network, which fixes win and when does BatchNorm help?"
         kicker: Worked example
@@ -229,24 +321,8 @@ parts:
           The values reproduce the lecture's table to two decimals, using the same seed. BatchNorm matters for depth, so do
           not read its zero here as a verdict on it.
 
-      - layout: bullets
-        title: What to watch, on five tanh layers
-        recall: "What do you plot per layer, and why isn't the loss curve enough?"
-        kicker: Diagnostics
-        bullets:
-          - "**Saturation:** 21% in layer one, tanh only; 3% with BatchNorm"
-          - "**Gradient scale:** similar across layers, thanks to the 5/3 gain"
-          - "**Update-to-data ratio:** about -2.4 on log10 at lr 0.1, and -3.4 at 0.01"
-        aside:
-          title: Rule of thumb
-          body: A healthy update is about one thousandth of the data, or -3 on a log10 scale.
-        takeaway: Plot saturation, gradient scale and update ratio per layer, since a loss curve cannot explain any failure.
-        source: notes/02-makemore.md
-        notes: >-
-          A loss can look fine while half a layer is dead. These three plots tell you which. Our run brackets the guideline
-          between the two rates that the training schedule uses.
-
       - layout: code
+        beat: practice
         title: The whole backward pass, by hand
         recall: "What does writing backward by hand give you, and what do you check it against?"
         kicker: Becoming a backprop ninja
@@ -270,6 +346,7 @@ parts:
           then you can read a gradient bug anywhere.
 
       - layout: table
+        beat: pitfalls
         title: More context, then a tree
         recall: "What does the tree add alone, and what shows where it stops?"
         kicker: WaveNet-style
@@ -288,6 +365,7 @@ parts:
           loss, so you could not have found it that way. Only checking shapes would have found it.
 
       - layout: flow
+        beat: fundamentals
         title: The tree fuses context a little at a time
         recall: "Why fuse context gradually, and what idea is that behind?"
         kicker: How it works
@@ -316,6 +394,7 @@ parts:
       block by adding them one at a time, on Tiny Shakespeare.
     slides:
       - layout: statement
+        beat: problem
         title: How can a token choose what to look at?
         kicker: The problem
         statement: "A fixed tree decides by position which characters matter. Which ones matter should depend on the characters."
@@ -327,6 +406,7 @@ parts:
           talk to earlier tokens, and only earlier ones, since the model must not see what it predicts.
 
       - layout: flow
+        beat: fundamentals
         title: One head, from tokens to a weighted sum
         kicker: How it works
         recall: What goes wrong without the division by the square root of d?
@@ -349,6 +429,7 @@ parts:
           the weights are now computed. Six of eight rows were near one-hot without the scale.
 
       - layout: code
+        beat: practice
         title: The head in code
         recall: "How long is self-attention in code, and what does a trained head do?"
         kicker: Worked example
@@ -373,6 +454,7 @@ parts:
           longer uniform.
 
       - layout: table
+        beat: practice
         title: Add one piece at a time, and measure
         recall: "What did depth alone do to the model, and what fixed it?"
         kicker: Ablation
@@ -393,6 +475,7 @@ parts:
           The residual path is worth 0.19. LayerNorm's 0.02 is on one seed, too small to call at this depth.
 
       - layout: compare
+        beat: pitfalls
         title: The leak that a validation split cannot see
         recall: "Why can only generating text reveal a mask leak?"
         kicker: A trap
@@ -415,6 +498,7 @@ parts:
           there is nothing to its right to read. So the model has learned little it can use.
 
       - layout: bullets
+        beat: practice
         title: Then simply scale up
         recall: "What separates the toy GPT from the lecture's model?"
         kicker: Scale
@@ -438,6 +522,7 @@ parts:
       Then we follow the lecture through speed, the training recipe and the result.
     slides:
       - layout: statement
+        beat: problem
         title: Is our code really GPT-2?
         kicker: The problem
         statement: "If the code is right, OpenAI's weights must produce the same logits as Hugging Face's implementation."
@@ -449,6 +534,7 @@ parts:
           judge by size: near 1e-5 is rounding and near 1 is a bug.
 
       - layout: code
+        beat: fundamentals
         title: Four matrices are the other way around
         recall: "What is the only trick in loading GPT-2 weights, and what still checks the init?"
         kicker: Worked example
@@ -474,6 +560,7 @@ parts:
           tensor, is 31% of the model on its own.
 
       - layout: table
+        beat: practice
         title: Speed, as the lecture reports it
         recall: "Where did most of the speed-up come from, and whose figures are they?"
         kicker: One A100, B=16, T=1024
@@ -493,6 +580,7 @@ parts:
           in the inference engineering pillar.
 
       - layout: flow
+        beat: practice
         title: One training step, with accumulation
         kicker: The recipe
         recall: What happens if you forget to divide the loss by the accumulation steps?
@@ -515,6 +603,7 @@ parts:
           climbs to 6e-4, then falls to 6e-5.
 
       - layout: compare
+        beat: pitfalls
         title: What the reproduction shows, and what it does not
         recall: "What does beating GPT-2 on one benchmark confirm, and what not?"
         kicker: The result, per the lecture
@@ -541,6 +630,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What to remember
         cards:
           - title: Check the first loss
@@ -555,7 +645,9 @@ parts:
             body: A mask leak hides from both loss curves.
           - title: Divide when you sum
             body: Accumulate the mean, or the rate is silently wrong.
+
       - layout: bullets
+        beat: wrap
         title: Where next
         bullets:
           - "**From building one to using many:** tokenisation, pre-training and inference, in LLM fundamentals"

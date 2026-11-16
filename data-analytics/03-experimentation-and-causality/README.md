@@ -1,4 +1,4 @@
-# 03 — Experimentation and Causality
+# Experimentation and causality
 
 > Whether a change caused a result is the question analysts are hired to answer. This pillar is how to answer it with an experiment, and what to do when you cannot run one.
 > Jump to: [Reading order](#reading-order) · [Rules of thumb](#rules-of-thumb) · [Deck and practice](#deck-and-practice) · [References](references.md)

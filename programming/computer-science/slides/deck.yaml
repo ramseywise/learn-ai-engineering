@@ -16,11 +16,61 @@ deck:
     travel better than the absolute values.
 
 parts:
+  - title: What is being counted
+    overview: true
+    summary: The question · Four steps · What you will be able to do
+    notes: >-
+      Before any structure or algorithm, here is the one question this lecture keeps asking and the four steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What is counted, and what does it cost?
+        recall: What question does every part of this lecture ask?
+        kicker: The idea
+        statement: A deduplication step that took 10 ms on your test file takes eleven minutes on the real one, and nothing in the code looks wrong.
+        attribution: Every part of this lecture asks what is being counted, and what one of them costs
+        takeaway: Code is slow because of what is being counted and what each count costs, and both can be measured before you change anything.
+        source: README.md
+        notes: >-
+          Big-O says what grows, and a clock says what each step costs. The lecture needs both, and it measures on one machine, so the ratios travel better than the absolute values.
+
+      - layout: flow
+        beat: fundamentals
+        title: Four steps from counting work to waiting
+        recall: What are the four parts of this lecture, in order?
+        steps:
+          - {label: Counting, sub: "Big-O and a clock"}
+          - {label: Structures, sub: "and patterns"}
+          - {label: Machine, sub: "numbers and memory"}
+          - {label: Waiting, sub: "threads, I/O, networks", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it."
+          - "Each part ends on the mistake it usually produces."
+        takeaway: The lecture moves from reasoning about code to the machine underneath it, and ends on the cost of waiting.
+        source: README.md
+        notes: >-
+          Chapters 1 to 3 are reasoning about code. Chapters 4 to 6 are the machine underneath: numbers and memory, processes, threads and I/O, and networks.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with code.
+        cards:
+          - {title: Count, body: "Count work with sums and recurrences, state Big-O properly, budget a request and optimise in an order that works."}
+          - {title: Choose, body: "Explain how CPython's `list` and `dict` work, and choose a structure or algorithm pattern by what it costs."}
+          - {title: Predict, body: "Predict float error, write a stable softmax, and explain why data layout changes speed by orders of magnitude."}
+          - {title: Price, accent: "D4621A", body: "Price a process, thread and system call, prevent races, size a queue and count the round trips in a cold request."}
+        takeaway: You will be able to predict what a piece of code costs, check the prediction against a clock, and fix the part that matters.
+        source: README.md
+        notes: >-
+          These are the abilities the reading-order table promises for chapters 1 to 6.
+
   - title: Counting work
     summary: The doubling test · Lower bounds · Amortised cost · The order to optimise in
     notes: How to count work, how to check the count against a clock, and what to do with the answer.
     slides:
       - layout: statement
+        beat: problem
         title: Why does a 10 ms job take eleven minutes?
         kicker: The problem
         statement: A deduplication step that took 10 ms on your test file takes eleven minutes on the real one, and nothing in the code looks wrong.
@@ -29,6 +79,7 @@ parts:
         notes: Without a way to predict this, you find out in production. With Big-O alone, you might spend a week on a change that saves nothing. This part teaches both halves.
 
       - layout: code
+        beat: fundamentals
         title: How do you estimate an exponent without any theory?
         kicker: The doubling test
         lead: "Best of 5 runs on shuffled ints. CPython 3.14.7, Apple M4 Pro."
@@ -55,6 +106,7 @@ parts:
         notes: "`n log n` predicts a slope of about 1.07 at this size, and `sorted` measured 1.15 to 1.18. The set's analysis isn't wrong, the cost model is: at a million items each lookup is likelier to miss the cache. Don't explain a slope away."
 
       - layout: flow
+        beat: fundamentals
         title: Why can't comparison sorting beat n log n?
         kicker: Logarithms are what halving looks like
         steps:
@@ -70,6 +122,7 @@ parts:
         notes: "Repeated halving is where `log n` comes from: going from a thousand items to a billion adds 20 steps. Chapter 2's sort can only beat this bound on inputs that aren't in random order."
 
       - layout: compare
+        beat: pitfalls
         title: When is amortised cost the wrong number?
         kicker: list.append
         lead: "2 million appends with 92 resizes. CPython 3.14.7, Apple M4 Pro."
@@ -91,6 +144,7 @@ parts:
         notes: "Adding a fixed amount gives an arithmetic series, and the 499.50 keeps growing with n. Any factor above 1 gives a constant, traded against wasted space. Keep the kinds of bound apart: worst case, average case, expected, amortised, adversarial. Reasoning gets you the shape, and measuring gets you what actually happens."
 
       - layout: steps
+        beat: practice
         title: In what order should you optimise?
         kicker: The order that works
         lead: "Evidence: tokens for a block list, 20,000 log rows against 2,000 ids."
@@ -110,6 +164,7 @@ parts:
     notes: What's behind the O(1) claims, then the handful of ideas most algorithms come from.
     slides:
       - layout: statement
+        beat: problem
         title: What do list and dict details cost you in production?
         kicker: The problem
         statement: A work queue that gets slower the longer it runs, a cache that never gives memory back, an endpoint brought down by a few thousand crafted keys.
@@ -118,6 +173,7 @@ parts:
         notes: The chapter reads the CPython source for list and dict and checks every claim with sys.getsizeof and a clock.
 
       - layout: code
+        beat: fundamentals
         title: How is a Python dict laid out?
         kicker: Two arrays
         lang: text
@@ -146,6 +202,7 @@ parts:
         notes: "Since Python 3.6, following Hettinger's 2012 proposal. Six thousand keys that collide on their low bits cost about 4 probes each with CPython's recurrence, against 3,000 for linear probing, in a table of 32,768 slots. A list, by comparison, is an array of pointers that grows by about 12.5%."
 
       - layout: table
+        beat: pitfalls
         title: Which list and dict habits become outages?
         kicker: Measured traps
         lead: "CPython 3.14.7, 64-bit macOS. Each row compares the habit with the alternative."
@@ -161,6 +218,7 @@ parts:
         notes: "A deleted slot can't simply be emptied, because a lookup stops at the first empty slot, so it's marked DUMMY. Strings are protected by per-process keyed SipHash, so never persist hash() of a string: use hashlib. Ints are still predictable: every multiple of 2**61 - 1 hashes to 0 on this build."
 
       - layout: flow
+        beat: fundamentals
         title: What makes BFS, DFS and Dijkstra the same algorithm?
         kicker: Whatever-first search
         steps:
@@ -178,6 +236,7 @@ parts:
         notes: "Erickson calls this whatever-first search. BFS and DFS handle each node and edge once, so V + E. Seeing a node again while it's still active on the current path means a cycle. heapq can't change a priority, so Dijkstra skips stale entries: 9 pops for 6 nodes in the note's example. Latencies are safe as weights; scores or log-probabilities may not be."
 
       - layout: table
+        beat: fundamentals
         title: What must hold before a pattern's shortcut is correct?
         kicker: Which pattern
         recall: Why check a pattern's condition first?
@@ -198,6 +257,7 @@ parts:
         notes: "The note's table also has union-find, which only ever merges, and quickselect, which needs random pivots. Honest results matter too: on in-memory lists set(a) & set(b) was about twice as fast as two pointers, 135 ms against 255 ms for 1M by 1M, because the set work happens in C. Ten simulations found a capacity limit among 999 rates by binary search."
 
       - layout: code
+        beat: practice
         title: How do you know a greedy rule is correct?
         kicker: GPU reservations
         lang: python
@@ -226,6 +286,7 @@ parts:
     notes: What the values in those structures really are, in bits and in cache lines.
     slides:
       - layout: statement
+        beat: problem
         title: Why would the same loop run four times slower?
         kicker: The problem
         statement: Python's numbers look like the ones in a maths book, and its memory looks flat and uniform. Neither is true.
@@ -234,6 +295,7 @@ parts:
         notes: "The useful skill is knowing when it matters. Accumulated rounding on a million costs comes to less than a billionth of a dollar, and you can ignore it. Cosine distance between nearly identical vectors can round to exactly zero."
 
       - layout: code
+        beat: pitfalls
         title: How can two different vectors have distance exactly zero?
         kicker: Cancellation
         lang: text
@@ -253,6 +315,7 @@ parts:
         notes: "For normal retrieval scores this doesn't matter at all. float32 has only 24 bits, so the same trap arrives around theta of 1e-4. Never compare computed floats with ==. Summing is usually fine: the plain loop was off by 6.4e-10 on a total of $5,998.86 over a million costs."
 
       - layout: table
+        beat: fundamentals
         level: deep
         title: Why train in bf16 rather than fp16?
         kicker: Smaller floats
@@ -271,6 +334,7 @@ parts:
         notes: "Narrow formats halve the bytes to store and move, and they fail in two ways. Range: fp16 turns 65,504 plus 16 into inf, and anything below about 6e-8 into zero, which is why fp16 training adds loss scaling. bf16 keeps fp32's eight exponent bits, so a loss of 70,000 is fine. Precision: ten thousand copies of 0.001 summed in fp16 stall at 4.0, because the step there is about 0.004; an fp32 accumulator gets 10.004. So mixed precision multiplies in 16 or 8 bits but keeps the matmul accumulator, the optimiser state and a master copy of the weights in fp32. NumPy has no bf16 or fp8, so those rows are derived, not measured."
 
       - layout: flow
+        beat: fundamentals
         title: What does a random read cost as the working set grows?
         kicker: The staircase
         lead: "NumPy reads in C, by throughput, on one Apple M4 Pro. Other machines' steps differ."
@@ -287,6 +351,7 @@ parts:
         notes: "This measures throughput, not the latency of a lone read: an out-of-order core has many misses in flight, so a pointer chase would show a steeper staircase. The mix includes TLB misses at large sizes, not separated out. The first touch of a page cost 674 ns, then none, which is why a fast allocation can be followed by a slow first loop."
 
       - layout: cards
+        beat: practice
         title: Why can a NumPy loop be slower than a list loop?
         kicker: Layout sets the constant
         lead: "2 million floats, costs per item. Apple M4 Pro, CPython 3.14.7."
@@ -313,6 +378,7 @@ parts:
         notes: "Big-O is equal in all of these, and the ratio between best and worst is more than 300. A list of floats is an array of pointers to 24-byte objects; an array holds the raw 8 bytes in a row. The same reasoning explains why column stores are fast."
 
       - layout: compare
+        beat: practice
         level: deep
         title: Why does a naive softmax return nan?
         kicker: Log-sum-exp
@@ -341,6 +407,7 @@ parts:
     notes: The largest cost is often waiting, which doesn't show up in Big-O at all.
     slides:
       - layout: statement
+        beat: problem
         title: Where does the time go when the CPU looks idle?
         kicker: The problem
         statement: Most Python performance mysteries are about waiting, not computing.
@@ -349,6 +416,7 @@ parts:
         notes: This part builds the operating system's model, prices each operation on one machine, and then follows a request out over the network.
 
       - layout: table
+        beat: fundamentals
         title: What does each boundary cost?
         kicker: Prices on one machine
         recall: Why use worker pools, not a process per request?
@@ -367,6 +435,7 @@ parts:
         notes: "A process has its own address space, and that isolation is why it exists. Threads share memory and have separate stacks. A new python -c pass took 16,304 µs, which suggests that most of spawn's cost is the interpreter starting up."
 
       - layout: code
+        beat: pitfalls
         title: Does the GIL make += safe?
         kicker: Lost updates
         lang: python
@@ -390,6 +459,7 @@ parts:
         notes: "A race condition is a result that depends on timing. Deadlock needs four conditions: mutual exclusion, hold-and-wait, no preemption and circular wait. Timeouts on acquire are also worthwhile, as a hang becomes an error you can log."
 
       - layout: compare
+        beat: pitfalls
         title: What does one blocking call do to an event loop?
         kicker: Many waits, one thread
         lead: "One thread, `selectors`, on loopback: one slow client, then 50 others arriving at 20 ms."
@@ -410,6 +480,7 @@ parts:
         notes: "186 ms is the rest of that 200 ms after they arrive at 20 ms. Blocking itself is good when it's the kernel putting a thread to sleep: polling and blocking both waited 0.5 s, polling used 0.5 s of CPU, and blocking used none."
 
       - layout: cards
+        beat: fundamentals
         title: How do you reason about a queue?
         kicker: Little's law and backpressure
         cards:
@@ -421,6 +492,7 @@ parts:
         notes: "Little's law was checked here by measurement: λW matched the sampled L to within about 2%. The default queue.Queue() has no bound, which quietly makes the choice between waiting and rejecting for you. put_nowait and queue.Full are how you reject."
 
       - layout: bullets
+        beat: practice
         title: What does parallelism buy in Python?
         kicker: Amdahl
         recall: Which parallelism fits which Python work?
@@ -441,6 +513,7 @@ parts:
         notes: "With n workers the speedup is 1 / (s + (1 - s) / n). 4.65x on 8 workers implies s of about 0.10, a ceiling of about 10x, and here that serial part is mostly startup. Don't send a 1 ms task to a process pool one at a time."
 
       - layout: code
+        beat: pitfalls
         title: Why isn't one recv one message?
         kicker: TCP is a stream
         lead: "Measured on loopback."
@@ -463,6 +536,7 @@ parts:
         notes: "HTTP/1.1 solves the same problem with Content-Length, chunked coding or connection close. A server-sent event can be split across chunks, so buffer until you've got a complete one. Reject an oversized length header before you buffer the body."
 
       - layout: flow
+        beat: practice
         title: Where does a cold HTTPS request spend its time?
         kicker: Count the round trips
         lead: "One run to `example.com`, RTT about 50 ms. Run it yourself before quoting it."
@@ -484,6 +558,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules to keep
         recall: When code is slow, what do you do first, and which do you fix before the other, the algorithm or the constant factor?
         cards:
@@ -498,6 +573,7 @@ parts:
         notes: "These condense the track's rules of thumb, one card per layer, and each comes from its own note. The flashcard itself comes from chapter 1. NaN is the other silent number trap: sorted on a list containing one returns a list that isn't sorted, so check math.isnan on the way in."
 
       - layout: bullets
+        beat: wrap
         title: Where next?
         bullets:
           - "**Build it:** the lab's `FrameDecoder` and `RtoEstimator`, against their tests"

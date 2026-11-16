@@ -19,12 +19,59 @@ deck:
     so the procedure matters more than the architecture.
 
 parts:
+  - title: Does the score match the decision?
+    overview: true
+    summary: The question · Four parts · What you will be able to do
+    notes: >-
+      Before any code, here is the one question this lecture keeps asking and the four parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What would this model really score on the day it is used?
+        recall: What question does this lecture ask of every forecast, list and match?
+        kicker: The idea
+        statement: "A shuffled test, a rating error and a pair accuracy each look good, and each describes a score the decision will never see."
+        attribution: "The M5 competition: only 35.8% of teams beat a seasonal naive forecast"
+        takeaway: In forecasts, lists and matches, the evaluation that flatters the model is the usual failure.
+        source: README.md
+        notes: >-
+          Three problems break the habit of shuffling rows and holding some out: bike demand by midnight, a top ten list per person, and bank lines to match to invoices. The procedure matters more than the architecture.
+
+      - layout: flow
+        beat: fundamentals
+        title: Four parts, from one forecast to a ledger of matches
+        recall: How does this lecture move from forecasts to matching?
+        steps:
+          - {label: Forecast, sub: "issue time, backtests"}
+          - {label: Rank, sub: "top-N, EASE"}
+          - {label: Serve and test, sub: "two towers, A/B"}
+          - {label: Match, sub: "blocking, rankers", accent: "D4621A"}
+        takeaway: Each part scores a different decision, and each swaps a flattering test for one that matches the decision.
+        source: README.md
+        notes: >-
+          The first part forecasts bike demand, the second ranks films, the third serves and evaluates at scale, and the fourth matches bank lines to invoices.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with forecasts and lists.
+        cards:
+          - {title: State, body: "State the issue time, horizon and information set before fitting anything."}
+          - {title: Baseline, body: "Put the seasonal naive in every forecast table and popularity in every recommender table."}
+          - {title: Score, body: "Rank the full catalogue, and never score a list with RMSE.", accent: "0EA5C9"}
+          - {title: Match, accent: "D4621A", body: "Say which record a line matches, if any, and train on the order of a list."}
+        takeaway: You will be able to set up a forecast or a ranking so that its score matches what the decision will see.
+        source: README.md
+        notes: >-
+          These abilities come from the reading order and the rules of thumb in the README.
+
   - title: Forecasting without fooling yourself
     summary: Issue time · Baselines · Backtests · Leaks · Sequence models · Segments
     notes: >-
       We start with an operator who plans vans at midnight. What would a forecast really have scored on the day it was issued?
     slides:
       - layout: statement
+        beat: problem
         title: Our shuffled test says the forecast is great. Is it?
         kicker: The problem
         recall: Why does a shuffled test overstate how well a forecast will do?
@@ -37,6 +84,7 @@ parts:
           time, and the level drifts so the test set can sit outside anything seen in training. So how do we set this up?
 
       - layout: cards
+        beat: fundamentals
         title: Four things to state before any model
         recall: Which four choices define a forecasting problem, and what do they decide?
         cards:
@@ -55,6 +103,7 @@ parts:
           if you want one model for every hour of tomorrow.
 
       - layout: flow
+        beat: fundamentals
         title: A backtest replays history one fold at a time
         recall: What does an expanding-window backtest train on at each cut?
         steps:
@@ -75,6 +124,7 @@ parts:
           is fine for purely autoregressive models with uncorrelated residuals, but not with a drifting level and a decision made at a set moment.
 
       - layout: table
+        beat: practice
         title: Dividing by a known level beat the naive by a quarter
         kicker: Worked example
         recall: Why model the ratio to a known level when a series is growing and you use trees?
@@ -94,6 +144,7 @@ parts:
           level takes MASE from 0.906 to 0.786 in one line. Note that October is the only month above 1, because of Hurricane Sandy.
 
       - layout: compare
+        beat: pitfalls
         title: Three leaks that each look like a breakthrough
         recall: What should you ask of every feature to catch a leak?
         lead: The honest model scores MASE 0.786 on these folds.
@@ -119,6 +170,7 @@ parts:
           flatter us least here because every feature is at least a day old, but 5 percent can still change a close decision.
 
       - layout: code
+        beat: practice
         title: DLinear is two linear maps and a moving average
         recall: What should any complex forecaster have to beat first, and on what evidence?
         lang: python
@@ -146,6 +198,7 @@ parts:
           trend from remainder. All three have the same interface: 168 hours in, 24 out.
 
       - layout: table
+        beat: practice
         title: Trees beat networks here, on one short series
         recall: On a small single series, what do you try first, and what must a deep model do?
         lead: Each network saw 168 hours and predicted 24, with no calendar input. MASE, six folds.
@@ -165,6 +218,7 @@ parts:
           35.8 percent of teams beat the seasonal naive. DeepAR and its relatives are designed for many series, and a single short one starves them.
 
       - layout: cards
+        beat: fundamentals
         title: "Case: forecasting each segment's cash flow, on synthetic data"
         kicker: Case study
         recall: In the segment case, what is a control world for?
@@ -185,6 +239,7 @@ parts:
           is scaled by the same-week-last-year naive.
 
       - layout: image
+        beat: pitfalls
         title: One synthetic world said that segments don't help
         kicker: Case study
         recall: Why did the seed 42 table read as "segments don't help"?
@@ -202,6 +257,7 @@ parts:
           that, ask how many worlds it rests on: one, and eight folds.
 
       - layout: table
+        beat: practice
         title: "Five more worlds reversed it: segments help only where real"
         kicker: Case study
         recall: Across five worlds, where did the gain from segments appear, and where did it vanish?
@@ -221,6 +277,7 @@ parts:
           with one model to maintain. In single customers the effect is small: 1.133 global against 1.126 with the feature and 1.137 per segment.
 
       - layout: steps
+        beat: fundamentals
         title: Segment a forecast only after it beats random groups
         kicker: Case study
         recall: What must segments beat, and on how many worlds, before you trust the gain?
@@ -248,6 +305,7 @@ parts:
       Now a film site wants a top ten list per person. We have MovieLens 100K, and we start where the Netflix Prize started, predicting stars.
     slides:
       - layout: statement
+        beat: problem
         title: Our best rating model loses to a bestseller list
         kicker: The problem
         recall: Why can a model trained to predict stars rank worse than popularity?
@@ -260,6 +318,7 @@ parts:
           The top tenth of films hold 43 percent of the ratings.
 
       - layout: cards
+        beat: fundamentals
         title: NDCG gives more credit for hits near the top of the list
         kicker: How we score a list
         recall: What does NDCG reward that plain recall does not?
@@ -277,6 +336,7 @@ parts:
           read from the top. Dividing by the best possible list keeps the score between 0 and 1 for every user. Coverage stops a list of bestsellers looking good.
 
       - layout: flow
+        beat: fundamentals
         title: Split interaction logs by time, not at random
         recall: What does a random split of interaction logs do to NDCG, and why?
         steps:
@@ -293,6 +353,7 @@ parts:
           MovieLens users rate in one sitting, so a global time cut leaves most future raters with no history. On a real system, use the global cut.
 
       - layout: bullets
+        beat: fundamentals
         title: Biased matrix factorisation, and what each part buys
         recall: In biased matrix factorisation, which parts capture most of the rating signal?
         lead: "**rating = mean + b_user + b_item + p_user · q_item**, fitted only on observed cells"
@@ -311,6 +372,7 @@ parts:
           random holdouts behind many published MovieLens numbers.
 
       - layout: code
+        beat: practice
         title: EASE trains with one matrix inverse
         recall: How does EASE learn its item-item matrix, and why is the diagonal zero?
         lang: python
@@ -335,6 +397,7 @@ parts:
           catalogues in the tens of thousands, which is what pushes larger systems to factor models.
 
       - layout: image
+        beat: practice
         title: Models built to rank beat a popularity list
         kicker: Worked example
         recall: On full-catalogue top-10, which kind of model beat popularity?
@@ -346,6 +409,7 @@ parts:
           Relevant means rated 4 or 5, minus what the user has seen. Recall@10 follows the same order: EASE 0.155, ALS 0.138, kNN 0.137, BPR 0.126, popularity 0.090, MF on ratings 0.043. One small dataset, so treat this as a demonstration of method. Watch coverage too. A high NDCG with 4 percent coverage is a bestseller list.
 
       - layout: compare
+        beat: fundamentals
         title: Implicit data has no dislikes, so model it differently
         recall: What are the two ways to model implicit feedback?
         lead: Not watching may mean disinterest, or never having seen it.
@@ -370,6 +434,7 @@ parts:
           validation grid put that setting last.
 
       - layout: statement
+        beat: pitfalls
         title: Simple methods keep winning, so measure them first
         recall: Which simple methods belong in every recommender table, and why?
         statement: "Of 18 published top-n algorithms, 7 could be reproduced, 6 of those often lost to simple heuristics, and the last did not consistently beat a tuned linear method."
@@ -386,6 +451,7 @@ parts:
       EASE won, but it cannot serve a catalogue of millions, and a new film leaves it helpless. Then the harder question: how do you know any of this works?
     slides:
       - layout: statement
+        beat: problem
         title: A new film has no ratings. What does EASE recommend?
         kicker: The problem
         recall: Which two limits of interaction-only models motivate feature-based retrieval?
@@ -397,6 +463,7 @@ parts:
           EASE's score for a film it never saw is zero everywhere. And the matrix inverse is cubic in items. We need something that embeds from features and serves quickly.
 
       - layout: flow
+        beat: fundamentals
         title: Large systems narrow the catalogue in stages
         recall: Why is retrieval judged on recall?
         steps:
@@ -413,6 +480,7 @@ parts:
           Because the towers never see each other's inputs, all item vectors can be precomputed into a nearest neighbour index. Serving is one forward pass and one lookup.
 
       - layout: code
+        beat: practice
         title: One line stops in-batch softmax punishing popularity
         recall: Why does in-batch softmax hurt popular items, and what is the fix?
         lang: python
@@ -435,6 +503,7 @@ parts:
           Yi and colleagues give this correction from importance sampling. On Wikipedia with 5.3 million pages they report Recall@10 going from 0.0643 to 0.1065 at tau 0.07.
 
       - layout: table
+        beat: practice
         title: The correction turns a losing tower into a contender
         kicker: Worked example
         recall: What did the logQ correction do to the two-tower model, and what did the plain model do?
@@ -454,6 +523,7 @@ parts:
           recall 0.22 against 0.08 for random, and EASE only matches random.
 
       - layout: image
+        beat: pitfalls
         title: A sampled metric reversed two models
         recall: What can ranking against sampled negatives do to the order of two models?
         image: ../../sources/images/recsys-sampled-metric.png
@@ -464,6 +534,7 @@ parts:
           Krichene and Rendle prove this is not noise. As the sample shrinks, all metrics collapse towards AUC. We see it directly here: numbers roughly four to nine times too high, and the order flipped. The tower's lead holds up to 499 negatives and ends at 999, so a paper's choice of sample size can decide the winner.
 
       - layout: table
+        beat: practice
         title: Reweighting recovers the value of an unshipped policy
         recall: What does IPS need from the logs, and what does it cost?
         lead: Simulated bandit, 200,000 logged events, so the true value is known.
@@ -483,6 +554,7 @@ parts:
           Log your propensities now, because you cannot add them later.
 
       - layout: steps
+        beat: fundamentals
         title: Each stage earns the next, more expensive one
         recall: Why must offline stages remove candidates before an A/B test?
         steps:
@@ -508,6 +580,7 @@ parts:
       Now there is no user and no catalogue, only bank lines and invoices with no shared ID. We retrieve, rank and then decide whether to link at all. The ledger is generated, so the true links are known exactly and no real supplier or payment is in it.
     slides:
       - layout: statement
+        beat: problem
         title: 99.5% accurate on pairs, and 27% of lines are wrong. Why?
         kicker: The problem
         recall: Why can a pair classifier score above 99% and still get a quarter of bank lines wrong?
@@ -519,6 +592,7 @@ parts:
           This is the job of a clerk with a stack of bank lines and a stack of invoices. A wrong link is also two errors, not one. Of 101 wrong top picks, 97 invoices were wrongly marked paid and 101 lines had their true invoices left open. About three quarters of the wrong picks, 0.752, were the right supplier and the wrong invoice, so what is left is telling near-identical invoices apart. The threshold also handed 62 lines several invoices, and only 2 of those were real batches.
 
       - layout: image
+        beat: fundamentals
         title: Blocking cuts 17 million pairs and caps all that follows
         recall: What does blocking cost, and which two numbers do you read together?
         image: ../../sources/images/recsys-match-blocking.png
@@ -533,6 +607,7 @@ parts:
           Blocking means comparing only pairs that share some cheap property, such as a close amount or a similar name. Recall is the share of true links still inside the block. Fellegi and Sunter already had this accounting in 1969: pairs outside the block are links you decided against without looking. Going from 157 to 250 candidates buys nothing, because the links still missing fail on another key, with a split amount, a hidden name and no reference. Only a new kind of key could reach them.
 
       - layout: code
+        beat: fundamentals
         title: Evidence adds up in bits, and the middle goes to a person
         kicker: Fellegi and Sunter, 1969
         recall: What are m and u, and why did Fellegi and Sunter use three outcomes?
@@ -555,6 +630,7 @@ parts:
           This reads like the odds form of Bayes' rule, adding evidence field by field if the fields are independent given match status. The link region is clean, but it holds only 305 of 824 true pairs, with nearly 7,000 pairs sent to review for 866 lines. These weights know nothing about the other candidates on the same line. Notice that a weak name scores below no name at all. That comes from the block, which selected on the same fields, so read the weights as conditional on the block. We did not run a language model here. Ditto is the reference for messy text, and its authors warn it may not capture numeric-heavy matching well.
 
       - layout: cards
+        beat: fundamentals
         title: Three ways to train a ranker differ in what one example is
         recall: What is one training example in pointwise, pairwise and listwise ranking, and why can't NDCG be optimised directly?
         cards:
@@ -572,6 +648,7 @@ parts:
           Each candidate gets a grade: 2 for a true link, 1 for another invoice from the right supplier, 0 for anything else. Sorting makes NDCG, in Burges's words, everywhere either discontinuous or flat, so it has no useful gradient. LambdaRank's fix is blunt: write no loss, just write down the gradient you want. Bruch's objection is that this leaves no objective to analyse. It works anyway. An ensemble of LambdaMART rankers won a track of the 2010 Yahoo challenge, though Burges's paper presents no experiments of its own.
 
       - layout: table
+        beat: practice
         title: LambdaMART won, and most of its gain is training on pairs
         kicker: Measured
         recall: Where did LambdaMART's gain over pointwise trees come from, and what did the NDCG factor add?
@@ -594,6 +671,7 @@ parts:
           LambdaMART wins on NDCG in all five paired comparisons, but read where the gain comes from. The biggest step is having features at all, from 0.54 to 0.87. A pairwise linear model at 0.9374 beats pointwise trees at 0.9129, so here the objective matters more than the model family. Pointwise linear scored 0.9101. The factor's 0.0035 is real, about an eighth of what moving to pairs bought. Listwise lost all five ledgers by 0.0056, though Bruch's web search benchmarks went the other way, 48.23 against 48.08 and 73.37 against 73.00, so the gap is small and depends on the data. Top-1 is noisier: the trees sit within about 0.015 with a standard deviation over 0.02, so don't claim an order from it. We chose this generator's difficulties, so run it on your own data before trusting the close results.
 
       - layout: table
+        beat: pitfalls
         title: The obvious one-to-one constraint lost, 678 to 689
         recall: Why did one-to-one assignment lower the score, and for which kind of payment?
         lead: "Hungarian assignment uses each line and each invoice at most once. Top picks counted right, one generated ledger, LambdaMART scores."
@@ -611,6 +689,7 @@ parts:
           We expected assignment to win, and it lost. Independent picks left 98 invoices claimed by more than one line, so the repair looked obvious. Singles and batches did improve, but the constraint is false for the part you most need to get right. For batches the fix is arithmetic, not learning. Search the supplier's invoices for a unique set that sums to the payment, and batches go from 0 to 22 of 35 fully right, with no wrong sets and one single lost. The 8 ambiguous lines go to a person. We have not measured exempting likely part payments from the constraint.
 
       - layout: image
+        beat: practice
         title: The margin over second links far more lines safely
         recall: What should a matcher abstain on, and did the better ranker help by itself?
         image: ../../sources/images/recsys-match-abstain.png
@@ -625,6 +704,7 @@ parts:
           A ranker only promises order within a bank line, so comparing raw scores across lines asks something it was not trained for. The margin is how far the top candidate is ahead of the second. The ranker did not change at all, and a better question of its output gained 28 points of coverage at 99 percent precision. Where to stand on that curve is a business decision based on the price of a wrong link and the price of review, which is DS 01/13. The corrections people make in the queue become your next labels, with the selection bias DS 01/14 measures.
 
       - layout: table
+        beat: practice
         title: Tuning beat a frozen encoder here, then flattened
         recall: How do you tell whether more labelled pairs would pay when tuning an encoder?
         lead: "Generated catalogues of about 1,700 records, `all-MiniLM-L6-v2`, 400 steps, batch 32, three seeds. Seed noise about 0.01."
@@ -644,6 +724,7 @@ parts:
           Don't take 13.4% to 90.8% as what tuning does in general. It's the size of the gap on this text, mostly codes, grades and dimensions, where the frozen model has the least to work with. The 1,000 to 5,000 pairs rule of thumb we traced cites no study. Pairs come from closing the match labels into groups and allowing one pair per known group in a batch, so no known match is used as a negative, though unlabelled matches can still land there. Look-alikes rise with tuning too, which the next slide returns to.
 
       - layout: compare
+        beat: pitfalls
         title: What a headline recall hides
         recall: Mining left recall flat. What did it buy, and why do you still need an attribute check?
         left:
@@ -670,6 +751,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What to remember
         recall: Which two habits apply to both forecasts and recommenders?
         cards:
@@ -690,6 +772,7 @@ parts:
         notes: >-
           Both halves of today came down to the same two habits: an evaluation that matches the real decision, and a simple method to beat.
       - layout: bullets
+        beat: wrap
         title: Where next
         recall: Where do you go next for experiment statistics, and for exploration and replay?
         bullets:

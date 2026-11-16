@@ -127,6 +127,12 @@ Its scope is tier 1, tier 2 and book chapters (`next` and `status` without `--al
 paper tiers 3-6 only once that core is empty. Nothing is read twice: `/papers` and `/chapter` leave an extraction
 behind, `next` skips every reading with a full one, and a `source-reader` handed a PDF whose full extraction
 passes `check` reports from that file instead of reading the PDF again.
+
+The nightly run ends by carrying the extractions into librarian (`../librarian`, or `LIBRARIAN`):
+`librarian scrape extractions` copies new ones to its `data/raw/papers/`, `/ingest` sessions compile the pending
+ones into wiki pages (a batch of ten per session, staged there, never committed), then `librarian courses import`
+and `librarian index build` refresh the mirrored notes and the search index. The three commands use no model and
+run even when a usage limit ended the run; `INGEST=0` skips the stage.
 `check_ledger.py` reports `no-extraction` (information only) until it is cleared; then it becomes gated and
 `mark integrated` refuses a reading without one. Today `mark integrated` warns.
 

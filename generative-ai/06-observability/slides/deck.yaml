@@ -17,12 +17,64 @@ deck:
     right answer. Read this alongside the Eval pillar, which covers how to judge the evidence we collect here.
 
 parts:
+  - title: What each tool can see
+    overview: true
+    summary: The question · Six uses of a trace · What you will be able to do
+    notes: >-
+      Before any tool, here is the one question this lecture keeps asking of one bad fortnight, and the six uses of a trace we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What can each tool see of the fortnight?
+        recall: What question does every part of this lecture ask about Acme Books' fortnight?
+        kicker: The idea
+        statement: "Acme Books' support agent had a bad fortnight. A vendor stalled, a release broke the prompt cache and answers went wrong. Which tool could see each failure, and what did it miss?"
+        attribution: 1,400 synthetic turns, 5 to 18 October 2026; every failure is planted, so the right answer is known
+        takeaway: The questions you can answer about an agent next month are fixed by what you log today, so each tool is judged by what it can and cannot see.
+        source: README.md
+        notes: >-
+          We follow one fictional agent through one fortnight. Each part opens with a number that looks fine and is not, states the rule that explains it, and applies the rule to the fortnight.
+
+      - layout: flow
+        beat: fundamentals
+        title: Six uses of one data model
+        recall: Name the six uses of a trace that this lecture covers, in order.
+        steps:
+          - {label: Trace, sub: "one agent turn"}
+          - {label: Score, sub: "versions on a golden set"}
+          - {label: Judge, sub: "exported production traces"}
+          - {label: Query, sub: "an agent reads traces"}
+          - {label: Contract, sub: "what every trace carries"}
+          - {label: Dashboard, sub: "spend and latency", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it to the fortnight."
+          - "Each part ends on what that tool cannot see."
+        takeaway: One data model of trace, span and score, and of dataset and run, serves all six uses, and each use sees a different part of the fortnight.
+        source: README.md
+        notes: >-
+          The README follows trace, span and score, and dataset and run, through these six uses. Observability is the infrastructure and eval is the discipline, so the Eval pillar covers how to judge what we collect here.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with an agent's traces.
+        cards:
+          - {title: Trace, body: "Read one turn as a tree, and let an agent query traces through MCP."}
+          - {title: Score, body: "Compare two versions on a golden dataset and gate a release with floors."}
+          - {title: Judge, body: "Run one judge per failure mode over exported production traces."}
+          - {title: Operate, accent: "D4621A", body: "Write the trace contract, then read spend and latency with alerts."}
+        takeaway: You will be able to say what an agent did, whether a release made it better, and what it cost, from the traces alone.
+        source: README.md
+        notes: >-
+          The abilities are the README's six uses, grouped. The practice folder runs every block in the notes with no API key.
+
   - title: Reading a trace
     summary: The fortnight · One turn as a tree · Carrying the trace into tools
     notes: >-
       Before any tool, we need to be able to read a single turn. A trace is the record that lets you do that.
     slides:
       - layout: statement
+        beat: problem
         title: A customer waited 16.5 seconds and left
         kicker: The problem
         statement: "The logs say the request succeeded. The answer was right. The customer had already gone. Which log line tells you why?"
@@ -33,6 +85,7 @@ parts:
           and failed, or that all the retries were billed. That's the gap tracing closes.
 
       - layout: steps
+        beat: problem
         title: The fortnight every part returns to
         kicker: The running example
         recall: What changed on 11, 14 and 17 October?
@@ -54,7 +107,31 @@ parts:
           Acme Books is fictional. Its agent answers in Dutch and English. Failures are planted so each chapter can state the
           right answer. Keep the three dates in mind, because we return to them with each new tool.
 
+      - layout: flow
+        beat: fundamentals
+        title: The data model is small
+        recall: Which level does a score attach to?
+        steps:
+          - label: Session
+            sub: one conversation
+          - label: Trace
+            sub: one agent turn
+          - label: Observation
+            sub: generation, retriever, tool, guardrail
+          - label: Score
+            sub: attached to a trace or observation
+            accent: D4621A
+        bullets:
+          - Use the typed observations, so cost and retrieval each get their own view.
+          - Dong, Lu and Zhu mapped 17 tools and found no unified span layer, so agree your metadata keys yourself.
+        takeaway: Session, trace, observation and score are enough to model an agent; one trace per turn and one child per call is the whole rule.
+        source: notes/01-tracing-with-langfuse.md
+        notes: >-
+          The Dong paper is a preprint and its taxonomy isn't validated, so we use it as a checklist. In v5 of the Langfuse SDK
+          the older lf.trace call is gone, and tutorials that use it won't run.
+
       - layout: code
+        beat: practice
         title: One turn, read top to bottom
         recall: What does the tree show that a log line can't?
         lang: text
@@ -80,29 +157,8 @@ parts:
           Some rows are trimmed to fit. The final answer was correct and the turn still failed the customer, so a judge on
           the final text would pass it. The same turn on healthy retrieval costs less than half as much.
 
-      - layout: flow
-        title: The data model is small
-        recall: Which level does a score attach to?
-        steps:
-          - label: Session
-            sub: one conversation
-          - label: Trace
-            sub: one agent turn
-          - label: Observation
-            sub: generation, retriever, tool, guardrail
-          - label: Score
-            sub: attached to a trace or observation
-            accent: D4621A
-        bullets:
-          - Use the typed observations, so cost and retrieval each get their own view.
-          - Dong, Lu and Zhu mapped 17 tools and found no unified span layer, so agree your metadata keys yourself.
-        takeaway: Session, trace, observation and score are enough to model an agent; one trace per turn and one child per call is the whole rule.
-        source: notes/01-tracing-with-langfuse.md
-        notes: >-
-          The Dong paper is a preprint and its taxonomy isn't validated, so we use it as a checklist. In v5 of the Langfuse SDK
-          the older lf.trace call is gone, and tutorials that use it won't run.
-
       - layout: code
+        beat: practice
         title: Carry the trace into tools you don't call
         recall: Why must the reset sit in finally?
         lang: python
@@ -130,6 +186,7 @@ parts:
           If you forget the reset, the next turn on that worker writes into the previous trace.
 
       - layout: table
+        beat: pitfalls
         title: Free online scores have uneven precision
         recall: Why not block on language_consistency?
         header: [Check, Precision, Recall, Note]
@@ -151,6 +208,7 @@ parts:
       Tracing shows what happened. Now we need a way to say whether a new version is better before it ships.
     slides:
       - layout: statement
+        beat: problem
         title: The new version scores higher
         kicker: The problem
         statement: "sa-v2 beats sa-v1 on the average, 4.08 to 3.88. It also started agreeing to refunds it must refuse. Do you ship it?"
@@ -161,6 +219,7 @@ parts:
           what to read in its place.
 
       - layout: flow
+        beat: fundamentals
         title: One dataset, one run per system version
         recall: What should a run be named after?
         steps:
@@ -183,6 +242,7 @@ parts:
           live traffic. Check the stop reason on every judge call and count the items left unscored.
 
       - layout: table
+        beat: practice
         title: Slice by category and the regression appears
         recall: How many items sit behind the refusal number?
         header: [Category, sa-v1, sa-v2, Change, n]
@@ -203,6 +263,7 @@ parts:
           0.33. That's one judge sample per item, so read it as a method demo.
 
       - layout: compare
+        beat: pitfalls
         title: Embedding similarity can't see a refusal
         recall: Why does similarity rise when behaviour reverses?
         emphasis: right
@@ -226,6 +287,7 @@ parts:
           it must not do. A single negation barely moves the vector.
 
       - layout: code
+        beat: practice
         title: A gate that reads categories
         recall: What does a floor do that a tolerance doesn't?
         lang: python
@@ -258,6 +320,7 @@ parts:
       The golden set passed billing. So we need to judge what really happened in production, at a cost we can afford.
     slides:
       - layout: statement
+        beat: problem
         title: Billing passed the gate and broke in production
         kicker: The problem
         statement: "Billing answers improved on the golden set. In production, their hallucination rate went from 1.6% to 7.6% to 12.5%."
@@ -268,6 +331,7 @@ parts:
           number: v2.1 made it worse, while spend went back to normal.
 
       - layout: flow
+        beat: fundamentals
         title: The strong judge sees only what the fast one flagged
         recall: Which stage can lower recall?
         steps:
@@ -292,6 +356,7 @@ parts:
           them. A judge that fails is recorded as failed, separately from a judge that passes.
 
       - layout: compare
+        beat: fundamentals
         title: One judge per failure mode
         recall: How do the two grounding failures differ?
         left:
@@ -311,6 +376,7 @@ parts:
           index or the prompt, which is the decision you actually need.
 
       - layout: code
+        beat: practice
         title: Recompute the verdict from the evidence
         recall: Which field do we distrust, and why?
         lang: python
@@ -334,6 +400,7 @@ parts:
           away the summary flag. This is a small amount of code with a large effect on trust.
 
       - layout: table
+        beat: pitfalls
         title: A lenient first pass costs six times more
         recall: Why did final precision and recall match?
         header: [First pass, Precision, Verified, Final P / R, Cost]
@@ -353,6 +420,7 @@ parts:
       The traces are data. An agent can investigate them for you, if we're careful about what it can touch.
     slides:
       - layout: statement
+        beat: problem
         title: About 95 tools, read and write by default
         kicker: The problem
         statement: "Hand an agent your Langfuse MCP server and it can read every trace. It can also write to them, and traces contain what your customers typed."
@@ -363,6 +431,7 @@ parts:
           the model will read, and write tools are what an injection needs.
 
       - layout: cards
+        beat: fundamentals
         title: Three servers you could use
         recall: What decides between them?
         cards:
@@ -382,6 +451,7 @@ parts:
           can do. The chapter builds the small one and runs it.
 
       - layout: flow
+        beat: practice
         title: The investigation, in three tool calls
         recall: Why group by span before fetching a trace?
         steps:
@@ -402,6 +472,7 @@ parts:
           argument to change is worth more than a stack trace. Here the agent traces the vendor stall in three calls.
 
       - layout: code
+        beat: practice
         title: Filter twice
         recall: Why refuse a tool the model can't see?
         lang: python
@@ -420,8 +491,23 @@ parts:
         takeaway: Hide the tools from the model and refuse the call anyway, because a model can name a tool it read about in a trace.
         source: notes/04-langfuse-mcp-server.md
         notes: >-
-          A read_only_hint annotation is a claim the server makes about itself, not a permission. Keys should be read-only and scoped
-          to one project, so that the provider enforces the rule as well.
+          Keys should be read-only and scoped to one project, so that the provider enforces the rule as well.
+
+      - layout: table
+        beat: pitfalls
+        title: Where a trace server goes wrong
+        recall: Name three ways an MCP server over traces goes wrong, and the fix for each.
+        header: [Mistake, What happens, Instead]
+        widths: [3, 3.6, 3.6]
+        rows:
+          - [Admin key in an assistant's config, "One misread instruction can delete traces or a project", Project-scoped key and a client allowlist]
+          - [Tools that return raw traces, A single call uses up the conversation's context, "Summaries by default, text behind a switch"]
+          - ["Trusting `read_only_hint`", "It is a self-declaration, not an enforced permission", Allow by tool name and scope the key]
+          - [Loop with no budget, A confused agent keeps calling tools at your expense, "Cap iterations, and return a stop message"]
+        takeaway: A trace server fails through its keys, the size of its output and its loops, so scope the key, summarise by default and cap the iterations.
+        source: notes/04-langfuse-mcp-server.md
+        notes: >-
+          Each row is a mistake the chapter lists with its fix. The key, the allowlist and the summary rule are the three controls we used on the investigation.
 
   - title: Contract and promotion
     summary: What every trace must carry · Where people look · Log-only first
@@ -429,6 +515,7 @@ parts:
       Everything so far assumed the fields were there. In a real system two frameworks write traces, and they won't agree unless you make them.
     slides:
       - layout: statement
+        beat: problem
         title: The field you need was never logged
         kicker: The problem
         statement: "A contract nobody checks decays within a few releases, and you find out on the day you need the missing field."
@@ -439,6 +526,7 @@ parts:
           and across every framework that writes traces.
 
       - layout: code
+        beat: fundamentals
         title: Test the contract like code
         recall: Where does the validator run?
         lang: python
@@ -463,6 +551,7 @@ parts:
           One written contract saves the ETL fallback paths from part three.
 
       - layout: table
+        beat: practice
         title: Where a planted failure is likely to be found
         recall: Why keep the random slice at all?
         header: [Sample, Turns, Planted failures]
@@ -480,6 +569,7 @@ parts:
           truth, judges for coverage. Targeted samples only find failures that have those symptoms.
 
       - layout: flow
+        beat: practice
         title: A check earns the right to block
         loop: "precision drops, go back to log-only"
         recall: Why measure precision per segment?
@@ -502,12 +592,29 @@ parts:
           The aggregate hides the segment. A check that looks fine overall can be useless in Dutch. citation_hallucination stays
           log-only too, with 0.77 on 13 in English and 1.00 on 8 in Dutch.
 
+      - layout: table
+        beat: pitfalls
+        title: Where the contract and its checks go wrong
+        recall: Name three ways a trace contract and its checks fail, and the fix for each.
+        header: [Mistake, What happens, Instead]
+        widths: [3, 3.6, 3.6]
+        rows:
+          - [Each framework names its own fields, "Cross-agent questions take days, and ETL grows fallback paths", "One written contract, and a validator in CI"]
+          - [Contract without cache token fields, The most expensive silent regression can't be seen, Log cache reads and writes as separate fields]
+          - [Promoting a check on overall precision, It blocks one language's customers wrongly, "Precision by segment, and let the worst segment decide"]
+          - [Sampling only on rules, "Quick, confident, wrong turns are never reviewed", Keep a small random slice alongside the rules]
+        takeaway: A contract decays unless it is validated, and a check misleads unless its precision is read per segment, so test both and keep a random slice.
+        source: notes/05-support-agent-observability.md
+        notes: >-
+          These are four rows of the chapter's pitfalls table. The first two are why part three's ETL needed fallback paths, and the third is the language_consistency result from the last slide.
+
   - title: Money and milliseconds
     summary: Pricing a turn · Percentiles · Alerts · What a dashboard can't see · Levers
     notes: >-
       The same traces also tell us what the fortnight cost and how long it took. Here the traps are mostly arithmetic.
     slides:
       - layout: image
+        beat: problem
         title: Three panels, one time axis
         recall: "Why put traffic and system panels beside a spend chart?"
         kicker: The problem
@@ -524,6 +631,7 @@ parts:
           work through how to compute each one correctly.
 
       - layout: code
+        beat: fundamentals
         title: Three buckets of input, three prices
         recall: What does input_tokens actually count?
         lang: text
@@ -547,6 +655,7 @@ parts:
           the page. The timestamp moved 4,200 tokens from the 0.20 column to the 5 dollar column.
 
       - layout: table
+        beat: practice
         title: The bucket table finds the release at once
         recall: Which bucket explains the jump?
         header: [Release, USD per turn, Billing p95, Cost per resolved, Billing hallucination]
@@ -563,6 +672,7 @@ parts:
           At an assumed 6 dollars per human ticket, model spend is 2.6 percent of the all-in cost.
 
       - layout: compare
+        beat: pitfalls
         title: Percentiles don't add
         recall: What goes wrong if you add span p95s?
         left:
@@ -586,6 +696,7 @@ parts:
           day is noise. A sum of span percentiles isn't even a safe bound: here it comes out below the real turn p95.
 
       - layout: code
+        beat: practice
         title: Replay the alerts on the fortnight
         recall: Why does the ratio beat the spend alert?
         lang: python
@@ -610,6 +721,7 @@ parts:
           a candidate threshold and count how often it would have paged. A monthly budget projection was blind until 16 October.
 
       - layout: table
+        beat: practice
         title: Which lever to pull
         recall: Why is the router the wrong first target?
         header: [Lever, USD per day, Condition]
@@ -632,6 +744,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What to carry out of this lecture
         cards:
           - title: Trace
@@ -657,6 +770,7 @@ parts:
           wrong answers, so you need the whole set.
 
       - layout: bullets
+        beat: wrap
         title: Where next
         bullets:
           - "**Eval pillar**, `generative-ai/08-eval`: how to build a grader, calibrate a judge and read a small sample."

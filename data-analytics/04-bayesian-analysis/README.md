@@ -1,4 +1,4 @@
-# 04 — Bayesian Analysis
+# Bayesian analysis
 
 > Treat unknowns as distributions, update them with data, and choose the action with the lowest expected cost.
 > Jump to: [Reading order](#reading-order) · [Rules of thumb](#rules-of-thumb) · [Deck and practice](#deck-and-practice) · [References](references.md)

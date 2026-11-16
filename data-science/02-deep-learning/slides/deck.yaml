@@ -17,12 +17,63 @@ deck:
     on a laptop, and several of them go against what you would expect.
 
 parts:
+  - title: From a loop to the right architecture
+    overview: true
+    summary: The question · Five steps · What you will be able to do
+    notes: >-
+      Before any code, here is the one question this lecture keeps asking and the five steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Why does a correct-looking network fail?
+        recall: What does this lecture ask you to do with a neural network?
+        kicker: The idea
+        statement: "One hidden layer lifts two interleaved moons from 0.895 to 0.955. The same network on digits scores 0.102 or 0.970, depending only on its initial weights."
+        attribution: Own runs from the chapters, on a laptop
+        takeaway: A network has to be trained, debugged when nothing raises an error, and matched to the data.
+        source: README.md
+        notes: >-
+          Logistic regression stops at a straight line, and a hidden layer bends it. Then training becomes the problem. Each part opens with a number that looks wrong, states the rule behind it, and applies the rule to a run you can repeat.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five steps from a training loop to text models
+        recall: Which five steps does this lecture take, from the loop to text?
+        steps:
+          - {label: The loop, sub: "forward, loss, backward, step"}
+          - {label: Why it fails, sub: "initialisation, AdamW, rate"}
+          - {label: What next, sub: "gaps, then one fix"}
+          - {label: Architecture, sub: "images, sequences, encoders"}
+          - {label: Text, sub: "word counts, then encoders", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it."
+          - "Each part ends on the mistake it usually produces."
+        takeaway: The loop never changes, so each step changes what you check or what the network assumes about the data.
+        source: README.md
+        notes: >-
+          The first two steps are about getting one network to train and generalise. The third decides where a month goes. The last two match the architecture to the data, first images, sequences and encoders, then real reviews.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with a neural network.
+        cards:
+          - {title: Train, body: "Write the training loop and say what each line prevents."}
+          - {title: Debug, body: "Find why a network will not train or generalise from its initial activations, `eval()`, the learning rate and its labels."}
+          - {title: Decide, body: "Find the largest gap between human, train, train-dev, dev and test, and count what a fix could win.", accent: "0EA5C9"}
+          - {title: Match, accent: "D4621A", body: "Choose an architecture for images, sequences or text, and keep a simple control to beat."}
+        takeaway: You will be able to train a network, tell why it fails, and say which architecture the data asks for.
+        source: README.md
+        notes: >-
+          This lecture starts from classical machine learning. The same discipline of splits, controls and honest metrics applies unchanged to every network here.
+
   - title: What is a network, and what does the loop do?
     summary: Forward and backward · The training loop · When depth pays
     notes: >-
       We begin with the one piece of machinery everything else in this lecture relies on.
     slides:
       - layout: statement
+        beat: problem
         title: Logistic regression hits a ceiling. How do we get past it?
         kicker: The problem
         recall: What does a hidden layer add that a one-layer network lacks?
@@ -35,6 +86,7 @@ parts:
           boundary bends. So how do we find the weights? That question is the first course in Ng's specialization.
 
       - layout: flow
+        beat: fundamentals
         title: One training step has four moves
         recall: Which call does the chain-rule bookkeeping of backprop for you?
         steps:
@@ -54,6 +106,7 @@ parts:
           precision, so from then on we let it do the work.
 
       - layout: code
+        beat: practice
         title: Each line of the PyTorch loop prevents a quiet bug
         recall: Why must every line of the PyTorch loop stay, when the code still runs without it?
         lang: python
@@ -81,6 +134,7 @@ parts:
           gradients or they accumulate. Switch modes or batch norm and dropout do the wrong thing. None of these raise errors.
 
       - layout: image
+        beat: practice
         title: One hidden layer took two moons from 0.895 to 0.955
         recall: What can the hidden layer draw that logistic regression cannot, and which PyTorch calls replace Ng's cost, backward and update functions?
         image: ../../sources/images/dl-moons-boundary.png
@@ -90,12 +144,30 @@ parts:
         notes: >-
           Same data and same training loop. Only the model differs. The curve is what the hidden layer buys. The note also has a full table translating Ng's notebooks to PyTorch: cost, backward and update become F.cross_entropy, loss.backward() and optimizer.step().
 
+      - layout: table
+        beat: pitfalls
+        title: Five training bugs show up as a strange number, not an error
+        recall: Which symptoms in a training run point to a missing zero_grad, an extra softmax or a copied keep_prob?
+        header: [Symptom, Cause, Fix]
+        widths: [4, 4, 3]
+        rows:
+          - ["Accuracy near chance, loss barely moves", "All weights equal, so every unit in a layer computes the same thing", Random initialisation]
+          - ["`mat1 and mat2 shapes cannot be multiplied` after a port", Ng columns against PyTorch rows, "Store examples as rows"]
+          - ["Loss flattens near 1.46 on ten classes", "A softmax before `F.cross_entropy`", Return logits]
+          - ["Loss jumps around and gets worse", "`zero_grad()` missing, so gradients accumulate", "Zero before `backward()`"]
+          - ["A TF port scores lower", "`keep_prob=0.8` copied as `nn.Dropout(0.8)`, which drops 80%", "`p = 1 - keep_prob`"]
+        takeaway: Learn the symptom of each quiet bug, because the loop runs and the number only looks wrong.
+        source: notes/01-neural-networks-fundamentals.md
+        notes: >-
+          These come from the pitfalls table in the first chapter. Four of the five raise no error. The loop itself looks right, which is why the symptom is the only clue.
+
   - title: Why won't it train, or generalise?
     summary: Initialisation · Batch norm · AdamW · The learning rate · Noisy labels
     notes: >-
       The loop is right, and the network still fails. Course two is about these failures. Each one here has a measured effect.
     slides:
       - layout: statement
+        beat: problem
         title: Same network, same data. Why 0.102 and 0.970?
         kicker: The problem
         recall: What should you check before tuning a network that will not start training?
@@ -107,7 +179,26 @@ parts:
           The code is correct and nothing raises an error. Too small, and the activations die out layer by layer. Too large,
           and they explode. So what else fails like this, quietly?
 
+      - layout: table
+        beat: fundamentals
+        title: Only He initialisation keeps the signal steady across layers
+        recall: Why does only He initialisation train a 6-layer ReLU network on digits?
+        lead: "Spread of the activations at the first and last hidden layer before any training, then test accuracy after 20 epochs."
+        header: [Scheme, Weights, "Activation std, first and last", Test]
+        widths: [2, 3.2, 4.2, 1.4]
+        highlight: [3]
+        rows:
+          - [Zeros, All 0, "0 and 0", "0.102"]
+          - [Small, "`std=0.01`", "0.023 and 1.04e-08", "0.102"]
+          - [Large, "`std=10`", "23 and 1.04e+10", "0.446"]
+          - [He, "`kaiming_normal_`, ReLU", "0.406 and 0.317", "**0.970**"]
+        takeaway: Each layer multiplies the signal by its weights, so only an initial scale that holds the activations steady lets a deep network start learning.
+        source: notes/02-optimisation-and-regularisation.md
+        notes: >-
+          Zeros and too-small weights land on the same 0.102, ten-class chance on this split, because no signal reaches the last layer. Large weights start with a loss near ten to the twelve. He doubles the Glorot variance because ReLU zeroes half its inputs, and Glorot is the default for tanh. PyTorch's default for a linear layer is close enough for shallow networks, so you notice this as depth grows.
+
       - layout: compare
+        beat: pitfalls
         title: The same weight_decay wrecks Adam but not AdamW
         recall: Why can `weight_decay=0.1` destroy a run in Adam but not in AdamW?
         emphasis: right
@@ -132,6 +223,7 @@ parts:
           the adaptive scaling and drives the weights to nearly zero. In AdamW the same setting is harmless.
 
       - layout: code
+        beat: pitfalls
         title: Batch norm left in train mode costs 9 points, silently
         recall: What does `eval()` change in batch norm, and what does forgetting it cost?
         lang: python
@@ -154,6 +246,7 @@ parts:
           batch that shows up as silent bugs like this. At batch size 2 it's bad either way.
 
       - layout: image
+        beat: practice
         title: Sweep the learning rate before anything else
         recall: How far can the learning rate move accuracy, compared with the choice of adaptive optimiser?
         image: ../../sources/images/dl-lr-sweep.png
@@ -164,6 +257,7 @@ parts:
           In the same chapter, the gaps between Adam, RMSprop and Lion were inside the noise on this short budget, but the rate moves everything. Tools like D-Adaptation try to remove the search; on this task one seed in five failed.
 
       - layout: flow
+        beat: practice
         title: Stopping early beats other regularisers on 30% noisy labels
         recall: Why does stopping early help on noisy labels, and what do you need in order to do it?
         steps:
@@ -185,6 +279,7 @@ parts:
       Course three has no code. It teaches where to spend the next month. And it rewards measuring before building.
     slides:
       - layout: statement
+        beat: problem
         title: Train 2.0%, dev 2.1%, human 0.1%. Do you need more data?
         kicker: The problem
         recall: What should you find before deciding how to improve a model?
@@ -197,6 +292,7 @@ parts:
           it wouldn't help. So how do we read those numbers systematically?
 
       - layout: flow
+        beat: fundamentals
         title: Each gap names one problem
         recall: Which gap do you fix first, and what do you count before building the fix?
         steps:
@@ -214,6 +310,7 @@ parts:
           And before building a fix for a category of errors, count how many errors it could possibly remove.
 
       - layout: code
+        beat: practice
         title: The diagnosis is a few lines of arithmetic
         recall: How does writing the diagnosis down settle an argument about priorities?
         lang: python
@@ -239,6 +336,7 @@ parts:
           the first two cases, and entirely different next steps.
 
       - layout: image
+        beat: practice
         title: Only a train-dev set reveals data mismatch
         recall: How did making training data look like production change dev error here?
         image: ../../sources/images/dl-data-mismatch.png
@@ -249,6 +347,7 @@ parts:
           Train-dev comes from the training data, but the model is not trained on it. Train on clean digits, deploy on corrupted ones. The clean row looks like a great model until the last step. Without train-dev you might read it as variance and go collect more of the wrong data.
 
       - layout: compare
+        beat: pitfalls
         title: Transfer learning lost to training from scratch on 25 labels
         recall: What does transfer learning need in order to help, and what should you run as a control?
         emphasis: left
@@ -277,6 +376,7 @@ parts:
       Now we match the architecture to the data, starting with images.
     slides:
       - layout: statement
+        beat: problem
         title: Move a digit one pixel. What happens to the MLP?
         kicker: The problem
         recall: Why does a convolution cope with a shifted digit better than an MLP?
@@ -290,6 +390,7 @@ parts:
           layer of 1000 units needs 12 million weights where 16 filters need 448.
 
       - layout: code
+        beat: fundamentals
         title: A small CNN reaches 0.983 on digits with 6,090 parameters
         recall: Which three ideas does a convolutional network take from LeNet-5?
         lang: python
@@ -313,6 +414,7 @@ parts:
           345,308 connections and reached 0.95 percent error on MNIST.
 
       - layout: image
+        beat: practice
         title: "Deeper plain networks train worse, residual ones don't"
         recall: Why is a very deep plain network's failure not overfitting, and what fixes it?
         image: ../../sources/images/dl-depth-degradation.png
@@ -323,6 +425,7 @@ parts:
           He and colleagues called this the degradation problem. At 62 layers the training score itself is 0.38, so it can't be overfitting. The block learns a residual, so doing nothing is easy. Transformers carried the idea straight over. Residuals aren't free at shallow depth: at 12 layers the plain network wins here, 0.985 against 0.974 on test, and the gap only opens from 22 layers on.
 
       - layout: flow
+        beat: fundamentals
         title: Detection keeps the best box and drops near duplicates
         recall: What are the two post-processing steps in detection, and what does the threshold trade off?
         steps:
@@ -340,6 +443,7 @@ parts:
           the car detection notebook adds. The chapter writes those functions in a few lines.
 
       - layout: cards
+        beat: practice
         title: Embeddings learn a distance, so new faces need no retraining
         recall: What do embeddings need to pay off, which a small toy run lacks?
         cards:
@@ -360,6 +464,7 @@ parts:
           saying before quoting the ImageNet results, whose runs used different architectures.
 
       - layout: image
+        beat: practice
         title: With 300 images, borrowing ImageNet features beats training from scratch
         recall: At what data size did the scratch CNN draw level with the frozen ResNet-18, and which arm stayed ahead?
         image: ../../sources/images/dl-vision-transfer.png
@@ -372,6 +477,7 @@ parts:
           source data, and a CNN whose early features carry over. Budgets are matched on time, not steps.
 
       - layout: cards
+        beat: pitfalls
         title: Three loud errors and one silent one
         recall: Why does a frozen backbone still change during training, and what fixes it?
         cards:
@@ -396,6 +502,7 @@ parts:
       Sequences have an order and any length. The problem with recurrent networks is keeping memory alive.
     slides:
       - layout: statement
+        beat: problem
         title: Can a network remember the first number?
         kicker: The problem
         recall: What does an LSTM's advantage over an RNN depend on at the start of training?
@@ -408,6 +515,7 @@ parts:
           one factor per step, and the signal fades away. What fixes it turns out to be a single initial value.
 
       - layout: image
+        beat: fundamentals
         title: The forget-gate bias decides whether gradient reaches step 0
         recall: What sets how much gradient reaches the first step of an LSTM?
         image: ../../sources/images/dl-forget-gate-gradient.png
@@ -420,6 +528,7 @@ parts:
           Bias 1 solves T equals 20, which Jozefowicz and colleagues recommend. T equals 50 needs more. One trap: nn.LSTM has two bias vectors, and each gate adds both, so the widely copied snippet that writes 1 to both is really setting 2.
 
       - layout: code
+        beat: pitfalls
         title: A wrong parameter name sets no forget-gate bias, and no error
         recall: How do you know your initialisation code actually did something?
         lang: python
@@ -443,6 +552,7 @@ parts:
           measurement is what caught it.
 
       - layout: flow
+        beat: fundamentals
         title: Attention lets the decoder read every input
         recall: What does attention replace the single summary vector with?
         steps:
@@ -459,6 +569,7 @@ parts:
           query each other, and you get the Transformer's self-attention.
 
       - layout: compare
+        beat: practice
         title: Attention took whole-date accuracy from 3% to 100%
         recall: On the same data and budget, what did adding attention do to whole-date accuracy?
         emphasis: right
@@ -482,6 +593,7 @@ parts:
           month, day digits at the day. With only 500 pairs neither one solves it, because that's only 42 updates.
 
       - layout: code
+        beat: practice
         title: An autoencoder beats PCA only where the code is tight
         kicker: The bottleneck on its own
         recall: Where did the autoencoder beat PCA on reconstruction, and what should you compute first?
@@ -505,6 +617,7 @@ parts:
           The seq2seq model squeezed a sentence through one vector and suffered for it. An autoencoder makes that squeeze the whole point. It can't copy through a narrow code, so it has to learn what is regular in the data. Hinton and Salakhutdinov set this out as a non-linear PCA and reached a squared error of 3.00 on MNIST at a code of 30, against 13.87 for PCA. Our digits are far smaller than MNIST, so don't compare the scale of these numbers with theirs.
 
       - layout: table
+        beat: practice
         title: Corrupting the input stops a wide network from copying
         kicker: Denoising
         recall: What replaces the bottleneck in a denoising autoencoder, and what does it cost on clean images?
@@ -521,6 +634,7 @@ parts:
           Vincent and colleagues asked what happens if you drop the bottleneck. Now copying fails even with a code wider than the input, so the corruption is the constraint, and it applies only during training. Their model selection chose very wide layers, 2,000 units for 784 pixels. Stacked denoising layers beat ordinary stacked autoencoders on most of their tasks, though not all. The denoising network has learned a different job, which is why clean images get worse.
 
       - layout: image
+        beat: pitfalls
         title: The best reconstruction is not the best detector
         kicker: Anomaly score
         recall: Why does a wider code rebuild better and detect worse, and how should you choose its size?
@@ -541,6 +655,7 @@ parts:
       An LSTM carries memory forward step by step. An encoder drops that and lets each token look at all the others.
     slides:
       - layout: statement
+        beat: problem
         title: Why does an encoder need position added?
         kicker: The problem
         statement: "An encoder reads every token at once, and knows nothing about order until you tell it."
@@ -549,9 +664,27 @@ parts:
         source: notes/05b-transformer-encoders.md
         recall: Why did the no-position encoder score the same on upside-down digits?
         notes: >-
-          Add sinusoids and test accuracy is 0.984 with 0.395 upside down. A learned table gives 0.975 and 0.551, and it raises an error past its length. The Transformer paper found the two nearly level, 25.7 against 25.8 dev BLEU. Attention has 4,224 parameters at any head count, because heads split the width rather than add to it.
+          The encoder scores the same on upside-down digits, because nothing in it knows the order of the rows. The next slide shows what happens when we add it.
+
+      - layout: table
+        beat: fundamentals
+        title: Position is an input you choose, and without it order is invisible
+        recall: Which position scheme lets an encoder tell upside-down digits from upright ones?
+        lead: "Digits as 8 rows of 8 pixels, 3 seeds. The upside-down column scores the same test rows flipped."
+        header: [Position, Parameters, Test, Rows upside down]
+        widths: [2.5, 2, 1.5, 2.5]
+        highlight: [1]
+        rows:
+          - [None, "17,770", "0.902", "0.902"]
+          - [Sinusoid, "17,770", "**0.984**", "0.395"]
+          - [Learned table, "18,026", "0.975", "0.551"]
+        takeaway: Self-attention is permutation-equivariant, so add position before the first block, and expect the upside-down score to fall once the model reads order.
+        source: notes/05b-transformer-encoders.md
+        notes: >-
+          Shuffle the input tokens and each output moves with its input, so the layer does not know their order, and a mean pool then sees a set. Sinusoids and a learned table are a tie on three seeds. The learned table has no entry for a ninth token and raises an error on longer input. The Transformer paper found the two nearly level, 25.7 against 25.8 dev BLEU. Attention has 4,224 parameters at any head count, because heads split the width rather than add to it.
 
       - layout: flow
+        beat: pitfalls
         title: The worst encoder bugs raise no error
         recall: Test accuracy falls from 0.966 to 0.658 when requests arrive one at a time. What should you suspect?
         steps:
@@ -569,6 +702,7 @@ parts:
           With the default, the layer reads the batch as the sequence, so each digit attends to the other digits in its batch. A large batch gives every example neighbours to borrow from, which is why the test score looks healthy. In the mask, True means ignore. Without a mask the same input gives different logits depending on the longest member of its batch: 0.4305 padded to 20. A third silent bug is a loss broadcast between shapes of batch by one and batch: R-squared per seed is about -0.084, 0.089 and -0.135, against 0.897, 0.966 and 0.946 once squeezed.
 
       - layout: code
+        beat: practice
         title: On 1,257 digits the encoder comes third, behind a CNN
         recall: Why does the encoder lose to a linear model at 100 digit labels yet reach 0.973 at 1,257?
         lang: text
@@ -600,6 +734,7 @@ parts:
       Back to real data: fifty thousand movie reviews.
     slides:
       - layout: statement
+        beat: problem
         title: Five thousand reviews. LSTM or word counts?
         kicker: The problem
         recall: Why do learned embeddings lose to word counts when data is scarce?
@@ -608,10 +743,27 @@ parts:
         takeaway: With little data, learning embeddings costs more than word order pays back.
         source: notes/06-neural-text-models.md
         notes: >-
-          This is the most useful result for a practitioner. Each neural model has over 160,000 parameters for 5,000 reviews,
-          and all of it has to come from these labels. So what changed the picture?
+          This is the most useful result for a practitioner. What does each model read, and why do the neural ones lose?
+
+      - layout: table
+        beat: fundamentals
+        title: Four models read the same token ids in different ways
+        recall: How do an embedding average, a TextCNN, a BiLSTM and TF-IDF each read a review?
+        lead: "Reviews become `(batch, seq_len)` token ids, then `(batch, seq_len, d)` embeddings. Parameters are for 5,000 training reviews."
+        header: [Model, Reads the text as, Parameters]
+        widths: [3, 6, 2]
+        rows:
+          - [Embedding average, "A mean of word embeddings, padding masked", "160,034"]
+          - [TextCNN, "128 filters over 5-token windows, then the strongest match anywhere", "170,626"]
+          - [BiLSTM, "A hidden state carried both ways, padding skipped", "202,242"]
+          - [TF-IDF and logistic regression, "Weighted counts of words and word pairs", "No network"]
+        takeaway: Each learned model has over 160,000 parameters for 5,000 reviews, and all of them must come from those labels.
+        source: notes/06-neural-text-models.md
+        notes: >-
+          The CNN's filters are n-gram detectors, and global max pooling keeps the strongest match. The BiLSTM reads both ways, which suits classification and not generation. The baseline needs no GPU and no tuning.
 
       - layout: image
+        beat: practice
         title: Word counts beat three neural models on 5,000 reviews
         recall: Which kind of model won on 5,000 reviews, and did it still lead on 25,000?
         image: ../../sources/images/dl-imdb-models.png
@@ -622,6 +774,7 @@ parts:
           The CNN memorises and the BiLSTM is still learning. The intro-to-nlp notebook on five times the data saw a closer race, and the linear model still led it.
 
       - layout: image
+        beat: fundamentals
         title: A pretrained encoder supplies what few labels can't
         recall: What does pretraining supply that your labels can't pay for?
         image: ../../sources/images/sarkar-universal-embeddings-classification.png
@@ -637,6 +790,7 @@ parts:
           with a representation learned on far more text.
 
       - layout: code
+        beat: pitfalls
         title: A frozen encoder takes a few lines and may still lose
         recall: Why can't you assume a pre-trained encoder will beat your baseline?
         lang: python
@@ -660,6 +814,7 @@ parts:
           one won where labels are few. The code is short, so there's no reason not to measure.
 
       - layout: table
+        beat: practice
         title: Strong frozen encoders win on few labels, fine-tuning on many
         recall: Which approach wins on few labels, which on many, and which loses throughout?
         lead: Test accuracy on IMDb, on one split and one seed.
@@ -683,6 +838,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb
         recall: What makes deep learning failures hard to catch, and what do these rules do about it?
         cards:
@@ -710,6 +866,7 @@ parts:
           If you remember one thing: most of what goes wrong here raises no error, so measure.
 
       - layout: bullets
+        beat: wrap
         title: Where to go next
         recall: What should you build next, now that you have seen the reasons for it?
         bullets:

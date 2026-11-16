@@ -15,12 +15,68 @@ deck:
     answer depends on the metric, scale up to many tests at once, and then deal with the questions that cannot be randomised.
 
 parts:
+  - title: Did the change cause it?
+    overview: true
+    summary: The question · Five steps · What you will be able to do
+    notes: >-
+      Before any method, here is the one question this lecture keeps asking and the five steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Did the change cause the result?
+        card: false
+        recall: What question does every step of this lecture ask?
+        kicker: The idea
+        statement: "Larkspur has a new checkout and a number that moved. Whether the checkout caused it depends on how the comparison was built."
+        attribution: Larkspur, a fictional online plant shop; all its numbers are synthetic
+        takeaway: A dashboard cannot separate a change from the weather, the seasons or the kind of customer who opts in, so the comparison has to be designed.
+        source: README.md
+        notes: >-
+          We start with one properly run test, then change what we measure, run many tests at once, and finally handle the questions that cannot be randomised.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five steps from a test to an honest estimate
+        card: false
+        recall: Which steps of this lecture assume you can randomise?
+        answer: The first three, Test, Measure and Scale, assume you can randomise. The last two, Infer and Match, are for the case where you cannot.
+        steps:
+          - {label: Test, sub: "one good A/B test"}
+          - {label: Measure, sub: "the metric it decides on"}
+          - {label: Scale, sub: "many tests at once"}
+          - {label: Infer, sub: "when you cannot randomise"}
+          - {label: Match, sub: "build a comparison group", accent: "D4621A"}
+        bullets:
+          - "Each step opens with **the idea**, states **the principle**, then **applies** it to a worked case."
+          - "Each step ends on the mistake it usually produces."
+        takeaway: The first three steps assume you can randomise, and the last two ask what to do when you cannot.
+        source: README.md
+        notes: >-
+          Test, measure and scale are the experimenter's craft. Infer and match are for observational data, where the generator is ours so every design can be scored against a known truth.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        card: false
+        recall: Name four things this lecture teaches you to do with an experiment.
+        answer: Run it (size, check for sample ratio mismatch, report a lift with an interval), measure it (north star, OEC, guardrail, diagnostic), scale it (CUPED, sequential tests, SRM diagnosis) and infer causes when you cannot randomise.
+        cards:
+          - {title: Run, body: "Size a test, check it for sample ratio mismatch, analyse it at the right unit and report a lift with an interval."}
+          - {title: Measure, body: "Separate north star, OEC, guardrail and diagnostic, and read ratio metrics correctly."}
+          - {title: Scale, body: "Apply CUPED, use sequential tests and diagnose an SRM."}
+          - {title: Infer, accent: "D4621A", body: "Spot confounders, use DiD, IV, RD and weighting, check balance and overlap, and say what a check rules out."}
+        takeaway: You will be able to say whether a change caused a result, and which customers the answer covers.
+        source: README.md
+        notes: >-
+          This lecture starts from the probability and statistics pillar. The next pillar asks the same checkout question as a probability of being better.
+
   - title: One good test
     summary: Size it · Check the split · Right unit · Report an interval
     notes: >-
       A controlled experiment is the only tool that removes every confounder, measured or not. This part is what must be right for one test to mean anything.
     slides:
       - layout: statement
+        beat: problem
         title: Plans are the part you cannot fix afterwards
         kicker: The problem
         statement: "Larkspur wants to know if a new checkout lifts conversion from 5.0% to 5.5%. Answering takes 31,231 users per arm, decided before the first user arrives."
@@ -31,8 +87,10 @@ parts:
           At 4,000 users a day, this test takes three weeks, 84,000 users in all. The sizing decides whether the test can answer the question at all.
 
       - layout: flow
+        beat: fundamentals
         title: A test is a pipeline, and each stage can break it
         recall: What are the stages of a well-run A/B test?
+        answer: Hypothesis with one primary metric, size (MDE, power, duration), assign by hashing at user level, check for SRM before reading the outcome, then decide on the lift with its interval.
         steps:
           - {label: Hypothesis, sub: "one primary metric"}
           - {label: Size, sub: "MDE, power, duration"}
@@ -48,8 +106,10 @@ parts:
           The order matters psychologically as well as statistically. Once someone has seen a win, nobody wants to hear about the split.
 
       - layout: code
+        beat: practice
         title: The Larkspur result
         recall: What should the report of an A/B test include?
+        answer: The lift with its confidence interval (+0.64 points, 95% CI +0.34 to +0.95) and the SRM result (p 0.33, so it passes). The p-value is only a supporting detail.
         lang: Text output
         code: |-
           conversion   A 4.93%   B 5.58%
@@ -67,9 +127,11 @@ parts:
           The relative lift needs its own interval, since its denominator is itself estimated. A plain ratio of the bounds is not the right calculation.
 
       - layout: table
+        beat: fundamentals
         title: What each planning choice costs
         lead: Starting from the Larkspur plan, how the required sample changes.
         recall: How does sample size respond to MDE, power and significance?
+        answer: "It grows with the inverse square of the effect: halving the MDE multiplies users by 3.91. Raising power from 80% to 90% costs x 1.34 and tightening significance from 5% to 1% costs x 1.49, so MDE dominates."
         header: ["Change", "Multiplier on users"]
         widths: [3, 2]
         highlight: [1]
@@ -85,9 +147,11 @@ parts:
           The baseline row is the same absolute half-point lift on a higher baseline, where variance is larger. Skewed splits are expensive, which is why ramps end at 50/50.
 
       - layout: compare
+        beat: pitfalls
         title: Two ways to get 5% wrong
         lead: Both errors look like an ordinary analysis, and A/A tests expose both.
         recall: How do peeking and the wrong unit inflate false positives?
+        answer: Analysing pageviews gave a 10.8% false positive rate against 4.6% by user, since one user's pages are not independent. Peeking twenty times gave 25.0% against 5.5%, since stopping at the first low p selects for noise.
         emphasis: right
         left:
           title: Analysing pageviews
@@ -114,6 +178,7 @@ parts:
       A correct test on the wrong metric gives a confident wrong answer. This part is about choosing and reading metrics.
     slides:
       - layout: statement
+        beat: problem
         title: A falling metric, and a winning change
         kicker: The problem
         statement: "Moving a module up cut click-through per user by 40%. Clicks rose 74%, impressions rose 200%, and revenue went up."
@@ -124,8 +189,10 @@ parts:
           This is from Microsoft's catalogue of twelve metric pitfalls. The change was good, and the headline metric said the opposite.
 
       - layout: cards
+        beat: fundamentals
         title: Four kinds of metric, read four different ways
         recall: "Why name each metric's job before the test?"
+        answer: "Each kind is read by a different rule: data quality failures stop the read, the OEC decides launch, a guardrail must not worsen beyond a margin, and a diagnostic explains the result but never decides it."
         cards:
           - {title: Data quality, body: "Can I trust this test? SRM, event loss. Any failure stops the read.", accent: "D4621A"}
           - {title: OEC, body: "Did it succeed? One number, chosen in advance, which decides launch.", accent: "1E3A5F"}
@@ -137,8 +204,10 @@ parts:
           A north star sits above this: the company number across quarters. The OEC is its experiment-sized proxy, which needs checking against long-term outcomes.
 
       - layout: flow
+        beat: fundamentals
         title: A metric tree links the goal to what teams can move
         recall: How does a north star connect to an OEC and its drivers?
+        answer: The north star (repeat customer revenue) is proxied by the OEC (revenue per user), which breaks into drivers (conversion, order value) and then funnel steps. The tree shows which levers teams hold and where a proxy may drift.
         steps:
           - {label: North star, sub: "repeat customer revenue"}
           - {label: OEC, sub: "revenue per user", accent: "D4621A"}
@@ -153,8 +222,10 @@ parts:
           On our data the identity is 0.0454 x 1.026 x 56.00 = 2.612. If the parts stop multiplying back to the total, your definitions disagree.
 
       - layout: code
+        beat: practice
         title: Same test, opposite stories
         recall: Why did revenue per session fall while revenue per user rose?
+        answer: The email brought people back for low-intent visits. Sessions per user grew 20.2% but revenue per user only 10.3%, so revenue per session fell 8.2% while the business improved.
         lang: Text output
         code: |-
           metric             A       B   B vs A
@@ -172,9 +243,11 @@ parts:
           Both readings are arithmetically right. That is why the metric definition has to be agreed in advance, including the unit and the denominator.
 
       - layout: table
+        beat: pitfalls
         title: A 5% change costs very different amounts
         lead: Users per arm by metric, using the 16σ²/Δ² rule on the same data.
         recall: Why do teams reach for proxies over revenue?
+        answer: "Revenue is noisy: a 5% change needs 290,154 users per arm on revenue per user against 125,290 on conversion. So teams cap revenue or use a validated proxy."
         header: ["Metric", "SD", "Users per arm"]
         widths: [3, 1, 2]
         highlight: [2]
@@ -188,8 +261,10 @@ parts:
           Forty users hold 13% of revenue here. Kohavi's worked example has the same pattern: over 409,000 on revenue and under 122,000 on conversion.
 
       - layout: code
+        beat: practice
         title: A guardrail needs its own test
         recall: Why does a non-significant change not pass a guardrail?
+        answer: "A guardrail needs the harm bounded, not just undetected. The one-sided upper bound must fall below a preset margin (50 ms), which a small test cannot do: at n=400 a +8 ms change has upper bound 112.7."
         lang: Text output
         code: |-
           margin +50 ms, sd 900 ms
@@ -211,6 +286,7 @@ parts:
       At scale the hard parts change. Effects are small, people look constantly, and the pipeline itself breaks.
     slides:
       - layout: statement
+        beat: problem
         title: A rounding error, or a broken test?
         kicker: The problem
         statement: "A dashboard shows a 50.4/49.6 split on two million users. The p-value is about 1e-29, and the test must stop."
@@ -220,9 +296,29 @@ parts:
         notes: >-
           In our simulation with no treatment effect, losing 4% of one arm's low-value users produced a significant fake win.
 
+      - layout: flow
+        beat: fundamentals
+        title: When the SRM fires, follow the pipeline
+        recall: How do you diagnose a sample ratio mismatch?
+        answer: Follow the pipeline (assignment, execution, logging, analysis) and slice the counts by browser, day and filter stage to localise it. In the example only Safari fails, 15,020 against 13,800. Then fix it and rerun.
+        steps:
+          - {label: Assignment, sub: "hash, reused salt"}
+          - {label: Execution, sub: "redirect, crash"}
+          - {label: Logging, sub: "bot filter, loss"}
+          - {label: Analysis, sub: "filter, start date", accent: "D4621A"}
+        bullets:
+          - "**Slice the counts** by browser, day and filter stage."
+          - "**Our example:** only Safari fails, 15,020 against 13,800."
+        takeaway: Slicing the counts by dimension localises an SRM, and only then can you fix it and rerun.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          Fabijan and colleagues give a taxonomy and method for this. You generally can't reweight your way out, because you don't know who was lost.
+
       - layout: code
+        beat: practice
         title: "CUPED: free power from last month's data"
         recall: How much variance does CUPED remove, and what must be true of the covariate?
+        answer: CUPED removes a fraction ρ² of the variance (variance ratio 0.508 here, so about half), at no traffic cost. The covariate must predate exposure, or bias returns.
         lang: Python
         code: |-
           theta = np.cov(pre, post)[0, 1] / pre.var(ddof=1)
@@ -240,9 +336,11 @@ parts:
           Across repeated simulations both estimators average about 0.12 and the CUPED spread is 30% smaller. It is the same estimate as regression on the centred pre-period value.
 
       - layout: table
+        beat: fundamentals
         title: Looks inflate false positives, and two ways to pay
         lead: Under the null, with the fixed threshold of 1.96 at every look.
         recall: "How do you let people look early without inflating false positives?"
+        answer: Use group-sequential boundaries such as O'Brien-Fleming (5.2% false positives over 5 looks) or always-valid p-values such as mSPRT (4.1%), in place of a fixed 1.96 at every look (24.5% over 20 looks).
         header: ["Looks", "False positive rate"]
         widths: [2, 2]
         highlight: [1]
@@ -258,26 +356,12 @@ parts:
         notes: >-
           O'Brien-Fleming's five boundaries go 4.53, 3.2, 2.61, 2.26, 2.03: strict early and close to 1.96 at the end. The mSPRT median stop was 5,897 pairs against 6,272 fixed, with a tail past 12,932.
 
-      - layout: flow
-        title: When the SRM fires, follow the pipeline
-        recall: How do you diagnose a sample ratio mismatch?
-        steps:
-          - {label: Assignment, sub: "hash, reused salt"}
-          - {label: Execution, sub: "redirect, crash"}
-          - {label: Logging, sub: "bot filter, loss"}
-          - {label: Analysis, sub: "filter, start date", accent: "D4621A"}
-        bullets:
-          - "**Slice the counts** by browser, day and filter stage."
-          - "**Our example:** only Safari fails, 15,020 against 13,800."
-        takeaway: Slicing the counts by dimension localises an SRM, and only then can you fix it and rerun.
-        source: notes/03-experimentation-at-scale.md
-        notes: >-
-          Fabijan and colleagues give a taxonomy and method for this. You generally can't reweight your way out, because you don't know who was lost.
-
       - layout: compare
+        beat: pitfalls
         title: When individual tests mislead
         lead: Two ways the sum of the tests differs from the truth.
         recall: What do interference and the winner's curse do to measured lifts?
+        answer: Both inflate them. With interference the A/B lift was +30.1% against a real +19.0%; with the winner's curse the platform measured a total of 18.6 for shipped wins against a true 9.2.
         left:
           title: Interference
           tag: fixed stock
@@ -305,6 +389,7 @@ parts:
       Many questions come after the fact, or concern things you can't assign. Here is how to read them honestly.
     slides:
       - layout: statement
+        beat: problem
         title: Subscribers order more. So what?
         kicker: The problem
         statement: "Loyalty-email subscribers placed 1.21 more orders. The true effect in this simulation is 0.30, and the other 0.91 is who chooses to subscribe."
@@ -315,9 +400,11 @@ parts:
           In potential outcomes terms, the comparison splits into the effect on those who opted in, and the difference their untreated outcomes would have had anyway.
 
       - layout: table
+        beat: fundamentals
         title: Which controls help and which harm
         lead: The causal graph decides this, not the correlation matrix.
         recall: Should you control for a confounder, a mediator, a collider?
+        answer: Control for a confounder (yes), not for a mediator (no), and never for a collider. Controlling for the wrong variable creates bias, so draw the causal graph first.
         header: ["Variable", "Path", "Control?", "Example result"]
         widths: [2, 2, 1, 4]
         highlight: [2]
@@ -331,8 +418,10 @@ parts:
           Collider selection hides in any analysis restricted to survivors of a filter: reviewers, people who finished onboarding, customers still active.
 
       - layout: code
+        beat: practice
         title: "Simpson's paradox: better everywhere, worse overall"
         recall: Why can a treatment win in every subgroup and lose overall?
+        answer: Severity drove both who got treated and who recovered. Treatment wins in mild (97.5% vs 90%) and severe (50% vs 30%) groups but loses overall (59.5% vs 60%), because most treated patients were severe.
         lang: Text output
         code: |-
           group    control       treatment
@@ -348,9 +437,11 @@ parts:
           The classic case is Berkeley admissions in 1973. Bickel and colleagues found little bias within departments, because women applied more to departments that were harder to get into.
 
       - layout: table
+        beat: practice
         title: Designs for when randomisation is off the table
         lead: Each simulation has a known truth. Each design rests on an assumption the data can't prove.
         recall: What does each quasi-experimental design assume?
+        answer: Weighting assumes no unmeasured confounders; DiD, parallel trends; IV, the exclusion restriction (for compliers); RD, no manipulation at the cutoff; synthetic control, that the pre-period fit carries on.
         header: ["Design", "Naive", "Design says", "Truth", "Assumes"]
         widths: [2, 1, 1, 1, 3]
         highlight: [2]
@@ -366,8 +457,10 @@ parts:
           The "naive" for DiD is treated minus control after launch; for synthetic control it's the city's before-and-after. Good-looking numbers don't validate the assumption. With diverging trends the DiD estimate doubled to 0.76 and looked just as confident.
 
       - layout: flow
+        beat: fundamentals
         title: Choosing a design
         recall: Which design fits which situation?
+        answer: If you control assignment, run an A/B test; with a rollout and pre-period, DiD; with a threshold, RD; with a randomised nudge, IV; with rich covariates, weighting; with one treated unit and many donors, synthetic control.
         steps:
           - {label: "Control assignment?", sub: "A/B test", accent: "D4621A"}
           - {label: "Rollout with pre-period?", sub: "DiD"}
@@ -382,12 +475,30 @@ parts:
         notes: >-
           Regression alone isn't on this list as a design. A coefficient is a conditional association until a design or randomisation makes it causal.
 
+      - layout: bullets
+        beat: pitfalls
+        title: Six ways a causal estimate goes wrong
+        recall: Name six ways a causal estimate goes wrong, and what each one needs.
+        answer: A post-treatment control or segment; trusting regression despite unobserved confounding; skipping the DiD pre-trend plot; claiming an IV effect for everybody (it covers compliers); extrapolating an RD result (it holds near the cutoff); ignoring extreme weights.
+        bullets:
+          - "**A post-treatment control or segment.** It can be a mediator or a collider, and treatment has already moved it."
+          - "**Trusting regression with unobserved confounding.** It removes only what you measured, and nothing warns you."
+          - "**Skipping the pre-trend plot in DiD.** Diverging trends almost doubled the estimate."
+          - "**Claiming an IV effect for everybody.** It applies to compliers."
+          - "**Extrapolating an RD result.** It applies near the cutoff."
+          - "**Ignoring extreme weights.** A propensity near 0 or 1 means poor overlap, and one user can dominate."
+        takeaway: Every quasi-experimental design answers a narrower question than it seems to, so say whose effect it estimates and which assumption you checked.
+        source: notes/04-correlation-and-causation.md
+        notes: >-
+          These are six of the chapter's nine pitfalls. A passed refuter tests the model you wrote and not the confounder you forgot, which the matching part returns to.
+
   - title: Matching and weighting
     summary: Overlap · Balance · Six designs on one scorecard · What bias remains · What the checks refute
     notes: >-
       Now a question with data but no randomisation, where the generator is ours, so every design can be scored against a truth a real analyst never sees.
     slides:
       - layout: statement
+        beat: problem
         title: The club's £95.54 is mostly who joins
         kicker: The problem
         statement: "Six months after Fernhill's loyalty club opened, members had spent £95.54 more than non-members. The generator says the true effect on joiners is £23.38."
@@ -399,8 +510,10 @@ parts:
           The three truths differ because the people who join benefit more, so say which one you want before you pick a design. Adjusting will remove about £70, and the argument after that is about what remains.
 
       - layout: image
+        beat: fundamentals
         title: Few non-joiners stand in for the likeliest joiners
         recall: How many joiners and non-joiners scored above 0.9, and what does that do to weighting?
+        answer: "970 joiners but only 40 non-joiners scored above 0.9. Weighting must lean heavily on those few: a non-joiner at 0.997 counts as about 330."
         image: ../../sources/images/causal-club-overlap.png
         caption: Estimated probability of joining, by group.
         bullets:
@@ -413,8 +526,10 @@ parts:
           Look at this chart before you run anything, because it sets the trade for the rest of the part. The scores run from 0.024 to 0.999 for joiners and 0.012 to 0.997 for non-joiners.
 
       - layout: image
+        beat: fundamentals
         title: Fix the design on balance alone
         recall: What thresholds does Rubin's guideline use, and how many of the ten covariates failed them?
+        answer: Absolute standardised difference below 0.25 and variance ratio between 0.5 and 2. Before adjustment nine of ten covariates fail the SMD threshold and four fail the variance ratio.
         image: ../../sources/images/causal-club-love-plot.png
         caption: Love plot. One row per covariate, one mark per design.
         bullets:
@@ -427,8 +542,10 @@ parts:
           Stuart reports Rubin's 2001 guideline: regression adjustment can be trusted when the absolute standardised difference is below 0.25 and the variance ratio lies between 0.5 and 2. A regression here would extrapolate, so we use a stricter line of 0.1 for the designs.
 
       - layout: code
+        beat: practice
         title: Every design pays in joiners or in effective controls
         recall: What did CEM give up to get balance, and how many controls were 5,710 weighted controls worth?
+        answer: CEM kept only 59% of the joiners (2,202), so the truth for them is £17.31 rather than £23.38. The 5,710 weighted controls are worth an effective 107.
         lang: Text output
         code: |-
           design              kept  eff_n  max|SMD|
@@ -446,8 +563,10 @@ parts:
           Effective sample is the sum of weights squared over the sum of squared weights. One non-joiner holds 8.6% of the control weight under propensity weights. Estimates then run from £15 to £32, and most of that spread is not bias: CEM's £20.96 and no-replacement matching's £18.26, which kept 53% with a truth of £15.32, target different people.
 
       - layout: image
+        beat: practice
         title: Every sound design lands high
         recall: What was the mean gap to the truth for the sound ATT designs, and what happened when engagement was added?
+        answer: The sound ATT designs landed £3.15 to £4.31 above the truth on average. Adding engagement cut entropy balancing's gap from £3.59 to £0.15.
         image: ../../sources/images/causal-club-estimates.png
         caption: Gap to the truth on 20 datasets, by design.
         bullets:
@@ -460,8 +579,10 @@ parts:
           Plain propensity weights are the worst sound option here, with a mean gap of £8.27 and a standard deviation of £7.76. Balancing logged history moved the groups further apart on what nobody logged: the engagement gap rose from 0.29 to 0.48 standard deviations. The arithmetic checks out: £8 per standard deviation times 0.48 gives £3.81, close to the £3.59 we measured.
 
       - layout: compare
+        beat: pitfalls
         title: The bad control that helped, and the world where it kills
         recall: Why can controlling for post-treatment sessions help in one world and destroy the estimate in another?
+        answer: If sessions only proxy engagement, controlling shrinks the regression gap from £4.20 to £2.01. If the club works through sessions, controlling erases the effect (£0.79 against £31.60). The data cannot tell the worlds apart.
         lead: "Same customers and the same true ATT of £23.38. Only the role of next-period sessions differs."
         emphasis: right
         left:
@@ -483,8 +604,10 @@ parts:
           An analyst who saw the first result could conclude that post-treatment controls are safe. The second world shows why the rule stands.
 
       - layout: compare
+        beat: pitfalls
         title: "A passed check says what it refutes, and no more"
         recall: What do an E-value of 1.79 and a passed placebo test rule out, and what bias did they miss?
+        answer: They rule out a zero effect or a broken pipeline. They missed a real bias of about 15%, which needed an E-value of only 1.20 to reach the truth.
         emphasis: right
         left:
           title: What the checks returned
@@ -510,8 +633,10 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb
         recall: "Where do most experiment failures come from?"
+        answer: From design and reading errors, such as a broken split, a badly chosen metric, unplanned looks or wrong controls, and each one has a check you can automate.
         cards:
           - {title: Run the SRM first, body: "Stop if it fails. Everything downstream depends on it.", accent: "D4621A"}
           - {title: Agree metrics early, body: "One OEC, guardrails with margins. Show both parts of a ratio.", accent: "D4621A"}
@@ -525,7 +650,10 @@ parts:
           These six catch most of what goes wrong. Everything here applies to online evaluation of LLM features too.
 
       - layout: bullets
+        beat: wrap
         title: Where to go next
+        recall: What can the next pillars do that a frequentist test cannot?
+        answer: The Bayesian pillar reads the same checkout test as a probability of being better, and the eval pillar in generative-ai applies this machinery to LLM features.
         bullets:
           - "**Bayesian analysis:** the same checkout test, as a probability of being better."
           - "**Eval pillar in generative-ai:** this machinery applied to LLM features."

@@ -17,12 +17,65 @@ deck:
     to use, with measurements in place of opinion. Everything runs offline on a scripted stub model.
 
 parts:
+  - title: Which framework do you keep
+    overview: true
+    summary: The question · Seven steps · What you will be able to do
+    notes: >-
+      Before any framework code, here is the one question this lecture answers and the seven steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Three builds, one answer. Which do you keep?
+        recall: What question does every part of this lecture work towards?
+        kicker: The idea
+        statement: "One research agent, built by hand, in LangGraph and in Google ADK. All three return the identical answer, so the demo cannot tell you which to keep."
+        attribution: The research agent in practice/01-research-agent
+        takeaway: Choose a framework on how a stuck run stops, how a run resumes and how it exports, because on the happy path they all look the same.
+        source: README.md
+        notes: >-
+          We build the same agent several times and measure what a demo skips. Left to run on a stuck model, one build stops after 6 calls, one after 500 and one after 5,004.
+
+      - layout: flow
+        beat: fundamentals
+        title: Seven steps from a hand-written loop to a choice
+        recall: In what order does this lecture build and judge the research agent?
+        steps:
+          - {label: Loop, sub: "by hand, then a graph"}
+          - {label: Stop, sub: "rewind and approve"}
+          - {label: Remember, sub: "a store"}
+          - {label: ADK, sub: "the same agent"}
+          - {label: Trace, sub: "see the run"}
+          - {label: Choose, sub: "measure", accent: "D4621A"}
+          - {label: Compose, sub: "inside a node"}
+        bullets:
+          - "Each step opens with **a problem the version before it has**."
+          - "Each step ends on the mistake it usually produces."
+        takeaway: Each step adds one capability to the same agent, and the choice comes after three working builds exist to measure.
+        source: README.md
+        notes: >-
+          The order follows the README's start-here list: notes 01 to 03 on LangGraph, 04 on ADK, 05 on tracing, 06 on choosing, and 07 for chains inside a node.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with an agent framework.
+        cards:
+          - {title: Build, body: "Write the agent loop by hand once, and say what a framework lets you stop writing."}
+          - {title: Resume, body: "Make a run pausable, approvable and rewindable, and give it memory that outlives a thread."}
+          - {title: Observe, body: "Trace a run on either framework and tell a stuck run from a healthy one."}
+          - {title: Choose, accent: "D4621A", body: "Pick by control flow and durability, set every limit and test that it trips."}
+        takeaway: You will be able to build the same agent on two frameworks, watch it run, and choose between them with measurements.
+        source: README.md
+        notes: >-
+          These follow the rules of thumb at the end of the lecture. The theory behind the graphs is in ai-engineering, graph engineering.
+
   - title: The loop you write first
     summary: The research agent · The split of work · From a class to a graph
     notes: >-
       Frameworks are easier to judge once you have written what they replace. So we start with no framework.
     slides:
       - layout: statement
+        beat: problem
         title: What does a framework actually do for you?
         kicker: The problem
         statement: "You can't judge a framework until you've written what it replaces, and that turns out to be about twenty lines."
@@ -33,6 +86,7 @@ parts:
           feature becomes a specific thing you no longer write, and you can ask whether that is worth the indirection.
 
       - layout: image
+        beat: fundamentals
         title: The model proposes, your code acts
         recall: Who does what in a ReAct loop?
         image: ../sources/images/ksm26-ai-agents-in-langgraph-fig1.png
@@ -48,6 +102,7 @@ parts:
           right-hand side of this picture.
 
       - layout: code
+        beat: practice
         title: The whole agent is a loop with a guard
         recall: What are the essential parts of a hand-written agent loop?
         lang: python
@@ -76,6 +131,7 @@ parts:
           calling. Note 01 shows the same loop on the Claude API as well.
 
       - layout: flow
+        beat: pitfalls
         title: The same loop as a two-node graph
         recall: How does the hand-written loop map onto LangGraph?
         steps:
@@ -100,6 +156,7 @@ parts:
       A loop in memory dies with its process. This part makes the run an object you can save, pause and go back to.
     slides:
       - layout: statement
+        beat: problem
         title: What if the agent is about to publish something wrong?
         kicker: The problem
         statement: "The agent's next step is `publish_report`. Nothing lets a person look first, and if the process dies, the run is gone."
@@ -110,6 +167,7 @@ parts:
           Both need the state saved after every step.
 
       - layout: image
+        beat: fundamentals
         title: An agent's search tool should return context, not pages
         recall: How does agentic search differ from web search?
         image: ../sources/images/ksm26-ai-agents-in-langgraph-fig5.png
@@ -124,6 +182,7 @@ parts:
           read. Same principle, smaller.
 
       - layout: code
+        beat: fundamentals
         title: One checkpointer turns a graph into a resumable thread
         recall: What does adding a checkpointer change?
         lang: python
@@ -148,6 +207,7 @@ parts:
           the same SQLite file and restores all 8 messages, standing in for a process restart.
 
       - layout: compare
+        beat: practice
         title: Two ways to gate a publish
         recall: How do interrupt_before and interrupt() differ?
         left:
@@ -171,6 +231,7 @@ parts:
           than failing the run.
 
       - layout: table
+        beat: pitfalls
         title: What a rewind does and does not undo
         recall: Does rewinding a graph undo external effects?
         header: [Thing, After a rewind]
@@ -192,6 +253,7 @@ parts:
       A checkpointer remembers one thread. Ask the same question on a new thread and the agent pays for everything again.
     slides:
       - layout: statement
+        beat: problem
         title: Why does it pay for the same research twice?
         kicker: The problem
         statement: "A checkpointer remembers a thread and nothing else. A new thread means every search and every read happens again."
@@ -202,6 +264,7 @@ parts:
           them. Different lifetimes need different storage.
 
       - layout: flow
+        beat: fundamentals
         title: Read memory before the model, write it after
         recall: Where does long-term memory attach to the graph?
         steps:
@@ -219,6 +282,7 @@ parts:
           which is why a wrong memory is more dangerous than a wrong message.
 
       - layout: cards
+        beat: fundamentals
         title: Three kinds of memory, one store
         recall: What are the three types of long-term memory?
         cards:
@@ -232,6 +296,7 @@ parts:
           pillar. Here we care about how it looks in code.
 
       - layout: code
+        beat: practice
         title: The second visit costs a quarter as much
         recall: What did semantic memory save in the lab?
         lang: text
@@ -253,12 +318,30 @@ parts:
           These are stub token counts from the lab, a word-based count and not billing data, so read the ratio and not the dollars. And
           sometimes Ben should share what Ana found, which is a design choice about the namespace.
 
+      - layout: table
+        beat: pitfalls
+        title: A memory the agent trusts too much
+        recall: What goes wrong when an agent trusts its long-term memory unchecked?
+        header: [Pitfall, What you see, Fix]
+        widths: [3, 4, 4]
+        rows:
+          - [No expiry or provenance, Trusts a finding after its source was corrected, "Store source and date, expire on a policy"]
+          - [User id from the model, One user reads another's memories, Read it from run config]
+          - [Unchecked memory writes, A planted fact persists across threads, Treat writes as untrusted input]
+        highlight: [2]
+        bold_first: true
+        takeaway: Store a source and date with every memory, take the user id from run config, and treat memory writes as untrusted input.
+        source: notes/03-long-term-memory-with-langgraph.md
+        notes: >-
+          From the note's Pitfalls table. A wrong memory outlives the thread that wrote it, so each of these fails quietly and later.
+
   - title: The same agent on a new runtime
     summary: ADK's shape · Events · Limits and approval · Built-in evals
     notes: >-
       Now we keep the tools and the question and change everything else. The differences are what we came to see.
     slides:
       - layout: statement
+        beat: problem
         title: What changes when the same tools run on ADK?
         kicker: The problem
         statement: "Same tools, same question, same answer. The state, the loop, the guard and the approval all look different."
@@ -268,6 +351,7 @@ parts:
           A second framework is how you find out which of your assumptions came from the first one.
 
       - layout: table
+        beat: fundamentals
         title: The same ideas under different names
         recall: How do LangGraph's concepts map onto ADK's?
         header: [Idea, LangGraph, ADK]
@@ -287,6 +371,7 @@ parts:
           this version. ADK's docs moved to adk.dev as well.
 
       - layout: code
+        beat: practice
         title: ADK's guard counts model calls, and raises
         recall: How do you cap an ADK agent's loop?
         lang: python
@@ -310,6 +395,7 @@ parts:
           This is real output from note 04. The next slides in the deck come back to what happens when you do not set it.
 
       - layout: flow
+        beat: fundamentals
         title: "An ADK approval is a function call back to your app"
         recall: How does ADK model a pending approval?
         steps:
@@ -326,12 +412,30 @@ parts:
           ADK's eval harness is the other big difference: AgentEvaluator compares the tool trajectory against a saved test file with no
           external platform. Note 04 runs it offline on the lab's eval folder.
 
+      - layout: table
+        beat: pitfalls
+        title: Where an ADK build breaks you
+        recall: Which ADK habits from older tutorials or other frameworks cause failures?
+        header: [Pitfall, What you see, Fix]
+        widths: [3, 4, 4]
+        rows:
+          - ["A tutorial that uses `LoopAgent`", "Runs with a deprecation warning, breaks later", "Use `Workflow`"]
+          - ["`require_confirmation` as a UI", "Nothing happens until your code answers", "Build the resume path, test both answers"]
+          - ["A retry decorator on `runner.run`", "A 429 is raised later, with no retry", "Retry around the loop that consumes events"]
+        highlight: [1]
+        bold_first: true
+        takeaway: Check tutorials against the installed version, answer every approval request from your own code, and retry around the loop that consumes the events.
+        source: notes/04-google-adk.md
+        notes: >-
+          From the note's Pitfalls table, measured at google-adk 2.13.0. The decorator returns at once because run is a generator, so the error appears during iteration.
+
   - title: Seeing what the agent did
     summary: Traces · Reading a stuck run · Datasets and evaluators
     notes: >-
       We have two builds. How do we see inside either of them, and how do we know a change made things better?
     slides:
       - layout: statement
+        beat: problem
         title: Every call returned 200. Why did the run fail?
         kicker: The problem
         statement: "An agent's worst failures raise no exception at the step that goes wrong. The model just does something unhelpful, twelve times."
@@ -342,6 +446,7 @@ parts:
           steps, and that is what a trace is for.
 
       - layout: flow
+        beat: fundamentals
         title: A trace is a tree of runs under one question
         recall: What does a trace contain?
         steps:
@@ -360,6 +465,7 @@ parts:
           traces contain four model calls.
 
       - layout: code
+        beat: pitfalls
         title: A stuck run is a pattern, not a repeated call
         recall: What does a trace of a stuck run show?
         lang: text
@@ -382,6 +488,7 @@ parts:
           looks_stuck check in the note flags this run and not the healthy one.
 
       - layout: steps
+        beat: practice
         title: From traces to a score you can compare
         recall: How do datasets and evaluators turn traces into experiments?
         steps:
@@ -402,6 +509,7 @@ parts:
       Three builds, one answer. Now we decide, using what we measured and what two empirical studies found.
     slides:
       - layout: statement
+        beat: problem
         title: All three builds give the same answer. Now what?
         kicker: The problem
         statement: "Every framework's happy path looks the same. Choose on the stuck run, the resume and the export."
@@ -411,6 +519,7 @@ parts:
           The demo can't help you choose. So we measure what demos skip.
 
       - layout: table
+        beat: fundamentals
         title: What the framework adds, with the model removed
         recall: What overhead does each framework add?
         header: [Build, Cold start, Per run, Lines, Packages]
@@ -427,6 +536,7 @@ parts:
           build's stub. Packages come from uv pip compile. Every package is a release you have to absorb.
 
       - layout: compare
+        beat: pitfalls
         title: "Left alone, a stuck agent keeps spending"
         recall: How many model calls does a stuck agent get by default?
         emphasis: right
@@ -451,6 +561,7 @@ parts:
           real transcript grows, so it costs more with each call.
 
       - layout: code
+        beat: practice
         title: Set the limit and test that it trips
         recall: How do you confirm a run limit works?
         lang: python
@@ -472,6 +583,7 @@ parts:
           have the test.
 
       - layout: flow
+        beat: fundamentals
         title: How the same agent stops in each build
         recall: What does a caller see when each build runs out of budget?
         steps:
@@ -489,6 +601,7 @@ parts:
           that no framework makes for you.
 
       - layout: cards
+        beat: pitfalls
         title: What two studies found
         recall: What do the empirical studies say about agent frameworks?
         cards:
@@ -503,6 +616,7 @@ parts:
           Trust the ordering more than the figures. Liu's sample does not include LangGraph or ADK.
 
       - layout: steps
+        beat: fundamentals
         title: Pick by shape, then check how you would leave
         recall: How do you choose an agent framework?
         steps:
@@ -523,6 +637,7 @@ parts:
       Inside a graph node you often need several model calls in a row. That is what LCEL is for, up to a point.
     slides:
       - layout: statement
+        beat: problem
         title: What happens to a key you forgot to carry forward?
         kicker: The problem
         statement: "The report needs the question, the findings and the gaps. Written by hand, one forgotten key fails three steps later."
@@ -532,6 +647,7 @@ parts:
           The book's example chains characters, plot and scenes. We use findings, gaps and report. The problem is the same.
 
       - layout: code
+        beat: fundamentals
         title: Each step adds a key and keeps the rest
         recall: What does RunnablePassthrough.assign do?
         lang: python
@@ -556,6 +672,7 @@ parts:
           hands back a ChatPromptValue. Check the output type once.
 
       - layout: image
+        beat: practice
         title: Map-reduce is just batch, then invoke
         recall: How do you build map-reduce with LCEL?
         image: ../sources/images/prompt-engineering-for-generative-ai-fig4-7.png
@@ -570,6 +687,7 @@ parts:
           Tag each partial with its source before joining. The lab's run over six sources does this, so the answer can still cite.
 
       - layout: compare
+        beat: pitfalls
         title: A plan from a model is untrusted input
         recall: How do you run a model-written query plan safely?
         left:
@@ -596,6 +714,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb
         recall: What rules of thumb summarize agentic frameworks?
         cards:
@@ -610,6 +729,7 @@ parts:
         notes: The one-page summary. The fuller table is in the pillar README.
 
       - layout: bullets
+        beat: wrap
         title: Where next
         recall: Where does this pillar lead?
         bullets:

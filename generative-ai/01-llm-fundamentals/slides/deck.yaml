@@ -12,12 +12,63 @@ deck:
     we go through what a model is, how it gets trained, how to prompt and call it, and how to run it yourself. By
     the end you will know which lever fits which problem, and why the assistant still needs the next pillar.'
 parts:
+- title: Which lever to pull
+  overview: true
+  summary: The question · Three parts · What you will be able to do
+  notes: Before any detail, here is the one question this lecture keeps asking and the three parts we take to answer it.
+  slides:
+  - layout: statement
+    beat: problem
+    title: Which lever fixes a wrong answer?
+    kicker: The idea
+    recall: What one question does this lecture keep asking about a model?
+    statement: A support assistant invents a refund policy. Is the fix a prompt, retrieval, a fine-tune or a different model?
+    attribution: The running example is a support-ticket assistant
+    takeaway: Most of an LLM's surprising behaviour follows from next-token prediction, and knowing that tells you which lever a problem calls for.
+    source: README.md
+    notes: We follow one assistant from a confident wrong answer to a system we can prompt, call and run. Each part opens with a symptom, states the rule behind it, applies the rule to the assistant and ends on the usual mistake.
+  - layout: flow
+    beat: fundamentals
+    title: Three parts take us from a token to a running model
+    recall: What are the three parts of this lecture, in order?
+    steps:
+    - label: How it works
+      sub: tokens to next token
+    - label: How it is trained
+      sub: stages and levers
+    - label: How you use it
+      sub: prompt, call, run
+      accent: D4621A
+    bullets:
+    - Each part opens with **the idea**, states **the principle**, then **applies** it to the assistant.
+    - Each part ends on the mistake it usually produces.
+    takeaway: The lecture runs from how a model predicts, through how its weights are trained and adapted, to how you prompt, call and run it.
+    source: README.md
+    notes: The story in the README follows the same path. What the model sees, then the stages its weights pass through, then the prompt, the API call and the local runtime.
+  - layout: cards
+    beat: wrap
+    title: By the end you will be able to
+    recall: Name four things this lecture teaches you to do with a model.
+    cards:
+    - title: Explain
+      body: Say why a model invents plausible answers, and design for it instead of hoping it away.
+    - title: Choose
+      body: Pick between a prompt, retrieval and a fine-tune, with LoRA first when you do tune.
+    - title: Call
+      body: Check stop_reason, cap tool loops and log usage on every call.
+      accent: D4621A
+    - title: Decide
+      body: Choose local or API on data rules and volume, after reading the licence of the exact repo.
+    takeaway: You will be able to say why the model answered as it did, which lever to pull, and how to call and run it safely.
+    source: README.md
+    notes: These come from the README's rules of thumb. The assistant still will not know the company's refund policy at the end, and that is the next pillar's job.
 - title: How a model works
   summary: Tokens · Attention · Scale · Decoding · Hallucination
   notes: We start from what the model sees. Everything surprising about LLMs follows from next-token prediction
     over subword tokens.
   slides:
   - layout: statement
+    beat: problem
     title: Our assistant just invented a refund policy. Why?
     kicker: The problem
     statement: An LLM predicts the next token. Almost everything surprising about it follows from that one sentence.
@@ -27,6 +78,7 @@ parts:
       crashed. To see why that was the expected behaviour, we start with what the model actually receives when a
       customer types a sentence. Then we follow that sentence all the way through to the next token.
   - layout: flow
+    beat: fundamentals
     title: From a customer message to one next token
     recall: "How does a model get from a customer's text to the next token?"
     steps:
@@ -50,6 +102,7 @@ parts:
       position signal, blocks of attention mix them, and the last position produces a score for each word in the
       vocabulary. We sample one, append it and go round again. The next few slides open each box.
   - layout: compare
+    beat: fundamentals
     title: Why tokens set both the bill and the blind spots
     recall: Why can a model fail to reverse a string that it reads correctly?
     lead: 'Same short sentence with GPT-4 tokenization: a median of 7 tokens in English, 72 in Burmese.'
@@ -75,6 +128,7 @@ parts:
       in English and 72 in Burmese. And since the letters sit inside a token, a model can read a string correctly
       and still fail to reverse it.'
   - layout: code
+    beat: practice
     level: deep
     title: A dot product counts length, a cosine only direction
     recall: When do dot product, cosine and L2 distance rank neighbours the same way?
@@ -103,6 +157,7 @@ parts:
       out. Once every vector has length 1, the dot product is the cosine, and since squared L2 distance is 2 minus 2
       times the dot product, all three rank neighbours the same way. Attention scores, next, are plain dot products.'
   - layout: table
+    beat: fundamentals
     title: Position schemes differ in where the order signal goes
     recall: Which position schemes act inside attention, and which act on the input?
     lead: Attention alone is order-blind, so every model adds position somewhere.
@@ -140,6 +195,7 @@ parts:
       embedding. Relative encodings, RoPE and ALiBi change the query-key score inside attention. NoPE adds nothing,
       and in a decoder the causal mask is enough for the model to recover order.
   - layout: compare
+    beat: pitfalls
     title: A RoPE model breaks past its training length, and rescaling positions mends it
     recall: What happens to a RoPE model run past its training length, and what fixes it without retraining?
     emphasis: right
@@ -165,6 +221,7 @@ parts:
       this shows the model does not break, not that it uses the far context. A model can accept 128k tokens and still
       retrieve or copy badly from them.
   - layout: image
+    beat: fundamentals
     title: The causal mask is why one pass can train every position
     recall: How do you test that a causal mask works?
     image: ../sources/images/build-a-large-language-model-from-scratch-fig3-19.png
@@ -180,6 +237,7 @@ parts:
       pass train each position to predict the next token. And it gives us a test: change a later token, and nothing
       earlier may move.'
   - layout: cards
+    beat: fundamentals
     level: deep
     title: Read attention by its shapes
     recall: What does Q Kᵀ cost, and why is K transposed?
@@ -204,6 +262,7 @@ parts:
       matrix has rank 1,000, while one built from two rank-4 factors has rank 4 and needs 125 times fewer numbers.
       That is the idea behind LoRA in chapter 9.'
   - layout: code
+    beat: practice
     title: Attention is short enough to hold in your head
     recall: Why divide by the square root of d_k?
     lang: python
@@ -222,6 +281,7 @@ parts:
       gets zero weight after the softmax. The real cost shows here too: the score matrix is T by T, so it is quadratic
       in context.'
   - layout: image
+    beat: fundamentals
     title: A block adds an MLP, residuals and LayerNorm, and then you stack it
     recall: What do the residual and the LayerNorm each contribute?
     image: ../sources/images/huyen-ai-engineering-fig2-6.png
@@ -237,6 +297,7 @@ parts:
       give gradients a direct path through deep stacks. LayerNorm keeps activations in a stable range. GPTs are
       this block stacked, with an embedding underneath and a linear head on top.
   - layout: image
+    beat: pitfalls
     title: Trained heads specialise, but a high weight is not an explanation
     recall: Is an attention weight an explanation of the model's answer?
     image: ../sources/images/voita-multihead-roles-fig1.png
@@ -253,6 +314,7 @@ parts:
       Wallace trained classifiers with attention and found different weights that gave the same prediction, and weak
       agreement with gradient importance. So weights show where a head drew from, nothing more.
   - layout: bullets
+    beat: pitfalls
     title: Many heads park their weight on the first token
     recall: What is an attention sink?
     lead: Large transformers put tokens to uses nobody designed.
@@ -271,6 +333,7 @@ parts:
       Darcet et al. found about 2% of DINOv2 patch tokens carried roughly ten times the norm, which they fixed with
       register tokens. The vision results were measured on patches; the language results are separate studies.
   - layout: table
+    beat: practice
     title: Parameters tell you the memory, not the ability
     recall: How do you estimate the memory for a model's weights?
     lead: Weights only. Serving adds the KV cache and activations.
@@ -304,6 +367,7 @@ parts:
       an envelope before you download it. Note that this says nothing about ability. LLaMA's 13B beat the 175B GPT-3
       on most benchmarks in its report, because it was trained on far more data per parameter.
   - layout: compare
+    beat: fundamentals
     title: Chinchilla changed what a training budget should buy
     recall: Why might an operator train past 20 tokens per parameter?
     emphasis: right
@@ -328,6 +392,7 @@ parts:
       optimum. If inference traffic dwarfs training, a smaller model trained past that point costs less over its
       life. And mixture of experts splits size from compute again.
   - layout: cards
+    beat: fundamentals
     title: Three ways around the quadratic cost of attention
     recall: What are the three ways to avoid attention's quadratic cost?
     lead: Not every LLM is a transformer.
@@ -357,6 +422,7 @@ parts:
       generation order, as LLaDA does with masked diffusion. Most comparisons here stop at a few billion parameters
       and use the authors' own benchmarks, so treat wins at 3B as saying little about 70B.
   - layout: code
+    beat: practice
     level: deep
     title: A fixed-size state gives the same outputs as a growing cache
     recall: Why is generation cheap in a linear-attention model?
@@ -390,6 +456,7 @@ parts:
       what makes generation cheap and what the limits are about, because everything the model remembers of the
       prompt has to fit in it.
   - layout: flow
+    beat: fundamentals
     title: Prefill is parallel, decode is one token at a time
     recall: What does the KV cache store, and what does it cost?
     steps:
@@ -413,6 +480,7 @@ parts:
       to compute only its own keys and values, but the cache grows linearly with context, on top of the memory for
       the weights.
   - layout: image
+    beat: fundamentals
     title: Temperature reshapes the choice among the logits
     recall: What does a temperature above 1 do to the distribution?
     image: ../sources/images/huyen-ai-engineering-fig2-16.png
@@ -429,6 +497,7 @@ parts:
       other as temperature rises. On your own open-weight model you control this. Current Claude models no longer
       accept it, which we return to later.
   - layout: cards
+    beat: fundamentals
     title: Spending more compute and constraining the output
     recall: What does constrained decoding guarantee, and what does it leave open?
     cards:
@@ -447,6 +516,7 @@ parts:
       a valid JSON object can still hold a wrong value. That distinction turns up in every structured-output system
       we use.'
   - layout: compare
+    beat: pitfalls
     title: 'Why it invents things: two hypotheses, neither settled'
     recall: What are the two hypotheses for hallucination?
     emphasis: left
@@ -470,6 +540,7 @@ parts:
       given text from its own, so errors snowball. The other is that fine-tuning teaches it to imitate knowledge
       it does not have. Neither is settled, and both imply that you check its answers.
   - layout: bullets
+    beat: practice
     title: 'Monday: check what your model can and cannot see'
     recall: What kind of error can self-consistency not catch?
     bullets:
@@ -490,6 +561,7 @@ parts:
     fine-tuning first.
   slides:
   - layout: statement
+    beat: problem
     title: Should we train a model on five years of tickets?
     kicker: The problem
     statement: Pretraining buys knowledge, supervised fine-tuning buys format, preference optimization buys judgment,
@@ -501,6 +573,7 @@ parts:
       too small to pretrain a base model. The longer answer is what this part covers: which stage of training a
       problem belongs to.'
   - layout: flow
+    beat: fundamentals
     title: One set of weights passes through several stages
     recall: About what share of InstructGPT's compute went into pretraining?
     steps:
@@ -524,6 +597,7 @@ parts:
       what came before. Parameter-efficient methods make the later stages affordable to you, since they do not need
       retraining from scratch.
   - layout: code
+    beat: fundamentals
     title: The training objective fits on one slide
     recall: What should the loss be before training, and why?
     lang: python
@@ -541,6 +615,7 @@ parts:
       training is parallel while generation is not. Before you train, the loss should be about ln of the vocabulary
       size.
   - layout: table
+    beat: fundamentals
     level: deep
     title: Cross-entropy is the loss, entropy its floor, KL the gap
     recall: Why does minimising cross-entropy also minimise KL divergence?
@@ -566,6 +641,7 @@ parts:
       against a frozen reference. Perplexity is exp of the cross-entropy, the effective number of tokens the model
       is choosing between. These numbers come from the three-token example in the note, run with NumPy.'
   - layout: image
+    beat: pitfalls
     title: A small corpus teaches you to memorise
     recall: What does a widening gap between training and validation loss show?
     image: ../sources/images/build-a-large-language-model-from-scratch-fig5-12.png
@@ -582,6 +658,7 @@ parts:
       a useful model: it would learn your tickets. Training also needs far more memory than inference, since Adam
       keeps two extra values per weight.'
   - layout: flow
+    beat: fundamentals
     title: Pretraining text is filtered before it is mixed
     recall: How does a raw crawl become a training stream?
     steps:
@@ -605,6 +682,7 @@ parts:
       scored worst on every task. Menus and cookie notices repeat across pages, which is why paragraph hashing
       removes so much. The next slide shows the cost of filtering hard.
   - layout: compare
+    beat: pitfalls
     title: Heavy filtering kept reasoning and gave up stored facts
     recall: What did phi-3-mini's heavy filtering keep and give up?
     emphasis: right
@@ -626,6 +704,7 @@ parts:
       reasoning and gave up stored facts. The numbers are Microsoft's own, self-reported, and the data was not released.
       The same trade shows up for toxicity filters and for the language and code mix.
   - layout: table
+    beat: practice
     title: Price a run before you plan one
     recall: What share of Llama 2's training data would five years of support tickets be?
     lead: Every pretraining figure reduces to a few multiplications.
@@ -661,6 +740,7 @@ parts:
       the Chinchilla ratio of 20, on purpose: a smaller model on more tokens costs more to train and less to run. The
       ticket volume is an assumption, chosen to be generous, and it still comes to 0.55% of what Llama 2 saw.'
   - layout: compare
+    beat: fundamentals
     title: Continued pretraining adds knowledge, SFT adds behaviour
     recall: How many SFT examples did InstructGPT use?
     emphasis: right
@@ -687,6 +767,7 @@ parts:
       is missing. InstructGPT used about 13,000 demonstrations, and typical sets run from 10,000 to 100,000, though
       much of the format gain arrives early.
   - layout: cards
+    beat: pitfalls
     title: What goes wrong when you fine-tune
     recall: What happens if you fine-tune on facts the model does not know?
     cards:
@@ -704,6 +785,7 @@ parts:
       slowly while its test accuracy falls. Moving weights makes it forget. And a classification head needs far
       less work than a full fine-tune. Early stopping and replay are cheap, so plan for them from the start.
   - layout: code
+    beat: fundamentals
     title: Preference training pays for separation, not confidence
     recall: What value does this loss start at when the two scores are tied?
     lang: python
@@ -720,6 +802,7 @@ parts:
       right answers people prefer. The reward-model loss pushes the winner's score above the loser's. It starts
       at ln 2 when the scores are tied, and it depends only on their difference. Raising both does nothing.
   - layout: compare
+    beat: fundamentals
     title: RLHF needs a reward model and RL, DPO needs neither
     recall: How does DPO avoid a reward model?
     emphasis: right
@@ -745,6 +828,7 @@ parts:
       on log-probability ratios against a frozen reference. Constitutional AI replaces human harm labels with model
       critiques against written principles. People still write those principles.
   - layout: code
+    beat: fundamentals
     title: LoRA starts as a no-op and trains only a small update
     recall: Why is the model unchanged at the start of LoRA training?
     lang: python
@@ -765,6 +849,7 @@ parts:
       at step 0. Trained, the update gets merged for serving, with no overhead. QLoRA holds the frozen base in 4-bit
       NF4 for less memory in training.
   - layout: table
+    beat: practice
     title: Prompt, retrieve or fine-tune?
     recall: When is fine-tuning the wrong answer?
     lead: Try them from the top. Each row costs more than the last.
@@ -797,6 +882,7 @@ parts:
     runtime.'
   slides:
   - layout: statement
+    beat: problem
     title: A one-line prompt returned a paragraph about billing
     kicker: The problem
     statement: A prompt is the conditioning context for next-token prediction. It is the cheapest change you will
@@ -807,6 +893,7 @@ parts:
       sometimes a paragraph about what billing is. Nothing in the model is broken. A prompt is the only thing we
       have changed so far, and it is the cheapest change we will ever make, because no weight moves.'
   - layout: cards
+    beat: fundamentals
     title: Five principles, and the last two are about how you work
     recall: What are the five principles of prompting?
     cards:
@@ -828,6 +915,7 @@ parts:
       Evaluation and division of labor are about how you work, and they matter the most, since output is sampled.
       Run each variant over a labelled set instead of judging from one good output.
   - layout: flow
+    beat: fundamentals
     title: Wrap every call in a retry with a designed exit
     recall: "What do you do with a reply that fails validation?"
     steps:
@@ -849,6 +937,7 @@ parts:
       and the label is allowed. If it fails and retries are left, go again. If retries run out, it goes to a person.
       Every retry is a paid call, so log the calls alongside accuracy to see what the retry is costing.
   - layout: code
+    beat: practice
     title: LangChain makes each box a swappable Runnable
     recall: What does the pipe operator do in LCEL?
     lang: python
@@ -868,6 +957,7 @@ parts:
       and stream, so the pipe composes them and the chain gains those methods with no new code. A fake chat model
       makes wiring tests free and deterministic. That tests the plumbing and says nothing about answer quality.
   - layout: table
+    beat: practice
     title: Five checks catch most model bugs
     recall: What should the loss be at step 0, and how do you test the causal mask?
     lead: Each takes minutes, on a model small enough for a laptop.
@@ -902,6 +992,7 @@ parts:
       CPU script is about 80 lines and runs these checks. When the fine-tune produces garbage, these tell you whether
       you have a bad mask or a bad learning rate. Note that a missing mask still trains and the loss still falls.
   - layout: compare
+    beat: pitfalls
     title: The request that worked last year can now return a 400
     recall: What replaces a forced tool_choice on current Claude models?
     emphasis: right
@@ -929,6 +1020,7 @@ parts:
       code from an older tutorial, that is a likely cause. Read the 400's message, and pin the model id so changes
       are deliberate.
   - layout: code
+    beat: practice
     title: The tool loop has three details that hand-rolled code gets wrong
     recall: What are the three details of a correct tool loop?
     lang: python
@@ -949,6 +1041,7 @@ parts:
       the turns, since a model that keeps calling tools is a cost incident. The history goes back each time, which
       is why long loops get expensive.
   - layout: table
+    beat: pitfalls
     title: Open weights are not a licence
     recall: What three things does the Llama 3.1 licence require?
     lead: Read from the licence pages and Hub metadata on 2026-11-02. Terms change, so check the exact repo.
@@ -983,6 +1076,7 @@ parts:
       we may. Terms differ by family and even by generation, and these were read on 2 November 2026. The Llama row
       is the surprising one. The obligations attach to what you ship, so a fine-tune inherits them.
   - layout: table
+    beat: practice
     title: Will it fit? Read the real file sizes
     recall: Why does a Q4 file need more than 4 bits per parameter?
     lead: Qwen2.5 7B Instruct GGUF files, from the Hugging Face Hub, read 2026-11-02.
@@ -1020,6 +1114,7 @@ parts:
       kept at higher precision. The file is a floor, since the KV cache grows with the context you ask for. Start
       at Q4_K_M, then compare with a larger file on your own eval.
   - layout: cards
+    beat: practice
     title: Three runtimes, and when local beats the API
     recall: What are the strongest reasons to run locally?
     cards:
@@ -1044,6 +1139,7 @@ parts:
   divider: false
   slides:
   - layout: cards
+    beat: wrap
     title: Rules of thumb to carry out of the room
     recall: Which one sentence explains most of an LLM's surprising behaviour?
     cards:
@@ -1067,6 +1163,7 @@ parts:
       with a part of the lecture, and each rests on the idea that we began with: the model predicts plausible next
       tokens.'
   - layout: bullets
+    beat: wrap
     title: Where this goes next
     recall: What can the assistant still not do at the end of this pillar?
     bullets:

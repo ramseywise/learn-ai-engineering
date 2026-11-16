@@ -14,12 +14,63 @@ deck:
     a notebook to a monitored service, and at each step we meet a failure that throws no error.
 
 parts:
+  - title: What this lecture answers
+    overview: true
+    summary: The question · Five parts and a case · What you will be able to do
+    notes: >-
+      Before any tool, here is the one question this lecture keeps asking and the parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What keeps a model working after the notebook?
+        recall: What question does every part of this lecture ask?
+        kicker: The idea
+        statement: "A model trusts its inputs and keeps answering when they are wrong. One taxi model scored 2.79 offline and 5.48 in production."
+        attribution: One taxi trip duration model on synthetic rides, from notebook to monitored service
+        takeaway: Most of what breaks in production ML breaks around the model and silently, so each piece of the platform makes a failure visible or reversible.
+        source: README.md
+        notes: >-
+          We follow one model from a notebook to a monitored service, and at each step we meet a failure that throws no error.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five parts, from a feature to a decision to automate
+        recall: What are the parts of this lecture, in order?
+        steps:
+          - {label: Features, sub: "the same in training and serving"}
+          - {label: Registry, sub: "which run made it"}
+          - {label: Serving, sub: "when the answer is needed"}
+          - {label: Drift, sub: "has the world moved"}
+          - {label: Maturity, sub: "how much to automate", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it."
+          - "A last part walks a second problem, reading invoices, through every stage."
+        takeaway: Each part answers one silent failure in order, and the last part shows the whole chain on a second problem.
+        source: README.md
+        notes: >-
+          The taxi model runs through the five parts. The invoice case is a separate set of experiments on generated data, used to show the order of decisions.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do.
+        cards:
+          - {title: Join, body: "Compute a feature as it was then, and identically in training and serving."}
+          - {title: Record, body: "Say which run made a model, and reject a retrain that is newer but worse."}
+          - {title: Serve, body: "Choose when the answer is needed, and roll out a new version safely."}
+          - {title: Judge, accent: "D4621A", body: "Know when the world moved and how much of this a team should automate."}
+        takeaway: You will be able to keep a model honest offline, traceable in the registry, safe in serving and watched in production.
+        source: README.md
+        notes: >-
+          The abilities follow the questions in the reading-order table.
+
   - title: Features you can trust
     summary: Leakage · Point-in-time joins · Training-serving skew · Feature stores
     notes: >-
       The first failure happens before there is any model to deploy. The offline score is simply false.
     slides:
       - layout: statement
+        beat: problem
         title: The offline score was a lie
         kicker: The problem
         statement: "Offline RMSE 2.79. In production, 5.48."
@@ -30,6 +81,7 @@ parts:
           The feature was the average duration of recent rides in a zone. A plain join attached a value computed after
           the ride. The score looked excellent and nothing raised an error.
       - layout: code
+        beat: fundamentals
         title: Join as of the prediction time
         recall: "What does a point-in-time join do to your score, and why take it?"
         lang: sql
@@ -50,6 +102,7 @@ parts:
           Run on the synthetic rides, the score gets worse and the gap vanishes. The inflated coefficient was the model
           leaning on a feature that would not exist at prediction time.
       - layout: flow
+        beat: practice
         title: What a feature store adds
         recall: "What does a feature store package, and what needs testing?"
         steps:
@@ -66,6 +119,7 @@ parts:
           These are behaviours we measured on Feast 0.67. The row count fell without warning, and the online store
           returned old values. Test the tool's semantics before trusting them.
       - layout: compare
+        beat: pitfalls
         title: Do you need a feature store?
         left:
           title: Not yet
@@ -92,6 +146,7 @@ parts:
       Now we have an honest model. The next failure is forgetting which one it was.
     slides:
       - layout: statement
+        beat: problem
         title: Which notebook made this model?
         kicker: The problem
         statement: "Three months on, a model nobody saved cannot be explained, compared or restored."
@@ -102,6 +157,7 @@ parts:
           Wilson's example is a regression noticed months later, with a need to recover the earlier artifact. That is
           only possible if someone logged it.
       - layout: code
+        beat: fundamentals
         title: Log what you need to rerun it
         recall: "What does experiment tracking turn a pile of notebooks into?"
         lang: python
@@ -122,6 +178,7 @@ parts:
           The numbers are from the chapter's synthetic run. The best run by a third decimal is rarely worth a more
           complex model.
       - layout: flow
+        beat: practice
         title: The gate on a retrain
         recall: "What must a retrain do before it gets the alias?"
         steps:
@@ -138,6 +195,7 @@ parts:
           This is Wilson's passive retraining. Keeping the loser registered matters too, because it is evidence of what
           was tried. A gate on one metric is not enough for users, so it leads to a staged rollout.
       - layout: cards
+        beat: fundamentals
         title: Registry vocabulary
         recall: "Why do services load an alias, and why do predictions store the version?"
         cards:
@@ -150,6 +208,19 @@ parts:
         notes: >-
           The registry labels but does not deploy. Something has to reload the model when the alias moves, and that
           something is yours to build.
+      - layout: cards
+        beat: pitfalls
+        title: Four ways the gate misleads
+        recall: What are four ways a retrain gate misleads?
+        cards:
+          - {title: Different holdouts, body: "Two logged RMSE values compare only on the same rows. Score both at decision time.", accent: 0F7490}
+          - {title: Older holdout, body: "One model has seen it and the other has not. Use a window newer than both.", accent: 0EA5C9}
+          - {title: Promoting on a tie, body: "A difference of 0.01 minutes is noise. Set a minimum gain you would defend.", accent: 5B21B6}
+          - {title: Alias as deploy, body: "It moved a pointer. Know how your service picks up a change.", accent: D4621A}
+        takeaway: Score both models on the same current holdout, require a gain you would defend, and know how the service picks up the alias.
+        source: notes/02-experiment-tracking-and-model-registry.md
+        notes: >-
+          The note adds more: no data version on the run, deleting the losers, copying stage-based tutorials and unpickling across library versions.
 
   - title: Serving the answer
     summary: Three shapes · Coverage · Latency · Rollout
@@ -157,6 +228,7 @@ parts:
       The model is good and recorded. Now its answer has to reach someone at the right moment.
     slides:
       - layout: statement
+        beat: problem
         title: The A/B test that showed nothing
         kicker: The problem
         statement: "The precomputed lists covered under 5% of sessions, so almost nobody saw the model."
@@ -166,6 +238,7 @@ parts:
         notes: >-
           The model may have been fine. The serving decision meant that it had no chance to matter.
       - layout: table
+        beat: fundamentals
         title: Three shapes, chosen by when the answer is used
         recall: "Why default to batch serving?"
         header: [Shape, Latency, Trigger, Output]
@@ -181,6 +254,7 @@ parts:
         notes: >-
           Online needs on-call, a latency budget and a fallback. If the consumer can read a table, let it.
       - layout: table
+        beat: practice
         title: Precompute only if traffic is concentrated
         header: [Keys precomputed, Skewed traffic, Even traffic]
         widths: [4, 3, 3]
@@ -196,6 +270,7 @@ parts:
           These are illustrations of two extremes, a Zipf distribution and a uniform one. Your logs give the real curve.
           If the input includes the current session, you cannot precompute at all.
       - layout: code
+        beat: practice
         title: A schema at the boundary
         recall: "What does validating at the boundary and returning the version give you?"
         lang: python
@@ -220,6 +295,7 @@ parts:
         notes: >-
           A 500 pages the on-call for what was a client's mistake. The version is what monitoring joins on later.
       - layout: table
+        beat: practice
         title: Where the milliseconds go
         recall: "Why measure before optimising an ML service?"
         lead: "One laptop, in-process, no network, so read only the ratios."
@@ -237,6 +313,7 @@ parts:
         notes: >-
           One laptop, in-process, no network, so read the ratios only. That is why an online store answers by key.
       - layout: flow
+        beat: fundamentals
         title: Rolling out a new model
         recall: "What does each rollout stage trade, and what does that protect?"
         steps:
@@ -252,6 +329,18 @@ parts:
         source: notes/03-batch-and-online-serving.md
         notes: >-
           Shankar's interviewees used one to four of these stages. Tie the last stage to a product metric.
+      - layout: cards
+        beat: pitfalls
+        title: Three ways serving goes wrong quietly
+        recall: What are three ways serving goes wrong without an error?
+        cards:
+          - {title: Appending batch output, body: "A rerun doubles rows and every downstream sum. Replace the partition.", accent: 0F7490}
+          - {title: No fallback, body: "The model still returns a number. Decide what is served when it breaks a business rule.", accent: 0EA5C9}
+          - {title: Exactly-once assumed, body: "A stream's retries repeat predictions. Make the consumer idempotent.", accent: D4621A}
+        takeaway: Serving fails quietly on reruns, on out-of-range answers and on retries, so replace the partition, decide the fallback early and make the consumer idempotent.
+        source: notes/03-batch-and-online-serving.md
+        notes: >-
+          Going online by default belongs here too: a service needs on-call, a latency budget and a fallback.
 
   - title: Knowing when the world moved
     summary: Tests · False alarms · Concept drift · Retraining policy
@@ -259,6 +348,7 @@ parts:
       The model is live. It will never tell you it has gone stale, so we build something that will, and see how that fails too.
     slides:
       - layout: statement
+        beat: problem
         title: Models fail without an error
         kicker: The problem
         statement: "A stale model returns numbers in the right format, at the right speed, and they are wrong."
@@ -269,6 +359,7 @@ parts:
           The paper opens with this observation. The natural answer is a drift monitor, and that has failure modes of
           its own, which is what this part is about.
       - layout: table
+        beat: fundamentals
         title: Significant is not the same as large
         recall: "Why is a p-value poor for big windows and PSI poor for small ones, and what do you do?"
         header: [Window, KS p-value, PSI, "PSI, no shift (median)"]
@@ -285,6 +376,7 @@ parts:
           The shift is the same 5 percent in every row. The usual PSI thresholds of 0.1 and 0.25 are conventions that I
           could not trace to a study, so calibrate on your own quiet windows.
       - layout: code
+        beat: practice
         title: A monitor that rings every day
         recall: "Why does testing many features at a fixed alpha get a monitor muted?"
         lang: python
@@ -306,6 +398,7 @@ parts:
           Shankar's interviewees describe exactly this: many columns, false positives, then alert fatigue. Rabanser's
           aggregated univariate tests use the Bonferroni correction.
       - layout: compare
+        beat: pitfalls
         title: Input tests mislead in both directions
         left:
           title: Damage, no drift
@@ -328,6 +421,7 @@ parts:
           The left is Gama's real concept drift. On the right is what Failing Loudly saw on MNIST and COIL-100: detected
           shifts that did no harm. So detect, characterise, then judge malignancy.
       - layout: flow
+        beat: fundamentals
         title: On a drift alert
         recall: "What do you check first on a drift alert, and why?"
         steps:
@@ -343,6 +437,7 @@ parts:
         notes: >-
           The first branch matters most, and it sends you to the incident playbook from the last pillar.
       - layout: table
+        beat: practice
         title: Scheduled or triggered retraining?
         header: [Policy, Sudden change, Gradual change]
         widths: [3, 4, 4]
@@ -363,6 +458,7 @@ parts:
       Each part added machinery. The last question is how much of it a given team should have.
     slides:
       - layout: statement
+        beat: problem
         title: Nobody should adopt all of this at once
         kicker: The problem
         statement: "A closed retraining loop on a bad monitor is a machine for shipping incidents."
@@ -372,6 +468,7 @@ parts:
         notes: >-
           Sculley's point stands: the model code is a small part of the system, and the debt builds up around it.
       - layout: table
+        beat: fundamentals
         title: The Microsoft maturity levels
         recall: "Which Microsoft maturity level suits a proof of concept, a business model, and full automation?"
         header: [Level, What is automated, Typical smell]
@@ -390,6 +487,7 @@ parts:
           Treat levels as a continuum and a description. Amershi's Microsoft study found maturity correlated with
           effectiveness, at Spearman 0.50 to 0.76, but it was self-reported.
       - layout: code
+        beat: practice
         title: A score you can compute
         recall: "Why can't a strong model section hide absent monitoring in the ML Test Score?"
         lang: python
@@ -411,6 +509,7 @@ parts:
           Breck and colleagues, IEEE Big Data 2017. Three more model tests changed nothing, and two automated monitors
           doubled the score. Up to 1 may have serious holes, up to 2 is a first pass, up to 3 is reasonably tested.
       - layout: cards
+        beat: pitfalls
         title: Test what changes, not only code
         recall: "Why are code tests alone not enough for an ML system?"
         cards:
@@ -424,6 +523,7 @@ parts:
           The overfit test is the cheap one that people skip. The healthy model reached 0.0002. The optimiser given
           another model's parameters stayed above 4, and nothing raised an error.
       - layout: flow
+        beat: fundamentals
         title: The chain that blocks a bad image
         recall: "Why is a dependency chain worth more than a checklist?"
         steps:
@@ -448,6 +548,7 @@ parts:
       as one system. The value is the order of decisions and the shape of failures.
     slides:
       - layout: statement
+        beat: problem
         title: A request with no decision in it
         kicker: The problem
         statement: "Can we use AI to read supplier invoices, so nobody has to type them?"
@@ -460,6 +561,7 @@ parts:
           invented prices, review everything costs 4.471 per invoice, two priced thresholds 3.312, and a perfect
           probability would add at most 0.07 more.
       - layout: flow
+        beat: fundamentals
         title: Each stage hands something on
         recall: "When is a stage of an ML system finished?"
         steps:
@@ -477,6 +579,7 @@ parts:
           The chapter's table lists nine stages, and this groups them. Sculley and colleagues guess a mature system is at
           most 5% machine learning code, which is an estimate from experience and not a measurement. The shape holds here.
       - layout: table
+        beat: practice
         title: Choose the route per sub-task
         lead: Separate experiments on generated invoices, never run as one system.
         recall: What do you state when no LLM has been measured?
@@ -495,6 +598,7 @@ parts:
           review alone below about 1.43 per retried document, and that can't exceed the 1.50 review price. The join is
           unmeasured too: a better extractor is an unstable dependency for the router, so version it and recalibrate.
       - layout: compare
+        beat: pitfalls
         title: The extractor can shadow, the router only partly
         recall: "Why does a decision model need a canary and not only a shadow?"
         left:
@@ -516,6 +620,7 @@ parts:
           Monitoring has the same lesson: PSI read 0.001 with no change and also 0.001 when a new fraud type took error on
           paid from 1.4% to 3.3%. Keep a random audit. Reporting from silence reads 0.14% when the truth is 1.37%.
       - layout: code
+        beat: practice
         title: "Support tickets: 35% automated beats 60%"
         recall: "Why price an automation target before accepting it?"
         lang: python
@@ -545,6 +650,7 @@ parts:
     summary: What to keep and where to go next
     slides:
       - layout: cards
+        beat: wrap
         title: What to keep
         recall: "What does each ML platform rule do to a silent failure?"
         cards:
@@ -560,7 +666,9 @@ parts:
           If you remember one thing, a model trusts its inputs and answers regardless, so all the checks have to live
           around it.
       - layout: bullets
+        beat: wrap
         title: Where next
+        recall: What comes after the ML platform?
         bullets:
           - "**Architecture and governance**: who owns many such pipelines, and who may read what"
           - "**Data science**: how the models served here are built and evaluated"

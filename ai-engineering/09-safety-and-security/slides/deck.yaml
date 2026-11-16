@@ -17,6 +17,55 @@ deck:
     proves, and what to do when something gets through. All of it is defensive, and on systems you own.
 
 parts:
+  - title: Can the model be trusted with this job
+    overview: true
+    summary: The question · Six parts · What you will be able to do
+    notes: >-
+      Before the threat model, here is the one question this lecture keeps asking, the six parts that answer it, and what you should be able to do at the end.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What stops this agent being turned against its users?
+        recall: What one question does this lecture keep asking?
+        kicker: The idea
+        statement: Harbour reads help articles and tickets, looks up orders, sends email and issues refunds. The question is what keeps it from being turned against its users or its owner, when the model cannot tell instructions from data.
+        attribution: One support agent, from its first diagram to the morning after an incident
+        takeaway: Assume the model will be fooled, and ask what limits hold when it is.
+        source: README.md
+        notes: >-
+          We follow Harbour through six questions. All of it is defensive, and on systems you own.
+      - layout: flow
+        beat: fundamentals
+        title: Six parts, from the threat model to the incident
+        recall: What are the six parts of this lecture, in order?
+        steps:
+          - {label: It reads, sub: "threat model", accent: D4621A}
+          - {label: It obeys, sub: "injection", accent: 0EA5C9}
+          - {label: It filters, sub: "guardrails", accent: 5B21B6}
+          - {label: It's fenced in, sub: "sandboxing", accent: 0F7490}
+          - {label: It's tested, sub: "red-teaming", accent: 1E3A5F}
+          - {label: It fails anyway, sub: "incident response", accent: 94A3B8}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it."
+          - "Each part names where it goes wrong."
+        takeaway: The parts follow the notes, from what can go wrong, through the defences and the tests of them, to what to do when one is breached.
+        source: README.md
+        notes: >-
+          The tagline is the order. A seventh note, on compliance, sits inside the last part, because the questions it raises arrive with an incident.
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with an agent's security.
+        cards:
+          - {title: Map, body: "Say what can go wrong, by which path, and which paths matter first.", accent: D4621A}
+          - {title: Limit, body: "Say why the model cannot tell instructions from data, and which designs limit the damage.", accent: 0EA5C9}
+          - {title: Enforce, body: "Enforce limits that do not depend on the model behaving.", accent: 5B21B6}
+          - {title: Test and respond, body: "Find failures, say how much a clean run proves, and act when one gets through.", accent: 0F7490}
+        takeaway: You will be able to map an agent's paths, enforce limits outside the model, test them honestly and respond when they fail.
+        source: README.md
+        notes: >-
+          These are the questions in the README's reading-order table, one per note.
+
   - title: The agent that reads strangers' text
     summary: Why old defences don't transfer · The trifecta · Rating paths · Beyond attackers
     notes: >-
@@ -25,6 +74,7 @@ parts:
       combination.
     slides:
       - layout: statement
+        beat: problem
         title: What is different about securing this system?
         kicker: The problem
         statement: "A database can tell a query from its parameters. A model reads instructions and data as one stream of tokens."
@@ -36,6 +86,7 @@ parts:
           This is why parameterised queries have no equivalent here. Everything else in the deck follows
           from accepting that sentence.
       - layout: flow
+        beat: fundamentals
         title: The lethal trifecta needs all three legs
         recall: "Which combination of capabilities can make an agent leak?"
         kicker: The dangerous combination
@@ -52,6 +103,7 @@ parts:
           the email tool, or the untrusted sources, makes the path safe from this attack. It usually costs
           features, which is the real design conversation.
       - layout: code
+        beat: practice
         title: Check the trifecta from the tool list
         recall: "Why can a build check the lethal trifecta automatically?"
         kicker: Worked example
@@ -78,6 +130,7 @@ parts:
           Abridged from the chapter. The point is that this is a plain check over tool metadata, one you can
           run in CI whenever someone adds a tool.
       - layout: cards
+        beat: pitfalls
         title: The threat model is wider than injection
         recall: "Besides injection, which paths should a threat model list?"
         kicker: Other paths
@@ -96,6 +149,7 @@ parts:
       why it can't be the boundary, and what to do instead.
     slides:
       - layout: statement
+        beat: problem
         title: Can we just detect the injected text?
         kicker: The problem
         statement: "An 88% prevention rate means the attack still works about one time in eight, and a planted document gets a try from every reader."
@@ -103,6 +157,7 @@ parts:
         takeaway: A good detection rate lowers risk, and it doesn't give you a boundary you can rely on.
         source: notes/02-prompt-injection-and-jailbreaks.md
       - layout: compare
+        beat: fundamentals
         title: Two attacks with different owners
         recall: "Who owns jailbreaks and who owns prompt injection?"
         kicker: Vocabulary
@@ -123,6 +178,7 @@ parts:
         takeaway: Jailbreaks are mostly a model problem, and injection is mostly a system design problem.
         source: notes/02-prompt-injection-and-jailbreaks.md
       - layout: code
+        beat: pitfalls
         title: A detector and honest text look alike
         recall: "Why must an injection detector trade missed attacks against false alarms?"
         kicker: Worked example
@@ -144,6 +200,7 @@ parts:
           This one is deliberately simple. Trained detectors do much better. The shape remains, and an attacker
           can retry and adapt.
       - layout: flow
+        beat: fundamentals
         title: Dual LLM keeps tools away from untrusted text
         recall: "What does the Dual LLM pattern separate, and what does that limit?"
         kicker: Design
@@ -157,6 +214,7 @@ parts:
         takeaway: Separating the model that reads untrusted text from the one with tools limits what a fooled model can do.
         source: notes/02-prompt-injection-and-jailbreaks.md
       - layout: table
+        beat: practice
         title: Measure both sides of every defence
         recall: "What must you measure alongside a provenance policy that stops an attack?"
         kicker: Simulated, plus one published result
@@ -181,6 +239,7 @@ parts:
       prevents. A guard is a classifier, so it has error rates, and these depend on your traffic.
     slides:
       - layout: statement
+        beat: problem
         title: Why does a good guard swamp its reviewers?
         kicker: The problem
         statement: "A guardrail is a classifier with a policy attached. It is worth exactly what you measure on your own traffic."
@@ -188,6 +247,7 @@ parts:
         takeaway: At low base rates, false alarms outnumber real catches, so judge a guard on your own traffic.
         source: notes/03-guardrail-models.md
       - layout: flow
+        beat: fundamentals
         title: Guardrails sit on both sides of the model
         recall: "What do input rails protect, and what do output rails protect?"
         kicker: The shape
@@ -200,6 +260,7 @@ parts:
         takeaway: Input rails protect what the model sees, and output rails protect what users see.
         source: notes/03-guardrail-models.md
       - layout: table
+        beat: fundamentals
         title: Same classifier, different traffic
         recall: "What happens to a guardrail's recall and precision as harmful traffic gets rarer?"
         kicker: Simulated, threshold 0.5
@@ -213,6 +274,7 @@ parts:
         takeaway: Recall holds as harmful traffic gets rarer, while precision collapses and nearly every flag is false.
         source: notes/03-guardrail-models.md
       - layout: code
+        beat: practice
         title: A cascade spends the big model on hard cases
         recall: "What does a guardrail cascade buy you?"
         kicker: Worked example
@@ -230,6 +292,7 @@ parts:
         takeaway: A cascade gets near-large-model accuracy at far lower average latency.
         source: notes/03-guardrail-models.md
       - layout: compare
+        beat: pitfalls
         title: Blocking too much is also a failure
         recall: "What should you track that never shows up in a single reply?"
         kicker: Refusals and fairness
@@ -257,13 +320,29 @@ parts:
       even if the model is entirely fooled.
     slides:
       - layout: statement
+        beat: problem
         title: Where should the hard limits live?
         kicker: The problem
         statement: "The model proposes and your code disposes. A rule in a system prompt is guidance, and a rule in the tool layer is a limit."
         attribution: Treat each tool call as a request from a semi-trusted party
         takeaway: Enforce security rules in code outside the model, since prompts only ask for good behaviour.
         source: notes/04-tool-and-execution-sandboxing.md
+      - layout: flow
+        beat: fundamentals
+        title: Each layer assumes the last one failed
+        recall: "What gives layered defences real depth?"
+        kicker: Defence in depth
+        steps:
+          - {label: Scope, sub: "least tools, valid args", accent: 1E3A5F}
+          - {label: Identity, sub: "from the session", accent: 0EA5C9}
+          - {label: Approval, sub: "for irreversible actions", accent: D4621A}
+          - {label: Isolation, sub: "process, container, VM", accent: 5B21B6}
+          - {label: Egress and audit, sub: "allow-list, log", accent: 0F7490}
+        caption: A schema misses a valid refund to the wrong person, and an ownership check catches it.
+        takeaway: Layers with different blind spots give real depth, and a stack of similar filters doesn't.
+        source: notes/04-tool-and-execution-sandboxing.md
       - layout: code
+        beat: practice
         title: A policy engine between model and tool
         recall: "What can a short policy function check before a tool runs, and where does identity come from?"
         kicker: Worked example
@@ -288,20 +367,8 @@ parts:
         notes: >-
           Abridged from the chapter's version, which also handles unknown orders and a daily limit. Note that
           customer_id comes from authentication and never from the model.
-      - layout: flow
-        title: Each layer assumes the last one failed
-        recall: "What gives layered defences real depth?"
-        kicker: Defence in depth
-        steps:
-          - {label: Scope, sub: "least tools, valid args", accent: 1E3A5F}
-          - {label: Identity, sub: "from the session", accent: 0EA5C9}
-          - {label: Approval, sub: "for irreversible actions", accent: D4621A}
-          - {label: Isolation, sub: "process, container, VM", accent: 5B21B6}
-          - {label: Egress and audit, sub: "allow-list, log", accent: 0F7490}
-        caption: A schema misses a valid refund to the wrong person, and an ownership check catches it.
-        takeaway: Layers with different blind spots give real depth, and a stack of similar filters doesn't.
-        source: notes/04-tool-and-execution-sandboxing.md
       - layout: table
+        beat: pitfalls
         title: What a light sandbox did and didn't stop
         recall: "What do process limits stop, and what needs a stronger boundary?"
         kicker: Run from the chapter
@@ -317,6 +384,7 @@ parts:
         takeaway: Process limits stop runaway work, and only a stronger boundary stops reads outside the directory.
         source: notes/04-tool-and-execution-sandboxing.md
       - layout: cards
+        beat: practice
         title: Close the way out, and pin what you installed
         recall: "How do you close the way out and notice a changed tool definition?"
         kicker: Egress and supply chain
@@ -335,6 +403,7 @@ parts:
       that does and doesn't show, then build a suite that stays honest.
     slides:
       - layout: statement
+        beat: problem
         title: Twenty attacks failed. Are we safe?
         kicker: The problem
         statement: "If the true attack rate were one in ten, a clean run of twenty would still happen about one time in eight."
@@ -342,6 +411,7 @@ parts:
         takeaway: A small clean run is common even when the true attack rate is high.
         source: notes/05-red-teaming-tools.md
       - layout: flow
+        beat: fundamentals
         title: Red-teaming became a loop
         recall: "What should happen to each confirmed red-team finding?"
         kicker: From people to loops
@@ -356,6 +426,7 @@ parts:
         takeaway: Automated adversaries scale testing, and each confirmed finding should become a permanent test.
         source: notes/05-red-teaming-tools.md
       - layout: table
+        beat: practice
         title: Pick a tool by the job
         recall: "Why point red-team tools at the whole application and not a bare model?"
         kicker: The tools
@@ -370,6 +441,7 @@ parts:
         takeaway: Point these tools at the whole application, since a bare model scan can't see your tools or data.
         source: notes/05-red-teaming-tools.md
       - layout: code
+        beat: fundamentals
         title: Report the bound, and not the zero
         recall: "What true attack rate can zero successes in twenty tries still allow?"
         kicker: Worked example
@@ -392,6 +464,7 @@ parts:
         takeaway: Zero successes in twenty tries still allows a true attack rate of about 16%.
         source: notes/05-red-teaming-tools.md
       - layout: code
+        beat: pitfalls
         title: A test can pass while measuring nothing
         recall: "When does a security test count as passed?"
         kicker: Worked example
@@ -415,6 +488,7 @@ parts:
         takeaway: Count a security test as passed only with harm in the baseline and a recorded denial when guarded.
         source: notes/05-red-teaming-tools.md
       - layout: compare
+        beat: practice
         title: You need both kinds of testing
         recall: "What does each of campaigns and suites contribute?"
         kicker: Static and adaptive
@@ -442,6 +516,7 @@ parts:
       that helps now had to exist before this message arrived.
     slides:
       - layout: statement
+        beat: problem
         title: One customer, or a thousand?
         kicker: The problem
         statement: "No alert fired. The logs show the tool call and not the text behind it. Nobody knows who else is affected, or what's safe to turn off."
@@ -450,6 +525,7 @@ parts:
         recall: When must the ability to investigate and contain an incident be built?
         source: notes/06-incident-response.md
       - layout: flow
+        beat: fundamentals
         title: The classic lifecycle still applies
         recall: "How does AI incident response differ from standard incident response?"
         kicker: The process
@@ -464,6 +540,7 @@ parts:
         takeaway: Standard incident response applies, with non-determinism, sensitive evidence and persistent bad inputs added.
         source: notes/06-incident-response.md
       - layout: table
+        beat: practice
         title: Build switches narrower than the whole product
         recall: "Why build narrow, tested kill switches?"
         kicker: Prepare
@@ -478,6 +555,7 @@ parts:
         takeaway: Narrow, tested kill switches let you act quickly, while keeping most of the product running.
         source: notes/06-incident-response.md
       - layout: code
+        beat: practice
         title: The blast radius is a query over traces
         recall: "What makes finding everyone affected a simple query?"
         kicker: Worked example
@@ -504,6 +582,7 @@ parts:
           Abridged from the chapter, which also reports first and last seen, fields exposed and sessions needing
           review. A breach may carry a legal clock, such as GDPR's 72 hours, so bring legal in early.
       - layout: cards
+        beat: pitfalls
         title: Removing the cause isn't always enough
         recall: "After removing a bad input, what else must you clear and evaluate?"
         kicker: Eradicate and detect
@@ -515,6 +594,7 @@ parts:
         takeaway: Clear everything derived from a bad input, and evaluate retrained models on agentic tasks.
         source: notes/06-incident-response.md
       - layout: compare
+        beat: practice
         title: Each incident should leave something behind
         recall: "When is an AI incident finished?"
         kicker: Learn
@@ -534,8 +614,8 @@ parts:
             - A detection rule, so you find the next one first
         takeaway: An incident is finished once a regression test, threat-model update and detection rule exist.
         source: notes/06-incident-response.md
-
       - layout: table
+        beat: practice
         title: Features, not the model, set Harbour's AI Act tier
         recall: What decides whether Harbour is high-risk under the EU AI Act, and where should that check live?
         kicker: EU AI Act, as of 2 Nov 2026
@@ -559,8 +639,8 @@ parts:
           deployer the provider if it rebrands, substantially modifies, or changes the purpose so a system becomes high-risk.
           The workplace emotion ban has an exception for medical or safety reasons. Judging sentiment from text is probably not
           emotion recognition, because the definition is tied to biometric data, but confirm that with counsel.
-
       - layout: code
+        beat: practice
         title: The 2026 Omnibus moved the high-risk dates
         recall: Why can an older summary of the EU AI Act give you the wrong compliance date?
         kicker: As amended by Regulation 2026/1744
@@ -588,8 +668,8 @@ parts:
           50(1) has applied since August. Much of the high-risk regime is what this course already teaches: threat model,
           replayable traces, human oversight, evals and incident response. What the law adds is that it must be documented and
           available on request, and logs kept at least six months. So keep evidence from the system you have, not a second one.
-
       - layout: cards
+        beat: pitfalls
         title: Four answers that don't mean what they sound like
         recall: Why doesn't a vendor's paperwork or setting answer a customer's compliance questionnaire?
         kicker: The questionnaire
@@ -613,6 +693,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb
         recall: "If you assume the model will be fooled, what do you limit and test?"
         kicker: Summary
@@ -626,6 +707,7 @@ parts:
         takeaway: Assume the model will be fooled, limit what a fooled model can do, and test that the limit holds.
         source: notes/01-threat-model.md
       - layout: bullets
+        beat: wrap
         title: Where to go next
         kicker: Next steps
         bullets:

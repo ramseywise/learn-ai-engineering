@@ -17,6 +17,58 @@ deck:
     not: what is the score, who wrote it, and what happens when the model finds its loophole?
 
 parts:
+  - title: What a score can teach
+    overview: true
+    summary: The question · Seven parts · What you will be able to do
+    notes: >-
+      Before any algorithm, here is the one question this lecture keeps asking and the seven parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What is the score, and how could it be gamed?
+        recall: What question does every part of this lecture ask about a trained model?
+        kicker: The idea
+        statement: "A treasure-hunt agent told only a score wins 0 of 100 games after 1,000 episodes and 100 of 100 after 10,000. Every model in this lecture learns the same way, so each part asks what the score is."
+        attribution: The Q-learning treasure-hunt lab, which runs offline in about ten seconds
+        takeaway: A trained model does what its score rewards, so the first question about any of them is what the score is and how the model could game it.
+        source: README.md
+        notes: >-
+          We follow one agent from a treasure hunt to a language model calling tools. The algorithm changes several times, but the question stays: where does the score come from, and what happens when the model finds its loophole?
+
+      - layout: flow
+        beat: fundamentals
+        title: Seven parts, each with a different source of score
+        recall: Name the sources of reward this lecture goes through, in order.
+        steps:
+          - {label: A score, sub: "agent and reward"}
+          - {label: Humans, sub: "ranked answers"}
+          - {label: Optimizers, sub: "DPO, GRPO"}
+          - {label: A constitution, sub: "written principles"}
+          - {label: Agents, sub: "environments, tools"}
+          - {label: Reasoning, sub: "a checker"}
+          - {label: Production, sub: "real runs", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it."
+          - "Each part ends on the way the score gets gamed."
+        takeaway: The parts change the source of the reward, from humans to a constitution to a checker to an environment, while the question stays the same.
+        source: README.md
+        notes: >-
+          Humans, a reward model, a constitution, a verifier and an environment are the sources the README names. The optimizer changes too, but the reward source decides more than the optimizer does.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with a trained model.
+        cards:
+          - {title: Read, body: "Describe a learning problem with agent, state, action, reward, policy and value."}
+          - {title: Trace, body: "Follow RLHF from SFT through a reward model to PPO with a KL penalty, and say where it fails."}
+          - {title: Choose, body: "Pick DPO, GRPO or PPO from the signal you have, and try search before training."}
+          - {title: Check, accent: "D4621A", body: "Gate a judge behind a verifiable check, and compare runs across many seeds."}
+        takeaway: You will be able to say what a model was actually asked to do, where its score came from and how it could be gamed.
+        source: README.md
+        notes: >-
+          These come from the README's rules of thumb and its short route for a working engineer. The lab is the quickest way to see the first one working.
+
   - title: Learning from a score
     summary: Agent and reward · Exploration · Value and policy · The families · Why a model is an agent
     notes: >-
@@ -24,6 +76,7 @@ parts:
       proper names, since every paper later in the deck assumes them.
     slides:
       - layout: statement
+        beat: problem
         title: Nobody gives the agent the answer
         kicker: The problem
         statement: "An RL agent gets no answer key. It acts, receives a score, and has to work out for itself which actions earned it."
@@ -36,6 +89,7 @@ parts:
           goes wrong when the score measures the wrong thing.
 
       - layout: flow
+        beat: fundamentals
         title: One loop underlies every method in this deck
         recall: What are the steps of the agent-environment loop?
         loop: new state, next action
@@ -52,6 +106,7 @@ parts:
           the rest of the deck.
 
       - layout: code
+        beat: practice
         title: With no exploration, the agent never finds the best machine
         recall: What happened to the bandit agent at epsilon 0, 0.1 and 0.5?
         lang: text
@@ -71,123 +126,8 @@ parts:
           This is a program from the on-ramp chapter and these are its real results. A low-scoring agent with epsilon zero
           looks like a failed algorithm, when it may only be a machine that never tried the good option.
 
-      - layout: table
-        level: deep
-        title: Regret says how much not knowing costs
-        recall: How fast does regret grow for explore-then-commit, UCB, MOSS and Exp3?
-        header: [Policy, Regret bound, Needs]
-        widths: [2, 4, 3]
-        rows:
-          - [Explore-then-commit, "Δ + (4/Δ)(1 + log(nΔ²/4)) with the commit tuned to the gap", "The gap Δ"]
-          - [UCB, "3ΣΔ + Σ 16 log n/Δ; gap-free 8√(nk log n)", "The horizon n"]
-          - [MOSS, "39√(kn) + ΣΔ, no log factor", "The horizon n"]
-          - [Exp3, "√(2nk log k) in expectation, heavy-tailed", "Rewards in [0,1], any adversary"]
-          - ["Floor, any policy", "(1/27)√((k−1)n) on some Gaussian instance", "Nothing beats it in the worst case"]
-        highlight: [4]
-        takeaway: With fixed gaps regret grows like log n, in the worst case like √n, and no policy beats √n on every instance.
-        source: notes/01c-bandit-algorithms.md
-        notes: >-
-          Regret is the reward lost against always pulling the best arm. The bounds assume k arms, horizon n and
-          1-subgaussian rewards. Lattimore and Szepesvari, chapters 6 to 15.
-
-      - layout: image
-        level: deep
-        title: Linear structure keeps regret flat as the arms multiply
-        recall: Why does LinUCB beat UCB when there are many arms?
-        image: ../sources/images/bandit-algorithms-fig19-1.png
-        caption: UCB and LinUCB regret against the number of arms, d = 5, n = 5,000 (Lattimore and Szepesvari, 2020, Fig. 19.1)
-        bullets:
-          - "**UCB** treats each arm alone, so regret climbs to about 4,000 at 1,000 arms."
-          - "**LinUCB** shares a ridge estimate across arms and stays under 500."
-          - "**The price:** the model must be right, and UCB wins on the two-armed problem."
-        takeaway: LinUCB's regret depends on the feature dimension rather than the number of arms, provided the linear model holds.
-        source: notes/01c-bandit-algorithms.md
-        notes: >-
-          The regret bound is O(d sqrt(n) log(nL)). Use it for recommendation and routing, where arms outnumber the
-          rounds you can afford.
-
-      - layout: table
-        level: deep
-        title: The goal decides the bandit algorithm
-        recall: Which bandit method fits drift, rankings, recommendations and sampling from a posterior?
-        header: [Goal, Method, Guarantee]
-        widths: [3, 3, 4]
-        rows:
-          - [Rewards drift, "Mirror descent on a clipped simplex", "Tracking regret O(√(nmk log(kn/m)))"]
-          - [Rank a slate from clicks, "TopRank under a click model", "O(√(m³ln log n)) worst case"]
-          - [Recommend one arm, "Sequential halving or track-and-stop", "Error shrinks exponentially in n or log(1/δ)"]
-          - [Large action set, "Linear Thompson sampling", "Bayesian regret O(d√(n log n log(n/d)))"]
-        highlight: [3]
-        takeaway: Match the algorithm to the goal first; a regret rate for one goal says little about another.
-        source: notes/01c-bandit-algorithms.md
-        notes: >-
-          Lattimore and Szepesvari, chapters 31, 32, 33 and 36. The rates are theory, with no experiments in chapters
-          31 to 33.
-
-      - layout: image
-        level: deep
-        title: A Bayesian policy wins on average and loses on some instances
-        recall: What does Bayesian regret hide?
-        image: ../sources/images/bandit-algorithms-fig35-2.png
-        caption: Expected regret on a one-armed Bernoulli bandit with the other arm at 1/2 (Lattimore and Szepesvari, 2020, Fig. 35.2)
-        bullets:
-          - "**Bayesian optimal** averages about 2 under a uniform prior."
-          - "**Frequentist rule** averages about 4.5, and peaks near 9 for arms just below 1/2."
-          - "**The catch:** the average is over the prior, so a wrong prior voids the win."
-        takeaway: Bayesian regret is an average over a prior and does not bound any single instance.
-        source: notes/01c-bandit-algorithms.md
-        notes: >-
-          n is 500 and the arm is Beta(1,1). The frequentist rule is better only for arms above 1/2.
-
-      - layout: table
-        title: Three ways to estimate how good a state is
-        recall: How do dynamic programming, Monte Carlo and TD differ?
-        header: [Method, "Needs a model?", Updates from, Trade-off]
-        widths: [2, 1.3, 3, 3]
-        rows:
-          - [Dynamic programming, "Yes", Bellman equation over all next states, Exact but only with a known model]
-          - [Monte Carlo, "No", The full return at episode end, "Unbiased, high variance"]
-          - [Temporal difference, "No", One step plus its own estimate, "Biased, low variance, online"]
-        highlight: [2]
-        takeaway: TD learning updates from one step plus its own estimate, trading some bias for lower variance and online learning.
-        source: notes/01-rl-foundations.md
-        notes: >-
-          Value is expected future reward, and these are the three classic ways to estimate it. Most deep RL descends from
-          the third row. The word to remember is bootstrapping: an estimate updated from another estimate.
-
-      - layout: image
-        title: The behaviour you learn about changes the path you get
-        recall: Why do Q-learning and SARSA take different paths in the cliff world?
-        image: ../sources/images/winder-reinforcement-learning-fig3-3.png
-        caption: Q-learning hugs the cliff and SARSA keeps clear (Winder, 2020, Fig. 3-3)
-        bullets:
-          - "**Q-learning** values the best next action, and learns the greedy path."
-          - "**SARSA** values the action actually taken, slips included."
-          - "**On-policy** methods value what the agent will really do."
-        takeaway: Q-learning learns the greedy policy off-policy, while SARSA learns the exploring policy on-policy and so avoids the cliff.
-        source: notes/01b-algorithm-families-td-and-dqn.md
-        notes: >-
-          Q-learning walks along the row next to the cliff, since that is the shortest path if you never slip. SARSA climbs
-          away because it is learning about a policy that does sometimes slip. Remember this when we reach LLM training,
-          where the main methods are on-policy.
-
-      - layout: image
-        title: The PPO clip removes the incentive to move too far
-        recall: What does the PPO clip do to the objective once the ratio passes 1 + epsilon?
-        image: ../sources/images/winder-reinforcement-learning-fig6-5.png
-        caption: The clipped objective against the probability ratio (Winder, 2020, Fig. 6-5)
-        bullets:
-          - "**Ratio past the bound:** gradient goes to zero in the helpful direction."
-          - "**Why it matters:** one batch can be reused for several epochs."
-          - "**The limit:** it removes an incentive; it does not forbid a large change."
-        takeaway: PPO clips the objective so a batch can be reused safely, but this removes an incentive rather than enforcing a hard bound.
-        source: notes/01-rl-foundations.md
-        notes: >-
-          In our runnable example the loss at ratio 1.1 still has a gradient of minus 1.1, and at ratios 1.5 and 3 the
-          gradient is zero. PPO is the optimizer of the next part. Its machinery may be less essential for LLMs than it looks,
-          which is where GRPO comes in.
-
       - layout: compare
+        beat: fundamentals
         title: A language model is already an RL agent
         recall: In a language model, what plays the roles of state, action and policy?
         emphasis: right
@@ -212,6 +152,129 @@ parts:
           methods. Temperature is already an exploration dial. The real decision is the reward, and the next parts take its
           sources one at a time: human ratings, a written constitution, an automatic checker, an environment.
 
+      - layout: table
+        beat: fundamentals
+        title: Three ways to estimate how good a state is
+        recall: How do dynamic programming, Monte Carlo and TD differ?
+        header: [Method, "Needs a model?", Updates from, Trade-off]
+        widths: [2, 1.3, 3, 3]
+        rows:
+          - [Dynamic programming, "Yes", Bellman equation over all next states, Exact but only with a known model]
+          - [Monte Carlo, "No", The full return at episode end, "Unbiased, high variance"]
+          - [Temporal difference, "No", One step plus its own estimate, "Biased, low variance, online"]
+        highlight: [2]
+        takeaway: TD learning updates from one step plus its own estimate, trading some bias for lower variance and online learning.
+        source: notes/01-rl-foundations.md
+        notes: >-
+          Value is expected future reward, and these are the three classic ways to estimate it. Most deep RL descends from
+          the third row. The word to remember is bootstrapping: an estimate updated from another estimate.
+
+      - layout: image
+        beat: fundamentals
+        title: The PPO clip removes the incentive to move too far
+        recall: What does the PPO clip do to the objective once the ratio passes 1 + epsilon?
+        image: ../sources/images/winder-reinforcement-learning-fig6-5.png
+        caption: The clipped objective against the probability ratio (Winder, 2020, Fig. 6-5)
+        bullets:
+          - "**Ratio past the bound:** gradient goes to zero in the helpful direction."
+          - "**Why it matters:** one batch can be reused for several epochs."
+          - "**The limit:** it removes an incentive; it does not forbid a large change."
+        takeaway: PPO clips the objective so a batch can be reused safely, but this removes an incentive rather than enforcing a hard bound.
+        source: notes/01-rl-foundations.md
+        notes: >-
+          In our runnable example the loss at ratio 1.1 still has a gradient of minus 1.1, and at ratios 1.5 and 3 the
+          gradient is zero. PPO is the optimizer of the next part. Its machinery may be less essential for LLMs than it looks,
+          which is where GRPO comes in.
+
+      - layout: image
+        beat: practice
+        title: The behaviour you learn about changes the path you get
+        recall: Why do Q-learning and SARSA take different paths in the cliff world?
+        image: ../sources/images/winder-reinforcement-learning-fig3-3.png
+        caption: Q-learning hugs the cliff and SARSA keeps clear (Winder, 2020, Fig. 3-3)
+        bullets:
+          - "**Q-learning** values the best next action, and learns the greedy path."
+          - "**SARSA** values the action actually taken, slips included."
+          - "**On-policy** methods value what the agent will really do."
+        takeaway: Q-learning learns the greedy policy off-policy, while SARSA learns the exploring policy on-policy and so avoids the cliff.
+        source: notes/01b-algorithm-families-td-and-dqn.md
+        notes: >-
+          Q-learning walks along the row next to the cliff, since that is the shortest path if you never slip. SARSA climbs
+          away because it is learning about a policy that does sometimes slip. Remember this when we reach LLM training,
+          where the main methods are on-policy.
+
+      - layout: table
+        beat: fundamentals
+        level: deep
+        title: Regret says how much not knowing costs
+        recall: How fast does regret grow for explore-then-commit, UCB, MOSS and Exp3?
+        header: [Policy, Regret bound, Needs]
+        widths: [2, 4, 3]
+        rows:
+          - [Explore-then-commit, "Δ + (4/Δ)(1 + log(nΔ²/4)) with the commit tuned to the gap", "The gap Δ"]
+          - [UCB, "3ΣΔ + Σ 16 log n/Δ; gap-free 8√(nk log n)", "The horizon n"]
+          - [MOSS, "39√(kn) + ΣΔ, no log factor", "The horizon n"]
+          - [Exp3, "√(2nk log k) in expectation, heavy-tailed", "Rewards in [0,1], any adversary"]
+          - ["Floor, any policy", "(1/27)√((k−1)n) on some Gaussian instance", "Nothing beats it in the worst case"]
+        highlight: [4]
+        takeaway: With fixed gaps regret grows like log n, in the worst case like √n, and no policy beats √n on every instance.
+        source: notes/01c-bandit-algorithms.md
+        notes: >-
+          Regret is the reward lost against always pulling the best arm. The bounds assume k arms, horizon n and
+          1-subgaussian rewards. Lattimore and Szepesvari, chapters 6 to 15.
+
+      - layout: image
+        beat: practice
+        level: deep
+        title: Linear structure keeps regret flat as the arms multiply
+        recall: Why does LinUCB beat UCB when there are many arms?
+        image: ../sources/images/bandit-algorithms-fig19-1.png
+        caption: UCB and LinUCB regret against the number of arms, d = 5, n = 5,000 (Lattimore and Szepesvari, 2020, Fig. 19.1)
+        bullets:
+          - "**UCB** treats each arm alone, so regret climbs to about 4,000 at 1,000 arms."
+          - "**LinUCB** shares a ridge estimate across arms and stays under 500."
+          - "**The price:** the model must be right, and UCB wins on the two-armed problem."
+        takeaway: LinUCB's regret depends on the feature dimension rather than the number of arms, provided the linear model holds.
+        source: notes/01c-bandit-algorithms.md
+        notes: >-
+          The regret bound is O(d sqrt(n) log(nL)). Use it for recommendation and routing, where arms outnumber the
+          rounds you can afford.
+
+      - layout: table
+        beat: fundamentals
+        level: deep
+        title: The goal decides the bandit algorithm
+        recall: Which bandit method fits drift, rankings, recommendations and sampling from a posterior?
+        header: [Goal, Method, Guarantee]
+        widths: [3, 3, 4]
+        rows:
+          - [Rewards drift, "Mirror descent on a clipped simplex", "Tracking regret O(√(nmk log(kn/m)))"]
+          - [Rank a slate from clicks, "TopRank under a click model", "O(√(m³ln log n)) worst case"]
+          - [Recommend one arm, "Sequential halving or track-and-stop", "Error shrinks exponentially in n or log(1/δ)"]
+          - [Large action set, "Linear Thompson sampling", "Bayesian regret O(d√(n log n log(n/d)))"]
+        highlight: [3]
+        takeaway: Match the algorithm to the goal first; a regret rate for one goal says little about another.
+        source: notes/01c-bandit-algorithms.md
+        notes: >-
+          Lattimore and Szepesvari, chapters 31, 32, 33 and 36. The rates are theory, with no experiments in chapters
+          31 to 33.
+
+      - layout: image
+        beat: pitfalls
+        level: deep
+        title: A Bayesian policy wins on average and loses on some instances
+        recall: What does Bayesian regret hide?
+        image: ../sources/images/bandit-algorithms-fig35-2.png
+        caption: Expected regret on a one-armed Bernoulli bandit with the other arm at 1/2 (Lattimore and Szepesvari, 2020, Fig. 35.2)
+        bullets:
+          - "**Bayesian optimal** averages about 2 under a uniform prior."
+          - "**Frequentist rule** averages about 4.5, and peaks near 9 for arms just below 1/2."
+          - "**The catch:** the average is over the prior, so a wrong prior voids the win."
+        takeaway: Bayesian regret is an average over a prior and does not bound any single instance.
+        source: notes/01c-bandit-algorithms.md
+        notes: >-
+          n is 500 and the arm is Beta(1,1). The frequentist rule is better only for arms above 1/2.
+
   - title: Humans as the score
     summary: The three stages · Fine-tuning in practice · Bradley-Terry · Overoptimization
     notes: >-
@@ -219,6 +282,7 @@ parts:
       what every later reward has to survive.
     slides:
       - layout: statement
+        beat: problem
         title: A pretrained model is not yet an assistant
         kicker: The problem
         statement: "A base model continues text. We want it to help people, and people can't write down what helpful means, though they can pick the better of two answers."
@@ -230,6 +294,7 @@ parts:
           The rest of this part shows how pairs become a reward and how a reward becomes a model.
 
       - layout: flow
+        beat: fundamentals
         title: RLHF takes three stages, and each exists for a reason
         recall: What are the three stages of RLHF and why does SFT come first?
         steps:
@@ -244,6 +309,7 @@ parts:
           holds four models in memory: policy, reference, reward model, value model.
 
       - layout: table
+        beat: fundamentals
         title: "Fine-tuning is for form, and retrieval is for facts"
         recall: In Ovadia et al., which scored higher on current-events QA, RAG or fine-tuning?
         lead: "Ovadia et al. (2024): Mistral-7B on a current-events QA set, as cited by Huyen."
@@ -259,6 +325,7 @@ parts:
           task, so treat it as a default. Once you do tune, use adapters: the memory case for LoRA is in the chapter.
 
       - layout: code
+        beat: practice
         title: Bradley-Terry turns comparisons into a score
         recall: How does the Bradley-Terry model turn pairwise preferences into a scalar reward?
         lang: python
@@ -281,6 +348,7 @@ parts:
           more trustworthy than that disagreement allows.
 
       - layout: image
+        beat: pitfalls
         title: Past a point, more reward means worse answers
         recall: What does overoptimization look like on the Stiennon et al. chart?
         image: ../sources/images/stiennon-learning-summarize-fig5.png
@@ -297,6 +365,7 @@ parts:
           positive with gibberish such as Love this ride instantly instantly instantly.
 
       - layout: cards
+        beat: pitfalls
         title: The hacks are predictable, so look for them
         recall: What are the common forms of reward hacking, and what mitigates them?
         cards:
@@ -318,6 +387,7 @@ parts:
       removal changes what the method can learn.
     slides:
       - layout: statement
+        beat: problem
         title: PPO needs four models. Which can we remove?
         kicker: The problem
         statement: "DPO removes the reward model and the rollouts. GRPO removes the critic. Each removal also decides what the method is able to discover."
@@ -328,41 +398,8 @@ parts:
           Ahmadian et al. found much of PPO's machinery may be unnecessary for LLM RLHF. Removing the clip and then the ratio
           left the REINFORCE-style method competitive, because the pretrained start does the stabilizing. That opened the door.
 
-      - layout: table
-        title: Who needs what
-        recall: Which methods need a reward model, a critic or paired data?
-        header: [Method, Reward signal, Critic, Memory, Best for]
-        widths: [1, 3, 0.8, 0.9, 2.6]
-        rows:
-          - [PPO, Learned reward model, "Yes", 4x, Complex general alignment]
-          - [DPO, "Offline pairs, no reward at train time", "No", 2x, Stable general alignment]
-          - [GRPO, "Verifier, reward function or judge", "No", 3x, Reasoning with a checker]
-          - [KTO, Unpaired thumbs up and down, "No", 2x, Unpaired feedback]
-          - [ORPO, "Offline pairs, no reference model", "No", 1x, Tight compute]
-        highlight: [1]
-        takeaway: Default to DPO with preference pairs and no verifier, and use GRPO when a checker can score new outputs online.
-        source: notes/03b-grpo-and-gspo.md
-        notes: >-
-          This table is the decision framework. Pair it with the warning from the chapter: reward hacking risk is lower for
-          GRPO, not gone, because the verifier itself can be gamed.
-
-      - layout: cards
-        title: Each variant answers one wall
-        recall: Which DPO variant answers which practical problem?
-        cards:
-          - {title: Thumbs not pairs, body: "**KTO** learns from unpaired up or down labels. With clean pairs, its authors say DPO works better."}
-          - {title: Pairs collapse, body: "**IPO** swaps in a squared loss toward a target margin, which punishes overshoot."}
-          - {title: One run only, body: "**ORPO** folds the preference term into SFT, with no reference model."}
-          - {title: Length drift, body: "**SimPO** averages per token. Without that, it scored 11.9 against DPO's 15.1."}
-          - {title: No labels, accent: "0EA5C9", body: "**SPIN** and **DITTO** pair human text against the model's own samples."}
-          - {title: Logged chats, accent: "0EA5C9", body: "**RLHI** mines pairs from follow-ups. Without filtering, it gained 2.5 points against 23.4."}
-        takeaway: DPO variants each change one thing, so choose by the problem you have, whether that's unpaired feedback, collapse, budget, length or missing labels.
-        source: notes/13-preference-variants.md
-        notes: >-
-          Numbers come from different papers with different judges, so compare within a paper and not across. SimPO's 11.9 against 15.1 is
-          its Mistral-7B-Base ablation on AlpacaEval 2 LC, and RLHI's is on its user evaluation of 100 users.
-
       - layout: code
+        beat: fundamentals
         title: DPO's loss moves probability from rejected to chosen
         recall: What does the DPO loss do when both answers become more likely?
         lang: text
@@ -384,42 +421,8 @@ parts:
           100 times below LoRA SFT. If rewards/accuracies hits 100 percent early, the pairs are too easy. Check average
           length before and after training.
 
-      - layout: code
-        title: GRPO compares a group of samples to replace the critic
-        recall: Why does an all-correct or all-wrong group teach GRPO nothing?
-        lang: text
-        code: |
-          # advantage = (reward - group mean) / group std
-          mixed verifier   [ 1.29 -0.77 -0.77  1.29 ...]
-          all correct      [ 0.    0.    0.    0.   ...]
-          all wrong        [ 0.    0.    0.    0.   ...]
-        bullets:
-          - "**Sibling samples** give the baseline, with no value model."
-          - "**All-pass or all-fail** groups produce no gradient."
-          - "**Checker bugs** get amplified, so audit it first."
-        takeaway: GRPO normalizes rewards within a group of samples, so it needs no critic but learns nothing from groups that all pass or all fail.
-        source: notes/03b-grpo-and-gspo.md
-        notes: >-
-          In DeepSeekMath this raised GSM8K from 82.9 to 88.2 percent and MATH from 46.8 to 51.7. Production coding
-          environments have been gamed by overriding dunder eq, so a verifier is no guarantee. Remember the zero rows, because
-          they return in the agents part as the reason penalties help.
-
-      - layout: image
-        title: GSPO moves the ratio to the sequence level
-        recall: Why does GSPO use a sequence-level ratio rather than GRPO's token ratio?
-        image: ../sources/images/ai-agents-definitive-guide-fig3-3.png
-        caption: Generate sequences, score and compare them, combine with KL (Koenigstein, 2026, Fig. 3-3)
-        bullets:
-          - "**The mismatch:** rewards belong to sequences, GRPO's ratios to tokens."
-          - "**The fix:** a single ratio per sequence."
-          - "**Reported benefit:** more efficient training on a 48-layer MoE."
-        takeaway: GSPO matches the ratio to the unit that earns the reward, using one sequence-level ratio in place of per-token ratios.
-        source: notes/03b-grpo-and-gspo.md
-        notes: >-
-          The GSPO numbers are the Qwen team's own and it clipped far more tokens than GRPO yet trained more efficiently. In a
-          mixture of experts, activated experts shift between snapshots, which is where token ratios are especially fragile.
-
       - layout: compare
+        beat: practice
         title: Offline for style, online for reasoning
         recall: On math, how did offline DPO compare with semi-online DPO and GRPO in Lanchantin et al.?
         lead: "Lanchantin et al. on NuminaMath, Math500 accuracy: 53.7% offline, 58.9% semi-online DPO, 58.7% online DPO, 58.1% GRPO."
@@ -443,6 +446,79 @@ parts:
           For style and refusals, offline pairs are usually enough. That is why Picking DPO for reasoning is on the pitfalls
           list in the chapter.
 
+      - layout: table
+        beat: fundamentals
+        title: Who needs what
+        recall: Which methods need a reward model, a critic or paired data?
+        header: [Method, Reward signal, Critic, Memory, Best for]
+        widths: [1, 3, 0.8, 0.9, 2.6]
+        rows:
+          - [PPO, Learned reward model, "Yes", 4x, Complex general alignment]
+          - [DPO, "Offline pairs, no reward at train time", "No", 2x, Stable general alignment]
+          - [GRPO, "Verifier, reward function or judge", "No", 3x, Reasoning with a checker]
+          - [KTO, Unpaired thumbs up and down, "No", 2x, Unpaired feedback]
+          - [ORPO, "Offline pairs, no reference model", "No", 1x, Tight compute]
+        highlight: [1]
+        takeaway: Default to DPO with preference pairs and no verifier, and use GRPO when a checker can score new outputs online.
+        source: notes/03b-grpo-and-gspo.md
+        notes: >-
+          This table is the decision framework. Pair it with the warning from the chapter: reward hacking risk is lower for
+          GRPO, not gone, because the verifier itself can be gamed.
+
+      - layout: code
+        beat: practice
+        title: GRPO compares a group of samples to replace the critic
+        recall: Why does an all-correct or all-wrong group teach GRPO nothing?
+        lang: text
+        code: |
+          # advantage = (reward - group mean) / group std
+          mixed verifier   [ 1.29 -0.77 -0.77  1.29 ...]
+          all correct      [ 0.    0.    0.    0.   ...]
+          all wrong        [ 0.    0.    0.    0.   ...]
+        bullets:
+          - "**Sibling samples** give the baseline, with no value model."
+          - "**All-pass or all-fail** groups produce no gradient."
+          - "**Checker bugs** get amplified, so audit it first."
+        takeaway: GRPO normalizes rewards within a group of samples, so it needs no critic but learns nothing from groups that all pass or all fail.
+        source: notes/03b-grpo-and-gspo.md
+        notes: >-
+          In DeepSeekMath this raised GSM8K from 82.9 to 88.2 percent and MATH from 46.8 to 51.7. Production coding
+          environments have been gamed by overriding dunder eq, so a verifier is no guarantee. Remember the zero rows, because
+          they return in the agents part as the reason penalties help.
+
+      - layout: image
+        beat: fundamentals
+        title: GSPO moves the ratio to the sequence level
+        recall: Why does GSPO use a sequence-level ratio rather than GRPO's token ratio?
+        image: ../sources/images/ai-agents-definitive-guide-fig3-3.png
+        caption: Generate sequences, score and compare them, combine with KL (Koenigstein, 2026, Fig. 3-3)
+        bullets:
+          - "**The mismatch:** rewards belong to sequences, GRPO's ratios to tokens."
+          - "**The fix:** a single ratio per sequence."
+          - "**Reported benefit:** more efficient training on a 48-layer MoE."
+        takeaway: GSPO matches the ratio to the unit that earns the reward, using one sequence-level ratio in place of per-token ratios.
+        source: notes/03b-grpo-and-gspo.md
+        notes: >-
+          The GSPO numbers are the Qwen team's own and it clipped far more tokens than GRPO yet trained more efficiently. In a
+          mixture of experts, activated experts shift between snapshots, which is where token ratios are especially fragile.
+
+      - layout: cards
+        beat: pitfalls
+        title: Each variant answers one wall
+        recall: Which DPO variant answers which practical problem?
+        cards:
+          - {title: Thumbs not pairs, body: "**KTO** learns from unpaired up or down labels. With clean pairs, its authors say DPO works better."}
+          - {title: Pairs collapse, body: "**IPO** swaps in a squared loss toward a target margin, which punishes overshoot."}
+          - {title: One run only, body: "**ORPO** folds the preference term into SFT, with no reference model."}
+          - {title: Length drift, body: "**SimPO** averages per token. Without that, it scored 11.9 against DPO's 15.1."}
+          - {title: No labels, accent: "0EA5C9", body: "**SPIN** and **DITTO** pair human text against the model's own samples."}
+          - {title: Logged chats, accent: "0EA5C9", body: "**RLHI** mines pairs from follow-ups. Without filtering, it gained 2.5 points against 23.4."}
+        takeaway: DPO variants each change one thing, so choose by the problem you have, whether that's unpaired feedback, collapse, budget, length or missing labels.
+        source: notes/13-preference-variants.md
+        notes: >-
+          Numbers come from different papers with different judges, so compare within a paper and not across. SimPO's 11.9 against 15.1 is
+          its Mistral-7B-Base ablation on AlpacaEval 2 LC, and RLHI's is on its user evaluation of 100 users.
+
   - title: A constitution as the score
     summary: Principles · SL-CAI · RLAIF · Noise and bias · Self-improvement
     notes: >-
@@ -450,6 +526,7 @@ parts:
       apply them. What can go wrong has more to do with correlated errors than with cost.
     slides:
       - layout: statement
+        beat: problem
         title: What if the labeler could read its instructions?
         kicker: The problem
         statement: "Constitutional AI replaces human harmlessness labels with AI feedback guided by written principles. The principles become the thing you audit."
@@ -462,6 +539,7 @@ parts:
           principle and revise the document as you would code.
 
       - layout: flow
+        beat: fundamentals
         title: Two phases, and only the labeler changes
         recall: What two phases does Constitutional AI have?
         steps:
@@ -476,6 +554,7 @@ parts:
           improves. Red-teaming supplies the hard prompts this loop needs in order to be useful.
 
       - layout: code
+        beat: pitfalls
         title: Noise averages out, but bias does not
         recall: Why does more data not fix a length-biased labeler?
         lang: text
@@ -497,6 +576,7 @@ parts:
           person. Consistency is not correctness, and a model that grades and answers shares its own blind spots.
 
       - layout: steps
+        beat: practice
         title: How far can a model train itself?
         recall: What limits self-improvement loops according to the chapter?
         axis: Less human input
@@ -518,6 +598,7 @@ parts:
       what a pretrained model changes, then design the data, the environment and the reward for it.
     slides:
       - layout: image
+        beat: problem
         title: Training an agent adds a second stage to pretraining
         recall: "Why does SFT come before RL in post-training?"
         kicker: The problem
@@ -535,6 +616,7 @@ parts:
           preference tuning did most of the general lifting and RLVR was a targeted top-up.
 
       - layout: table
+        beat: fundamentals
         title: SFT memorizes, and RL generalizes
         recall: What did Chu et al. find when rules or cities shifted between train and test?
         lead: "Chu et al., 2025: same base model and compute; change in test score under shift."
@@ -553,6 +635,7 @@ parts:
           that goes. Use SFT for format and RL for behaviour under shift.
 
       - layout: code
+        beat: practice
         title: A pretrained prior turns millions of tries into dozens
         recall: How does a prior that is right 70% of the time change exploration on an 11-move puzzle?
         lang: text
@@ -576,6 +659,7 @@ parts:
           rather than tabula rasa. Try prompts and in-context learning first: Reflexion and ExpeL change behaviour with no weights.
 
       - layout: table
+        beat: practice
         level: deep
         title: A 3.8B model needed four stages to reach 57.5 on AIME24
         recall: Which post-training stage added the most for Phi-4-Mini-Reasoning?
@@ -596,23 +680,8 @@ parts:
           does not rescue a small model. GRPO was unstable until they kept prompts with uniform response lengths, oversampled hard
           prompts and annealed temperature from 1.0 to 0.6. The comparison model is DeepSeek-R1-Distill-Qwen-7B at 53.3.
 
-      - layout: image
-        title: Quality and diversity both count
-        recall: How did quality and diversity affect LIMA's 7B fine-tune on 2,000 examples?
-        image: ../sources/images/huyen-ai-engineering-fig8-1.png
-        caption: A 7B model fine-tuned on 2,000 examples, from Zhou et al., via Huyen (2025, Fig. 8-1)
-        bullets:
-          - "**wikiHow** (high quality, not diverse) scored 3.49."
-          - "**Raw Stack Exchange** (diverse, low quality) scored 3.33."
-          - "**Start small:** about 50 well-made examples."
-        takeaway: Data quality and diversity both raise results, so start with about 50 good examples and fix the setup if they show no gain.
-        source: notes/06b-dataset-engineering-for-post-training.md
-        notes: >-
-          Data is cheap to get wrong. SFT bakes noise into the weights and RL pushes hard toward a biased reward. Check coverage,
-          diversity and label accuracy, and run the curation pipeline: dedup and decontaminate before anything else, because a
-          leaked near-duplicate looks like progress on your eval.
-
       - layout: compare
+        beat: pitfalls
         title: The environment is the practice field
         recall: Why can a simulated environment hurt, and how do you limit that?
         emphasis: left
@@ -635,7 +704,25 @@ parts:
           to 42.1 percent on decontaminated SWE-rebench. Order of effort is strong base model, then environment and data, then only
           after that algorithms and hyperparameters.
 
+      - layout: image
+        beat: fundamentals
+        title: Quality and diversity both count
+        recall: How did quality and diversity affect LIMA's 7B fine-tune on 2,000 examples?
+        image: ../sources/images/huyen-ai-engineering-fig8-1.png
+        caption: A 7B model fine-tuned on 2,000 examples, from Zhou et al., via Huyen (2025, Fig. 8-1)
+        bullets:
+          - "**wikiHow** (high quality, not diverse) scored 3.49."
+          - "**Raw Stack Exchange** (diverse, low quality) scored 3.33."
+          - "**Start small:** about 50 well-made examples."
+        takeaway: Data quality and diversity both raise results, so start with about 50 good examples and fix the setup if they show no gain.
+        source: notes/06b-dataset-engineering-for-post-training.md
+        notes: >-
+          Data is cheap to get wrong. SFT bakes noise into the weights and RL pushes hard toward a biased reward. Check coverage,
+          diversity and label accuracy, and run the curation pipeline: dedup and decontaminate before anything else, because a
+          leaked near-duplicate looks like progress on your eval.
+
       - layout: table
+        beat: fundamentals
         title: The form of the reward decides what you can diagnose
         recall: Which reward forms say where a failed call went wrong?
         lead: One support call that succeeded, but missed the billing address and named the wrong plan.
@@ -655,6 +742,7 @@ parts:
           30 percent of HumanEval passes and 60 percent of APPS passes were wrong.
 
       - layout: code
+        beat: practice
         title: Check first, then rank, so persuasion can't buy reward
         recall: Why does the gate-then-rank reward give a persuasive wrong answer zero?
         lang: python
@@ -675,6 +763,7 @@ parts:
           free answers, which is why the gate comes first. The third framework, rLLM, trains whole workflows.
 
       - layout: image
+        beat: practice
         title: "RLVP: reward the outcome, penalize the path"
         recall: Why do verifiable process penalties restore GRPO's gradient on all-fail groups?
         image: ../sources/images/li-ai-agents-in-depth-fig8-13.svg
@@ -691,6 +780,7 @@ parts:
           doing nothing earns the best score, and the chapter's code shows it scoring zero against minus one for trying.
 
       - layout: cards
+        beat: practice
         title: Rules for training a tool-calling agent
         recall: Why must environment tokens be masked out of the RL loss?
         cards:
@@ -713,6 +803,7 @@ parts:
       question about whether RL creates ability or only sharpens it, and whether we need to train at all.
     slides:
       - layout: statement
+        beat: problem
         title: Can a checker replace the reward model?
         kicker: The problem
         statement: "R1-Zero used only rule-based accuracy and format rewards, with no SFT, and took AIME 2024 pass@1 from 15.6% to 71.0%."
@@ -724,6 +815,7 @@ parts:
           Model size still matters: on Qwen-32B over 10K steps of R1-Zero-style RL reached 47.0, while SFT on 800k R1 samples reached 72.6.
 
       - layout: image
+        beat: fundamentals
         title: RLVR sharpens more than it creates
         recall: What did Yue et al. find about what RLVR adds at large k?
         image: ../sources/images/yue-rlvr-reasoning-boundary-fig1.png
@@ -740,6 +832,7 @@ parts:
           on Qwen1.5-32B-Chat gave 9.2. The knowledge has to be there first.
 
       - layout: code
+        beat: practice
         title: Read the whole pass@k curve, not one number
         recall: Why can pass@1 mislead about whether RL created a skill?
         lang: text
@@ -763,6 +856,7 @@ parts:
           If the base model reaches the answer in forty samples, could you skip training and pick the right one?
 
       - layout: code
+        beat: pitfalls
         title: Sampling is limited by the selector
         recall: What limits best-of-N, and how did vote and checker compare with perfect selection?
         lang: text
@@ -783,6 +877,7 @@ parts:
           for greedy CoT. Aggregators such as AggLM can pick a minority answer, or combine partial work, which a vote can't.
 
       - layout: flow
+        beat: practice
         title: Search and training feed each other
         recall: How does rStar-Math turn search into training data?
         loop: the better policy searches again
@@ -805,6 +900,7 @@ parts:
       deciding whether to learn live at all, in the field and when several agents or a retriever are involved.
     slides:
       - layout: statement
+        beat: problem
         title: Is that result real, or was it one lucky seed?
         kicker: The problem
         statement: "One training run is one sample. RL results swing widely from run to run, and bugs hide because rewards arrive late and noise masks errors."
@@ -816,6 +912,7 @@ parts:
           evaluation. Before any deep model, picture a random policy acting in the environment and check a simple baseline.
 
       - layout: code
+        beat: fundamentals
         title: Two identical agents can land far apart
         recall: How large a gap appears between identical agents with 3, 5 and 15 seeds?
         lang: text
@@ -835,6 +932,7 @@ parts:
           because a batched reward against a scalar value trains with no error and no warning.
 
       - layout: steps
+        beat: fundamentals
         title: Deploying a policy means staying close to never
         recall: How should you roll out a new RL policy and why stay near never updating live?
         axis: More exposure
@@ -851,6 +949,7 @@ parts:
           be poisoned. Delayed rewards drive the architecture: state changes get a dedicated log.
 
       - layout: table
+        beat: pitfalls
         title: Several classic beliefs have dated
         recall: Which 2020 views about RL no longer hold for LLMs?
         header: [2020 view, 2025-26 LLM RL]
@@ -867,6 +966,7 @@ parts:
           RL has a counterpart too: a learned reward model is doing the same job.
 
       - layout: flow
+        beat: fundamentals
         title: Train with everything, deploy with local views
         recall: What does centralized training with decentralized execution mean?
         steps:
@@ -881,6 +981,7 @@ parts:
           for cooperative tasks and MADDPG uses a critic over all actions. If one agent plus tools would do, don't take this on.
 
       - layout: table
+        beat: practice
         title: In RAG, RL belongs at the decision points
         recall: What actions and rewards does RL use at each RAG decision point?
         header: [Sub-task, Action, Reward]
@@ -901,6 +1002,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb for RL and alignment
         recall: What are the rules of thumb for RL and alignment?
         cards:
@@ -917,6 +1019,7 @@ parts:
           because its score was honest. Ask the same of every model you train or buy.
 
       - layout: bullets
+        beat: wrap
         title: Where to go next
         recall: Which pillars and lab come after RL and alignment?
         bullets:

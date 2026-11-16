@@ -13,12 +13,64 @@ deck:
     Today we take landed tables and make them into tested models that build on schedule. Each part fixes something that fails silently, so the running question is how you would ever have found out.
 
 parts:
+
+  - title: What this lecture asks
+    overview: true
+    summary: The question · From tested models to safe re-runs · What you will be able to do
+    notes: >-
+      Before any tool, here is the one question this lecture keeps asking and the five steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: How would you know it went wrong?
+        kicker: The idea
+        recall: What question does every part of this lecture ask about a nightly pipeline?
+        statement: "Each night a taxi pipeline rebuilds its tables. When it fails silently, how would you find out, and what makes a second run harmless?"
+        attribution: Synthetic taxi trips through dbt on DuckDB, then one daily pipeline in two orchestrators
+        takeaway: Every part of this lecture takes something that fails silently and makes it fail loudly or become harmless to repeat.
+        source: README.md
+        notes: >-
+          The running question is how you would ever have found out. Each part opens with a number that looks right and is not, states the rule, applies it to the trips, and ends on the usual mistake.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five steps from a model to a safe re-run
+        recall: In what order does this lecture build a pipeline that is safe to run twice?
+        steps:
+          - {label: Transform, sub: "tested models"}
+          - {label: Orchestrate, sub: "the right day"}
+          - {label: dbt in depth, sub: "grain, snapshots, incremental"}
+          - {label: Idempotency, sub: "safe to run twice"}
+          - {label: Two tools, sub: "Dagster and Airflow", accent: "D4621A"}
+        bullets:
+          - "Each step opens with **the idea**, states **the principle**, then **applies** it to the trips."
+          - "Each step ends on the mistake it usually produces."
+        takeaway: The lecture moves from one correct model to a schedule, then to re-runs and backfills, and ends by running the same pipeline in two tools.
+        source: README.md
+        notes: >-
+          The README tells the same story in prose. Dagster and Airflow got a chapter of their own, because the comparison needs running code in both.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with a pipeline.
+        cards:
+          - {title: Trace, body: "Follow a wrong number to one line in one file, test the grain, and left join through a default row."}
+          - {title: Schedule, body: "Take the logical date as a parameter, and say what an orchestrator decides that a cron line leaves out."}
+          - {title: Re-run, body: "Replace a period in one transaction, and decide which dimension version a backfill should use."}
+          - {title: Compare, accent: "D4621A", body: "Say what Dagster and Airflow each think a pipeline is, and name the Airflow 3 timetable."}
+        takeaway: You will be able to make a pipeline traceable, tied to the right day, and boring to run twice.
+        source: README.md
+        notes: >-
+          These come from the question column of the reading order and the rules of thumb at the end of the README. The next pillar covers the storage these runs write to.
+
   - title: Transform
     summary: ELT · Layers · Tests · What a test protects
     notes: >-
       A wrong number should be traceable to one line in one file. dbt is how this course gets there, and the first surprise is what its tests do not protect.
     slides:
       - layout: statement
+        beat: problem
         title: Every test passed and the revenue was gone
         kicker: The problem
         statement: "An inner join dropped 5,680 trips and about $96,000. Revenue read $5.00M instead of $5.10M, and no test failed."
@@ -29,6 +81,7 @@ parts:
           Nothing in those rows was invalid. They had a zone the lookup did not know. The fix is a left join through a default row, and a count of the unknowns.
 
       - layout: flow
+        beat: fundamentals
         title: Raw data becomes a mart in layers
         recall: Which layer is allowed to hold business logic?
         steps:
@@ -45,6 +98,7 @@ parts:
           Kleppmann describes the same shift as the data lake's sushi principle in DDIA chapter 10, where raw data is better. Keeping raw is what makes a full refresh a repair.
 
       - layout: code
+        beat: practice
         title: A dedupe key is a claim about the data
         recall: How would a too-narrow key show up in row counts?
         lang: sql
@@ -67,6 +121,7 @@ parts:
           The zoomcamp block has no order by, so among duplicates that differ, which row you keep can change between runs. Adding pickup zone and amount to the key gets all 100,000 back.
 
       - layout: compare
+        beat: pitfalls
         title: What a failing test protects
         recall: Why is the tested table not protected?
         left:
@@ -95,6 +150,7 @@ parts:
       Tasks exist now. What decides when they run, for which day, and what stops when one fails?
     slides:
       - layout: statement
+        beat: problem
         title: Cron has no idea anything failed
         kicker: The problem
         statement: "The extract failed at 03:00, the transform ran anyway on yesterday's file, and the dashboard showed a flat line. Nobody was told."
@@ -105,6 +161,7 @@ parts:
           Then someone has to work out from log files which days need re-running. An orchestrator makes each of these decisions explicit.
 
       - layout: flow
+        beat: fundamentals
         title: When a task fails for good, downstream must not run
         recall: What would a cron script have done in this case?
         steps:
@@ -121,6 +178,7 @@ parts:
           The toy orchestrator in chapter 2 is fifty lines and does this. Every tool's core is this loop, plus a recorded logical date.
 
       - layout: code
+        beat: practice
         title: A task takes its day as a parameter
         recall: What breaks when a task reads the clock?
         lang: python
@@ -142,12 +200,27 @@ parts:
         notes: >-
           These three habits are most of the craft, and they apply across Mage, Prefect, Kestra, Dagster and Airflow. Prefect in the chapter uses the same flow with a test harness.
 
+      - layout: cards
+        beat: pitfalls
+        title: Four ways an orchestrator misleads you
+        recall: Why can an orchestrator not tell a dead worker from a paused one?
+        cards:
+          - {title: Retrying non-idempotent work, body: "A retry after a timeout can repeat a write that already happened."}
+          - {title: Retrying forever or never, body: "No retries pages someone for every blip, and unlimited retries hide an outage."}
+          - {title: A failed task has stopped, body: "The old attempt may still be writing while the retry runs."}
+          - {title: A green run is correct, accent: "D4621A", body: "The orchestrator knows tasks finished. A test task knows the numbers were right."}
+        takeaway: An orchestrator cannot tell a dead worker from a paused one, or a finished run from correct data, so make writes safe and put a test in the graph.
+        source: notes/02-orchestrate.md
+        notes: >-
+          Set a small retry limit with backoff and alert after it. The case of a failed task that has not stopped is the paused-worker case from the first pillar, and writes need to be safe against the old attempt.
+
   - title: dbt in depth
     summary: Grain tests · Snapshots · Incremental
     notes: >-
       As the project grows, three things break in a predictable order. A number goes wrong unseen, somebody asks about last quarter, and the nightly rebuild outgrows the night.
     slides:
       - layout: statement
+        beat: problem
         title: One innocent row added 12.5 percent to revenue
         kicker: The problem
         statement: "A second row for zone 3 took the fact from 1,000 rows to 1,125, and revenue from $24,870 to $27,980."
@@ -158,6 +231,7 @@ parts:
           Nothing about that row is invalid. The wrong number is small enough to be believed, which is why this test is the cheapest and most valuable you will write.
 
       - layout: table
+        beat: fundamentals
         title: Data tests and unit tests answer different questions
         recall: Which one runs before the model builds?
         header: [Test, Checks, Catches]
@@ -174,6 +248,7 @@ parts:
           Write a reason next to every threshold. One that nobody remembers setting is where drift hides. A monitor that watches the trend is the longer-term home, in pillar 5.
 
       - layout: flow
+        beat: pitfalls
         title: A snapshot is a series of samples
         recall: Why does a snapshot ignore --full-refresh?
         steps:
@@ -191,6 +266,7 @@ parts:
           Greenpoint's move to Brooklyn gives two contiguous versions in the chapter. Keep logic out of snapshots, so a transform bug cannot get baked into history. Hard deletes are ignored unless you set hard_deletes.
 
       - layout: code
+        beat: practice
         title: A watermark cannot see late rows
         recall: Which test would have caught the missing row?
         lang: sql
@@ -214,6 +290,7 @@ parts:
           With a watermark and no lookback, the late row is gone and every test on the table passes. The reconciliation test is what catches it. Measure real lateness and set the window from that.
 
       - layout: table
+        beat: fundamentals
         title: Incremental strategies
         recall: Why must insert_overwrite carry the whole partition?
         header: [Strategy, Does, Watch out for]
@@ -236,6 +313,7 @@ parts:
       Every pipeline gets run twice eventually. This part is about making that boring.
     slides:
       - layout: statement
+        beat: problem
         title: The second run doubled the table
         kicker: The problem
         statement: "After one run: 1,100 trips. After running it again: 2,200. No error, because INSERT did exactly what it says."
@@ -246,6 +324,7 @@ parts:
           Kleppmann makes the larger argument in DDIA chapter 10. If a batch job replaces its output, you can roll back the code and run it again, which he calls human fault tolerance.
 
       - layout: table
+        beat: fundamentals
         title: Three ways to write, one of them wrong
         recall: Why is overwrite the default rather than merge?
         header: [Write mode, Rerun, Rows deleted upstream]
@@ -261,6 +340,7 @@ parts:
           Use merge for slowly changing entities and CDC, where no period owns the row. Do the delete and insert in one transaction, or readers can catch the gap.
 
       - layout: flow
+        beat: practice
         title: Write, audit, publish
         recall: Which gap from chapter 1 does this close?
         steps:
@@ -276,6 +356,7 @@ parts:
           The whole-table copy in the chapter is for clarity. A warehouse would use a zero-copy clone or a table format branch, so the audit costs little.
 
       - layout: compare
+        beat: pitfalls
         title: A backfill decides what the past should say
         recall: When is restating history legitimate?
         left:
@@ -299,6 +380,7 @@ parts:
           A nightly job on a Type 1 dimension and a backfill of that job give different answers for one day. Then the table's history depends on when each partition was built.
 
       - layout: code
+        beat: pitfalls
         title: Past-dependent tables have an order
         recall: How would a window function remove the ordering problem?
         lang: python
@@ -327,6 +409,7 @@ parts:
       One pipeline, written twice, broken the same three ways. The interesting output is what each tool can tell you the morning after.
     slides:
       - layout: statement
+        beat: problem
         title: Did it run, or which days are wrong?
         kicker: The problem
         statement: "Airflow says a pipeline is tasks that ran. Dagster says it is tables that should exist."
@@ -337,6 +420,7 @@ parts:
           After an outage, the question at 09:00 is which days of which tables are wrong. Hold that question against everything in this part.
 
       - layout: code
+        beat: fundamentals
         title: "Dagster: declare the tables"
         recall: What makes a failed check stop the report?
         lang: python
@@ -362,6 +446,7 @@ parts:
           In the chapter, get_materialized_partitions lists the days that exist, a loop fills the rest, and running a day again leaves 12,650 trips unchanged. A real backfill runs from the UI and the daemon.
 
       - layout: code
+        beat: fundamentals
         title: "Airflow: declare the work"
         recall: What is the state of zone_report when the check fails?
         lang: python
@@ -385,6 +470,7 @@ parts:
           The states are the same outcome as Dagster's, in a different vocabulary. Run on Airflow 3.3.2. Tutorials for 2.x will mislead you in several places.
 
       - layout: table
+        beat: pitfalls
         title: "Cron changed meaning in Airflow 3"
         recall: Which day does a default cron run process on Jan 14 at 03:00?
         header: [Timetable, Fires, Logical date, "`ds` covers"]
@@ -400,6 +486,7 @@ parts:
           This changed through a config default in 3.0. A Dag written for 2.x keeps running after the upgrade and quietly processes the wrong day.
 
       - layout: flow
+        beat: practice
         title: A real backfill in Airflow 3
         recall: Why did --max-active-runs 2 fail here?
         steps:
@@ -416,6 +503,7 @@ parts:
           reprocess-behavior chooses what happens to days that already ran. A poisoned day left unrepaired also failed every backfilled run, because our check scans the whole table.
 
       - layout: cards
+        beat: practice
         title: Choosing, having run both
         recall: What matters more than the choice of tool?
         cards:
@@ -437,6 +525,7 @@ parts:
       One slide of rules, then where to go next.
     slides:
       - layout: cards
+        beat: wrap
         title: What to remember
         recall: Which of these would have caught the $96,000?
         cards:
@@ -457,6 +546,7 @@ parts:
         notes: >-
           The theme of the subject: a stage silently trusts the one before it. Tests, logical dates and idempotent writes are this pillar's way of making that trust explicit.
       - layout: bullets
+        beat: wrap
         title: Where to go next
         recall: Which pillar prices these runs?
         bullets:

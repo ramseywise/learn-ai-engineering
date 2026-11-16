@@ -16,10 +16,61 @@ deck:
     holds up, then how to run many things at once, then what classes and objects really do.
 
 parts:
+  - title: What the language does for you
+    overview: true
+    summary: The question · Five parts · What you will be able to do
+    notes: >-
+      Before any feature, the one question this module keeps asking and the five parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What is Python doing that your code did not say?
+        recall: What question does every part of Python for Engineers ask?
+        kicker: The idea
+        statement: A function changes your list, a retry wraps your call, a cache keeps an object alive. Every part asks what the language does on your behalf, and what that costs.
+        attribution: Each part names a rule you can check with a print statement
+        takeaway: Production Python surprises you where the language acts for you, so each part asks what it does and what it costs.
+        source: ../../README.md
+        notes: >-
+          Python Foundations taught the syntax. Here we learn the model underneath it, because that model decides how code behaves in a service.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five parts from the data model to memory
+        recall: What are the five parts of Python for Engineers, in order?
+        steps:
+          - {label: Model, sub: "names, iterators, closures"}
+          - {label: Robust, sub: "errors, types, tooling"}
+          - {label: Concurrent, sub: "threads, asyncio"}
+          - {label: Classes, sub: "MRO, descriptors"}
+          - {label: Memory, sub: "cost and leaks", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the rule**, then **applies** it."
+          - "Each part ends on the mistake it usually produces."
+        takeaway: The parts run from how the language works, to code that holds up, to concurrency, to what classes do, to what memory costs.
+        source: ../../README.md
+        notes: >-
+          Every slide in this deck is a flashcard, so the title is the question and the takeaway is the rule that answers it.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things Python for Engineers teaches you to do.
+        cards:
+          - {title: Reason, body: "Reason about names versus objects, write lazy pipelines, closures and decorators."}
+          - {title: Harden, body: "Design exception hierarchies, write `with` managers and type signatures, and lay out a package."}
+          - {title: Run, body: "Choose threads, asyncio or processes, limit concurrency and add timeouts."}
+          - {title: Measure, accent: "D4621A", body: "Predict the MRO, and find a leak with `tracemalloc`."}
+        takeaway: You will be able to explain what the language does for you, and measure what it costs in a running service.
+        source: ../../README.md
+        notes: >-
+          These are the syllabus outcomes for notes 01 to 09 in the Python track README.
+
   - title: How the language works
     summary: Names and objects · Dunder methods · Iterators · Generators · Closures · Decorators
     slides:
       - layout: statement
+        beat: problem
         title: Why does Python's "weird" behaviour keep surprising people?
         kicker: The problem
         statement: A function changes your list, a default argument remembers old calls, and a second loop over a generator finds nothing. One model explains the first two, and a protocol explains the third.
@@ -28,6 +79,7 @@ parts:
         notes: Everything is an object with an identity, a type and a value.
 
       - layout: code
+        beat: fundamentals
         title: What is the difference between mutating and rebinding?
         kicker: Names and objects
         lang: text
@@ -47,6 +99,7 @@ parts:
         notes: Arguments are passed by assignment, so a function that mutates is visible to the caller and one that rebinds is not.
 
       - layout: compare
+        beat: fundamentals
         title: When do you use == and when do you use is?
         kicker: Equality and identity
         emphasis: none
@@ -67,6 +120,7 @@ parts:
         notes: Hashability is a separate idea. Dict keys and set members need a hash that never changes. Immutable built-ins are hashable, lists and dicts aren't, and a tuple is hashable only if everything inside it is. Defining __eq__ without __hash__ stops instances working as keys. A frozen dataclass solves it.
 
       - layout: table
+        beat: fundamentals
         title: How does Python syntax map to methods?
         kicker: The data model
         header: [You write, Python calls]
@@ -83,6 +137,7 @@ parts:
         notes: "Idioms by reflex: `first, *rest = xs`, `a, b = b, a`, `zip(xs, ys, strict=True)`, `{**defaults, **overrides}`. `copy.copy` is shallow and `copy.deepcopy` goes all the way down."
 
       - layout: flow
+        beat: fundamentals
         title: What does a for loop actually do?
         kicker: The iterator protocol
         steps:
@@ -97,6 +152,7 @@ parts:
         notes: That is why looping twice over a generator or a map object silently yields nothing the second time.
 
       - layout: code
+        beat: practice
         title: Why would you write a generator?
         kicker: Laziness
         lang: python
@@ -113,6 +169,7 @@ parts:
         notes: The with block stays open until the generator finishes or is collected. Consume it fully. Stop comprehensions at two for clauses.
 
       - layout: table
+        beat: practice
         title: Which itertools do you actually use?
         kicker: itertools
         recall: What must you do before `itertools.groupby`?
@@ -130,6 +187,7 @@ parts:
         notes: Pair infinite streams such as count and cycle with islice or zip. collections adds Counter, defaultdict, deque with maxlen for a sliding window, and namedtuple.
 
       - layout: compare
+        beat: pitfalls
         title: What do closures capture?
         kicker: Closures
         left:
@@ -149,6 +207,7 @@ parts:
         notes: "Signatures: parameters before / are positional-only, parameters after * are keyword-only, a good default for flags."
 
       - layout: code
+        beat: practice
         title: What is a decorator?
         kicker: Decorators
         lang: python
@@ -173,6 +232,7 @@ parts:
     summary: Exceptions · Context managers · Type hints · Dataclasses and Pydantic · uv, ruff and pytest
     slides:
       - layout: statement
+        beat: problem
         title: What separates a script from code others depend on?
         kicker: The problem
         statement: Failures that surface clearly, cleanup that always happens, signatures a checker can read, and an environment anyone can rebuild.
@@ -182,6 +242,7 @@ parts:
         notes: The next slides take these one at a time. Failures and cleanup are in this note, signatures in note 05, and the environment in note 06.
 
       - layout: flow
+        beat: fundamentals
         title: What does each clause of try do?
         kicker: Exceptions
         recall: How do you write a safe try/except?
@@ -199,6 +260,7 @@ parts:
         notes: Add fields to custom exceptions for anything a caller might branch on. Use log.exception inside except, not print.
 
       - layout: code
+        beat: practice
         title: How do you write your own context manager?
         kicker: Context managers
         lang: python
@@ -216,7 +278,23 @@ parts:
         source: notes/04-errors-and-context-managers.md
         notes: As a class, implement __enter__ and __exit__. Returning True from __exit__ swallows the exception, which is rarely what you want.
 
+      - layout: table
+        beat: pitfalls
+        title: Which error-handling habits hide bugs?
+        kicker: Pitfalls
+        header: [Habit, What it costs]
+        widths: [3.4, 5.6]
+        rows:
+          - ["A bare `except:` or `except Exception:`", "Hides bugs like `NameError`, and a bare one hides `KeyboardInterrupt`"]
+          - ["A large `try` block", "Catches errors from code you did not mean to guard"]
+          - ["`except: pass`", "Turns a caller's mistake into a plausible-looking result"]
+          - ["`__exit__` returning `True`", "Swallows the exception, which is rarely what you want"]
+        takeaway: Catch the narrowest exception, keep the `try` block small, and log the error instead of passing.
+        source: notes/04-errors-and-context-managers.md
+        notes: The fix for a blind catch is the narrow catch and a log call, as on the earlier slides.
+
       - layout: bullets
+        beat: fundamentals
         title: Who checks Python's type hints?
         kicker: Type hints
         bullets:
@@ -230,6 +308,7 @@ parts:
         notes: The TypeScript track teaches the same ideas with a stricter checker.
 
       - layout: compare
+        beat: practice
         title: When do you use a dataclass, and when Pydantic?
         kicker: Inside and at the edge
         left:
@@ -255,6 +334,7 @@ parts:
         notes: "frozen=True makes instances immutable and hashable. Mutable defaults need field(default_factory=list). Pydantic coerces \"4\" to 4 for an int field."
 
       - layout: cards
+        beat: fundamentals
         title: What are the parts of a modern Python project?
         kicker: Tooling
         cards:
@@ -271,6 +351,7 @@ parts:
     summary: Picking a tool · The GIL · The event loop · Never block · Retries
     slides:
       - layout: statement
+        beat: problem
         title: What decides which concurrency tool you use?
         kicker: The problem
         statement: Fifty HTTP calls and fifty pure-Python number crunches need different tools, because one spends its time waiting and the other spends it computing.
@@ -279,6 +360,7 @@ parts:
         notes: NumPy releases the GIL, so array work is a separate case.
 
       - layout: table
+        beat: fundamentals
         title: Threads, asyncio or processes?
         kicker: Which tool
         recall: Why do threads help waiting but not computing?
@@ -293,6 +375,7 @@ parts:
         notes: Free-threaded builds (3.13t+) remove the GIL, but most code and libraries still assume it.
 
       - layout: flow
+        beat: fundamentals
         title: How does the event loop run two tasks on one thread?
         kicker: The event loop
         steps:
@@ -307,6 +390,7 @@ parts:
         notes: The same model as JavaScript promises. Promise.all corresponds to gather and TaskGroup.
 
       - layout: code
+        beat: practice
         title: How do you limit concurrency in asyncio?
         kicker: TaskGroup and Semaphore
         lang: python
@@ -325,6 +409,7 @@ parts:
         notes: "`gather(*coros, return_exceptions=True)` collects errors without cancelling. `asyncio.timeout(5)` adds a deadline."
 
       - layout: compare
+        beat: pitfalls
         title: What must you never do inside async def?
         kicker: Never block the loop
         left:
@@ -346,6 +431,7 @@ parts:
         notes: Calling an async def does nothing until it is awaited or scheduled as a task.
 
       - layout: code
+        beat: practice
         title: How should you retry a failed call?
         kicker: Retries with backoff
         lang: python
@@ -369,6 +455,7 @@ parts:
       print statement, and each tool has a cost.
     slides:
       - layout: statement
+        beat: problem
         title: Why does class behaviour seem unpredictable?
         kicker: The problem
         statement: "A `super()` call runs a method in a class you never named, an instance attribute silently replaces a method, or two libraries refuse to combine with a metaclass conflict."
@@ -382,7 +469,26 @@ parts:
           works: a class decorator, then __init_subclass__, then a metaclass. Inheritance also couples you to the parent's
           internals, so composition is the default for reusing behaviour.
 
+      - layout: steps
+        beat: fundamentals
+        title: In what order does obj.x look for x?
+        kicker: Attribute lookup
+        axis: first checked → last checked
+        steps:
+          - {title: Data descriptor on the class, text: "Found in the MRO with `__set__` or `__delete__`? Call its `__get__`. A `property` is one."}
+          - {title: Instance dict, text: "`x` in `obj.__dict__`? Return it."}
+          - {title: Non-data descriptor, text: "A function or `cached_property` found in step 1: call its `__get__`. Functions are how methods bind."}
+          - {title: Plain class attribute, text: "Found in step 1 and not a descriptor: return it."}
+          - {title: AttributeError, text: "Then `__getattr__` is tried, if the class defines it.", accent: "D4621A", n: "!"}
+        takeaway: A data descriptor beats the instance dict and a non-data one loses to it. So a method can be shadowed and a property can't.
+        source: notes/08-objects-inheritance-and-mro.md
+        notes: >-
+          `functools.cached_property` is a non-data descriptor. After computing, it writes the value into the instance dict, and step 2
+          finds it next time. classmethod, staticmethod and __slots__ entries are descriptors too. `__getattr__` runs only after normal
+          lookup fails, while `__getattribute__` runs on every access and recurses forever if it reads self.x directly.
+
       - layout: code
+        beat: practice
         title: Why can tenant B read tenant A's message?
         kicker: Class attributes
         lang: python
@@ -407,6 +513,7 @@ parts:
           __init__, or use a dataclass with field(default_factory=list).
 
       - layout: compare
+        beat: pitfalls
         title: Why count writes with composition instead of a subclass?
         kicker: Inheritance couples you to internals
         recall: A subclass overrides `put` and `put_many` to count writes. Why does `put_many` of two items count 4, and what avoids it?
@@ -438,6 +545,7 @@ parts:
           right for frameworks, exception hierarchies and a parent built to be extended.
 
       - layout: flow
+        beat: fundamentals
         title: What does super() call in a diamond?
         kicker: The MRO
         recall: In `class ProdClient(Retrying, Logged)`, with both parents inheriting `BaseClient`, what does `super()` inside `Retrying` reach, and why?
@@ -459,24 +567,8 @@ parts:
           call super(). For a small stack of wrappers, composition is often clearer, because the nesting shows the order where
           the object is assembled.
 
-      - layout: steps
-        title: In what order does obj.x look for x?
-        kicker: Attribute lookup
-        axis: first checked → last checked
-        steps:
-          - {title: Data descriptor on the class, text: "Found in the MRO with `__set__` or `__delete__`? Call its `__get__`. A `property` is one."}
-          - {title: Instance dict, text: "`x` in `obj.__dict__`? Return it."}
-          - {title: Non-data descriptor, text: "A function or `cached_property` found in step 1: call its `__get__`. Functions are how methods bind."}
-          - {title: Plain class attribute, text: "Found in step 1 and not a descriptor: return it."}
-          - {title: AttributeError, text: "Then `__getattr__` is tried, if the class defines it.", accent: "D4621A", n: "!"}
-        takeaway: A data descriptor beats the instance dict and a non-data one loses to it. So a method can be shadowed and a property can't.
-        source: notes/08-objects-inheritance-and-mro.md
-        notes: >-
-          `functools.cached_property` is a non-data descriptor. After computing, it writes the value into the instance dict, and step 2
-          finds it next time. classmethod, staticmethod and __slots__ entries are descriptors too. `__getattr__` runs only after normal
-          lookup fails, while `__getattribute__` runs on every access and recurses forever if it reads self.x directly.
-
       - layout: code
+        beat: practice
         title: How do you validate the same field on many classes?
         kicker: Writing a descriptor
         lang: python
@@ -506,6 +598,7 @@ parts:
           is that `cfg.top_p = 1.5` looks like a store and can raise. Check whether Pydantic or a dataclass already validates at the boundary.
 
       - layout: table
+        beat: fundamentals
         title: Decorator, __init_subclass__ or metaclass?
         kicker: How a class gets built
         recall: Which class-customisation tool should you try first, and what does a metaclass cost?
@@ -530,6 +623,7 @@ parts:
       Everything here was measured on CPython 3.14.7 on macOS arm64. This area changes between releases, so recheck the numbers on yours.
     slides:
       - layout: statement
+        beat: problem
         title: Why does a service run out of memory before it runs out of data?
         kicker: The problem
         statement: "A retrieval service holding embeddings as Python lists, or a worker that \"leaks\" with nothing leaked in the C sense, are both stories about what an object costs and what still holds it."
@@ -541,6 +635,7 @@ parts:
           Recheck on yours.
 
       - layout: table
+        beat: fundamentals
         title: What does one small record cost in bytes?
         kicker: Measured with tracemalloc, 200,000 records
         recall: Which record shape costs the most and the least in bytes, and why can't `sys.getsizeof` compare them?
@@ -561,6 +656,7 @@ parts:
           as list[float], 13,176 as array('d') and 6,628 as array('f'). A million list embeddings come to about 44 GiB. Use array or NumPy.
 
       - layout: flow
+        beat: fundamentals
         title: What frees an object, and what frees a cycle?
         kicker: Reference counting and the cycle collector
         steps:
@@ -578,6 +674,7 @@ parts:
           and gc.freeze() took a full collect to 0.0 ms. The free-threaded build has its own non-generational collector.
 
       - layout: bullets
+        beat: practice
         title: What is a memory leak in Python, and how do you find it?
         kicker: Measured on CPython 3.14.7, macOS arm64
         bullets:
@@ -606,6 +703,7 @@ parts:
           about 260 ms at 4 million. Free-threading in 3.14 is supported but optional, and it does not make your code thread-safe.
 
       - layout: compare
+        beat: pitfalls
         title: Why does lru_cache on a method keep objects alive?
         kicker: A leak you can write by accident
         left:
@@ -631,6 +729,7 @@ parts:
           no arguments and can't be bounded.
 
       - layout: cards
+        beat: pitfalls
         title: What does __slots__ buy, and what does it cost?
         kicker: Trading flexibility for size
         cards:
@@ -644,6 +743,7 @@ parts:
           For 500,000 records with 2 KB of text each, 40 bytes saved per record is about 2% of the total, because the size is in the strings.
 
       - layout: code
+        beat: practice
         title: Is self.total += n one operation?
         kicker: Bytecode
         lang: text
@@ -666,6 +766,7 @@ parts:
           under free-threading. Use a lock or a queue when you need the guarantee. After warm-up the loop's BINARY_OP shows as BINARY_OP_ADD_FLOAT.
 
       - layout: table
+        beat: fundamentals
         title: What does the free-threaded build change?
         kicker: Python 3.14, CPU-bound work, one short run
         recall: Does removing the GIL make code thread-safe, and what did 4 CPU-bound threads gain?
@@ -687,6 +788,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What are the engineering rules?
         cards:
           - {title: Model, body: "Names are labels. `None` as a default. `is` only for singletons."}

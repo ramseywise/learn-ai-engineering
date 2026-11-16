@@ -14,12 +14,63 @@ deck:
     ends with something a later stage will take on trust, so we make that trust explicit.
 
 parts:
+
+  - title: What this lecture asks
+    overview: true
+    summary: The question · Load, model, promise · What you will be able to do
+    notes: >-
+      Before any method, here is the one question this lecture keeps asking and the four steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Will two people get the same number?
+        kicker: The idea
+        recall: What question does every part of this lecture ask about a day of taxi trips?
+        statement: "A day of taxi trips is loaded, modelled and reported. What has to be true for two analysts, and for next month's re-run, to get the same number?"
+        attribution: A small trips source, then one million synthetic taxi trips
+        takeaway: Nearly every wrong number is a broken agreement about how data was copied or what a row means, so each agreement has to be written down.
+        source: README.md
+        notes: >-
+          We copy data out of a system not built to be copied from, then shape it so two people get one answer. Each part opens with a number that looks right and is not, states the rule, applies it to the trips, and ends on the usual mistake.
+
+      - layout: flow
+        beat: fundamentals
+        title: Four steps from a source to a promise
+        recall: In what order does this lecture take data from a source to a checked promise?
+        steps:
+          - {label: Load, sub: "safe to repeat"}
+          - {label: Star, sub: "what a row means"}
+          - {label: Vault or wide table, sub: "when the star is wrong"}
+          - {label: Contract, sub: "a promise a machine checks", accent: "D4621A"}
+        bullets:
+          - "Each step opens with **the idea**, states **the principle**, then **applies** it to the trips."
+          - "Each step ends on the mistake it usually produces."
+        takeaway: Each step turns something a later stage would trust silently into an agreement that can be checked.
+        source: README.md
+        notes: >-
+          The README tells the same story in prose: a load that retries, a join that inflates revenue, a boundary change that rewrites last month, and a producer who switches dollars to cents.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with a source of data.
+        cards:
+          - {title: Load, body: "Copy data without loading it twice or losing it once, and read the change log when deletes matter."}
+          - {title: Model, body: "Write the grain sentence, load facts to an Unknown row, and choose Type 1 or Type 2 per attribute."}
+          - {title: Judge, body: "Say when the star is wrong in either direction, for a vault or a wide table."}
+          - {title: Promise, accent: "D4621A", body: "Write a contract and check it at the door, so a change of units cannot pass silently."}
+        takeaway: You will be able to load data safely, say what a row means, and write down what the next stage may rely on.
+        source: README.md
+        notes: >-
+          These are the questions in the README's reading order and the rules of thumb at its end. The next pillar builds these models as tested, scheduled transforms.
+
   - title: Getting data in
     summary: Retries · Watermarks · Change logs · dlt
     notes: >-
       Every number your company reports begins with someone copying rows. Whether a retry doubles them is decided by a few lines in the loader.
     slides:
       - layout: statement
+        beat: problem
         title: Your scheduler will run this load twice
         kicker: The problem
         statement: "A naive append, retried once, turned 1,000 rows into 2,000. No error, and the job shows green."
@@ -29,6 +80,7 @@ parts:
         notes: >-
           Network drops at 2:04, the scheduler retries, and the append runs again. The dashboards go up, and nobody is paged. The rest of this part makes that impossible.
       - layout: code
+        beat: fundamentals
         title: Replace the window, in one transaction
         recall: What happens without the BEGIN if the insert fails?
         lang: python
@@ -48,6 +100,7 @@ parts:
         notes: >-
           The exercise in the chapter shows the count falling to zero without a transaction. Merge on a key is the other route when rows have a stable id.
       - layout: compare
+        beat: pitfalls
         title: A watermark cannot see everything
         recall: Which two changes did the watermark miss?
         left:
@@ -70,6 +123,7 @@ parts:
         notes: >-
           After extraction by watermark, only trip 44 came through. The source said 42 was 99 dollars and 43 was gone; the warehouse disagreed on both, with no error.
       - layout: flow
+        beat: fundamentals
         title: Change data capture, end to end
         recall: Why take the snapshot at a known log position?
         steps:
@@ -85,6 +139,7 @@ parts:
         notes: >-
           Kleppmann covers this in chapter 11 of DDIA. The chapter uses a trigger-based log as a stand-in for reading the real replication log, and Debezium is what you would run in production.
       - layout: table
+        beat: practice
         title: Choosing how to ingest
         recall: When is batch still the right answer?
         header: [Source, Method, Accept that]
@@ -107,6 +162,7 @@ parts:
       Now the data is ours. Next, agreements about what a row means, what adds up, and what a label meant that day.
     slides:
       - layout: statement
+        beat: problem
         title: Two analysts, one metric, two numbers
         kicker: The problem
         statement: "A dimensional model is a small set of agreements: what one row means, what can be added up, and what a label meant on the day."
@@ -116,6 +172,7 @@ parts:
         notes: >-
           Kimball lists that scene near the top of what a warehouse is for. Everything below breaks one agreement and shows the wrong number that results.
       - layout: flow
+        beat: fundamentals
         title: Four decisions, in order
         recall: Why does the grain come before the dimensions?
         steps:
@@ -132,6 +189,7 @@ parts:
         notes: >-
           Kimball's order is the useful part. A column with several values per row, like tolls on a trip, is telling you the grain is wrong or it needs its own fact.
       - layout: code
+        beat: practice
         title: A star in SQL, with an honest Unknown
         recall: What would an inner join have done to those 2187 trips?
         lang: sql
@@ -151,6 +209,7 @@ parts:
         notes: >-
           Simplified here; d_key stands for the date key expression in the chapter. Trips use 260 zones and the lookup knows 250. Kimball uses the same device for No Promotion in Effect.
       - layout: table
+        beat: pitfalls
         title: A finer table fans out the fact
         recall: Why did revenue change with no error raised?
         header: [Query, Fares]
@@ -165,6 +224,7 @@ parts:
         notes: >-
           Revenue rose by 899,180 dollars, or 8 percent, because 80,000 trips appear twice. The SQL is valid and reads naturally. This is the most common bug in analytics SQL.
       - layout: cards
+        beat: pitfalls
         title: Three answers to "what do we charge per mile?"
         recall: Which aggregate does Kimball insist on for ratios?
         cards:
@@ -179,6 +239,7 @@ parts:
         notes: >-
           The average overstates by 20 percent if the rate is what you meant. Semi-additive facts, like balances, have the same kind of trap across time.
       - layout: table
+        beat: fundamentals
         title: "Slowly changing dimensions: choose per attribute"
         recall: Which type changes numbers you already published?
         header: [Type, Mechanism, History, Use for]
@@ -193,6 +254,7 @@ parts:
         notes: >-
           Kimball named these in 1994. When we moved zone 6 from Queens to Brooklyn with Type 1, January's Brooklyn revenue changed by about 328,000 dollars with no record of it.
       - layout: code
+        beat: practice
         title: Type 2 gives both views of history
         recall: Why does the fact query need no date condition?
         lang: text
@@ -212,6 +274,7 @@ parts:
         notes: >-
           The dimension grew by one row. Late-arriving facts need no special case, because the range join looks at event date. dbt snapshots generate this logic for you.
       - layout: code
+        beat: pitfalls
         title: Never join two facts directly
         recall: What does drilling across do differently?
         lang: text
@@ -234,6 +297,7 @@ parts:
       The star sits in the middle of a range. One direction pulls it apart, the other joins it all up.
     slides:
       - layout: statement
+        beat: problem
         title: Move either way from the star and you pay
         kicker: The problem
         statement: "Pull it apart and a question needs three joins. Join it up and one label change rewrites 29,249 rows."
@@ -243,6 +307,7 @@ parts:
         notes: >-
           Both are used in production for sound reasons, and both are oversold. We measure so the choice rests on your constraints.
       - layout: flow
+        beat: fundamentals
         title: A vault separates keys, relationships and history
         recall: What does adding a new source of zone attributes cost?
         steps:
@@ -258,6 +323,7 @@ parts:
         notes: >-
           The same query took three joins and about 28 milliseconds against one join and 3 for the star, in one run on a laptop. Fit: many changing sources and an audit duty. The notes follow standard descriptions; the book was not read in full.
       - layout: table
+        beat: practice
         title: "Star vs OBT: Kaminsky's benchmark"
         recall: Why is this evidence about reads and not a verdict?
         header: [Warehouse, Denormalized vs star]
@@ -271,6 +337,7 @@ parts:
         notes: >-
           Fivetran, 2022, TPC-DS subset at scale 100. Redshift storage was 60,250 megabytes against 29,778 for store_sales, likely a worst case because dbt could not apply column encodings. On our data the wide table used 25 percent more space.
       - layout: code
+        beat: pitfalls
         title: The real cost of a wide table is a change
         recall: Why does object storage make this worse?
         lang: text
@@ -288,6 +355,7 @@ parts:
         notes: >-
           Trivial on this data, and a real bill on a petabyte. Table formats reduce but do not remove it. Treat wide tables as disposable outputs of a star.
       - layout: compare
+        beat: fundamentals
         title: Which shape for which team
         recall: What makes a wide table stop being a cache?
         left:
@@ -315,6 +383,7 @@ parts:
       Every model assumes the source keeps sending what it sent yesterday. A contract writes that assumption down and checks it.
     slides:
       - layout: statement
+        beat: problem
         title: A schema cannot see dollars become cents
         kicker: The problem
         statement: "Average fare went from 11.23 to 1122.8. The column kept its name and type, so each structural test still passed."
@@ -324,6 +393,7 @@ parts:
         notes: >-
           The engineer did nothing wrong by their own lights. They did not know a warehouse read the column. That is the missing agreement.
       - layout: code
+        beat: fundamentals
         title: A contract in the open standard
         recall: What does this hold that a schema does not?
         lang: yaml
@@ -348,6 +418,7 @@ parts:
         notes: >-
           Shortened for the slide; the chapter's version validates with no errors. Breck and colleagues at Google report the opposite starting point, where the data comes first and a schema is inferred and curated.
       - layout: table
+        beat: practice
         title: Six batches, one checker
         recall: Why does the checker test structure first?
         header: [Batch, Result]
@@ -365,6 +436,7 @@ parts:
         notes: >-
           Only the semantic rules caught cents. A distribution monitor picks up what a static rule misses.
       - layout: compare
+        beat: fundamentals
         title: Stop the load, or quarantine rows
         recall: Why is nothing loaded better than something wrong?
         left:
@@ -384,6 +456,7 @@ parts:
         notes: >-
           In the chapter, 2.9 percent of rows failed against a 1 percent limit, so we stop. The limit belongs in the contract.
       - layout: flow
+        beat: practice
         title: Shipping a breaking change
         recall: Which step needs sign-off, and why is it then harmless?
         steps:
@@ -399,11 +472,26 @@ parts:
         notes: >-
           The check runs on the pull request, while the person who can fix it is looking at the code. A rename is a drop plus an add, so it is breaking too.
 
+      - layout: cards
+        beat: pitfalls
+        title: Four ways a contract fails to protect you
+        recall: Why is a schema that calls itself a contract only an automated DESCRIBE?
+        cards:
+          - {title: Schema only, body: "Without semantics and ownership, it is only an automated DESCRIBE."}
+          - {title: Checks in the warehouse, body: "By then the bad data is loaded. Check at the boundary, and in the producer's CI."}
+          - {title: Silent drops, body: "Totals stop reconciling and no one knows why. Quarantine with a reason."}
+          - {title: No named owner, accent: "D4621A", body: "An alert to a shared channel is a notification with no one responsible."}
+        takeaway: A contract needs meaning, an owner and a check at the boundary, or bad data still loads and nobody is responsible for it.
+        source: notes/04-data-contracts.md
+        notes: >-
+          Breck's system deliberately limits its schema to a narrow set of constraints to avoid false positives, so start with the critical few tables rather than every one.
+
   - title: Rules of thumb
     agenda: false
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: What to remember
         recall: "What should each stage state, so that failures become visible?"
         cards:
@@ -424,6 +512,7 @@ parts:
         notes: >-
           The theme of the subject: a stage silently trusts the one before it. Each of these turns one silent trust into something checked.
       - layout: bullets
+        beat: wrap
         title: Where to go next
         recall: Which pillar turns these models into scheduled builds?
         bullets:

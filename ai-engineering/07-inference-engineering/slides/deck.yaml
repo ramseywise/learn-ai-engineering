@@ -16,6 +16,53 @@ deck:
     gave less than the one before.
 
 parts:
+  - title: Which limit, and what to spend
+    overview: true
+    summary: The question · Four parts · What you will be able to do
+    notes: >-
+      Before any tuning, here is the one question this lecture keeps asking, the four parts that answer it, and what you should be able to do at the end.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Which limit is this model under, and what do you spend on it?
+        recall: What one question does this lecture keep asking?
+        kicker: The idea
+        statement: The dashboard says the GPU is busy and users are still waiting. The question is which limit the model is under, and which fix answers that limit.
+        attribution: One Llama-7B on one A100, followed from 25.5 to 244.7 tokens per second
+        takeaway: Name the limit first, because each fix, from batching to quantization, answers one limit and does nothing for the others.
+        source: README.md
+        notes: >-
+          We follow one small model on one GPU. At each layer we ask what actually limits it, and what the next change buys.
+      - layout: flow
+        beat: fundamentals
+        title: Four parts, from the meters to the idle compute
+        recall: What are the four parts of this lecture, in order?
+        steps:
+          - {label: Meters, sub: "latency, goodput, why GPU util lies"}
+          - {label: The machine, sub: "roofline, kernels, compilers"}
+          - {label: The fleet, sub: "batching, routing, KV cache"}
+          - {label: Idle compute, sub: "speculation, quantization, checklist", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it."
+          - "Each part names where it goes wrong."
+        takeaway: We measure first, then look inside one machine, then share a fleet, and last spend the compute that decode leaves idle.
+        source: README.md
+        notes: >-
+          The order follows the notes. Meters come first because nothing after them can be judged without them. The fleet and the idle compute are the two answers to a decode step that leaves the chip waiting on memory.
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with a model that is slow or costly.
+        cards:
+          - {title: Measure, body: "Read TTFT, TPOT and goodput at a percentile, and say why GPU utilization alone misleads."}
+          - {title: Locate, body: "Say whether a step is compute-bound or bandwidth-bound, and which side of the ridge you are on."}
+          - {title: Budget, body: "Compute the KV cache from KV heads and divide your memory by it to size the batch."}
+          - {title: Spend, accent: "D4621A", body: "Choose batching, speculation or quantization for the limit you found, and re-run evals when outputs can change."}
+        takeaway: You will be able to measure a serving system, name its limit and pick the change that answers it.
+        source: README.md
+        notes: >-
+          These are the abilities the wrap-up cards summarise. The deck is the same chain from the other end.
+
   - title: Reading the meters
     summary: Two phases · Latency and goodput · Why GPU util lies
     notes: >-
@@ -23,6 +70,7 @@ parts:
       cannot tell us, so this part replaces it.
     slides:
       - layout: statement
+        beat: problem
         title: The GPU reads 100% busy, and users are still waiting
         recall: What does a GPU utilization reading of 100% actually tell you?
         statement: "The dashboard says the GPU is 100% busy. A single tiny kernel running all the time would read exactly the same."
@@ -35,8 +83,8 @@ parts:
           percent of compute could be lost to failures and restarts while dashboards still showed GPUs 100
           percent utilized. So if that meter cannot see the problem, what can? We need to know what the
           request is doing.
-
       - layout: flow
+        beat: fundamentals
         title: One request is two different workloads
         recall: "What bounds prefill and decode, and which latency does each set?"
         lead: Each phase sits on a different side of the roofline ridge, so each wants different engineering.
@@ -53,8 +101,8 @@ parts:
           decode leaves compute idle. The pricing follows too. Total latency is TTFT plus TPOT times output
           tokens, and Huyen's floor for streamed chat is about 120 ms per token, the pace of a very fast reader.
           Faster only matters when a machine reads the output, as in agents and chained calls.
-
       - layout: code
+        beat: practice
         title: Our running model, priced and measured
         recall: "How do you turn $2/hour and 100 tokens/s into a cost, and 7B weights into a bandwidth figure?"
         lang: arithmetic
@@ -80,8 +128,8 @@ parts:
           billion weights at two bytes each, so a hundred tokens a second is 700 GB per second, or 70 percent of an
           A100's memory bandwidth. Nothing about the chip's arithmetic appears in that sum. Hold on to that when we
           reach the hardware. Next question: what number should we promise the user?
-
       - layout: image
+        beat: fundamentals
         title: Goodput counts only the requests that kept the promise
         recall: What is goodput, and how does it differ from throughput?
         image: ../sources/images/huyen-ai-engineering-fig9-4.png
@@ -98,8 +146,8 @@ parts:
           that come from training clusters, so check which one a dashboard means. Even the book's own figure
           miscounts here. A request at 260 and 80 meets TPOT and misses TTFT. For agents the tail compounds,
           because a task of ten calls hits a single call's p90 far more often.
-
       - layout: compare
+        beat: pitfalls
         title: Replace GPU util with two meters that disagree on purpose
         recall: Which utilization metrics should you track for prefill and for decode?
         emphasis: right
@@ -125,8 +173,8 @@ parts:
           of PaLM 540B with a 2,048-token context. The figure in the note also shows Llama 2-70B's MBU falling from
           around 33 to 43 percent at one user to 14 to 19 percent at 256 users. That is the workload moving toward
           compute-bound as batches grow, which is expected and not a regression.
-
       - layout: steps
+        beat: practice
         title: "Monday: put the right meters on the wall"
         recall: What should you measure before you tune an inference service?
         steps:
@@ -151,6 +199,7 @@ parts:
       the map of where bytes live. We move from chip to host to kernel to compiler.
     slides:
       - layout: statement
+        beat: problem
         title: Why adding compute does nothing for a slow decode
         recall: Why can extra compute fail to speed up a memory-bound kernel?
         statement: "A load from HBM costs the time of hundreds of arithmetic instructions. A faster math unit just waits faster."
@@ -162,8 +211,8 @@ parts:
           independent work to run during the wait, through occupancy, instruction parallelism and pipelining.
           Or it can do more math per byte, through tiling, fusion and lower precision. The next few slides are
           that one choice, seen at different scales.
-
       - layout: image
+        beat: fundamentals
         title: The roofline tells you which limit you are under
         recall: How do you locate a kernel on the roofline, and what does its position imply?
         image: ../sources/images/ai-systems-performance-engineering-fig6-21.png
@@ -181,8 +230,8 @@ parts:
           run on tensor cores, where dense BF16 on a B200 is about 2.25 PFLOPS, so the ridge is much further right.
           That is why decode is so firmly bandwidth-bound, and why batching is the main way to move it right.
           Always quote dense, not sparse, FLOPS and attach a precision.
-
       - layout: steps
+        beat: fundamentals
         title: Every hop down the memory ladder costs more
         recall: "What does performance work do on the memory ladder, and what tier is Grace memory?"
         axis: slower, larger →
@@ -200,8 +249,8 @@ parts:
           runs one kernel at 48.21 ms demand-paged and 2.17 ms with prefetch. The fabric has the same shape. NVLink
           gives 1.8 TB/s per GPU at 1 to 2 microseconds. Between racks you get 20 to 80 GB/s at 5 to 10 microseconds.
           So keep tensor-parallel groups inside one NVLink domain.
-
       - layout: cards
+        beat: pitfalls
         title: The platform can cost more than any kernel, and it fails silently
         recall: Which platform misconfigurations slow inference without raising an error?
         cards:
@@ -220,8 +269,8 @@ parts:
           2 percent overhead, and the real trouble is version skew against the host driver. For sharing, use MIG for
           tenants with a latency promise and MPS only between trusted processes. Cold start is a storage question:
           stage weights to local NVMe, read shards sequentially, and let the page cache act as a warm tier.
-
       - layout: table
+        beat: fundamentals
         title: Name the kernel's regime before you change its code
         recall: What are the four kernel regimes, and what fixes each?
         header: [Regime, Signature in Nsight Compute, Fix]
@@ -240,8 +289,8 @@ parts:
           memory-bound win. On GPT-2 medium on an A100 it does more FLOPs than standard attention, 66.6 against 75.2
           GFLOPs, yet moves 9 times fewer HBM bytes, so runtime falls from 41.7 to 7.3 ms. Fregly's metrics tables are
           labelled illustrative, so trust their direction and not their size.
-
       - layout: image
+        beat: fundamentals
         title: At small batch the GPU idles between launches
         recall: What does a CUDA graph improve, and what does it leave unchanged?
         image: ../sources/images/ai-systems-performance-engineering-fig12-3.png
@@ -259,8 +308,8 @@ parts:
           new shapes, which is why vLLM and TensorRT-LLM capture a graph per bucket at startup and pad batches up to
           the bucket. And Fregly's own verdict on the fancier features: warp specialization and clusters rarely justify
           the engineering cost, so reach for them through CUTLASS, FlashAttention or Triton.
-
       - layout: code
+        beat: practice
         title: The compiler gives you most of this if shapes hold still
         recall: What does torch.compile need from your model to pay off, and how do you enforce it in CI?
         lang: python
@@ -288,8 +337,8 @@ parts:
           large batches. Static cache trades memory for stable shapes, since you reserve for the maximum length. Three
           things make a compiled model quietly slow: graph breaks, recompiles when a guard fails, and CUDA graph
           invalidation. Compile time is real too, minutes for a large model, so cache artifacts or export ahead of time.
-
       - layout: bullets
+        beat: practice
         title: "Monday: profile, fix the largest bottleneck, profile again"
         recall: In what order should you work on a performance problem, and how do you keep the gain?
         bullets:
@@ -311,6 +360,7 @@ parts:
       are how you batch, how you route, how you split the model, and where the KV cache lives.
     slides:
       - layout: statement
+        beat: problem
         title: Why does a 10-token answer wait for a 1,000-token one?
         statement: "One request needs 10 output tokens and its neighbour needs 1,000. In a static or dynamic batch, the short one holds its slot for all 1,000 steps."
         attribution: Huyen, AI Engineering, ch. 9
@@ -320,25 +370,8 @@ parts:
           Batching is the first lever, because decode reads all the weights each step and a batch amortizes that read
           over many sequences. So we want big batches. But requests are unequal. Dynamic batching with batch size 4 and
           a 100 ms window fixes the waiting at low load, not this. What does?
-
-      - layout: image
-        title: Continuous batching gives the slot back at every step
-        recall: How does continuous batching differ from static batching, and what makes it possible?
-        image: ../sources/images/ai-systems-performance-engineering-fig16-6.png
-        caption: "Static vs continuous. Yellow prefill, blue decode, red end of sequence (Fregly, AISPE, Fig. 16-6)"
-        bullets:
-          - "Introduced by **Orca** (OSDI 2022), now default in vLLM, SGLang, TGI, TensorRT-LLM."
-          - "Paged KV: **20–38%** of memory used before, **under 4%** wasted after (Kwon, 2023)."
-          - "Cap the batch where p99 TPOT climbs."
-        takeaway: Continuous batching swaps sequences in at every decode step, and paged KV memory is what makes that safe.
-        source: notes/07-prefill-decode-kv-cache.md
-        notes: >-
-          New sequences take the slots as soon as one ends. Its limits are memory, solved by PagedAttention, and long
-          prefills stalling decodes, which we reach shortly. PagedAttention stores KV in fixed blocks, 16 tokens by default
-          in vLLM, and maps them like an OS maps virtual pages. Clipper had the SLO-tuning idea earlier: on a scikit-learn
-          SVM under a 20 ms SLO, adaptive batches raised throughput up to 26 times.
-
       - layout: code
+        beat: fundamentals
         title: The router decides latency as much as the GPU does
         recall: Why is round-robin a poor default for routing LLM requests?
         lang: arithmetic
@@ -362,8 +395,8 @@ parts:
           falls with it. Second, always check cascade arithmetic: escalated queries may pay for both models, so 2.2 times
           is a ceiling. The idea is still sound. FrugalGPT measured a real cascade over 12 commercial APIs at March 2023
           prices and matched GPT-4's accuracy at 98.3 percent lower cost on one task, HEADLINES, and 59 to 73 percent lower on two others.
-
       - layout: table
+        beat: fundamentals
         title: Split the model only as far as you must
         recall: Which parallelism strategy buys what, and in what order do you compose them?
         header: [Strategy, Splits, Buys, Costs]
@@ -382,8 +415,42 @@ parts:
           is mainly for training holds only for models too large for one GPU. Expert parallelism's cost is real: in GShard,
           going from 128 to 2,048 experts made dispatch and combine about 3.75 times slower. Now let us look at the memory
           every one of these strategies has to budget for.
-
+      - layout: steps
+        beat: practice
+        title: "Monday: scale on signals that see the real limit"
+        recall: Which signals should drive LLM autoscaling, and why is warm capacity needed?
+        steps:
+          - {title: Change the scaling metric, text: "Queue depth, KV utilization, or p90 TTFT against the SLO. Not GPU utilization."}
+          - {title: Keep warm headroom, text: "The Handbook's deploy takes **15–30 min**, longer than most spikes."}
+          - {title: Alert on copy-engine spikes, text: "With flat compute they usually mean KV swapping, and latency is about to jump."}
+          - {title: Split along the GPU/CPU seam, text: "When load justifies it, so retrieval code never idles the GPU."}
+          - {title: Stream over SSE, text: "Set `TCP_NODELAY`, or Nagle's algorithm bursts your tokens.", accent: "D4621A"}
+        takeaway: Autoscale on queue depth, KV use or TTFT, and keep warm capacity because cold starts outlast most spikes.
+        source: notes/06-serving-at-scale.md
+        notes: >-
+          The Handbook's recipe of target-tracking at around 70 percent GPU utilization runs straight into the meter problem from
+          part one. A lightly loaded decode loop reads near 100 percent, so scaling on it adds replicas that do not help, or never
+          triggers when KV memory is the limit. Pre-pull weights and cache compiled artifacts. That closes the fleet. One idle resource
+          is left: all that compute decode is not using.
+      - layout: image
+        beat: fundamentals
+        title: Continuous batching gives the slot back at every step
+        recall: How does continuous batching differ from static batching, and what makes it possible?
+        image: ../sources/images/ai-systems-performance-engineering-fig16-6.png
+        caption: "Static vs continuous. Yellow prefill, blue decode, red end of sequence (Fregly, AISPE, Fig. 16-6)"
+        bullets:
+          - "Introduced by **Orca** (OSDI 2022), now default in vLLM, SGLang, TGI, TensorRT-LLM."
+          - "Paged KV: **20–38%** of memory used before, **under 4%** wasted after (Kwon, 2023)."
+          - "Cap the batch where p99 TPOT climbs."
+        takeaway: Continuous batching swaps sequences in at every decode step, and paged KV memory is what makes that safe.
+        source: notes/07-prefill-decode-kv-cache.md
+        notes: >-
+          New sequences take the slots as soon as one ends. Its limits are memory, solved by PagedAttention, and long
+          prefills stalling decodes, which we reach shortly. PagedAttention stores KV in fixed blocks, 16 tokens by default
+          in vLLM, and maps them like an OS maps virtual pages. Clipper had the SLO-tuning idea earlier: on a scikit-learn
+          SVM under a 20 ms SLO, adaptive batches raised throughput up to 26 times.
       - layout: code
+        beat: practice
         title: Size the KV cache from KV heads, then divide your memory
         recall: How do you compute KV cache bytes per token, and which head count do you use?
         lang: text
@@ -411,8 +478,8 @@ parts:
           across heads. MLA stores a latent. Character.AI's cross-layer attention reported over 20 times less KV. FP8 KV
           halves it. But sharing is not free: DeepSeek's 7B dense ablation shows MMLU falling from 45.2 with MHA to 41.2
           with GQA-8 and 37.9 with MQA.
-
       - layout: image
+        beat: practice
         title: Splitting prefill from decode doubled goodput on the same GPUs
         recall: How does separating prefill and decode pools raise goodput per GPU in the DistServe example?
         image: ../sources/images/ai-systems-performance-engineering-fig17-2.png
@@ -430,8 +497,8 @@ parts:
           chunk of 50 to 100 ms of GPU time. Disaggregation pays when long prompts dominate, SLOs are strict at high load, the
           interconnect is fast and the fleet can size two pools. Do not offload short prompts or prompts with a large
           prefix-cache hit. Batch the transfers too: LMCache's example goes from about 20 ms to about 8 ms.
-
       - layout: bullets
+        beat: pitfalls
         title: Stable content first, or the prefix cache cannot help
         recall: What does prefix-cache hit rate depend on, and what breaks it in agent sessions?
         bullets:
@@ -449,23 +516,6 @@ parts:
           hit, the next bottleneck is tokenizing the transcript, which grows from 10 to 64 percent of TTFT as the hit rate rises
           toward 0.99.
 
-      - layout: steps
-        title: "Monday: scale on signals that see the real limit"
-        recall: Which signals should drive LLM autoscaling, and why is warm capacity needed?
-        steps:
-          - {title: Change the scaling metric, text: "Queue depth, KV utilization, or p90 TTFT against the SLO. Not GPU utilization."}
-          - {title: Keep warm headroom, text: "The Handbook's deploy takes **15–30 min**, longer than most spikes."}
-          - {title: Alert on copy-engine spikes, text: "With flat compute they usually mean KV swapping, and latency is about to jump."}
-          - {title: Split along the GPU/CPU seam, text: "When load justifies it, so retrieval code never idles the GPU."}
-          - {title: Stream over SSE, text: "Set `TCP_NODELAY`, or Nagle's algorithm bursts your tokens.", accent: "D4621A"}
-        takeaway: Autoscale on queue depth, KV use or TTFT, and keep warm capacity because cold starts outlast most spikes.
-        source: notes/06-serving-at-scale.md
-        notes: >-
-          The Handbook's recipe of target-tracking at around 70 percent GPU utilization runs straight into the meter problem from
-          part one. A lightly loaded decode loop reads near 100 percent, so scaling on it adds replicas that do not help, or never
-          triggers when KV memory is the limit. Pre-pull weights and cache compiled artifacts. That closes the fleet. One idle resource
-          is left: all that compute decode is not using.
-
   - title: Spending the idle compute
     summary: Speculative decoding · Quantization · Stacking gains · The checklist and AI tuning
     notes: >-
@@ -473,6 +523,7 @@ parts:
       Some of these keep the output distribution exactly, and others trade a little quality.
     slides:
       - layout: statement
+        beat: problem
         title: What could decode do with FLOPs it already paid for?
         statement: "Each decode step reads every weight to produce one token per sequence, while the tensor cores sit idle. What could you do with that spare compute?"
         attribution: Two answers. Do more work per weight read, or read fewer bytes
@@ -482,8 +533,8 @@ parts:
           At small batch, arithmetic intensity is far below the ridge. So two families of fix follow. The caveat comes from Huyen:
           if your batches already saturate compute, the idle FLOPs are gone and speculative methods help less or hurt. Long contexts
           are the exception, because KV reads keep large batches bandwidth-bound.
-
       - layout: image
+        beat: fundamentals
         title: A draft guesses, and the target checks in one parallel pass
         recall: Why does speculative decoding preserve the target model's output distribution, and what speedup should you plan on?
         image: ../sources/images/ai-systems-performance-engineering-fig15-8.png
@@ -501,8 +552,27 @@ parts:
           instructive: a small Qwen target with a 0.5B draft on a T4 gained nothing significant, because the draft was not much cheaper.
           That EAGLE-2 comparison is at temperature 0 and batch 1. Past a critical sequence length, KV loading dominates, so speculation
           pays at large batch again; MagicDec measures up to 2.51 times on 8 H100s.
-
+      - layout: image
+        beat: practice
+        title: Our model's whole journey, 25.5 to 244.7 tokens per second
+        recall: What did compile, INT8, INT4 and speculation each add on Llama-7B, and why did gains shrink?
+        image: ../sources/images/huyen-ai-engineering-fig9-14.png
+        caption: "Llama-7B, A100-80GB, tokens/s per user, batch 1 (PyTorch 2023, via Huyen, Fig. 9-14)"
+        bullets:
+          - "`torch.compile`: 25.5 → 107.0, **4.2×**"
+          - "INT8: → 157.4, **1.5×**"
+          - "INT4: → 202.1, **1.3×**"
+          - "Speculation: → 244.7, **1.2×**"
+          - "Quality was **not measured**."
+        takeaway: Gains multiply but shrink because each step attacks a smaller remaining bottleneck, and order matters.
+        source: notes/08-adaptive-inference.md
+        notes: >-
+          This is where our running model lands. At batch 1 launch overhead dominates eager PyTorch, so compiling gives the largest single gain.
+          After that, each step works on a smaller remaining bottleneck. Huyen notes it was unclear how these steps affected quality, so INT4
+          needs an eval before you ship it. At large batch the picture changes: compile helps less, and speculation may not help. Dynamic
+          precision, early exit and RL tuners remain experiments, and they should ship with a kill switch that reverts to a known-good configuration.
       - layout: code
+        beat: pitfalls
         title: One outlier can crush a whole tensor's precision
         recall: How does absmax quantization work, and what problem do the serious methods all address?
         lang: python
@@ -525,27 +595,8 @@ parts:
           is more than double at small batch and near zero at large batch. How well a model survives 4 bits depends on what it was trained to
           do. Kyutai's 7B Helium scores 52.97 on MMLU against 54.3 at BF16, while the same backbone tuned for speech falls from 49.7 to 42.2
           under the same scheme. So re-run the eval on the checkpoint you will actually serve.
-
-      - layout: image
-        title: Our model's whole journey, 25.5 to 244.7 tokens per second
-        recall: What did compile, INT8, INT4 and speculation each add on Llama-7B, and why did gains shrink?
-        image: ../sources/images/huyen-ai-engineering-fig9-14.png
-        caption: "Llama-7B, A100-80GB, tokens/s per user, batch 1 (PyTorch 2023, via Huyen, Fig. 9-14)"
-        bullets:
-          - "`torch.compile`: 25.5 → 107.0, **4.2×**"
-          - "INT8: → 157.4, **1.5×**"
-          - "INT4: → 202.1, **1.3×**"
-          - "Speculation: → 244.7, **1.2×**"
-          - "Quality was **not measured**."
-        takeaway: Gains multiply but shrink because each step attacks a smaller remaining bottleneck, and order matters.
-        source: notes/08-adaptive-inference.md
-        notes: >-
-          This is where our running model lands. At batch 1 launch overhead dominates eager PyTorch, so compiling gives the largest single gain.
-          After that, each step works on a smaller remaining bottleneck. Huyen notes it was unclear how these steps affected quality, so INT4
-          needs an eval before you ship it. At large batch the picture changes: compile helps less, and speculation may not help. Dynamic
-          precision, early exit and RL tuners remain experiments, and they should ship with a kill switch that reverts to a known-good configuration.
-
       - layout: table
+        beat: fundamentals
         title: An encoder's cost is the shape of its batch
         recall: Why does sorting texts by length speed up an encoder, and what does a token budget give you instead?
         kicker: Serving encoders
@@ -569,8 +620,8 @@ parts:
           only part of it. In a simulated single worker, a 50 ms wait window added about 35 ms at the median, so start at
           zero. Published fp16 and ONNX int8 results pointed the other way from ours on this Apple machine, and int8
           kept 0.916 of the top ten here, so measure on your hardware and test retrieval.
-
       - layout: flow
+        beat: practice
         title: A vision-language model pays before its first token
         recall: Why does a short reply from a vision-language model stay slow, and which setting changes that most?
         kicker: Serving VLMs
@@ -589,8 +640,8 @@ parts:
           GPU and heavy scans could reverse that, so compare both rates. Cached image features saved 60 ms at a 512 edge,
           the only size measured. There is a trap: in Transformers 5.20, a bare list passed as mm_encoder_outputs was
           ignored with no error, and the model answered with no image. So assert the same reply against a fresh pass.
-
       - layout: compare
+        beat: practice
         title: Merge one adapter, and keep many of them apart
         recall: When should you merge a LoRA adapter for serving, and when should you keep it attached?
         kicker: Adapters at serving time
@@ -618,8 +669,8 @@ parts:
           vision models is our inference. vLLM's docs mark adapters on the vision tower as experimental. RunPod's vendor
           benchmark is the other serving note worth reading: on bge-m3 at 512 tokens with TEI, the fastest card was not the
           cheapest per token, and we did not reproduce it. Next, back to language-model kernels.
-
       - layout: code
+        beat: fundamentals
         title: Let a model search for kernels only behind a verifier
         recall: What makes AI-generated kernels safe to use, and what results has the verifier loop produced?
         lang: python
@@ -644,8 +695,8 @@ parts:
           results, and hands over to human review before merge. Watch the baseline: two times FlexAttention on an exotic mask is not two times the
           best hand-written kernel. The 40 percent figure means most generated kernels are wrong. That is fine inside a verified search loop and
           dangerous anywhere else.
-
       - layout: steps
+        beat: practice
         title: "Monday: walk the checklist in order, measuring each step"
         recall: In what order do you walk the inference checklist?
         steps:
@@ -668,6 +719,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb for inference engineering
         recall: "How do you approach an inference problem, and when do you re-run evals?"
         cards:
@@ -682,8 +734,8 @@ parts:
         notes: >-
           If you remember one chain from today: decode is bandwidth-bound, so batching, disaggregation, quantization and speculation are all
           different answers to one sum, the one we did for 700 GB per second at the start.
-
       - layout: bullets
+        beat: wrap
         title: Where to go next
         recall: Which pillars connect to inference engineering, and where do the labs live?
         bullets:

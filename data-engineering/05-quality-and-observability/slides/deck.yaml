@@ -14,12 +14,63 @@ deck:
     truth. By the end we will have caught all five, and repaired them with a backfill that is safe to run twice.
 
 parts:
+  - title: What this lecture answers
+    overview: true
+    summary: The question · Five parts · What you will be able to do
+    notes: >-
+      Before any tool, here is the one question this lecture keeps asking and the five parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: How do you find out the data is wrong first?
+        recall: What question does every part of this lecture ask?
+        kicker: The idea
+        statement: "A quarter of taxi trips runs green while five faults sit in March. Nothing in the code reads what the data says."
+        attribution: One quarter of synthetic taxi trips, with five faults planted in March
+        takeaway: Data fails silently, so the checks have to judge the data itself, against rules and against its own history.
+        source: README.md
+        notes: >-
+          Each stage trusts the one before it, so the first alarm is usually a stakeholder holding a wrong number. We plant the faults ourselves so that every check can be scored against the truth.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five parts from a rule to an on-call page
+        recall: What are the five parts of this lecture, in order?
+        steps:
+          - {label: Rules, sub: "tests on a batch"}
+          - {label: History, sub: "monitors and lineage"}
+          - {label: Repair, sub: "contain and backfill"}
+          - {label: Live store, sub: "migrate and restore"}
+          - {label: Ship, sub: "deploys and paging", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, then **applies** it."
+          - "Each part ends on the mistake it usually produces."
+        takeaway: The first three parts find and repair wrong data, and the last two keep the running store and the delivery path safe.
+        source: README.md
+        notes: >-
+          The taxi feed runs through the first three parts. The last two use their own benches, a real Postgres under load and a small dbt project.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do.
+        cards:
+          - {title: Test, body: "Turn each meaning of good data into a query with a stated tolerance, in SQL, Great Expectations and dbt."}
+          - {title: Monitor, body: "Catch what no rule anticipated, and say what a bad table touched."}
+          - {title: Repair, body: "Stop the spread, then fix it with a backfill that is safe to run twice."}
+          - {title: Operate, accent: "D4621A", body: "Change a live table, restore it, and ship a change with someone told when the data is late."}
+        takeaway: You will be able to catch a fault, bound its damage, repair it safely and keep the store and the pipeline running.
+        source: README.md
+        notes: >-
+          The abilities follow the questions in the reading-order table. The next pillar picks up what a model needs from the platform.
+
   - title: Testing against rules
     summary: Dimensions · Tests · Tolerances · Great Expectations and dbt
     notes: >-
       We start with what good data means, and turn each meaning into a query. Then we see how far that gets us.
     slides:
       - layout: statement
+        beat: problem
         title: Green pipeline, wrong numbers
         kicker: The problem
         statement: "A pipeline fails when code fails. Nothing in the code reads what the data says."
@@ -31,6 +82,7 @@ parts:
           Sculley and colleagues point out that static analysis finds code dependencies, and nothing equivalent exists
           for data. So a broken data dependency runs without complaint. That is the gap this pillar closes.
       - layout: table
+        beat: problem
         title: Five faults planted in one feed
         recall: "Why plant synthetic faults in a feed?"
         header: [Date, Fault, Likely real cause]
@@ -48,6 +100,7 @@ parts:
           The data is synthetic on purpose. With real data you never know what you missed. With planted faults we can
           keep score, and the scoreboard is the thread through the whole session.
       - layout: cards
+        beat: fundamentals
         title: Good data has six meanings
         recall: Which dimension can no query on the table alone ever test?
         cards:
@@ -63,6 +116,7 @@ parts:
           Schelter and colleagues name completeness, consistency and accuracy as the most common. Practitioners split
           them further, because each split needs a different check. The names vary. The questions are what matter.
       - layout: code
+        beat: practice
         title: A test is a query that should return nothing
         recall: "What happens to a hard rule on a soft fact?"
         lang: python
@@ -86,6 +140,7 @@ parts:
           Normal days carry about 0.2 percent null fares. A hard not-null would fail nearly every day and be silenced
           within a week. Great Expectations has this built in, as the mostly parameter.
       - layout: compare
+        beat: practice
         title: Great Expectations and dbt find the same faults
         recall: "When do you use dbt for data tests, and how many homes should a rule have?"
         left:
@@ -106,6 +161,7 @@ parts:
           We ran both. Great Expectations 1.24 flagged the null spike and the duplicates, and passed the unit change
           because a median of 3.8 fits inside a range that looked generous. dbt found 2,947 duplicate keys.
       - layout: flow
+        beat: fundamentals
         title: Each gate covers what the last cannot
         recall: "What does write-audit-publish do that a report afterwards cannot?"
         steps:
@@ -121,6 +177,7 @@ parts:
           Not every failure should block. Finance numbers and training sets should. A dashboard people glance at may be
           better served by a warning, since a stale chart is a failure too. Decide per table.
       - layout: table
+        beat: pitfalls
         title: Rules caught two of five
         recall: "Why can no rule within a batch catch the faults the rules missed?"
         header: [Fault, Rule tests, Reconciliation]
@@ -145,6 +202,7 @@ parts:
       Monitors compare today with the past, so they find failures nobody thought to write a rule for.
     slides:
       - layout: statement
+        beat: problem
         title: The alert cleared and the data was still missing
         kicker: The problem
         statement: "On 12 March the freshness alert went quiet. The 10 March partition had never arrived."
@@ -155,6 +213,7 @@ parts:
           The newest record was never the problem. There is a hole behind it. Once a newer partition lands, the max of
           loaded_at looks healthy and the alert clears. dbt source freshness has the same blind spot.
       - layout: code
+        beat: fundamentals
         title: Age alone clears too early
         recall: "How does a spine check differ from an age check after a gap?"
         lang: text
@@ -176,6 +235,7 @@ parts:
           Read the two columns together. The late partition shows the same pattern: the alert clears on the 17th, a
           full day before the data appears on the 18th.
       - layout: table
+        beat: pitfalls
         title: Same-weekday median sees what three sigma misses
         recall: "Why does a naive three-sigma check let a quarter of the data vanish unseen?"
         lead: "Share of days detected, synthetic feed."
@@ -196,6 +256,7 @@ parts:
           46 normal days and counted detections. These figures describe this synthetic feed. Run the same injection on
           your own history before you trust a threshold.
       - layout: compare
+        beat: fundamentals
         title: Threshold on effect size, not on the p-value
         recall: Why would a chi-squared alarm get worse with more data?
         left:
@@ -217,6 +278,7 @@ parts:
           The second column is Breck and colleagues at MLSys 2019. With 3,000 rows a day our p-values still behave. The
           habit to form is a threshold on the effect, and a fixed reference, since a rolling one learns the bug.
       - layout: flow
+        beat: practice
         title: Monitoring is itself a pipeline
         recall: "How do you key monitoring metrics so a backfill replaces instead of adds?"
         steps:
@@ -234,6 +296,7 @@ parts:
           The zoomcamp stack is Evidently, Postgres and Grafana. Prediction drift is the first model alarm to wire up when
           labels arrive late, because it needs no ground truth. Ours jumped from 0.022 to 0.679 on the unit change.
       - layout: code
+        beat: practice
         title: Lineage answers what this touched
         recall: "What does lineage plus run history turn an incident into?"
         lang: python
@@ -262,6 +325,7 @@ parts:
       A monitor has fired. What happens in the next hour decides whether this costs a morning or a quarter's trust.
     slides:
       - layout: statement
+        beat: problem
         title: Wrong data stays wrong after the cause is fixed
         kicker: The problem
         statement: "A service outage ends when the service returns. Wrong data keeps being read, and spreads."
@@ -272,6 +336,7 @@ parts:
           The incident practice here comes from Google's SRE book, which describes services. The adaptation to data is
           engineering judgment, and we have marked the chapter's confidence as medium for that reason.
       - layout: flow
+        beat: fundamentals
         title: Contain before you diagnose
         recall: "Do you need to know the cause before you stop a dashboard showing bad data?"
         steps:
@@ -287,6 +352,7 @@ parts:
           The priority order is from the SRE book, chapter 14. Preserving evidence has a specific meaning for us: if you
           fix raw files in place, you have destroyed the only record of what the source sent.
       - layout: cards
+        beat: fundamentals
         title: One group changes the tables
         recall: "Why make incident roles explicit on a small team?"
         cards:
@@ -300,6 +366,7 @@ parts:
           The commander holds any role not delegated, and keeps a living incident document. The book's test for declaring:
           a second team is needed, customers can see it, or it is unsolved after an hour's concentrated work.
       - layout: code
+        beat: practice
         title: A backfill must be safe to run twice
         recall: "How do you make a backfill safe to run twice?"
         lang: python
@@ -323,6 +390,7 @@ parts:
           An appending job turns a repair into a second incident. In a warehouse, the equivalent is a merge or partition
           overwrite. Corrections live in a view above raw, with a dated row and a ticket number.
       - layout: table
+        beat: practice
         title: Five faults, five runbook pages
         recall: "What is a playbook, and why keep it short?"
         header: [Fault, Contain, Repair, Prevent]
@@ -339,7 +407,21 @@ parts:
         notes: >-
           Two repairs cannot be finished from our side. 10 March and the fares on 5 March were never sent. You re-request
           them or publish a labelled estimate. An imputed value presented as repaired is a new fault.
+      - layout: cards
+        beat: pitfalls
+        title: Four ways a repair goes wrong
+        recall: What are four ways a repair goes wrong?
+        cards:
+          - {title: Blast radius skipped, body: "The mart looks right and the feature table downstream does not. Walk the lineage to the end.", accent: 0F7490}
+          - {title: Gaps filled silently, body: "An interpolated day looks real downstream. Mark it missing or label an estimate.", accent: 0EA5C9}
+          - {title: Retrain as reflex, body: "A retrain on bad data bakes the fault into the model. Fix the inputs first.", accent: 5B21B6}
+          - {title: Closing at first green, body: "Job success says nothing about the data. Close when the checks that fired are quiet.", accent: D4621A}
+        takeaway: A repair is finished when the blast radius is walked to the end, any filled gap is labelled and the checks that fired are quiet.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          These sit beside the three already shown, which are fixing raw in place, a repair job that cannot run twice and diagnosing before containing. Communication belongs here too: say what is wrong before people find it themselves.
       - layout: bullets
+        beat: fundamentals
         title: A postmortem pays for the incident
         recall: "What is the only return on an incident?"
         bullets:
@@ -360,6 +442,7 @@ parts:
       change it, restore it and run it out of connections.
     slides:
       - layout: statement
+        beat: problem
         title: A one-millisecond ALTER stops the reads
         kicker: The problem
         statement: "An `ALTER` that needs a millisecond stalled reads for 2,003 ms."
@@ -372,6 +455,7 @@ parts:
           behind the ALTER even though they do not conflict with the report. The price of the timeout is that the ALTER
           did not happen, so the migration has to retry. Set it per session, not in postgresql.conf.
       - layout: table
+        beat: fundamentals
         title: Split the slow work from the strong lock
         lead: "Worst stall seen by a small application. Postgres 16.2, 2,000,000-row table, on a laptop."
         recall: "How do you keep a slow migration step from stalling the application?"
@@ -390,6 +474,7 @@ parts:
           failed concurrent build leaves an INVALID index to drop. And a backfill alone is wrong on a live table: 1,932 rows
           came out wrong because the application kept writing, until a trigger and a repair pass took that to zero.
       - layout: flow
+        beat: fundamentals
         title: Expand, migrate, contract
         recall: "How do you rename a column while old and new code both run?"
         steps:
@@ -409,6 +494,7 @@ parts:
           rollback is a restore from backup. A warehouse move is the same pattern: in our DuckDB simulation with a one-hour
           session difference planted, totals agreed to the cent and no day of 367 matched, so compare per partition and key.
       - layout: code
+        beat: practice
         title: Only a restore proves a backup
         recall: "How do you know a backup works?"
         lang: text
@@ -431,6 +517,7 @@ parts:
           records the time, which is your measured recovery time. A dump loses everything since: with a base backup and
           archived WAL, our recovery to just before a bad DELETE brought all 5,000 orders back on a new timeline.
       - layout: compare
+        beat: practice
         title: 100 clients, 30 connections
         recall: "What does a pool change when clients outnumber connections?"
         left:
@@ -453,6 +540,7 @@ parts:
           1.27 ms against 0.02 ms for reuse, on a local socket with no TLS, so the real gap is larger. PgBouncer was read
           about and not run. Its transaction mode breaks session state such as SET lock_timeout, so run migrations directly.
       - layout: table
+        beat: pitfalls
         title: What grows when no new data arrives
         lead: "Measured on Postgres 16.2 on a laptop, with autovacuum off for the demonstration."
         recall: "Why can a Postgres table or disk grow while no new data arrives?"
@@ -478,6 +566,7 @@ parts:
       the page that wakes someone.
     slides:
       - layout: statement
+        beat: problem
         title: Correct models, wrong numbers
         kicker: The problem
         statement: "A data team can write correct models and still ship wrong numbers."
@@ -490,6 +579,7 @@ parts:
           a real comparison, since one stores and computes and the other schedules. DataOps sits across the layers, and it
           changes how each one gets changed.
       - layout: flow
+        beat: fundamentals
         title: A change reaches production through its own schema
         recall: "How do you stop a bad model reaching production without rebuilding everything?"
         steps:
@@ -509,6 +599,7 @@ parts:
           beside the old version, audit, and swap a view, which took about a millisecond on a local file. Terraform was modelled
           and not run: read every plan for destroys, since some edits replace the resource, and rotate any secret that reaches git.
       - layout: code
+        beat: practice
         title: Spend a budget, page on the symptom
         recall: "What should page someone about late batches, and what should not?"
         lang: text
@@ -531,6 +622,19 @@ parts:
           An error budget is one minus the target, and the policy for spending it is agreed in advance. The symptom rule is 2 of
           the last 6 batches late. Burn-rate thresholds from the SRE workbook do not fit here, because one batch is 15% of the
           budget. A target has to come from what users need, and these numbers do not tell you what yours should be.
+      - layout: cards
+        beat: pitfalls
+        title: Four habits that make DataOps decorative
+        recall: What are four ways DataOps checks become decorative?
+        cards:
+          - {title: Optional checks, body: "A failing check that can still be merged gets merged. Require it.", accent: 0F7490}
+          - {title: Small-sample CI, body: "A day of data passes a test that a year would fail. Know what CI does not cover.", accent: 0EA5C9}
+          - {title: An SLO nobody uses, body: "If missing it changes nothing, it is a dashboard. Agree the policy first.", accent: 5B21B6}
+          - {title: Alerts on causes, body: "They grow with the system and teach people to ignore them. Page on symptoms.", accent: D4621A}
+        takeaway: A check that can be merged past, an SLO with no policy and an alert on a cause are all ignored in time, so require the check, agree the policy and page on the symptom.
+        source: notes/06-dataops.md
+        notes: >-
+          The note lists ten pitfalls. These four are the ones that undo what the slides above set up.
 
   - title: Rules of thumb
     summary: What to keep
@@ -538,6 +642,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb
         recall: "What finds a data fault, what bounds it, and what repairs it?"
         cards:
@@ -553,6 +658,7 @@ parts:
           If you keep one habit, make it the last one. Almost everything else can be improved during an incident, but a
           job that doubles the mart on a rerun cannot.
       - layout: bullets
+        beat: wrap
         title: Where next
         bullets:
           - "Read: the chapters in `notes/`, then `references.md`"

@@ -17,6 +17,57 @@ deck:
     it has to run somewhere, and eventually it can spend money.
 
 parts:
+  - title: Where the agent goes wrong
+    overview: true
+    summary: The question · Six steps · What you will be able to do
+    notes: >-
+      Before any mechanics, here is the one question this lecture keeps asking and the six steps we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Can we let the model act on its own?
+        recall: What question does every part of this lecture ask about the restock agent?
+        kicker: The idea
+        statement: "A restock agent starts as one model call that orders 300 units of itemB. Every step we add to it, tools, memory, a second agent, a framework, a spending limit, is another place for it to go wrong."
+        attribution: "The restock agent, from Generative AI Design Patterns, ch. 1"
+        takeaway: Agent = Model + Context + Tools, run in a loop, and everything else in this lecture manages one of those three across many steps.
+        source: README.md
+        notes: >-
+          We follow one restock agent through six parts. Each part finds out what is wrong with the version before it, states the rule that fixes it, and applies the rule to the agent.
+
+      - layout: flow
+        beat: fundamentals
+        title: Six steps from one model call to an agent you can trust
+        recall: In what order does this lecture add things to the restock agent?
+        steps:
+          - {label: Check, sub: "arithmetic, not trust"}
+          - {label: Act, sub: "tools and the loop"}
+          - {label: Remember, sub: "memory tiers"}
+          - {label: Collaborate, sub: "teams and stops"}
+          - {label: Run, sub: "frameworks, harness"}
+          - {label: Limit, sub: "guardrails", accent: "D4621A"}
+        bullets:
+          - "Each step opens with **a failure of the version before it**."
+          - "Each step ends on the mistake it usually produces."
+        takeaway: Each step fixes a failure of the one before it, and the last step is the one that keeps an agent that can spend money inside a limit.
+        source: README.md
+        notes: >-
+          The order follows the README's four questions: how does a model act, how does it remember, how do agents work together, and how do you keep it safe. The framework part sits between the last two.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with an agent.
+        cards:
+          - {title: Act, body: "Explain how a model acts: it emits a tool call, and your code runs it and returns the result."}
+          - {title: Remember, body: "Say how an agent edits its own memory with tool calls and pages old context out to databases."}
+          - {title: Collaborate, body: "Set up agent conversations with stop conditions, and say when one agent is enough."}
+          - {title: Limit, accent: "D4621A", body: "Lower the risk first, then filter, gate actions in code and keep people at the irreversible points."}
+        takeaway: You will be able to say how an agent acts, remembers and works with others, and how to keep it inside a limit.
+        source: README.md
+        notes: >-
+          These are the four questions in the pillar README. The frameworks themselves, LangGraph and Google ADK, come in the next pillar.
+
   - title: A model is not yet an agent
     summary: The restock example · Model, context, tools · The ablation · When not to build an agent
     notes: >-
@@ -24,6 +75,7 @@ parts:
       and also the rule for when not to build one.
     slides:
       - layout: statement
+        beat: problem
         title: The model ordered 300 units. Was that right?
         kicker: The problem
         statement: "Asked to order just in time, a model orders 300 of itemB and explains why. The explanation sounds fine. Nothing in the system can tell you whether it is."
@@ -36,6 +88,7 @@ parts:
           because the same input can yield a different plan on another run.
 
       - layout: code
+        beat: fundamentals
         title: Check the order with arithmetic the model cannot argue with
         recall: What does a plain-code check of the restock order reveal?
         lang: text
@@ -62,6 +115,7 @@ parts:
           an independence assumption, which is a simplification. Huyen makes the same compound-error point in AI Engineering, chapter 6.
 
       - layout: image
+        beat: fundamentals
         title: "Agent = Model + Context + Tools, run in a loop"
         recall: What are the parts of an agent?
         image: ../sources/images/li-ai-agents-in-depth-fig1-1.svg
@@ -77,6 +131,7 @@ parts:
           Multi-agent splits context across roles. A harness is the code around the model.
 
       - layout: table
+        beat: practice
         title: Remove a part and watch what breaks
         recall: What happens to an agent if you remove its tool results?
         header: [Removed, Observed failure]
@@ -94,7 +149,34 @@ parts:
           This is Experiment 1-1 in Li's book, which removes one part at a time. The tool-results row had been seen on robots before ReAct:
           Inner Monologue showed that writing success feedback back into the prompt is what closes the loop.
 
+      - layout: code
+        beat: practice
+        title: The whole agent in one screen
+        recall: What must a minimal agent loop contain besides the model call?
+        lang: python
+        code: |
+          for step in range(max_steps):
+              reply = model(messages, tools=TOOLS)
+              messages.append(reply)
+              if not reply.tool_calls:
+                  return reply.text
+              for call in reply.tool_calls:
+                  result = TOOLS[call.name](**call.args)
+                  messages.append(tool_result(call, result))
+          # out of budget: ask for a wrap-up, no tools
+          return model(messages, tools=[]).text
+        bullets:
+          - "**Results go back in:** that is the feedback."
+          - "**The cap is not optional:** agents rarely stop on their own."
+          - "**Make the last step a wrap-up,** not a silent cutoff."
+        takeaway: A minimal agent is a capped loop that runs tool calls and feeds back the results, ending in a wrap-up rather than a silent cutoff.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          This is a condensed form of the runnable block in note 01, which uses a scripted model so that it runs offline.
+          Note 02 shows the same loop against the Messages API with a stub client. No framework is needed to understand any of this.
+
       - layout: compare
+        beat: pitfalls
         title: Climb the ladder only as far as you need
         recall: When should you use a workflow rather than an autonomous agent?
         emphasis: left
@@ -123,6 +205,7 @@ parts:
           Our restock calculation is plain code. The judgment around suppliers is what might justify a model.
 
       - layout: code
+        beat: fundamentals
         title: Every step re-reads everything before it
         recall: Why does an agent run cost more than its step count suggests?
         lang: text
@@ -146,6 +229,7 @@ parts:
           The model assumes every run uses all its steps. A real cap stops early finishers sooner, so measure your own step distribution.
 
       - layout: table
+        beat: practice
         title: Price the run, then divide by how often it succeeds
         recall: What is cost-of-pass?
         header: [Backbone on GAIA, Accuracy, Cost per solved task]
@@ -164,6 +248,7 @@ parts:
           One to three points on this sample is noise.
 
       - layout: image
+        beat: fundamentals
         title: An agent can change itself at three timescales
         recall: In what three ways does an agent learn?
         image: ../sources/images/li-ai-agents-in-depth-fig1-2.svg
@@ -180,6 +265,7 @@ parts:
           CoALA ranks the risk: a bad prompt or skill update can break the agent, which is far riskier than appending a fact.
 
       - layout: table
+        beat: practice
         title: Reward-filtered self-training beat more expert data
         recall: Why train an agent on its own successful rollouts?
         header: [AgentGym task, Cloned on experts, After AgentEvol]
@@ -197,11 +283,12 @@ parts:
           DPO on success and failure pairs did worse than successes alone on all four tasks tested. Our toy in note 01c shows the same mechanism in a few lines.
 
   - title: A model cannot touch anything
-    summary: The tool-call mechanism · The raw loop · Limits of reasoning · Reliable tools · Injection
+    summary: The tool-call mechanism · Limits of reasoning · Written plans · Reliable tools · Injection
     notes: >-
       Our agent needs current stock, not a pasted table. Yet a model only writes text. So how does anything get done?
     slides:
       - layout: statement
+        beat: problem
         title: How does a text generator place an order?
         kicker: The problem
         statement: "It does not. The model proposes a call as text. Your code decides whether and how to run it."
@@ -213,6 +300,7 @@ parts:
           Toolformer called this tool use; OpenAI and Gemini call it function calling. The mechanism is the same.
 
       - layout: flow
+        beat: fundamentals
         title: Four steps under every framework
         recall: What are the four steps of a tool call?
         steps:
@@ -227,32 +315,8 @@ parts:
           Client, model, client, client. Only one of the four steps is the model. ReAct is this loop with the reasoning written out
           between calls, and it is why the loop has a name in the literature.
 
-      - layout: code
-        title: The whole agent in one screen
-        recall: What must a minimal agent loop contain besides the model call?
-        lang: python
-        code: |
-          for step in range(max_steps):
-              reply = model(messages, tools=TOOLS)
-              messages.append(reply)
-              if not reply.tool_calls:
-                  return reply.text
-              for call in reply.tool_calls:
-                  result = TOOLS[call.name](**call.args)
-                  messages.append(tool_result(call, result))
-          # out of budget: ask for a wrap-up, no tools
-          return model(messages, tools=[]).text
-        bullets:
-          - "**Results go back in:** that is the feedback."
-          - "**The cap is not optional:** agents rarely stop on their own."
-          - "**Make the last step a wrap-up,** not a silent cutoff."
-        takeaway: A minimal agent is a capped loop that runs tool calls and feeds back the results, ending in a wrap-up rather than a silent cutoff.
-        source: notes/01-agent-fundamentals.md
-        notes: >-
-          This is a condensed form of the runnable block in note 01, which uses a scripted model so that it runs offline.
-          Note 02 shows the same loop against the Messages API with a stub client. No framework is needed to understand any of this.
-
       - layout: table
+        beat: pitfalls
         title: What reasoning steps cannot fix
         recall: Which failures does chain of thought not fix?
         header: [CoT fails on, Their example, The fix]
@@ -270,6 +334,7 @@ parts:
           which is meaningless. So well-formed steps are not evidence of a correct answer.
 
       - layout: compare
+        beat: fundamentals
         title: Write the plan down, and name the tool in each step
         recall: Why put tool names in a plan?
         emphasis: right
@@ -295,6 +360,7 @@ parts:
           The zero-shot version is Plan-and-Solve. Test any planning prompt on the model you will deploy.
 
       - layout: code
+        beat: practice
         title: A plan with dependencies runs in two waits, not nine
         recall: When does a plan DAG pay?
         lang: text
@@ -317,6 +383,7 @@ parts:
           What the plan gives up is adaptation: if get_stock fails, nothing downstream runs.
 
       - layout: cards
+        beat: fundamentals
         title: What makes tool calls reliable
         recall: Name four rules for reliable tool calls.
         cards:
@@ -335,6 +402,7 @@ parts:
           And if every query should start with a search, build that tool call in code and do not spend a model call deciding it.
 
       - layout: table
+        beat: pitfalls
         title: Tool output is untrusted input
         recall: What are the six prompt-injection design patterns?
         header: [Pattern, Idea]
@@ -360,6 +428,7 @@ parts:
       Long context is expensive and finite, so what should it keep?
     slides:
       - layout: image
+        beat: problem
         title: The supplier changed delivery times. It forgot.
         kicker: The problem
         recall: How does MemGPT treat the context window?
@@ -376,6 +445,7 @@ parts:
           Memory theory itself is in context engineering note 06. This note covers what MemGPT and Letta add.
 
       - layout: code
+        beat: fundamentals
         title: A core that fills up, an archive that must be searched
         recall: What does a self-editing memory do when core memory is full?
         lang: text
@@ -403,6 +473,7 @@ parts:
           Agents do not save or search by default, so the system prompt has to say when.
 
       - layout: compare
+        beat: pitfalls
         title: Skills did not beat plain history in context
         recall: Do skill libraries beat keeping the history in context?
         emphasis: none
@@ -429,6 +500,7 @@ parts:
           Recuris found a verified task-state tracker worth +23.9 points where ten distilled skills added +2.0, with an interval that included zero.
 
       - layout: table
+        beat: practice
         title: What transfers is the insight, not the trajectory
         recall: What transfers across tasks, trajectories or insights?
         header: [Memory format, Average Pass@3]
@@ -448,6 +520,7 @@ parts:
           The differences are a few points on 100-task subsets with no intervals. Promote a lesson to a skill only after it has worked twice, as MSCE does.
 
       - layout: compare
+        beat: pitfalls
         title: Does curating memory pay? Often not
         recall: Does agent-curated memory beat a verbatim store?
         emphasis: left
@@ -473,6 +546,7 @@ parts:
           A-MEM takes the safe route: it evolves links and index fields and never rewrites content. Video and audio have no verbatim record, so there the writer has to extract something.
 
       - layout: bullets
+        beat: fundamentals
         title: Tools let it manage memory, not know when to
         recall: What four things do you control in a memory agent?
         bullets:
@@ -496,6 +570,7 @@ parts:
       A reviewer would catch a bad order. So we add one. Now we have a conversation that may not end, and costs that grow faster than agents.
     slides:
       - layout: statement
+        beat: problem
         title: Should we just add a reviewer agent?
         kicker: The problem
         statement: "Cemri et al. found 40–80% of tasks failing in the multi-agent systems they studied. No single cause dominated."
@@ -507,6 +582,7 @@ parts:
           The AutoGen course teaches each with one lesson, and that is the source of the conversation primitives in note 04.
 
       - layout: code
+        beat: fundamentals
         title: A conversation needs three kinds of stop
         recall: What three stops does a multi-agent conversation need?
         lang: text
@@ -533,6 +609,7 @@ parts:
           The transition check is the group-chat lesson: a graph forbids what a prompt can only discourage.
 
       - layout: compare
+        beat: pitfalls
         title: A critic picks worse than counting votes
         recall: Does self-critique beat sampling at equal compute?
         emphasis: right
@@ -559,6 +636,7 @@ parts:
           Du et al.'s own vote baseline got 81.0 on GSM8K against debate's 85.0, so half of debate's gain over one agent is what voting already gives.
 
       - layout: table
+        beat: practice
         title: A mixed team with a protocol can beat the vote
         recall: When has a team beaten the vote?
         header: [Setup on competition math, Average]
@@ -578,6 +656,7 @@ parts:
           Matching was by candidate count, not tokens, and the offline strategy search is not counted. Marjanovic et al. found that voting across 23 unequal models mostly added wrong answers.
 
       - layout: table
+        beat: practice
         title: Count the calls before you search over plans
         recall: How does Tree of Thoughts cost scale?
         header: [Depth, Thoughts, Width, LLM calls]
@@ -595,6 +674,7 @@ parts:
           A search is only as good as its scorer. Graph of Thoughts adds merging, and repairing a failed plan node often beats replanning.
 
       - layout: image
+        beat: fundamentals
         title: Pick the topology by who needs to talk
         recall: Which multi-agent topologies are common?
         image: ../sources/images/learning-langchain-fig7-3.png
@@ -609,6 +689,7 @@ parts:
           Koenigstein's table compares supervisor, hierarchical and swarm. The running rule from the note is to prefer shared state to messages for facts, since one block edit beats N messages.
 
       - layout: compare
+        beat: pitfalls
         title: Same model in every role? Try one agent first
         recall: When does a single agent match a multi-agent workflow?
         emphasis: left
@@ -640,8 +721,10 @@ parts:
       The agent works on a laptop. Now the order has to wait for a person, restart cleanly, talk to a supplier's system, and carry a growing policy.
     slides:
       - layout: statement
+        beat: problem
         title: Which framework, and what around it?
         kicker: The problem
+        revisits: true
         statement: "Most agent failures are configuration failures, the course argues: tools, prompts and guardrails, not the model."
         attribution: "Google × Kaggle, 5-Day AI Agents Intensive, Day 1. A framing, not a measurement"
         takeaway: The engineering leverage sits mostly around the model, so choose a framework for its control flow and invest in what surrounds the loop.
@@ -650,6 +733,7 @@ parts:
           Agent equals model plus harness. Treat the claim as the course's framing. It does match the pattern in this pillar: the demo is the easy part.
 
       - layout: table
+        beat: fundamentals
         title: Pick a framework by what you program
         recall: How do agent frameworks differ?
         header: [Framework, You program, Lean toward it for]
@@ -669,6 +753,7 @@ parts:
           LangGraph or AutoGen for production control. Many teams build directly on provider APIs.
 
       - layout: code
+        beat: practice
         title: One approval, two orders
         recall: Why must a side effect not share a node with an interrupt?
         lang: python
@@ -695,6 +780,7 @@ parts:
           Note 05 models this rule in plain Python so that it runs without LangGraph, and these outputs are from that run. Koenigstein states the side-effect rule in chapter 2 of the Definitive Guide.
 
       - layout: flow
+        beat: fundamentals
         title: The harness across the lifecycle
         recall: Where does the harness sit across the lifecycle?
         steps:
@@ -713,6 +799,7 @@ parts:
           From the Day 1 whitepaper. Depth is in the harness engineering pillar. Agents reduce capital expenditure, the upfront cost of building something, but operational expenditure remains.
 
       - layout: code
+        beat: practice
         title: Load a skill only when the task matches
         recall: What is progressive disclosure?
         lang: text
@@ -734,6 +821,7 @@ parts:
           It does not provide parallelism, context isolation, reviewer independence or separate permissions, which note 04 still needs.
 
       - layout: table
+        beat: pitfalls
         title: A correct answer can hide a bad process
         recall: Why evaluate the trajectory as well as the output?
         header: [Run, Output correct, Trajectory correct]
@@ -756,6 +844,7 @@ parts:
       Sooner or later the agent places a real order. A line in the system prompt saying do not exceed 500 is a request, not a limit. So what actually enforces one?
     slides:
       - layout: statement
+        beat: problem
         title: Does telling it the limit enforce the limit?
         kicker: The problem
         statement: "A prompt restriction is not a permission. Swap the prompt, and the same SQL agent runs the writes it refused before."
@@ -766,6 +855,7 @@ parts:
           LangChain's default SQL-agent prompt stops it from running INSERT, UPDATE or DELETE. With a custom prefix and an unrestricted connection the same agent runs them. The limit has to live in the credentials.
 
       - layout: steps
+        beat: fundamentals
         title: Lower the risk before you filter it
         recall: What are the four patterns for lowering output risk, from least to most risk?
         steps:
@@ -784,6 +874,7 @@ parts:
           Low token probability marks where a model had alternatives, so it routes to review rather than rejecting. The book's Vectara numbers show hallucination falling but not vanishing, even on summarization.
 
       - layout: code
+        beat: practice
         title: The gate is ordinary code
         recall: Where should a high-risk tool call be gated?
         lang: python
@@ -810,6 +901,7 @@ parts:
           Keep approval for the irreversible, or approval fatigue sets in.
 
       - layout: flow
+        beat: pitfalls
         title: Controls sit on three positions
         recall: Where do guardrails sit around an agent?
         steps:
@@ -828,6 +920,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb
         recall: What rules of thumb summarize agentic foundations?
         cards:
@@ -849,6 +942,7 @@ parts:
           Each of these undoes a failure of the restock agent from earlier in the lecture. The full table is in the pillar README.
 
       - layout: bullets
+        beat: wrap
         title: Where to go next
         recall: Which pillar follows agentic foundations?
         bullets:

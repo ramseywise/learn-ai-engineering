@@ -15,6 +15,56 @@ deck:
     an agent whose cost is bounded and end with where the agent sits beside a person.
 
 parts:
+  - title: What would prove it wrong
+    overview: true
+    summary: The question · Five parts · What you will be able to do
+    notes: >-
+      Before any build, here is the one question this lecture keeps asking of every agent, and the five parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        title: What would prove this answer wrong, and who checks?
+        recall: What question does every part of this lecture ask of an agent?
+        kicker: The idea
+        statement: "An agent can finish a real task and still be wrong. What would prove its answer wrong, and who checks?"
+        attribution: Tests, recomputation, a reference report and a person are all answers to the same question.
+        takeaway: "Models change every few months, but the decisions stay: how much autonomy, what limits, what counts as done and who checks it."
+        source: README.md
+        notes: >-
+          Each part builds an application and then attacks its judge. The question stays the same, and the answer gets stricter as we go.
+
+      - layout: flow
+        beat: fundamentals
+        title: Five parts, each with a stricter judge
+        recall: In what order does this lecture move from a bounded agent to the person who uses it?
+        steps:
+          - {label: Open the loop, sub: "fixed graph to research loop"}
+          - {label: Add a clock, sub: "voice and screens"}
+          - {label: Add a judge, sub: "tests that can say no"}
+          - {label: Check the numbers, sub: "a correct query, a wrong answer"}
+          - {label: Meet the user, sub: "where the agent sits", accent: "D4621A"}
+        bullets:
+          - "Each part opens with **the idea**, states **the principle**, applies it, then shows **where it fails**."
+          - "The coding and data labs run offline, with a scripted model."
+        takeaway: The parts run from a bounded agent to the person who has to trust it, and each adds a stricter check on the answer.
+        source: README.md
+        notes: >-
+          The story in the README is one paragraph: bound the cost, open the loop, add a clock, then add a judge, then place the agent next to a person.
+
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do when you build an agent.
+        cards:
+          - {title: Choose, body: "Use a fixed graph for a known shape, and a capped loop with compaction for open work."}
+          - {title: Limit, body: "Enforce limits in the tools, and say what each sandbox layer stops and what it does not."}
+          - {title: Verify, body: "Believe the test run, not the sentence. Agree the metric, then recompute the number."}
+          - {title: Place, accent: "D4621A", body: "Pick where the agent sits, and show evidence a person can check."}
+        takeaway: You will be able to decide how much path the model owns, what limits hold, and what check could prove an answer wrong.
+        source: README.md
+        notes: >-
+          The abilities are the README's rules of thumb, grouped into four.
+
   - title: Open the loop
     summary: Fixed graph · Router node · Open loop · Compaction · Judging a report
     notes: >-
@@ -23,6 +73,7 @@ parts:
       and in having to judge the output.
     slides:
       - layout: statement
+        beat: problem
         title: How much of the path should the model choose?
         kicker: The problem
         statement: "Every step the model chooses is a step you cannot budget, test or replay in advance."
@@ -34,6 +85,7 @@ parts:
           owns the path. We will see a fixed graph first, and then what we get and what we pay by opening it.
 
       - layout: flow
+        beat: fundamentals
         title: A fixed graph decides first, then works section by section
         recall: In the internet search agent, what does the workflow graph do, in order, and what bounds its cost?
         steps:
@@ -52,6 +104,7 @@ parts:
           purpose. You give up flexibility and get one trace per step, plus state you can inspect per node.
 
       - layout: code
+        beat: practice
         title: The open loop is one while statement
         recall: What ends the minimal agent loop in the deep-research bot, and what must you add to it for long runs?
         lang: python
@@ -78,6 +131,7 @@ parts:
           of this with real output.
 
       - layout: table
+        beat: practice
         title: Read each new research agent by asking which part it changed
         recall: What did TTD-DR, Open Deep Search and SFR-DeepResearch each change about the loop, and how far do you trust the numbers?
         header: [Part changed, Paper, "Reported, in the authors' own setup"]
@@ -95,6 +149,7 @@ parts:
           because its figures survived code review and replication, and they are small.
 
       - layout: compare
+        beat: pitfalls
         title: A research report has no test suite, so you need a judge
         recall: How does RACE score a report, and why is an LLM judge in the training loop risky?
         emphasis: right
@@ -126,6 +181,7 @@ parts:
       a perception problem. This part is about what a hard budget does to the loop.
     slides:
       - layout: image
+        beat: problem
         title: A voice turn is a serial sum, and people can feel it
         kicker: The problem
         recall: Which stages make up the latency of a cascaded voice response, and which is usually largest?
@@ -141,6 +197,7 @@ parts:
           Each stage looks reasonable by itself. The sum is what the caller feels. So what happens when the server gets busy?
 
       - layout: table
+        beat: fundamentals
         title: Load multiplies everything except the silence wait
         recall: Why can a voice server not run hot, and what does the latency formula leave out for VAD?
         lead: Latency budget from the note's runnable block. Model stages scale by 1/(1 − utilization); VAD does not.
@@ -159,6 +216,7 @@ parts:
           budget even when idle, which means it needs a design change and not a utilization limit.
 
       - layout: code
+        beat: practice
         title: The fast model reads a status and never claims it is done
         recall: In a fast/slow architecture, what rule protects the user, and where must it live?
         lang: python
@@ -182,6 +240,7 @@ parts:
           in computer use: responses got about 15 times faster when a fast model handled the talking.
 
       - layout: table
+        beat: practice
         title: GUI agents moved from finding the button to whole desktops
         recall: What did SeeAct show about grounding, and what did Agent S3 trade for its OSWorld score?
         header: [Paper, Move, Evidence]
@@ -196,7 +255,20 @@ parts:
         source: notes/03-real-time-multimodal-agents.md
         notes: >-
           Agent S3 spends compute and time to buy reliability, the reverse of voice. An agent with no one waiting can take more
-          tries and a voice agent cannot. Report time per task alongside the score. Now let us give an agent a stricter judge.
+          tries and a voice agent cannot.
+
+      - layout: cards
+        beat: pitfalls
+        title: Voice and screen agents fail in ways an average hides
+        recall: Which three mistakes does the real-time note warn about, and what hides each?
+        cards:
+          - {title: Average latency, body: "Users remember the slow turns. Track tail latency per stage, since queueing makes the tail much worse than the mean."}
+          - {title: One silence threshold, body: "Pauses inside a turn can run longer than gaps between turns, so one threshold fails both ways."}
+          - {title: Benchmarks that hide cost, accent: "D4621A", body: "A high OSWorld score at 100 steps can still be unusable, at seconds per step, for someone waiting."}
+        takeaway: Track tail latency per stage, do not rely on one silence threshold to detect a turn, and report time per task beside any benchmark score.
+        source: notes/03-real-time-multimodal-agents.md
+        notes: >-
+          These come from the note's pitfalls. Now let us give an agent a stricter judge.
 
   - title: Add a judge
     summary: The loop · Interface design · Sandbox layers · Held-out tests · Supervision
@@ -205,6 +277,7 @@ parts:
       with a lab you can run with no key.
     slides:
       - layout: statement
+        beat: problem
         title: Tests can say no. Can you trust a yes?
         kicker: The problem
         statement: "A coding agent acts on a real machine and its tests are its judge, so both the machine and the judge need protecting from it."
@@ -216,6 +289,7 @@ parts:
           the agent cannot rewrite the tests or do damage while running them.
 
       - layout: flow
+        beat: fundamentals
         title: The loop is reproduce, localize, patch, verify
         recall: What arc did SWE-agent's trajectories show, and why is reproducing first valuable?
         steps:
@@ -235,6 +309,7 @@ parts:
           it worse. A good interface is a limit on what the model has to deal with.
 
       - layout: compare
+        beat: fundamentals
         title: Designing the interface beats handing the model a shell
         recall: What is the agent-computer interface, and how much did it matter in SWE-agent?
         lead: Same model (GPT-4 Turbo), same $4 budget per instance, SWE-bench Lite.
@@ -264,6 +339,7 @@ parts:
           controlled measurement.
 
       - layout: cards
+        beat: fundamentals
         title: Only one way for the loop to end should count as success
         recall: What should stop a coding agent's loop, and what counts as success?
         cards:
@@ -285,6 +361,7 @@ parts:
           ai-engineering.
 
       - layout: table
+        beat: fundamentals
         title: Say what each sandbox layer stops, and what it does not
         recall: Which lab layer stops an agent from editing tests to pass them, and what does no file-tool check stop?
         header: [Layer, Stops, "Does not stop"]
@@ -303,6 +380,7 @@ parts:
           Real containment takes an operating system sandbox.
 
       - layout: code
+        beat: practice
         title: The lab runs every attack with a stub model and no key
         recall: In the coding-agent lab, what does the guards scenario show, and which scenario shows the limit of the sandbox?
         lang: bash
@@ -327,6 +405,7 @@ parts:
           what happened. Swapping in Claude is one file, which is marked illustrative because it needs a key.
 
       - layout: compare
+        beat: pitfalls
         title: Green visible tests are necessary, and not sufficient
         recall: Why did the overfit scenario pass visible tests, and what did the Shen and Tamkin trial add to the supervision question?
         emphasis: right
@@ -357,6 +436,7 @@ parts:
       real data from the analytics pillar: restaurant tips and the Titanic.
     slides:
       - layout: statement
+        beat: problem
         title: The query ran. Is the answer right?
         kicker: The problem
         statement: "Which day do customers tip the most? On the same 244 rows, Sunday wins in dollars and Friday wins as a share of the bill."
@@ -369,6 +449,7 @@ parts:
           past the query: baselines never passed 20% exact match in their set, and hand-written TAG pipelines reached 55%.
 
       - layout: flow
+        beat: fundamentals
         title: The run profiles, agrees a metric, queries, and then is checked
         recall: Why does the data agent agree a metric before querying, and why doesn't the validator ask the model?
         steps:
@@ -387,6 +468,7 @@ parts:
           recomputes from source data. Then it applies the rules a statistician would apply by reflex.
 
       - layout: code
+        beat: practice
         title: A lead needs a sense of noise, and four lines give you one
         recall: How does the validator decide whether a claimed lead between two groups is real?
         lang: python
@@ -410,6 +492,7 @@ parts:
           what the agent ends up allowed to say.
 
       - layout: image
+        beat: practice
         title: The chart shows the answer and its weakness at once
         recall: What does the narrow chart tool enforce, and what does the chart still fail to show?
         image: ../sources/images/data-analysis-agent-tip-share-by-day.png
@@ -425,6 +508,7 @@ parts:
           agent's first two submissions on this question were refused before it was allowed to answer.
 
       - layout: cards
+        beat: pitfalls
         title: What this design does not do
         recall: Name three limits of the data agent's validator.
         cards:
@@ -445,6 +529,7 @@ parts:
       project: whether to build one at all.
     slides:
       - layout: statement
+        beat: problem
         title: Where should the agent sit?
         kicker: The problem
         statement: "An agent that is right every time still fails if it fires while nobody is looking, or edits what someone else is editing."
@@ -455,6 +540,7 @@ parts:
           Oshin and Campos give three answers, and they differ in concurrency: who is working when.
 
       - layout: table
+        beat: fundamentals
         title: Three positions, by who works when
         recall: What differs between chatbot, collaborative and ambient patterns, and what is hardest in each?
         header: [Pattern, Who works when, Hardest part]
@@ -472,6 +558,7 @@ parts:
           A voice agent's fast and slow pair is a kind of concurrency too.
 
       - layout: steps
+        beat: fundamentals
         title: A small intent classifier still earns its place
         recall: When is a small intent-and-slot model in front of the agent still sensible?
         lead: This is the chatbot's front door, not note 01's router node, which only decides whether to search.
@@ -486,6 +573,7 @@ parts:
           from joint intent and slot models to DIET, is under Further reading in note 06.
 
       - layout: compare
+        beat: pitfalls
         title: A confirmation helps only if the person can disagree with it
         recall: What did Bansal et al. find about explanations, and what should a confirmation show instead?
         lead: Bansal et al., CHI 2021, more than 1,500 participants, with AI and people about equally accurate.
@@ -511,6 +599,7 @@ parts:
           support efficient correction and dismissal, and update cautiously.
 
       - layout: code
+        beat: practice
         title: Reflection needs anchors it cannot edit
         recall: Why does an ambient agent need a must-surface list and a change log?
         lang: python
@@ -536,6 +625,7 @@ parts:
           Removing the anchor is one of the exercises. No error is raised and only the log shows it.
 
       - layout: image
+        beat: pitfalls
         title: One engine, a new domain, and a pitch that outran its sources
         recall: What did moving the Context Engine to marketing take, and what is wrong with the chapter's key success?
         image: ../sources/images/context-engineering-multi-agent-systems-fig9-1.png
@@ -551,6 +641,7 @@ parts:
           which is the question we started with again: what would prove this answer wrong?
 
       - layout: flow
+        beat: fundamentals
         title: Write user, problem, metric and constraint before the model
         recall: Why decide what would kill an AI project before the work starts?
         steps:
@@ -573,6 +664,7 @@ parts:
           reaching the threshold costs more than the return, and as she notes, that is a successful outcome of scoping.
 
       - layout: code
+        beat: practice
         title: Count model calls, because each one resends everything so far
         recall: Why does input dominate an agent's bill even when output costs 5 times as much per token?
         lang: text
@@ -599,6 +691,7 @@ parts:
           portable, and compare only among models that pass your evaluation.
 
       - layout: table
+        beat: practice
         title: Uplift and use decide the ROI, not the model bill
         recall: In the worked example, why measure how often people use the draft before working on the model bill?
         lead: "Hypothetical: 60% of tickets use the draft, $180,000 build, then $2,204 model bill and $7,500 run cost a month."
@@ -623,6 +716,7 @@ parts:
           126. Keep the eval set yourself either way, and keep shadow mode, since $2,204 is cheap for a look at real tokens.
 
       - layout: compare
+        beat: practice
         title: Buying wins at 40 agents, and building needs about 126
         recall: When does building an AI feature beat buying it, in the note's hypothetical?
         lead: Invented prices for a hypothetical team of 40 agents. Not a quote.
@@ -656,6 +750,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         title: Rules of thumb for agentic applications
         recall: What are the rules of thumb for agentic applications?
         cards:
@@ -672,6 +767,7 @@ parts:
           to the same question.
 
       - layout: bullets
+        beat: wrap
         title: Where to go next
         recall: Which pillars and labs come after agentic applications?
         bullets:

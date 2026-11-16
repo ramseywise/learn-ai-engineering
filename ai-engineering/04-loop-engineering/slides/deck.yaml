@@ -14,15 +14,65 @@ deck:
     Pillar four. The harness made one run safe. Today nobody types the next prompt. We will follow a single
     loop with a simple job, make the auth tests pass, and at each stage ask what goes wrong once you stop watching.
 parts:
+  - title: What a loop is for
+    overview: true
+    summary: The question · Four parts · What you will be able to do
+    divider: true
+    agenda: true
+    notes: >-
+      Before any part of a loop, here is the one question this lecture keeps asking about the auth loop and the four parts we take to answer it.
+    slides:
+      - layout: statement
+        beat: problem
+        kicker: The idea
+        title: What keeps a loop honest when nobody is watching?
+        statement: "A loop is told to make the auth tests pass. Who decides each pass helped, what keeps it going, how much do you hand off, and what stops it?"
+        attribution: "The running example: one loop over tests/auth/, from a manual run to a scheduled one (README)"
+        takeaway: A loop is a goal plus a scorekeeper, repeated, with a way to stop, and each part of this lecture answers one of those questions.
+        recall: What question does every part of this lecture ask about the auth loop?
+        source: README.md
+        notes: >-
+          One loop stays with us the whole way. Each part opens with the way it fails, states the rule behind the fix, applies the rule to the auth tests, and ends on the mistake the fix usually produces.
+      - layout: flow
+        beat: fundamentals
+        title: Four parts, from a first pass to a loop that stops
+        recall: What are the four parts of this lecture, in order?
+        steps:
+          - {label: Who checks, sub: "goal, scorekeeper"}
+          - {label: What keeps it going, sub: "memory, triggers"}
+          - {label: How much to hand off, sub: "autonomy, self-edits"}
+          - {label: What stops it, sub: "traps, exits", accent: "D4621A"}
+        bullets:
+          - "The notes run in this order, and each is earned by the one before."
+          - "Each part ends on the mistake the fix usually produces."
+        takeaway: The lecture runs from the scorekeeper, through memory and triggers and the autonomy ladder, to the exits that stop a loop.
+        source: README.md
+        notes: >-
+          The README's syllabus is the same order as the parts: the cycle and the scorekeeper, long runs and triggers, the autonomy ladder and self-improving loops, then failure modes and guardrails.
+      - layout: cards
+        beat: wrap
+        title: By the end you will be able to
+        recall: Name four things this lecture teaches you to do with a loop.
+        cards:
+          - {title: Score, body: "Write a scorekeeper that is deterministic first, outside the loop's write scope, with some checks held out."}
+          - {title: Sustain, body: "Keep state on disk, take one item per session and leave the repo clean."}
+          - {title: Hand off, body: "Climb the autonomy ladder one rung at a time, each earned with a verifier you have seen catch a real failure."}
+          - {title: Stop, accent: "D4621A", body: "Set layered, independent exits, and treat a cap as an escalation and never a success."}
+        takeaway: You will be able to score a pass, keep a long run going from files, hand off one rung at a time and stop a loop with layered exits.
+        source: README.md
+        notes: >-
+          These are the README's rules of thumb, in the order the parts teach them.
+
   - title: Who checks the work
-    summary: What a loop is · The shape to design first · The scorekeeper
+    summary: What a loop is · The shape to design first · The scorekeeper · Six parts, added on failure
     divider: true
     agenda: true
     notes: >-
       The first question for any loop is not how to prompt it. It is who decides whether a pass helped.
-      We define the loop, draw its skeleton, and spend the most time on the scorekeeper.
+      We define the loop, draw its skeleton, spend the most time on the scorekeeper, and name the parts that go around it.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: Nobody is watching the next pass
         statement: Loop engineering is designing the cycle that keeps an agent correct and productive when nobody is watching.
@@ -35,6 +85,7 @@ parts:
           pass, and you want to go to lunch. Each pass used to have you in it, reading the result. Remove yourself
           and something else has to do that reading. That is what this pillar designs.
       - layout: image
+        beat: fundamentals
         kicker: The cycle
         title: One cycle, three vocabularies
         image: ../sources/images/aibuilderclub-anthropic-agent-loop.png
@@ -51,6 +102,7 @@ parts:
           save. If passing work gets committed, a later bad pass can only cost you that pass. So what do you need
           before starting the cycle at all?
       - layout: compare
+        beat: fundamentals
         kicker: Before it runs
         title: A goal points the work, a scorekeeper proves it
         emphasis: right
@@ -75,6 +127,7 @@ parts:
           Our goal is checkable as written, and the test suite is already a scorekeeper. Before adding any machinery,
           run one pass by hand from start to end. And before any of this, ask if you need a loop at all.
       - layout: bullets
+        beat: pitfalls
         kicker: Not always
         title: Build a loop only when it can pay back
         lead: "Both must hold. Otherwise use a fixed workflow or a good prompt."
@@ -98,6 +151,7 @@ parts:
           Anthropic's advice is workflow first. Our auth tests qualify because a script can say pass or fail. A loop
           that writes marketing copy mostly would not. When yours keeps circling, first ask if it should be a loop.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Draw the skeleton before the prompt
         lang: pseudocode
@@ -128,6 +182,7 @@ parts:
           engineering. Remove the stall check and it thrashes. Remove the cap and it runs forever. Note that hitting
           the cap escalates: it doesn't report success, and that matters later.
       - layout: cards
+        beat: fundamentals
         kicker: Task shape
         title: Pick the pattern by the shape of the task
         cards:
@@ -143,6 +198,7 @@ parts:
           Explore-Narrow. Vercel's order is a good sanity check: tool use, then reflection, then planning. Inside
           any of these shapes there are lots of small decisions, and not all need an expensive model.
       - layout: image
+        beat: pitfalls
         kicker: The evidence
         title: Many loop decisions are multiple choice
         image: ../sources/images/zhu-jevagentharness-fig3.png
@@ -159,6 +215,7 @@ parts:
           lost nineteen points of success. With a threshold fitted per decision point it was 81 to 89 percent cheaper.
           So measurement decides, which brings us to the thing doing the measuring.
       - layout: cards
+        beat: fundamentals
         kicker: The load-bearing part
         title: Five traits of a scorekeeper, and its defenses
         cards:
@@ -176,6 +233,7 @@ parts:
           Our pytest run is objective, automatic and clear. Is it hard to fake? An agent asked to make the tests pass
           can delete them. So where does the scorekeeper live?
       - layout: table
+        beat: pitfalls
         kicker: The write boundary
         title: An editable evaluator is a negotiation
         lead: "Karpathy's `autoresearch` separates three files by who may write them."
@@ -193,6 +251,7 @@ parts:
           For us the agent writes auth code, nobody writes tests/auth while the loop runs, and a human writes the
           contract. Tests still can't check judgment, though, so where a rubric is needed we use a second agent.
       - layout: code
+        beat: practice
         kicker: Monday morning
         title: The checker never trusts the maker
         lang: markdown
@@ -220,29 +279,10 @@ parts:
         notes: >-
           This is a prompt you can use this week. Read the diff, not the summary. Run the commands yourself. The most
           overlooked rule is honest in both directions: a checker that must find something will invent something.
-          With an honest checker in place, the loop can start running longer.
+          With an honest checker in place, which parts does the loop need around it?
 
-  - title: What keeps it going
-    summary: Six parts, added on failure · Memory on disk · Ralph · Triggers
-    divider: true
-    agenda: true
-    notes: >-
-      We have an honest loop that gets through one pass. Now it has to survive many: parallel attempts, full
-      context, restarts, and starting with no one pressing go.
-    slides:
-      - layout: statement
-        kicker: The problem
-        title: Each pass makes the next one worse
-        statement: A loop that runs for hours must forget on purpose and remember on disk.
-        attribution: "Context rot, context anxiety and session end all have the same fix"
-        takeaway: "Context rot, context anxiety and session end share one fix, which is that progress lives in files and not in the window."
-        recall: What three walls does a long loop hit, and what one fix addresses all of them?
-        source: notes/05-long-running-loops.md
-        notes: >-
-          Every pass adds tool output and errors to the transcript. Working memory degrades, the model starts wrapping
-          up early, and then the session ends and the next one starts blank. Three different walls, one fix. Let's
-          look at the parts that implement it, and when to add each one.
       - layout: table
+        beat: fundamentals
         kicker: The inventory
         title: Six parts, each fixing one failure
         header: [Part, Fixes this failure]
@@ -259,8 +299,30 @@ parts:
         source: notes/04-building-blocks.md
         notes: >-
           Don't install all six. Each row names a failure, so wait for it. Our auth loop has no use for connectors
-          until you want it to open a pull request. Memory arrives first, as we are about to see.
+          until you want it to open a pull request. Memory arrives first, because the loop will soon run for hours.
+  - title: What keeps it going
+    summary: Memory on disk · Ralph · Triggers
+    divider: true
+    agenda: true
+    notes: >-
+      We have an honest loop that gets through one pass. Now it has to survive many: parallel attempts, full
+      context, restarts, and starting with no one pressing go.
+    slides:
+      - layout: statement
+        beat: problem
+        kicker: The problem
+        title: Each pass makes the next one worse
+        statement: A loop that runs for hours must forget on purpose and remember on disk.
+        attribution: "Context rot, context anxiety and session end all have the same fix"
+        takeaway: "Context rot, context anxiety and session end share one fix, which is that progress lives in files and not in the window."
+        recall: What three walls does a long loop hit, and what one fix addresses all of them?
+        source: notes/05-long-running-loops.md
+        notes: >-
+          Every pass adds tool output and errors to the transcript. Working memory degrades, the model starts wrapping
+          up early, and then the session ends and the next one starts blank. Three different walls, one fix. Let's follow one whole pass, and see where memory fits.
       - layout: flow
+        beat: fundamentals
+        revisits: true
         kicker: One pass
         title: The whole loop in motion
         steps:
@@ -282,6 +344,7 @@ parts:
           one change, runs the tests, and saves or rolls back. One change per pass is what lets the score tell you
           what helped. What exactly does memory hold?
       - layout: table
+        beat: fundamentals
         kicker: Worked example
         title: Five fields carry the auth loop across restarts
         header: [Field, Example]
@@ -300,6 +363,7 @@ parts:
           This is what our loop's state file looks like at 41 of 47. It is short enough to load at every pass. The
           highlighted row is the one people leave out, and then a fresh agent cheerfully mocks the clock again.
       - layout: code
+        beat: practice
         kicker: The minimal loop
         title: The Ralph loop, with a ratchet
         lang: bash
@@ -331,6 +395,7 @@ parts:
           decides on commit or reset. Look at the exit codes: whatever runs this script can tell a win from a timeout.
           The note has the complete version.
       - layout: compare
+        beat: fundamentals
         kicker: Two jobs
         title: One session plans, the rest pick one item
         emphasis: right
@@ -357,6 +422,7 @@ parts:
           leaves. And because state already lives in files, clearing the window costs almost nothing. So far the loop
           runs until it finishes. Other work never finishes.
       - layout: compare
+        beat: fundamentals
         kicker: Run again
         title: Run until done, or run on a timer
         emphasis: none
@@ -381,6 +447,7 @@ parts:
           One question decides this: does it have an end? Fixing the auth tests does, so that is a goal. Watching that
           the tests stay green doesn't, so that's a timer.
       - layout: table
+        beat: pitfalls
         kicker: Monday morning
         title: An unattended trigger multiplies a run's cost
         header: [Trigger, Fires on, Example]
@@ -407,6 +474,7 @@ parts:
       happens when the loop starts editing its own procedure. The answer to both is verification.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: Handing off faster than you can verify
         statement: Earn each handoff with a verifier. Skipping rungs is how you get a doom loop.
@@ -418,6 +486,7 @@ parts:
           The temptation is to skip straight to a nightly job that opens pull requests. But each step away from the
           keyboard removes one way you were catching mistakes. So we go up a rung at a time.
       - layout: steps
+        beat: fundamentals
         kicker: The ladder
         title: Four rungs, four things handed off
         axis: more handed off
@@ -434,6 +503,7 @@ parts:
           it had a measurable end state. Rung four, which runs without your session or attention, needs a verifier
           you trust while asleep. Why does each rung cost reliability?
       - layout: image
+        beat: fundamentals
         kicker: The trade-off
         title: Each rung moves along a frontier
         image: ../sources/images/learning-langchain-fig8-1.png
@@ -450,6 +520,7 @@ parts:
           along it, while good engineering moves the curve itself. One of the levers is human control, and that means more
           than a yes or no.
       - layout: cards
+        beat: fundamentals
         kicker: Human controls
         title: Approving each call is one control of six
         cards:
@@ -467,6 +538,7 @@ parts:
           six, all needing a checkpointer and a thread ID. For a loop that took a wrong turn at pass nine, fork is the one that
           saves you redoing the rest.
       - layout: image
+        beat: fundamentals
         kicker: The human side
         title: As the agent climbs, your job changes
         image: ../sources/images/building-applications-with-ai-agents-fig13-1.png
@@ -484,6 +556,7 @@ parts:
           role needs its own interface, and a governor with no audit log isn't governing anything. Now for the case
           where the thing under review is the loop's own procedure.
       - layout: image
+        beat: fundamentals
         kicker: The slow loop
         title: A second loop can edit the first
         image: ../sources/images/li-ai-agents-in-depth-fig9-1.svg
@@ -501,6 +574,7 @@ parts:
           its instructions. Agents default to doing something, so "no change needed" must count as success, or it will
           churn. But it needs a signal to learn from.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: Verify the run before you learn from it
         lang: python
@@ -529,6 +603,7 @@ parts:
           succeeded. Two very different failures average 0.571, one a false promise and one a privacy leak. A scalar would
           hide that, so the lesson needs evidence attached.
       - layout: image
+        beat: fundamentals
         kicker: The target
         title: Put the lesson in the smallest place that works
         image: ../sources/images/li-ai-agents-in-depth-fig9-3.svg
@@ -543,9 +618,28 @@ parts:
         source: notes/08-self-improving-loops.md
         notes: >-
           A lesson can live in four places. Start at the left, where it is cheap to change. If the same note keeps proving
-          useful, promote it to a rule, and if the rule needs no language understanding, compile it. How does any
-          of this reach the live loop?
+          useful, promote it to a rule, and if the rule needs no language understanding, compile it. How does the search choose what to try next?
+      - layout: image
+        beat: pitfalls
+        kicker: The frontier
+        title: An archive keeps an improver climbing
+        image: ../sources/images/zhang-darwin-godel-machine-fig2.png
+        caption: "Best agent per iteration, full DGM vs. variants (Zhang et al., 2025, Fig. 2)"
+        bullets:
+          - The Darwin Gödel Machine keeps an **archive** of past agents
+          - "One agent hit a perfect score by removing the logging its checker read"
+          - "Protect the evaluator's **inputs**, not just its code"
+          - "DiscoveryRSI: best hit rate against later papers **6.3%**; the limit becomes verification capacity"
+        takeaway: Hiding the checker is not enough, because an evolving agent can game its inputs, so those belong outside the write scope too.
+        recall: How did a Darwin Gödel Machine agent game a hidden checker, and what does that imply?
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          With the archive, the search can step back from a dead end. The cautionary part is the agent that reached a
+          perfect score in two edits by removing the logging the checker relied on. Our write boundary now has to include the
+          scorekeeper's inputs. When generation gets this cheap, the limit moves to verification capacity. How does any of this reach the live loop?
+
       - layout: flow
+        beat: fundamentals
         kicker: The release
         title: Self-modification is a release process
         steps:
@@ -566,6 +660,7 @@ parts:
           retrying non-retryable errors. Swap in a language model as the patch writer and a plausible patch that breaks
           timeouts is still rejected, because the gate is code.
       - layout: compare
+        beat: practice
         kicker: The case study
         title: "autoresearch: one file, one GPU, one metric"
         emphasis: right
@@ -592,6 +687,7 @@ parts:
           one number. Most attempts fail, and that is fine when attempts are cheap. Now, what does evolving do to what the
           agent already knows?
       - layout: image
+        beat: pitfalls
         kicker: The cost
         title: Plasticity costs stability
         image: ../sources/images/chen-self-evolving-agents-continual-learners-fig2.png
@@ -605,25 +701,7 @@ parts:
         source: notes/08b-releasing-self-edits.md
         notes: >-
           Chen and colleagues found a correlation of minus 0.72 across twelve runs between gaining on new tasks and keeping old
-          ones. That is why the release gate replays old tasks. Next comes the far end, an improver that improves itself.
-      - layout: image
-        kicker: The frontier
-        title: An archive keeps an improver climbing
-        image: ../sources/images/zhang-darwin-godel-machine-fig2.png
-        caption: "Best agent per iteration, full DGM vs. variants (Zhang et al., 2025, Fig. 2)"
-        bullets:
-          - The Darwin Gödel Machine keeps an **archive** of past agents
-          - "One agent hit a perfect score by removing the logging its checker read"
-          - "Protect the evaluator's **inputs**, not just its code"
-          - "DiscoveryRSI: best hit rate against later papers **6.3%**; the limit becomes verification capacity"
-        takeaway: Hiding the checker is not enough, because an evolving agent can game its inputs, so those belong outside the write scope too.
-        recall: How did a Darwin Gödel Machine agent game a hidden checker, and what does that imply?
-        source: notes/08-self-improving-loops.md
-        notes: >-
-          With the archive, the search can step back from a dead end. The cautionary part is the agent that reached a
-          perfect score in two edits by removing the logging the checker relied on. Our write boundary now has to include the
-          scorekeeper's inputs. When generation gets this cheap, the limit moves to verification capacity.
-
+          ones. That is why the release gate replays old tasks. Now, what stops a loop that edits itself?
   - title: What stops it
     summary: Traps · Silent costs · Layered exits · The same parts in your framework
     divider: true
@@ -633,6 +711,7 @@ parts:
       how to find these parts in the framework you use.
     slides:
       - layout: statement
+        beat: problem
         kicker: The problem
         title: A cap reached is not a job finished
         statement: A cap is an escalation, never a success.
@@ -645,6 +724,7 @@ parts:
           what an unattended run needs before you walk away: budgets, stopping conditions, recovery and observability. We
           begin with the ways it fails.
       - layout: table
+        beat: pitfalls
         kicker: Name them
         title: Six traps, and what each looks like
         header: [Trap, Symptom, Fix]
@@ -664,6 +744,7 @@ parts:
           and it needs a protected scorekeeper. Lots of change and no improvement is thrashing, and more iterations will not
           help. Those at least show up in the logs. Some costs don't.
       - layout: cards
+        beat: pitfalls
         kicker: Quiet failures
         title: Four costs that never trip an alert
         cards:
@@ -678,6 +759,7 @@ parts:
           These come from Osmani, and they don't trip any alert. Three of the four happen to you, not the agent. The loop keeps
           producing, you keep accepting, and at some point you no longer understand what you own.
       - layout: table
+        beat: fundamentals
         kicker: Stopping
         title: Layered exits, each one independent
         header: [Exit, Fires when, Outcome]
@@ -696,6 +778,7 @@ parts:
           Five exits, and only one of them is a success. They must be independent, so one failing doesn't take out the rest.
           These are the exit codes from the Ralph script, grown up.
       - layout: flow
+        beat: fundamentals
         kicker: Self-modifying loops
         title: Three boundaries a self-editing loop may not cross
         steps:
@@ -713,6 +796,7 @@ parts:
           Back to the slow loop. Tool output could steer it, candidates could reach users, and it could weaken its own tests.
           The last boundary is the one from part one, the write boundary, extended to the whole release gate.
       - layout: code
+        beat: practice
         kicker: Monday morning
         title: Write the loop contract first
         lang: markdown
@@ -740,6 +824,7 @@ parts:
           Here's the whole lecture as a document, filled in for our auth loop with illustrative values. The template is in
           note nine. If you can't write one of these sections, you are not ready to walk away from the loop.
       - layout: table
+        beat: practice
         kicker: Your framework
         title: The same loop parts in three frameworks
         header: [Loop part, Google ADK, Vercel AI SDK, LangGraph]
@@ -758,6 +843,7 @@ parts:
           Nothing you learned depends on a framework. Each has the same parts under different names. A closer look at one
           will show where the surprises are.
       - layout: code
+        beat: practice
         kicker: Worked example
         title: "ADK's loop stops only when a sub-agent asks"
         lang: python
@@ -792,6 +878,7 @@ parts:
     divider: false
     slides:
       - layout: cards
+        beat: wrap
         kicker: Closing
         title: Rules of thumb
         cards:
@@ -808,6 +895,7 @@ parts:
           Our auth loop now has a scorekeeper it can't edit, a memory file, a ratchet, a trigger with a cost ceiling and five
           exits. Each of these was there because something would otherwise go wrong while nobody was watching.
       - layout: bullets
+        beat: wrap
         kicker: Next
         title: Where to go next
         bullets:

@@ -17,6 +17,15 @@
 # every read left one (scripts/papers/extractions/): tier 1, tier 2 and book chapters first, paper tiers
 # 3-6 once those are done. EXTRACT=0 skips it.
 # PAPERS=0 skips the /papers and /chapter passes: PAPERS=0 STOP_HOUR=24 runs the backfill alone.
+# Last, the run carries what was read into librarian's search index (the vector DB), in the sibling
+# checkout at LIBRARIAN (default ../librarian):
+#   1. `librarian scrape extractions` copies new extractions to its data/raw/papers/ (no model);
+#   2. /ingest sessions there compile pending extractions into wiki pages, one batch of ten per session,
+#      until the pending count stops falling, STOP_HOUR passes or a usage limit is hit;
+#   3. `librarian courses import` mirrors the notes and `librarian index build` re-embeds (no model).
+# Steps 1 and 3 cost no usage, so they run even after a limit or STOP_HOUR ended the passes above.
+# Step 2 edits librarian's data/wiki/ and stages each batch there; it never commits either.
+# INGEST=0 skips all three. PAPERS=0 EXTRACT=0 STOP_HOUR=24 runs the ingestion alone.
 
 set -uo pipefail
 
@@ -32,6 +41,8 @@ STOP_HOUR="${STOP_HOUR:-8}"
 read -ra TIERS <<< "${TIERS:-1 2 3 4 5 6}"  # TIERS="1 2" limits a run
 EXTRACT="${EXTRACT:-1}"
 PAPERS="${PAPERS:-1}"
+INGEST="${INGEST:-1}"
+LIBRARIAN="${LIBRARIAN:-$REPO/../librarian}"
 LOCK="$REPO/.claude/logs/papers-nightly.lock"
 
 cd "$REPO" || exit 1
@@ -47,18 +58,25 @@ source "$REPO/scripts/papers/nightly-lib.sh"
 
 PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Every PDF read must leave a passing extraction in scripts/papers/extractions/ (the source-reader writes it); check it before marking the paper integrated. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. A usage limit can end this run at any moment, so write each paper's note edit and references.md row before you mark it integrated, in small batches. \`potw.py mark integrated\` refuses a key no note or references.md in its home cites, so write the citation first; use --no-citation only for a real exception, with the reason. Do not commit or push; stage with git add only if the repo rules say so."
 
-LIMIT_HIT=0
-# session LABEL PROMPT: one headless claude session; sets LIMIT_HIT if it ended on a usage limit
-session() {
-    local out status
-    out="$(claude -p "$2
+# The human gate in /ingest's Bulk Mode (stop for a go-ahead after each batch) is replaced by one batch
+# per session: the next session starts from the manifest, with a fresh context.
+WIKI_TAIL="This is an unattended overnight run in Bulk Mode: nobody is available to answer questions or to give the go-ahead between batches, so make the sensible call and record it in your final report. Compile ONE batch of ten pending paper extractions, grouped by topic as the skill says, and no more. Run the batch's checks and reviewers and fix what they find, then close it out with \`ingest closeout --mark\`, stage the batch with git add, and end the session with the report instead of waiting: the next session takes the next batch. A source you cannot compile cleanly stays unmarked and goes under Not ingested. A usage limit can end this run at any moment, so mark a source only once its pages pass \`wiki verify\`. Never write under data/raw/ or a private/ directory. Do not commit or push."
+WIKI_DENY=("Write(data/raw/**)" "Edit(data/raw/**)" "Write(**/private/**)" "Edit(**/private/**)")
 
-$PROMPT_TAIL" \
+LIMIT_HIT=0
+# session LABEL PROMPT [DIR TAIL DENY...]: one headless claude session, in DIR when given (default: this
+# repo, with PROMPT_TAIL); sets LIMIT_HIT if it ended on a usage limit
+session() {
+    local out status label="$1" prompt="$2" dir="${3:-$REPO}" closing="${4:-$PROMPT_TAIL}"
+    shift $(( $# < 4 ? $# : 4 ))
+    out="$(cd "$dir" && claude -p "$prompt
+
+$closing" \
         --permission-mode auto \
-        --disallowedTools "Bash(git commit:*)" "Bash(git push:*)" "Bash(gh pr:*)" 2>&1)"
+        --disallowedTools "Bash(git commit:*)" "Bash(git push:*)" "Bash(gh pr:*)" "$@" 2>&1)"
     status=$?
     echo "$out" | tail -40
-    echo "$(date '+%F %T') $1 exit $status"
+    echo "$(date '+%F %T') $label exit $status"
     if limit_hit "$status" "$out"; then
         echo "$(date '+%F %T') usage limit hit, stopping: $(limit_text "$out")"
         LIMIT_HIT=1
@@ -122,6 +140,44 @@ extractions() {
     done
 }
 
+# librarian VERB...: one `librarian` command in the sibling checkout, logged; a failure does not end the run
+librarian() {
+    echo "$(date '+%F %T') librarian $*"
+    (cd "$LIBRARIAN" && uv run librarian "$@" 2>&1 | tail -5)  # pipefail: uv's failure is the status
+    local status=$?
+    [ "$status" -eq 0 ] || echo "$(date '+%F %T') librarian $* failed (exit $status)"
+    return "$status"
+}
+
+# Paper extractions in librarian's data/raw/papers/ that no wiki page has been compiled from yet.
+wiki_pending() {
+    (cd "$LIBRARIAN" && uv run librarian ingest pending --count 'data/raw/papers/*.md' 2>/dev/null) || echo 0
+}
+
+# Compile pending extractions into the wiki, a batch per session, until the count stops falling.
+wiki() {
+    local n left
+    while ! stop_now; do
+        n="$(wiki_pending)"
+        [ "$n" -gt 0 ] || { echo "$(date '+%F %T') /ingest papers: nothing pending"; return; }
+        echo "$(date '+%F %T') /ingest papers ($n pending)"
+        session "/ingest papers" "/ingest data/raw/papers/" "$LIBRARIAN" "$WIKI_TAIL" "${WIKI_DENY[@]}"
+        left="$(wiki_pending)"
+        echo "$(date '+%F %T') /ingest papers: $left still pending"
+        [ "$left" -lt "$n" ] || return  # no progress: what's left needs a person
+    done
+}
+
+ingestion() {
+    if [ ! -d "$LIBRARIAN/src/librarian" ]; then
+        echo "$(date '+%F %T') no librarian checkout at $LIBRARIAN; skipping ingestion"
+        return
+    fi
+    librarian scrape extractions && wiki
+    librarian courses import
+    librarian index build
+}
+
 python3 scripts/papers/potw.py tier
 
 [ "$PAPERS" = "1" ] || TIERS=()
@@ -135,5 +191,6 @@ for tier in ${TIERS[@]+"${TIERS[@]}"}; do
     fi
 done
 [ "$EXTRACT" = "1" ] && ! stop_now && extractions
+[ "$INGEST" = "1" ] && ingestion
 python3 scripts/papers/potw.py status
 python3 scripts/papers/extract.py status | tail -2
