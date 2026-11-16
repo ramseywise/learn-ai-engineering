@@ -127,7 +127,7 @@ papers-install:  ## Install the weekly launchd job (Monday 11:00)
 	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.potw.plist
 	@echo "Installed com.wiseer.potw — log: .claude/logs/potw.log"
 
-papers-nightly-install:  ## Install the nightly /papers and /chapter job (daily 02:30)
+papers-nightly-install:  ## Install the weekly /papers and /chapter job (Tuesdays 02:30)
 	@mkdir -p .claude/logs
 	@cp scripts/papers/com.wiseer.papers-nightly.plist ~/Library/LaunchAgents/
 	@launchctl bootout gui/$$(id -u)/com.wiseer.papers-nightly 2>/dev/null || true
