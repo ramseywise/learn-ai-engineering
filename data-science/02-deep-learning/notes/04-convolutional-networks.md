@@ -484,6 +484,8 @@ Every digits number here came from running the code shown. The numbers attribute
 | What does a triplet loss optimise? | Same-identity distance to be smaller than different-identity distance by a margin. |
 | What is a Gram matrix? | Channel correlations of a feature map, used as a position-free style description. |
 | How does SimCLR get a positive pair without labels? | Two augmentations of one image, with the other images in the batch as negatives. |
+| Which CNN architectures do you know? | LeNet-5 (local receptive fields, shared weights, subsampling), VGG (only 3×3 filters, more depth), ResNet, ResNeXt (parallel paths in the residual block) and EfficientNet (every dimension scaled at once). |
+| How did R-CNN do object detection? | It took about 2,000 region proposals per image, warped each to a fixed size, ran a CNN on each one and classified the features with per-class SVMs. Every proposal needs its own forward pass, so it was slow. |
 
 ## Next
 

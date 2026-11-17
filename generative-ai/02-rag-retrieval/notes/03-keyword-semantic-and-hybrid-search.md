@@ -419,6 +419,7 @@ Metadata filters, hybrid search with reciprocal rank fusion, and evaluating a re
 | What do BM25's `k1` and `b` control? | `k1` saturates term frequency, so repeats give diminishing returns. `b` sets how much long documents are penalised: 0 ignores length, 1 normalises fully. |
 | When does keyword search beat embeddings? | Exact identifiers, names and jargon, especially when many documents are semantically near-identical. |
 | Cosine similarity or dot product? | Cosine ignores length. They are the same on unit vectors, so normalise and use the faster one. |
+| What are good unsupervised baselines for text retrieval? | TF-IDF and BM25, which need no trained model. BM25 is TF-IDF with two tunable fixes, `k1` and `b`, and it is still the default keyword scorer. |
 
 ---
 

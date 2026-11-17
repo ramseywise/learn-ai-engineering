@@ -521,6 +521,7 @@ A length of 113 covers 95% of descriptions. Truncating at 20 tokens would cut 97
 | Why cosine for text? | It ignores document length, so a long review and a short one on the same subject can match. |
 | Why pad, and on which side? | Batches need equal lengths. For RNNs pre-padding keeps real tokens near the final state. |
 | Why do transformers use subwords? | New words and misspellings still map to known pieces, so there is no OOV. |
+| What do n-grams add to bag of words? | Pairs and triples recover local order such as "not good", at the price of many more features. Pair them with `min_df`, since most long n-grams occur once. |
 
 ## Next
 

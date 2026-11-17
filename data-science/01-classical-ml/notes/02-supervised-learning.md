@@ -7,6 +7,7 @@ sources:
   - Bruce and Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017), ch. 6
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 8, 12, 19
   - Hastie, Tibshirani and Friedman, The Elements of Statistical Learning, 2nd ed. (Springer, 2009), ch. 1, 2, 6, 9, 11, 12, 13
+  - Bishop, Pattern Recognition and Machine Learning (Springer, 2006), ch. 6, 7, appendix E
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://www.coursera.org/specializations/machine-learning-introduction
   - ../practice/ng-machine-learning/ex1/ex1.ipynb
@@ -217,6 +218,8 @@ The slack budget $B$ is the overfitting knob. The left fit tolerates some margin
 The authors add the limits: kernel methods are not immune to the curse of dimensionality, the quadratic penalty keeps every feature in the model so there is no sparsity (swap in an L1 penalty for that), and the popularity of SVMs rests on classification performance, since classifiers are less sensitive to bias-variance trade-offs than regression is (*Computer Age*, ch. 19).
 
 ESL puts numbers on the first limit. Early claims that the kernel lets the SVM "finesse the curse of dimensionality" get a flat reply: "Neither of these claims is true". In its "skin of the orange" simulation the true boundary is a second-degree polynomial, and the test error, averaged over 50 simulations, is 0.078 for a degree-2 polynomial SVM, 0.180 at degree 5 and 0.230 at degree 10, against a Bayes error of 0.029. Adding six noise features roughly doubles the first two, to 0.152 and 0.370, while MARS, which can ignore features, moves only from 0.156 to 0.173 (*ESL*, ch. 12, Table 12.2). A kernel weighs every feature alike, so scaling and feature selection stay your job. The hinge loss is also less special than it looks. On ESL's two-class mixture data (Bayes error 0.210) a radial-kernel SVM has test error 0.218 and a degree-4 polynomial SVM 0.245; logistic regression with the same kernels has 0.221 and 0.263 and returns class probabilities as well. What the hinge buys is sparsity: 42% and 45% of the training points are not support vectors and drop out of prediction (*ESL*, ch. 12, Figs. 12.3 and 12.5, regularisation "chosen in both cases to achieve good test error", so these errors are optimistic).
+
+Bishop's *Pattern Recognition and Machine Learning* (*PRML*) gives the algebra behind the trick. Ridge regression can be rewritten so that the fit depends on the data only through the $N \times N$ Gram matrix $K$ of kernel values: $a=(K+\lambda I)^{-1}t$. That swaps a solve in the number of features for a solve in the number of rows, which pays only when the feature space is the larger of the two (*PRML*, ch. 6, p. 293). A function is a valid kernel when its Gram matrix is positive semidefinite for every choice of points (ch. 6, p. 295). The Gaussian kernel qualifies, with an infinite-dimensional feature vector (p. 297); the tanh kernel that `SVC(kernel="sigmoid")` offers in general does not (p. 299). Sparsity comes from the loss, not the kernel: the SVM objective is the hinge loss plus a ridge penalty with $\lambda = 1/(2C)$, and the hinge is exactly zero beyond the margin, so those points drop out of the solution (ch. 7, p. 338; the multiplier conditions are in appendix E). The price is that an SVM outputs a decision, not a probability. Platt's fix fits a sigmoid to the SVM scores, and it has to be fitted on data independent of the training set to avoid severe overfitting (ch. 7, p. 336). The relevance vector machine is the Bayesian alternative: on the book's noisy sine regression it keeps 3 relevance vectors where the SVM keeps 7 support vectors, and Bishop reports models "typically an order of magnitude more compact", paid for with a non-convex and usually slower fit (ch. 7, Fig. 7.9 and p. 349; one synthetic data set, the general claim without a table). Gaussian processes use the same kernels and need the inverse of an $N \times N$ matrix, $O(N^3)$, which is the same wall SVMs hit on large data (ch. 6, p. 309).
 
 | Knob | Small value | Large value |
 |---|---|---|
@@ -436,6 +439,12 @@ After 1,500 iterations gradient descent has not quite reached the closed-form an
 | Why is naive Bayes fast and often fine? | One pass of per-class statistics. Its independence assumption is wrong but the ranking is often good |
 | Which model first on a new table? | A linear model or kNN to learn the data, then a forest or boosting |
 | Gradient descent vs normal equation? | Iterative with a learning rate, vs closed form at about cubic cost in features |
+| What separates classification from regression? | Whether there is continuity between the possible outputs. Income in dollars is regression. The language of a website is classification. |
+| Which model do you try first on a new dataset? | A simple one (linear, naive Bayes or kNN) to learn what the data is like. Then move to random forests, gradient boosting, SVMs or neural networks. |
+| What is the curse of dimensionality? | With many features a neighbourhood holding a fixed share of the data stops being local. In a 10-dimensional unit cube, capturing 1% of uniform points takes 63% of each feature's range. |
+| What is a decision tree, and how is it trained? | A sequence of if/else questions on one feature at a time, each chosen to make the resulting groups as pure as possible, scored by Gini or entropy. A leaf predicts the majority class or the mean of its training points. |
+| What are the main parameters of a decision tree? | The pre-pruning limits `max_depth`, `max_leaf_nodes` and `min_samples_leaf`, plus `ccp_alpha` for cost-complexity post-pruning. |
+| How does a tree split a categorical feature? | For a two-class target, order the levels by their share of class 1 and split as if the feature were ordered. That finds the best split without searching every grouping of levels. |
 
 ## Next
 

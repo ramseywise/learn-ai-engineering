@@ -460,6 +460,8 @@ The first model is the *right* one for the question "did the checkout work?", an
 | When do you need robust or clustered SEs? | Robust when variance is non-constant, typical of money. Clustered when rows repeat within a unit or the randomisation unit is coarser than the row. |
 | Show that a t-test is a regression. | Regress the outcome on a 0/1 group. The coefficient is the difference in means, and its t matches the pooled t-test. |
 | What does multicollinearity do? | Inflates coefficient SEs and makes individual coefficients unstable. It does not bias them and rarely hurts prediction. |
+| What are the assumptions of linear regression? | In the order they usually matter: the sample represents what you claim, errors are independent, the relationship is additive and linear, error variance is constant, and errors are Normal (rarely important with large n). |
+| How do you read the intercept and a coefficient? | A coefficient is a conditional difference: comparing cases with the same other inputs. The intercept is the prediction when all regressors are zero. |
 
 ---
 

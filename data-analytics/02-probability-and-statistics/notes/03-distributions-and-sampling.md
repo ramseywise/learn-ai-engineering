@@ -370,6 +370,8 @@ print(f"95/100 lower 95% Wilson: {stats.binomtest(95, 100).proportion_ci(method=
 | LLN or CLT: which tells you how wrong your mean is? | LLN says it converges. CLT describes the distribution of the error, giving the interval. |
 | How would you rank items with few ratings? | Use a lower confidence or credible bound, or shrink toward the overall mean with a Beta prior. |
 | Can a larger sample fix a biased sample? | No. It gives a more precise estimate of the wrong number. |
+| How do you check whether a variable is Normal? | With a probability plot: sort the data, sort a standard-normal sample of the same size and plot one against the other. A Kolmogorov-Smirnov test puts a number on the gap. |
+| Are prices and incomes Normal? | Usually not. Positive, multiplicative quantities such as order value and income are lognormal, so the log is roughly Normal and the tail is heavy. |
 
 ---
 

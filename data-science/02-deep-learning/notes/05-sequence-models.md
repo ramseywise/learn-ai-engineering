@@ -4,6 +4,7 @@ sources:
   - ../practice/ng-deep-learning/Sequence Models/
   - https://www.coursera.org/specializations/deep-learning
   - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
+  - Bishop, Pattern Recognition and Machine Learning (Springer, 2006), ch. 12, 13
   - https://doi.org/10.1038/323533a0
   - https://doi.org/10.1162/neco.1997.9.8.1735
   - https://arxiv.org/abs/1406.1078
@@ -438,6 +439,8 @@ code 32  autoencoder 0.315 (0.067)   PCA 0.171 (0.004)
 
 The non-linear model wins only where the code is tight. At 16 they're level, and at 32 PCA is ahead, with far less variation between runs and no training. So compute PCA first: it's your baseline, and it may be all you need.
 
+For the shallow case that is a theorem. A two-layer autoencoder trained on squared error finds only the PCA subspace, even with non-linear hidden units, so "There is therefore no advantage in using two-layer neural networks to perform dimensionality reduction" (Bishop, *Pattern Recognition and Machine Learning*, *PRML*, ch. 12, p. 593). Any gain has to come from extra non-linear layers.
+
 **Denoising.** Vincent et al. asked what happens if you drop the bottleneck. Corrupt the input by setting a random share of it to zero, then ask for the clean version. Now copying fails even with a code wider than the input, so the corruption replaces the bottleneck as the constraint, and it applies only during training ([*Extracting and Composing Robust Features with Denoising Autoencoders*](https://www.cs.toronto.edu/~larocheh/publications/icml-2008-denoising-autoencoders.pdf), ICML 2008). Their model selection in fact chose very wide layers, 2,000 units for 784 pixels, and stacked denoising layers beat ordinary stacked autoencoders on most of their tasks, though not all. Here's the same effect on a wide network that could simply copy:
 
 ```text
@@ -482,6 +485,8 @@ GRU with each test window's order scrambled      0.149
 These are PR-AUC with 90% bootstrap intervals. Order clearly matters: totals can't see it, and scrambling the windows breaks the GRU. But gaps and the last three events are order written by hand, and they beat the GRU by 0.061 (interval 0.025 to 0.098), and they lead on all three generated datasets, by 0.021 and 0.009 on the other two. The GRU got one architecture and no search, and the pattern fits in a short window, so this isn't a verdict on GRUs. The large-tree row is the warning: our first boosting settings overfit the few positives and handed the GRU a win it hadn't earned. Compare models that have each had a fair chance.
 
 PR-AUC, the cost rule and PSI are in [DS 01/10](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md), and the lab applies them to events, with late chargebacks and a pattern that changes. There, every model fell below 0.01 while PSI stayed at 0.002 or less, as [concept shift is silent to PSI](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves).
+
+**What recurrent networks replaced.** The hidden Markov model (HMM) is the recurrent cell's probabilistic ancestor: a hidden state that takes one of $K$ values, a transition table, and an output distribution per state. A chain of length $N$ has $K^N$ possible state paths, yet the forward-backward recursion sums over all of them in $O(K^2N)$, and the Viterbi algorithm finds the single best path at a cost that also grows only linearly in $N$ (*PRML*, ch. 13, pp. 615, 621 and 629). Two limits explain why vectors took over. The state is one symbol, so carrying 10 bits of context takes $2^{10}=1{,}024$ states where 10 binary units would do (p. 634). And the time spent in a state decays exponentially, which Bishop calls "a very unrealistic model of state duration" for many applications (p. 632). The numerical trap is the one you met with gradients: forward probabilities shrink at every step and exceed the range of double precision on chains of "say 100 or so" unless rescaled (p. 627). An HMM is still a fair choice when the states are few and you need to read them.
 
 ## Reading
 

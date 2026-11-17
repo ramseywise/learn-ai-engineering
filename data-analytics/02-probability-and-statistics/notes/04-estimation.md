@@ -426,6 +426,7 @@ The paper's rounded 16 gives about 409,000 per arm for a 5% revenue change and a
 | What is an MLE, and where does its SE come from? | The parameter value that makes the data most probable. Its asymptotic SE comes from the curvature of the log-likelihood at the peak. |
 | What do you do for a rate of 0 out of 50? | Use Wilson, which gives roughly [0, 0.07]. Wald gives [0, 0], which claims certainty. |
 | What is an MDE? | The smallest effect you would detect with the chosen power and significance, given n and variance. Roughly n = 16σ²/δ² per arm at 5% and 80%. |
+| Is an unbiased estimator always the one you want? | No. Dividing by n is biased, yet in the chapter's example it has a smaller mean squared error than n − 1. Accepting a little bias for less variance is what regularisation and shrinkage do. |
 
 ---
 

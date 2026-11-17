@@ -393,6 +393,7 @@ Run the data block at the top of this chapter first, then:
 | Pearson vs Spearman? | Pearson measures linear association and is sensitive to outliers. Spearman works on ranks, so it captures monotonic association and resists single values. |
 | Why is the student-reported class size larger than the dean's? | Sampling by student weights each class by its size, so large classes are over-represented. The same happens with per-session and per-user metrics. |
 | When is missing data dangerous? | When missingness relates to the outcome or to a segment. Compare the missing and non-missing groups before dropping. |
+| How do you spot outliers in a column of numbers? | Compare the mean with the median, and the standard deviation with the IQR. When they disagree by a lot, the tail is running the summary, so look at the tail. |
 
 ---
 

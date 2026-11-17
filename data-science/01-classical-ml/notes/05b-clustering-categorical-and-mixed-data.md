@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - Bishop, Pattern Recognition and Machine Learning (Springer, 2006), ch. 9, 12
   - ../practice/mixed_clustering.py
   - https://www.numdam.org/item/RSA_2004__52_4_93_0.pdf
   - https://arxiv.org/abs/1301.4797
@@ -209,6 +210,8 @@ variance ratios [0.562 0.201 0.198 0.02  0.019]
 
 Picking axes by the elbow, the point where the scree plot flattens, keeps one, at 56% of the variance, and that axis has no groups in it at all. Keep four and you only tie with the raw columns (0.23), where the loud block also drowns the groups. Only the two quiet columns on their own do well (0.964). Column choice beat the reduction here, and no reduction method can make that choice for you.
 
+The theory says to expect this. PCA minimises reconstruction error, and the error left after keeping $M$ axes "is simply the sum of the eigenvalues" of the discarded ones (Bishop, *Pattern Recognition and Machine Learning*, *PRML*, ch. 12, p. 565). Nothing in that objective knows about groups, and Bishop makes the point by setting PCA beside Fisher's discriminant, which uses the labels and can prefer a direction PCA ranks low (ch. 12, p. 568). Probabilistic PCA turns the reduction into a likelihood model, where the fitted noise variance is the average variance of the discarded dimensions, EM copes with missing values, and a prior can prune surplus axes: on 300 synthetic points in 10 dimensions with 3 high-variance directions, the Bayesian fit suppressed the 6 surplus axes (ch. 12, pp. 575, 577 and 584, one synthetic data set).
+
 The evidence for categorical data is more mixed than the warning suggests. Joint methods that fit the reduction and the clusters together exist: reduced k-means, factorial k-means, MCA k-means and cluster correspondence analysis, [all in R's `clustrd`](https://www.jstatsoft.org/article/view/v091i10) (Markos and colleagues, *Journal of Statistical Software*, 2019). That paper's review reports that reduced and factorial k-means, on continuous data, recover well-separated clusters masked by random variables where tandem fails, on evidence I know only through this summary. [A 2014 working paper](https://repub.eur.nl/pub/77010/EI2014-24.pdf) with uniform noise columns found tandem about level with the joint methods (ARI 0.85 against 0.82 to 0.86, for 20 variables of 5 categories plus 8 noise columns, 4 balanced groups, n = 1,000). [Its published 2017 abstract](https://repub.eur.nl/pub/93479) (*Psychometrika*) reports tandem doing worse once unrelated variables are added; I couldn't read those tables, so don't treat one as settling the other. In practice: keep more axes than the elbow says, and rerun with a joint method if the columns may include noise.
 
 ## Gower: define the distance directly
@@ -286,6 +289,8 @@ Seed 0. Each world wants a different $\gamma$, and you don't know which world yo
 Every method so far minimises a distance. **Latent class analysis (LCA)** instead assumes a recipe: each customer belongs to a hidden class, each class has its own mean for each number and its own level shares for each category, and within a class the columns are independent. That last assumption is called **local independence**.
 
 The fit is expectation-maximisation (EM), the same loop as the [Gaussian mixture in note 05](05-unsupervised-learning.md#clustering), and easy to say in words. Start with guessed recipes. **E step:** for each customer, compute the probability of each class given their row. **M step:** re-estimate each recipe using those probabilities as weights. Repeat until it settles, from several random starts because it can stop at a poor optimum.
+
+*PRML* makes the kinship with k-means exact. Give every Gaussian component the same spherical covariance $\epsilon I$ and let $\epsilon \to 0$: the soft responsibilities harden into assignments and EM becomes k-means (ch. 9, pp. 443–444). Two habits follow from that chapter. Start a mixture from a k-means run, because EM takes many more iterations and each costs more (p. 438). And expect maximum likelihood to break when a Gaussian component collapses onto one point and its density goes to infinity, which a prior or a variance floor prevents (p. 434). K-medoids, the PAM used above, is the same alternation with any dissimilarity in place of squared distance, at $O(N_k^2)$ evaluations per cluster for the medoid step (p. 428).
 
 Because it's a likelihood model, you can compare numbers of classes with the Bayesian information criterion (BIC), including one class, which means no groups:
 

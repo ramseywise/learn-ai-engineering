@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
+  - Bishop, Pattern Recognition and Machine Learning (Springer, 2006), ch. 11
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 13
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 3 Opening the Black Box of MCMC)
   - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
@@ -47,7 +48,7 @@ BMH's picture is useful here ([Davidson-Pilon, ch. 3](https://github.com/CamDavi
 Two consequences follow, and BMH stresses both:
 
 - **A prior of zero stays zero.** If the prior assigns no mass to a region, no amount of data can move the posterior there. Choose supports generously ([chapter 3](03-priors-and-bandits.md)).
-- **Thousands of samples, not tens.** Summaries are Monte Carlo estimates, and their error shrinks like 1/√(effective samples).
+- **Thousands of samples, not tens.** Summaries are Monte Carlo estimates, and their error shrinks like 1/√(effective samples). Bishop notes that "ten or twenty independent samples may suffice" for an expectation (*PRML*, ch. 11, p. 524); MCMC needs thousands because its draws are not independent.
 
 ### When the likelihood is costly: summaries instead of data
 
@@ -134,6 +135,8 @@ Random-walk Metropolis struggles because it proposes blindly, and in high dimens
 *Image Source: Hoffman & Gelman, [The No-U-Turn Sampler](https://arxiv.org/abs/1111.4246) (2014), Fig. 2. Blue arrow: leftmost-to-rightmost vector; magenta arrow: momentum. The angle passes 90 degrees, so doubling stops; red marks are excluded nodes.*
 
 Two older samplers explain what the table's names mean. **Gibbs** sampling updates one block of unknowns at a time by drawing it from its conditional distribution given the rest, which is cheap whenever conjugacy makes that conditional a standard family. **Metropolis-Hastings** proposes a move and accepts it with a probability set so that the chain's long-run frequencies match the posterior (the detailed-balance condition), so the normalising constant is never needed. Efron and Hastie's tour of the Gibbs case is the Bayesian t-test on 39 vasoconstriction measurements (20 in one group, 19 in the other, 10,000 Gibbs draws per run), where the posterior tail probability of the effect is 0.0028 against a frequentist one-sided p of 0.0047, and the same book's population-admixture model (197 individuals at 100 SNPs, three ancestral groups, flat Dirichlet and Beta priors, 1,000 burn-in draws then 2,000) recovers the ethnic clusters without labels by alternating conjugate updates (*Computer Age Statistical Inference*, ch. 13). Their caveats match the diagnostics below: successive draws are correlated, and there is no clear rule for the burn-in length. Both examples are small, and the book gives no timings.
+
+Bishop's *Pattern Recognition and Machine Learning* (*PRML*) puts orders of magnitude on this ladder. Rejection sampling dies with dimension: for a 1,000-dimensional Gaussian target and a Gaussian proposal whose standard deviation is 1% larger, about 1 proposal in 20,000 is accepted (*PRML*, ch. 11, p. 531). Random-walk Metropolis has to step at the scale of the narrowest direction, so independent draws are of order $(\sigma_{\max}/\sigma_{\min})^2$ steps apart, and Gibbs sampling on a correlated Gaussian pays the same kind of square, $(L/l)^2$ (ch. 11, pp. 540 and 544). That squared cost is what gradient-guided samplers exist to avoid. Importance sampling has the nastier failure: where the proposal misses a region of the target, the estimate can be "arbitrarily in error and with no diagnostic indication" (p. 534). The chapter predates NUTS, so its hybrid Monte Carlo is tuned by hand.
 
 The same data under different samplers and scalings makes the case. This is Challenger again:
 

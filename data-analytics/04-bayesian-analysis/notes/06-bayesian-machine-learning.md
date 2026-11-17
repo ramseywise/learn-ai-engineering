@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: own coursework
 sources:
+  - Bishop, Pattern Recognition and Machine Learning (Springer, 2006), ch. 9, 10
   - ../practice/BayesianML/
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 7 Bayesian Machine Learning, unfinished outline)
   - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/
@@ -117,7 +118,7 @@ EM vs MCMC on the same model:
 | Uncertainty | none on the parameters | full |
 | Failure | local optima, collapsing covariances | slow mixing, label switching |
 
-The `1e-6 * np.eye` in `m_step` guards against the collapsing-covariance failure, where a component shrinks onto a single point and the likelihood rises without limit.
+The `1e-6 * np.eye` in `m_step` guards against the collapsing-covariance failure, where a component shrinks onto a single point and the likelihood rises without limit. Bishop names this a singularity of maximum likelihood that a prior removes (*PRML*, ch. 9, p. 434).
 
 ## MCMC and Bayesian logistic regression (week 4)
 
@@ -299,6 +300,8 @@ ADVI: mean a 1.153 b 1.018  sd a 0.127 b 0.130  sd of a+b 0.181  corr -0.01
 The means are close. The marginal standard deviations are about 0.39 under NUTS and 0.13 under ADVI, which is the underestimation Blei et al. warn about, and here it is threefold. Mean-field q has no way to express the correlation of −0.96, and that also misstates the sum: the well-determined a + b gets an sd of 0.181 against 0.113. If you need intervals rather than a prediction, check VI against MCMC on a sample of the data first.
 
 That check is needed because the general answer isn't known. Blei et al. write that **the relative accuracy of VI and MCMC "is still unknown"**: VI generally underestimates variance, yet it need not lose accuracy on posterior predictive densities. Their own speed result is one case. CAVI fit a 30-cluster Gaussian mixture to 10,000 images (576-dimensional colour histograms) in under a minute, "orders of magnitude" faster than the HMC-based sampler in Stan (the review cites version 2.8), with progress tracked by held-out log predictive and no hardware stated. It says nothing about intervals, and a footnote calls it "not a definitive comparison", since a collapsed Gibbs sampler might do better. Two more limits come from the same review. The ELBO is generally non-convex, so CAVI only reaches a local optimum that depends on the starting point. And picking a model by its ELBO "sometimes works in practice" but is "not justified in theory".
+
+Bishop's *Pattern Recognition and Machine Learning* (*PRML*) shows where the narrowness comes from. Minimising KL(q‖p) with a factorised q matches the variance of the narrowest direction and under-estimates the rest; in general such approximations are "too compact" (*PRML*, ch. 10, p. 467). The same chapter shows what VI is good for. A variational mixture of 6 Gaussians fitted to the Old Faithful data switches off the components it doesn't need, and how many survive depends on the prior on the mixing weights: 2 with $\alpha_0=10^{-3}$, 3 with $\alpha_0=1$, all 6 with $\alpha_0=10$ (ch. 10, p. 480). So the count is not read off the data alone. Comparing the lower bound across $K$, with $\ln K!$ added for the label symmetry and 100 random starts per $K$, gives a peak at $K=2$ (ch. 10, Fig. 10.7, p. 484, one data set).
 
 ![Exact correlated posterior against its mean-field approximation, drawn as 2-sigma ellipses](../../sources/images/blei-variational-inference-fig1.png)
 *Image Source: Blei, Kucukelbir & McAuliffe, [Variational Inference: A Review for Statisticians](https://arxiv.org/abs/1601.00670) (2017), Fig. 1. Ellipses are 2σ contours: the mean-field approximation misses the correlation and is too narrow.*

@@ -409,6 +409,8 @@ Both sides match. The second identity is the reason for two later techniques. St
 | Why does a standard error shrink with √n? | Independent variances add to nσ², and dividing the sum by n leaves σ²/n. That independence is what breaks with repeated users. |
 | Law of total variance in one line? | Total variance is the mean within-group variance plus the variance of group means, which is why knowing groups can reduce noise. |
 | Independent vs conditionally independent? | Neither implies the other. A shared cause makes variables dependent overall but independent given the cause. |
+| Define variance. | Var(X) = E[(X − E[X])²], the mean squared distance of X from its mean. Its square root is the standard deviation. |
+| What is an expected value? | The long-run mean of a random variable, E[X]. A webinar attendee who buys a 300-dollar service with probability 5% and a 50-dollar one with 15% is worth 0.05 × 300 + 0.15 × 50 = 22.50 dollars a month. |
 
 ---
 

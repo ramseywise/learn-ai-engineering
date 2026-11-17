@@ -448,6 +448,9 @@ Light users gain more: NDCG goes from 0.061 with popularity to 0.131 with EASE. 
 | Item-based or user-based kNN? | Usually item-based: item relationships change slowly enough to precompute, so it scales, and Sarwar et al. (2001) also measured better quality on MovieLens. |
 | What did Dacrema et al. find? | Of 18 algorithms, 7 reproducible; 6 of those often lost to simple heuristics, and the remaining one did not consistently beat a tuned linear method. |
 | How should you split interaction data? | By time. A global cut is closest to production. A per-user chronological split is a compromise when users have short active periods. |
+| What is a recommender system? | It ranks a large catalogue for each person from a table that is almost entirely empty, using the traces other people left behind. |
+| What are good baselines for a recommender? | Popularity and random first, then item kNN and EASE, tuned with the same care as your favourite model. |
+| What is collaborative filtering? | Recommending from other people's behaviour in the user-item table: people who liked this also liked that. Item kNN, matrix factorisation and EASE are examples. |
 
 ## Next
 

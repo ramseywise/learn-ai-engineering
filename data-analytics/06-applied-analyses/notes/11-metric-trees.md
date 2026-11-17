@@ -579,6 +579,7 @@ The limits are real. The 90-day repeat rate is a leading proxy for a long-term v
 | What's maturity or finality? | How long until a period's number stops changing. Reporting before that confuses censoring with a fall |
 | Count or rate for a north star? | A count rises with scale and a rate punishes growth. Choose one, then pair it with something that catches the other's failure |
 | What does a semantic layer solve? | One stored definition served to every consumer. It doesn't make the definition right |
+| A metric moved more than expected. How do you find the cause? | Attribute the change along the tree's identity, month against month and against the same month last year, then go down whichever leaf moved. |
 
 ## Next
 

@@ -7,6 +7,7 @@ sources:
   - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - James et al., An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 10
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 18
+  - Bishop, Pattern Recognition and Machine Learning (Springer, 2006), ch. 5
   - https://www.tensorflow.org/guide/migrate
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), appendix A"
   - https://doi.org/10.1038/323533a0
@@ -198,6 +199,8 @@ planted bug, gradient off by 10%: 0.04761904761148488
 ```
 
 A relative difference below about $10^{-7}$ passes; your notebook uses the same threshold. ReLU's kink can raise it a little when a unit sits at zero. Turn the check off during training, because it costs one full forward pass per parameter, twice.
+
+Bishop's *Pattern Recognition and Machine Learning* (*PRML*) puts the two costs side by side: for $W$ weights, backpropagation gets every derivative in $O(W)$ operations, while central differences need two forward passes per weight, $O(W^2)$ in all (*PRML*, ch. 5, pp. 240 and 246–247). The symmetry you broke with random initial weights also means the answer is never unique. A hidden layer of $M$ tanh units has $M!\,2^M$ equivalent weight settings, from permuting the units and flipping signs (ch. 5, p. 232). And stopping early acts like weight decay: for a quadratic error surface, the product of the step count $\tau$ and the learning rate $\eta$ plays the role of $1/\lambda$ (ch. 5, pp. 260–261).
 
 ## The same network in PyTorch
 
@@ -432,6 +435,7 @@ All are your own Coursera submissions, kept untouched, and their outputs are not
 | What do `model.eval()` and `torch.no_grad()` each do? | `eval` switches layers such as dropout and batch norm to test behaviour. `no_grad` stops recording the graph. They are independent. |
 | What do you need to change for DDP? | Init the process group, wrap the model, use `DistributedSampler` with `shuffle=False`, and call `set_epoch` each epoch. |
 | Does having more parameters than rows mean a network must overfit? | No. Parameter count is a poor proxy for complexity, and flexible models with a preference for simple solutions generalise, as linear models with suitable regularisation can too (Wilson 2025). |
+| How does a feed-forward pass work? | Layer by layer. Each layer multiplies the previous activations by its weight matrix, adds a bias and applies an activation, starting from the input. |
 
 ## Next
 

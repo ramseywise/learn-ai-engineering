@@ -514,6 +514,7 @@ Every step except the last must have `fit` and `transform`. The last needs `fit`
 | Why log-transform counts? | Skewed inputs let a few huge values dominate a linear fit; log1p makes them more symmetric and handles zeros |
 | What does `handle_unknown="ignore"` do? | Encodes an unseen category as all zeros, so production data doesn't crash |
 | Which preprocessing steps must be refit inside each fold? | Any step with a `fit`: scaling, imputation, encoding, selection, PCA, target encoding, vectorising text. A `Pipeline` does that for you. |
+| Which feature selection techniques do you know? | Univariate statistics (`SelectKBest`), model-based (`SelectFromModel`, on importances or L1 coefficients) and iterative (`RFE`). Selection is a fitted step, so it belongs inside each CV fold. |
 
 ## Next
 

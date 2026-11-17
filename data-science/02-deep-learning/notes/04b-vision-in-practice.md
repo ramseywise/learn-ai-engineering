@@ -426,6 +426,8 @@ Every shapes number here came from running the code shown. The numbers attribute
 | Name the three common PyTorch errors and their fixes. | Shape (add the batch dimension, check flatten), device (move inputs to the model's device), dtype (`uint8` to scaled `float32`, labels `int64`). |
 | Why do ViTs need more data than CNNs? | They lack locality and translation equivariance, so they learn them from data; the paper's ViT-B/32 lost to a ResNet50 on 9M images and won from 90M. |
 | Why split code into `data.py`, `model.py`, `engine.py`? | Every experiment shares one loop, so a fix reaches all arms, and a script runs where a notebook won't. |
+| What is augmentation, and how do you choose the transforms? | Random transforms applied to the training set only, drawn fresh each time an image is read. Use only those that keep the label: a shape survives rotation, but a 6 rotated half a turn is a 9. |
+| What is pseudo-labelling? | A teacher labels unlabelled images and a student trains on labelled plus pseudo-labelled data. Noisy Student adds RandAugment, dropout and stochastic depth to the student, which then becomes the next teacher. |
 
 ## Next
 

@@ -5,6 +5,7 @@ sources:
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://scikit-learn.org/stable/modules/ensemble.html
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
+  - Bishop, Pattern Recognition and Machine Learning (Springer, 2006), ch. 14
   - https://doi.org/10.1023/a:1010933404324
   - https://doi.org/10.1214/aos/1013203451
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
@@ -51,6 +52,8 @@ $$\rho\sigma^2 + \frac{1-\rho}{B}\sigma^2$$
 Adding more trees kills the second term; only *decorrelating* the trees attacks the first. That is the whole design of random forests.
 
 **What bagging can and cannot do.** Bagging averages one model fitted to $B$ bootstrap samples. Under squared error the argument is clean: averaging leaves the bias alone and removes variance, so the ideal aggregate over the population never has a higher mean squared error than a single fit (*ESL*, ch. 8, Eq. 8.52). Three limits follow. It helps only unstable fits such as trees; a fit that is linear in the data, such as a spline smoother, comes back essentially unchanged. It does not reduce bias: on 100 points in two classes separated by the line $x_1 + x_2 = 1$, bagging 50 single-split stumps gives test error 0.166 where boosting the same stump gives 0.065 (Fig. 8.12). And under 0-1 loss the guarantee is gone: if the true label is always 1 and a classifier predicts 1 with probability 0.4, its error is 0.6 and the error of its bagged majority vote is 1.0. Bagging makes a good classifier better and can make a bad one worse. When the base model outputs class probabilities, ESL recommends averaging those over counting votes (*ESL*, ch. 8, sec. 8.7).
+
+Bishop's *Pattern Recognition and Machine Learning* (*PRML*) states the best case of that formula. If the errors of $M$ models had zero mean and were uncorrelated, the committee's expected squared error would be the average member's divided by $M$: $E_\text{COM} = \frac{1}{M}E_\text{AV}$. Then comes the caveat: "In practice, the errors are typically highly correlated, and the reduction in overall error is generally small", though the committee is never worse than the average member (*PRML*, ch. 14, eq. 14.14, p. 657).
 
 | | Bagging / random forests | Boosting |
 |---|---|---|
@@ -170,6 +173,8 @@ lr 0.01                   train 0.988  test 0.958
 **Boosting against a forest, and trimming the ensemble.** Boosting slightly beat a random forest on both the ALS and spam data, but at the price of cross-validating three parameters (rounds, depth, shrinkage), whereas the forest is almost automatic; on spam a McNemar test finds boosting and the forest not significantly different, and both better than bagging. `gbm` grows each tree on a 50% subsample by default, which acts like bagging. AdaBoost, the original boosting algorithm for $\pm 1$ labels, reweights misclassified points so the classifier just fitted has weighted error 0.5; it turns out to be forward-stagewise fitting of the exponential loss, whose left tail punishes confident mistakes far harder than the logistic loss, and on spam it matches binomial gradient boosting. Because shrunken trees are similar, a non-negative lasso over the trees can pick and reweight a subset: on the ALS data it matched the depth-2 boosted model with about a third of the trees, though choosing the number to keep is critical (*Computer Age*, ch. 17, Fig. 17.13).
 
 **How weak the weak learner can be.** ESL's opening example is the cleanest demonstration. On ten Gaussian features with the class set by whether the squared radius exceeds its median (2,000 training cases, 10,000 test, no label noise), a single stump has 45.8% test error, barely better than a coin. AdaBoost on stumps reaches 5.8% after 400 rounds, against 24.7% for a single 244-node tree. Training error hits zero at around 250 rounds and the test error keeps falling, because the exponential loss being minimised is still decreasing after the misclassification count has nothing left to give (*ESL*, ch. 10, Figs. 10.2 and 10.3, one simulated dataset). The price of that loss is robustness: ESL concedes that AdaBoost degrades with overlapping classes and mislabelled training data, which is the case for the deviance loss that gradient boosting uses for classification.
+
+The exponential loss has a cost too. It grows exponentially with the size of a negative margin where cross-entropy grows linearly, so AdaBoost is "much less robust to outliers or misclassified data points" (*PRML*, ch. 14, p. 662).
 
 Because `n_estimators` and `learning_rate` trade against each other, a grid over both is wasteful; early stopping picks `n_estimators` for you. [Note 09](09-training-and-tuning.md#early-stopping-is-regularisation-too) explains why stopping acts as regularisation.
 
@@ -334,6 +339,16 @@ For the notebook version, see [`02-supervised-learning.ipynb`](../practice/intro
 | What makes `HistGradientBoosting` fast? | Binning features into at most 255 values before searching splits |
 | Why can't trees extrapolate? | A leaf predicts a constant from training targets, so predictions stop at the training range |
 | When is stacking worth it? | Competitions, when the last small gain matters more than maintenance |
+| What is a random forest? | Many deep trees, each trained on a bootstrap sample and considering only a random subset of features at each split, then averaged. The randomness decorrelates the trees, so averaging cuts variance. |
+| What are the main parameters of a random forest? | `n_estimators` and `max_features`. `max_depth` and `min_samples_leaf` are rarely needed: tune them only to cut memory and time. Fix `random_state` for reproducibility. |
+| How many trees does a random forest need? | Enough for the estimate to settle, commonly 100 to 500. The number of trees is a stability setting and not a tuning parameter, because too many cannot overfit. |
+| Is a random forest easy to parallelise? | Yes. The trees are built independently, so `n_jobs=-1` trains them on all cores. |
+| What are the weaknesses of a random forest? | It is poor on very high-dimensional sparse data such as text, slow to predict with many deep trees, less interpretable than one tree, and cannot extrapolate beyond the training range. |
+| What if each split uses a random threshold? | That is `ExtraTreesClassifier`: random split thresholds are a third source of randomness. It is faster and sometimes as good. |
+| What do correlated features do to tree importances? | A single tree picks one of each correlated group and ignores the rest. A forest's feature subsets force it to try the others, so the credit spreads. |
+| What is gradient boosting? | Fit a shallow tree, compute the residuals (in general the negative gradient of the loss), fit the next tree to those, add it scaled by a learning rate, and repeat. |
+| How do you pick the number of trees in gradient boosting? | Let early stopping pick it. `n_estimators` and `learning_rate` trade against each other, so a grid over both is wasteful. |
+| When does combining models beat a single model? | When their errors are not perfectly correlated, since averaging then reduces variance. Adding models cannot remove the correlated part, so the gain comes from decorrelating them. |
 
 ## Next
 

@@ -546,6 +546,7 @@ This case is hypothetical; the rows are real and the rate is our doing.
 | Covariate or concept shift? | P(x) moves, against P(y given x) moves. The first is visible without labels, the second is not |
 | What is train/serve skew? | Serving computes features differently from training. A stale month or a filled null, with no change in the world |
 | What does PSI measure, and when does it fail? | Distribution change in a feature or score. It can't see concept shift or a rare class's prior, and quantile bins can hide a coded column |
+| What do you try first on an imbalanced binary problem? | On this chapter's data: tune the threshold and leave the data alone. SMOTE at a fixed 0.5 usually lost, and with a tuned threshold it only tied. |
 
 ## Next
 

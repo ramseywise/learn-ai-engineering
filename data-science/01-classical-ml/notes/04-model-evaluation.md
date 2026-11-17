@@ -497,6 +497,13 @@ Where the fixes landed:
 | How do you read a learning curve? | High and converged means bias, so more data will not help. A large gap means variance, so more data will help |
 | How do you split for grouped or temporal data? | So production's situation holds: by subject, or past-to-future |
 | Recall or specificity? | Recall is $TP/(TP+FN)$, the share of real positives caught. Specificity is $TN/(TN+FP)$, the share of negatives left alone. The first counts misses and the second counts false alarms. |
+| Which metrics evaluate a regression model? | R² for comparing models. For reporting, use a unit the business understands: MAE (robust to outliers), RMSE (penalises big misses) or MAPE (relative error, undefined at zero). |
+| How many folds should k-fold CV use? | 5 or 10 is ISLP's advice. Leave-one-out has the least bias but averages n highly correlated fits, so its variance is high. A single validation split is noisy and trains on less data. |
+| What is accuracy, and when does it suit? | (TP + TN) / n, the fraction right. It suits balanced classes and symmetric costs. Always compare it against a dummy: if it barely beats one, accuracy is the wrong metric. |
+| What are precision, recall and F1? | Precision: of those flagged, how many are real. Recall: of the real ones, how many were caught. F1 is their harmonic mean, one number for an imbalanced positive class. |
+| What are the limits of R² as a metric? | It is fine for comparing models, but not in-sample: with at least as many features as rows a perfect fit is guaranteed, so report held-out or cross-validated error only. |
+| Too many false positives or too many false negatives? | It depends on what each costs. In cancer screening a false negative is a missed cancer and a false positive is extra tests. In a spam filter the false positive, a real email lost, is the worse one. |
+| How do you average F1 over more than two classes? | `macro` weights every class equally, for when small classes matter as much as large. `weighted` weights by class support. `micro` weights every sample equally and equals accuracy for single-label problems. |
 
 ## Next
 

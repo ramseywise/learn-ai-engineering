@@ -228,6 +228,9 @@ These are 2021 image classifiers, so don't carry the ranking to other domains or
 | ROC or PR on imbalance? | PR: it ignores the large pool of true negatives |
 | How do you pick a threshold? | From the cost of each error, on validation data, then report on test once |
 | What is calibration, and how do you fix it? | Whether scores match frequencies. Reliability diagram; Platt, isotonic, or temperature scaling |
+| What is the precision-recall trade-off? | Moving the decision threshold trades precision for recall without retraining the model. |
+| What are the ROC curve and AUC? | ROC plots TPR against FPR over all thresholds. AUC is the probability that a random positive outscores a random negative: 0.5 is chance, 1.0 is perfect ranking. |
+| What is the PR curve, and what summarises it? | Precision against recall over all thresholds, where closer to the top right is better. Average precision summarises it, and ignores the large pool of true negatives. |
 
 ## Next
 

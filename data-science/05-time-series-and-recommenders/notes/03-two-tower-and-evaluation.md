@@ -433,6 +433,8 @@ The effective sample size drops from 3,237 to 332, and the largest weight rises 
 | What is IPS? | Reweight logged events matching the new policy by the inverse of the logging probability. It needs logged propensities and exploration, and high variance is its price. |
 | Why not trust offline results alone? | Logs only hold what the old system showed, so new behaviours get little credit. YouTube and Netflix both report that offline does not always predict live. |
 | How many users does an A/B test need? | About $2(z_\alpha + z_\beta)^2 \bar p(1 - \bar p)/\Delta^2$ per arm. A 1% lift on 5% takes roughly three million. |
+| How do you evaluate a new ranker online? | With a controlled A/B test, the only method where the counterfactual is real, on a long-term outcome such as retention. Offline experiments prune the candidates first. |
+| What is the cold start problem? | A new item has no interactions, so EASE, kNN and factorisation can only guess. A tower can still embed the item from its features. |
 
 ## Next
 

@@ -470,6 +470,11 @@ Every digits number in this chapter came from running the code shown, with `uv r
 | Dropout in an underfitting model? | It hurts. Standard dropout lowered accuracy here and on ViT-T in Liu et al. Early dropout can help or at least not harm. |
 | Regularising first, or learning rate first? | Learning rate. Regularisation is for a model that fits and doesn't generalise. |
 | How do you compare two optimisers fairly? | Several seeds, an equal tuning budget and more than one workload, measured by time to a target. That's the AlgoPerf design. |
+| Which regularisation techniques do you know? | Early stopping, weight decay, dropout and more data. Reach for them once training is good and test is poor, after the learning rate and optimiser are tuned. |
+| How do you set the learning rate? | Sweep it by factors of ten before touching anything else. Too low and the run has not finished. Too high and it never settles. |
+| Can you rank the adaptive optimisers from one run? | No. Momentum and per-parameter step sizes clearly matter on a short budget, but the gaps among the adaptive methods were within a standard deviation or two. |
+| Constant learning rate or a schedule? | A schedule gave a small gain here: cosine 0.970 ± 0.003 against constant 0.963 ± 0.006 test accuracy, and it was more consistent across seeds, since the step shrinks as training ends. |
+| When do you stop training? | Watch a validation curve and keep the best checkpoint, since the right epoch count is not known in advance. On digits with 30% label noise, stopping early beat dropout and weight decay. |
 
 ## Next
 

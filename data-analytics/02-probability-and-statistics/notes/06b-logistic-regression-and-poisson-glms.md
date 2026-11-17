@@ -289,6 +289,7 @@ Mass leaves the low ratings and lands on the high ones, and the mean rises from 
 | Your logistic coefficient is 28 with SE in the thousands. What now? | Separation. Check for a predictor that splits the outcome perfectly, then regularise or use a weakly informative prior. |
 | What is deviance? | Twice the log-likelihood gap from a model that fits every row exactly: a GLM's version of the residual sum of squares. The drop from null to residual deviance is a likelihood-ratio test. |
 | What is overdispersion? | Count variance above the mean. A Poisson fit then has SEs too small, so use robust SEs or a negative binomial. |
+| What is logistic regression, and is it a linear model? | A model for a yes/no outcome, where a straight line can predict outside 0 and 1. It is linear in the log-odds, and the logistic function then squashes the prediction into a probability. |
 
 ---
 
