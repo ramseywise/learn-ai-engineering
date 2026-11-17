@@ -12,7 +12,7 @@ cleaned: 2026-11-01
 ---
 # 1 — Series and DataFrame
 
-Most of the data an analyst touches arrives as a table: a row per order, a column per fact about the order. Python's own lists and dictionaries can hold such a table, but every question you ask of it turns into a loop, and every loop is a place to get the bookkeeping wrong. pandas gives you two objects that hold the table directly, the Series for one column and the DataFrame for many, and lets you ask the question in one line. This chapter builds both from nothing, using the orders of a small online shop that sells coffee gear. The same shop runs through all seven chapters of this pillar. By the end you can build a frame, read what it tells you about itself, compute a new column, and explain why two Series with different labels add up the way they do.
+Most of the data an analyst touches arrives as a table: a row per order, a column per fact about the order. Python's own lists and dictionaries can hold such a table, but every question you ask of it turns into a loop, and every loop is a place to get the bookkeeping wrong. pandas gives you two objects that hold the table directly, the Series for one column and the DataFrame for many, and lets you ask the question in one line. This chapter builds both from nothing, using the orders of a small online shop that sells coffee gear. The same shop runs through all eight chapters of this pillar. By the end you can build a frame, read what it tells you about itself, compute a new column, and explain why two Series with different labels add up the way they do.
 
 Everything here was run on pandas 3.1.0 with Python 3.13. That matters more than usual, because pandas 3.0 changed behaviour that older books and most blog posts still describe. The chapter points those places out as they come up.
 
@@ -189,7 +189,7 @@ scale       6.0
 dtype: float64
 ```
 
-The book's own example is the same shape: `s1 + s2` over overlapping labels gives `NaN` for every label found on only one side, and `df1.add(df2, fill_value=0)` treats a missing label as 0 (*Python for Data Analysis*, ch. 5). Whether a gap means zero or means unknown is a question about the data and not about the code, and pandas leaves that decision with you. Chapter 2 returns to it.
+The book's own example is the same shape: `s1 + s2` over overlapping labels gives `NaN` for every label found on only one side, and `df1.add(df2, fill_value=0)` treats a missing label as 0 (*Python for Data Analysis*, ch. 5). Whether a gap means zero or means unknown is a question about the data and not about the code, and pandas leaves that decision with you. Chapter 5 returns to it.
 
 ## A DataFrame is a dictionary of aligned columns
 

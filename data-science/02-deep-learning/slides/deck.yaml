@@ -98,12 +98,38 @@ parts:
         bullets:
           - "**Gradient check:** correct backprop differs from numerical by 9e-11, a planted 10% bug by 0.048."
           - "**Autograd** matched the NumPy `dW1` to within 7e-17 in the chapter."
+          - "**Cost for W weights:** backprop gets every derivative in O(W), central differences need O(W²)."
         takeaway: Backprop is the chain rule with bookkeeping, and `backward()` does the bookkeeping.
         source: notes/01-neural-networks-fundamentals.md
         notes: >-
           Forward, loss, backward, step. The notebooks write every line in NumPy, which is worth doing once. A numerical
           gradient check catches a planted bug instantly, and autograd reproduces the hand-written gradient to machine
-          precision, so from then on we let it do the work.
+          precision, so from then on we let it do the work. Bishop's PRML puts the costs side by side: central differences need two forward passes per weight, O(W²) in all, which is why they serve as a check and not as the method.
+
+      - layout: compare
+        beat: fundamentals
+        title: Sigmoid shrinks the gradient at every layer, ReLU does not
+        recall: Why did ReLU replace sigmoid in hidden layers, and what does it cost?
+        emphasis: right
+        left:
+          title: Sigmoid
+          tag: "slope at most 0.25"
+          bullets:
+            - "Ten layers scale the gradient by at most 0.25^10, about 10^-6"
+            - "Early layers barely learn: the vanishing gradient"
+            - "Output always positive, so updates zig-zag"
+        right:
+          title: ReLU
+          tag: "slope exactly 1 for positive inputs"
+          bullets:
+            - "Depth does not shrink the gradient"
+            - "Costs one comparison"
+            - "Price: a dead unit has zero gradient for good, and Leaky ReLU avoids it"
+        takeaway: Use ReLU in hidden layers and keep sigmoid and softmax for the output, where a probability is wanted.
+        answer: "Its slope is 1 for positive inputs, so depth doesn't shrink the gradient, and it is cheap. The cost is dead units, which Leaky ReLU avoids."
+        source: notes/01-neural-networks-fundamentals.md
+        notes: >-
+          A sigmoid's slope peaks at 0.25 at z equals zero and falls as the unit saturates, and backpropagation multiplies one such factor per layer. tanh fixes the centring and has slope 1 at zero, but it still saturates.
 
       - layout: code
         beat: practice
@@ -386,7 +412,7 @@ parts:
         source: notes/04-convolutional-networks.md
         notes: >-
           Every weight in the MLP is tied to one pixel position, so it has nothing to say about a digit that has moved. Shifted
-          training data helps it too, but sharing a filter builds the idea into the network. For a 64 by 64 colour image, a dense
+          training data helps it too, but sharing a filter builds the idea into the network. Rotation is different: nothing is shared across turning, so a rotated edge is a different pattern to the filter, and a CNN copes only as far as its training images did. The fix is augmentation with rotations the label survives. For a 64 by 64 colour image, a dense
           layer of 1000 units needs 12 million weights where 16 filters need 448.
 
       - layout: code
@@ -514,6 +540,29 @@ parts:
           The rest of the numbers are noise. So the network only has to carry one bit along. Backpropagation through time multiplies
           one factor per step, and the signal fades away. What fixes it turns out to be a single initial value.
 
+      - layout: compare
+        beat: fundamentals
+        title: The hidden Markov model was the recurrent cell's ancestor
+        recall: Why did vector-valued hidden states take over from the hidden Markov model?
+        emphasis: right
+        left:
+          title: Hidden Markov model
+          tag: "one state out of K values"
+          bullets:
+            - "K^N paths, summed in O(K²N); Viterbi finds the best, also linear in N"
+            - "10 bits of context takes 1,024 states"
+            - "Time in a state decays exponentially"
+        right:
+          title: Recurrent cell
+          tag: "a hidden vector"
+          bullets:
+            - "10 binary units carry the same 10 bits"
+            - "Gradients fade over many steps, as the next slides show"
+        takeaway: "A single symbol is a poor memory: 10 bits of context cost 1,024 states, where 10 binary units do."
+        source: notes/05-sequence-models.md
+        notes: >-
+          An HMM is still a fair choice when states are few and you need to read them. From Bishop's PRML, chapter 13. Bishop calls the exponential state duration "a very unrealistic model of state duration" for many applications. The numerical trap is the one from gradients: forward probabilities shrink at every step and exceed double precision on chains of "say 100 or so" unless rescaled.
+
       - layout: image
         beat: fundamentals
         title: The forget-gate bias decides whether gradient reaches step 0
@@ -611,10 +660,11 @@ parts:
           # code 8   autoencoder 1.233 (0.112)   PCA 1.569 (0.025)
           # code 16  autoencoder 0.764 (0.198)   PCA 0.738 (0.008)
           # code 32  autoencoder 0.315 (0.067)   PCA 0.171 (0.004)
-        takeaway: Compute PCA first, since at a code of 32 it is ahead with far less variation between runs and no training.
+        takeaway: "Compute PCA first: at a code of 32 it wins with far less variation between runs and no training."
+        answer: "At small codes (2, 4 and 8), where it beat PCA. At 16 and 32 PCA is ahead, so compute PCA first."
         source: notes/05-sequence-models.md
         notes: >-
-          The seq2seq model squeezed a sentence through one vector and suffered for it. An autoencoder makes that squeeze the whole point. It can't copy through a narrow code, so it has to learn what is regular in the data. Hinton and Salakhutdinov set this out as a non-linear PCA and reached a squared error of 3.00 on MNIST at a code of 30, against 13.87 for PCA. Our digits are far smaller than MNIST, so don't compare the scale of these numbers with theirs.
+          The seq2seq model squeezed a sentence through one vector and suffered for it. An autoencoder makes that squeeze the whole point. It can't copy through a narrow code, so it has to learn what is regular in the data. Hinton and Salakhutdinov set this out as a non-linear PCA and reached a squared error of 3.00 on MNIST at a code of 30, against 13.87 for PCA. Our digits are far smaller than MNIST, so don't compare the scale of these numbers with theirs. For the shallow case it is a theorem: Bishop's PRML (ch. 12) shows a two-layer autoencoder on squared error finds only the PCA subspace even with non-linear hidden units. This autoencoder has more layers, so its gains at small codes are not ruled out.
 
       - layout: table
         beat: practice

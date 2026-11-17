@@ -70,7 +70,7 @@ parts:
         notes: >-
           This lecture starts from the probability and statistics pillar. The next pillar asks the same checkout question as a probability of being better.
 
-  - title: One good test
+  - title: Design and read one test
     summary: Size it · Check the split · Right unit · Report an interval
     notes: >-
       A controlled experiment is the only tool that removes every confounder, measured or not. This part is what must be right for one test to mean anything.
@@ -280,8 +280,8 @@ parts:
         notes: >-
           At Live Search, Kohavi and colleagues report that one extra second cut queries per user by 1% and ad clicks by 1.5%, which is why load time gets this status.
 
-  - title: Many tests at once
-    summary: CUPED · Safe peeking · SRM · Interference · The portfolio
+  - title: Run many tests safely
+    summary: CUPED · Safe peeking · SRM · Slowdown tests · Interference · The portfolio
     notes: >-
       At scale the hard parts change. Effects are small, people look constantly, and the pipeline itself breaks.
     slides:
@@ -355,6 +355,24 @@ parts:
         source: notes/03-experimentation-at-scale.md
         notes: >-
           O'Brien-Fleming's five boundaries go 4.53, 3.2, 2.61, 2.26, 2.03: strict early and close to 1.96 at the end. The mSPRT median stop was 5,897 pairs against 6,272 fixed, with a tail past 12,932.
+
+      - layout: steps
+        beat: practice
+        title: Price latency by adding delay, not removing it
+        lead: Nobody has a faster version to test, so the experiment runs the other way.
+        recall: How do you measure what latency costs engagement when nobody has a faster version to test?
+        answer: Run a slowdown experiment. Add artificial server delay in several small arms (for example +100 ms and +250 ms against control), randomise by user, confirm the delay landed, keep guardrails, and fit engagement per 100 ms. The slope holds near today's speed, and valuing a speed-up assumes it continues.
+        steps:
+          - {title: Add delay, text: "Several small arms, for example +100 ms and +250 ms against control."}
+          - {title: Randomise by user, text: "Not by request, so one person's experience is consistent."}
+          - {title: Keep arms small and short, text: "You are knowingly making the product worse for those users."}
+          - {title: Check it landed, text: "Log the latency users actually got, and guard errors and abandonment."}
+          - {title: Fit a line, text: "Report engagement per 100 ms, a slope near today's operating point."}
+          - {title: State the assumption, text: "Valuing a speed-up assumes the line continues the other way.", n: "★", accent: "D4621A"}
+        takeaway: Slow the product in small arms, randomised by user, and report engagement per 100 ms as a slope near today's speed.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          Users also learn that a product is slow, so read the lift by week, as in the novelty and primacy section, before quoting one number.
 
       - layout: compare
         beat: pitfalls

@@ -80,6 +80,28 @@ parts:
           when the interface is much simpler than the implementation, and Google has no hard limit but says to think past
           about 40 lines. The note's working test, which is judgement and not data: extract when the new name lets a reader
           skip the body. On comments, comment what the code can't say, not what it already says.
+          Martin's own figure for reading against writing is "well over 10:1", which the book gives as his impression from
+          watching editing replays, with no sample or method. The book says functions should hardly ever be 20 lines and, on the
+          same page, that he can't point to research showing very small functions are better. Its "comments are always failures"
+          sits beside a list of kinds it accepts (intent, warnings of consequences, TODOs, public API documentation), and his
+          stated reason is staleness. None of it is measured.
+
+      - layout: cards
+        beat: fundamentals
+        title: What tests can you apply to a name?
+        kicker: Names
+        cards:
+          - {title: "Does it need a comment?", body: "Then it doesn't reveal its intent. `int d; // elapsed time in days` should have been `elapsedTimeInDays`."}
+          - {title: "Does it claim a type?", body: "Don't call a group of accounts `accountList` unless it is a list. In Python, `accounts` survives a change to a set."}
+          - {title: "Do two names differ in nothing?", body: "Number series (`a1`, `a2`) and noise words (`Info`, `Data`) fail. Is `get_account` different from `get_account_info`?"}
+          - {title: "Can you search for it?", accent: "D4621A", body: "A named constant can be found, and a bare `5` can't."}
+        takeaway: A good name needs no comment, claims no type it lacks, differs from its neighbours in meaning, and can be searched for.
+        source: notes/01-readable-code-and-smells.md
+        notes: >-
+          These four tests are from the naming chapter of Clean Code (Ottinger), argued from Java examples with no measurements.
+          Its Java-era advice on Hungarian notation, `m_` prefixes and get/set accessors doesn't carry to Python. The cost: long
+          names wrap lines, and the book pulls both ways, telling you not to fear a long name in one chapter and to add no more
+          context than necessary in another. A name that needs seven words usually means the function does too much.
 
       - layout: steps
         beat: fundamentals
@@ -97,7 +119,10 @@ parts:
           That's one study with few developers, in Java, measuring effort and not defects or comprehension. Files with at
           least one smell were on average twice as long as files with none, so adjusting for size may absorb part of what a
           smell signals. It justifies a priority, not a claim that smells never matter. A complexity score is the same kind
-          of pointer: McCabe counts branches, so it misses coupling and overrates flat dispatch.
+          of pointer: McCabe counts branches, so it misses coupling and overrates flat dispatch. The longest printed catalogue is the
+          last chapter of Clean Code: 66 coded heuristics, one practitioner's list built by refactoring programs, with no measurement.
+          Its only numeric rule is for arguments: more than three is "very questionable", a preference stated without evidence. It has
+          no entry for global mutable state or swallowed errors, and its Java wildcard-import advice is the opposite of PEP 8.
 
       - layout: flow
         beat: fundamentals
@@ -117,7 +142,10 @@ parts:
         notes: >-
           A step that took two minutes loses two minutes when you revert. Debugging one that went wrong can take much longer.
           Fowler's two everyday modes are opportunistic and preparatory refactoring: make the change easy, then make the easy
-          change. If you find a bug while refactoring, write it down and finish the step.
+          change. If you find a bug while refactoring, write it down and finish the step. Martin's argument-parser case study keeps the
+          tests passing across about 30 tiny steps for one change, but where this slide reverts on red he fixes a small break on the
+          spot. That works only when the cause is the line you just touched. It is one author on one small module, a demonstration of
+          the rhythm and not a measurement.
 
       - layout: code
         beat: practice
@@ -147,7 +175,11 @@ parts:
         notes: >-
           A golden master is the bulk version: the lab records output, return value and written file across 16 flag
           combinations. The lab's 22 tests reach 100% statement and branch coverage of the original, and coverage only tells
-          you the lines ran, which is why you put a deliberate error in to see whether the tests notice.
+          you the lines ran, which is why you put a deliberate error in to see whether the tests notice. Martin's SerialDate clean-up
+          starts from the other side: tests for the behaviour he thinks the class should have, which is a specification and not a
+          characterization, so it suits a change that is willing to alter behaviour. His case study also passed every unit test while
+          breaking the acceptance tests, because he had only run the unit tests. A second probe: when a line looks dead, delete it and
+          run the tests. A pass means it was unreachable or unchecked, and you still have to work out which.
 
       - layout: table
         beat: practice
@@ -208,7 +240,12 @@ parts:
           Parnas notes that this decomposition, implemented naively as subroutine calls, will often be less efficient, so hiding
           has a cost. Martin's working definition: raise cohesion between things that change for the same reasons, and lower
           coupling between things that change for different reasons. Depth is a judgement and not a measure, and it matters most
-          for a public interface.
+          for a public interface. Private fields with getters and setters don't hide anything: "Hiding implementation is about
+          abstractions" (Clean Code, ch. 6). His Law of Demeter, talk to friends and not to strangers, says to ask the first object
+          for what you wanted instead of chaining through it, and applies to objects, not to plain records. Clean Code also offers a
+          structural cohesion test: the more of a class's instance variables each method uses, the more cohesive it is. It is a
+          signal and not a target, and when a few methods share variables the rest ignore, there is a second class inside. The
+          commit history is the test that tells you what a split would save.
 
       - layout: compare
         beat: pitfalls
@@ -255,7 +292,12 @@ parts:
           type-checks, and `zip` silently truncates, so vectors attach to the wrong chunks: a shared contract test plus
           `zip(..., strict=True)` catches it. North offers properties to move towards rather than rules you pass or fail, and
           Martin's reply is that "just be simple" gives no further guidance. "This violates SRP" with no change scenario is a
-          review weapon, not an argument.
+          review weapon, not an argument. The 2008 book states SRP structurally: one reason to change, and class size counted in
+          responsibilities and not lines. Its quick tests are describing the class in about 25 words without "if", "and", "or" or
+          "but", and treating `Processor`, `Manager` or `Super` in a name as a warning. On O, chapter 6 states the trade-off that
+          subclassing hides: functions over plain data make new functions easy and new types hard, polymorphic classes the reverse. A
+          subclass per case is closed only against new cases, so if you expect to add operations, the table or `match` stays closed.
+          Martin calls a class that is half data and half behaviour "the worst of both worlds".
 
       - layout: compare
         beat: pitfalls
@@ -305,7 +347,10 @@ parts:
           verdicts. Costs: a gateway loses vendor features such as streaming, an observer hides control flow, a repository can hide
           the query plan, and mutable globals couple tests. Per call, each layer of wrapping cost tens of nanoseconds in CPython on
           the note's machine, for example 15.4 ns for a plain function and 52.8 ns through one `@wraps` decorator. The bigger cost
-          is what it asks of the reader: one more place to look.
+          is what it asks of the reader: one more place to look. Clean Code's boundaries chapter (Grenning) gives two more reasons to
+          wrap a foreign type, with no vendor involved: a wide type such as a Java `Map` lets every user clear it, and the other side
+          may not exist yet, so you design the interface you wish you had. The evidence is an anecdote about systems stuck on raw
+          maps when generics arrived. He asks only that the boundary type stay out of public APIs, not that every use be wrapped.
 
       - layout: code
         beat: practice
@@ -372,7 +417,10 @@ parts:
           SWE learned this the hard way after years of mocking-framework tests that were easy to write, costly to maintain, and rarely
           found bugs. Treat it as a judgement with a track record, not a settled result. `create_autospec` at least copies the signature.
           Fakes need tests too: a contract test runs the same checks against the real implementation and the fake. Flakes: at a 0.1%
-          per-test false-failure rate and 1,000 tests, assuming independence, about two runs in three go red for nothing.
+          per-test false-failure rate and 1,000 tests, assuming independence, about two runs in three go red for nothing. For a library
+          you don't control, Clean Code's learning tests (a name it credits to Newkirk) are small tests that call it the way you
+          intend to use it, rerun at each upgrade to see whether behaviour changed. That pins one dependency to the behaviour you rely
+          on, where a contract test holds several implementations to one interface. It is an argument, not a measurement.
 
       - layout: code
         beat: pitfalls
@@ -400,7 +448,9 @@ parts:
         notes: >-
           SWE: an 80% bar soon acts as a ceiling rather than a floor. Fowler expects a thoughtful team in the upper 80s or 90s, and finds
           100% suspicious. The lab's tool doesn't touch constants. Petrovic et al. warn that a test written to kill an unproductive
-          mutant can be a change-detector that makes the suite worse. Run a new measuring tool twice before believing it.
+          mutant can be a change-detector that makes the suite worse. Run a new measuring tool twice before believing it. Martin's
+          JUnit case study shows both readings: he notes the code is "100 percent covered", then renaming a variable exposes an `if`
+          that was nonfunctional because its condition could never be true. He doesn't draw the conclusion himself.
 
       - layout: table
         beat: practice

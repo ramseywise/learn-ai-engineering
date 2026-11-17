@@ -3,7 +3,7 @@ origin: curated
 sources:
   - "Books, papers and documentation listed below"
 confidence: high
-cleaned: 2026-11-03
+cleaned: 2026-11-17
 ---
 
 # Visualisation and storytelling: references
@@ -18,8 +18,8 @@ None of the seven core books on this list is specifically a Python book, so the 
 
 | Book | Why read it | Notes | How it was used |
 |---|---|---|---|
-| VanderPlas, *Python Data Science Handbook* (O'Reilly, 2017, ISBN 9781491912058). [Free online](https://jakevdp.github.io/PythonDataScienceHandbook/), [local copy](../sources/Python_Datascience.pdf) | The matplotlib chapter explains figure and axes clearly, then seaborn | 02 | Local copy held; used as background, not read in full |
-| McKinney, *Python for Data Analysis*. [Free online](https://wesmckinney.com/book/), [local copy](../sources/Python%20for%20Data%20Analysis.pdf) | Its plotting chapter shows how pandas, matplotlib and seaborn fit together | 02 | Local copy held; used as background, not read in full |
+| VanderPlas, *Python Data Science Handbook* (O'Reilly, 2017, ISBN 9781491912058). [Free online](https://jakevdp.github.io/PythonDataScienceHandbook/), [local copy](../sources/Python_Datascience.pdf) | The matplotlib chapter explains figure and axes clearly, then seaborn | 01b, 02 | Ch. 4 folded into note 01b from the chapter PDF; background for note 02 |
+| McKinney, *Python for Data Analysis*. [Free online](https://wesmckinney.com/book/), [local copy](../sources/Python%20for%20Data%20Analysis.pdf) | Its plotting chapter shows how pandas, matplotlib and seaborn fit together | 01b, 02 | Ch. 9 folded into note 01b from the chapter PDF, and ch. 14 is its capstone exercise; background for note 02 |
 
 ### JavaScript
 
@@ -46,9 +46,11 @@ None of the seven core books on this list is specifically a Python book, so the 
 | Paper | Why read it | Notes |
 |---|---|---|
 | Anscombe, ["Graphs in Statistical Analysis"](https://www.jstor.org/stable/2682899), *The American Statistician*, 1973 | Four datasets, same summary statistics, different stories. The original case for plotting | 01 |
-| Cleveland & McGill, ["Graphical Perception"](https://doi.org/10.1080/01621459.1984.10478080), *JASA* 79(387), 1984 | The experiments behind the ranking of encodings: position beats length beats angle and area | 01 |
+| Cleveland & McGill, ["Graphical Perception"](https://doi.org/10.1080/01621459.1984.10478080), *JASA* 79(387), 1984 | The experiments behind the ranking of encodings: position beats length beats angle and area | 01, 01b |
 | Heer & Bostock, ["Crowdsourcing Graphical Perception"](https://idl.uw.edu/papers/crowdsourcing-graphical-perception), CHI 2010 | Replicates the spatial encoding results online and adds rectangular area, chart size and gridline spacing | 01 |
 | Wickham, ["A Layered Grammar of Graphics"](https://vita.had.co.nz/papers/layered-grammar.html), *JCGS* 19(1), 2010 | The grammar as used by ggplot2 and in spirit by seaborn, plotly express and Altair | 01 |
+| Hunter, ["Matplotlib: A 2D Graphics Environment"](https://doi.org/10.1109/MCSE.2007.55), *CiSE*, 2007 | What matplotlib set out to do | 01b |
+| Waskom, ["seaborn: statistical data visualization"](https://doi.org/10.21105/joss.03021), *JOSS*, 2021 | Plots specified from a table's columns | 01b |
 | Shneiderman, ["The Eyes Have It"](https://doi.org/10.1109/VL.1996.545307), IEEE Symposium on Visual Languages, 1996 | Overview first, zoom and filter, then details on demand | 03, 05 |
 | Bostock, Ogievetsky & Heer, ["D3: Data-Driven Documents"](https://idl.uw.edu/papers/d3), IEEE TVCG, 2011 | Why D3 works on the document directly | 04 |
 | Satyanarayan, Moritz, Wongsuphasawat & Heer, ["Vega-Lite"](https://idl.uw.edu/papers/vega-lite), IEEE TVCG, 2017 | Interaction as part of a declarative grammar, the idea behind Altair's selections | 03, 04 |
@@ -67,6 +69,7 @@ None of the seven core books on this list is specifically a Python book, so the 
 
 | Tool | Notes | Link |
 |---|---|---|
+| Matplotlib, seaborn | 01b | [Application interfaces](https://matplotlib.org/stable/users/explain/figure/api_interfaces.html), [seaborn function overview](https://seaborn.pydata.org/tutorial/function_overview.html) |
 | Matplotlib, seaborn | 02 | [Quick start](https://matplotlib.org/stable/users/explain/quick_start.html), [seaborn function overview](https://seaborn.pydata.org/tutorial/function_overview.html) |
 | Plotly, Altair | 03 | [Plotly hover text](https://plotly.com/python/hover-text-and-formatting/), [Altair interactions](https://altair-viz.github.io/user_guide/interactions/index.html) |
 | D3, Vega-Lite, Observable Plot | 04 | [D3 getting started](https://d3js.org/getting-started), [Vega-Lite compile](https://vega.github.io/vega-lite/usage/compile.html), [Plot source](https://github.com/observablehq/plot) |

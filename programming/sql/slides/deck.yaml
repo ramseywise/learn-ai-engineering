@@ -145,6 +145,32 @@ parts:
         source: notes/03-aggregation.md
         notes: SQLite accepting a bare column is a silent bug.
 
+      - layout: code
+        beat: practice
+        title: How do you compute a rate per group per month?
+        kicker: Rate in one GROUP BY
+        lang: sql
+        code: |-
+          SELECT facid,
+                 strftime('%Y-%m', starttime) AS month,
+                 count(*) AS bookings,
+                 round(avg(CASE WHEN memid = 0
+                                THEN 1.0 ELSE 0 END), 3)
+                   AS guest_share
+          FROM bookings
+          WHERE facid IN (0, 4)
+          GROUP BY facid, month
+          ORDER BY facid, month;
+          -- 0|2012-07|88|0.261
+          -- 4|2012-07|123|0.374
+        bullets:
+          - "A rate is two aggregates over the same rows. `avg` of a 0/1 flag is the rate"
+          - "Write `1.0`, not `1`: integer division truncates in SQLite and Postgres"
+          - "Rates from two tables: aggregate each to one row per group and month, then join"
+        takeaway: Group by the group and the month and take `avg` of a 0/1 `CASE` flag. Write 1.0, and aggregate before joining tables.
+        source: notes/03-aggregation.md
+        notes: Joining the raw rows multiplies them and inflates both counts, as with clicks and impressions for a click-through rate (note 04). Other months in the note's output, for facility 0, are 0.24 in August and 0.241 in September.
+
       - layout: compare
         beat: fundamentals
         title: When do you filter with WHERE, and when with HAVING?
@@ -409,6 +435,20 @@ parts:
         takeaway: Wrapping an indexed column in a function usually hides it from the index, so compare the bare column.
         source: notes/08-indexes-and-query-plans.md
         notes: Columnar engines such as DuckDB and BigQuery use zone maps rather than B-trees, so read fewer columns and partition instead.
+
+      - layout: cards
+        beat: pitfalls
+        title: Why can a join on a subquery be slow?
+        kicker: Subqueries in joins
+        cards:
+          - {title: Correlated, body: "May run once per outer row."}
+          - {title: Stored derived table, body: "Has no index, so the join scans it or hashes the whole result."}
+          - {title: Aggregate inside, body: "Runs over every row before the outer filter gets a chance."}
+          - {title: Fix, accent: "D4621A", body: "Read the plan first. Filter inside, index the base tables, or pre-aggregate and join once."}
+        takeaway: Read the plan, then filter inside the subquery, index the base tables, or pre-aggregate and join once.
+        answer: A correlated subquery may run once per outer row, a stored derived table has no index, and an aggregate runs before the outer filter. Filter inside, index the base tables, or pre-aggregate and join once.
+        source: notes/08-indexes-and-query-plans.md
+        notes: The note's other fixes are rewriting a correlated subquery as a window function, and storing a subquery you reuse as an indexed temporary table. See note 05 for correlated subqueries.
 
       - layout: compare
         beat: practice

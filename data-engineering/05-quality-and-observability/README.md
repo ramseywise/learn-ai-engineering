@@ -23,7 +23,7 @@
 
 | Chapter | Why |
 |---|---|
-| [DA 01/02 Loading and cleaning](../../data-analytics/01-python-for-data-analysis/notes/02-loading-and-cleaning.md) | The assertions an analyst runs by hand |
+| [DA 01/05 Cleaning](../../data-analytics/01-python-for-data-analysis/notes/05-cleaning.md) | The assertions an analyst runs by hand |
 | [DA 02/01 Descriptive statistics and EDA](../../data-analytics/02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md) | Looking for what is impossible |
 
 **Feeds into**

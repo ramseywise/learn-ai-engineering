@@ -1,0 +1,278 @@
+# Opening lecture of the processing data series: the one question, the three steps, and where each is taught.
+# make slides PILLAR=data-analytics/01-python-for-data-analysis LECTURE=00-overview STRICT=1 PREVIEW=1
+deck:
+  title: Processing Data
+  subtitle: From a raw export to a table you can trust
+  tagline: "The question · Three steps · The series"
+  reference: "Notes: data-analytics/01-python-for-data-analysis/README.md"
+  output: 00-overview.pptx
+  notes: >-
+    This opening lecture runs no code. It gives you the map: the one question the module keeps asking, the three steps
+    between an export and a number, and which lecture teaches each step. Everything named here is taught properly later.
+
+lecture:
+  overview: true
+  covers: [data-analytics/01-python-for-data-analysis/README.md]
+  next: [data-analytics/01-python-for-data-analysis/notes/01-series-and-dataframe.md]
+  related:
+    - programming/sql/notes/09-sql-from-python.md
+    - data-analytics/05-visualisation-and-storytelling/notes/01b-plotting-your-own-data.md
+
+parts:
+  - title: The question
+    summary: A clean number that is wrong · Three steps · What you bring
+    notes: First, why a module about tables spends its time on checks and not on syntax.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Is this number the one you meant?
+        kicker: The question
+        statement: "The mistakes made here do not raise exceptions. They give a clean-looking number that is wrong."
+        takeaway: This module is about the data, and its one question is whether the number is the one you meant.
+        source: README.md
+        notes: >-
+          Every later module in data analytics starts with "given a table". An analyst spends more of the job getting
+          that table right than running any model on it, so this is where we start.
+
+      - layout: compare
+        beat: fundamentals
+        title: The dangerous mistakes are the quiet ones
+        recall: Which three mistakes give a clean-looking number that is wrong?
+        answer: "A join that doubles rows, a price column that is still text, and an average of averages. None of them raises an exception."
+        left:
+          title: A mistake that stops you
+          bullets: ["Raises an exception", "You see it at once", "You fix it and move on"]
+        right:
+          title: A mistake that does not
+          bullets: ["A join that doubles rows", "A price column that is still text", "An average of averages"]
+        takeaway: A doubled join, a text price column and an average of averages all run without an error.
+        source: README.md
+        notes: >-
+          Keep these three in mind. Each one belongs to one of the three steps, and each step comes with the check that
+          catches it.
+
+      - layout: flow
+        beat: fundamentals
+        title: Three steps between an export and a number
+        recall: What are the three steps of processing data, and what does each one produce?
+        answer: "Extract gives the rows and columns you need. Clean makes every column the type it claims to be. Summarise gives one number per group."
+        steps:
+          - {label: Raw export, sub: "kept untouched", accent: "94A3B8"}
+          - {label: Extract, sub: "the rows and columns you need"}
+          - {label: Clean, sub: "every column the type it claims"}
+          - {label: Summarise, sub: "one number per group"}
+        bullets:
+          - "Each step has **one usual mistake** and **one check** that catches it."
+          - "Analysis and charts come **after** these steps, in later modules."
+        takeaway: Extract the rows you need, clean every column to the type it claims, then summarise to one number per group.
+        source: README.md
+        notes: >-
+          The steps are in the order you do them. The lectures after this one take one step each.
+
+      - layout: bullets
+        beat: fundamentals
+        title: What should you already know?
+        card: false
+        lead: Nothing here is taught again. The README links the chapter for each line.
+        bullets:
+          - text: "**Python**, from the Python track"
+            sub:
+              - "Tell `int`, `float`, `str`, `bool` and `None` apart, and convert between them"
+              - "Write a function, loop over a sequence, keep a running result"
+              - "Open a text file, and split, strip and compare strings"
+              - "Hold records in lists, dictionaries and tuples"
+          - text: "**Relational tables**, from the SQL track: helpful, not required"
+            sub:
+              - "`SELECT … WHERE`, `GROUP BY`, and what a left join keeps"
+              - "Why a missing value is not a zero"
+        takeaway: You need the Python track's foundations, and the SQL ideas help because each one returns here on a table in memory.
+        source: README.md
+        notes: >-
+          Tick each line off on the module page. If one is shaky, go back to the chapter it links before the first
+          lecture.
+
+  - title: Three steps, three checks
+    summary: Extract · Clean · Summarise · Which tool · What pandas 3 changed
+    notes: Now each step in turn, with the ideas that make it go right in any tool.
+    slides:
+      - layout: statement
+        beat: problem
+        title: Why learn the steps and not the tool?
+        kicker: The rule
+        statement: "The steps are the same in any tool. The choice between tools is mostly about where the data lives and how big it is."
+        takeaway: The steps are the same in any tool, so learn the ideas and the check for each step.
+        source: README.md
+        notes: >-
+          The notes use pandas. The ideas on the next three slides hold just as well in SQL or Polars.
+
+      - layout: cards
+        beat: fundamentals
+        title: "Extract: the rows and columns you need"
+        recall: Which four ideas make the extract step go right?
+        answer: "Know what one row means. Labels and positions are different things. A filter is a mask of true and false. A join can multiply rows, so count before and after."
+        cards:
+          - {title: One row, body: "Know what one row means before you touch it."}
+          - {title: Labels and positions, body: "They are different things, and they come apart after a filter."}
+          - {title: A filter is a mask, body: "A column of true and false, one per row."}
+          - {title: A join can multiply rows, accent: "D4621A", body: "State what it should do, and count before and after."}
+        takeaway: Know what a row means, keep labels and positions apart, and count rows around every join.
+        source: README.md
+        notes: >-
+          Chapters one to four: Series and DataFrame, loading data, indexing and selection, and reshaping and joins.
+
+      - layout: steps
+        beat: fundamentals
+        title: "Clean: every column the type it claims"
+        recall: Which four ideas make the clean step go right?
+        answer: "The type of a column decides what an operation means. A gap is a decision, and missing is not zero. A date is a type, not text. Keep the raw file untouched and put every fix in one function."
+        steps:
+          - {title: Types, text: "The type of a column decides what an operation on it means."}
+          - {title: Gaps, text: "A gap is a decision, and missing is not zero."}
+          - {title: Dates, text: "A date is a type, not text, and it carries a time zone and a period."}
+          - {title: One function, text: "Keep the raw file untouched and put every fix in one function you can rerun.", accent: "D4621A"}
+        takeaway: Fix types, decide what each gap means, parse dates, and keep every fix in one function you can rerun.
+        source: README.md
+        notes: >-
+          Chapters five and six: cleaning, and dates and times.
+
+      - layout: bullets
+        beat: fundamentals
+        title: "Summarise: one number per group"
+        recall: Which checks keep a group summary honest?
+        answer: "Print a count beside every mean. For a rate, sum the top, sum the bottom, then divide. Check that the groups add back up to the total. Keep a window that feeds a model looking backward."
+        bullets:
+          - "**Split, apply, combine.**"
+          - "Print a **count** beside every mean."
+          - "For a rate: **sum the top, sum the bottom, then divide.**"
+          - "The groups must **add back up** to the total."
+          - "Time is one more group key, and a window that feeds a model must look **backward**."
+        takeaway: Count beside every mean, divide sums for a rate, and check the groups add back up to the total.
+        source: README.md
+        notes: >-
+          Chapters seven and eight: groupby and aggregation, and time series.
+
+      - layout: table
+        beat: practice
+        title: Which tool should you reach for?
+        recall: When do you reach for SQL, pandas or Polars?
+        answer: "SQL when the data lives in a database, so it reads less and sends back less. pandas when the result fits in memory and you need to clean, reshape and look at it. Polars when the files are large but still fit on one machine."
+        header: [Tool, Reach for it when]
+        widths: [1.5, 8]
+        rows:
+          - [SQL, "The data lives in a database. Filter and aggregate there, so the database reads less and sends back less."]
+          - [pandas, "The result fits in memory and you need to clean, reshape and look at it."]
+          - [Polars, "The files are large but still fit on one machine. A lazy scan pushes the filter and the column choice into the read."]
+        highlight: [1]
+        takeaway: SQL where the data lives, pandas once the result fits in memory, Polars for large files on one machine.
+        source: README.md
+        notes: >-
+          The loading chapter shows all three on the same question. This module uses pandas throughout.
+
+      - layout: compare
+        beat: pitfalls
+        title: Pandas 3 changed the rules
+        recall: Why do older pandas tutorials and books now mislead?
+        left:
+          title: Most tutorials and books
+          bullets: ["Written before pandas 3.0", "Includes McKinney's second edition", "Now mislead in places"]
+        right:
+          title: These notes
+          bullets: ["Run on Python 3.13 and pandas 3.1.0", "Output shown as it printed", "Say where old advice breaks"]
+        takeaway: Pandas 3.0 changed enough that older material misleads in places, and the notes say where.
+        source: README.md
+        notes: >-
+          One example from the rules of thumb: chained assignment now does nothing, so to change part of a frame you
+          use one loc call.
+
+  - title: The series
+    summary: Three lectures · The labs · Rules of thumb · What comes next
+    notes: Last, how the lectures after this one fit together and what to do between them.
+    slides:
+      - layout: steps
+        beat: practice
+        title: After this overview, one lecture per step
+        card: false
+        steps:
+          - {title: Extract, text: "Series and DataFrame · Loading data · Indexing and selection · Reshaping and joins"}
+          - {title: Clean, text: "Cleaning · Dates and times"}
+          - {title: Summarise, text: "Groupby and aggregation · Time series"}
+        takeaway: Extract covers chapters 1 to 4, Clean chapters 5 and 6, and Summarise chapters 7 and 8.
+        source: README.md
+        notes: >-
+          The chapters are numbered in reading order, and each belongs to one step. Each lecture opens by showing what
+          comes before it and closes by showing where it leads.
+
+      - layout: table
+        beat: practice
+        title: Each step has labs to work through afterwards
+        card: false
+        header: [Step, Notebooks, Book code]
+        widths: [1.6, 5.2, 2.4]
+        rows:
+          - [Extract, "1_Overview, 3_Arrays, 4_DataFrames, wrangle_pandas.py", "McKinney ch06, ch08"]
+          - [Clean, "2_Texts; 7_Time_Series, Datetime Basics and Periods", "McKinney ch07, ch11"]
+          - [Summarise, "6_Aggregation; 7_Time_Series, from Shifting onward", "McKinney ch10"]
+        takeaway: Read the chapters for a step, then work through its notebooks in the practice folder.
+        source: README.md
+        notes: >-
+          The practice README says how to run them. 1_Overview is a refresher on the Python involved.
+
+      - layout: bullets
+        beat: practice
+        title: Where are the charts?
+        recall: Where does the course teach plotting your own table?
+        bullets:
+          - "Charts come **later**, in visualisation and storytelling."
+          - "Its chapter **Plotting your own data** gives you the calls to look at your own table."
+          - "The plotting labs stay in this module's practice folder, beside the data they use."
+        takeaway: Plotting is taught in visualisation and storytelling, in the chapter Plotting your own data.
+        source: README.md
+        notes: >-
+          This module stops at the table. Analysis and charts come after the three steps.
+
+      - layout: cards
+        beat: wrap
+        title: Four habits to start today
+        recall: Which habits catch most problems with a new table?
+        answer: "Run shape, dtypes, head and isna().sum() on every new frame. Keep the raw file untouched. State how and validate on every merge, then compare row counts. Print a count beside every mean."
+        cards:
+          - {title: Look first, body: "Run `shape`, `dtypes`, `head` and `isna().sum()` on every new frame."}
+          - {title: Keep the raw file, body: "Leave it untouched. Put every fix in one function that you can rerun."}
+          - {title: State the merge, body: "Give `how` and `validate` on every merge, then compare row counts and one total."}
+          - {title: Count, accent: "D4621A", body: "Print a count beside every mean, and check that groups add up to the total."}
+        takeaway: Look at every new frame, keep the raw file, state every merge, and print a count beside every mean.
+        source: README.md
+        notes: >-
+          These are four of the module's rules of thumb. The full list is on the module page, and each one is earned
+          in a lecture.
+
+      - layout: table
+        beat: wrap
+        title: Who uses this later?
+        recall: Which later chapters build on processing data?
+        answer: "The data-analysis agent in generative AI, quality dimensions and tests in data engineering, and time-series ML in data science."
+        header: [Later chapter, What it takes from here]
+        widths: [4, 5.5]
+        rows:
+          - ["Generative AI: data-analysis agent", "Its cleaning and group-by checks are this module's"]
+          - ["Data engineering: quality dimensions and tests", "Automates the checks an analyst runs by hand here"]
+          - ["Data science: time-series ML", "Takes resampling and shifting as given"]
+        takeaway: An analysis agent, automated data-quality tests and time-series ML all rest on the checks learned here.
+        source: README.md
+        notes: >-
+          So the checks are worth learning by hand first. Later chapters automate them or assume them.
+
+      - layout: flow
+        beat: wrap
+        title: What you can say at the end, and what you cannot
+        recall: What can you not yet say after processing data?
+        steps:
+          - {label: Extract, sub: "the rows you need"}
+          - {label: Clean, sub: "types you can trust"}
+          - {label: Summarise, sub: "a number you meant"}
+          - {label: "Real or luck?", sub: "probability and statistics"}
+        caption: After the three steps you can get data into a table and say how you know a number is the one you meant.
+        takeaway: You cannot yet say whether a difference in the table is real or luck, which is the next module.
+        source: README.md
+        notes: >-
+          Start with the Extract lecture, then read chapter one, Series and DataFrame, and work through its labs.

@@ -184,7 +184,7 @@ except pd.errors.MergeError as e:
 MergeError: Merge keys are not unique in right dataset; not a many-to-one m
 ```
 
-Make it a habit: state `validate`, compare the row count before and after, and compare one total. Then the join is checked. The same idea scales to any SQL you write in pillar 06.
+Make it a habit: state `validate`, compare the row count before and after, and compare one total. Then the join is checked. The same idea scales to any SQL you write.
 
 With the checks in place, a two-step join gives a frame that can answer a question none of the three tables could answer alone, namely gross margin by product category.
 

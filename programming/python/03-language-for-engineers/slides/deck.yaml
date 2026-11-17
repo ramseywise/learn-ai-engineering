@@ -252,12 +252,20 @@ parts:
           - {label: "`else`", sub: runs only if nothing was raised}
           - {label: "`finally`", sub: "always runs, even after `return`"}
         bullets:
-          - "`raise ValueError(...) from err` keeps the original as the cause, and a bare `raise` re-raises unchanged"
+          - "`raise ... from err` keeps the cause; a bare `raise` re-raises"
           - "One base exception per package lets callers write `except PipelineError`"
-          - "A bare `except:` hides bugs like `NameError`, and even `KeyboardInterrupt`"
+          - "A message names the operation that failed, since a stack trace can't show its intent"
         takeaway: Catch the narrowest exception, keep the `try` small, and use `raise ... from err` to keep the cause.
         source: notes/04-errors-and-context-managers.md
-        notes: Add fields to custom exceptions for anything a caller might branch on. Use log.exception inside except, not print.
+        notes: >-
+          Add fields to custom exceptions for anything a caller might branch on. Use log.exception inside except, not print.
+          A bare `except:` hides bugs like `NameError`, and even `KeyboardInterrupt`; a later slide shows it.
+          From Feathers's error-handling chapter in Clean Code, which is written for Java and argues from examples with no
+          measurements. If every handler for a vendor library does the same thing, wrap the library and raise one type of your own
+          `from err` at the wrapper. Return `[]` or `{}` instead of `None` from a function whose callers iterate. His rules on null
+          carry over only in part, because `None` for "absent" is ordinary Python. Raise when absence is an error, and write
+          `X | None` in the signature when it isn't, so a type checker makes the caller handle it. Python has no checked
+          exceptions, and Feathers cites that as evidence they aren't needed.
 
       - layout: code
         beat: practice

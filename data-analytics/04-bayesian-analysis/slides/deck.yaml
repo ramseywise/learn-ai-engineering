@@ -214,6 +214,24 @@ parts:
         notes: >-
           Too small and the chain crawls. Too large and it rarely moves. NUTS tunes this during warm-up, which is why you should not hand-tune it for routine models.
 
+      - layout: table
+        beat: fundamentals
+        title: Older samplers pay for dimension and correlation
+        kicker: Bishop, PRML ch. 11
+        recall: What does rejection sampling cost in 1,000 dimensions, and what do random-walk Metropolis and Gibbs pay?
+        answer: "For a 1,000-dimensional Gaussian and a proposal with sd 1% larger, rejection sampling accepts about 1 proposal in 20,000. Random-walk Metropolis draws are about (sigma max / sigma min) squared steps apart, and Gibbs on a correlated Gaussian pays a similar squared cost."
+        header: [Sampler, What breaks it, What it costs]
+        widths: [3.2, 4.4, 4.4]
+        rows:
+          - [Rejection sampling, "1,000-dimensional Gaussian, proposal sd 1% larger", "About 1 proposal in 20,000 accepted"]
+          - [Random-walk Metropolis, Must step at the scale of the narrowest direction, "Independent draws about (σmax/σmin)² steps apart"]
+          - [Gibbs on a correlated Gaussian, Updates one block at a time, "A similar squared cost"]
+          - [Importance sampling, The proposal misses a region of the target, "Error can be arbitrary, with no diagnostic indication"]
+        takeaway: Rejection sampling collapses with dimension, and random-walk Metropolis and Gibbs pay a squared price for correlation, which gradient-guided samplers exist to avoid.
+        source: notes/02-mcmc-and-pymc.md
+        notes: >-
+          Bishop writes the Gibbs cost as (L/l)². Page numbers in PRML ch. 11 are 531 for rejection sampling, 542 and 544 for Metropolis and Gibbs, and 534 for importance sampling, whose estimate can be "arbitrarily in error and with no diagnostic indication". The chapter predates NUTS, so its hybrid Monte Carlo is tuned by hand.
+
       - layout: code
         beat: practice
         title: The same model with a new geometry
@@ -602,6 +620,20 @@ parts:
         notes: >-
           A VAE's loss is this same expression, with an encoder network producing m and s for each data point, using the reparameterised draws shown here.
 
+      - layout: bullets
+        beat: practice
+        title: The prior sets how many components survive
+        kicker: Bishop, PRML ch. 10, Old Faithful
+        recall: How many components of a 6-component variational mixture survive under different priors on the mixing weights?
+        answer: "A variational mixture switches off components it does not need, and how many survive depends on the prior on the mixing weights: 2 with alpha 0 of 0.001, 3 with 1, and all 6 with 10. So the count is not read off the data alone."
+        bullets:
+          - "**Setup:** a variational mixture of 6 Gaussians on Old Faithful switches off components it does not need."
+          - "**Survivors:** 2 at α0 = 10⁻³, 3 at α0 = 1, all 6 at α0 = 10."
+        takeaway: A variational mixture prunes components it does not need, but the prior on the mixing weights sets how many survive, so the count is not read off the data alone.
+        source: notes/06-bayesian-machine-learning.md
+        notes: >-
+          The lower bound across K, with ln K! added and 100 random starts per K, peaks at K = 2 on this one data set. The ln K! term allows for the label symmetry. Bishop's figure is Fig. 10.7 on p. 484, and the component counts are from p. 480.
+
       - layout: table
         beat: pitfalls
         title: Mean-field ADVI cannot see correlation
@@ -618,7 +650,7 @@ parts:
         takeaway: Mean-field variational inference is fast and misstates correlated uncertainty, so check it against NUTS on a small version.
         source: notes/06-bayesian-machine-learning.md
         notes: >-
-          The factorised q cannot represent the -0.96 correlation. It gets both spreads wrong: too narrow on a, too wide on a plus b. The chapter closes with a Gaussian process plus expected improvement, which spends each costly evaluation where it is most likely to beat the best so far: on one small tuning problem it reached a best log loss of 0.1016 against about 0.112 for random search. Treat that as a demonstration, not a benchmark.
+          The factorised q cannot represent the -0.96 correlation. It gets both spreads wrong: too narrow on a, too wide on a plus b. Bishop gives the general reason: minimising KL(q‖p) with a factorised q matches the variance of the narrowest direction and under-estimates the rest, so factorised approximations tend to give posteriors that are "too compact" (PRML, ch. 10, p. 467). The chapter closes with a Gaussian process plus expected improvement, which spends each costly evaluation where it is most likely to beat the best so far: on one small tuning problem it reached a best log loss of 0.1016 against about 0.112 for random search. Treat that as a demonstration, not a benchmark.
 
   - title: Partial pooling
     summary: The winner's number · Weights by size · When it fails · Few groups

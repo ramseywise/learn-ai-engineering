@@ -145,7 +145,7 @@ parts:
         source: notes/01-statistical-foundations.md  # also: notes/06-ensembles.md
         notes: >-
           This is the bias and variance picture. Too simple a family misses real structure, and too flexible a family
-          follows the sample's noise. What we want is the middle, and each family gives us a knob for finding it.
+          follows the sample's noise. What we want is the middle, and each family gives us a knob for finding it. Bishop prints what overfitting does to the weights: a degree-9 polynomial through 10 points has zero training error and coefficients up to about a million, and a ridge penalty pulls one of them from -557,682.99 to -91.53.
 
       - layout: code
         beat: practice
@@ -186,7 +186,7 @@ parts:
           - [Kernel SVM, "`C` and `gamma`", Small dense data, Large data; needs scaling]
           - [Small MLP, "Layers and `alpha`", Dense signal given time, Needs scaling and tuning]
         takeaway: Start with a linear model or kNN to learn the data, and learn one knob per family.
-        source: notes/02-supervised-learning.md
+        source: notes/02-supervised-learning.md  # also: notes/02b-linear-models.md
         notes: >-
           You don't need every parameter. For each family, know the one that controls complexity and how the family fails.
           Trees don't need scaling because each split reads one feature's order. Kernel SVMs do, because they use distance. The knob also sets the shape of the boundary: a linear model draws one flat cut, a tree draws axis-aligned boxes, and kernels and kNN draw smooth local curves. That shape is the model's assumption, and no family wins everywhere.
@@ -244,6 +244,27 @@ parts:
           divided by the largest eigenvalue of 2/n X transpose X, which is 2.40, so anything above 0.83 diverges. The cutoff
           depends on the data, and that is why learning rates get tuned.
 
+      - layout: cards
+        beat: practice
+        level: practice
+        title: With 285 features and 331 rows, OLS memorises
+        recall: What do ridge and lasso do when features nearly outnumber rows?
+        lead: Diabetes data expanded to cubic terms, 285 features. R² on train and test.
+        cards:
+          - {title: OLS, accent: "D4621A", body: "Train 0.90, test **-9.32**, far worse than predicting the mean. All 285 weights non-zero."}
+          - {title: "Ridge, `alpha` 0.1", body: "Train 0.55, test **0.37**. Keeps all 285 weights, each one small."}
+          - {title: "Lasso, `alpha` 0.1", body: "Train 0.55, test **0.36** with only **7** non-zero weights."}
+        takeaway: When features rival rows, penalise the weights; default to ridge, and use lasso when only a few features should matter.
+        answer: "Both penalise the weights and rescue test R² (OLS -9.32, ridge 0.37, lasso 0.36). Ridge keeps all 285 weights small, and lasso keeps 7."
+        source: notes/02b-linear-models.md
+        notes: >-
+          The expansion adds squares, products and cubes of the diabetes features, so OLS has room to overfit. Both penalties
+          trade train score for test score. Ridge shrinks every weight toward zero, and lasso sets some exactly to zero, which is
+          why it doubles as feature selection. The picture behind it is that the lasso's constraint region has corners on the
+          axes and the ridge disc has none. Standardise first, because the penalty is on the size of the weights and that
+          depends on each feature's units. `C` in logistic regression and the linear SVM is the inverse of `alpha`, so a higher
+          `C` is a weaker penalty.
+
       - layout: table
         beat: pitfalls
         revisits: true
@@ -258,9 +279,9 @@ parts:
           - [Unscaled features for distance models, kNN or SVC scores near the dummy, Put a scaler in a pipeline]
           - [Coefficients read as causes, A correlated feature flips sign, Check stability across resamples]
         takeaway: Check the base rate, keep the test set back, and scale for distance models before you trust a first score.
-        source: notes/01-statistical-foundations.md  # also: notes/02-supervised-learning.md
+        source: notes/01-statistical-foundations.md  # also: notes/02-supervised-learning.md, notes/02b-linear-models.md
         notes: >-
-          These come from the pitfalls tables in the first two notes. Each has a symptom you can spot. That closes Part 2:
+          These come from the pitfalls tables in the first notes, and the coefficient row is in the linear models note. Each has a symptom you can spot. One cause of unstable coefficients is exact collinearity: a column that is a combination of others, such as a full set of one-hot columns next to an intercept, leaves infinitely many weight vectors that fit equally well. Drop a column or add a ridge penalty. That closes Part 2:
           we know what a model estimates and how it fails, but not yet whether its score can be believed.
 
   - title: Honest inputs, honest scores
@@ -338,9 +359,9 @@ parts:
           - "**Select first:** selection saw every fold's target."
           - "**Pipeline:** selection is refit inside each fold."
         takeaway: Any step with a fit goes in a pipeline, refit inside each fold, and the chain ships as one object.
-        source: notes/03-feature-engineering-and-pipelines.md
+        source: notes/03-feature-engineering-and-pipelines.md  # also: notes/04-model-evaluation.md
         notes: >-
-          In a pipeline, fit runs fit_transform on each step and predict runs only transform.
+          In a pipeline, fit runs fit_transform on each step and predict runs only transform. ESL's version of the leak: 50 samples, 5,000 noise predictors, keep the 100 most correlated with the labels, then cross-validate. The average CV error over 50 simulations was 3% where the true error is 50%. Split first, then screen inside each fold.
           This is the most important bug in applied machine learning. Nothing crashes. You get a wonderful score. With scaling the bias is small, and with selection it is enormous. The note's single run on seed 42 gets 0.89 and -0.03, and the book's own run gets 0.91 and -0.25. Ten datasets give the bars here. Pipelines exist for this reason. The chain does the right thing in each fold, you can tune preprocessing jointly with the model, and the same object goes to production. That closes the section: we can now trust a score, so next we go looking for a better one.
 
   - title: Winning on tables
@@ -361,6 +382,8 @@ parts:
         notes: >-
           Averaged trees have lower variance, but only so far: correlated errors don't average away. That's why forests also
           subset features. Boosting works the other way round, starting from weak trees and fitting the remaining error.
+          Bagging leaves bias alone, so it helps only unstable fits such as trees. On 100 points in two classes separated by
+          the line x1 + x2 = 1, bagging 50 single-split stumps gives test error 0.166 where boosting the same stump gives 0.065.
 
       - layout: flow
         beat: fundamentals
@@ -401,7 +424,7 @@ parts:
         source: notes/07-boosting-in-practice.md
         notes: >-
           No library won every seed. LightGBM led seed 0, CatBoost seed 1, XGBoost seed 3, and the classic booster seeds 2 and
-          4. Speed differs by a factor of 30, measured on a busy laptop, so treat that as rough. The script is in practice. Every library shares the same second-order core: we fit a one-tree XGBoost model in the note and recompute its leaves by hand, -1.1513 and 1.1729, and they match. They differ in how they find splits fast. Tune in order: learning rate, then rounds, leaves, leaf size, sampling, L1 and L2. Learning rates from 0.3 to 0.02, and leaves from 4 to 128, stay between 0.924 and 0.927, so on adult census the whole search moves AUC by under 0.003.
+          4. Speed differs by a factor of 30, measured on a busy laptop, so treat that as rough. The script is in practice. AdaBoost, the first practical boosting algorithm, reweights the rows the ensemble gets wrong and is the special case of gradient boosting for exponential loss, which punishes a confidently wrong row hard, so mislabelled rows hurt it more. Every library shares the same second-order core: we fit a one-tree XGBoost model in the note and recompute its leaves by hand, -1.1513 and 1.1729, and they match. They differ in how they find splits fast. Tune in order: learning rate, then rounds, leaves, leaf size, sampling, L1 and L2. Learning rates from 0.3 to 0.02, and leaves from 4 to 128, stay between 0.924 and 0.927, so on adult census the whole search moves AUC by under 0.003.
 
       - layout: code
         beat: pitfalls

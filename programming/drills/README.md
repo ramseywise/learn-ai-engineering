@@ -6,10 +6,12 @@ material lives in the [curriculum](../../README.md); interview format and round 
 practice links to chapters, chapters never depend on practice. [`practice/CROSSWALK.md`](../../practice/CROSSWALK.md)
 maps each curriculum unit to the drills and guides that test it.
 
-librarian imports this folder as the **drills** module of its Programming course
-(`make import-courses`): every tracked `.md` here becomes a lesson, each track folder a section. A
-file with `track:` in its frontmatter feeds Practice mode. Notebooks, `.sql`, `.ts` and `.py` files
-stay here and are linked, not imported.
+This folder is the **drills** module of librarian's Programming course (`make import-courses`): every
+tracked `.md` here is a lesson, each track folder a section. A file with `track:` in its frontmatter
+feeds Practice mode. The `.py`, `.sql` and `.ts` files that go with a drill live beside it in this
+tree, so relative links to them resolve. Notebooks are converted to lessons separately. Licensed third-party
+material keeps its `LICENSE` and is listed in [`THIRD_PARTY.md`](../../THIRD_PARTY.md); material without a clear licence
+stays in the gitignored `private/` mirror.
 
 ## Tracks
 
@@ -23,6 +25,12 @@ stay here and are linked, not imported.
 | Coding rounds | `coding/` | [Prompts](coding/prompts/README.md), [seeded-bug problems](coding/problems/README.md), [Hello, Interview!](coding/dsa/README.md) as a DSA reference | Active |
 
 `coding/` keeps its layout because the drill tooling depends on its paths.
+
+**Timed coding-round prep** (`coding/notes/`): start with the [prep brief](coding/notes/brief.md) and the two
+formats, [no AI, 45 min](coding/notes/brief-env1-noai.md) and [AI allowed, 30 min](coding/notes/brief-env2-ai.md).
+Then the four skills it grades: [planning the approach](coding/notes/approach.md),
+[driving the AI](coding/notes/ai.md), [verification and testing](coding/notes/testing.md) and
+[communication](coding/notes/comms.md).
 
 Unlike `practice/`, this folder has no allowlist: the root `.gitignore` names what stays local. That is
 solutions to site problems (`python/leetcode/` and the `hackerrank/` folders), personal attempts

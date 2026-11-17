@@ -160,7 +160,7 @@ parts:
         notes: "Before step 3, work out what you can win: if a share p of the time gets s times faster, the whole gains 1 / ((1 - p) + p / s). A hundredfold speedup of something that takes 5% of the time gains you 5%. Amdahl's 1967 paper argues this in prose; the formula is the textbook version."
 
   - title: Structures and patterns
-    summary: Inside list and dict · Traps that become outages · One graph loop · The condition behind each pattern
+    summary: Inside list and dict · Traps that become outages · One graph loop · The condition behind each pattern · Sampling a stream
     notes: What's behind the O(1) claims, then the handful of ideas most algorithms come from.
     slides:
       - layout: statement
@@ -254,7 +254,7 @@ parts:
         bold_first: false
         takeaway: A pattern is a reason not to look at every pair, subset or path. Its condition is what breaks when you apply it from memory, so check that first.
         source: notes/03-algorithm-patterns.md
-        notes: "The note's table also has union-find, which only ever merges, and quickselect, which needs random pivots. Honest results matter too: on in-memory lists set(a) & set(b) was about twice as fast as two pointers, 135 ms against 255 ms for 1M by 1M, because the set work happens in C. Ten simulations found a capacity limit among 999 rates by binary search."
+        notes: "The note's table also has union-find, which only ever merges, and quickselect, which needs random pivots. Honest results matter too: on in-memory lists set(a) & set(b) was about twice as fast as two pointers, 135 ms against 255 ms for 1M by 1M, because the set work happens in C. Ten simulations found a capacity limit among 999 rates by binary search. The same loop gives an integer square root, because x * x <= n flips exactly once: 60 steps for 10**18 + 5, one per bit of n, with a closed [lo, hi] range so the midpoint rounds up. Newton's method, x = (x + a / x) / 2, took 5 steps for sqrt(2) and 34 for 1e18, because it first halves a poor guess and only doubles the correct digits once close."
 
       - layout: code
         beat: practice
@@ -279,7 +279,35 @@ parts:
           - "A rule that's about 95% right passes a few tests"
         takeaway: An exchange argument, or at the least agreement with brute force on many small random cases. Only earliest finish was optimal in all 300 random booking cases.
         source: notes/03-algorithm-patterns.md
-        notes: "The random cases are 10 bookings each. The brute-force test takes minutes to write, and caught two of three rules. The obvious knapsack greedy also fails: best relevance per token gets 60 where the optimum is 62, in the note's token-budget example. Dynamic programming is recursion that doesn't repeat itself."
+        notes: "The random cases are 10 bookings each. The brute-force test takes minutes to write, and caught two of three rules. The obvious knapsack greedy also fails: best relevance per token gets 60 where the optimum is 62, in the note's token-budget example. Dynamic programming is recursion that doesn't repeat itself. For an NP-hard problem on a time budget the note's plan has three layers: a greedy first answer (for 0/1 knapsack, value per weight compared with the single most valuable item is never worse than half the optimum), local search such as swaps or 2-opt with restarts or simulated annealing, and the best answer so far kept so the search can stop at any deadline. A relaxation such as the fractional knapsack gives an upper bound on how far from optimal you could be."
+
+      - layout: code
+        beat: practice
+        title: How do you sample k items from a stream of unknown length?
+        kicker: Reservoir sampling
+        lang: python
+        code: |-
+          def reservoir(stream, k, rng):
+              sample = []
+              for i, item in enumerate(stream):
+                  if i < k:
+                      sample.append(item)
+                  else:
+                      j = rng.randrange(i + 1)
+                      if j < k:
+                          sample[j] = item
+              return sample
+
+          # 20,000 runs, k=3 of 10 items: expect 6,000 each
+          # [5831, 6021, 6096, 5965, 5987,
+          #  6038, 6038, 5975, 6054, 5995]
+        bullets:
+          - "Keep the first `k`, then item `i` (0-based) replaces a random slot with probability `k / (i + 1)`"
+          - "One pass, **O(k)** memory, no need to know the length"
+          - "Every item ends up kept with probability **k / n**"
+        takeaway: Keep the first k, then let item i replace a random slot with probability k/(i + 1). Every item is kept with probability k/n, in one pass and O(k) memory.
+        source: notes/03-algorithm-patterns.md
+        notes: "Why it is uniform: item i enters with probability k/(i + 1). A later item t evicts it with probability (k/(t + 1)) * (1/k), so it survives that step with probability t/(t + 1). The product from t = i + 1 to n - 1 telescopes to (i + 1)/n, and k/(i + 1) times that is k/n. Quickselect, by contrast, needs the whole input in memory."
 
   - title: Numbers and memory
     summary: Where float precision goes · The staircase of caches · Why layout sets the constant

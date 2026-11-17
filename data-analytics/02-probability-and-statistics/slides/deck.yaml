@@ -371,6 +371,35 @@ parts:
           beta: what do I believe it is? Poisson and exponential are two views of the same process. Every test and
           every Bayesian model starts from a distribution, so naming it usually names the method.
 
+      - layout: code
+        beat: fundamentals
+        title: Uniform in, any distribution out, and back
+        recall: What does a distribution's ppf do to uniform draws, and what does its cdf do to its own draws?
+        answer: "Applying a distribution's inverse CDF (ppf) to uniform draws gives draws from it, which is inverse transform sampling. A continuous variable pushed through its own CDF comes out uniform."
+        lang: Python
+        code: |-
+          wait = stats.expon(scale=3)
+          made = wait.ppf(rng.random(100_000))
+          back = wait.cdf(rng.exponential(3, 100_000))
+          # made: mean 3.006
+          #   KS against exponential p = 0.38
+          # back: deciles 0.1  0.499  0.901
+          #   KS against uniform p = 0.86
+        bullets:
+          - "**ppf:** uniform draws in, the target distribution out."
+          - "**cdf:** a continuous variable through its own CDF is uniform."
+        takeaway: The inverse CDF turns uniform draws into any distribution, and the CDF turns them back.
+        source: notes/03-distributions-and-sampling.md
+        notes: >-
+          ppf and cdf convert in opposite directions. Forward, this is inverse transform sampling, which works for any distribution with a computable inverse CDF. In reverse it is the probability integral transform. A goodness-of-fit test can always be phrased as asking whether the transformed values are uniform. A p-value is the null distribution's CDF applied to the statistic, so it is uniform when the null is true.
+        narration: >-
+          The ppf and the cdf convert in opposite directions. Take uniform draws and apply the inverse CDF of an
+          exponential with mean 3, and you get exponential draws. Their mean is 3.006, and a Kolmogorov-Smirnov
+          test finds nothing wrong. This is inverse transform sampling. Go the other way, pushing exponential
+          draws through their own CDF, and the deciles come out at 0.1, 0.499 and 0.901, which is uniform. That
+          second direction explains the p-value. It is the null distribution's CDF applied to a test statistic, so
+          when the null is true it is uniform.
+
       - layout: table
         beat: pitfalls
         title: On revenue, the CLT takes its time
@@ -424,6 +453,38 @@ parts:
           covers it 92 percent of the time. Wilson inverts the score test. At n of 4,000 the two are
           indistinguishable. Simulating coverage is the general way to test any interval you do not trust. For
           rates in small segments, use Wilson.
+
+      - layout: compare
+        beat: fundamentals
+        title: Method of moments is quick, and noisier than MLE
+        lead: "Fitting a lognormal to the chapter's 180 orders, where the true σ is 1.1."
+        recall: How does the method of moments compare with maximum likelihood for a lognormal σ?
+        answer: "Set the model's mean and variance equal to the sample's and solve. It is quick and needs no optimiser, but over 2,000 samples of 180 its σ varied about twice as much as the MLE's (1.044 ± 0.123 against 1.096 ± 0.056) and sat a little low."
+        emphasis: right
+        left:
+          title: Method of moments
+          bullets:
+            - "**Recipe:** set the model's mean and variance equal to the sample's and solve."
+            - "**Quick,** no optimiser, a start when the likelihood is awkward."
+            - "**Noisier:** over 2,000 samples it varied about twice as much and sat a little low."
+          tag: "σ = 0.916 on the 180 orders"
+        right:
+          title: Maximum likelihood
+          bullets:
+            - "**Recipe:** the parameters that make the data most probable."
+            - "**Over 2,000 samples:** MLE 1.096 ± 0.056, moments 1.044 ± 0.123."
+          tag: "σ = 1.140 on the 180 orders"
+        takeaway: Moments are quick and need no optimiser, but maximum likelihood uses the data more efficiently when the model is right.
+        source: notes/04-estimation.md
+        notes: >-
+          The moment estimate of σ is built on the sample variance, which a few of the largest orders decide. For a Normal mean or a Bernoulli rate the two methods give the same estimator.
+        narration: >-
+          The method of moments is an older recipe that needs no likelihood. Write the model's mean and variance
+          in terms of its parameters, set them equal to the sample's, and solve. For a lognormal that gives sigma
+          squared as the log of one plus the sample variance over the squared mean. On the 180 orders it gives a
+          sigma of 0.916, where maximum likelihood gives 1.140, against a true 1.1. Over 2,000 samples of 180, the
+          moment estimate varies about twice as much and sits a little low. Moments are quick. Maximum likelihood
+          uses the data more efficiently when the model is right.
 
       - layout: flow
         beat: fundamentals

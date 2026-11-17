@@ -3,7 +3,6 @@ origin: synthesis
 sources:
   - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 6; 3rd ed. open access at https://wesmckinney.com/book/accessing-data"
   - https://pandas.pydata.org/docs/user_guide/io.html
-  - https://docs.pola.rs/user-guide/lazy/optimizations/
 confidence: high
 cleaned: 2026-11-17
 ---

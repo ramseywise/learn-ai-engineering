@@ -1,4 +1,4 @@
-# Visualisation and Storytelling lecture deck. Covers notes 01-06.
+# Visualisation and Storytelling lecture deck. Covers notes 01-06b.
 # Build: make slides PILLAR=data-analytics/05-visualisation-and-storytelling STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: Fernhill Home, a fictional retailer. All numbers come from the seeded generator
@@ -54,7 +54,7 @@ parts:
         takeaway: The steps run from choosing a chart to getting a decision made, and the last one asks what the dashboard should be built on.
         source: README.md
         notes: >-
-          Parts one to four are about the chart. Part five covers the dashboard and the single chart and sentence that gets the budget restored. Part six moves to Fernhill's customer segments and measures the cost of each stack.
+          Parts two to five are about the chart. Part six covers the dashboard and the single chart and sentence that gets the budget restored. Part seven moves to Fernhill's customer segments and measures the cost of each stack.
 
       - layout: cards
         beat: wrap
@@ -72,8 +72,8 @@ parts:
         notes: >-
           These are the README's rules of thumb, which the parts that follow work through on Fernhill's data.
 
-  - title: Choosing the form
-    summary: Why plot · The grammar · Encoding accuracy · Two honest lies
+  - title: Choose and plot
+    summary: Why plot · The grammar · Encoding accuracy · Two honest lies · Your own data
     notes: >-
       Before any library, we need a way to think about what a chart is and which one fits the question.
     slides:
@@ -177,6 +177,62 @@ parts:
         notes: >-
           Neither chart contains a false number. The distortion comes entirely from the scale.
 
+      - layout: image
+        beat: problem
+        title: The same column, three stories
+        kicker: Your own data
+        image: ../../sources/images/da01-plotting-hist.png
+        caption: "Daily revenue as histograms with 5, 25 and 150 bins."
+        bullets:
+          - "**5 bins** give a plain staircase and **150** look like static."
+          - "**25 bins** show a main body with a long right tail."
+          - "The mean (507) sits above the median (477), the same skew in numbers."
+        takeaway: The number of bins is a real choice, so try several before you believe the shape of a column.
+        source: notes/01b-plotting-your-own-data.md
+        recall: Why should you try several bin counts on a histogram?
+        answer: Too few bins hide structure and too many show only noise, so try several. A mean above the median (507 against 477 here) is the same fact as a long right tail.
+        notes: >-
+          Five bins give a staircase, a hundred and fifty look like static, and twenty-five shows the body with a long right tail made by the December days and the weekends.
+
+      - layout: code
+        beat: practice
+        title: Pandas draws, you choose the Axes
+        kicker: Your own data
+        lang: python
+        code: |-
+          fig, axes = plt.subplots(1, 2, figsize=(9, 3))
+          by_month.plot.bar(ax=axes[0])
+          axes[0].set(title="Mean daily revenue by month")
+          by_product.sort_values().plot.barh(ax=axes[1])
+          fig.tight_layout()
+          fig.savefig("bars.png")
+        bullets:
+          - "**`ax=`** says which Axes a pandas plot lands on."
+          - "**Sort** the products, keep the months in calendar order."
+          - "**Mean per day** so February's shortness does not count against it."
+        takeaway: Pass ax= to a pandas plot so you choose where it is drawn, then label and save through the figure.
+        source: notes/01b-plotting-your-own-data.md
+        recall: How do you put two pandas plots side by side, and which order should each axis use?
+        answer: Create fig, axes with plt.subplots, then pass ax=axes[0] and ax=axes[1] to each pandas plot call. Keep months in calendar order, sort the categories, and use the mean per day so month length does not distort the bars.
+        notes: >-
+          Pandas plot methods wrap matplotlib, so every labelling call is still a method on the Axes you passed in.
+
+      - layout: bullets
+        beat: pitfalls
+        title: Four plotting slips that mislead
+        kicker: Your own data
+        bullets:
+          - "**Unsorted dates:** a line connects points in row order, so `sort_index()` first."
+          - "**A line across categories** implies an order that is not there."
+          - "**Panels without `sharey=True`** make small things look big."
+          - "**Opaque dots** hide density: lower `alpha`, or use `hexbin`."
+        takeaway: A chart can plot true numbers and still mislead through row order, an implied order, scale or overplotting.
+        source: notes/01b-plotting-your-own-data.md
+        recall: Name the plotting mistakes that mislead even when the numbers are right.
+        answer: Unsorted dates on a line, a line across categories, side-by-side panels without sharey=True, and opaque dots that hide density (use alpha or hexbin).
+        notes: >-
+          Each of these draws the right numbers. The error is in how the picture is built, so no check on the data will catch it.
+
   - title: Static charts in Python
     summary: Object model · Declutter · Small multiples · Seaborn
     notes: >-
@@ -203,7 +259,7 @@ parts:
         title: Remove first, then direct attention
         kicker: Declutter in order
         steps:
-          - {title: Use the object API, text: "A Figure holds Axes; call methods on ax."}
+          - {title: Use the object API, text: "Same object API as before: call methods on ax."}
           - {title: Remove, text: "Top and right spines, heavy gridlines, tick marks."}
           - {title: Label directly, text: "Name each line at its end, keep a legend for two or more series."}
           - {title: Mark the event, text: "A thin rule and a short label."}
@@ -507,7 +563,7 @@ parts:
         notes: >-
           These are four of the chapter's seven pitfalls. The others are reaching for D3 first, colouring text like the series, and hit targets as thin as the mark.
 
-  - title: Dashboards and the decision
+  - title: Dashboards and story
     summary: Monitoring · Streamlit and BI tools · The Big Idea · Sizing · Story
     notes: >-
       Two different jobs: something people monitor, and telling someone what you found so that they act.

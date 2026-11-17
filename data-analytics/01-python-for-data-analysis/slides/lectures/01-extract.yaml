@@ -1,0 +1,1338 @@
+# Lecture on notes/01-series-and-dataframe.md, 02-loading-data.md, 03-indexing-and-selection.md and 04-reshaping-and-joins.md, in the notes' order.
+# make slides PILLAR=data-analytics/01-python-for-data-analysis LECTURE=01-extract STRICT=1 PREVIEW=1
+deck:
+  title: Extract
+  subtitle: The rows and columns you need
+  tagline: "Series and DataFrame · Loading data · Indexing and selection · Reshaping and joins"
+  reference: "Notes: data-analytics/01-python-for-data-analysis, notes 1 to 4"
+  output: 01-extract.pptx
+  notes: >-
+    This is the first of three lectures on processing data: extract, clean, summarise. By the end you should be able to
+    build and read a frame, load a file with the decisions stated, select exactly the rows you mean, and join tables
+    without changing your totals.
+
+lecture:
+  covers:
+    - data-analytics/01-python-for-data-analysis/notes/01-series-and-dataframe.md
+    - data-analytics/01-python-for-data-analysis/notes/02-loading-data.md
+    - data-analytics/01-python-for-data-analysis/notes/03-indexing-and-selection.md
+    - data-analytics/01-python-for-data-analysis/notes/04-reshaping-and-joins.md
+  requires: [data-analytics/01-python-for-data-analysis/README.md]
+  next: [data-analytics/01-python-for-data-analysis/notes/05-cleaning.md]
+  related:
+    - programming/sql/notes/04-joins.md
+    - programming/sql/notes/09-sql-from-python.md
+
+parts:
+  - title: Series and DataFrame
+    summary: Why a table object · Labels · Alignment · First look · Dtypes · Copy-on-Write
+    notes: We start with the two objects that hold a table, and the shop's six orders that run through the whole module.
+    slides:
+      - layout: statement
+        beat: problem
+        section: The problem a DataFrame solves
+        title: How much has each customer spent?
+        recall: What does a plain-Python loop make you manage to total spend by customer?
+        answer: "You name the accumulator, handle the first time a customer appears and spell out the arithmetic per row, so the intent is buried in the bookkeeping."
+        kicker: The problem
+        statement: "Six orders, one question: total spend by customer. In plain Python you name the accumulator, handle the first sight of each customer and spell out the arithmetic per row."
+        takeaway: In a loop the intent is buried in bookkeeping, and pandas lets you ask the question in one line.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Six orders fit in a list of dictionaries, and the loop works. The point is what it makes you manage. Keep that
+          in mind for the next slide.
+
+      - layout: compare
+        beat: fundamentals
+        section: The problem a DataFrame solves
+        title: Three lines say what the loop hides
+        recall: Why did McKinney build pandas?
+        answer: "Statistical data tends to arrive as a two-dimensional list of observations with named fields, and the structures Python offered did not make that convenient compared with R's data.frame."
+        left:
+          title: Plain loop
+          bullets: ["Name the accumulator", "Handle the first time a customer appears", "Spell out the arithmetic per row"]
+        right:
+          title: DataFrame
+          bullets: ["Three lines, and each one says what it means", '`groupby("customer")["revenue"].sum()` is the question']
+        takeaway: The same total spend takes a loop with bookkeeping, or three lines that each say what they mean.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          The saving is the reason pandas exists. Both give ana 143.0, ben 41.5, cara 13.0 and dev 96.0. Do not worry
+          about the groupby syntax yet, it gets a whole chapter later.
+
+      - layout: cards
+        beat: fundamentals
+        section: A Series is a column with labels
+        title: A Series is values plus labels
+        recall: What are the parts of a Series?
+        answer: "Values of one type, an index holding a label for each value, and a dtype for the values."
+        cards:
+          - {title: Values, body: "A sequence of one type"}
+          - {title: Index, body: "A label for each value, numbered from 0 if you give none"}
+          - {title: dtype, accent: "D4621A", body: "The type of the values, printed under them"}
+        takeaway: A Series holds values of one type plus a label for each, and the labels are called the index.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Two pictures help. A NumPy array that knows the name of every position, or a dictionary whose values are stored
+          efficiently and keep their order.
+
+      - layout: code
+        beat: practice
+        section: A Series is a column with labels
+        title: Build a Series and read its parts
+        recall: How do you read the values, the index and the dtype of a Series?
+        answer: "Use to_numpy() for the values, list(qty.index) for the labels and qty.dtype for the type."
+        lead: Four customers, one quantity each, with the names as labels.
+        lang: python
+        code: |-
+          qty = pd.Series([1, 3, 1, 2], index=["ana", "ben", "cara", "dev"], name="qty")
+          print("values:", qty.to_numpy())
+          print("index: ", list(qty.index))
+          print("dtype: ", qty.dtype)
+
+          # values: [1 3 1 2]
+          # index:  ['ana', 'ben', 'cara', 'dev']
+          # dtype:  int64
+        takeaway: to_numpy gives the values, index gives the labels, and dtype gives the type.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          The printout of the Series itself shows labels on the left, values on the right and the dtype underneath.
+
+      - layout: bullets
+        beat: fundamentals
+        section: A Series is a column with labels
+        title: Labels give you two habits
+        recall: What two habits follow from having labels?
+        answer: "You look values up by label, and you do arithmetic on the whole column at once, which is called vectorisation."
+        bullets:
+          - '**Look up by label:** `qty["ben"]` gives 3'
+          - "**Vectorisation:** arithmetic on the whole column, with no loop"
+          - "**Faster too:** the loop runs in compiled code inside NumPy"
+          - "**A boolean test selects values:** `qty >= 2`"
+        aside:
+          code: |-
+            print(qty["ben"])
+            print(qty.sum(), qty.mean())
+            # 3
+            # 7 1.75
+          lang: python
+        takeaway: Look up by label, and do arithmetic on the whole column at once without a loop.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Summaries ignore the labels. A Series can also be built from a dictionary, where the keys become the labels.
+
+      - layout: compare
+        beat: fundamentals
+        section: "Alignment: the idea that makes it pandas"
+        title: Pandas adds by label, not by position
+        recall: Why does adding two Series with different labels not go wrong?
+        answer: "Operations between two objects match values by label, not by position, so each product is matched with itself whatever its order."
+        left:
+          title: NumPy arrays
+          bullets: ["Position is all there is", "[4 30 2] + [25 6 5] gives [29 36 7]", "That adds 4 kettles to 25 filters, silently"]
+        right:
+          title: Pandas Series
+          bullets: ["Each product is matched with itself", "The result carries the union of the labels", "A label on one side only comes out NaN"]
+        takeaway: Alignment matches values by label, so differently ordered Series still add correctly.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          McKinney lists alignment first among the requirements he set himself. The NumPy answer is wrong, and silently
+          so. Alignment removes that whole class of mistake.
+
+      - layout: code
+        beat: practice
+        section: "Alignment: the idea that makes it pandas"
+        title: A label on one side only comes out NaN
+        recall: What does week1 + week2 give when each week is missing a product?
+        answer: "filter adds to 55.0 and kettle to 9.0, while grinder and scale are NaN, and the result is float64."
+        lead: Week 1 sold no scales, and week 2 sold no grinders.
+        lang: python
+        code: |-
+          week1 = pd.Series({"kettle": 4, "filter": 30, "grinder": 2})
+          week2 = pd.Series({"filter": 25, "scale": 6, "kettle": 5})
+          print(week1 + week2)
+
+          # filter     55.0
+          # grinder     NaN
+          # kettle      9.0
+          # scale       NaN
+          # dtype: float64
+        takeaway: Each product is matched with itself, and a label present on only one side gives NaN.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Pandas will not pretend it knows what 2 plus nothing is. The NaNs are a smaller trap than silent misalignment,
+          and they are visible.
+
+      - layout: compare
+        beat: fundamentals
+        section: "Alignment: the idea that makes it pandas"
+        title: A gap means zero or unknown, and you choose
+        recall: How do you say that a missing label means zero sales?
+        answer: "Use add with a fill value: week1.add(week2, fill_value=0)."
+        emphasis: none
+        left:
+          title: Means zero
+          code: "week1.add(week2, fill_value=0)"
+          tag: "grinder 2.0, scale 6.0"
+        right:
+          title: Means unknown
+          bullets: ["Leave the NaN in place", "Pandas will not pretend it knows"]
+        takeaway: Whether a gap means zero or unknown is a question about the data, and pandas leaves that decision with you.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Chapter 2 of the Clean lecture returns to this. The code cannot answer it for you.
+
+      - layout: cards
+        beat: fundamentals
+        section: A DataFrame is a dictionary of aligned columns
+        title: A DataFrame is Series sharing one index
+        recall: What is a DataFrame made of?
+        answer: "A set of Series, one per column, that share one index, and each column has a single dtype."
+        cards:
+          - {title: Index, body: "One label per row. The columns are an Index too"}
+          - {title: One dtype per column, body: "Different columns can differ: int64, str, float64"}
+          - {title: A row is a Series, accent: "D4621A", body: "Indexed by the column names"}
+        takeaway: A DataFrame is a set of Series, one per column, sharing one index, and each column has one dtype.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Mixed dtypes are exactly what a real table needs and what a NumPy array does not offer.
+
+      - layout: code
+        beat: practice
+        section: A DataFrame is a dictionary of aligned columns
+        title: Build the orders frame from a dictionary of lists
+        recall: How do you build a DataFrame from a dictionary of equal-length lists?
+        answer: "Pass pd.DataFrame a dictionary whose keys are the column names and whose values are equal-length lists."
+        lang: python
+        code: |-
+          orders = pd.DataFrame({
+              "order_id":   [1001, 1002, 1003, 1004, 1005, 1006],
+              "customer":   ["ana", "ben", "ana", "cara", "dev", "ben"],
+              "product":    ["kettle", "filter", "grinder", "filter", "kettle", "scale"],
+              "qty":        [1, 3, 1, 2, 2, 1],
+              "unit_price": [48.0, 6.5, 95.0, 6.5, 48.0, 22.0],
+          })
+          print(orders)
+
+          #    order_id customer  product  qty  unit_price
+          # 0      1001      ana   kettle    1        48.0
+          # 1      1002      ben   filter    3         6.5
+        takeaway: A dictionary of equal-length lists mirrors the structure of the frame directly.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          A list of row dictionaries works too. Taking one column out gives a Series with the same index.
+
+      - layout: flow
+        beat: practice
+        section: "First look: what to run on a new frame"
+        title: Four commands to run on every new frame
+        recall: Which commands do you run first on a new frame?
+        answer: "shape, head, dtypes and info, then describe and value_counts for what the values look like."
+        steps:
+          - {label: shape, sub: "(rows, columns)"}
+          - {label: head, sub: first rows}
+          - {label: dtypes, sub: the type of every column}
+          - {label: info, sub: "non-null counts, memory"}
+        caption: "Then describe for the numbers and value_counts for a categorical column."
+        takeaway: Run shape, head, dtypes and info on a new frame before you believe anything about it.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          They answer four questions: how big is it, what types did pandas assign, how much is missing, and what do the
+          values look like.
+
+      - layout: table
+        beat: practice
+        section: "First look: what to run on a new frame"
+        title: Read describe with some care
+        recall: How should you read the count row, and the mean against the median?
+        answer: "A count below the row total is the first sign of gaps, and a mean of 37.67 above a median of 35.00 shows the one 95.00 grinder pulling it up."
+        lead: "`count` is the number of non-missing values, and `50%` is the median."
+        header: [Statistic, qty, unit_price]
+        widths: [3, 3, 3]
+        rows:
+          - [count, "6.000000", "6.000000"]
+          - [mean, "1.666667", "37.666667"]
+          - ["50% (median)", "1.500000", "35.000000"]
+          - [max, "3.000000", "95.000000"]
+        highlight: [1, 2]
+        takeaway: A count below the row total shows gaps, and a mean above the median means a few large values pull it up.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          describe and value_counts catch a surprising share of problems early: an impossible maximum, a category spelled
+          two ways. The next module explains why the mean and median gap matters.
+
+      - layout: bullets
+        beat: pitfalls
+        section: Dtypes decide what an operation means
+        title: A number read as text adds as text
+        recall: What does sum do on numbers that were read as strings?
+        answer: "It concatenates them: 3, 12 and 5 sum to 3125, and after pd.to_numeric they sum to 20."
+        bullets:
+          - '**One stray value** such as `"n/a"` makes pandas read the whole column as strings'
+          - "**The arithmetic** then fails or does something quite different"
+          - "**`astype`** when you know the type"
+          - "**`pd.to_numeric` and `pd.to_datetime`** when the data may be dirty"
+        aside:
+          code: |-
+            as_text = pd.Series(
+                ["3", "12", "5"])
+            print(as_text.sum())
+            print(pd.to_numeric(
+                as_text).sum())
+            # 3125
+            # 20
+          lang: python
+        takeaway: A column's dtype decides what + and sum do, so run dtypes on a new frame before you compute.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          This is the most common failure in real data. Since pandas 3.0, text columns get a dedicated str dtype where
+          earlier versions used object, so old tutorials that check for object no longer work.
+
+      - layout: table
+        beat: fundamentals
+        section: Dtypes decide what an operation means
+        title: Six dtypes, and where each one goes wrong
+        recall: What happens to an int64 column that gets one gap?
+        answer: "It is promoted to float64, because NaN is a floating-point value."
+        header: [dtype, Holds, Missing marker, Typical source of trouble]
+        widths: [1.6, 2.6, 2.2, 5]
+        rows:
+          - ["`int64`", whole numbers, cannot hold a missing value, one gap promotes the column to float64]
+          - ["`float64`", real numbers, "`NaN`", rounding error when summing money]
+          - ["`str`", text, "`NaN`", numbers and dates read as text]
+          - ["`bool`", True and False, cannot hold a missing value, a gap makes it object]
+          - ["`datetime64`", moments in time, "`NaT`", dates left as text]
+          - ["`category`", a small set of repeated labels, "`NaN`", a value outside the declared categories turns into NaN]
+        highlight: [0]
+        takeaway: One gap promotes int64 to float64, so a column of whole numbers printing with .0 usually hides a missing value.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Whenever a column of whole numbers mysteriously prints with .0 on the end, there is usually a missing value in
+          it. McKinney named this as the known cost of choosing NaN for speed.
+
+      - layout: compare
+        beat: fundamentals
+        section: Dtypes decide what an operation means
+        title: A category column stores each label once
+        recall: How much memory did category save in McKinney's 10-million-element example?
+        answer: "80,000,080 bytes as strings against 10,000,272 as category, about 8 times less, after a one-off 726 ms astype."
+        lead: A 10-million-element Series cycling through four labels (one run, machine unstated).
+        left:
+          title: As strings
+          bullets: ["**80,000,080** bytes", "Every label stored on every row"]
+        right:
+          title: As category
+          bullets: ["**10,000,272** bytes", "Each label once, plus an integer code per row"]
+        takeaway: Category saved about 8 times the memory in the 2017 example, but pandas 3 stores text as str, so measure first.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          The 2017 text keeps strings as object, which is why the saving looked so large. Treat every ratio in this
+          section as the lesson and not a benchmark, since the machine and pandas have both changed.
+
+      - layout: code
+        beat: practice
+        section: Making new columns
+        title: A new column is one vectorised line
+        recall: How do you add a column, keep the bulk orders and sort them by revenue?
+        answer: 'Assign orders["revenue"] = qty * unit_price, filter with orders[orders["is_bulk"]], then sort_values("revenue", ascending=False).'
+        lead: Assigning to a name that does not exist creates the column.
+        lang: python
+        code: |-
+          orders["revenue"] = orders["qty"] * orders["unit_price"]
+          orders["is_bulk"] = orders["qty"] >= 2
+          print(orders[orders["is_bulk"]].sort_values("revenue", ascending=False))
+
+          #    order_id customer product  qty  unit_price  revenue  is_bulk
+          # 4      1005      dev  kettle    2        48.0     96.0     True
+          # 1      1002      ben  filter    3         6.5     19.5     True
+          # 3      1004     cara  filter    2         6.5     13.0     True
+        takeaway: Arithmetic between columns is vectorised, so a new column is usually one line.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          drop returns a new frame rather than changing the old one. Most pandas methods behave this way, which is why
+          you so often see orders = orders.something(...).
+
+      - layout: compare
+        beat: fundamentals
+        section: "Copy-on-Write: the rule that changed in pandas 3"
+        title: Copy-on-Write makes every result behave as a copy
+        recall: What is the Copy-on-Write rule in pandas 3?
+        answer: "The result of any indexing operation or method behaves as if it were a copy, so changing one object never changes another."
+        left:
+          title: Before pandas 3
+          bullets: ["A column you pulled out was a view on the frame", "Changing it could change the frame", "`.copy()` calls silenced the SettingWithCopyWarning"]
+        right:
+          title: Pandas 3
+          bullets: ["Any indexing result behaves as if it were a copy", "`col.iloc[0] = 99` changed `col` and left `orders` at 1", "Pandas still avoids copying until it has to"]
+        takeaway: Under Copy-on-Write, changing one object never changes another.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          This is the one section where older material will actively mislead you. One statement cannot update more than
+          one object. The array from to_numpy may be a read-only view, so copy it first to modify it.
+
+      - layout: code
+        beat: pitfalls
+        section: "Copy-on-Write: the rule that changed in pandas 3"
+        title: Chained assignment now does nothing
+        recall: How do you change part of a frame in pandas 3?
+        answer: "Use a single .loc call that makes the selection and the assignment together."
+        lang: python
+        code: |-
+          fixed = orders.copy()
+          fixed["qty"][fixed["customer"] == "ana"] = 0     # chained: does nothing
+          print(fixed.loc[fixed["customer"] == "ana", "qty"].tolist())
+
+          fixed.loc[fixed["customer"] == "ana", "qty"] = 0  # one .loc call: works
+          print(fixed.loc[fixed["customer"] == "ana", "qty"].tolist())
+
+          # ChainedAssignmentError: A value is being set on a copy ...
+          # [1, 1]
+          # [0, 0]
+        takeaway: To change part of a frame, use a single .loc, because chained assignment lands on a temporary that is thrown away.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Each step of a chained assignment produces a separate object. The first attempt changed nothing and pandas
+          warned about it.
+
+      - layout: table
+        beat: pitfalls
+        section: Pitfalls
+        title: Six traps from the first chapter
+        recall: Why can't you test for a missing value with ==?
+        answer: "NaN == NaN is false by the floating-point standard, so use isna()."
+        header: [Pitfall, Fix]
+        widths: [5, 5]
+        rows:
+          - [Iterating a frame row by row, Look for a vectorised column expression first]
+          - [Reading .0 as harmless, "Check `isna().sum()`"]
+          - [Trusting the dtype without looking, "Run `dtypes` on a new frame"]
+          - [Comparing with NaN using ==, "Use `isna()`"]
+          - [Following pre-3.0 advice on views and copies, '`df.loc[mask, "a"] = x`']
+          - [Forgetting that methods return new objects, Assign the result]
+        takeaway: Look for a vectorised expression, check isna().sum() and dtypes, and assign what a method returns.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Each of these has a symptom you can spot. orders.drop(columns=["qty"]) on its own line changes nothing that you
+          kept.
+
+  - title: Loading data
+    summary: The raw file · read_csv options · Take only what you need · Three tools
+    notes: The frame in chapter 1 was typed in by hand. Real data comes from an export, and the load is where meaning gets lost.
+    slides:
+      - layout: statement
+        beat: problem
+        section: Look at the raw file first
+        title: Where does the meaning get lost?
+        recall: What can go wrong in a load without raising an error?
+        answer: "A banner line becomes the header, a zip code loses its leading zero, and a quantity column turns into decimals because one cell says n/a."
+        kicker: The problem
+        statement: "A banner line becomes the header. A zip code loses its leading zero. A column of quantities turns into decimals because one cell says n/a. None of these raises an error."
+        takeaway: None of these loads raises an error, and each one changes every number computed afterwards.
+        source: notes/02-loading-data.md
+        notes: >-
+          Data comes out of an admin panel, a database or somebody's spreadsheet. This chapter is about getting it into a
+          frame without changing it. Fixing what is wrong inside the values is cleaning, and it waits.
+
+      - layout: flow
+        beat: fundamentals
+        section: Look at the raw file first
+        title: A careful load has five steps
+        recall: What are the steps of a careful load?
+        answer: "Look at the raw file, read_csv with the decisions stated, check shape, dtypes and missing counts, then take only the rows and columns you need."
+        steps:
+          - {label: Raw file, sub: look first}
+          - {label: read_csv, sub: decisions stated}
+          - {label: Check, sub: "shape, dtypes, missing"}
+          - {label: Take less, sub: only what you need}
+          - {label: A frame, sub: matches the file}
+        loop: the parse is wrong, so look at the raw file again
+        takeaway: Look first, state your decisions, check shape, dtypes and missing counts, then take only what you need.
+        source: notes/02-loading-data.md
+        notes: >-
+          The same flow runs through the whole chapter. The loop back to the raw file is the point: a wrong parse sends
+          you back to the text.
+
+      - layout: bullets
+        beat: practice
+        section: Look at the raw file first
+        title: Read the first lines of the raw file
+        recall: Why read the raw text before you parse it?
+        answer: "A banner line, a second header or a footer total is obvious in the first lines and invisible in a frame."
+        bullets:
+          - "**The first line is not data**"
+          - "Everything else you might fix is visible from a quick read, **if you look**"
+          - "**Pass `encoding`:** the default differs across systems, and a wrong one raises an error or garbles characters"
+        aside:
+          code: |-
+            with open("orders_raw.csv",
+                      encoding="utf-8") as f:
+                print(f.readline())
+            # # shop-admin export 2025-02-01
+          lang: python
+        takeaway: Read the raw text first, and pass encoding explicitly.
+        source: notes/02-loading-data.md
+        notes: >-
+          Python's open and pathlib are enough for this. The export has a banner line, mixed case, a duplicate row, n/a
+          quantities and a dash for a missing region, all visible in a quick read.
+
+      - layout: bullets
+        beat: pitfalls
+        section: read_csv and the options that matter
+        title: The naive read_csv takes the banner as the header
+        recall: What does the naive read_csv give for a file with a banner line?
+        answer: "A frame of shape (14, 1) whose only column is named after the banner line."
+        bullets:
+          - "**One column,** named after the banner line"
+          - "The real columns collapsed into a confusing index"
+          - "**The shape gives it away,** which is why you check it"
+        aside:
+          code: |-
+            naive = pd.read_csv(
+                "orders_raw.csv")
+            print(naive.shape)
+            # (14, 1)
+          lang: python
+        takeaway: Check the shape after every load, and tell read_csv about the comment line.
+        source: notes/02-loading-data.md
+        notes: >-
+          McKinney groups the options by purpose: indexing, type inference and conversion, date parsing, iterating over
+          big files, and handling unclean data. Try the naive call first and see what breaks.
+
+      - layout: table
+        beat: pitfalls
+        section: read_csv and the options that matter
+        title: A parse that runs without error is still not right
+        recall: Why is the parse with comment="#" still not right?
+        answer: 'qty is float64 because of the n/a, unit_price and date stay str, and the "-" for a missing region is not recognised.'
+        header: [Column, Read as, Why]
+        widths: [2.2, 1.8, 7]
+        rows:
+          - ["`qty`", "`float64`", "pandas treats `n/a` as missing by default, and a gap promotes the column to float"]
+          - ["`unit_price`", "`str`", "The dollar signs"]
+          - ["`date`", "`str`", "pandas does not guess dates unless you ask"]
+          - ["`region`", "`str`", "The `-` for missing is this file's own convention, so pandas cannot know"]
+        highlight: [0]
+        takeaway: A load can run cleanly and still mistype columns, so check dtypes against what the file should hold.
+        source: notes/02-loading-data.md
+        notes: >-
+          The defaults also treat NA, NaN, null and the empty string as missing. This is the parse after comment="#" has
+          been added.
+
+      - layout: code
+        beat: practice
+        section: read_csv and the options that matter
+        title: State the decisions read_csv would otherwise guess
+        recall: Which three options deal with the banner, the missing marker and the dates?
+        answer: 'comment="#", na_values={"region": ["-"]} and parse_dates=["date"].'
+        lang: python
+        code: |-
+          orders = pd.read_csv(
+              "orders_raw.csv",
+              comment="#",
+              na_values={"region": ["-"]},
+              parse_dates=["date"],
+          )
+          print(orders.isna().sum())
+        bullets:
+          - "**`comment`:** skip the banner"
+          - "**`na_values`:** this file's own marker"
+          - "**`parse_dates`:** `date` becomes `datetime64`"
+          - "**Check:** `qty` 2 missing, `region` 2"
+        takeaway: State the missing markers, the dates and the comment line, then check isna().sum() after the load.
+        source: notes/02-loading-data.md
+        notes: >-
+          After this load, the date column is datetime64, qty has two missing values and region has two. That is what the
+          file should hold, which is the check.
+
+      - layout: compare
+        beat: practice
+        section: read_csv and the options that matter
+        title: Identifiers need to be read as str
+        recall: How do you stop read_csv turning 01234 into 1234?
+        answer: 'Pass dtype={"zip": "str"} for any identifier with a leading zero.'
+        left:
+          title: Guessed
+          bullets: ["`01234` becomes the integer 1234", "`[1234, 90210]`"]
+        right:
+          title: Stated
+          bullets: ['`dtype={"zip": "str"}`', "`['01234', '90210']`"]
+        takeaway: State dtype as str for zip codes, phone numbers and account ids, or the leading zeros vanish.
+        source: notes/02-loading-data.md
+        notes: >-
+          This file does not need it, but it matters for any identifier. chunksize gives you an iterator of frames for a
+          file larger than memory. McKinney reads a 10,000-row file in pieces of 1,000.
+
+      - layout: table
+        beat: fundamentals
+        section: read_csv and the options that matter
+        title: One reader per source, and one pattern
+        recall: Which function reads Excel, and what does it need?
+        answer: "read_excel, which needs openpyxl, and sheet_name picks the sheet."
+        header: [Source, Function, Note]
+        widths: [2.4, 3.2, 5.4]
+        rows:
+          - [Delimited text, "`read_csv`", "Types are guessed, so state the ones that matter"]
+          - [JSON records, "`read_json`, `json_normalize`", Nested data needs flattening]
+          - [Excel, "`read_excel`", "Needs `openpyxl`; `sheet_name` picks the sheet"]
+          - [HTML tables, "`read_html`", "Returns a list of frames, one per table"]
+          - [Database, "`read_sql`", "Takes a query and a connection"]
+          - [Parquet, "`read_parquet`", "Types come with the file; needs `pyarrow`"]
+        takeaway: Learn read_csv thoroughly and you know most of the other readers, since each returns a DataFrame.
+        source: notes/02-loading-data.md
+        notes: >-
+          There are over 50 read_csv parameters, so when a file will not parse, go to the docs and not to memory.
+
+      - layout: bullets
+        beat: practice
+        section: Take only what you need
+        title: usecols and nrows trim the read
+        recall: Why can't a peek with nrows tell you a column's type?
+        answer: "The n/a further down was never read, so qty looks like an integer on four rows but is not on the full column."
+        bullets:
+          - "**`usecols`:** only the columns you name"
+          - "**`nrows`:** only the first rows"
+          - "**A peek shows the layout** and nothing about the types of the full column"
+          - "On four rows `qty` is an integer, because the `n/a` was never read"
+        aside:
+          code: |-
+            peek = pd.read_csv(
+                "orders_raw.csv",
+                comment="#",
+                usecols=["order_id",
+                         "product", "qty"],
+                nrows=4)
+          lang: python
+        takeaway: A peek tells you the layout of a file and nothing about the types of the full column.
+        source: notes/02-loading-data.md
+        notes: >-
+          The earlier you say which rows and columns you want, the less there is to read, hold in memory and get wrong.
+
+      - layout: code
+        beat: practice
+        section: Take only what you need
+        title: Filter in the query when the data is in a database
+        recall: How do you pass a value into a read_sql query safely?
+        answer: "Through params, and never by pasting values into the query string."
+        lead: A CSV cannot filter before pandas reads it. A database can.
+        lang: python
+        code: |-
+          north = pd.read_sql(
+              "SELECT order_id, product, qty FROM orders WHERE region = ?",
+              conn, params=("north",)
+          )
+          print(north)
+
+          #    order_id  product  qty
+          # 0      1001   kettle  1.0
+          # 1      1003  grinder  1.0
+          # 2      1007  filter   4.0
+          # 3      1008   filter -1.0
+        takeaway: Filter and pick columns in the query, so the database reads less and sends back less.
+        source: notes/02-loading-data.md
+        notes: >-
+          Four rows and three columns crossed over, not the whole table. SQLite stands in for the shop's database here.
+          Using params also stops an odd value from changing the query.
+
+      - layout: statement
+        beat: pitfalls
+        section: Take only what you need
+        title: Does extracting fix the mess?
+        recall: What did the GROUP BY on region reveal?
+        answer: "south and South were counted as two regions, so extracting moved the mess without fixing it."
+        kicker: "north 4, south 3, South 2, east 1, East 1"
+        statement: "Extracting moves the mess, and it does not fix it. The database counted south and South as two regions, exactly as pandas would have."
+        takeaway: A query returns the same mess a file does, so check what arrived whatever the source.
+        source: notes/02-loading-data.md
+        notes: >-
+          The same count also shows a dash and a NaN as separate groups. Cleaning comes after you can select and join.
+
+      - layout: code
+        beat: practice
+        section: Take only what you need
+        title: Polars scan_csv builds a plan before it reads
+        recall: What do PROJECT 4/7 COLUMNS and SELECTION tell you about the scan?
+        answer: "The scan reads four of the seven columns (the three asked for plus region, which the filter needs), and the filter is applied inside the scan."
+        lead: "`scan_csv` reads nothing. The filter and the columns you add afterwards are pushed into the read."
+        lang: python
+        code: |-
+          lazy = (
+              pl.scan_csv("orders_raw.csv", comment_prefix="#")
+                .filter(pl.col("region") == "north")
+                .select("order_id", "product", "qty")
+          )
+          print(lazy.explain())
+
+          # simple π 3/3 ["order_id", "product", "qty"]
+          #   Csv SCAN [orders_raw.csv]
+          #   PROJECT 4/7 COLUMNS
+          #   SELECTION: col("region") == "north"
+        takeaway: A lazy scan pushes the filter and the column choice into the read, so less is read.
+        source: notes/02-loading-data.md
+        notes: >-
+          This ran on Polars 2.1.0. The eager pl.read_csv would have read everything first, as pandas does. Polars also
+          returned qty as str, where pandas made it a float. The same file gave three different types for one column.
+
+      - layout: cards
+        beat: fundamentals
+        section: Take only what you need
+        title: Where does the filter run in each tool?
+        recall: Which tool filters before the data is sent?
+        answer: "SQL through read_sql filters in the database before anything is sent. pandas filters in memory after the whole file is read, and Polars filters inside the scan."
+        cards:
+          - {title: "SQL, `read_sql`", body: "In the database, before anything is sent. Use it when the data lives in a database."}
+          - {title: "pandas `read_csv`", body: "In memory, after the whole file is read. Use it when the result fits in memory and you will clean and reshape it."}
+          - {title: "Polars `scan_csv`", accent: "D4621A", body: "Inside the scan, from a plan. Use it when the files are large but still fit on one machine."}
+        takeaway: Filter where the data lives, and whatever the tool, the check after the load is yours to run.
+        source: notes/02-loading-data.md
+        notes: >-
+          The rest of this module uses pandas, because the shop's data is small and every step after the load is easiest
+          to see there. The steps are the same in the other two.
+
+      - layout: table
+        beat: pitfalls
+        section: Pitfalls
+        title: Eight ways a load goes quietly wrong
+        recall: Why is a database query not a safe way to build a filter from pasted values?
+        answer: "Pasting values into the query string lets an odd value change the query, so pass them through params."
+        header: [Pitfall, Fix]
+        widths: [5, 5]
+        rows:
+          - [Parsing before reading the raw text, Read the first lines of the file]
+          - [Trusting a parse that ran without error, "Check `shape`, `dtypes` and `isna().sum()`"]
+          - [Letting read_csv guess identifiers, '`dtype="str"`']
+          - [Leaving the encoding to the default, "Pass `encoding`"]
+          - [Judging types from a peek, Check the full column]
+          - [Loading the table to filter it, Filter and aggregate in the query]
+          - [Pasting values into the query string, "Use `params`"]
+          - [Expecting two tools to guess alike, State missing markers and types in whichever you use]
+        takeaway: State your decisions, check the result against the file, and filter where the data lives.
+        source: notes/02-loading-data.md
+        notes: >-
+          pandas read n/a as missing and Polars read it as text. Whatever the tool, state the missing markers and types.
+
+  - title: Indexing and selection
+    summary: NumPy underneath · loc and iloc · The integer index trap · Masks · Setting values · Choosing an index
+    notes: Nearly everything you do to a frame starts with saying which part of it you mean.
+    slides:
+      - layout: statement
+        beat: problem
+        section: "Underneath: the NumPy array"
+        title: Which part of the frame do you mean?
+        recall: Which two questions do loc and iloc answer?
+        answer: "loc asks which label, and iloc asks which position."
+        kicker: The problem
+        statement: "Pandas gives you several ways to say which rows and columns you mean. They look alike, and then one day your rows get filtered and the same code returns the wrong row without complaint."
+        takeaway: By the end, loc and iloc should feel like two clear questions, which label and which position.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          These differences cause more confusion for newcomers than anything else in the library. We start with the NumPy
+          array underneath, because positions and masks work the same way there, then add labels.
+
+      - layout: bullets
+        beat: fundamentals
+        section: "Underneath: the NumPy array"
+        title: NumPy selects by position, slice or mask
+        recall: What forms of selection does a NumPy array give you?
+        answer: "A position, a slice with the start included and the stop excluded, a boolean mask, and a list of positions."
+        bullets:
+          - "**A position,** counting from the end with a negative number"
+          - "**A slice:** start included, stop excluded"
+          - "**A boolean mask:** keeps the True positions"
+          - "**A list of positions**"
+        aside:
+          code: |-
+            qty = np.array(
+                [1, 3, 1, 2, 2, 1])
+            print(qty[1:4])
+            print(qty[qty >= 2])
+            # [3 1 2]
+            # [3 2 2]
+          lang: python
+        takeaway: A mask is the most used selection tool, because qty >= 2 is an array of True and False and the True positions are kept.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Vectorised comparison plus mask replaces the loop with an if that you would write in plain Python. McKinney's
+          example doubled a million-element array ten times in 72.4 ms in NumPy and 1.05 s as a list comprehension.
+
+      - layout: cards
+        beat: fundamentals
+        section: "Underneath: the NumPy array"
+        title: Three NumPy behaviours carry straight into pandas
+        recall: Which three NumPy behaviours carry into pandas?
+        answer: "A slice is a view, boolean and list-of-positions selection always copies, and masks combine with & and | in parentheses."
+        cards:
+          - {title: A slice is a view, body: "Writing through it changes the source array"}
+          - {title: Fancy selection copies, body: "Boolean and list-of-positions selection always copies"}
+          - {title: "Masks use & and |", accent: "D4621A", body: "Each in parentheses, never and or or. Check len(mask) == len(arr) for a hand-built one"}
+        takeaway: Slices are views, masks copy, and masks combine with & and | in parentheses.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          A mask of the wrong length is not always an error. np.where is the vectorised if-else you will use for
+          conditional columns later in the chapter.
+
+      - layout: code
+        beat: practice
+        section: The orders frame
+        title: The orders frame used from here on
+        recall: What does the orders frame hold?
+        answer: "11 clean orders with order_id, date, customer, product, qty, unit_price, region and revenue."
+        lead: The 11 clean orders that chapter 5 produces from the export loaded in chapter 2.
+        lang: python
+        code: |-
+          orders = pd.read_csv(io.StringIO(csv), parse_dates=["date"])
+          orders["revenue"] = orders["qty"] * orders["unit_price"]
+          print(orders)
+
+          #     order_id       date customer  product  qty  unit_price   region  revenue
+          # 0       1001 2025-01-03      ana   kettle    1        48.0    north     48.0
+          # 1       1002 2025-01-03      ben   filter    3         6.5    south     19.5
+          # 2       1003 2025-01-05      ana  grinder    1        95.0    north     95.0
+          # 3       1004 2025-01-06     cara   filter    2         6.5     east     13.0
+          # 4       1005 2025-01-08      dev   kettle    2        48.0  unknown     96.0
+        takeaway: Every later chapter starts from this same block, so you can run any one of them alone.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Only the first five of the eleven rows are shown. Run the block yourself and print the rest.
+
+      - layout: cards
+        beat: fundamentals
+        section: "Three selectors: `[]`, `loc` and `iloc`"
+        title: Which question does each selector ask?
+        recall: What does each of [], loc and iloc select by?
+        answer: "[] picks columns by name and filters rows with a boolean Series, loc selects by label, and iloc selects by integer position."
+        cards:
+          - {title: "`[]`", body: "A column name or list picks columns. A boolean Series filters rows. Learn those two and stop"}
+          - {title: "`.loc`", body: "By **label**: `df.loc[row_labels, column_labels]`"}
+          - {title: "`.iloc`", accent: "D4621A", body: "By integer **position**: `df.iloc[row_positions, column_positions]`"}
+        takeaway: Use [] for columns and filters, loc for labels and iloc for positions.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          The plain square bracket is a convenience with a mixed job. For anything else, ask the precise question with
+          one of the two accessors.
+
+      - layout: compare
+        beat: fundamentals
+        section: "Three selectors: `[]`, `loc` and `iloc`"
+        title: The same slice 0:2 returns three rows and two
+        recall: How many rows do loc[0:2] and iloc[0:2] return?
+        answer: "loc[0:2] returns three rows because a label slice includes its end, and iloc[0:2] returns two because a position slice excludes it."
+        emphasis: none
+        left:
+          title: ".loc[0:2]"
+          bullets: ["Labels 0 to 2", "The end is **included**", "Three rows"]
+        right:
+          title: ".iloc[0:2]"
+          bullets: ["Positions 0 and 1", "The end is **excluded**, like all of Python", "Two rows"]
+        takeaway: A label slice includes its end and a position slice excludes it.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          McKinney flags the inclusive label slice as the way pandas differs from ordinary Python slicing. Labels have no
+          natural one past the last. Here the labels equal the positions, which is exactly what makes the difference easy
+          to miss.
+
+      - layout: code
+        beat: pitfalls
+        section: The integer index trap
+        title: After a filter, position 1 has label 3
+        recall: What happens to the labels of a filtered frame?
+        answer: "They keep their original values and gain gaps, so loc and iloc give different answers to what looks like the same question."
+        lead: Filtering keeps the original labels, so a filtered frame has gaps in them.
+        lang: python
+        code: |-
+          filters = orders[orders["product"] == "filter"]
+          print("iloc[1]:", filters.iloc[1]["order_id"])
+          print("loc[3]: ", filters.loc[3]["order_id"])
+          try:
+              filters.loc[0]
+          except KeyError as e:
+              print("loc[0]: KeyError", e)
+
+          # iloc[1]: 1004
+          # loc[3]:  1004
+          # loc[0]: KeyError 0
+        takeaway: Position 1 is the second row, whose label is 3, so reset the index after a filter if you work with positions.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Label 0 no longer exists because order 1001 was a kettle. Neither accessor complains. reset_index(drop=True)
+          gives fresh labels, or never rely on a default integer label meaning anything.
+
+      - layout: bullets
+        beat: pitfalls
+        section: The integer index trap
+        title: In pandas 3, s[0] on a Series means a label
+        recall: What does a bare integer in square brackets mean on a Series in pandas 3?
+        answer: "Always a label. Older versions fell back to position when the index held no integers, and now a text index raises a KeyError."
+        bullets:
+          - "**A bare integer** in square brackets always means a label"
+          - "**Older versions** fell back to position when the index held no integers"
+          - "**With a text index** it now fails, which is an improvement"
+          - "**Use `iloc[0]`** for the first value"
+        aside:
+          code: |-
+            revenue = orders.set_index(
+                "product")["revenue"]
+            print(revenue.iloc[0])
+            revenue[0]
+            # 48.0
+            # KeyError: 0
+          lang: python
+        takeaway: Use iloc[0] for the first value, because s[0] is a label lookup.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          s[0] on a Series is the most treacherous form of all, because it used to work by position in some cases.
+
+      - layout: compare
+        beat: fundamentals
+        section: Boolean masks, in full
+        title: Combine masks with & and |, not and or or
+        recall: Why does and fail in a mask?
+        answer: "and and or try to reduce a whole Series to a single truth value, which raises a ValueError."
+        left:
+          title: "`&`, `|` and `~`"
+          bullets: ["Each condition in parentheses, because these operators bind more tightly than comparisons", '`(region == "south") & (revenue > 30)` keeps orders 1011 and 1012']
+        right:
+          title: "`and` and `or`"
+          accent: "D4621A"
+          bullets: ["They try to reduce a whole Series to one truth value", "ValueError: The truth value of a Series is ambiguous"]
+        takeaway: Use & and | with parentheses around each condition, never and or or.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          A real filter usually has several conditions. Use ~ for not.
+
+      - layout: table
+        beat: practice
+        section: Boolean masks, in full
+        title: Four helpers make common masks shorter
+        recall: What do isin, between, .str and query do?
+        answer: "isin tests membership, between gives a range with both ends included by default, .str methods handle text, and query writes the condition as a string."
+        header: [Helper, Example, Order ids]
+        widths: [1.6, 5.4, 3]
+        rows:
+          - ["`isin`", '`orders["product"].isin(["kettle", "scale"])`', "1001, 1005, 1006, 1010, 1012"]
+          - ["`between`", '`orders["date"].between("2025-01-05", "2025-01-09")`', "1003, 1004, 1005, 1006"]
+          - ["`.str`", '`orders["customer"].str.startswith("c")`', "1004, 1009"]
+          - ["`query`", "`orders.query(\"region == 'north' and qty > 1\")`", "1007"]
+        takeaway: isin tests membership, between takes a range with both ends included, .str handles text, and query reads well when conditions pile up.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          nlargest is a fifth shortcut: nlargest(2, "revenue") returned orders 1005 and 1003.
+
+      - layout: statement
+        beat: practice
+        section: Boolean masks, in full
+        title: A mask is also a number
+        recall: What do the sum and mean of a boolean mask give?
+        answer: "The sum is how many rows match and the mean is the share that match."
+        kicker: "(orders[\"qty\"] > 1).sum() and .mean()"
+        statement: "Since True counts as 1, the sum of a mask counts the rows that match and its mean is the share. Orders with qty above 1: 5 rows, a share of 0.455."
+        takeaway: The sum of a mask is a count, and its mean is a share.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          It is a small trick you will use constantly.
+
+      - layout: code
+        beat: practice
+        section: Setting values
+        title: One loc call sets values, and np.where builds a column
+        recall: How do you set part of a column, and build a column from a condition?
+        answer: "Put the row selection and the column in the same .loc, and use np.where for two outcomes, or np.select or pd.cut for more."
+        lead: Copy-on-Write means an assignment goes through one accessor call in one step.
+        lang: python
+        code: |-
+          orders.loc[orders["region"] == "unknown", "region"] = "unassigned"
+          orders["size"] = np.where(orders["revenue"] >= 50, "large", "small")
+          print(orders[["order_id", "region", "revenue", "size"]].head(5))
+
+          #    order_id      region  revenue   size
+          # 3      1004        east     13.0  small
+          # 4      1005  unassigned     96.0  large
+        takeaway: The selection and the assignment go through one .loc call, and np.where builds a column from a condition.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Only rows 3 and 4 of the printed head are shown. NumPy has one more setting rule: with repeated positions,
+          x[i] += 1 counts a repeat only once, and np.add.at applies the operation unbuffered.
+
+      - layout: bullets
+        beat: fundamentals
+        section: Choosing an index
+        title: set_index turns an identifying column into the index
+        recall: What do set_index, reset_index and reindex do?
+        answer: "set_index makes an identifying column the index, reset_index moves it back to a column, and reindex conforms to a list of labels, inserting NaN for new ones."
+        bullets:
+          - "**`set_index`:** a column that identifies rows becomes the index, and lookups read as what they are"
+          - "**`reset_index`:** moves the index back to a column"
+          - "**`reindex`:** conforms to a list of labels you give, inserting NaN for new ones"
+          - "**`fill_value=0`:** a product with no sales shows 0"
+        aside:
+          code: |-
+            by_id = orders.set_index(
+                "order_id")
+            print(by_id.loc[
+                1007, "customer"])
+            # eli
+          lang: python
+        takeaway: Index by the column that identifies rows, and use reindex to list every label, in a fixed order, including empty ones.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          A report needs every product listed in a fixed order, including one with no sales this month. In the example
+          descaler comes back with 0.
+
+      - layout: table
+        beat: pitfalls
+        section: Choosing an index
+        title: A non-unique index changes what loc returns
+        recall: What does loc return on a non-unique index?
+        answer: "A DataFrame when the label repeats and a Series when it does not, so check index.is_unique or pass a list."
+        lead: "`by_customer.index.is_unique` is False, because ana placed two orders."
+        header: [Call, Returns, Shape]
+        widths: [5, 2.5, 2.5]
+        rows:
+          - ['`by_customer.loc["ana"]`', DataFrame, "(2, 8)"]
+          - ['`by_customer.loc["eli"]`', Series, "(8,)"]
+          - ['`by_customer.loc[["eli"]]`', DataFrame, "(1, 8)"]
+        highlight: [1]
+        takeaway: With a non-unique index loc can return a Series or a DataFrame, so check index.is_unique or pass a list.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          A single row comes back as a Series, with a different type and shape. Pass a list to always get a DataFrame.
+
+      - layout: cards
+        beat: practice
+        section: "Two-level labels: the MultiIndex"
+        title: Three ways to select from a MultiIndex
+        recall: How do you select from a two-level index?
+        answer: "Use a tuple for one exact combination, a single value for everything under an outer level, and xs to cut across an inner level."
+        lead: A groupby on two columns gives an index with two levels.
+        cards:
+          - {title: A tuple, body: '`sales.loc[("south", "filter")]` gives 9, one exact combination'}
+          - {title: A single value, body: '`sales.loc["north"]` gives filter 4, grinder 1, kettle 1'}
+          - {title: "`xs`", accent: "D4621A", body: '`sales.xs("filter", level="product")` cuts across an inner level: east 2, north 4, south 9'}
+        takeaway: Select with a tuple, a single value or xs, and when in doubt reset_index() flattens the levels back to columns.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Slicing a MultiIndex needs it to be sorted, as a groupby result already is, and sort_index fixes one that is
+          not. Plenty of analysts reset_index on purpose. Chapter 4 shows the other route out, unstack.
+
+      - layout: table
+        beat: pitfalls
+        section: Pitfalls
+        title: Seven ways selection goes wrong
+        recall: When do labels stop matching positions?
+        answer: "After the first filter or sort, so use iloc for the first row and loc for the row labelled this."
+        header: [Pitfall, Fix]
+        widths: [5, 5]
+        rows:
+          - [Assuming labels are positions, "`iloc` for the first row, `loc` for the row labelled this"]
+          - [Forgetting that .loc slices include the end, "`loc[0:2]` has three rows and `iloc[0:2]` two"]
+          - [and and or in a mask, "`&` and `|` with parentheses"]
+          - [Chained selection on assignment, '`df.loc[mask, "a"] = 1`']
+          - [A non-unique index, "Check `index.is_unique`, or pass a list"]
+          - [Reading old code with .ix, "Decide label or position, then use loc or iloc"]
+          - [Slicing an unsorted MultiIndex, "Call `sort_index()` first"]
+        takeaway: Labels match positions only until the first filter or sort, so choose loc or iloc on purpose.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Use iloc for the first row and loc for the row labelled this. The .ix accessor has been gone for years.
+
+  - title: Reshaping and joins
+    summary: Tidy data · merge · The many-to-many blow-up · concat · Long and wide · unstack
+    notes: The facts you need sit in several tables, or in one table in the wrong arrangement.
+    slides:
+      - layout: statement
+        beat: problem
+        section: "What one row means: tidy data"
+        title: What does one row of this table mean?
+        recall: What should you ask before and after every operation?
+        answer: "What does one row of this table mean?"
+        kicker: The question
+        statement: "The orders say that dev bought a kettle. They do not say where dev lives, or what a kettle costs the shop to buy in. Those facts sit in other tables, and analysis needs them together."
+        takeaway: Ask what one row of the table means before and after every operation.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          Storing a customer's signup date on every order would mean correcting it in many places. So the tables are
+          rightly apart. The second half of the chapter is a different mismatch: the right facts, in the wrong arrangement.
+
+      - layout: cards
+        beat: fundamentals
+        section: "What one row means: tidy data"
+        title: A dataset is tidy when three rules hold
+        recall: What makes a dataset tidy?
+        answer: "Each variable is a column, each observation is a row, and each type of observational unit is a table."
+        cards:
+          - {title: Each variable is a column, body: "A variable measures one attribute across units"}
+          - {title: Each observation is a row, body: "An observation collects every measurement on one unit"}
+          - {title: Each type of unit is a table, accent: "D4621A", body: "Close to database normalisation: each fact lives in one place"}
+        takeaway: Tidy means variables in columns, observations in rows and one table per unit, and joins and reshapes are the moves that follow.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          Wickham notes the catch: analysis tools mostly want one table, so analysis generally merges the tables back
+          together. Joins bring the units together, and reshapes put variables in columns.
+
+      - layout: table
+        beat: fundamentals
+        section: "Joins: merge"
+        title: how decides what happens to rows with no partner
+        recall: What do inner, left, right and outer joins keep?
+        answer: "Inner keeps only matches, left keeps every order, right keeps every customer, and outer keeps everything, with NaN where a side is absent."
+        lead: "`eli` and `fay` have orders but no customer record, and `gus` has a customer record but no orders."
+        header: [how, Keeps, Rows, Missing city]
+        widths: [2, 4, 1.6, 2.4]
+        rows:
+          - ["`inner`", Only matches, "9", "0"]
+          - ["`left`", Every order, "11", "2"]
+          - ["`right`", Every customer, "10", "0"]
+          - ["`outer`", Everything, "12", "2"]
+        highlight: [1]
+        takeaway: The inner join, the default, dropped two orders without telling you, so start with how="left" from the table your question is about.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          pd.merge is the same operation as a SQL join. The silent inner join is the source of many a revenue total that
+          is mysteriously a bit low. Eleven orders stay 11 under a left join.
+
+      - layout: code
+        beat: practice
+        section: "Joins: merge"
+        title: indicator=True audits a join
+        recall: How do you find which rows a join could not match?
+        answer: "Use indicator=True and read _merge: left_only rows had no customer record and right_only rows had no orders."
+        lead: "`indicator=True` adds a column stating which side each row came from."
+        lang: python
+        code: |-
+          audit = pd.merge(orders, customers, on="customer", how="outer", indicator=True)
+          print(audit["_merge"].value_counts())
+
+          # _merge
+          # both          9
+          # left_only     2
+          # right_only    1
+        takeaway: indicator=True shows which side each row came from, which makes it the quickest way to audit a join.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          When the key has a different name on each side, use left_on and right_on. When both sides have a non-key column
+          of the same name, pandas adds suffixes, which you should set to something meaningful.
+
+      - layout: statement
+        beat: problem
+        section: The many-to-many blow-up
+        title: How much revenue can a join add?
+        recall: What did merging the promotions table do to the orders?
+        answer: "11 rows became 16 and revenue went from 523.5 to 756.0, with no error."
+        kicker: ana and ben have two promotions each
+        statement: "A promotions table was merged to attach a promotion to each order. Orders went from 11 rows to 16, and revenue from 523.5 to 756.0. Nothing raised an error."
+        takeaway: A many-to-many merge returns every combination of matching rows, so row count and totals grow with no error.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          This is the most expensive mistake in the chapter. Two rows of ana times two promotions gives four, and three
+          rows of ben times two gives six. McKinney calls it the Cartesian product of the matching rows.
+
+      - layout: code
+        beat: fundamentals
+        section: The many-to-many blow-up
+        title: validate makes pandas check the relationship
+        recall: How do you make a merge fail when the right keys repeat?
+        answer: 'Pass validate="many_to_one"; pandas raises a MergeError when the right keys are not unique.'
+        lead: Orders to customers is many-to-one, and orders to promos is not.
+        lang: python
+        code: |-
+          print(len(orders.merge(customers, on="customer", how="left",
+                                 validate="many_to_one")))
+          try:
+              orders.merge(promos, on="customer", how="left", validate="many_to_one")
+          except pd.errors.MergeError as e:
+              print("MergeError:", str(e)[:63])
+
+          # 11
+          # MergeError: Merge keys are not unique in right dataset; not a many-to-one m
+        takeaway: State validate, and pandas raises when the data disagrees with the relationship you believe in.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          The book also notes that merge defaults to an inner join, and that DataFrame.join is a left join that keeps the
+          left row index.
+
+      - layout: flow
+        beat: practice
+        section: The many-to-many blow-up
+        title: Three checks make a join safe
+        recall: What is the habit that makes a join checked?
+        answer: "State validate, compare the row count before and after, and compare one total."
+        steps:
+          - {label: State validate, sub: the relationship you believe in}
+          - {label: Count rows, sub: before and after}
+          - {label: Compare a total, sub: before and after}
+        takeaway: State validate, compare the row count before and after, and compare one total, and then the join is checked.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          The two-step join in the next slide asserts len(full) == len(orders) as well. Make this a habit.
+
+      - layout: table
+        beat: practice
+        section: The many-to-many blow-up
+        title: Which category keeps the most of each sale?
+        recall: Which category keeps the larger share of its revenue as margin?
+        answer: "Consumables keep about 62 of every 100 (60.0 of 97.5) against about 37 for brew gear (142.0 of 382.0), since a filter costs 2.50 and sells at 6.50."
+        lead: A two-step validated join answers gross margin by category, which no single table could.
+        header: [category, revenue, margin]
+        widths: [3, 3, 3]
+        rows:
+          - [brew, "382.0", "142.0"]
+          - [consumable, "97.5", "60.0"]
+          - [tools, "44.0", "20.0"]
+        highlight: [1]
+        takeaway: Consumables keep about 62 of every 100 in revenue and brew gear about 37, which no single table could show.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          Brew gear brings in the most revenue and margin in absolute terms. The join used validate="many_to_one" at both
+          steps, then margin is revenue minus qty times unit_cost. DataFrame.join is a shorthand for joining on the index.
+
+      - layout: code
+        beat: practice
+        section: "Stacking tables: concat"
+        title: concat stacks rows and aligns columns by name
+        recall: What happens to a column that one frame lacks in concat?
+        answer: "It is NaN for that frame's rows, not an error, and ignore_index=True gives fresh row labels."
+        lang: python
+        code: |-
+          jan = orders.iloc[:2][["order_id", "revenue"]]
+          feb = pd.DataFrame({"order_id": [1101, 1102], "revenue": [31.0, 12.5],
+                              "coupon": ["NEW", None]})
+          print(pd.concat([jan.assign(month="jan"), feb.assign(month="feb")],
+                          ignore_index=True))
+
+          #    order_id  revenue month coupon
+          # 0      1001     48.0   jan    NaN
+          # 1      1002     19.5   jan    NaN
+          # 2      1101     31.0   feb    NEW
+          # 3      1102     12.5   feb    NaN
+        takeaway: concat aligns columns by name, so a missing column is NaN and not an error, and ignore_index=True gives fresh labels.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          Record where each row came from while you combine, since the file name is often itself a variable. df.append was
+          removed in pandas 2.0. Build a list of frames and call concat once.
+
+      - layout: compare
+        beat: fundamentals
+        section: Long and wide
+        title: The same information, wide or long
+        recall: When is a wide table untidy?
+        answer: "When its column headers are values of a variable, such as w1, w2 and w3 for week, and not variable names."
+        left:
+          title: Wide
+          bullets: ["One row per product, a column per week", "Good for reading and for matrix arithmetic", "`w1`, `w2`, `w3` are values of `week` in the header"]
+        right:
+          title: Long
+          bullets: ["One row per product and week", "`week` and `units` are the variables", "**melt** goes wide to long, **pivot** goes back"]
+        takeaway: Column headers that are values and not variable names are the first messy-data problem, and melt and pivot move between the forms.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          The information in each is identical. Wickham points out that the presentation form is not wrong for every
+          purpose. pivot needs each combination of row and column to occur once, and pivot_table handles repeats by
+          aggregating.
+
+      - layout: code
+        beat: practice
+        section: Long and wide
+        title: In long form, a total per week is a plain groupby
+        recall: How do you turn the week columns into rows?
+        answer: 'Call wide.melt(id_vars="product", var_name="week", value_name="units").'
+        lead: "`melt` keeps the `id_vars` and turns every other column into a pair of variable and value."
+        lang: python
+        code: |-
+          long = wide.melt(id_vars="product", var_name="week", value_name="units")
+          print(long.groupby("week")["units"].sum())
+
+          # week
+          # w1    34
+          # w2    30
+          # w3    44
+        takeaway: In long form a total per week is a plain groupby, and a new variable is just another column.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          Sometimes a melted column holds two variables at once, as in Wickham's tuberculosis example where m014 combines
+          sex and age. The fix is melt, then split the string.
+
+      - layout: bullets
+        beat: practice
+        section: stack and unstack
+        title: unstack moves an index level into the columns
+        recall: What does unstack do, and when is fill_value=0 right?
+        answer: "unstack moves an index level up into the columns, with missing combinations as NaN, and fill_value=0 is right when a missing combination means no units sold."
+        bullets:
+          - "**`melt` and `pivot`** work on columns"
+          - "**`stack` and `unstack`** do the same job on index levels"
+          - "**`unstack`** moves a level into the columns, and missing combinations become NaN"
+          - "**`fill_value=0`** is right here, because a gap means no units sold"
+        aside:
+          code: |-
+            sales = orders.groupby(
+                ["region", "product"]
+            )["qty"].sum()
+            table = sales.unstack(
+                fill_value=0)
+          lang: python
+        takeaway: unstack is the usual route from a grouped result to the table a reader wants, and for other measures a gap should stay a gap.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          pivot is equivalent to set_index followed by unstack. stack drops missing cells by default, so it inverts
+          unstack, and dropna=False keeps them.
+
+      - layout: table
+        beat: pitfalls
+        section: Pitfalls
+        title: Seven ways a join or reshape goes wrong
+        recall: How does a pandas merge treat NaN keys differently from SQL?
+        answer: "Unlike SQL, a pandas merge matches NaN keys to each other, so drop or fill missing keys before joining."
+        header: [Pitfall, Fix]
+        widths: [5, 5]
+        rows:
+          - [A silent inner join, "Say which `how` you want, and start from the table your question is about"]
+          - [A many-to-many merge, "Use `validate`, and compare a total before and after"]
+          - [Keys that do not quite match, "Clean keys, audit with `indicator=True`, check dtypes"]
+          - ["`NaN` keys", Drop or fill missing keys before joining]
+          - ["`concat` in a loop", Collect the frames in a list and concatenate once]
+          - ["Summing a wide table's columns as comparable", Ask what a row means before you aggregate]
+          - ["Using `pivot` on data with repeats", "Use `pivot_table` with a stated `aggfunc`"]
+        takeaway: Say which join you want, validate it, and compare a total before and after.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          "Ana" and "ana " will not join, and an integer key will not match a string key. A table that has already been
+          aggregated can be double-counted.
+
+  - title: Rules of thumb
+    summary: The six habits of extracting data
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        beat: wrap
+        section: Pitfalls
+        title: Six habits for extracting data
+        recall: What are the habits of a careful extract?
+        answer: "Read the raw file and state your decisions, check every new frame, choose loc or iloc on purpose, filter with masks, validate joins, and change data with one loc call."
+        cards:
+          - {title: Look first, body: "Read the raw file, then state the decisions read_csv would guess"}
+          - {title: Check every frame, body: "shape, head, dtypes and info, and isna().sum() after a load"}
+          - {title: Label or position, body: "loc asks which label, iloc which position, and they come apart after a filter"}
+          - {title: Masks, accent: "D4621A", body: "Combine with & and |, each condition in parentheses"}
+          - {title: Joins, accent: "D4621A", body: "State validate, and compare rows and one total before and after"}
+          - {title: Changes, accent: "D4621A", body: "To change part of a frame, use a single .loc call"}
+        takeaway: Look first, check every frame, pick by label or position on purpose, validate joins, and change data with one loc.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          These are the habits from all four chapters. Every one of them is a check that catches an error pandas will not
+          raise on its own.
+
+      - layout: steps
+        beat: wrap
+        section: Pitfalls
+        title: What is still wrong after the extract?
+        recall: What is left to fix once the right rows and tables are in?
+        answer: "Gaps in qty and region, south and South counted as two regions, keys such as Ana and ana with a trailing space that will not join, and unit_price still read as str."
+        steps:
+          - {title: Gaps, text: "`qty` has 2 missing and `region` 2 after the load"}
+          - {title: Spelling, text: "`south` and `South` count as two regions"}
+          - {title: Keys, text: '"Ana" and "ana " will not join'}
+          - {title: Types, text: "`unit_price` is still `str`, because of the dollar signs"}
+        takeaway: Extract gets the right rows and tables in, and cleaning, next, fixes what is wrong inside the values.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          Cleaning is the next lecture. It starts from these problems and ends with every column the type it claims.

@@ -1,0 +1,822 @@
+# Lecture on notes/05-cleaning.md and notes/06-dates-and-times.md, in the notes' order.
+# make slides PILLAR=data-analytics/01-python-for-data-analysis LECTURE=02-clean STRICT=1 PREVIEW=1
+deck:
+  title: Clean
+  subtitle: Every column the type it claims
+  tagline: "Text · Duplicates · Gaps · Impossible values · One function · Dates · Time zones"
+  reference: "Notes: data-analytics/01-python-for-data-analysis/notes/05-cleaning.md, 06-dates-and-times.md"
+  output: 02-clean.pptx
+  notes: >-
+    The shop's export is loaded, and the file is a mess. By the end you should be able to take it to a frame in which
+    every column is the type it claims to be, every removed row is accounted for, and the whole job is one function you
+    can rerun next month. Dates get their own half, because a date is a type with a format, a resolution, a time zone
+    and a calendar.
+
+lecture:
+  covers:
+    - data-analytics/01-python-for-data-analysis/notes/05-cleaning.md
+    - data-analytics/01-python-for-data-analysis/notes/06-dates-and-times.md
+  requires:
+    - data-analytics/01-python-for-data-analysis/notes/02-loading-data.md
+    - data-analytics/01-python-for-data-analysis/notes/03-indexing-and-selection.md
+  next: [data-analytics/01-python-for-data-analysis/notes/07-groupby-and-aggregation.md]
+  related:
+    - programming/sql/notes/02-nulls-and-expressions.md
+    - data-engineering/05-quality-and-observability/notes/01-quality-dimensions-and-tests.md
+
+parts:
+  - title: Cleaning
+    summary: Text · Duplicates · Gaps · Impossible values · Buckets · Saving · One function
+    notes: We start with the export as loaded, and take it to a frame we can trust.
+    slides:
+      - layout: statement
+        beat: problem
+        section: Start from the loaded export
+        title: Is the frame what the file claims?
+        recall: What is wrong with the shop's loaded export?
+        kicker: The problem
+        statement: "Prices carry currency signs, categories are spelled three ways, one row appears twice, and a column of numbers contains the word n/a. Nobody cleaned it for you."
+        takeaway: The export has currency signs, mixed spellings, a repeated row and a word in a number column.
+        source: notes/05-cleaning.md
+        notes: >-
+          Chapter 2 loaded the export so that the frame matched the file, and the file is a mess. This lecture takes the
+          loaded export to a frame in which every column is the type it claims to be, and every removed row is accounted for.
+
+      - layout: compare
+        beat: fundamentals
+        section: Start from the loaded export
+        title: Is 80% of analysis really cleaning?
+        recall: Which half of the 80% claim is the useful half?
+        emphasis: right
+        left:
+          title: The folklore
+          bullets: ["80% of analysis goes on cleaning and preparing the data", "Wickham repeats it, citing Dasu and Johnson"]
+        right:
+          title: The useful half
+          bullets: ["Preparation is no one-off first step", "It gets repeated as new problems surface"]
+        takeaway: You will clean the same data again, so cleaning should be a script you can rerun and not edits you did once.
+        source: notes/05-cleaning.md
+        notes: >-
+          Treat the 80% as folklore and the second half as the useful part. Because you will clean the same data again,
+          cleaning should be a script you can rerun.
+
+      - layout: flow
+        beat: fundamentals
+        section: Start from the loaded export
+        title: What are the steps of cleaning?
+        recall: What are the steps from the loaded frame to a saved one?
+        answer: Count, fix, decide, assert and save, and go back to counting whenever a new problem turns up.
+        steps:
+          - {label: Count, sub: "dtypes, missing, distinct values"}
+          - {label: Fix, sub: text and numbers}
+          - {label: Decide, sub: duplicates and gaps}
+          - {label: Assert, sub: what must be true}
+          - {label: Save, sub: "with types: Parquet"}
+        loop: new problem found, count again
+        caption: The flow for the whole chapter.
+        takeaway: Count, fix, decide, assert and save, and go back to counting whenever a new problem turns up.
+        source: notes/05-cleaning.md
+        notes: >-
+          The dotted arrow in the note's diagram goes from fixing text and numbers back to counting. A problem found late
+          sends you round again.
+
+      - layout: table
+        beat: practice
+        section: Start from the loaded export
+        title: Which columns still have a job to do?
+        recall: Which of the loaded columns is already the type it claims to be?
+        header: [Column, Type as loaded, Should be, Why]
+        widths: [2.6, 2.4, 2.4, 4]
+        rows:
+          - [qty, float64, whole number, It has gaps]
+          - [unit_price, str, number, The dollar signs]
+          - ["customer, product, region", str, categories, You do not yet know how many spellings]
+          - [date, "datetime64[us]", Already right, Chapter 6 is about what it gives you]
+        highlight: [3]
+        takeaway: Read the dtypes as a list of jobs, because only date is already what it claims to be.
+        source: notes/05-cleaning.md
+        notes: >-
+          The load wrote the same export that chapter 2 read, with the banner skipped, `-` treated as a missing region and
+          the dates parsed. The frame has 13 rows and 7 columns.
+
+      - layout: code
+        beat: practice
+        section: Fixing text
+        title: Why do two rows both print as filter?
+        recall: Why does a groupby count two spellings of filter as separate things?
+        lang: python
+        code: |-
+          print(orders["product"].value_counts())
+
+          # product
+          # kettle     3
+          # filter     3
+          # scale      3
+          # grinder    2
+          # Filter     1
+          # filter     1
+        bullets:
+          - "**Two spellings** of `ana`."
+          - "**A trailing space** in `filter `."
+          - "**A capital** in `South`."
+          - "The same value, written differently."
+        takeaway: A groupby counts different spellings of one value as separate things, and an invisible space is enough.
+        source: notes/05-cleaning.md
+        notes: >-
+          The two rows that print as filter differ only by the invisible space. Text columns are where most of the visible
+          mess lives.
+
+      - layout: bullets
+        beat: practice
+        section: Fixing text
+        title: How do you normalise a text column?
+        recall: How do you normalise every text column the same way?
+        bullets:
+          - "**Strip** the whitespace, then **lower** the case."
+          - "**The `.str` accessor** skips missing values rather than crashing on them."
+          - "**Products** go from six spellings to four."
+        aside:
+          title: The same line on every column
+          body: "`orders[col].str.strip().str.lower()` for customer, product and region. The customers come out as ana, ben, cara, dev, eli and fay."
+        takeaway: Strip the whitespace and then lower the case, the same way on every text column.
+        source: notes/05-cleaning.md
+        notes: >-
+          After normalising, filter has 5 rows, kettle 3, scale 3 and grinder 2.
+
+      - layout: code
+        beat: practice
+        section: Fixing text
+        title: How do you pull structure out of text?
+        recall: How do you pull a tracking reference out of free text?
+        lang: python
+        code: |-
+          notes = pd.Series([
+              "left with neighbour, ref TRK-20391",
+              "ref TRK-20417 delivered",
+              "customer not home",
+          ])
+          print(notes.str.extract(r"TRK-(\d+)"))
+
+          #        0
+          # 0  20391
+          # 1  20417
+          # 2    NaN
+        bullets:
+          - "**Each capture group** becomes a column."
+          - "**No match** gives `NaN`, not an error."
+          - "`practice/2_Texts.ipynb` works through `re` on free text."
+        takeaway: Use a regular expression through str.extract, where each capture group becomes a column and a miss is NaN.
+        source: notes/05-cleaning.md
+        notes: >-
+          Say the shop's couriers send notes with a tracking reference buried inside. The third row has no match, so it
+          gets NaN and not an error. `str.contains("deliver")` gives False, True, False on the same notes.
+
+      - layout: steps
+        beat: practice
+        section: Fixing text
+        title: How does a price column become numbers?
+        recall: How do you turn a column of prices with dollar signs into numbers?
+        steps:
+          - {title: Strip the sign, text: 'Use `str.replace("$", "", regex=False)`, since `$` is special in a regular expression'}
+          - {title: Convert, text: 'Use `to_numeric` with `errors="coerce"`, which turns anything unparseable into `NaN`'}
+          - {title: Count the failures, text: "Where you can count them, which beats failing on the first bad value or silently keeping text"}
+          - {title: Check, text: "The dtype comes out `float64` and the missing count is 0", n: "✓", accent: "D4621A"}
+        takeaway: Strip the sign with regex=False, convert with errors="coerce", and count the NaN it makes.
+        source: notes/05-cleaning.md
+        notes: >-
+          Coerce turns every failure into NaN without a word, which is why the count matters.
+
+      - layout: compare
+        beat: practice
+        section: Fixing text
+        title: When do you use map and when replace?
+        recall: What is the difference between map and replace?
+        emphasis: none
+        left:
+          title: map
+          bullets: ["Applies a dictionary to every value", "A value absent from it becomes `NaN`", "Gives ['N', 'S', 'N', 'E', nan]"]
+        right:
+          title: replace
+          bullets: ["Changes only the values you list", "Leaves the rest", "Gives ['north', 'south', 'north', 'eastern', nan]"]
+        takeaway: Choose map when the dictionary should be complete and a miss should surface, and replace for a handful of corrections.
+        source: notes/05-cleaning.md
+        notes: >-
+          The dictionary was north to N, south to S and east to E. The fifth value is the order with no region.
+
+      - layout: bullets
+        beat: practice
+        section: Duplicates
+        title: Why check the column that should be unique?
+        recall: Why check the column that should be unique and not only the whole row?
+        bullets:
+          - "**Exact duplicates** usually come from a join or a retry upstream."
+          - "**`duplicated`** flags every repeat after the first, and `drop_duplicates` removes them."
+          - "**Two rows can share an order id** and differ in another field. A full-row comparison would not catch that."
+          - "**Order 1006** appears twice."
+        aside:
+          title: The fix
+          body: "`drop_duplicates(subset=\"order_id\")` leaves 12 rows."
+        takeaway: Check duplicates on the column that should be unique, because a full-row comparison misses rows that differ elsewhere.
+        source: notes/05-cleaning.md
+        notes: >-
+          On this export both checks find 1, so they agree. They need not. `keep=False` shows every copy of a repeated id.
+
+      - layout: compare
+        beat: fundamentals
+        section: "Missing data: decide what a gap means"
+        title: Why might this value be empty?
+        recall: What is the difference between a structural missing value and a missing observation?
+        lead: "Wickham's distinction. Ask of each gap: why might this be empty?"
+        emphasis: right
+        left:
+          title: Structural
+          bullets: ["Stands for something that could not be measured", "Can safely be removed"]
+        right:
+          title: Observation
+          bullets: ["Should have been recorded and was not", "Needs keeping"]
+        takeaway: Ask why a value is missing before you fill or drop it, because pandas can count gaps but not say what they mean.
+        source: notes/05-cleaning.md
+        notes: >-
+          If people with high incomes skip the income question, then dropping those rows biases every average you compute
+          afterwards. Later pillars care about that question.
+
+      - layout: bullets
+        beat: practice
+        section: "Missing data: decide what a gap means"
+        title: Where are the gaps?
+        recall: Which columns have gaps in the cleaned export, and in which orders?
+        bullets:
+          - "**Three rows** hold gaps: orders 1005, 1006 and 1010."
+          - "**Two kinds of gap**, and they call for different treatment."
+        aside:
+          code: |-
+            print(orders.isna().sum())
+
+            # qty           1
+            # region        2
+            # (every other column: 0)
+          lang: python
+        takeaway: Three orders have gaps, one in qty and two in region, and the two kinds need different treatment.
+        source: notes/05-cleaning.md
+        notes: >-
+          Order 1005 and order 1010 have no region. Order 1006 has no quantity.
+
+      - layout: cards
+        beat: practice
+        section: "Missing data: decide what a gap means"
+        title: Two gaps, two different decisions
+        recall: What do you do with a missing region and a missing qty?
+        cards:
+          - {title: Missing region, body: "Revenue does not need it, so keep the row. `fillna` with a label records the gap as a value of its own."}
+          - {title: Missing qty, accent: "D4621A", body: "Revenue depends on it. Find out, or exclude the order and say so. The mean would invent a fractional number of scales."}
+          - {title: The reason, accent: "0EA5C9", body: "Keep it in a comment, since the line records a decision no code could have made."}
+        takeaway: Keep a row with a missing region, but find out a missing qty instead of filling it with the mean.
+        source: notes/05-cleaning.md
+        notes: >-
+          Dropping the orders with no region would throw away real sales. Leaving the ignorance in plain view is the point
+          of the label.
+
+      - layout: code
+        beat: practice
+        section: "Missing data: decide what a gap means"
+        title: How do you write a decision into the frame?
+        recall: How do you record that the shop owner confirmed a quantity?
+        lang: python
+        code: |-
+          orders["region"] = orders["region"].fillna("unknown")
+          orders.loc[orders["order_id"] == 1006, "qty"] = 1   # confirmed by the shop owner
+          print(orders["qty"].isna().sum())
+          orders["qty"] = orders["qty"].astype("int64")
+          print(orders["qty"].dtype)
+
+          # 0
+          # int64
+        takeaway: Write a confirmed fact in with a single .loc and a comment, then cast qty to int64 now it has no gaps.
+        source: notes/05-cleaning.md
+        notes: >-
+          In this story the shop owner checks the order and confirms the customer bought one. A single `.loc`, as chapter 1 taught.
+
+      - layout: compare
+        beat: practice
+        section: "Missing data: decide what a gap means"
+        title: What do ffill and dropna do to a gap?
+        recall: When does ffill make sense, and what do sum and mean do with gaps?
+        lead: "`sum` and `mean` skip missing values, so on 48, gap, gap, 52, gap the mean is 50.0, over 2 values and not 5."
+        emphasis: none
+        left:
+          title: ffill
+          bullets: ["Carries the last known value forward", "Gives [48.0, 48.0, 48.0, 52.0, 52.0]", "Fits a slowly changing reading such as a price list, not independent orders"]
+        right:
+          title: dropna
+          bullets: ["Removes rows with gaps", "Gives [48.0, 52.0]", "`subset`, `how=\"all\"` and `thresh=n` tolerate some gaps"]
+        takeaway: Always read the count alongside the mean, because a summary can look fine when half the column is empty.
+        source: notes/05-cleaning.md
+        notes: >-
+          The old `fillna(method="ffill")` form was removed in pandas 3.0, so ffill is a method of its own. The count of
+          missing values in the example is 3.
+
+      - layout: statement
+        beat: fundamentals
+        section: Impossible values and assertions
+        title: Is a quantity of -1 an error or a return?
+        recall: Why does no type check catch a quantity of -1?
+        kicker: Order 1008
+        statement: "Order 1008 has a quantity of -1. It parsed fine, and it is a valid integer. Only knowing what the column means tells you it is a return or an error."
+        takeaway: A quantity of -1 is a valid integer, so only knowing what the column means catches it.
+        source: notes/05-cleaning.md
+        notes: >-
+          No type check would catch it. In this shop negative quantities are returns.
+
+      - layout: bullets
+        beat: practice
+        section: Impossible values and assertions
+        title: Where do the negative quantities go?
+        recall: Why set returns aside in their own frame and not delete them?
+        bullets:
+          - "**In this shop** negative quantities are returns, which belong in a different table."
+          - "**Set them aside**, even in a separate frame."
+          - "**You can report** how much was removed, and undo it if you turn out to be wrong."
+        aside:
+          title: The split
+          body: "Rows with `qty < 0` go to `returns`: 1 row set aside, 11 orders left."
+        takeaway: Set impossible rows aside and keep them, because you can then report the loss and undo it.
+        source: notes/05-cleaning.md
+        notes: >-
+          Keeping them is better than a silent delete.
+
+      - layout: code
+        beat: practice
+        section: Impossible values and assertions
+        title: How do you state what must be true?
+        recall: Which four assertions does the cleaning script make about the orders?
+        lead: A failed assertion in a cleaning script is cheap, while a wrong number in a report is expensive.
+        lang: python
+        code: |-
+          assert orders["order_id"].is_unique
+          assert orders[["order_id", "date", "product", "qty", "unit_price"]].notna().all(axis=None)
+          assert orders["qty"].between(1, 100).all()
+          assert set(orders["region"]) <= {"north", "south", "east", "unknown"}
+          print(orders.describe().loc[["min", "max"], ["qty", "unit_price"]])
+
+          #      qty  unit_price
+          # min  1.0         6.5
+          # max  6.0        95.0
+        takeaway: Assert a unique key, no gaps in key columns, a range for qty and the allowed regions, because next month's export will differ.
+        source: notes/05-cleaning.md
+        notes: >-
+          Next month's export will have problems this month's did not.
+
+      - layout: bullets
+        beat: practice
+        section: Impossible values and assertions
+        title: How do you bound a column with no business rule?
+        recall: How does VanderPlas's rule bound a column with no business rule?
+        bullets:
+          - "**Estimate the spread** from the interquartile range: `sig = 0.74 * (q3 - q1)`."
+          - "**The factor** makes it a standard-deviation estimate for normal data."
+          - "**Keep values** within 5 `sig` of the median."
+          - "**A few absurd counts** cannot inflate the cutoff the way they inflate a standard deviation."
+          - "**Count what it drops:** 1000 births became 995."
+        takeaway: Keep values within 5 sig of the median, where sig is 0.74 times the interquartile range, and count what you drop.
+        source: notes/05-cleaning.md
+        notes: >-
+          VanderPlas applies the rule to the CDC births data. The slide's numbers come from the note's simulated births, with five absurd counts planted in 1,000 draws.
+
+      - layout: compare
+        beat: practice
+        section: Bucketing a number
+        title: When do you choose cut and when qcut?
+        recall: When do you choose cut, and when qcut?
+        emphasis: none
+        left:
+          title: pd.cut
+          bullets: ["Splits by the values you give it", "Bins are closed on the right: `(0, 20]` includes 20 but not 0", "Fits thresholds that mean something to the business", "Order sizes: small 2, medium 6, large 3"]
+        right:
+          title: pd.qcut
+          bullets: ["Splits by quantiles", "Each bucket holds about the same number of rows", "Fits equal-sized comparison groups", "Two halves: 6 and 5 rows"]
+        takeaway: Use cut for meaningful fixed thresholds and qcut for equal-sized groups, and chapter 7 feeds either into groupby.
+        source: notes/05-cleaning.md
+        notes: >-
+          McKinney's contrast: qcut into quartiles on 1,000 normal draws gives exactly 250 rows per bin, which cut with
+          equal-width edges would not.
+
+      - layout: compare
+        beat: practice
+        section: Saving what you cleaned
+        title: What does a CSV lose that Parquet keeps?
+        recall: Why use Parquet between steps of your own work?
+        lead: Use CSV to hand data to someone else, and Parquet between steps of your own work.
+        emphasis: right
+        left:
+          title: CSV
+          bullets: ["Keeps nothing but text", "Every reader redoes your type decisions", "The date came back as `str`", "556 bytes"]
+        right:
+          title: Parquet
+          bullets: ["Compressed columnar binary, with the dtypes stored", "The date came back as `datetime64[us]`", "5266 bytes: metadata outweighs compression on a small frame", "The size advantage shows only at scale"]
+        takeaway: Parquet keeps the types a CSV loses, so use it between your own steps and CSV to hand data on.
+        source: notes/05-cleaning.md
+        notes: >-
+          McKinney advises against pickle for long-term storage, because a later library version may be unable to read the
+          file, so use `to_pickle` only for a short-lived scratch file. HDF5 "is best suited for write-once, read-many
+          datasets" and concurrent writers can corrupt it.
+
+      - layout: code
+        beat: practice
+        section: Put it in one function
+        title: What does the whole cleaning script look like?
+        recall: How do you write the cleaning steps as one rerunnable function?
+        lang: python
+        code: |-
+          def load_orders(path):
+              df = pd.read_csv(path, comment="#", na_values={"region": ["-"]}, parse_dates=["date"])
+              n_raw = len(df)
+              df = (
+                  df.drop_duplicates(subset="order_id")
+                    .assign(
+                        customer=lambda d: d["customer"].str.strip().str.lower(),
+                        # product: the same strip and lower as customer
+                        region=lambda d: d["region"].str.strip().str.lower().fillna("unknown"),
+                        unit_price=lambda d: pd.to_numeric(
+                            d["unit_price"].str.replace("$", "", regex=False), errors="coerce"),
+                    )
+              )
+              df.loc[df["order_id"] == 1006, "qty"] = 1          # confirmed by the shop owner
+              df = df[df["qty"] > 0].reset_index(drop=True)      # negative quantities are returns
+              df["qty"] = df["qty"].astype("int64")
+              assert df["order_id"].is_unique and df["unit_price"].notna().all()
+              print(f"loaded {n_raw} rows, kept {len(df)}")
+              return df
+        takeaway: One function that takes a path and returns a clean frame lets next month's export run through the same steps.
+        source: notes/05-cleaning.md
+        notes: >-
+          Printing a row count at the end makes silent losses visible.
+
+      - layout: steps
+        beat: practice
+        section: Put it in one function
+        title: What does the function guarantee?
+        recall: What are the steps inside load_orders, and what does it print?
+        answer: "Read with decisions stated, drop duplicates on the key, normalise, record the decisions, assert and count. It prints loaded 13 rows, kept 11."
+        lead: "It prints `loaded 13 rows, kept 11`, and 11 orders feed chapters 3 and 7."
+        steps:
+          - {title: Read with decisions, text: "`comment`, `na_values` and `parse_dates` stated"}
+          - {title: Drop duplicates on the key, text: 'Using `drop_duplicates(subset="order_id")`'}
+          - {title: Normalise, text: "Strip and lower the text, `unknown` for a missing region, `to_numeric` for the price"}
+          - {title: Record the decisions, text: "Set order 1006's qty, drop the returns, cast qty to `int64`"}
+          - {title: Assert and count, text: "Unique `order_id`, prices present, then print the row counts", n: "✓", accent: "D4621A"}
+        takeaway: The function turns 13 raw rows into 11 clean orders, with every removal accounted for.
+        source: notes/05-cleaning.md
+        notes: >-
+          This is the frame the selections in chapter 3 and the summaries in chapter 7 use.
+
+      - layout: table
+        beat: pitfalls
+        section: Pitfalls
+        title: Where does cleaning go quietly wrong?
+        recall: Which cleaning habits go quietly wrong, and what is the fix for each?
+        header: [Pitfall, Why it bites, Fix]
+        widths: [3.4, 4.2, 3.8]
+        rows:
+          - [Editing the raw file by hand, "Nobody can rerun your work, including you next month", Keep raw data unchanged and fix in code]
+          - ["`errors=\"coerce\"` without counting", A format change upstream can wipe out a column unnoticed, "Print `isna().sum()` before and after"]
+          - [Filling gaps with the mean by reflex, It shrinks the variance and can invent impossible values, Ask why the value is missing]
+          - [Dropping rows silently, The losses go unseen, Print row counts and keep what you removed]
+          - [Duplicate checks on the whole row only, "Rows can share a key and differ elsewhere", Check the column that should be unique]
+          - [Pickle as an archive format, A later library version may not read it, Use Parquet for anything you might read in a year]
+          - [A check on a type and not a meaning, "A quantity of -1 is a valid integer", Assert the range and the allowed values]
+        takeaway: Keep the raw data, count what coerce and every drop remove, and assert meanings and not only dtypes.
+        source: notes/05-cleaning.md
+        notes: >-
+          Each of these has a symptom you can spot and a fix you can apply on Monday.
+
+  - title: Dates and times
+    summary: Parsing · Checking the parse · Durations · Periods · Time zones
+    notes: A date is a type, and the conversion can succeed and still be wrong.
+    slides:
+      - layout: statement
+        beat: problem
+        section: Parsing dates
+        title: Is 03/04/2025 March or April?
+        recall: Why can a date conversion succeed and still be wrong?
+        kicker: The problem
+        statement: "`03/04/2025` is the 3rd of April to one person and the 4th of March to another. 9 o'clock is a different moment in Oslo and in New York, and January is a span of 31 days, not a moment at all."
+        takeaway: A date conversion can succeed and still be wrong.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          A date in a file is text. Turning it into a date type is a cleaning step like turning $48.00 into a number, and
+          it has the same trap. What you then do along the time axis (change over time, resampling, rolling windows) is
+          summarising, and it waits until chapter 8.
+
+      - layout: cards
+        beat: fundamentals
+        section: Parsing dates
+        title: Which of three time types does a column hold?
+        recall: What are a timestamp, a timedelta and a period?
+        cards:
+          - {title: Timestamp, body: "A moment. When did it happen? Prints as `datetime64`."}
+          - {title: Timedelta, body: "A length of time with no start. How long did it take? Prints as `timedelta64`."}
+          - {title: Period, accent: "D4621A", body: "A whole span with a start and an end. Which month was it in? Prints as `period`."}
+        takeaway: A timestamp is a moment, a timedelta a length and a period a span, and most confusion goes once you know which.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          All of the code that follows runs on pandas 3.1.0.
+
+      - layout: code
+        beat: practice
+        section: Parsing dates
+        title: Why does text not behave like time?
+        recall: What goes wrong when you sort dates as text?
+        lead: As text, October 2025 comes before November 2024, because `1` sorts before `9`.
+        lang: python
+        code: |-
+          txt = pd.Series(["9/1/2025", "10/1/2025", "11/12/2024"])
+          print(txt.sort_values().tolist())
+          print(pd.to_datetime(txt, format="%m/%d/%Y").sort_values().dt.date.astype(str).tolist())
+
+          # ['10/1/2025', '11/12/2024', '9/1/2025']
+          # ['2024-11-12', '2025-09-01', '2025-10-01']
+        takeaway: Text sorts by character, so a latest order computed on a text column is wrong and nothing says so.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          To pandas a text date sorts by its first character, cannot be subtracted and has no month. Any latest order or
+          first purchase computed on the text column is wrong.
+
+      - layout: compare
+        beat: fundamentals
+        section: Parsing dates
+        title: Does one string always give one day?
+        recall: Why should you state the format when you parse dates?
+        lead: Same string, `03/04/2025`, parsed with two formats.
+        emphasis: none
+        left:
+          title: Day first
+          bullets: ["`format=\"%d/%m/%Y\"`", "Parses to **2025-04-03**", "The 3rd of April"]
+        right:
+          title: Month first
+          bullets: ["`format=\"%m/%d/%Y\"`", "Parses to **2025-03-04**", "The 4th of March"]
+        takeaway: State the format whenever you know it, so pandas cannot guess a day or month wrong.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          `pd.to_datetime` converts a column, and `parse_dates` in `read_csv` does the same at load time. A format is also
+          faster. `errors="coerce"` gives NaT, "not a time", the datetime version of NaN, and as with `to_numeric` you must count what it produces.
+
+      - layout: code
+        beat: practice
+        section: Check the parse
+        title: Which three numbers check a parse?
+        recall: Which three numbers catch most date-parsing problems?
+        lead: "Three numbers catch most problems: how many values failed, the earliest date and the latest."
+        lang: python
+        code: |-
+          col = pd.Series(["2025-01-03", "2025-01-08", "2052-01-09", "not a date"])
+          dates = pd.to_datetime(col, errors="coerce")
+          print(dates.isna().sum(), dates.min().date(), dates.max().date())
+
+          # 1 2025-01-03 2052-01-09
+        takeaway: Count the failures and read the min and max, because a typo such as 2052 parses perfectly and only max shows it.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          One value failed, and the latest order is in 2052. For an export that should cover one month, assert the range,
+          as the second exercise in chapter 5 did.
+
+      - layout: compare
+        beat: practice
+        section: Check the parse
+        title: Does format="mixed" fix a mixed column?
+        recall: Why does format="mixed" not fix a column that mixes date conventions?
+        lead: "The column holds `2025-01-03` and `03/01/2025`."
+        emphasis: right
+        left:
+          title: No format
+          bullets: ["Pandas takes the format from the first value", "It refuses the rest with a `ValueError`", "That error is the good outcome: the column is not what you assumed"]
+        right:
+          title: format="mixed"
+          bullets: ["It parses each value on its own and removes the error", "Without `dayfirst`, `03/01/2025` becomes 1 March", "With `dayfirst=True` it becomes 3 January, and the first value turns into 1 March"]
+        takeaway: Neither call can know what the writer meant, so parse each batch of rows with its own explicit format.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          When a column mixes conventions, find out where each batch of rows came from.
+
+      - layout: code
+        beat: practice
+        section: Calendar parts and durations
+        title: What do you get from subtracting two dates?
+        recall: What does subtracting two datetime columns give you?
+        lead: Subtracting two datetimes gives a timedelta, a length of time.
+        lang: python
+        code: |-
+          orders["weekday"] = orders["date"].dt.day_name()
+          orders["wait"] = orders["shipped"] - orders["date"]
+          print(orders[["order_id", "weekday", "wait"]])
+          print(orders["wait"].dt.days.tolist(), orders["wait"].mean(), orders["wait"].dtype)
+
+          #    order_id   weekday   wait
+          # 0      1001    Friday 1 days
+          # 1      1003    Sunday 4 days
+          # 2      1007  Saturday 1 days
+          # 3      1012    Monday 7 days
+          # [1, 4, 1, 7] 3 days 06:00:00 timedelta64[us]
+        takeaway: Subtracting datetimes gives a timedelta column, whose mean here is 3 days 6 hours and whose days you can pull out with .dt.days.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          A datetime column has a `.dt` accessor, just as a text column has `.str`. You can compare a timedelta with
+          `pd.Timedelta(days=2)`, or turn it into a plain number with `.dt.days` when a chart or a model needs one.
+
+      - layout: compare
+        beat: practice
+        section: Calendar parts and durations
+        title: Why not add 30 days for one month?
+        recall: What does adding 30 days to 31 January give, against one calendar month?
+        answer: "30 days gives 2 March, and one calendar month gives 28 February, the last day that exists."
+        lead: Starting from 31 January 2025.
+        emphasis: right
+        left:
+          title: "Timedelta(days=30)"
+          bullets: ["A fixed length of time", "Lands on **2025-03-02**", "Code that adds 30 days drifts away from a monthly renewal"]
+        right:
+          title: "DateOffset(months=1)"
+          bullets: ["Moves along the calendar", "Lands on **2025-02-28**, the last day that exists", "What a subscription renewing monthly means"]
+        takeaway: Add pd.DateOffset(months=1) for a calendar month, because 30 days drifts.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          A month is not a fixed length, so adding "one month" needs a different tool.
+
+      - layout: code
+        beat: fundamentals
+        section: "Periods: when you mean the whole month"
+        title: What does a period know that a timestamp does not?
+        recall: What does a period know about itself?
+        lang: python
+        code: |-
+          p = pd.Period("2024-03")
+          print(p, p.start_time, p.end_time.date(), p + 1)
+
+          # 2024-03 2024-03-01 00:00:00 2024-03-31 2024-04
+        bullets:
+          - "**A period** knows its start and its end."
+          - "**Adding 1** moves it by one whole period."
+          - "**No argument** about the 1st or the 31st."
+        takeaway: A period labels a whole month, so nobody argues whether the row stands for the 1st or the 31st.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          A timestamp is a moment and a period is a span, such as all of March 2024. For monthly reporting a period label says what you mean.
+
+      - layout: bullets
+        beat: practice
+        section: "Periods: when you mean the whole month"
+        title: Why print both ends of a week label?
+        recall: What do you have to define before two people compare week numbers?
+        bullets:
+          - "**`W-SUN`** is a week that ends on Sunday, so it runs Monday to Sunday."
+          - "**The week label** prints both ends, so nobody asks which day a week starts on."
+          - "**A week ignores the year boundary:** the first week starts in 2024, so \"week 1\" needs a definition."
+          - "**The week of 13 January** has no row, and a groupby only shows groups that have rows."
+        aside:
+          title: Orders per week
+          bullets: ["2024-12-30/2025-01-05: 2", "2025-01-06/2025-01-12: 1", "2025-01-20/2025-01-26: 1"]
+        takeaway: Define week 1 before comparing week numbers, and remember a groupby hides weeks that have no rows.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          Convert a column with `.dt.to_period` and group by the result as you would any key. Chapter 8 shows how to make
+          such gaps visible.
+
+      - layout: compare
+        beat: practice
+        section: "Periods: when you mean the whole month"
+        title: Can a period follow a fiscal calendar?
+        recall: Which dates does fiscal 2012 Q4 run between with a year ending in January?
+        lead: "The book writes the yearly frequency as `A-JUN`. Pandas 3.0 spells it `Y-JUN`."
+        emphasis: none
+        left:
+          title: Year ending in January
+          bullets: ["`Period(\"2012Q4\", freq=\"Q-JAN\")`", "Runs from 2011-11-01 to 2012-01-31"]
+        right:
+          title: Year ending in June
+          bullets: ["`to_period(\"Y-JUN\")` on 2007-08-15", "Gives 2008: August 2007 belongs to fiscal 2008"]
+        takeaway: Fiscal quarter 4 of 2012 runs from 1 November 2011 to 31 January 2012 when the year ends in January.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          Both examples are from McKinney, chapter 11.
+
+      - layout: flow
+        beat: fundamentals
+        section: Time zones
+        title: What is the rule for storing time zones?
+        recall: What is the sensible rule for storing timestamps?
+        steps:
+          - {label: Naive, sub: "09:00 where?"}
+          - {label: tz_localize, sub: declares the zone}
+          - {label: Store in UTC, sub: "arithmetic here", accent: "D4621A"}
+          - {label: tz_convert, sub: changes only the display}
+        end_accent: false
+        caption: On a spring-forward day, a local day has 23 hours, so do arithmetic in UTC.
+        takeaway: Keep stored data in UTC and convert only for display, because daylight saving makes local hours irregular.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          A timestamp with no zone is naive. A zone-aware timestamp stores UTC nanoseconds since the epoch, so `tz_convert`
+          changes only how it is displayed.
+
+      - layout: code
+        beat: practice
+        section: Time zones
+        title: Which day was this sale?
+        recall: Why does the reporting zone change which day a sale falls on?
+        lead: The second stamp is 22:00 on March 31 in UTC, but it is already April 1 in Oslo.
+        lang: python
+        code: |-
+          ts = pd.Series([1, 2], index=pd.to_datetime(["2024-03-30 22:00", "2024-03-31 22:00"]))
+          utc = ts.tz_localize("UTC")
+          oslo = utc.tz_convert("Europe/Oslo")
+          print(oslo.index)
+
+          # DatetimeIndex(['2024-03-30 23:00:00+01:00', '2024-04-01 00:00:00+02:00'],
+          #               dtype='datetime64[us, Europe/Oslo]', freq=None)
+        takeaway: A daily or even monthly total by local date differs from one by UTC date, so choose the reporting zone before grouping.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          March 31 was the day the clocks went forward in Oslo, so that local day lasted 23 hours.
+
+      - layout: cards
+        beat: practice
+        section: Time zones
+        title: What goes wrong converting local time to UTC?
+        recall: What are the traps in converting local times to UTC?
+        cards:
+          - {title: The offset changes, body: "The shop opens at 09:00 Oslo time: 08:00 UTC on 30 March and 07:00 UTC on 31 March. A fixed hour is wrong half the year."}
+          - {title: A time that never happened, accent: "D4621A", body: "The clocks jumped from 02:00 to 03:00, so pandas raises on 02:30 and does not invent a moment."}
+          - {title: Text with its own offsets, body: "`utc=True` converts every value to UTC, so two strings that both say 10:00 come out an hour apart."}
+        takeaway: Convert local times with the zone, never a fixed hour, and let pandas raise on a time that never happened.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          The offset changed overnight. The last call handles text that carries its own offsets, and the two strings were an hour apart.
+
+      - layout: table
+        beat: pitfalls
+        section: Pitfalls
+        title: How does a date parse go quietly wrong?
+        recall: Which parsing mistakes go quietly wrong, and what is the fix for each?
+        header: [Pitfall, Fix]
+        widths: [4, 7]
+        rows:
+          - [Dates left as text, "They sort alphabetically and have no month. Check `dtypes` and pass `parse_dates`"]
+          - [Ambiguous day and month, "State `format=`. Never let `dayfirst` or a guess decide for a whole column"]
+          - ["`errors=\"coerce\"` without counting", "Print `isna().sum()` and read `min` and `max`. A date in 2052 parses without complaint"]
+          - ["`format=\"mixed\"` as a fix", "It removes the error and keeps the ambiguity. Parse each source with its own format"]
+        takeaway: State the format, count the NaT, read min and max, and parse each source with its own format.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          The first four pitfalls are about the parse. The next slide covers time arithmetic and zones.
+
+      - layout: bullets
+        beat: pitfalls
+        section: Pitfalls
+        title: How does date arithmetic go quietly wrong?
+        recall: Which arithmetic and time zone mistakes go quietly wrong?
+        bullets:
+          - "**Adding 30 days when you mean a month.** Use `pd.DateOffset(months=1)`, or work in periods."
+          - "**Labelling a month with a timestamp.** Does `2024-01-31` mean that day or the month? A period says which."
+          - "**Naive timestamps from two sources.** Every join and daily total is off by hours. Localize each on arrival."
+          - "**Local-time arithmetic across daylight saving.** Local days can be 23 or 25 hours long. Store in UTC."
+          - "**Old spellings.** `A-JUN` is now `Y-JUN`, and `PeriodIndex(year=, quarter=)` is deprecated."
+        takeaway: Use DateOffset or periods for months, localize each source on arrival, and store in UTC.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          Converting a datetime to an integer also changed in pandas 3.0: the unit is inferred, usually microseconds, so
+          the number is 1000 times smaller than old code expected. State the unit with `as_unit` first if you depend on it.
+
+  - title: What to remember
+    agenda: false
+    divider: false
+    notes: >-
+      We end with the habits, and where the cleaned export goes next.
+    slides:
+      - layout: cards
+        beat: wrap
+        title: Rules of thumb
+        recall: Which rules of thumb keep a cleaning job honest?
+        answer: "Keep the raw file and fix in code. Count what coerce makes. Ask why a value is missing. Assert meanings. State date formats. Store time in UTC."
+        cards:
+          - {title: Raw file, body: "Keep it unchanged. Do all fixes in code you can rerun."}
+          - {title: Coerce, body: "Count the `NaN` and `NaT` it makes, and read `min` and `max`."}
+          - {title: Gaps, body: "Ask why a value is missing before filling or dropping."}
+          - {title: Assertions, body: "Assert the range and allowed values, not only the dtype."}
+          - {title: Dates, body: "State the format. A period for a whole month."}
+          - {title: Time zones, body: "Store in UTC. Pick the reporting zone before grouping."}
+        takeaway: Keep the raw file, count what coerce makes, ask why a value is missing, assert meanings and store time in UTC.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          Every column is now a type you can trust, dates included.
+
+      - layout: bullets
+        beat: wrap
+        title: Where next
+        recall: What happens to the cleaned export next?
+        answer: "It is summarised: chapter 7 groups it, and chapter 8 puts time on the axis, resamples and shows gaps."
+        bullets:
+          - "**Next lecture:** the export is ready to be summarised, in chapter 7, groupby and aggregation."
+          - "**Chapter 8** makes gaps in time visible, such as a week with no orders."
+          - "**Practice:** `practice/2_Texts.ipynb` and the Datetime Basics and Periods sections of `practice/7_Time_Series.ipynb`."
+        takeaway: With every column a trusted type, the next step is to summarise the export, starting with groupby.
+        source: notes/06-dates-and-times.md
+        notes: >-
+          The book code for these two chapters is practice/mckinney/ch07.ipynb and ch11.ipynb.

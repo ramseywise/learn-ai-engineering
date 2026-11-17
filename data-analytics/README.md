@@ -212,8 +212,8 @@ Name the distribution, fix the sample size before you look, and report effect si
 | Rule | Where |
 |---|---|
 | State `how` and `validate` on a merge, then compare row counts and one total before and after | [01](01-python-for-data-analysis/notes/04-reshaping-and-joins.md) |
-| For a group's rate, sum the numerator and the denominator and then divide; never average the rates | [01](01-python-for-data-analysis/notes/05-groupby-and-aggregation.md) |
-| Make absent days visible with `asfreq`, and keep model features looking backward | [01](01-python-for-data-analysis/notes/06-time-series.md) |
+| For a group's rate, sum the numerator and the denominator and then divide; never average the rates | [01](01-python-for-data-analysis/notes/07-groupby-and-aggregation.md) |
+| Make absent days visible with `asfreq`, and keep model features looking backward | [01](01-python-for-data-analysis/notes/08-time-series.md) |
 | `sf(k)` is P(X > k); for "k or more" on a discrete distribution, pass k − 1 | [02](02-probability-and-statistics/notes/03-distributions-and-sampling.md) |
 | The most extreme averages come from the smallest groups, so always show N | [02](02-probability-and-statistics/notes/03-distributions-and-sampling.md) |
 | Default to Welch's t (`equal_var=False`) | [02](02-probability-and-statistics/notes/05-hypothesis-testing.md) |
