@@ -44,7 +44,7 @@ scientist predicts on unseen data, and the engineer makes both possible.
 | After the shared start | [Experimentation](../../data-analytics/03-experimentation-and-causality/README.md), [storytelling](../../data-analytics/05-visualisation-and-storytelling/README.md), [applied analyses](../../data-analytics/06-applied-analyses/README.md) | [Classical ML](../../data-science/01-classical-ml/README.md), [structuring ML projects](../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md), [Bayesian analysis](../../data-analytics/04-bayesian-analysis/README.md) | [Data engineering](../../data-engineering/README.md), from [data systems and data models](../../data-engineering/01-storage-and-compute-foundations/notes/01-data-systems-and-data-models.md) onward |
 
 The shared start is [Python](../../programming/python/README.md) with
-[Working with data](../../data-analytics/01-python-for-data-analysis/README.md), then
+[Processing data](../../data-analytics/01-python-for-data-analysis/README.md), then
 [SQL for analytics](../../data-analytics/06-applied-analyses/notes/06-sql-for-analytics.md), then
 [probability and statistics](../../data-analytics/02-probability-and-statistics/README.md).
 

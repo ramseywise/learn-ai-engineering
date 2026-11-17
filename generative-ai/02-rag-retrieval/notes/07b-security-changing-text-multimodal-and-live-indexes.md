@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # split from 07-rag-in-production.md (2026-11-08) so each part stays under the chapter length cap
 sources:
+  - Manning, Raghavan and Schütze, *Introduction to Information Retrieval* (Cambridge University Press, 2008; online edition), ch. 20
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 5, "RAG Systems in Production" + ungraded lab "Tracing a RAG system" + Assignment 5 "Improving a RAG System")
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
@@ -185,6 +186,8 @@ while index.describe_index_stats().namespaces.get(ns, {"vector_count": 0})["vect
 ```
 
 The Handbook also stores two snapshots of each document in its feature store: one cleaned (for fine-tuning) and one chunked and embedded (for RAG). Then a new chunking or embedding choice doesn't mean re-crawling.
+
+**What web crawlers already learned about freshness.** A crawler is a live index with a politeness problem added, and three of its rules carry over. Permissions go stale in the queue: a URL can wait in the frontier "for days or even weeks", so robots.txt is checked "immediately before attempting to fetch a web page", not when the URL was queued (*IIR*, ch. 20, p. 447). An access-control list captured at ingestion has the same weakness; that parallel is this note's. Change rate alone is a poor priority signal, because "a large number of spam pages change completely on every fetch", so the frontier combines it with a quality estimate (p. 451). And corpus-wide statistics such as idf can't be computed on one shard of a document-partitioned index, so background processes recompute them and refresh each node periodically (p. 454). Scores therefore drift between refreshes; that consequence is this note's reading. The chapter gives designs and one rule of thumb from the Mercator crawler, "a rough rule of three times as many back queues as crawler threads" (p. 453). It reports no measurements.
 
 ---
 

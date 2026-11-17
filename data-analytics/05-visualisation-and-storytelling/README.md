@@ -18,7 +18,7 @@ How to choose a chart, draw it well in Python and JavaScript, and use it to get 
 | 6 | [Dashboard stacks: from Python results to a browser](notes/06-dashboard-stacks-from-python-to-frontend.md) | Which stack should this dashboard use, and how do results reach a browser? |
 | 6b | [Dashboard stacks, part 2: the data path, many points, colour and the finished pages](notes/06b-dashboard-data-path-points-colour-and-worked-example.md) | How do I stop the first draft leaking and overloading, and what do the finished pages look like? |
 
-Then go on to [experimentation and causality](../03-experimentation-and-causality/README.md), the first advanced module, and after it [applied analyses](../06-applied-analyses/README.md), which use these charts on worked business questions. Readers new to pandas should start with [working with data](../01-python-for-data-analysis/README.md).
+Then go on to [experimentation and causality](../03-experimentation-and-causality/README.md), the first advanced module, and after it [applied analyses](../06-applied-analyses/README.md), which use these charts on worked business questions. Readers new to pandas should start with [processing data](../01-python-for-data-analysis/README.md).
 
 ## Builds on and feeds into
 

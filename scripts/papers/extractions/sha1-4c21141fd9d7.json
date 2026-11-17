@@ -1,0 +1,241 @@
+{
+ "schema": 1,
+ "key": "sha1:4c21141fd9d7",
+ "pdf": "programming/sources/martin-clean-code/ch07-error-handling.pdf",
+ "bib": {
+  "title": "Clean Code, Chapter 7: Error Handling",
+  "authors": ["Michael Feathers"],
+  "first_author": "Feathers",
+  "year": 2008,
+  "venue": "Robert C. Martin, Clean Code: A Handbook of Agile Software Craftsmanship, Prentice Hall (printed pp. 103-112; the PDF carries a www.it-ebooks.info footer)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 19839,
+  "chars_total": 19839,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should code handle errors so that it is both clean and robust, with error handling kept separate from the main logic?",
+ "hypothesis": "Error handling that obscures logic is wrong; treating it as a separate concern makes code readable and robust at once.",
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "Error handling that obscures the logic of the code is wrong.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Java examples; general principle stated in the chapter opening.",
+   "quote": "Error handling is important, but if it obscures logic, it’s wrong.",
+   "table": null,
+   "note": null,
+   "where": "p. 103"
+  },
+  {
+   "claim": "Throw exceptions instead of returning error codes or flags, because codes clutter the caller and are easy to forget to check.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 7-1 (nested if/else on handle and status) versus Listing 7-2 (sendShutDown with try/catch around tryToShutDown), Java DeviceController.",
+   "quote": "it is better to throw an exception when you encounter an error. The calling code is cleaner.",
+   "table": null,
+   "note": null,
+   "where": "p. 104"
+  },
+  {
+   "claim": "A try block defines a transaction-like scope: the catch must leave the program consistent however the try aborts, so write the try-catch-finally first and drive it with a test that forces the exception.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TDD example: retrieveSection test expects StorageException on an invalid file name; catch is first Exception, then narrowed to FileNotFoundException.",
+   "quote": "In a way, try blocks are like transactions.",
+   "table": null,
+   "note": null,
+   "where": "p. 105-106"
+  },
+  {
+   "claim": "Checked exceptions are not worth their price in general application development: a low-level throws clause cascades signature changes upward and breaks encapsulation. The chapter names Python among the languages with no checked exceptions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Java argument; the Open/Closed Principle citation is [Martin] 2002. Feathers concedes checked exceptions can help in a critical library.",
+   "quote": "Neither do Python or Ruby. Yet it is possible to write robust software in all of these languages.",
+   "table": null,
+   "note": null,
+   "where": "p. 106-107"
+  },
+  {
+   "claim": "Each exception should carry context (the failed operation and the type of failure) because a stack trace cannot say what the operation intended.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General guidance, Java stack traces.",
+   "quote": "a stack trace can’t tell you the intent of the operation that failed.",
+   "table": null,
+   "note": null,
+   "where": "p. 107"
+  },
+  {
+   "claim": "Define exception classes by how they are caught; wrap a third-party API so it raises one common exception type, which removes duplicated catch blocks, limits dependency on the vendor and eases mocking. Use separate classes only when a caller wants to catch one and let the other through.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ACMEPort wrapped by LocalPort, which translates three exception types to PortDeviceFailure.",
+   "quote": "wrapping third-party APIs is a best practice.",
+   "table": null,
+   "note": null,
+   "where": "p. 107-109"
+  },
+  {
+   "claim": "Special Case Pattern: return an object that encodes the exceptional case (per diem meal expenses, an empty list) so the client has no special branch.",
+   "kind": "claim",
+   "source": "Fowler (Special Case Pattern; no reference entry printed)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ExpenseReportDAO returns PerDiemMealExpenses instead of throwing MealExpensesNotFound; getEmployees returns Collections.emptyList().",
+   "quote": "That behavior is encapsulated in the special case object.",
+   "table": null,
+   "note": null,
+   "where": "p. 109-111"
+  },
+  {
+   "claim": "Do not return null: it creates null-check clutter for callers and one missed check breaks the application. Throw or return a special case object, and wrap null-returning third-party methods.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "registerItem example with nested null checks, Java.",
+   "quote": "the problem is that it has too many.",
+   "table": null,
+   "note": null,
+   "where": "p. 110-111"
+  },
+  {
+   "claim": "Do not pass null: neither an InvalidArgumentException nor an assert gives the handler a good action, so forbid null arguments by default.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MetricsCalculator.xProjection(Point, Point), Java.",
+   "quote": "the rational approach is to forbid passing null by default.",
+   "table": null,
+   "note": null,
+   "where": "p. 111-112"
+  },
+  {
+   "claim": "Error handling should be treated as a separate concern that can be reasoned about independently of the main logic.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conclusion.",
+   "quote": "Clean code is readable, but it must also be robust.",
+   "table": null,
+   "note": null,
+   "where": "p. 112"
+  }
+ ],
+ "limits": [
+  "Java-only examples; no data or measurements, every result is an assertion by the author.",
+  "Written in 2008 for Java; the checked-exception debate and null guidance do not transfer one-to-one to Python (no checked exceptions; None is idiomatic for 'absent').",
+  "The chapter does not cover context managers, try-with-resources, logging levels, retries or error handling in async code.",
+  "The Special Case Pattern is credited to Fowler with no reference entry; the Bibliography lists only [Martin] 2002."
+ ],
+ "practices": [
+  "Throw exceptions rather than return error codes or flags (p. 104).",
+  "Write the try-catch-finally first and use a test that forces the exception to build the transaction-like scope (p. 105-106).",
+  "Do not use checked exceptions in general application code (p. 106-107).",
+  "Put the failed operation and failure type in the exception message, and pass enough to log in the catch (p. 107).",
+  "Define exception classes by how callers catch them; often one class per area is enough (p. 107-109).",
+  "Wrap third-party APIs to map their exceptions to one local type (p. 108-109).",
+  "Use the Special Case Pattern so normal flow needs no exception handling (p. 109-110).",
+  "Do not return null; return an empty collection or a special case object (p. 110-111).",
+  "Do not pass null as an argument (p. 111-112)."
+ ],
+ "terms": [
+  {
+   "term": "Special Case Pattern",
+   "definition": "You create a class or configure an object so that it handles a special case for you. When you do, the client code doesn’t have to deal with exceptional behavior.",
+   "where": "p. 110"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Martin, Agile Software Development: Principles, Patterns, and Practices, Prentice Hall, 2002",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited for the Open/Closed Principle in the checked-exceptions argument.",
+   "quote": null
+  },
+  {
+   "work": "Fowler, Special Case Pattern",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Named as [Fowler] on p. 110; not in the printed bibliography.",
+   "quote": null
+  }
+ ],
+ "figures": [],
+ "code": [
+  {
+   "where": "Listing 7-2, p. 104-105",
+   "snippet": "public void sendShutDown() {\n    try {\n      tryToShutDown();\n    } catch (DeviceShutDownError e) {\n      logger.log(e);\n    }\n  }",
+   "verbatim": true
+  },
+  {
+   "where": "p. 111",
+   "snippet": "List<Employee> employees = getEmployees();\nfor(Employee e : employees) {\n  totalPay += e.getPay();\n}",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Byline is Michael Feathers, not Robert C. Martin.",
+  "Text uses ligature glyphs (fi) and curly quotes; quotes in this file avoid ligature words.",
+  "Listing 7-2 is split across pages 104-105 and the layout interleaves with the 'Write Your Try-Catch-Finally Statement First' text in the extraction order.",
+  "Some printed code has typos (missing semicolon, 'peristentStore', 'throw InvalidArgumentException(' without new); not corrected here.",
+  "No embedded instructions found in the PDF text."
+ ]
+}

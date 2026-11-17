@@ -4,6 +4,7 @@ sources:
   - "Brandon Rhodes, Python Design Patterns: index, Composition Over Inheritance, Decorator, Abstract Factory, Singleton, Global Object — https://python-patterns.guide/"
   - "Peter Norvig, Design Patterns in Dynamic Programming (1996 slides) — https://norvig.com/design-patterns/design-patterns.pdf"
   - "Martin Fowler, Gateway (2021) — https://martinfowler.com/articles/gateway-pattern.html"
+  - "Robert C. Martin, Clean Code (Prentice Hall, 2008), chapter 8 (boundaries, by James Grenning: wrapping a boundary type, the interface you wish you had) — chapter PDFs in programming/sources/martin-clean-code/"
   - "Edward Hieatt and Rob Mee, Repository, in Fowler's PoEAA catalogue — https://martinfowler.com/eaaCatalog/repository.html"
 concepts: [design-patterns, strategy-pattern, adapter-pattern, decorator-pattern, factory-pattern, gateway-pattern, repository-pattern, observer-pattern, pipeline-pattern, state-machine, template-method, singleton-pattern]
 confidence: high
@@ -123,6 +124,8 @@ canned
 ```
 
 Fowler's priorities are worth noting: swapping vendors is a handy benefit but "hardly ever a reason" on its own. Containing awkwardness and easier testing are what justify it.
+
+James Grenning's chapter in *Clean Code* gives two more reasons, with no vendor involved. The foreign type can be too wide for what you need: pass a Java `Map` of sensors around and "any user of the Map has the power to clear it" (ch. 8, p. 114). A small `Sensors` class with `getById` hides the map, can enforce the rules the application cares about, and leaves one place to change when the type does. His evidence is an anecdote: the `Map` interface changed when Java 5 added generics, and he reports systems that couldn't adopt them because raw maps were everywhere (p. 115). He doesn't ask you to wrap every use, only to keep the boundary type out of public APIs (p. 115). The second reason is that the other side may not exist yet. His team defined "the interface we wished we had" for a transmitter whose API was still undecided and wrote the adapter once it arrived (p. 119). He calls that an Adapter. By Fowler's distinction above it's a gateway, since the interface was designed first. His closing reason is control, not swapping: "It's better to depend on something you control than on something you don't control" (p. 120).
 
 **The cost.** Any translation layer loses something: streaming, tool-call deltas, a vendor-specific parameter. A lowest-common-denominator `Reply` means new features wait for your wrapper, and a framework does the same to you at a larger scale. Fowler also warns about translating a widely-understood vocabulary just because a team doesn't like the names. If you only have one vendor and its types are fine, using them directly may be the better choice.
 

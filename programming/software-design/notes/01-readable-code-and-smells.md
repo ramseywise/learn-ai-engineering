@@ -9,6 +9,7 @@ sources:
   - "Google Python Style Guide — https://google.github.io/styleguide/pyguide.html"
   - "Ruff rule C901 (complex-structure) — https://docs.astral.sh/ruff/rules/complex-structure/"
   - "Martin Fowler, Flag Argument (2011) — https://martinfowler.com/bliki/FlagArgument.html"
+  - "Robert C. Martin, Clean Code (Prentice Hall, 2008), chapters 1 to 4 and 17 (the reading ratio; naming; function size, arguments and side effects; comments; the catalogue of smells and heuristics) — chapter PDFs in programming/sources/martin-clean-code/"
 concepts: [readable-code, naming, code-comments, cyclomatic-complexity, code-smells, deep-modules]
 confidence: high
 cleaned: 2026-11-02
@@ -22,6 +23,8 @@ cleaned: 2026-11-02
 ## What you are optimising for
 
 [PEP 8](https://peps.python.org/pep-0008/) opens from Guido van Rossum's point that code is read much more often than it is written. Ousterhout and Martin, who disagree about nearly everything else below, [agree on the goal](https://github.com/johnousterhout/aposd-vs-clean-code): Ousterhout defines complexity as whatever makes a system hard to understand and modify, chiefly how much information a developer must hold in their head and how obvious that information is. Martin says the programmer to help most is the one reading someone else's code.
+
+Martin's book puts a number on it: the ratio of time spent reading to writing is "well over 10:1" (*Clean Code*, ch. 1, p. 14). Treat that as his impression. It comes from watching replays of editing sessions in the 1980s and 90s, and the chapter gives no sample, method or citation. The same chapter is candid about its standing: it presents the book as one school of thought among several and says many of its recommendations are controversial (ch. 1, pp. 12-13). That's the right frame for everything cited from it below. None of it is measured.
 
 Use that as the test for every rule in this chapter. A rule is good when, in this place, it reduces what the next reader must know. The worst case Ousterhout names is a crucial fact hidden in far-away code that the reader has never heard of. So when you're unsure, ask: what would a new teammate need to know to change this safely, and where would they find it?
 
@@ -69,7 +72,16 @@ The logic is identical, but the second version says what the 4 is and which end 
 - **Use the domain's words,** and one word per concept. If `chunk`, `passage` and `segment` mean the same thing in your RAG code, every reader has to work out that they do.
 - **Name booleans as claims** (`is_cached`, `has_tool_calls`) so `if` reads as a sentence.
 
-**The cost.** Long names make lines wrap. In the debate, [Ousterhout objects](https://github.com/johnousterhout/aposd-vs-clean-code) to Martin's very long method names: they waste horizontal space, trigger line wraps and still don't say as much as a shorter name with a comment. A name that needs seven words is usually a sign that the function does too many things.
+The naming chapter of *Clean Code* (ch. 2, written by Tim Ottinger) argues for the same habits from Java examples, and adds a few tests you can apply to a name:
+
+- **Does it need a comment?** Then it doesn't reveal its intent (p. 18). Its example is `int d; // elapsed time in days`, which should have been `elapsedTimeInDays`.
+- **Does it claim a type it doesn't have?** Don't call a group of accounts `accountList` unless it really is a list (p. 19). In Python, `accounts` survives a change from list to set.
+- **Do two names differ without meaning something different?** Number series (`a1`, `a2`) and noise words (`Info`, `Data`) fail this (p. 20). A reader can't tell `get_account` from `get_account_info` without opening both.
+- **Can you search for it?** A named constant can be found, and a bare `5` can't (pp. 22-23).
+
+Its Java-era advice on Hungarian notation, `m_` prefixes and `get`/`set` accessors doesn't carry to Python, where PEP 8 and properties settle those questions.
+
+**The cost.** Long names make lines wrap. In the debate, [Ousterhout objects](https://github.com/johnousterhout/aposd-vs-clean-code) to Martin's very long method names: they waste horizontal space, trigger line wraps and still don't say as much as a shorter name with a comment. The book pulls both ways here. Its functions chapter tells you not to be afraid of a long name, since a long descriptive name beats a long descriptive comment (*Clean Code*, ch. 3, p. 39), while its naming chapter says shorter names are generally better as long as they're clear, and to add no more context than is necessary (ch. 2, p. 30). A name that needs seven words is usually a sign that the function does too many things.
 
 ## How long should a function be?
 
@@ -80,6 +92,8 @@ There's no agreed number, and the disagreement is instructive.
 | Martin | Very short functions that do "One Thing"; if you must err, err towards decomposition, since it can be inlined later | [Debate](https://github.com/johnousterhout/aposd-vs-clean-code) |
 | Ousterhout | Decompose when the interface is much simpler than the implementation ("deep"); stop when pieces become "shallow" or "entangled" | Same |
 | Google | No hard limit; past about 40 lines, think about whether it can be broken up without harming the structure | [Style guide §3.18](https://google.github.io/styleguide/pyguide.html#318-function-length) |
+
+The book itself is blunter than the debate. Functions "should hardly ever be 20 lines long", the indent level shouldn't pass one or two, and a function does one thing when its steps all sit one level of abstraction below its name (*Clean Code*, ch. 3, pp. 34-36). On the same page as the 20-line rule, Martin says he can't provide any references to research showing that very small functions are better. The rule is his experience, argued from one worked Java refactoring whose readability the reader is asked to judge, not from a measurement. He also says he doesn't write functions that way first: they start long and messy under a test suite and get refined (p. 49).
 
 Both authors agree that over-decomposition exists and that the first edition of *Clean Code* says little about how to recognise it, as Martin concedes. Where they part is on weighting. Martin values decomposition more; Ousterhout counts entanglement as the worse failure: if understanding one method requires reading another, flipping between them is a red flag, and they may be better combined. Here is what that looks like:
 
@@ -128,7 +142,9 @@ My working test, which is judgement and not data: extract when the new name lets
 
 ## Comments: what the code can't say
 
-Here the two authors [ended up further apart](https://github.com/johnousterhout/aposd-vs-clean-code). *Clean Code* calls comments a necessary evil and, in a line Ousterhout quotes from page 54, "always failures"; Martin replies that he's hostile to gratuitous comments and that bad comments cost more than good ones save. Ousterhout says some information can't be expressed in code at all, and puts the cost of missing comments at 10 to 100 times the cost of incorrect ones, by his own experience. He estimates he'd write 5 to 10 times as many comment lines as Martin. Neither moved. They do agree that implementation code needs comments only where it's non-obvious.
+Here the two authors [ended up further apart](https://github.com/johnousterhout/aposd-vs-clean-code). *Clean Code* calls comments "at best, a necessary evil" and says "Comments are always failures" (ch. 4, pp. 53-54); in the debate Martin replies that he's hostile to gratuitous comments and that bad comments cost more than good ones save. Ousterhout says some information can't be expressed in code at all, and puts the cost of missing comments at 10 to 100 times the cost of incorrect ones, by his own experience. He estimates he'd write 5 to 10 times as many comment lines as Martin. Neither moved. They do agree that implementation code needs comments only where it's non-obvious.
+
+Read in context, the book's line is less absolute than the quotation. The same paragraph says we must have comments because we can't always express ourselves without them, and the chapter then lists the kinds it accepts: legal notices, explanations of intent, clarifications, warnings of consequences, TODOs, amplification of something that looks unimportant, and documentation of a public API (ch. 4, pp. 55-59). Martin's stated reason for the hostility is staleness: code moves and the comment doesn't, so an inaccurate comment is worse than none (p. 54). His own worked example, a prime sieve rewritten into small named functions, keeps two comments, and one of them explains why the loop stops at a square root, which no name could say (pp. 72-74). That's the "why" comment this section argues for. What the chapter doesn't do is weigh the cost of a missing comment, which is Ousterhout's side of the argument. Like the rest of the book, it's experience and Java examples with no data.
 
 Their shared ground gives you a usable rule: **comment what the code can't say, not what it already says.** PEP 8 adds the failure mode: [comments that contradict the code are worse than no comments](https://peps.python.org/pep-0008/#comments).
 
@@ -198,7 +214,18 @@ The table uses names in common use, with examples from [the lab's module](../pra
 | Swallowed errors | Bare `except: continue` | What happens to the row we skipped, and who finds out? |
 | Stale comment | "updated last week" | When was that? |
 
-The flag argument is the easiest of these to see from the outside, because the damage is at the call site. [Fowler](https://martinfowler.com/bliki/FlagArgument.html) prefers separate methods, so that the call states the intent, and keeps a hidden flagged implementation behind them when the logic is too tangled to split:
+The longest printed catalogue is the last chapter of *Clean Code*: 66 coded heuristics under comments, environment, functions, general, Java, names and tests (ch. 17, pp. 285-315). Martin built it by refactoring several programs and writing down why he made each change (p. 286), so it's one practitioner's list and carries no measurement. Six rows of the table above have a code there, and the catalogue adds detail to four of them:
+
+- **Duplication (G5)** comes in three forms: pasted blocks, the same `switch` or `if` chain repeated in several modules, and algorithms that are alike without sharing a line (pp. 289-290). He calls it one of the most important rules in the book.
+- **Flag arguments** appear twice, as F3 and as selector arguments (G15), where a call ends in "a dangling false argument" (pp. 288, 294-295).
+- **Magic numbers (G25)** have exceptions. Some constants are self-describing in context: a formula with `5280.0` feet per mile, or `radius * Math.PI * 2`, doesn't need a name (pp. 300-301). A literal like `"John Doe"` in a test counts as magic too.
+- **Too many arguments (F1)** is the chapter's only numeric rule: none is best, then one, two, three, and "more than three is very questionable" (p. 288). It's a preference stated without evidence.
+
+The catalogue has no entry for global mutable state or swallowed errors, and only touches primitive obsession, so it isn't a superset of the table. Some heuristics the table lacks are still worth knowing by name: encapsulate a compound condition in a named function (G28, p. 301), make a required call order explicit by passing each step's result to the next (G31, hidden temporal coupling, pp. 302-303), and delete commented-out code (C5, p. 287).
+
+Two entries need care. Martin writes that names are "90 percent of what make software readable" (N1, p. 309), which is rhetoric, not a figure. And J1 recommends wildcard imports for Java (p. 307), the opposite of the wildcard-import row in the ML table below and of PEP 8. That heuristic is specific to Java, so don't carry it to Python.
+
+The flag argument is the easiest of these to see from the outside, because the damage is at the call site. [Fowler](https://martinfowler.com/bliki/FlagArgument.html) prefers separate methods, so that the call states the intent, and keeps a hidden flagged implementation behind them when the logic is too tangled to split. Martin reaches the same remedy from his "one thing" rule: a boolean argument announces that the function does two things, so write two functions (*Clean Code*, ch. 3, p. 41). He leaves a flag in his own final listing in that chapter to limit the refactoring, which is Fowler's tangled case in practice:
 
 ```python
 def report(path, mode="full", show_cost=True, write=False, dedupe=True):
@@ -228,7 +255,7 @@ calls: 0 total: 0.7201
 0.7201
 ```
 
-The second call found nothing, yet still reported the same total. No line in `report`'s body looks wrong on its own.
+The second call found nothing, yet still reported the same total. No line in `report`'s body looks wrong on its own. Martin's name for this is a side effect that lies: the function promises one thing and also changes hidden state, which makes its result depend on when it's called (*Clean Code*, ch. 3, p. 44). His example is a `checkPassword` that also initialises the session, so calling it at the wrong time wipes session data.
 
 ### Smells that show up in ML code
 
@@ -299,7 +326,7 @@ Argue about style once, then let the tool decide. [Ruff](https://docs.astral.sh/
 |---|---|
 | What is a code smell? | Fowler: a surface indication that usually corresponds to a deeper problem. Quick to spot, and not always a problem. |
 | Does refactoring smells reduce maintenance effort? | Sjøberg et al. found no significant effect for 12 smells after adjusting for file size and changes, in a controlled study of six developers and four Java systems. One study, but it argues for prioritising by change frequency. |
-| How long should a function be? | There's no consensus. Google: think hard past about 40 lines. Martin: very short. Ousterhout: as long as the interface stays much simpler than the implementation. What matters is whether a reader can skip the body. |
+| How long should a function be? | There's no consensus. Google: think hard past about 40 lines. Martin: hardly ever 20, by his own account without research behind it. Ousterhout: as long as the interface stays much simpler than the implementation. What matters is whether a reader can skip the body. |
 | What is a deep module? | Ousterhout's term: lots of functionality behind a simple interface. A shallow one exposes nearly as much as it hides. |
 | When should you write a comment? | For what the code can't say: why, units, invariants, what callers must guarantee. Not to restate the code. |
 | What is cyclomatic complexity good for? | Finding places to look. It counts branches, so it misses coupling and overrates flat dispatch. Don't make it a target. |

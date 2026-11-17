@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - "Titus Winters, Tom Manshreck, Hyrum Wright (eds.), Software Engineering at Google, chapters 11 to 14 (free online edition) — https://abseil.io/resources/swe-book/html/ch11.html"
   - "Ben Wilson, Machine Learning Engineering in Action (Manning, 2022), chapters 9 (a unit test of a private method) — chapter PDFs in data-engineering/sources/ml-engineering-in-action/"
+  - "Robert C. Martin, Clean Code (Prentice Hall, 2008), chapters 8, 9 and 15 (learning tests at a third-party boundary, by James Grenning; clean tests, one concept per test, F.I.R.S.T.; 100% coverage over a dead branch) — chapter PDFs in programming/sources/martin-clean-code/"
   - "Martin Fowler, Test Pyramid — https://martinfowler.com/bliki/TestPyramid.html"
   - "Ham Vocke, The Practical Test Pyramid (contract tests section) — https://martinfowler.com/articles/practical-test-pyramid.html"
   - "Martin Fowler, Mocks Aren't Stubs — https://martinfowler.com/articles/mocksArentStubs.html"
@@ -25,6 +26,10 @@ cleaned: 2026-11-02
 Fowler gives a good [test of sufficiency](https://martinfowler.com/bliki/TestCoverage.html): you have enough tests if bugs rarely escape to production and you're rarely hesitant to change code for fear of causing them. You have too many if you could remove some and still meet that bar, and one sign is a simple code change that demands long changes to the tests.
 
 Two properties make a test worth keeping, and they pull against what looks like diligence. It should fail when behaviour breaks, and it should stay quiet when behaviour doesn't. [Software Engineering at Google](https://abseil.io/resources/swe-book/html/ch12.html) (SWE from here) calls a test that fails on an unrelated change *brittle*, and its advice follows from that: call the code through its public API, as a user would, and test behaviours rather than methods.
+
+Martin puts the running cost as a story: a team that let its tests rot found them so expensive to change that it threw the suite away, and defects rose. His conclusion is that "having dirty tests is equivalent to, if not worse than, having no tests", so test code deserves the same care as production code (*Clean Code*, ch. 9, pp. 123-124). It's one anecdote with no numbers. What makes a test clean, for him, is readability: each test builds its data, operates on it and checks the result, with helper functions hiding the detail that doesn't matter to the case (pp. 124-127). A test may be less efficient than production code, never less clear (pp. 127-130). On assertions he ends close to SWE. One assert per test is a good guideline that he doesn't enforce, and the rule he keeps is to "test just one concept per test function" (pp. 130-132).
+
+The same chapter says "the higher your test coverage, the less your fear" (p. 124). It never mentions whether the tests assert anything, which is the gap [coverage versus mutation](#coverage-versus-mutation) is about.
 
 One book in the ML literature goes the other way on private methods. Wilson isolates a method, `_generate_boundaries`, so that it can be tested alone, and the test calls it directly (*Machine Learning Engineering in Action*, ch. 9, Listing 9.4). It asks a distribution object for the 1% and 99% points of a standard normal and asserts equality with `-2.3263478740408408` and `2.3263478740408408`. His reasoning is sound: split out of a long script, the step can be checked on its own, and a failure points at it instead of at the module. SWE's rule would still ask whether some public entry point can reach the same behaviour, since a test of a protected name breaks when the helper is renamed or merged. Two practical points. The values are exact float equality; on SciPy 1.18.1 `norm.ppf(0.99)` does equal that literal, but `pytest.approx` states the intent and survives a library change. And the listing is one function from one analysis class, not evidence about how many private-method tests a code base can carry.
 
@@ -203,6 +208,8 @@ DropsEmptyEmbedder ['returned 4 vectors for 5 texts']
 
 In a real suite, this is a `pytest.mark.parametrize` over implementations ([Python 03 · 06](../../python/03-language-for-engineers/notes/06-modules-packaging-tooling.md) covers `parametrize` and fixtures), with the implementation backed by a real vendor marked as slow. Between services, [Vocke describes](https://martinfowler.com/articles/practical-test-pyramid.html#ContractTests) the same idea as consumer-driven contracts: the consumer writes what it needs from a provider's interface, and the provider runs those tests. He says the provider should run them continuously, so that a breaking change is caught before it goes live.
 
+When the provider is a library you don't control, nobody will run your tests for you, so you run them yourself. *Clean Code* calls these learning tests, a name it credits to Jim Newkirk: instead of exploring a new package inside production code, you write small tests that call it the way you intend to use it (ch. 8, p. 116; the chapter is by James Grenning). They cost nothing extra, he argues, since you had to learn the API anyway, and they pay again at each upgrade: "we run the learning tests to see whether there are behavioral differences" (p. 118). That's an argument, with no measurement behind it. It's a different thing from the contract test above. A contract test holds several implementations to one interface, and a learning test pins one dependency to the behaviour you rely on.
+
 ## Property tests: say what's always true
 
 An example test checks the cases you thought of. [Hypothesis](https://hypothesis.readthedocs.io/en/latest/) generates inputs from a description (a *strategy*) and tests a claim that should hold for all of them, 100 inputs by default. It reports a simplified failing case rather than whichever random one it hit first. Here's a chunker with a bug I wrote on purpose, of a kind that's easy to write by accident:
@@ -262,6 +269,8 @@ Good properties to look for in data code: round trips (`parse(render(x)) == x`),
 ## Coverage versus mutation
 
 Coverage tells you what ran, not what was checked. [SWE puts it](https://abseil.io/resources/swe-book/html/ch11.html) in terms of the metric becoming a goal: an 80% bar soon acts as a ceiling rather than a floor. [Fowler](https://martinfowler.com/bliki/TestCoverage.html) expects a thoughtful team to land in the upper 80s or 90s, and finds 100% suspicious as a sign of writing tests for the number. Its best use, he says, is finding code you forgot.
+
+Martin's JUnit case study shows both readings in one place. Before refactoring a string-comparison class he notes that its tests cover it completely, "The code is 100 percent covered", and takes that as a high degree of confidence that it works (*Clean Code*, ch. 15, p. 254; he doesn't name the tool or say whether that's lines or branches). Eight pages on, renaming a variable exposes an `if` in that same code that "was nonfunctional", because its condition could never be true (p. 262). Every line had run and the tests had passed, and one guard had never done anything. He doesn't draw the conclusion himself, but it's the one this section is about.
 
 Mutation testing asks the question coverage can't: if this line were wrong, would any test notice? Here are three suites over the same function, all at 100% branch coverage, and each put through a tiny mutator that swaps one operator at a time:
 
@@ -391,6 +400,8 @@ True
 ```
 
 Exact boundaries are now testable, with no `sleep`. The test needs no tolerance and can't fail because CI was busy.
+
+Martin's F.I.R.S.T. is a checklist for the same properties (*Clean Code*, ch. 9, pp. 132-133): fast, so the tests get run; independent, so they pass in any order; repeatable in any environment, including offline; self-validating, meaning pass or fail with no log to read; and timely, written just before the code, since code written first can turn out hard to test. Independent and repeatable are the two a flaky suite has lost. He gives no thresholds for any of them, and his own example controls time the same way, by mocking the timing functions under a scheduler (p. 122).
 
 ## Testing around a model
 

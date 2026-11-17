@@ -1,4 +1,4 @@
-# Working with data
+# Processing data
 
 Turn a raw export into a table you can trust. Three steps, each with the check that catches its usual mistake: extract the rows you need, clean them until every column is the type it claims to be, and summarise them.
 

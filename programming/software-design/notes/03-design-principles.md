@@ -5,6 +5,7 @@ sources:
   - "John Ousterhout and Robert C. Martin, A Philosophy of Software Design vs Clean Code (2024-25) — https://github.com/johnousterhout/aposd-vs-clean-code"
   - "Robert C. Martin, The Single Responsibility Principle (2014) — https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html"
   - "Robert C. Martin, Solid Relevance (2020) — https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html"
+  - "Robert C. Martin, Clean Code (Prentice Hall, 2008), chapters 6 and 10 to 12 (objects versus data structures and the Law of Demeter; classes: SRP as one reason to change, cohesion, OCP and DIP examples; systems: construction separated from use, deferring decisions; emergence: Beck's four rules in a different order; ch. 10 is with Jeff Langr, ch. 11 is by Kevin Dean Wampler, ch. 12 by Jeff Langr) — chapter PDFs in programming/sources/martin-clean-code/"
   - "Barbara Liskov and Jeannette Wing, A Behavioral Notion of Subtyping, TOPLAS 16(6), 1994 — https://doi.org/10.1145/197320.197383"
   - "Dan North, CUPID: for joyful coding (2022) — https://dannorth.net/blog/cupid-for-joyful-coding/"
   - "Sandi Metz, The Wrong Abstraction (2016) — https://sandimetz.com/blog/2016/1/20/the-wrong-abstraction"
@@ -78,9 +79,13 @@ shipping
 
 Moving from lists to a flat `array` changes three functions in the first version and one class in the second. So ask of any module: what does it know that nothing else does? If the answer is "nothing", it's a step in a flowchart with a `def` around it.
 
+Making the fields private doesn't answer that question. A class whose every field has a getter and a setter still tells its callers how it stores things: "Hiding implementation is about abstractions!" (*Clean Code*, ch. 6, p. 94). Martin's example is a vehicle that reports fuel as a percentage, which hides whether the tank is measured in gallons. The same chapter gives the usual rule for what a method may talk to, the Law of Demeter: its own object, its arguments, objects it creates and its instance variables, or "talk to friends, not to strangers" (p. 98). A chain like `ctxt.getOptions().getScratchDir().getAbsolutePath()` breaks it, and the fix isn't to split the chain into temporaries but to ask the first object for what you wanted, here a scratch file stream (pp. 98-100). He limits the rule to objects. A plain record with public fields has nothing to hide, so reaching through one is fine (p. 98). In Python that's the line between a dataclass you read from and a class with behaviour.
+
 Parnas even marks down his own good design. His circular-shift module promised an order for its output that callers didn't need, which he calls a design error because it ruled out some systems. That lesson is what a Python interface should keep: every promise you make, including accidental ones such as "the result happens to be sorted", is a thing you can't change later. He also notes that this decomposition, implemented naively as subroutine calls, will often be less efficient. Then and now, hiding has a cost.
 
 **Coupling and cohesion** are the words people use for the result. [Martin](https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html) gives a working definition that doesn't depend on OO: raise cohesion between things that change for the same reasons, and lower coupling between things that change for different reasons. A useful test is to look at your commit history. Files that keep changing together are coupled, whatever the import graph says.
+
+*Clean Code* has a second, structural test for cohesion inside one class: how many of its instance variables each method uses. "A class in which each variable is used by each method is maximally cohesive" (ch. 10, p. 140; the chapter is written with Jeff Langr). The authors say that extreme is neither advisable nor possible, and use the measure as a signal. When a few methods share a few variables that the rest ignore, there's a second class inside the first: "When classes lose cohesion, split them!" (p. 141). The two tests can disagree, and the commit history is the one that tells you what a split would save.
 
 ## Deep modules
 
@@ -168,7 +173,9 @@ Who is right? They're not really opposed. Beck's rule is about duplicated *knowl
 
 Fowler also concedes that sometimes YAGNI causes an expensive later change, though he thinks those cases are rare and that availability bias makes them memorable. A pragmatic exception, and this is my view rather than his: decisions with a very high cost of change, such as a public API, a wire format or anything you've persisted, deserve more thought up front, not because you'll need more features but because you can't easily take this one back. Ask whether you can undo it.
 
-Kent Beck's [four rules of simple design](https://martinfowler.com/bliki/BeckDesignRules.html), in Fowler's wording and priority order, are a compact checklist you can apply now: passes the tests, reveals intention, no duplication, fewest elements. The last means anything that doesn't serve the first three should go. Beck told Fowler that when duplication and intention do conflict, usually in tests, "empathy wins over some strictly technical metric."
+*Clean Code* makes the same case at the scale of a system, in a chapter by Kevin Dean Wampler. Big design up front "is even harmful because it inhibits adapting to change" (ch. 11, p. 167): people resist throwing away work they've done, and early architecture shapes how they think about everything after. His alternative is to start with a "naively simple" but well-decoupled architecture and add infrastructure as the system grows (p. 167), and to "postpone decisions until the last possible moment", because "a premature decision is a decision made with suboptimal knowledge" (p. 168). That's advice about timing, and it's argued by analogy with no data. It doesn't cover the decisions you can't take back, which is where the exception above applies: deferring a wire format is fine until the day you ship one.
+
+Kent Beck's [four rules of simple design](https://martinfowler.com/bliki/BeckDesignRules.html), in Fowler's wording and priority order, are a compact checklist you can apply now: passes the tests, reveals intention, no duplication, fewest elements. The last means anything that doesn't serve the first three should go. Beck told Fowler that when duplication and intention do conflict, usually in tests, "empathy wins over some strictly technical metric." *Clean Code* gives the same four rules in a different order, citing Beck's 1999 book: runs all the tests, no duplication, expresses intent, fewest classes and methods, and "the rules are given in order of importance" (ch. 12, p. 172; the chapter is by Jeff Langr). So the two sources disagree about whether duplication outranks intent, which is the question the previous section was about. Langr's chapter is the unqualified side of it, "Duplication is the primary enemy of a well-designed system" (p. 173), and never mentions an abstraction being wrong. It does guard the other flank: "High class and method counts are sometimes the result of pointless dogmatism" (p. 176), with an interface for every class as its example.
 
 ## SOLID and its critics
 
@@ -178,7 +185,11 @@ SOLID is five principles associated with Robert Martin. They're widely taught an
 
 Martin's [own explanation](https://blog.cleancoder.com/uncle-bob/2014/05/08/SingleReponsibilityPrinciple.html) is often misquoted as "a class should do one thing". He means a module should answer to one group of people: "This principle is about people". His example puts pay calculation (the CFO's concern), reporting of hours (the COO's) and persistence (the CTO's) on one class, so a change requested by one breaks something another relies on.
 
+The people framing is his 2014 gloss. The 2008 book states it structurally: a class "should have one, and only one, reason to change" (*Clean Code*, ch. 10, p. 138), and class size is counted in responsibilities, not lines (p. 136). It gives two quick tests. You should be able to describe the class in about 25 words without using "if", "and", "or" or "but", and a name with `Processor`, `Manager` or `Super` in it is a warning (p. 138). Its example class has about 70 public methods, and the cut-down version with five is still too big, because those five serve two reasons to change. Neither test is the misquoted "do one thing".
+
 [Dan North's objection](https://dannorth.net/blog/cupid-for-joyful-coding/) is about where it leads. He says the textbook split of a report's content from its format creates artificial seams, since the most common change, a new field, touches both together. In his view "does one thing well" is an outside-in property of a component's purpose, and SRP is an inside-out statement about how code is organised. Frameworks that take it to mean separate view and controller files can spread one product change across the code base, adding cognitive load.
+
+The book answers that worry in advance, and only by assertion: "a system with many small classes has no more moving parts than a system with a few large classes" (*Clean Code*, ch. 10, p. 139), like a toolbox with labelled drawers. No data backs it, and its own worked example shows the price. Splitting Knuth's prime-printing program into three classes took it from a little over one page to nearly three (p. 146). The authors put that down to longer names and class boilerplate. A reader still has three pages to get through.
 
 ```python
 # Pricing answers to finance and rendering answers to whoever reads the report.
@@ -230,7 +241,9 @@ print(export({"model": "atlas-small", "score": 0.91}, "tsv"))
 atlas-small	0.91
 ```
 
-The cost: you've opened the extension point you predicted, and it will be the wrong one sometimes. Fowler's YAGNI article quotes Jeremy Miller: an extensibility point that's never used isn't just wasted effort, it's likely to get in your way. For code you own and can edit, editing is usually fine. OCP matters most at a boundary where you can't edit the callers or the plugins.
+The cost: you've opened the extension point you predicted, and it will be the wrong one sometimes. Fowler's YAGNI article quotes Jeremy Miller: an extensibility point that's never used isn't just wasted effort, it's likely to get in your way. For code you own and can edit, editing is usually fine. OCP matters most at a boundary where you can't edit the callers or the plugins. The book's own example concedes as much. A `Sql` class that must be opened every time a statement type is added becomes a base class with one subclass per statement, so that adding `UpdateSql` changes no existing class (*Clean Code*, ch. 10, pp. 147-149). But the same passage says that if no update support is foreseeable the class should be left alone, and that the spur for acting should be the system changing, not a rule (p. 147).
+
+Chapter 6 states the trade-off that OCP by subclassing hides. Functions over plain data make "it easy to add new functions without changing the existing data structures", and polymorphic classes make it easy to add new types without changing existing functions; each makes the other change hard, since a new function on a class hierarchy means "all the classes must change" (*Clean Code*, ch. 6, p. 97). So a subclass per case is closed only against new cases. If what you expect to add is operations, the `match` or the table is the design that stays closed. Martin's own summary is blunter than his reputation: "Mature programmers know that the idea that everything is an object is a myth" (p. 97). A class that is half of each, with public fields and real behaviour, he calls "the worst of both worlds" (p. 99).
 
 ### L: Liskov substitution
 
@@ -306,7 +319,7 @@ print(to_context_line(Stub()))     # no delete, owner or acl needed
 
 ### D: dependency inversion
 
-Martin: "Depend in the direction of abstraction. High level modules should not depend upon low level details." The motive is sound: your evaluation logic shouldn't import a vendor SDK. In Python you rarely need a container or a framework for it. Pass the thing in:
+Martin: "Depend in the direction of abstraction. High level modules should not depend upon low level details." The motive is sound: your evaluation logic shouldn't import a vendor SDK. In Python you rarely need a container or a framework for it. The book's example gives the testing motive directly: a `Portfolio` that takes a `StockExchange` interface in its constructor can be tested with a stub that fixes one share price at 100, so five shares must be worth 500, where the live exchange would give a different answer every five minutes (*Clean Code*, ch. 10, pp. 149-150). Pass the thing in:
 
 ```python
 from typing import Callable
@@ -328,6 +341,8 @@ False
 ```
 
 The cost is one more thing to read when you try to follow what actually runs, plus a wiring place. A single-implementation interface added for its own sake is the shallow case Ousterhout warns about. A function parameter has almost no such cost, which is why it's the default here.
+
+The wiring place has a name in *Clean Code*: separate the startup process, where objects are built and wired together, from the runtime logic that uses them (ch. 11, p. 154; the chapter is by Kevin Dean Wampler). `main` builds everything and hands it over, so the dependency arrows "all go one direction, pointing away from main" (p. 155), and a class that receives its collaborators "takes no direct steps to resolve its dependencies; it is completely passive" (p. 157). The thing he's arguing against is a method that builds its own default collaborator on first use. That hard-codes the dependency and makes the test replace it before anything runs (pp. 154-155). For Java in 2008 the chapter goes on to recommend a container such as Spring. Nothing in it changes the Python advice: one function at the edge that constructs and passes is the same separation.
 
 ### The arguments, side by side
 

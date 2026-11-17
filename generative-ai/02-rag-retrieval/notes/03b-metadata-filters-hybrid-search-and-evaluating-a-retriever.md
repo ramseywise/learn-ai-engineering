@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # split from 03-keyword-semantic-and-hybrid-search.md (2026-11-08) so each part stays under the chapter length cap
 sources:
+  - Manning, Raghavan and Schütze, *Introduction to Information Retrieval* (Cambridge University Press, 2008; online edition), ch. 8
   - https://arxiv.org/abs/2402.03216
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
@@ -120,6 +121,8 @@ M3-Embedding puts the three scorers in one model. An XLM-RoBERTa-large extended 
 ## Evaluating a retriever
 
 You need a labelled set: for each query, which documents are relevant. The metric definitions and a framework comparison live in [GA 08 note 7](../../08-eval/notes/07-evaluating-rag-and-grounding.md#retrieval-metrics); this section keeps the worked numbers and code.
+
+Four rules of thumb from the classical evaluation literature bound how far to trust a retriever benchmark (*IIR*, ch. 8). Size: "As a rule of thumb, 50 information needs has usually been found to be a sufficient minimum." (p. 152). Variance: MAP for one system varies widely across queries, "for instance, between 0.1 and 0.7", and varies more across queries than across systems on one query, so the test set must be large and diverse enough to be representative (p. 161). Labels: for agreement between judges, "a kappa value above 0.8 is taken as good agreement, a kappa value between 0.67 and 0.8 is taken as fair agreement" (p. 166). And disagreement moves absolute scores more than rankings: on TREC ad hoc data Voorhees found that "although the numbers change, the rankings are quite stable" (p. 174). Accuracy is not on the list, because "normally over 99.9% of the documents are in the nonrelevant category" (p. 155).
 
 | Metric | Formula | Question it answers |
 |---|---|---|

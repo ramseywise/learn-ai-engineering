@@ -1,6 +1,6 @@
 # Practice: Python for data analysis
 
-The labs for [working with data](../README.md). Its syllabus says which notebook goes with which step.
+The labs for [processing data](../README.md). Its syllabus says which notebook goes with which step.
 
 ## Setup
 

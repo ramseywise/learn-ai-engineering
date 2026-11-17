@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: Deeplearning.ai-RAG-main
 sources:
+  - Manning, Raghavan and Schütze, *Introduction to Information Retrieval* (Cambridge University Press, 2008; online edition), ch. 1, 2, 6, 7, 11, 12, 18
   - https://arxiv.org/abs/2104.08821
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 5"
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
@@ -49,6 +50,8 @@ Production retrievers run all three. Note [01 § hybrid retrieval](01-rag-pipeli
 
 Each document becomes a **sparse vector**: one slot per vocabulary word, mostly zeros. The prompt becomes one too, and documents are scored by overlap. [Text representation](../../../data-science/03-nlp/notes/01-text-representation.md#tf-idf) in data science derives TF-IDF from scratch, and [text classification](../../../data-science/03-nlp/notes/02-text-classification.md#the-baseline-tf-idf-and-a-linear-model) uses it as the baseline to beat.
 
+IIR's Reuters example shows the scale of idf. In 806,791 documents, with base-10 logarithms, *car* (in 18,165 documents) gets 1.65, *auto* (6,723) gets 2.08, *insurance* (19,241) gets 1.62 and *best* (25,235) gets 1.5 (*IIR*, ch. 6, Fig. 6.8). And whatever the weighting, a bag-of-words vector is "fundamentally lossy: the relative order of terms in a document is lost" (*IIR*, ch. 7, p. 149).
+
 | Score | Formula | Fixes |
 |---|---|---|
 | Term frequency (TF) | count of word in doc | — |
@@ -87,6 +90,10 @@ BM25 is TF-IDF with two tunable fixes, and it is still the default keyword score
 | **b** length normalisation | 0–1 (0.75 common) | How much to penalise long docs. b = 0 ignores length |
 
 Raieli and Iuculano give the same defaults (*Building AI Agents*, ch. 5). The ranges come from experiment, not theory. BM25's authors say the model "provides no guidance" on k1 and b, and that 0.5 < b < 0.8 and 1.2 < k1 < 2 "are reasonably good in many circumstances", though the best values depend on the documents and queries. Both knobs have a model behind them. k1 shapes a curve, tf/(k1 + tf), fitted to the saturating weight that Harter's 2-Poisson model of "elite" terms predicts. b blends two views of a long document: it is verbose (normalise fully, b = 1), or it covers more topics (don't normalise, b = 0) ([Robertson & Zaragoza, *Foundations and Trends in IR* 2009](https://doi.org/10.1561/1500000019)). An edge case makes saturation clear: push k to 0 and the term-frequency factor collapses to 1, so BM25 scores only whether each query term is present.
+
+IIR gives the defaults their provenance: absent tuning on a test collection, "experiments have shown reasonable values are to set k1 and k3 to a value between 1.2 and 2 and b = 0.75" (*IIR*, ch. 11, p. 233). It also flags a flaw in the simplest idf variant: a term in over half the documents gets "a negative term weight", normally hidden by a stop list or a floor of 0. Its verdict on the family before BM25 is dry: "Traditionally, probabilistic IR has had neat ideas but the methods have never won on performance." (ch. 11, p. 230). The other classical scorer, the query-likelihood language model, ranks a document by the probability that its smoothed word distribution generates the query. In Ponte and Croft's comparison it raised 11-point average precision over tf-idf from 0.1868 to 0.2233 (+19.55%) on TREC topics 202–250 (*IIR*, ch. 12, Fig. 12.4).
+
+**What the classical index already knew.** Four older results still set expectations. Sparsity is the whole design: 1M documents by 500K terms is half a trillion cells, of which at least 99.8% are zero at 1,000 words per document, so the index stores only postings, and intersecting two lists of lengths x and y costs O(x + y) (*IIR*, ch. 1, pp. 6, 11). Normalisation trades precision for recall: "Stemming increases recall while harming precision." In Hollink et al.'s 2004 study stemming improved mean average precision by 30% for Finnish and 10% for Spanish but by 0–5% for most languages, English included, and stop lists shrank over time from 200–300 terms to 7–12 to none (*IIR*, ch. 2, pp. 27, 34, 46). A positional index, which phrase queries need, is "2 to 4 times as large as a non-positional index" (ch. 2, p. 43). Cluster pruning is IVF from before vectors were dense: pick $\sqrt{N}$ documents at random as leaders, attach every other document to its nearest leader, and at query time score only the closest leader and its followers (*IIR*, ch. 7, p. 141; the link to IVF in [note 04](04-vector-databases-and-ann.md) is this note's). And latent semantic indexing, the first dense representation, used a truncated SVD in which "k is generally chosen to be in the low hundreds". In the early 1990s it took "approximately a day on one machine" for tens of thousands of documents, and the book's verdict is that it "has not been established as a significant force in scoring and ranking" (*IIR*, ch. 18, pp. 403, 413, 416).
 
 Why keyword search survives: it is cheap, interpretable, needs no model, and nails exact matches that embeddings blur. Huyen's example is an error code. A user searching for `EADDRNOTAVAIL (99)` wants documents containing exactly that string, and an embedding retriever may return generic networking pages instead. She also quotes Perplexity's CEO saying BM25 remains a hard baseline to beat (*AI Engineering*, ch. 6).
 

@@ -39,23 +39,23 @@ By the end of the course, you can:
 
 ## Core modules
 
-The three every analyst needs, in this order: get the data into a table, reason about it with statistics, and show the result.
+The three every analyst needs, in this order: get the data into a table, reason about it with statistics, and show the result. Each row is one module: open it to study, **Lecture** is its deck, **Labs** is its practice, and **Sources** names what to read beside it. Every book, paper and course, with links: [references.md](references.md).
 
-| Module | The analyst's job | What you learn | Portfolio evidence |
-|---|---|---|---|
-| [Working with data](01-python-for-data-analysis/README.md) | get data into a table you can trust | Extract the rows you need, clean every column to the type it claims, and summarise by group, in pandas and assuming no earlier pandas. | Cleaned dataset and validated analysis |
-| [Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test and fit regressions, then say what a model claims. | Statistical analysis memo |
-| [Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | Decision-ready visual narrative or dashboard |
+| Module | The analyst's job | Lecture | Labs | Sources |
+|---|---|---|---|---|
+| [Processing data](01-python-for-data-analysis/README.md) | get data into a table you can trust | [deck](01-python-for-data-analysis/slides/python-for-data-analysis.pptx) | [notebooks and book code](01-python-for-data-analysis/practice/README.md) | McKinney, [*Python for Data Analysis*](https://wesmckinney.com/book/) · VanderPlas, [*Python Data Science Handbook*](https://jakevdp.github.io/PythonDataScienceHandbook/) · Wickham, [*Tidy Data*](https://doi.org/10.18637/jss.v059.i10) |
+| [Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) | [practice](02-probability-and-statistics/README.md#deck-and-practice) | Bruce & Bruce, *Practical Statistics for Data Scientists* · Downey, [*Think Stats*](https://allendowney.github.io/ThinkStats/) · James et al., [*An Introduction to Statistical Learning*](https://www.statlearning.com/) |
+| [Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) | [practice](05-visualisation-and-storytelling/README.md#deck-and-practice) | Knaflic, [*Storytelling with Data*](https://www.storytellingwithdata.com/books) · Wilke, [*Fundamentals of Data Visualization*](https://clauswilke.com/dataviz/) · Munzner, [*Visualization Analysis and Design*](https://www.cs.ubc.ca/~tmm/vadbook/) |
 
 ## Advanced topics
 
 Take these after the core, in this order. Experimentation comes first, because both of the others lean on it. Applied analyses puts the core and experimentation to work on business questions. Bayesian analysis comes last: it revisits inference and the same A/B test as a decision problem. The folder numbers are older than this order, so follow the table.
 
-| Module | The analyst's job | What you learn | Portfolio evidence |
-|---|---|---|---|
-| [Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading, including by matching and weighting. | Experiment brief or causal-design critique |
-| [Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation, SQL, survival, journeys, marketing measurement, operations, metric trees and surveys. | End-to-end analysis portfolio |
-| [Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests, loss functions and multilevel models. | Diagnosed PyMC decision analysis |
+| Module | The analyst's job | Lecture | Labs | Sources |
+|---|---|---|---|---|
+| [Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | [deck](03-experimentation-and-causality/slides/experimentation-and-causality.pptx) | [practice](03-experimentation-and-causality/README.md#deck-and-practice) | Kohavi, Tang & Xu, [*Trustworthy Online Controlled Experiments*](https://experimentguide.com/) · Dmitriev et al., [*A Dirty Dozen*](https://doi.org/10.1145/3097983.3098024) · Cunningham, [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) |
+| [Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | [deck](06-applied-analyses/slides/applied-analyses.pptx) | [worked analyses](06-applied-analyses/practice/README.md) | Hyndman & Athanasopoulos, [*Forecasting: Principles and Practice*](https://otexts.com/fpp3/) · Fader & Hardie, [*How to Project Customer Retention*](https://doi.org/10.1002/dir.20074) · [Mode SQL tutorial](https://mode.com/sql-tutorial/) |
+| [Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | [deck](04-bayesian-analysis/slides/bayesian-analysis.pptx) | [practice](04-bayesian-analysis/README.md#deck-and-practice) | Davidson-Pilon, [*Bayesian Methods for Hackers*](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers) · Gelman et al., [*Bayesian Data Analysis*](https://sites.stat.columbia.edu/gelman/book/) · [PyMC examples](https://www.pymc.io/projects/examples/en/latest/gallery.html) |
 
 ## Two ways to answer the same question
 
@@ -72,7 +72,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 
 ## Units
 
-### [Working with data](01-python-for-data-analysis/README.md)
+### [Processing data](01-python-for-data-analysis/README.md)
 
 **Purpose:** Turn a raw export into a table you can safely analyse. Cleaning, joins, aggregation, time, and charts are correctness problems, not merely API calls ([McKinney](https://wesmckinney.com/book/); [Wickham](https://doi.org/10.18637/jss.v059.i10) on tidy shape).
 

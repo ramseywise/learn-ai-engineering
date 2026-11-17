@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python (kept as practice)
 sources:
+  - Manning, Raghavan and Schütze, *Introduction to Information Retrieval* (Cambridge University Press, 2008; online edition), ch. 13
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/04-representing-data-feature-engineering.ipynb
   - ../practice/intro-to-ml-in-python/06-algorithm-chains-and-pipelines.ipynb
@@ -260,6 +261,8 @@ RFE to 40        0.986 real features kept: 29
 ```
 
 Every selector beats keeping the noise, and each kept most of the 30 real features. The book's split (breast cancer plus 50 noise columns, 80 features, 284 training rows, `test_size=.5`, logistic regression) gives 0.930 with everything, 0.940 univariate (50% of features kept) and 0.951 for model-based and RFE (forest of 100 trees, 40 features kept; *Introduction to ML with Python*, ch. 4, "Automatic feature selection"), so the order among selectors moves with the split and only the gain over no selection is stable. Selection only pays off when you suspect many features are noise; with a regularised model on clean data it rarely helps.
+
+Text is a case where it does help. On Reuters-RCV1 (trained on the first 100,000 documents, F1 on the next 100,000, averaged over five classes), keeping 10 to 100 terms chosen by mutual information instead of all 132,776 "increases F1 by about 0.1 for the multinomial model and by more than 0.2 for the Bernoulli model" of Naive Bayes. Keeping the most frequent terms is the cheap alternative, and here it "performs a lot worse than MI and χ2 and should not be used" (*IIR*, ch. 13, Fig. 13.8, pp. 274–278). The result is for Naive Bayes; the figure does not test a regularised linear model.
 
 The classical, model-aware version of the same idea is subset selection for linear models. Searching every subset costs $2^p$ fits (1,048,576 at $p=20$), forward stepwise costs $1 + p(p+1)/2$ (211 at $p=20$), and exhaustive search is infeasible beyond roughly $p=40$. Forward and best-subset choices can differ even at small size: on ISLP's Credit data they agree up to three predictors and diverge at four. The training error always falls as variables are added, so the size is chosen by an estimate of test error, and the criteria disagree: on Credit, $C_p$ picks six variables, adjusted $R^2$ seven and BIC four, because BIC's penalty $\log(n)\,d\,\hat\sigma^2$ exceeds $C_p$'s $2d\hat\sigma^2$ once $n>7$. Validation and 10-fold CV both pick six there, and the one-standard-error rule (the smallest model within one standard error of the best) picks three (*ISLP*, ch. 6, Credit data, 10 predictors). The criteria need an estimate of the noise variance, so they are not usable when $p \ge n$; there only a held-out or cross-validated error is honest (*ISLP*, ch. 6).
 

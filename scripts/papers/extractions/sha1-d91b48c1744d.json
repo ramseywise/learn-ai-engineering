@@ -1,0 +1,66 @@
+{
+ "schema": 1,
+ "key": "sha1:d91b48c1744d",
+ "pdf": "programming/sources/martin-clean-code/ch16-refactoring-serialdate.pdf",
+ "bib": {"title": "Clean Code, ch. 16: Refactoring SerialDate", "authors": ["Robert C. Martin"], "first_author": "Martin", "year": 2008, "venue": "Prentice Hall (book chapter, printed pp. 267-284)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-17", "chars_read": 41268, "chars_total": 41268, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "What does a professional review and refactoring of a real, well-regarded open-source class (JCommon's SerialDate) look like, step by step?",
+ "hypothesis": null,
+ "contributions": ["A worked refactoring of SerialDate into DayDate: first make it work (tests), then make it right, annotated with smell/heuristic codes [C1], [G5], [N1] etc. that point to the book's ch. 17 catalogue"],
+ "method": null,
+ "results": [
+  {"claim": "The original unit tests covered only about half of SerialDate's executable statements (Clover).", "kind": "measured", "source": null, "metric": "statement coverage", "value": "91 of 185", "unit": "statements", "baseline_value": null, "n": 185, "setup": "SerialDate in JCommon, original SerialDateTests, measured with Clover", "quote": "reported that the unit tests executed only 91 of the 185 executable statements in SerialDate", "table": null, "note": "printed as ~50 percent", "where": "p. 268"},
+  {"claim": "Martin's own independent test suite raised coverage to 92 percent, even with failing tests commented out.", "kind": "measured", "source": null, "metric": "statement coverage", "value": "170 of 185", "unit": "statements", "baseline_value": "91 of 185", "n": 185, "setup": "SerialDate, Martin's suite (Listing B-4), Clover", "quote": "executing 170 (92 percent) out of the 185 executable statements.", "table": null, "note": null, "where": "p. 268"},
+  {"claim": "After refactoring, DayDate's coverage percentage fell to 84.9 percent because the class shrank, not because less was tested; 45 of 53 statements covered, the uncovered ones judged too trivial to test.", "kind": "measured", "source": null, "metric": "statement coverage", "value": "84.9", "unit": "percent", "baseline_value": "92", "n": 53, "setup": "DayDate after refactoring, Clover", "quote": "Interestingly the code coverage in DayDate has decreased to 84.9 percent!", "table": null, "note": "the 45 of 53 figure is split across a hyphenated line break in the text", "where": "p. 284"},
+  {"claim": "Writing tests for behaviour the code should have exposed a boundary-condition bug in getFollowingDayOfWeek (Dec 25 2004, a Saturday, returned itself as the following Saturday); fix was changing the comparison at line 685.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "SerialDate.getFollowingDayOfWeek, Martin's added test", "quote": "It is a typical boundary condition error [T5].", "table": null, "note": null, "where": "p. 269"},
+  {"claim": "Coverage showed one branch in getNearestDayOfWeek never ran, proving the algorithm wrong; the pattern of failing tests showed it failed when the nearest day was in the future.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "SerialDate.getNearestDayOfWeek, lines 718-719", "quote": "Line 719\nnever gets executed!", "table": null, "note": null, "where": "p. 269"},
+  {"claim": "Replacing int month constants with a Month enum took about an hour and removed isValidMonthCode and the month error checking.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "SerialDate to DayDate, Month enum, one author's estimate", "quote": "It took me an hour to make all the changes.", "table": null, "note": null, "where": "p. 272"},
+  {"claim": "After a chain of IDE-driven refactorings, Martin found the only callers of weekInMonthToString and relativeToString were tests, and deleted both functions and their tests.", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "WeekInMonth enum, relativeToString", "quote": "Fool me once, shame on you. Fool me twice, shame on me!", "table": null, "note": null, "where": "p. 281"}
+ ],
+ "limits": [
+  "One class, one author's judgement; no measurement of whether the result is easier to maintain.",
+  "Martin concedes reviewers disagreed on deleting serialVersionUID (fn. 2) and admits naming choices may not suit the reader (p. 276).",
+  "Java 2008 idioms (enums, final, Javadoc, Clover); the listings use the old SerialDate names throughout.",
+  "Only a few refactored snippets are printed; full listings are in Appendix B, not in this PDF."
+ ],
+ "practices": [
+  "Make it work before making it right: get tests passing and coverage high first (pp. 268-270).",
+  "Check coverage with a tool and write tests for behaviour the class should have, leaving failing ones commented until fixed (p. 268).",
+  "Run all tests after every change (p. 270).",
+  "Treat a professional code review as normal and welcome (p. 268).",
+  "Delete change-history comments, redundant comments and unused code; source control does that job (pp. 270, 272, 275).",
+  "Name at the right level of abstraction: do not let a name imply an implementation (SerialDate to DayDate) (p. 271).",
+  "Replace int constants with enums, so they are easy to rename and need no validation (pp. 271, 275-276).",
+  "Do not inherit from a constants class (p. 271).",
+  "Base classes should not know their derivatives; use Abstract Factory (p. 273).",
+  "Move members to where they are used, push down or pull up by real dependency, and watch for logical dependencies (pp. 272-275, 282).",
+  "Avoid flag arguments that select output format (p. 278).",
+  "Fix feature envy by moving methods to the class whose data they use (p. 278).",
+  "Make methods that use instance data instance methods, and rename to show immutability (addDays to plusDays) (pp. 279-280).",
+  "Use explaining temporary variables to clarify algorithms (pp. 279-281).",
+  "Remove duplication by extracting a method (correctLastDayOfMonth) (p. 283).",
+  "Delete final keywords on arguments and variables as clutter (p. 276).",
+  "Delete tests whose only subject is code you have just deleted (p. 281).",
+  "Leave the code cleaner than you found it: the Boy Scout Rule (p. 284)."
+ ],
+ "terms": [
+  {"term": "Boy Scout Rule", "definition": "We've checked the code in a bit cleaner than when we checked it out.", "where": "p. 284"},
+  {"term": "Explaining temporary variables", "definition": "named locals that make a complicated algorithm more transparent (citing Beck97)", "where": "p. 279"},
+  {"term": "Feature envy", "definition": "a method that uses another class's data more than its own, so it belongs there (citing Fowler)", "where": "p. 278"},
+  {"term": "Abstract Factory", "definition": "pattern used to create DayDate instances and answer implementation questions without the base class knowing its derivatives (citing GOF)", "where": "p. 273"}
+ ],
+ "lineage": [
+  {"work": "Design Patterns (Gamma et al.)", "year": 1996, "arxiv": null, "relation": "uses-method", "note": "Abstract Factory, Singleton, Decorator", "quote": null},
+  {"work": "Hardcore Java (Simmons)", "year": 2004, "arxiv": null, "relation": "contradicts", "note": "Martin rejects its advice to use final everywhere", "quote": "Clearly I disagree."},
+  {"work": "Refactoring (Fowler et al.)", "year": 1999, "arxiv": null, "relation": "uses-method", "note": "Feature Envy smell", "quote": null},
+  {"work": "Smalltalk Best Practice Patterns (Beck)", "year": 1997, "arxiv": null, "relation": "uses-method", "note": "Explaining Temporary Variables", "quote": null},
+  {"work": "SerialDate / JCommon (David Gilbert)", "year": null, "arxiv": null, "relation": "evaluates", "note": "the code under review", "quote": null}
+ ],
+ "figures": [],
+ "code": [
+  {"where": "p. 280", "snippet": "public DayDate getPreviousDayOfWeek(Day targetDayOfWeek) {\n    int offsetToTarget = targetDayOfWeek.index - getDayOfWeek().index;\n    if (offsetToTarget >= 0)\n      offsetToTarget -= 7;\n    return plusDays(offsetToTarget);\n  }", "verbatim": true},
+  {"where": "p. 283", "snippet": "public boolean isInRange(DayDate d1, DayDate d2, DateInterval interval) {\n int left = Math.min(d1.getOrdinalDay(), d2.getOrdinalDay());\nint right = Math.max(d1.getOrdinalDay(), d2.getOrdinalDay());\n    return interval.isIn(getOrdinalDay(), left, right);\n  }", "verbatim": true}
+ ],
+ "problems": ["No embedded instructions found. Printed page footer 'www.it-ebooks.info' on every page. Some diffs are shown only as fragments (code between listings missing, e.g. the stringToMonthCode fix)."]
+}

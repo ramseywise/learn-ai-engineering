@@ -2,6 +2,7 @@
 origin: curated  # was: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval.md (pipeline material moved here) - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
 confidence: medium
 sources:
+  - Manning, Raghavan and Schütze, *Introduction to Information Retrieval* (Cambridge University Press, 2008; online edition), ch. 19
   - https://arxiv.org/abs/2009.02252
   - https://arxiv.org/abs/1803.05355
   - https://arxiv.org/abs/2404.19543
@@ -270,6 +271,8 @@ chunks left: 0
 ```
 
 Two changes that sync can't absorb chunk by chunk. **An embedding-model change forces a full reindex**, because vectors from different model versions are not comparable; Lakshmanan and Hapke advise open-weights embedders partly so a vendor deprecation can't force one on you. And for content that has gone stale they give three remedies with different costs: filter at query time on metadata, prune the store (smaller index, faster retrieval, but the history is gone), or demote old chunks at rerank (*Generative AI Design Patterns*, ch. 3, Pattern 8). The chapter's example is a ChromaDB `where` prefilter on `created_at` dropping a 2024 duplicate; it measures none of the three.
+
+**Near-duplicates inflate an index before retrieval starts.** Mirrors, boilerplate and re-posted pages put the same passage in the index several times, and top-k then returns one fact k times. The classical fix is shingling: represent each document by its set of word k-grams ("k = 4 is a typical value"), measure the overlap of two sets with the Jaccard coefficient, and drop one document when the overlap passes a threshold "(say, 0.9)". Comparing every pair is too slow, so each set is reduced to a sketch of 200 values, its minimum hash under each of 200 random permutations, and only documents whose sketches largely agree are compared (*IIR*, ch. 19, pp. 437–441). The book repeats an estimate that "as many as 40% of the pages on the Web are duplicates of other pages" without naming a source or a date, and the text is from 2009, so read it as motivation and not as a measurement. Shingles catch copies and light edits. A paraphrase shares few 4-grams, and this chapter does not discuss it; that case needs embedding similarity.
 
 Scheduling, change detection, LangChain's indexing API and asynchronous deletes are in [07 § keeping a live index in sync](07b-security-changing-text-multimodal-and-live-indexes.md#keeping-a-live-index-in-sync).
 

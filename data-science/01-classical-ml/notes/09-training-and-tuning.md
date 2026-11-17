@@ -772,6 +772,7 @@ Nested CV gives 0.9274, close to the hold-out test score of 0.9272, at a cost of
 | What is nested CV for? | An honest score for a whole tuning procedure, mainly on small data |
 | Why is the search winner's score optimistic? | It was chosen partly for luck on those rows. Measured: 0.0085 at 100 rows, 0.0013 at 1,000 |
 | How much does tuning help? | Usually less than choosing the right family. Here 0.0009 on test against 0.025 from logistic to boosting |
+| Which tuning strategies are there? | Grid search tries every combination. Random search draws every knob from a range. Bayesian search uses earlier trials to choose the next. |
 
 ---
 

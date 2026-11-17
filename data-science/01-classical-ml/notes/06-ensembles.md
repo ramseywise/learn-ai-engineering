@@ -174,7 +174,7 @@ lr 0.01                   train 0.988  test 0.958
 
 **How weak the weak learner can be.** ESL's opening example is the cleanest demonstration. On ten Gaussian features with the class set by whether the squared radius exceeds its median (2,000 training cases, 10,000 test, no label noise), a single stump has 45.8% test error, barely better than a coin. AdaBoost on stumps reaches 5.8% after 400 rounds, against 24.7% for a single 244-node tree. Training error hits zero at around 250 rounds and the test error keeps falling, because the exponential loss being minimised is still decreasing after the misclassification count has nothing left to give (*ESL*, ch. 10, Figs. 10.2 and 10.3, one simulated dataset). The price of that loss is robustness: ESL concedes that AdaBoost degrades with overlapping classes and mislabelled training data, which is the case for the deviance loss that gradient boosting uses for classification.
 
-The exponential loss has a cost too. It grows exponentially with the size of a negative margin where cross-entropy grows linearly, so AdaBoost is "much less robust to outliers or misclassified data points" (*PRML*, ch. 14, p. 662).
+The exponential loss has a cost too. It grows exponentially with the size of a negative margin where cross-entropy grows linearly, and Bishop calls the exponential error "much less robust to outliers or misclassified data points" than cross-entropy (*PRML*, ch. 14, p. 662).
 
 Because `n_estimators` and `learning_rate` trade against each other, a grid over both is wasteful; early stopping picks `n_estimators` for you. [Note 09](09-training-and-tuning.md#early-stopping-is-regularisation-too) explains why stopping acts as regularisation.
 
