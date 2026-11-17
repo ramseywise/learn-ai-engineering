@@ -66,6 +66,32 @@ GROUP BY facid;
 
 Postgres and DuckDB also support `count(*) FILTER (WHERE …)`, which reads more cleanly. DuckDB has a `PIVOT` statement as well.
 
+## A rate per group per month
+
+A rate is two aggregates over the same rows, so compute both in one `GROUP BY`. The average of a 0/1 flag is the rate:
+
+```sql
+-- Share of each facility's bookings made by guests (memid 0), by month
+SELECT facid, strftime('%Y-%m', starttime) AS month,
+       count(*) AS bookings,
+       round(avg(CASE WHEN memid = 0 THEN 1.0 ELSE 0 END), 3) AS guest_share
+FROM bookings
+WHERE facid IN (0, 4)
+GROUP BY facid, month
+ORDER BY facid, month;
+```
+
+```text
+0|2012-07|88|0.261
+0|2012-08|146|0.24
+0|2012-09|174|0.241
+4|2012-07|123|0.374
+4|2012-08|224|0.317
+4|2012-09|282|0.323
+```
+
+Write `1.0` and not `1`: dividing two integers truncates in SQLite and Postgres. When the numerator and denominator live in different tables, as clicks and impressions do for a click-through rate, aggregate each to one row per group and month first and join after. Joining the raw rows multiplies them and inflates both counts ([note 04](04-joins.md)).
+
 ## Rollups
 
 ```sql
@@ -75,6 +101,13 @@ FROM bookings GROUP BY ROLLUP (facid, month) ORDER BY facid, month;
 ```
 
 SQLite has no `ROLLUP`. Emulate it with `UNION ALL` of the detailed query and a query grouped at the coarser level.
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| `WHERE` or `HAVING`? | `WHERE` filters rows before grouping and cannot see aggregates. `HAVING` filters groups after it. |
+| How do you compute a rate per group per month? | Group by the group and the month, and take `avg` of a 0/1 `CASE` flag. Write 1.0 to avoid integer division, and aggregate before joining tables. |
 
 ---
 

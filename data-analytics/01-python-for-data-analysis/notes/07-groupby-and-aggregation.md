@@ -9,7 +9,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
 ---
-# 5 — Groupby and Aggregation
+# 7 — Groupby and Aggregation
 
 Ask a shop owner what they want to know and almost every answer has the word "per" in it: revenue per region, orders per customer, average basket per month. Those are all one operation. You cut the table into groups, compute something on each, and glue the answers back together. It is the single pattern you will use most as an analyst, the heart of a SQL `GROUP BY` and of a spreadsheet pivot table alike, and pandas expresses it in one method. The method is deceptively simple. It can also return a number per group, a value per original row, or a smaller table per group, and which one you need depends on the question. This chapter works through each kind, shows how to get the totals right when ratios are involved, and ends with the pivot tables that a reader actually wants to look at.
 
@@ -270,7 +270,7 @@ print(orders[["order_id", "product", "qty", "qty_vs_product"]].sort_values("qty_
 
 The group-wise z-score shows why `transform` beats `apply` when the function is built from group statistics. `(df["value"] - g.transform("mean")) / g.transform("std")` gives the same numbers as `g.apply(normalize)` (first value -1.161895 in McKinney's output), but uses the string aliases' fast path instead of calling Python once per group (*Python for Data Analysis*, ch. 12; no timing given). The same holds for a share within group: `df.total / df.groupby("tz").total.transform("sum")` replaces an `apply` that normalises each group (ch. 14, the 1.USA.gov time-zone counts). A transform function must return a scalar or a same-shape object, and must not mutate its input. For a time-binned group per key, combine keys and a time grouper, `df.groupby(["key", pd.Grouper(freq="5min")]).sum()`; the book writes `pd.TimeGrouper`, which was removed.
 
-A group-wise fill is the same move. Filling a missing rating with the mean of its own region beats the global mean when regions differ, though as chapter 2 said, you should first ask why it is missing at all.
+A group-wise fill is the same move. Filling a missing rating with the mean of its own region beats the global mean when regions differ, though as chapter 5 said, you should first ask why it is missing at all.
 
 ```python
 g["rating_filled"] = g["rating"].fillna(g.groupby("region")["rating"].transform("mean"))
@@ -354,7 +354,7 @@ To decide among these four methods, ask what shape comes back.
 
 ## Groups from buckets
 
-McKinney's decile example shows the difference: on 1,000 random rows `qcut` gives 100 rows per bucket, while equal-width `cut` gave uneven counts of 95, 598, 297 and 10 in his four-bucket case (*Python for Data Analysis*, ch. 10; unseeded data, so not reproducible). Chapter 2's `cut` and `qcut` produce keys ready for a groupby, which is how you get a table of behaviour by size band. Grouping by a categorical key raises a question of what to do with empty categories. Since pandas 3.0, the `observed` option defaults to `True`, so only categories present in the data appear, while `observed=False` lists all of them and is what you want for a report with a fixed row list.
+McKinney's decile example shows the difference: on 1,000 random rows `qcut` gives 100 rows per bucket, while equal-width `cut` gave uneven counts of 95, 598, 297 and 10 in his four-bucket case (*Python for Data Analysis*, ch. 10; unseeded data, so not reproducible). Chapter 5's `cut` and `qcut` produce keys ready for a groupby, which is how you get a table of behaviour by size band. Grouping by a categorical key raises a question of what to do with empty categories. Since pandas 3.0, the `observed` option defaults to `True`, so only categories present in the data appear, while `observed=False` lists all of them and is what you want for a report with a fixed row list.
 
 ```python
 band = pd.cut(orders["revenue"], bins=[0, 20, 50, 100, 200], labels=["<=20", "20-50", "50-100", "100+"])
@@ -535,4 +535,4 @@ The two agree here, to three places, because all orders of one product share one
 
 ## Next
 
-Every group so far has been a label. The most common grouping of all is by time, and time has its own rules: months have different lengths, a label can sit at either end of a period, and the order of rows carries meaning. Next: [Time series](06-time-series.md).
+Every group so far has been a label. The most common grouping of all is by time, and time has its own rules: months have different lengths, a label can sit at either end of a period, and the order of rows carries meaning. Next: [Time series](08-time-series.md).

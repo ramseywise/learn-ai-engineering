@@ -92,6 +92,14 @@ SELECT name FROM facilities;
 
 `INTERSECT` and `EXCEPT` work the same way. Both sides must have the same number of columns with compatible types.
 
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What are the join types, and how do they differ? | Inner keeps matched pairs only. Left keeps every left row, with `NULL` where nothing matches, and right is its mirror. Full outer keeps unmatched rows from both sides. |
+| Why did a `LEFT JOIN` lose rows? | A `WHERE` filter on the right-hand table threw away the `NULL` rows the join kept. Put that condition in the `ON` clause. |
+| Why did a join return more rows than the table has? | The join key is not unique on the other side, so rows multiply. Check the key you assumed. |
+
 ---
 
 ## Exercises

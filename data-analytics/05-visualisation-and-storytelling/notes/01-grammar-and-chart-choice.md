@@ -392,4 +392,4 @@ Colour is near the bottom of the accuracy list, so spend it on identity, not qua
 
 ## Next
 
-The grammar tells you what to draw. Next we do it by hand in Python, where you control every pixel: [Matplotlib and seaborn](02-matplotlib-and-seaborn.md).
+The grammar tells you what to draw. Next we draw it quickly, for our own eyes, on a table we already have: [Plotting your own data](01b-plotting-your-own-data.md).

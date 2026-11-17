@@ -616,6 +616,25 @@ heap invariant: True
 
 On 2 million latencies, the library version is 28 times faster than sorting and holds only 100 items. It also works on a stream you can't hold in memory. Dijkstra's algorithm in [chapter 3](03-algorithm-patterns.md#graphs-are-one-loop-with-a-different-bag) uses the same structure as a priority queue. When `k` is close to `n`, a full sort is simpler and competitive, so use a heap when `k` is small.
 
+The `k` most frequent items are the same job after a count. A `Counter` is one pass over `n` items, and a heap of size `k` over the `d` distinct keys costs `d log k`:
+
+```python
+import heapq
+from collections import Counter
+
+words = "the cat sat on the mat and the dog sat on the log".split()
+counts = Counter(words)
+print(heapq.nlargest(2, counts.items(), key=lambda kv: kv[1]))
+print(counts.most_common(2))
+```
+
+```text
+[('the', 4), ('sat', 2)]
+[('the', 4), ('sat', 2)]
+```
+
+`most_common(k)` is that `nlargest` call, so use it. Sorting all the counts would be `d log d`, which only matters when there are many distinct keys.
+
 ## Sorted lists and bisect
 
 `bisect` does binary search over a sorted list, in `log n` comparisons. Its `insort` also has to insert, which is `O(n)`, as [the docs warn](https://docs.python.org/3/library/bisect.html). So maintaining a sorted list one item at a time is quadratic overall, and in practice the shift dominates long before the search does:
@@ -988,6 +1007,7 @@ The general approach is to write down the operations and how often each happens,
 | Top k of a stream? | A min-heap of size k: `O(n log k)` time and `O(k)` memory. |
 | When is a linked list worth it? | When you hold node references and splice at them, as in an LRU. Otherwise the memory and pointer-chasing cost more. |
 | How do you build an LRU cache? | A dict from key to node in a doubly linked list. Both operations are constant time, and `OrderedDict` packages that. |
+| How do you find the k most frequent items? | Count with a `Counter`, then keep a heap of size k over the distinct keys: n + d log k. `Counter.most_common(k)` does exactly that. |
 
 ## See also
 

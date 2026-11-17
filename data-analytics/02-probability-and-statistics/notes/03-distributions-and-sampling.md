@@ -105,6 +105,26 @@ KS of skewed data against a fitted Normal: p = 1.5e-56
 
 The Normal draws are consistent with N(0,1). Their exponentials, which are what a lognormal is, are decisively not Normal, even with the mean and spread fitted. The same "simulate and compare" habit returns as the [posterior predictive check](../../04-bayesian-analysis/notes/01-bayesian-inference.md). With a large enough sample a goodness-of-fit test will reject any model at all, so treat it as a description of size of disagreement and look at the plot.
 
+### Uniform draws in, any distribution out, and back
+
+`ppf` and `cdf` convert in opposite directions. If U is uniform on (0, 1), then `ppf(U)` follows the distribution whose inverse CDF you applied. This is inverse transform sampling, and it turns uniform random numbers into any distribution with a computable inverse CDF. In reverse, a continuous variable pushed through its own CDF comes out uniform (the probability integral transform).
+
+```python
+rng = np.random.default_rng(2)
+wait = stats.expon(scale=3)                          # exponential waiting time, mean 3
+made = wait.ppf(rng.random(100_000))                 # uniform -> exponential
+print(f"ppf(uniform): mean {made.mean():.3f}, KS against the exponential p = {stats.kstest(made, wait.cdf).pvalue:.2f}")
+back = wait.cdf(rng.exponential(3, 100_000))         # exponential -> uniform
+print(f"cdf(exponential): deciles {np.quantile(back, [0.1, 0.5, 0.9]).round(3)}, KS against uniform p = {stats.kstest(back, 'uniform').pvalue:.2f}")
+```
+
+```text
+ppf(uniform): mean 3.006, KS against the exponential p = 0.38
+cdf(exponential): deciles [0.1   0.499 0.901], KS against uniform p = 0.86
+```
+
+The second direction explains two things used later. A p-value is the null distribution's CDF (or one minus it) applied to a test statistic, so for a continuous statistic it is uniform when the null hypothesis is true. And a goodness-of-fit test can always be phrased as "are the transformed values uniform?"
+
 ## From population to sample
 
 A *population* is what you want to know about. A *sample* is what you have. A *statistic* is a number computed from the sample. The *sampling distribution* is what that statistic would do if you repeated the sampling, and it is the central idea of this chapter: the data have one distribution, and the statistic has another, usually much narrower and better behaved (Bruce & Bruce, 2017, ch. 2).
@@ -372,6 +392,7 @@ print(f"95/100 lower 95% Wilson: {stats.binomtest(95, 100).proportion_ci(method=
 | Can a larger sample fix a biased sample? | No. It gives a more precise estimate of the wrong number. |
 | How do you check whether a variable is Normal? | With a probability plot: sort the data, sort a standard-normal sample of the same size and plot one against the other. A Kolmogorov-Smirnov test puts a number on the gap. |
 | Are prices and incomes Normal? | Usually not. Positive, multiplicative quantities such as order value and income are lognormal, so the log is roughly Normal and the tail is heavy. |
+| How do you turn uniform draws into another distribution, and back? | Apply the target's inverse CDF (`ppf`) to uniform draws. In reverse, a continuous variable pushed through its own CDF is uniform, which is why p-values are uniform under the null. |
 
 ---
 

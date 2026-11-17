@@ -43,6 +43,8 @@ The adult census dataset (M&G ch. 4, [`adult.data`](../practice/intro-to-ml-in-p
 
 Replace a column with $k$ categories by $k$ binary columns.
 
+Why not number the categories 0 to $k-1$ in one column? A linear model multiplies that number by one weight, so it would be told that the categories lie in that order and that the third is worth twice the second. A string such as `workclass` means neither. One column per category gives each its own weight. Trees are hurt less by integer codes, since they can split a range more than once, and a truly ordered category (small, medium, large) can keep one ordinal column.
+
 ```python
 import numpy as np
 import pandas as pd
@@ -100,6 +102,8 @@ print(X_train_trans.shape, round(logreg.score(X_test_trans, y_test), 3))
 ```
 
 The base rate is 0.759, so these six columns add real signal. Missing values in `workclass` and `occupation` went through as their own all-zero pattern here; [the boosting note](07-boosting-in-practice.md) compares how libraries treat them natively.
+
+**Missing values in general.** Ask first why a value is missing, since a gap that depends on the target is itself a signal. Then there are four moves. Drop the rows or the column, when few are affected and the gaps look random. Impute from the training data: the median for a numeric column, the most frequent level or an explicit "missing" level for a categorical one (`SimpleImputer`). Add an indicator column (`add_indicator=True`) so the model can use the fact that the value was missing. Or use a model that takes `NaN` directly, as `HistGradientBoostingClassifier` and the boosting libraries do. An imputer is a fitted step, so it goes inside the pipeline and is refit in each fold ([leakage](#leakage-and-why-pipelines-exist)).
 
 `sparse=` was renamed `sparse_output=` in scikit-learn 1.2 and the old name removed in 1.4; see the migration map in [04](04-model-evaluation.md#scikit-learn-migration-map-020--14).
 
@@ -518,6 +522,8 @@ Every step except the last must have `fit` and `transform`. The last needs `fit`
 | What does `handle_unknown="ignore"` do? | Encodes an unseen category as all zeros, so production data doesn't crash |
 | Which preprocessing steps must be refit inside each fold? | Any step with a `fit`: scaling, imputation, encoding, selection, PCA, target encoding, vectorising text. A `Pipeline` does that for you. |
 | Which feature selection techniques do you know? | Univariate statistics (`SelectKBest`), model-based (`SelectFromModel`, on importances or L1 coefficients) and iterative (`RFE`). Selection is a fitted step, so it belongs inside each CV fold. |
+| Why one-hot encode a categorical feature? | Integer codes tell a linear model that the categories are ordered and evenly spaced. One column per category gives each its own weight. Trees mind less, and a truly ordered category can stay ordinal. |
+| How do you handle missing values in predictors? | Ask why they are missing. Then drop, impute the median or most frequent level, add a missing indicator, or use a model that accepts `NaN`. The imputer is fitted, so it goes inside the pipeline. |
 
 ## Next
 

@@ -248,6 +248,8 @@ skew raw 5.1, skew log 0.01
 
 Read it as sentences: 61% of orders are at most 50, and only about 1% exceed 500. The skewness numbers confirm the histogram: 5.1 on the raw scale, essentially zero on the log scale. Chapter 3 shows why that skew matters: it slows the Central Limit Theorem, so a mean based on a few hundred users can have an interval that misses far more often than it should.
 
+**Box plot or histogram?** A box plot draws five numbers: the median, the two quartiles as the box, and whiskers to the furthest points within 1.5 IQR of the box, with anything beyond drawn as a dot. It is compact, so twenty groups fit side by side, and it flags outliers by a fixed rule. It cannot show shape between the quartiles: a two-peaked column and a flat one can share a box. A histogram shows the shape, including gaps and spikes at round numbers, but its look depends on the bins and it compares badly across many groups. Use a histogram to learn one column and box plots to compare many.
+
 Three more points from *Think Stats* sharpen the choice of summary. A mean can describe nobody: six pumpkins weighing 1, 1, 1, 3, 3 and 591 pounds have a mean of 100, and no pumpkin is near it. When a distribution has a clear mode, as pregnancy length does at 39 weeks, the mode is the better "typical value" (*Think Stats*, ch. 2). To compare two groups of different size, normalise to probabilities (a probability mass function, PMF) instead of counts, and then plot the difference. Downey's difference of PMFs for weeks 35 to 45 shows first babies are less often born at 39 weeks and somewhat more often at weeks 41 and 42. A single relative risk summarises one slice: 18.2% of first babies were early (week 37 or before) against 16.8% of others, a risk ratio of 1.08 (*Think Stats*, ch. 2, treated there as an observed effect, with no test). When PMFs are too noisy to read, compare CDFs. Chapter 3 does this for NSFG birth weights, where the CDFs show first babies slightly lighter across the distribution and by more above the mean, which the PMFs hid (*Think Stats*, ch. 3). It also gives the *percentile rank* (the share of values at or below yours: 88 in the scores 55, 66, 77, 88, 99 has rank 80) and defines the median as the 50th percentile and the IQR as the 75th minus the 25th.
 
 ## Two columns at a time
@@ -394,6 +396,7 @@ Run the data block at the top of this chapter first, then:
 | Why is the student-reported class size larger than the dean's? | Sampling by student weights each class by its size, so large classes are over-represented. The same happens with per-session and per-user metrics. |
 | When is missing data dangerous? | When missingness relates to the outcome or to a segment. Compare the missing and non-missing groups before dropping. |
 | How do you spot outliers in a column of numbers? | Compare the mean with the median, and the standard deviation with the IQR. When they disagree by a lot, the tail is running the summary, so look at the tail. |
+| Box plot or histogram? | A histogram to learn one column's shape, including two peaks and gaps. Box plots to compare many groups side by side, since each is five numbers plus outliers. A box plot hides shape between the quartiles. |
 
 ---
 

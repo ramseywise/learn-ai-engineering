@@ -343,6 +343,10 @@ stop at week 1: 0.83; steady state truth: 0.20
 
 Stopping at week 1 would claim four times the lasting effect. In Dmitriev and colleagues' Edge example, a coach mark raised page clicks by 0.96% and top-site clicks by 2.07%, all of which disappeared after the first visit. Plot lift by days since first exposure, and compute it separately for new users, as Kohavi and colleagues advise, since they cannot have any novelty or primacy about a change they never saw before. For effects that matter long-term, some teams hold out a group for months, an approach also used to [study long-term user learning at Google](https://doi.org/10.1145/2783258.2788583), though that paper isn't held here.
 
+### Measuring a cost you would never ship
+
+How much engagement does latency cost? Nobody has a faster version waiting to be tested, so the experiment runs the other way: add an artificial delay on the server and measure what is lost. Use several small arms, say +100 ms and +250 ms against control, so you can fit a line and report engagement per 100 ms. Randomise by user and not by request, so one person's experience is consistent. Keep the arms small and short, because you are knowingly making the product worse for them. Log the latency users actually got, to confirm the treatment landed, and put guardrails on errors and abandonment. The result is a slope near today's operating point. Using it to value a speed-up assumes the line continues in the other direction, which is an assumption to state. Users also learn that a product is slow, so read the lift by week as above before quoting one number.
+
 ## When users affect each other
 
 Randomised tests assume that one user's arm doesn't change another's outcome, which statisticians call SUTVA. Marketplaces and networks break this. Take a seller with a fixed stock. If the treatment makes people want to buy more, some of the extra sales come directly out of what the control group would have bought:
@@ -537,6 +541,7 @@ Online evaluation of LLM features is this chapter over again. A prompt change is
 | Why doesn't the sum of lifts match growth? | The winner's curse: selection on significance inflates each measured lift. Use holdouts and shrinkage. |
 | How do you make experiments cheaper to run? | Remove noise that has nothing to do with the treatment. CUPED does it with activity from before assignment, but the gain depends on the correlation: with ρ = 0.3 variance falls by only 9%. |
 | How do you pick a winner among many variants? | With a pure-exploration design, not a regret-tuned bandit, which plays losers so rarely that it can name the wrong arm. Sequential halving gives every arm equal samples, drops the bottom half and repeats. |
+| How do you measure the effect of latency on engagement? | Run a slowdown experiment: add artificial delay in several small arms, randomised by user, and fit engagement against delay. Confirm the delay landed, keep guardrails, and read the effect by week. |
 
 ---
 

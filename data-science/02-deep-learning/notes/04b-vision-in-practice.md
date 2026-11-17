@@ -360,6 +360,8 @@ Bourke's rule of thumb covers all three: "trained models like to predict on data
 
 Classification gives one label per image. Detection gives a box and a label for each object, and [04's object detection section](04-convolutional-networks.md#object-detection) builds the pieces: anchors, IoU and non-max suppression. You rarely train a detector from scratch either. `torchvision.models.detection` in torchvision 0.29 ships pretrained Faster R-CNN, RetinaNet, FCOS, SSD, Mask R-CNN and Keypoint R-CNN weights on COCO; `FasterRCNN_ResNet50_FPN_V2_Weights.COCO_V1`, for example, has 43,712,278 parameters and a box mAP of 46.7 on COCO val2017, as its own metadata reports. COCO is the standard detection benchmark of everyday photos, and box mAP (mean average precision) averages precision over recall levels, classes and IoU thresholds from 0.5 to 0.95, out of 100. Fine-tuning one follows this chapter's pattern: keep the backbone, replace the head with one for your classes, and expect the dataset class to do more work, because each item returns a dictionary of boxes and labels instead of one integer.
 
+Segmentation goes one step finer and labels every pixel. *Semantic* segmentation gives each pixel a class, so two cars side by side form one region. *Instance* segmentation separates them, which is what Mask R-CNN adds to a detector: a mask inside each box. The output is as large as the image, so these networks downsample to gather context and upsample again. Score them with IoU between the predicted and true masks and not with pixel accuracy, because background pixels dominate.
+
 ## Reading
 
 Bourke, [*Learn PyTorch for Deep Learning*](https://www.learnpytorch.io/), chapters [03](https://www.learnpytorch.io/03_pytorch_computer_vision/) to [08](https://www.learnpytorch.io/08_pytorch_paper_replicating/) and [the three most common errors](https://www.learnpytorch.io/pytorch_most_common_errors/). The pages are undated; one prints torch 1.12 and another torch 2.0.1, so use the v2 transforms above in place of `ToTensor`. Code at [github.com/mrdbourke/pytorch-deep-learning](https://github.com/mrdbourke/pytorch-deep-learning), MIT licence.
@@ -428,6 +430,7 @@ Every shapes number here came from running the code shown. The numbers attribute
 | Why split code into `data.py`, `model.py`, `engine.py`? | Every experiment shares one loop, so a fix reaches all arms, and a script runs where a notebook won't. |
 | What is augmentation, and how do you choose the transforms? | Random transforms applied to the training set only, drawn fresh each time an image is read. Use only those that keep the label: a shape survives rotation, but a 6 rotated half a turn is a 9. |
 | What is pseudo-labelling? | A teacher labels unlabelled images and a student trains on labelled plus pseudo-labelled data. Noisy Student adds RandAugment, dropout and stochastic depth to the student, which then becomes the next teacher. |
+| What is image segmentation? | A label for every pixel. Semantic segmentation gives each pixel a class. Instance segmentation also separates objects of one class, as Mask R-CNN does with a mask per box. Score it with IoU. |
 
 ## Next
 

@@ -98,6 +98,8 @@ The same paper shows two other things worth knowing. Its sparsity-aware algorith
 
 Boosting is also sequential by nature, not just by habit. Karbasi and Larsen prove a lower bound in the model where an algorithm calls a weak learner in rounds: AdaBoost needs about $\gamma^{-2}\ln m$ sequential rounds for a $\gamma$-weak learner on $m$ samples, and matching its error in a constant number of rounds takes exponentially many weak-learner calls per round, $\exp(\Omega(d\gamma^{-2}\ln m))$ for hypothesis VC-dimension $d$. Without that blow-up the rounds can fall only to $\Omega(\gamma^{-1}\ln m)$, a factor $\gamma$ below AdaBoost ([arXiv:2301.09627](https://arxiv.org/abs/2301.09627), preprint, 2023). It is a worst-case result about a constructed weak learner, with no experiments, so it explains the direction of the design, not any library's speed. This is why every library here parallelises *inside* a tree, on split finding, and never across rounds.
 
+**Where AdaBoost fits.** AdaBoost, the first practical boosting algorithm, works by reweighting rows. Each round raises the weight of the examples the ensemble so far gets wrong, fits a weak learner (usually a one-split stump) to the reweighted data, and gives it a vote that grows with its accuracy. It turned out to be the special case of gradient boosting for exponential loss. Gradient boosting generalises it to any differentiable loss by fitting each tree to the gradient. XGBoost adds the second derivative, the explicit penalty on leaves above, row and column subsampling, and the engineering that makes it fast. AdaBoost has few knobs, but exponential loss punishes a confidently wrong row very hard, so mislabelled rows hurt it more.
+
 ## Where they differ
 
 ```mermaid
@@ -292,6 +294,7 @@ Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don
 | Why can't boosting be parallelised across rounds? | Each tree needs the last one's output, and theory says fewer rounds costs exponentially more work |
 | How do you tune it? | Fix learning rate, early stop for rounds, then tree size, leaf size, sampling, regularisation |
 | Trees or a neural net for a table? | Trees first: state of the art on medium-sized tabular data per Grinsztajn et al., and much cheaper |
+| How does AdaBoost differ from XGBoost? | AdaBoost reweights misclassified rows and adds weighted stumps, which is gradient boosting for exponential loss. XGBoost takes any differentiable loss, uses second derivatives, penalises leaves and subsamples. AdaBoost is more sensitive to label noise. |
 
 ## Next
 

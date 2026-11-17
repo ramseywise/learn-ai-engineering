@@ -99,6 +99,33 @@ The payoff is at scale. On the spam emails with binarised variables and all pair
 
 **Choosing complexity without a validation set.** The Bayesian alternative to cross-validation is the model evidence, the probability of the data with the weights integrated out. On the sine data of Bishop's *Pattern Recognition and Machine Learning* (*PRML*) the evidence favours the cubic among the polynomial orders plotted: higher orders improve the fit only a little and pay a growing complexity penalty (*PRML*, ch. 3, Fig. 3.14, one synthetic data set). The same algebra gives an effective number of parameters $\gamma$, the count of weights the data determines, with the rest held near zero by the prior (ch. 3, p. 170). scikit-learn's `BayesianRidge` sets its penalty this way.
 
+**Exact collinearity, and what the SVD shows.** If one column is an exact combination of others, say $z = x + y$, then adding any $c$ to the weights of $x$ and $y$ and subtracting it from the weight of $z$ leaves every prediction unchanged. Least squares then has infinitely many solutions, $X^\top X$ is singular, and a package either refuses or returns one arbitrary answer. The singular value decomposition $X = U\Sigma V^\top$ makes this visible. Each singular value in $\Sigma$ measures how much the data varies along one direction of weight space, and a zero marks a direction the data cannot see.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+x, y = rng.normal(size=(2, 200))
+X = np.column_stack([x, y, x + y])                   # third column is the sum of the first two
+target = 2 * x + 3 * y + rng.normal(0, 0.1, 200)
+print("singular values", np.linalg.svd(X, compute_uv=False).round(3))
+w, *_ = np.linalg.lstsq(X, target, rcond=None)
+print("lstsq weights  ", w.round(3))
+for alt in ([2, 3, 0], [0, 1, 2]):
+    print(alt, "rmse", np.sqrt(np.mean((X @ alt - target) ** 2)).round(3))
+```
+
+```text
+singular values [23.608 14.484  0.   ]
+lstsq weights   [0.336 1.335 1.671]
+[2, 3, 0] rmse 0.1
+[0, 1, 2] rmse 0.1
+```
+
+The third singular value is zero. The weights (2, 3, 0) and (0, 1, 2) fit equally well, and `lstsq` returns a third set, the one of smallest norm, which it builds from the SVD with the zero direction left out (the pseudo-inverse). The fix is to drop a column or add a ridge penalty, which makes the solution unique. A full set of one-hot columns next to an intercept is the usual way to produce this by accident.
+
+Near-collinearity is the same picture with a small singular value in place of a zero. The weights exist, but they swing between samples and their standard errors are large. In a logistic regression that shows as wide confidence intervals on the correlated coefficients, each of which may include zero while the group together predicts well. The sign flip in the heart-disease fit below comes from the same correlation among predictors.
+
 **Learning curves for ridge** show the data-size effect from [01](01-statistical-foundations.md): with enough data, regularisation matters less and OLS catches up.
 
 [Training and tuning](09-training-and-tuning.md#regularisation-is-one-idea) shows that this penalty, a tree's depth limit and a network's weight decay are one idea.
@@ -233,6 +260,9 @@ Setup: seed 0, 100 rows, 3 standard-normal features, true weights $(2, -1, 0.5)$
 | One weight is larger than another. Is that feature more important? | Not safely. Coefficients of correlated features can flip sign between fits, so don't over-read them. Check stability across resamples. |
 | Which model for sparse, very wide data? | A linear model. It handles very many features and sparse data such as text, scales to huge datasets with `SGDClassifier`, and is fast to train and predict. |
 | Predictors correlate positively with the target, yet one gets a negative weight. Why? | Correlation among the predictors. In ESL's heart-disease fit, obesity gets a negative coefficient with every predictor in the model. |
+| A regression reports no unique solution. What is wrong? | A column is an exact combination of others, so infinitely many weight vectors fit equally well. Drop a column or add a ridge penalty. One-hot columns next to an intercept are the usual cause. |
+| What is the SVD, and what does it tell you about a regression? | X = UΣVᵀ. Each singular value measures how much the data varies along one direction of weight space. A zero means exact collinearity and a small one means unstable weights. `lstsq` uses it to return the minimum-norm solution. |
+| What happens to logistic coefficient intervals when features are correlated? | They widen. The data cannot separate the correlated features, so each interval may include zero while the group together predicts well. |
 
 ## Next
 

@@ -90,7 +90,7 @@ An array has no idea that column 1 means filters. Getting that wrong is a silent
 
 ## The orders frame
 
-The rest of the chapter uses the 11 clean orders that chapter 2 produced. Each later chapter starts from this same block, so you can run any one of them alone.
+The rest of the chapter uses the 11 clean orders that chapter 5 produces from the export loaded in chapter 2. Each later chapter starts from this same block, so you can run any one of them alone.
 
 ```python
 import io

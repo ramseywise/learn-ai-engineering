@@ -121,6 +121,29 @@ implied mean order 64.59, sample mean 59.59
 
 The parameters are recovered well, and the model's implied mean order sits within 10% of the sample mean. The gap matters: the fitted mean relies on the assumption that the tail really is lognormal, and the sample mean makes no such assumption but rests on the few largest values. Maximum likelihood is the backbone of [GLMs](06b-logistic-regression-and-poisson-glms.md), and adding a prior to it gives [the MAP estimate of the Bayesian pillar](../../04-bayesian-analysis/notes/01-bayesian-inference.md).
 
+### The method of moments
+
+An older recipe needs no likelihood to maximise. Write the model's moments in terms of its parameters, set them equal to the sample's, and solve. Two parameters take two moments, the mean and the variance. A lognormal has mean exp(μ + σ²/2) and variance (exp(σ²) − 1) × mean², so σ² = log(1 + s²/x̄²) and μ = log x̄ − σ²/2.
+
+```python
+orders = revenue[revenue > 0]
+m, v = orders.mean(), orders.var()
+sigma2 = np.log(1 + v / m**2)
+print(f"moments: mu {np.log(m) - sigma2 / 2:.3f}, sigma {np.sqrt(sigma2):.3f}")
+
+sims = np.random.default_rng(0).lognormal(3.6, 1.1, (2_000, 180))
+mle = np.log(sims).std(axis=1)
+mom = np.sqrt(np.log(1 + sims.var(axis=1) / sims.mean(axis=1) ** 2))
+print(f"sigma over 2,000 samples of 180: MLE {mle.mean():.3f} +/- {mle.std():.3f}, moments {mom.mean():.3f} +/- {mom.std():.3f}")
+```
+
+```text
+moments: mu 3.668, sigma 0.916
+sigma over 2,000 samples of 180: MLE 1.096 +/- 0.056, moments 1.044 +/- 0.123
+```
+
+On the 180 orders the two methods disagree: σ is 0.916 by moments and 1.140 by maximum likelihood, against a true 1.1. The simulation shows this is typical for this model. The moment estimate of σ varies about twice as much from sample to sample and sits a little low, because it is built on the sample variance, which a few of the largest orders decide. That is the usual trade. The method of moments is quick, needs no optimiser and gives a starting value when the likelihood is awkward, and maximum likelihood uses the data more efficiently when the model is right. For a Normal mean or a Bernoulli rate the two give the same estimator.
+
 ## Standard errors and confidence intervals
 
 The standard error of a mean is s/√n, and of a proportion √(p̂(1 − p̂)/n). The Normal-approximation interval is estimate ± 1.96 SE.
@@ -427,6 +450,7 @@ The paper's rounded 16 gives about 409,000 per arm for a 5% revenue change and a
 | What do you do for a rate of 0 out of 50? | Use Wilson, which gives roughly [0, 0.07]. Wald gives [0, 0], which claims certainty. |
 | What is an MDE? | The smallest effect you would detect with the chosen power and significance, given n and variance. Roughly n = 16σ²/δ² per arm at 5% and 80%. |
 | Is an unbiased estimator always the one you want? | No. Dividing by n is biased, yet in the chapter's example it has a smaller mean squared error than n − 1. Accepting a little bias for less variance is what regularisation and shrinkage do. |
+| What is the method of moments, and how does it compare with maximum likelihood? | Set the model's moments equal to the sample's and solve for the parameters. It is quick and needs no optimiser, but is usually noisier: for the lognormal σ here its spread was about twice the MLE's. |
 
 ---
 

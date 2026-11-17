@@ -102,9 +102,20 @@ A predicate is *sargable* (Search ARGument ABLE) if the index can satisfy it. Wr
 - **Small tables.** A 9-row `facilities` table always gets scanned.
 - **Write cost.** Every `INSERT`, `UPDATE` and `DELETE` also updates every index. Index for the queries you actually run, not for every column.
 
+## Joining to a subquery
+
+A join to a subquery can be slow for three reasons. A correlated subquery may run once per outer row ([note 05](05-subqueries-and-ctes.md)). A derived table that the planner computes and stores has no index, so the join scans it or hashes the whole result. And an aggregate inside the subquery runs over every row before the outer filter gets a chance. Read the plan first, then pick the fix that matches: filter inside the subquery so less is aggregated, index the join and filter columns of the base tables, rewrite a correlated subquery as one join to a pre-aggregated table or as a window function, or store a subquery you reuse as an indexed temporary table.
+
 ## Columnar engines
 
 DuckDB, BigQuery, Snowflake and ClickHouse store data by column and scan compressed column chunks. They rely on min/max statistics per block (zone maps) instead of B-trees. There, performance comes from reading fewer columns (avoid `SELECT *`), partitioning or clustering by the common filter column, and pre-aggregation, rather than from adding indexes.
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What makes a predicate sargable? | The indexed column stands bare on one side. Wrapping it in a function or expression stops the index being used, so rewrite it as a range on the raw column. |
+| Why can a join on a subquery be slow? | A correlated subquery may run once per outer row, a stored derived table has no index, and an aggregate runs before the outer filter. Filter inside, index the base tables, or pre-aggregate and join once. |
 
 ---
 

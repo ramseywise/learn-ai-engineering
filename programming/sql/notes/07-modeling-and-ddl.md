@@ -89,6 +89,12 @@ SELECT memid, count(*) AS bookings, sum(slots) AS slots FROM bookings GROUP BY m
 
 A view is a saved query, so it always reflects the current data. A materialised view (Postgres), or a table rebuilt by your pipeline, stores the result for speed at the cost of going stale.
 
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Primary key or foreign key? | A primary key identifies a row in its own table: unique, not `NULL`, one per table. A foreign key is a column whose value must exist in the parent table. |
+
 ---
 
 ## Exercises

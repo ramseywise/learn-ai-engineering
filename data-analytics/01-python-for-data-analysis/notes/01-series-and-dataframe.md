@@ -42,7 +42,7 @@ print(spend)
 
 That works, and for six rows it is fine. Look at what the loop makes you manage, though. You name the accumulator, you handle the first time a customer appears, and you spell out the arithmetic per row. The intent, "total spend by customer", is buried in the book-keeping. Wickham makes this argument about loops in general: the objection is seldom speed, it is that loops do not express intent, since the important details are mixed in with the unimportant ones ([Wickham, JSS 2011](https://doi.org/10.18637/jss.v040.i01)).
 
-Here is the same question asked of a DataFrame. Do not worry about the syntax yet; chapter 5 is devoted to it.
+Here is the same question asked of a DataFrame. Do not worry about the syntax yet; chapter 7 is devoted to it.
 
 ```python
 import pandas as pd
@@ -437,7 +437,7 @@ The first attempt changed nothing and pandas warned about it. The second made th
 
 ## Pitfalls
 
-- **Iterating a frame row by row.** `for` loops and `iterrows` work, but they are slow and hide intent. If you are writing one, look first for a vectorised column expression, or wait until chapter 5 and use `groupby`.
+- **Iterating a frame row by row.** `for` loops and `iterrows` work, but they are slow and hide intent. If you are writing one, look first for a vectorised column expression, or wait until chapter 7 and use `groupby`.
 - **Reading `.0` as harmless.** A column of whole numbers printing as floats usually means a missing value is hiding in it. Check `isna().sum()`.
 - **Trusting the dtype without looking.** A numeric column with one bad value reads as `str`, and `sum` then concatenates rather than adds. Always run `dtypes` on a new frame.
 - **Comparing with `NaN` using `==`.** `NaN == NaN` is false by the floating-point standard. Use `isna()`.
@@ -511,4 +511,4 @@ It prints 2. `u` behaves as a copy under Copy-on-Write, so writing to it does no
 
 ## Next
 
-The frames here were typed in by hand, and real ones never are. Real data comes from files, and files are messy. Next: [Loading and cleaning](02-loading-and-cleaning.md).
+The frames here were typed in by hand, and real ones never are. Real data comes from files, databases and exports, and the load is where it first goes wrong. Next: [Loading data](02-loading-data.md).

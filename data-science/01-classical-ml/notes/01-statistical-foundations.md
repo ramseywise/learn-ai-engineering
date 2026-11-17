@@ -155,6 +155,8 @@ ISLP draws the same decomposition for three simulated truths, and the lesson is 
 
 **Regularisation** is the general name for any constraint that pulls the fit toward simplicity: an L2 penalty on weights (ridge), an L1 penalty (lasso, which also zeros features), a maximum tree depth, a minimum number of neighbours. Every model in [02](02-supervised-learning.md) has one main complexity knob, and its strengths-and-weaknesses table names it.
 
+**Inductive bias** is what a learner assumes beyond the data, and without it there is no generalising: many functions fit any finite training set equally well, and the method's assumptions pick one. A linear model assumes additive straight-line effects. k-nearest neighbours assumes nearby points share a label. A tree assumes thresholds on single features. A convolutional network assumes a pattern means the same wherever it appears. Regularisation is an inductive bias stated as a preference for simple fits. A bias that matches the problem needs less data, and one that does not is the bias term of the decomposition above.
+
 ---
 
 ## Probability as ML uses it
@@ -324,6 +326,7 @@ Return to these after each later note: a technique you have just used makes the 
 | What does scikit-learn's estimator API buy? | `fit`, `predict`, `transform` are uniform, so estimators chain in pipelines and plug into search |
 | Supervised or unsupervised learning? | Supervised learning learns $x \to y$ from labelled pairs, with a class or a number as the target. Unsupervised learning has no $y$ and finds structure in $x$ alone. |
 | Which regularisation techniques do you know? | Any constraint that pulls the fit toward simplicity: an L2 penalty on weights (ridge), an L1 penalty (lasso, which also zeros features), a maximum tree depth, a minimum number of neighbours. |
+| What is inductive bias? | What a learner assumes beyond the data: linearity, locality for kNN, axis-aligned thresholds for trees. Without it nothing generalises, since many functions fit any training set. A bias that matches the problem needs less data. |
 
 ## Next
 

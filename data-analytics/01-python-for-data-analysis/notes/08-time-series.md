@@ -8,76 +8,22 @@ sources:
   - https://pandas.pydata.org/docs/whatsnew/v3.0.0.html
   - https://doi.org/10.18637/jss.v040.i01
 confidence: high
-cleaned: 2026-11-01
+cleaned: 2026-11-17
 ---
-# 6 — Time Series
+# 8 — Time Series
 
-"How did we do last month?" sounds like a groupby, and it nearly is. But time carries rules that labels do not. Rows have a meaningful order, so "the previous value" exists. Months have different lengths, so a monthly total is not comparable to the last one without thought. A label such as "January" stands for an interval, and an interval can be labelled at either end. A date printed as `03/04/2025` means two different days depending on who wrote it. And when a value is missing from a time series, the row is often simply absent, so you cannot see the gap. This chapter gives the shop a year of daily revenue and takes it through parsing, indexing, changes over time, resampling, time zones and rolling windows. These are the tools that the forecasting chapter in pillar 06 assumes you already have.
+"How did we do last month?" sounds like a groupby, and it nearly is. But time carries rules that labels do not. Rows have a meaningful order, so "the previous value" exists. Months have different lengths, so a monthly total is not comparable to the last one without thought. A label such as "January" stands for an interval, and an interval can be labelled at either end. And when a value is missing from a time series, the row is often simply absent, so you cannot see the gap. [Chapter 6](06-dates-and-times.md) made the dates a real type. This chapter puts them in the index, gives the shop a year of daily revenue and takes it through gaps, changes over time, resampling and rolling windows. These are the tools that the forecasting chapter in pillar 06 assumes you already have.
 
 Frequency names changed in pandas 3.0, so this is the chapter where code from older books breaks most often. All of the code below runs on pandas 3.1.0.
-
-## Parsing dates
-
-A date in a CSV is text until you say otherwise. `pd.to_datetime` converts it. Give it the `format` whenever you know it: this is faster and, more importantly, it stops pandas from guessing wrong on ambiguous dates.
-
-```python
-import numpy as np
-import pandas as pd
-
-print(pd.to_datetime(["2025-01-03", "2025-01-08"]))
-print(pd.to_datetime(["03/04/2025"], format="%d/%m/%Y"))
-print(pd.to_datetime(["03/04/2025"], format="%m/%d/%Y"))
-print(pd.to_datetime(["2025-01-03", "not a date"], errors="coerce"))
-```
-
-```text
-DatetimeIndex(['2025-01-03', '2025-01-08'], dtype='datetime64[us]', freq=None)
-DatetimeIndex(['2025-04-03'], dtype='datetime64[us]', freq=None)
-DatetimeIndex(['2025-03-04'], dtype='datetime64[us]', freq=None)
-DatetimeIndex(['2025-01-03', 'NaT'], dtype='datetime64[us]', freq=None)
-```
-
-The second and third lines parsed the same string into two different days, the 3rd of April and the 4th of March. If a file mixes both conventions, no parser can save you, so check the `min` and `max` and look for implausible values. `errors="coerce"` gives `NaT`, "not a time", the datetime version of `NaN`, and as with `to_numeric` you must count what it produces.
-
-The printed dtype is `datetime64[us]`, microsecond resolution. Pandas 3.0 changed this: older versions parsed to nanoseconds by default, and pandas now infers the unit, with microseconds for strings like these ([pandas 3.0 release notes](https://pandas.pydata.org/docs/whatsnew/v3.0.0.html)). It rarely shows, except in one case the release notes warn about. Converting a datetime to an integer now gives a number 1000 times smaller than old code expected, so state the unit with `as_unit` first if you depend on it.
-
-Resolution also sets the range. A 64-bit nanosecond timestamp spans only about 292 years, so `pd.Timestamp.min` and `max` are 1677-09-21 and 2262-04-11, the span the book quotes as 1678 to 2262 (*Python Data Science Handbook*, ch. 3). Coarser units widen it, which matters for historical dates.
-
-```python
-d = pd.Series(pd.to_datetime(["2025-01-03"]))
-print(d.astype("int64").iloc[0], d.dt.as_unit("ns").astype("int64").iloc[0])
-```
-
-```text
-1735862400000000 1735862400000000000
-```
-
-A datetime column has a `.dt` accessor, just as a text column has `.str`, and it pulls out the calendar parts you need for grouping. Subtracting two datetimes gives a timedelta.
-
-```python
-orders = pd.DataFrame({
-    "order_id": [1001, 1003, 1007, 1012],
-    "date": pd.to_datetime(["2025-01-03", "2025-01-05", "2025-01-11", "2025-01-20"]),
-})
-orders["weekday"] = orders["date"].dt.day_name()
-orders["month"] = orders["date"].dt.to_period("M")
-orders["days_since_last"] = orders["date"].diff().dt.days
-print(orders)
-```
-
-```text
-   order_id       date   weekday    month  days_since_last
-0      1001 2025-01-03    Friday  2025-01              NaN
-1      1003 2025-01-05    Sunday  2025-01              2.0
-2      1007 2025-01-11  Saturday  2025-01              6.0
-3      1012 2025-01-20    Monday  2025-01              9.0
-```
 
 ## A year of daily revenue
 
 Put the datetimes in the index and pandas unlocks everything else in this chapter. The 11 orders from earlier chapters are too few for this, so here is the shop's whole previous year. It is synthetic, built with a fixed seed so your output matches: a slow upward trend, a weekly pattern that peaks at the weekend, a December bump, some noise, and three days missing because the checkout was down.
 
 ```python
+import numpy as np
+import pandas as pd
+
 rng = np.random.default_rng(7)
 days = pd.date_range("2024-01-01", "2024-12-31", freq="D")
 trend = 400 + 0.5 * np.arange(len(days))
@@ -135,7 +81,7 @@ print(regular.loc["2024-03-13":"2024-03-16"])
 Freq: D, Name: revenue, dtype: float64
 ```
 
-Here a gap is an outage, so the true revenue was close to zero, and leaving `NaN` keeps the honest record. For a sensor, you might interpolate. For a price, you might carry forward. Chapter 2's question comes back: what does this gap mean?
+Here a gap is an outage, so the true revenue was close to zero, and leaving `NaN` keeps the honest record. For a sensor, you might interpolate. For a price, you might carry forward. Chapter 5's question comes back: what does this gap mean?
 
 ## Frequencies and date ranges
 
@@ -294,14 +240,13 @@ Freq: MS, dtype: float64
 Freq: MS, dtype: float64
 ```
 
-## Periods: when you mean the whole month
+## Grouping by month and by weekday
 
-A timestamp is a moment and a **period** is a span, such as all of March 2024. For monthly reporting, a period label says what you mean: there is no argument about whether the row is labelled by the 1st or the 31st. Convert with `to_period`, and group by the result as you would any key. This also gives the seasonal view, with one row per month.
+`resample` labels a month by a timestamp at its end. A **period** label, from chapter 6, says what you mean without the argument about which day stands for the month. Convert the index with `to_period` and group by the result as you would any key. Grouping by a calendar part gives the seasonal view, with one row per weekday.
 
 ```python
 by_month = regular.groupby(regular.index.to_period("M")).agg(["sum", "mean"])
 print(by_month.head(2).round(1))
-print(pd.Period("2024-03").start_time, pd.Period("2024-03").end_time.date())
 print(regular.groupby(regular.index.day_name()).mean().round(0).sort_values(ascending=False).head(3))
 ```
 
@@ -309,34 +254,13 @@ print(regular.groupby(regular.index.day_name()).mean().round(0).sort_values(asce
              sum   mean
 2024-01  11992.8  386.9
 2024-02  12266.4  423.0
-2024-03-01 00:00:00 2024-03-31
 Saturday    626.0
 Sunday      568.0
 Friday      536.0
 Name: revenue, dtype: float64
 ```
 
-Periods also express fiscal calendars. With a year ending in January (`Q-JAN`), 2012Q4 runs 1 November 2011 to 31 January 2012, and in `A-JUN` August 2007 belongs to the 2008 period (*Python for Data Analysis*, ch. 11). Resampling periods needs the target to be a subperiod (downsampling) or superperiod (upsampling), or pandas raises. Saturday leads, as the weekly pattern we built in says it should. Grouping by weekday is how you check for a pattern like that on real data, before you trust any comparison across days.
-
-## Time zones
-
-A timestamp with no zone is **naive**: 09:00 where? The sensible rule for stored data is to keep it in UTC and convert only for display. `tz_localize` declares what zone a naive timestamp is in, and `tz_convert` changes the zone of one that already has it. Daylight-saving changes make local hours irregular: on a spring-forward day, a local day has 23 hours. That is another reason to do arithmetic in UTC.
-
-```python
-ts = pd.Series([1, 2], index=pd.to_datetime(["2024-03-30 22:00", "2024-03-31 22:00"]))
-utc = ts.tz_localize("UTC")
-oslo = utc.tz_convert("Europe/Oslo")
-print(oslo.index)
-print(pd.date_range("2024-03-31", periods=2, freq="D", tz="Europe/Oslo").to_series().diff().iloc[1])
-```
-
-```text
-DatetimeIndex(['2024-03-30 23:00:00+01:00', '2024-04-01 00:00:00+02:00'],
-              dtype='datetime64[us, Europe/Oslo]', freq=None)
-0 days 23:00:00
-```
-
-A zone-aware timestamp stores UTC nanoseconds since the epoch, so `tz_convert` changes only how it is displayed: the stored integer (1299902400000000000 in McKinney's example) does not move (*Python for Data Analysis*, ch. 11). The zone also changes the answer to "which day was this sale?". The second stamp is 22:00 on March 31 in UTC, but it is already April 1 in Oslo, so a daily or even a monthly total by local date differs from one by UTC date. Choose the reporting zone before you resample. The last line shows the other hazard: March 31 was the day the clocks went forward in Oslo, so that local day lasted 23 hours.
+Saturday leads, as the weekly pattern we built in says it should. Grouping by weekday is how you check for a pattern like that on real data, before you trust any comparison across days. Resampling periods needs the target to be a subperiod (downsampling) or superperiod (upsampling), or pandas raises (*Python for Data Analysis*, ch. 11). If the timestamps carry a time zone, choose the reporting zone before any of this, because a sale late in the evening belongs to a different day, and sometimes a different month, in another zone.
 
 ## Rolling windows
 
@@ -401,16 +325,14 @@ Rolling works on any statistic. A rolling standard deviation is a quick volatili
 
 ## Pitfalls
 
-- **Dates left as text.** They sort alphabetically and do not resample. Check `dtypes` and pass `parse_dates`.
-- **Ambiguous day and month.** State `format=`. Check `min` and `max`.
 - **Absent rows taken for complete data.** Use `asfreq`, and compare `count` against the calendar.
 - **Old frequency aliases.** `M`, `Q`, `Y`, `H` and `T` now raise an error. Use `ME`, `QE`, `YE`, `h`, `min`.
 - **Comparing raw monthly sums.** Months have 28 to 31 days. Check per-day means too.
 - **Leakage.** A negative `shift` and `center=True` both read the future. Fine on a chart, and not in a model.
-- **Removed or renamed resample arguments.** The book's `resample(..., loffset="-1s")` no longer exists (shift the index instead), `pd.TimeGrouper` is now `pd.Grouper(freq=...)`, and `PeriodIndex(year=, quarter=)` is deprecated.
+- **Removed or renamed resample arguments.** The book's `resample(..., loffset="-1s")` no longer exists (shift the index instead), and `pd.TimeGrouper` is now `pd.Grouper(freq=...)`.
 - **Duplicate timestamps.** Check `index.is_unique`, and aggregate with `groupby(level=0)` before resampling.
 - **Unsorted index.** Sort before you slice or take rolling windows: `sort_index()`. Check with `index.is_monotonic_increasing`.
-- **Local-time arithmetic across daylight saving.** Store in UTC and convert for display.
+- **Daily totals in the wrong zone.** Pick the reporting zone before you resample (chapter 6).
 
 ## Try it
 
@@ -468,22 +390,21 @@ A count-based window could not answer this, as the gaps between orders vary.
 
 </details>
 
-4. Work through `practice/7_Time_Series.ipynb`, which repeats these moves on synthetic series and ends with rolling means and correlations on stock prices (`data/stock_px_2.csv`, which `fetch_data.sh` downloads). `practice/mckinney/ch11.ipynb` has the book's full chapter, with some old frequency aliases that the README's table translates.
+4. Work through `practice/7_Time_Series.ipynb` from Shifting onward, which repeats these moves on synthetic series and ends with rolling means and correlations on stock prices (`data/stock_px_2.csv`, which `fetch_data.sh` downloads). `practice/mckinney/ch11.ipynb` has the book's full chapter, with some old frequency aliases that the table above translates.
 
 ## Interview checklist
 
 | Question | What a good answer covers |
 |---|---|
-| Timestamp or period? | A timestamp is a moment, a period is a span. Use periods when the row stands for a whole month or quarter. |
 | What does `resample` do? | Time-based groupby. Downsampling aggregates into bins with `closed` and `label` choices; upsampling makes empty rows that you must fill on purpose. |
 | Why did `freq="M"` start failing? | Pandas 3.0 removed it for the explicit `ME` and `MS`. Similarly `QE`, `YE`, `h`, `min`. |
 | How do you do a seasonal comparison? | `shift` by the season length, such as 7 for daily data with a weekly cycle, and compare like with like. |
 | What is the difference between `rolling(7)` and `rolling("7D")`? | Seven rows against seven calendar days. They differ when rows are missing or irregular. |
 | What is leakage, and how can a time series leak? | Using information not known at prediction time: negative shifts, centred windows, or filling backward. |
-| How do you handle time zones? | Store in UTC, convert for display, pick the reporting zone before daily aggregation. Local days can be 23 or 25 hours long. |
+| Why not compare raw monthly totals? | Months have 28 to 31 days, and some have missing days. Compare mean daily values, and read the count. |
 | How do you find missing days? | `asfreq("D")` then `isna().sum()`, or compare `count` per month with the calendar. |
 | What does `ewm` do differently from a rolling mean? | It weights recent values more, decaying exponentially, so it responds faster and has no hard window edge. |
 
 ## Next
 
-You now have all the numbers. A table of 12 months hides a shape that a single chart reveals at a glance. Next: [Plotting](07-plotting.md).
+That is the third step. You can extract the rows you need, clean them until every column is the type it claims to be, and summarise them by group and over time, with a check for each step's usual mistake. What you cannot yet say is whether a difference in that table is real or luck. Next: [Probability and statistics](../../02-probability-and-statistics/README.md).

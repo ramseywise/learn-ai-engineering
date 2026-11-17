@@ -106,6 +106,8 @@ matches nn.functional.conv2d: True
 
 The filter responds where brightness changes from left to right, so the 1's two sides show up with opposite signs. In a CNN those filter values are weights, learned by the same `backward()`.
 
+**Pooling** summarises each window and has no weights. Max pooling keeps the strongest response, which asks whether the feature occurred anywhere in the window. Average pooling keeps the mean. Global average pooling takes one mean per channel over the whole map, and ResNet-style networks use it in place of a large dense layer at the end. A stride-2 convolution downsamples too, with learned weights.
+
 Buduma's ch. 5 compares the same two designs in TF 1.x: a CNN with two 5 by 5 convolutions (32, then 64 filters), two poolings, a 1024-unit layer and dropout 0.5 reaches 99.4% on MNIST, against 98.2% for its feed-forward network (one run, "several epochs"). On CIFAR-10, with random 24 by 24 crops, adding batch norm (with a 10× learning rate and no dropout) lifts accuracy from 92.3% to 96.7% and cuts the minibatches needed to pass 90% from over 80,000 to just over 14,000, read from the training curves (*Fundamentals of Deep Learning*, ch. 5). Single runs, with epochs and base rate unstated. Its 96.7% as "state of the art" has long been passed.
 
 ## A CNN on the digits
@@ -160,6 +162,8 @@ CNN  params 6090  test 0.983  test shifted one pixel 0.656
 ```
 
 With similar parameter counts, the CNN is a little better on digits as given and far better when they move by a pixel. It is not fully shift-invariant: the max pool and the final linear layer still care about position, so its accuracy falls too. Digits moved by a pixel are a small [covariate shift](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves): P(x) moves, P(y | x) doesn't, and accuracy on the unshifted test set gave no warning. On 8×8 images the parameter counts are close, because the MLP is small. For a 64×64×3 image the first dense layer of 1,000 units would need about 12 million weights, against 448 for 16 filters of 3×3×3 with biases. That's the real argument for sharing. The **Application** notebook's TF graph translates line by line with [the translation table](01-neural-networks-fundamentals.md#translating-the-ng-notebooks-to-pytorch), and the same [`tf.contrib` status](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map) applies to it.
+
+**Rotation is not built in.** Sharing weights across positions makes a filter's response move with the image. Nothing equivalent holds for turning it: a rotated edge is a different pattern to the filter. A CNN copes with rotation only as far as its training images did, so the fix is [augmentation](04b-vision-in-practice.md#transforms-v2-and-the-preset-that-comes-with-the-weights) with rotations the label survives.
 
 The convolutional design goes back to LeCun et al. ([doi:10.1109/5.726791](https://doi.org/10.1109/5.726791) (LeCun et al., Proc. IEEE 1998)). LeNet-5 combines three ideas: local receptive fields, shared weights and subsampling. Because of weight sharing, its 345,308 connections need only about 60,000 trainable parameters. The same paper introduced MNIST, with 60,000 training and 10,000 test digits drawn from two NIST sets. LeNet-5 reached 0.95% test error, or 0.8% with distorted copies of the training images added. For comparison, a linear classifier got 12%, a one-hidden-layer MLP 4.7%, and a regular SVM 1.4% at about 14M multiply-adds per digit. Schölkopf's virtual-support-vector SVM reached 1.0% at about twice that cost, and boosting three LeNet-4s gave the best result, 0.7%. Its later sections train a whole reading pipeline end to end through graphs of candidate segmentations, an ancestor of CTC, and a check reader built that way was in commercial use from 1996. It also describes a collapse problem. If the loss only pulls the correct output's learned target closer, the network can make all targets equal and ignore its input. The fix is a discriminative loss that also pushes wrong answers away, which is the job negatives do in the contrastive methods below.
 
@@ -486,6 +490,8 @@ Every digits number here came from running the code shown. The numbers attribute
 | How does SimCLR get a positive pair without labels? | Two augmentations of one image, with the other images in the batch as negatives. |
 | Which CNN architectures do you know? | LeNet-5 (local receptive fields, shared weights, subsampling), VGG (only 3×3 filters, more depth), ResNet, ResNeXt (parallel paths in the residual block) and EfficientNet (every dimension scaled at once). |
 | How did R-CNN do object detection? | It took about 2,000 region proposals per image, warped each to a fixed size, ran a CNN on each one and classified the features with per-class SVMs. Every proposal needs its own forward pass, so it was slow. |
+| Which kinds of pooling are there? | Max keeps the strongest response in a window, average keeps the mean, and global average takes one mean per channel in place of a final dense layer. A stride-2 convolution is the learned alternative. |
+| Is a CNN robust to rotation? | No. Weight sharing covers shifts only, and a rotated pattern is a different pattern to the filter. Train with rotation augmentation where the label survives it. |
 
 ## Next
 

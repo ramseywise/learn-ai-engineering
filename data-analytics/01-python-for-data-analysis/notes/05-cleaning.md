@@ -1,36 +1,39 @@
 ---
 origin: synthesis
 sources:
-  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 6-7; 3rd ed. open access at https://wesmckinney.com/book/accessing-data and https://wesmckinney.com/book/data-cleaning"
+  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 6-7; 3rd ed. open access at https://wesmckinney.com/book/data-cleaning"
   - "VanderPlas, Python Data Science Handbook (O'Reilly, 2016), ch. 3, Handling Missing Data; https://jakevdp.github.io/PythonDataScienceHandbook/03.04-missing-values.html"
   - "Wickham, Tidy Data (JSS 2014), https://doi.org/10.18637/jss.v059.i10"
-  - https://pandas.pydata.org/docs/user_guide/io.html
   - https://pandas.pydata.org/docs/user_guide/missing_data.html
+  - https://pandas.pydata.org/docs/whatsnew/v3.0.0.html
 confidence: high
-cleaned: 2026-11-01
+cleaned: 2026-11-17
 ---
-# 2 — Loading and Cleaning
+# 5 — Cleaning
 
-The first chapter's frame was typed in by hand, so every value was what it looked like. Real data comes out of an admin panel, an export, or somebody's spreadsheet, and nobody cleaned it for you. Prices carry currency signs, categories are spelled three ways, one row appears twice, and a column of numbers contains the word `n/a`. It is often said that 80% of data analysis goes on cleaning and preparing the data; Wickham repeats the figure, citing Dasu and Johnson, and adds that preparation is no one-off first step but gets repeated as new problems surface ([Wickham, JSS 2014](https://doi.org/10.18637/jss.v059.i10)). Treat the 80% as folklore and the second half as the useful part. Because you will clean the same data again, cleaning should be a script you can rerun and not a set of edits you did once. This chapter takes the shop's real export from file to trustworthy frame.
+[Chapter 2](02-loading-data.md) loaded the shop's export so that the frame matched the file, and the file is a mess. Prices carry currency signs, categories are spelled three ways, one row appears twice, and a column of numbers contains the word `n/a`. Nobody cleaned it for you. It is often said that 80% of data analysis goes on cleaning and preparing the data; Wickham repeats the figure, citing Dasu and Johnson, and adds that preparation is no one-off first step but gets repeated as new problems surface ([Wickham, JSS 2014](https://doi.org/10.18637/jss.v059.i10)). Treat the 80% as folklore and the second half as the useful part. Because you will clean the same data again, cleaning should be a script you can rerun and not a set of edits you did once. This chapter takes the loaded export to a frame in which every column is the type it claims to be, and every removed row is accounted for.
 
 The flow for the whole chapter:
 
 ```mermaid
 flowchart LR
-    A[Look at the raw file] --> B[read_csv with the right options]
-    B --> C[Check dtypes and missing counts]
-    C --> D[Fix text, numbers, duplicates]
+    A[The frame as loaded] --> B[Count: dtypes, missing, distinct values]
+    B --> C[Fix text and numbers]
+    C --> D[Decide duplicates and gaps]
     D --> E[Assert what must be true]
     E --> F[Save with types: Parquet]
-    D -. new problem found .-> A
+    C -. new problem found .-> B
 ```
 
-## Look at the raw file first
+## Start from the loaded export
 
-Before you parse anything, read the raw text. Python's `open` and `pathlib` are enough, and `practice/2_Texts.ipynb` drills them on a real file. Here is the export, written to disk so that the rest of the chapter reads an actual file.
+The chapter runs on its own, so this block writes the same export that chapter 2 read and loads it with the same decisions stated: skip the banner line, treat `-` as a missing region, and parse the dates.
 
 ```python
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 raw = """# shop-admin export 2025-02-01
 order_id,date,customer,product,qty,unit_price,region
@@ -50,73 +53,13 @@ order_id,date,customer,product,qty,unit_price,region
 """
 Path("orders_raw.csv").write_text(raw, encoding="utf-8")
 
-with open("orders_raw.csv", encoding="utf-8") as f:
-    for _ in range(3):
-        print(f.readline().rstrip())
-```
-
-```text
-# shop-admin export 2025-02-01
-order_id,date,customer,product,qty,unit_price,region
-1001,2025-01-03,Ana,kettle,1,$48.00,north
-```
-
-The first line is not data. Everything else you might have to fix is visible from a quick read, but only if you look. Passing `encoding` explicitly is a good habit too: a file saved in another encoding either raises an error or quietly produces garbled characters, and the default encoding differs across systems.
-
-## read_csv and the options that matter
-
-`pd.read_csv` is a large function because files vary in many ways. McKinney groups its options by purpose, and that grouping is a good way to remember them: indexing, type inference and conversion, date parsing, iterating over big files, and handling unclean data ([McKinney, *Python for Data Analysis*, ch. 6](https://wesmckinney.com/book/accessing-data)). Try the naive call first and see what breaks.
-
-```python
-import pandas as pd
-
-naive = pd.read_csv("orders_raw.csv")
-print(naive.shape)
-print(list(naive.columns))
-```
-
-```text
-(14, 1)
-['# shop-admin export 2025-02-01']
-```
-
-The banner line became the header, so the frame has one column named after it, and the real columns collapsed into a confusing index. The shape gives it away, which is why you check it. Tell `read_csv` about the comment line and look again.
-
-```python
-orders = pd.read_csv("orders_raw.csv", comment="#")
-print(orders.head(3))
+orders = pd.read_csv("orders_raw.csv", comment="#", na_values={"region": ["-"]}, parse_dates=["date"])
+print(orders.shape)
 print(orders.dtypes)
 ```
 
 ```text
-   order_id        date customer  product  qty unit_price region
-0      1001  2025-01-03      Ana   kettle  1.0     $48.00  north
-1      1002  2025-01-03      ben   filter  3.0      $6.50  South
-2      1003  2025-01-05      ana  grinder  1.0     $95.00  north
-order_id        int64
-date              str
-customer          str
-product           str
-qty           float64
-unit_price        str
-region            str
-dtype: object
-```
-
-This parse runs without error and is still not right. `qty` is `float64` and not `int64`: pandas treats `n/a` as missing by default, along with strings such as `NA`, `NaN`, `null` and the empty string, and a gap promotes the column to float. `unit_price` stayed `str` because of the dollar signs, and `date` is `str` since pandas does not guess dates unless you ask. The `-` standing for a missing region is this file's own convention, so pandas cannot know about it. Here is a better parse with those decisions stated.
-
-```python
-orders = pd.read_csv(
-    "orders_raw.csv",
-    comment="#",
-    na_values={"region": ["-"]},   # this file's own marker for missing
-    parse_dates=["date"],
-)
-print(orders.dtypes)
-print(orders.isna().sum())
-```
-
-```text
+(13, 7)
 order_id               int64
 date          datetime64[us]
 customer                 str
@@ -125,46 +68,9 @@ qty                  float64
 unit_price               str
 region                   str
 dtype: object
-order_id      0
-date          0
-customer      0
-product       0
-qty           2
-unit_price    0
-region        2
-dtype: int64
 ```
 
-Three more options deserve a place in your memory, though this file does not need them. `dtype={"zip": "str"}` stops pandas from turning `01234` into the integer 1234, which matters for any identifier with a leading zero. `usecols` and `nrows` let you take a look at a file too large to load in full. And `chunksize` gives you an iterator of frames for a file larger than memory.
-
-```python
-import io
-
-ids = "zip,sales\n01234,5\n90210,7\n"
-print(pd.read_csv(io.StringIO(ids))["zip"].tolist())
-print(pd.read_csv(io.StringIO(ids), dtype={"zip": "str"})["zip"].tolist())
-
-for chunk in pd.read_csv("orders_raw.csv", comment="#", chunksize=5):
-    print(len(chunk), end=" ")
-print()
-```
-
-```text
-[1234, 90210]
-['01234', '90210']
-5 5 3
-```
-
-McKinney's chunked example reads a 10,000-row, 5-column file in pieces of 1,000 and accumulates `value_counts` with `tot.add(piece["key"].value_counts(), fill_value=0)`, so the full file is never in memory; the `fill_value=0` handles a key absent from some chunk (*Python for Data Analysis*, ch. 6). The chapter also counts over 50 `read_csv` parameters, so when a file will not parse, go to the docs and not to memory. The other readers follow the same pattern. Learn `read_csv` thoroughly and you already know most of `read_json`, `read_excel`, `read_parquet` and `read_sql`, since each returns a DataFrame and most share the idea of stating types and missing markers up front ([pandas IO guide](https://pandas.pydata.org/docs/user_guide/io.html)).
-
-| Source | Function | Note |
-|---|---|---|
-| Delimited text | `read_csv` | Types are guessed, so state the ones that matter |
-| JSON records | `read_json`, `json_normalize` | Nested data needs flattening |
-| Excel | `read_excel` | Needs `openpyxl`; `sheet_name` picks the sheet |
-| HTML tables | `read_html` | Returns a list of frames, one per table |
-| Database | `read_sql` | Takes a query and a connection; pillar 06 teaches the SQL |
-| Parquet | `read_parquet` | Types come with the file; needs `pyarrow` |
+Read the types as a list of jobs. `qty` should be a whole number and is a float, because it has gaps. `unit_price` should be a number and is text, because of the dollar signs. The three text columns hold categories, and you do not yet know how many spellings each one has. Only `date` is already what it claims to be, and [chapter 6](06-dates-and-times.md) is about what that type gives you.
 
 ## Fixing text
 
@@ -411,7 +317,7 @@ upper half    5
 Name: count, dtype: int64
 ```
 
-`pd.cut` on fixed thresholds fits when the thresholds mean something to the business. `pd.qcut` fits when you want equal-sized comparison groups, and chapter 5 feeds such buckets straight into `groupby`.
+`pd.cut` on fixed thresholds fits when the thresholds mean something to the business. `pd.qcut` fits when you want equal-sized comparison groups, and chapter 7 feeds such buckets straight into `groupby`.
 
 ## Saving what you cleaned
 
@@ -479,44 +385,21 @@ loaded 13 rows, kept 11
 10      1012 2025-01-20      ben   kettle    1        48.0    south
 ```
 
-This is the frame the next chapters start from: 11 orders, and every removal accounted for.
+This is the frame the selections in chapter 3 and the summaries in chapter 7 use: 11 orders, and every removal accounted for.
 
 ## Pitfalls
 
 - **Editing the raw file by hand.** Then nobody can rerun your work, including you next month. Keep raw data unchanged and do all fixes in code.
-- **Letting `read_csv` guess identifiers.** Leading zeros vanish from zip codes, phone numbers and account ids. State `dtype="str"`.
 - **`errors="coerce"` without counting.** It turns every failure into `NaN` without a word. Print `isna().sum()` before and after, or a change of format upstream can wipe out a whole column unnoticed.
 - **Filling gaps with the mean by reflex.** It shrinks the variance and it can invent impossible values. Decide by asking why the value is missing.
 - **Dropping rows silently.** Print row counts at each step and keep what you removed.
 - **Duplicate checks on the whole row only.** Check the column that should be unique.
 - **Pickle as an archive format.** Use Parquet for anything you might read in a year.
+- **A check that passes on a type and not on a meaning.** A quantity of -1 is a valid integer. Assert the range and the allowed values, not only the dtype.
 
 ## Try it
 
-1. Parse this text so that `sku` keeps its leading zeros, `sold` is numeric with `?` counted as missing, and `day` is a datetime: `"sku,sold,day\n0012,4,2025-03-01\n0031,?,2025-03-02\n"`.
-
-<details><summary>Answer</summary>
-
-```python
-text = "sku,sold,day\n0012,4,2025-03-01\n0031,?,2025-03-02\n"
-t = pd.read_csv(io.StringIO(text), dtype={"sku": "str"}, na_values=["?"], parse_dates=["day"])
-print(t.dtypes)
-print(t)
-```
-
-```text
-sku                str
-sold           float64
-day     datetime64[us]
-dtype: object
-    sku  sold        day
-0  0012   4.0 2025-03-01
-1  0031   NaN 2025-03-02
-```
-
-</details>
-
-2. In `pd.Series(["Filter", " filter", "FILTER ", None, "kettle"])`, how many distinct products are there before and after cleaning?
+1. In `pd.Series(["Filter", " filter", "FILTER ", None, "kettle"])`, how many distinct products are there before and after cleaning?
 
 <details><summary>Answer</summary>
 
@@ -533,7 +416,7 @@ print(s.nunique(), s.str.strip().str.lower().nunique())
 
 </details>
 
-3. Extend the assertions in `load_orders` so it fails if a date falls outside the export month. Then rerun it on a copy of `raw` with one date changed to 2024.
+2. Extend the assertions in `load_orders` so it fails if a date falls outside the export month. Then rerun it on a copy of `raw` with one date changed to 2024.
 
 <details><summary>Answer</summary>
 
@@ -553,7 +436,28 @@ The `False` is what the assertion would stop on, had you added it inside the fun
 
 </details>
 
-4. Work through `practice/2_Texts.ipynb`, which reads a poem from `mckinney/examples/` and uses `re` on free text (run `bash practice/fetch_data.sh` first). Then `practice/mckinney/ch06.ipynb` and `ch07.ipynb` cover the book's full tour of readers and cleaning tools on the book's data.
+3. A price column arrives as `pd.Series(["$48.00", "$6.50", "free", None, "$1,200.00"])`. Turn it into numbers, and say how many values you could not parse and why.
+
+<details><summary>Answer</summary>
+
+```python
+p = pd.Series(["$48.00", "$6.50", "free", None, "$1,200.00"])
+stripped = p.str.replace("$", "", regex=False).str.replace(",", "", regex=False)
+num = pd.to_numeric(stripped, errors="coerce")
+print(num.tolist())
+print(p.isna().sum(), num.isna().sum())
+```
+
+```text
+[48.0, 6.5, nan, nan, 1200.0]
+1 2
+```
+
+One value was missing to begin with and two are missing afterwards, so the conversion failed on exactly one, the word `free`. Whether that means a price of zero is a question for whoever owns the data. Without the second `replace`, the thousands comma would have made a third.
+
+</details>
+
+4. Work through `practice/2_Texts.ipynb`, which reads a poem from `mckinney/examples/` and uses `re` on free text (run `bash practice/fetch_data.sh` first). Then `practice/mckinney/ch07.ipynb` covers the book's full tour of cleaning tools on the book's data.
 
 ## Interview checklist
 
@@ -570,4 +474,4 @@ The `False` is what the assertion would stop on, had you added it inside the fun
 
 ## Next
 
-You now have a clean frame. To work with it you need to pick out precisely the rows and columns you mean. Next: [Indexing and selection](03-indexing-and-selection.md).
+Every column is now the type it claims to be. One of those types, the date, carries more than a number does: a format, a resolution, a time zone and a calendar. Next: [Dates and times](06-dates-and-times.md).

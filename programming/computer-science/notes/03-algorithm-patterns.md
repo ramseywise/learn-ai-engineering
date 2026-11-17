@@ -263,6 +263,43 @@ The last line shows that you rarely have to write it by hand. [`bisect`](https:/
 
 The condition is that the test has to be monotonic. A real queue's p95 isn't strictly monotonic in rate, because it's noisy. I fixed the seed above and checked rates 1 to 300 for this one, finding no violations. Under another seed or with fewer requests it may flip more than once, and then binary search returns a boundary and not necessarily the first. Use repeated seeds or a smoothed estimate when checks are noisy.
 
+The same loop computes a square root without a library, because `x * x <= n` flips exactly once as `x` grows. Newton's method gets there faster on floats by averaging a guess with `a / guess`:
+
+```python
+def isqrt(n):
+    """Largest x with x*x <= n: binary search on the answer."""
+    lo, hi, steps = 0, n, 0
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if mid * mid <= n:
+            lo = mid
+        else:
+            hi = mid - 1
+        steps += 1
+    return lo, steps
+
+
+def newton_sqrt(a, tol=1e-12):
+    x, steps = max(a, 1.0), 0
+    while abs(x * x - a) > tol * a:
+        x = (x + a / x) / 2                  # average the guess with a / guess
+        steps += 1
+    return x, steps
+
+
+print("isqrt(10**18 + 5) =", isqrt(10**18 + 5))
+print("newton_sqrt(2.0)  =", newton_sqrt(2.0))
+print("newton_sqrt(1e18) =", newton_sqrt(1e18))
+```
+
+```text
+isqrt(10**18 + 5) = (1000000000, 60)
+newton_sqrt(2.0)  = (1.414213562373095, 5)
+newton_sqrt(1e18) = (1000000000.0000024, 34)
+```
+
+Binary search takes one step per bit of `n`, 60 here. Newton's step roughly doubles the number of correct digits once the guess is close, which is the 5 steps for 2. From a poor start it first halves the guess each time, which is most of the 34 steps for `1e18`. This loop is closed on both ends, `[lo, hi]`, so the midpoint rounds up. Otherwise `lo = mid` would stall when `hi == lo + 1`.
+
 ## Backtracking
 
 Backtracking explores a tree of choices: make a choice, recurse, undo it. Without pruning it's exhaustive, so `2^n` for subsets. [Erickson's chapter](https://jeffe.cs.illinois.edu/teaching/algorithms/) frames it as making one decision at a time from a recursive description of the solution. Pruning is what makes it usable, and it's only correct if you only cut branches that can't beat what you already have:
@@ -324,6 +361,8 @@ Both find 5 tools, which agrees with the unpruned search. But the two prunes rem
 The `chosen.append`/`chosen.pop` pair is the essential mechanic: a single mutable list shared across the search, restored after each call. Mixing that up by storing `chosen` without copying it, in place of `list(chosen)`, is the classic bug, and it leaves a best answer that's empty by the end.
 
 Set cover in general has no known fast exact algorithm, so for large inputs you'd switch to a greedy approximation and accept the difference. Exhaustive search is fine for tens of items if the bounds are strong, and the point of the measurement above is that you can't tell without trying.
+
+That is the general plan for an NP-hard problem with a time budget, and it has three layers. Build a first answer greedily, which is fast and often has a guarantee: for 0/1 knapsack, taking items by value per weight and comparing the result with the single most valuable item is never worse than half the optimum. Then improve it by local search, swapping two items or reversing a stretch of a tour as 2-opt does, until no move helps. Restart from random points, or accept some worse moves as simulated annealing does, to get out of local optima. Keep the best answer found so far throughout, so the search can stop at any deadline. A relaxation gives the other side: the fractional knapsack is easy and its value is an upper bound, so you can say how far from optimal you could be.
 
 ## Dynamic programming
 
@@ -767,6 +806,41 @@ The randomness matters more than it seems. With a fixed pivot rule, an adversary
 
 The other half of divide and conquer is the recurrence, already covered by [recursion trees in chapter 1](01-cost-models-and-big-o.md#recurrences-and-recursion-trees): what matters is the number of branches, how fast the problem shrinks, and how much work each level does.
 
+## Sampling a stream you can't hold
+
+Quickselect needs the whole input in memory. A uniform sample of `k` items doesn't, even when the length isn't known in advance. Reservoir sampling keeps the first `k`, then lets item `i` (0-based) replace a random slot with probability `k / (i + 1)`:
+
+```python
+import random
+from collections import Counter
+
+
+def reservoir(stream, k, rng):
+    """A uniform sample of k items from a stream of unknown length, in O(k) space."""
+    sample = []
+    for i, item in enumerate(stream):
+        if i < k:
+            sample.append(item)
+        else:
+            j = rng.randrange(i + 1)         # item i is kept with probability k / (i + 1)
+            if j < k:
+                sample[j] = item
+    return sample
+
+
+rng = random.Random(4)
+counts = Counter(x for _ in range(20_000) for x in reservoir(iter(range(10)), 3, rng))
+print("times each of 10 items was sampled in 20,000 runs of k=3 (expect 6,000):")
+print([counts[i] for i in range(10)])
+```
+
+```text
+times each of 10 items was sampled in 20,000 runs of k=3 (expect 6,000):
+[5831, 6021, 6096, 5965, 5987, 6038, 6038, 5975, 6054, 5995]
+```
+
+Why it's uniform: item `i` enters with probability `k / (i + 1)`. A later item `t` evicts it with probability `(k / (t + 1)) * (1 / k)`, so it survives that step with probability `t / (t + 1)`. The product of those from `t = i + 1` to `n - 1` telescopes to `(i + 1) / n`, and `k / (i + 1)` times that is `k / n` for every item. It's one pass, and memory doesn't grow with the stream.
+
 ## Pitfalls
 
 - **Binary search over a test that isn't monotonic.** Symptom: an answer that changes with the seed or the bounds, and looks plausible each time.
@@ -812,6 +886,9 @@ The other half of divide and conquer is the recurrence, already covered by [recu
 | When does Dijkstra fail? | With negative edge weights. It finalises a node on the assumption that later paths can't be shorter. |
 | How do you detect a cycle in a dependency graph? | In a DFS, an edge to a node still active on the current path. |
 | How do you get a percentile from a large list? | Quickselect gives expected linear time; a sort is simple and, in Python, often close enough. |
+| How do you sample k items from a stream of unknown length? | Reservoir sampling. Keep the first k, then let item i (0-based) replace a random slot with probability k/(i + 1). Every item ends up kept with probability k/n, in one pass and O(k) memory. |
+| How do you compute a square root without a library? | Binary search on the answer: the largest x with x·x ≤ n, in log n steps. Or Newton's method: replace the guess x with (x + a/x)/2, which doubles the correct digits each step once close. |
+| How do you approach an NP-hard problem in a fixed time? | Build a greedy answer, improve it by local search with restarts, and keep the best so far so you can stop at the deadline. A relaxation gives a bound on how far from optimal you can be. |
 
 ## Next
 

@@ -226,6 +226,24 @@ corr(mon, tue) | not engaged +0.000
 
 Opening Monday's and Tuesday's emails have a correlation of 0.28 across all users, and essentially zero within each engagement level. This is the structure behind confounding in [causal inference](../../03-experimentation-and-causality/notes/04-correlation-and-causation.md): a shared cause induces correlation that vanishes when you condition on it.
 
+Independence is also something you can build with. Suppose a coin lands heads with an unknown probability p, and you need a fair one. Flip it twice. Heads then tails has probability p(1 − p) and tails then heads has (1 − p)p, which are equal whatever p is, because the flips are independent. So call the first heads and the second tails, and start again on two of a kind. This is von Neumann's trick.
+
+```python
+rng = np.random.default_rng(12)
+flips = rng.random(2_000_000) < 0.7                  # a coin that lands heads 70% of the time
+first, second = flips[0::2], flips[1::2]
+keep = first != second                               # HT or TH; throw away HH and TT
+print(f"raw heads {flips.mean():.3f}, heads among kept pairs {first[keep].mean():.3f}")
+print(f"flips per fair bit {flips.size / keep.sum():.2f}, theory 1/(p(1-p)) = {1 / (0.7 * 0.3):.2f}")
+```
+
+```text
+raw heads 0.700, heads among kept pairs 0.500
+flips per fair bit 4.76, theory 1/(p(1-p)) = 4.76
+```
+
+The price is flips. A pair is kept with probability 2p(1 − p), so a fair bit costs 1/(p(1 − p)) flips on average: 4 for a coin that was fair already, 4.76 here, and more as the bias grows.
+
 ## Random variables, expectation and variance
 
 A *random variable* assigns a number to each outcome. It has a probability mass function if discrete, a density if continuous, and a CDF either way. Two numbers summarise it. The expectation E[X] is its long-run mean. The variance Var(X) = E[(X − E[X])²] is its mean squared distance from that mean, and its square root is the standard deviation. A worked case from Bruce and Bruce: a webinar attendee buys a $300 service with probability 5%, a $50 one with 15% and nothing otherwise, so the expected value per attendee is 0.05 × 300 + 0.15 × 50 = $22.50 per month (*Practical Statistics*, ch. 1).
@@ -411,6 +429,7 @@ Both sides match. The second identity is the reason for two later techniques. St
 | Independent vs conditionally independent? | Neither implies the other. A shared cause makes variables dependent overall but independent given the cause. |
 | Define variance. | Var(X) = E[(X − E[X])²], the mean squared distance of X from its mean. Its square root is the standard deviation. |
 | What is an expected value? | The long-run mean of a random variable, E[X]. A webinar attendee who buys a 300-dollar service with probability 5% and a 50-dollar one with 15% is worth 0.05 × 300 + 0.15 × 50 = 22.50 dollars a month. |
+| How do you get a fair coin from a biased one? | Flip twice. Heads-tails and tails-heads are equally likely whatever the bias, so call one heads and the other tails, and flip again on a matching pair. A fair bit costs 1/(p(1 − p)) flips on average. |
 
 ---
 

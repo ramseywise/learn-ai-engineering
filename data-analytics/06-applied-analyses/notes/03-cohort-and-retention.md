@@ -57,6 +57,8 @@ A cohort is a group of customers who started in the same period, and **age** is 
 
 Why not just track one retention rate over time? A blended figure weighs together customers of every age. A young customer base has a high monthly rate because newly acquired customers buy again soon, so growth flatters the figure and slowdown hurts it, even if nobody's behaviour changes. Holding age fixed removes that.
 
+**Churn is retention's complement, and defining it is a decision.** The churn rate for a period is the customers lost during it divided by the customers at its start, and retention is one minus that. In a contractual business (subscriptions, telecoms, software) a loss is an event: a cancellation or a renewal that did not happen. In a non-contractual one such as Fernhill nobody cancels, so churn needs a rule, for example no order in 90 days, and the window you pick moves the number. State three things with any churn figure. The denominator: customers at the start, without those acquired during the period. The period: 2% a month compounds to 1 − 0.98¹² = 21.5% a year, not 24%. And the unit: customers or revenue.
+
 ```python
 LAST = pd.Period("2025-12", "M")
 sizes = customers.groupby("cohort").size()
@@ -378,6 +380,7 @@ Exercises use `practice/ch03_cohort_retention.py`.
 | When does the sBG not apply? | When churn is unobserved, as in non-contractual retail. Use Pareto/NBD or [BG/NBD](09b-customer-lifetime-value.md#what-a-customer-is-worth-bgnbd), or a repeat window as a proxy. |
 | Why not fit an exponential to retention? | It assumes the same churn for everyone, so it falls away too fast and under-values a cohort's future. |
 | What is an LTV to CAC ratio? | Margin per customer over some horizon, divided by acquisition cost. State the horizon and the margin, and don't quote a ratio without them. |
+| How do you define and calculate churn? | Customers lost in a period divided by customers at its start. Contractual businesses count cancellations. Others need a rule, such as no order in 90 days. State the denominator, the period and whether it counts customers or revenue. |
 
 ## Next
 

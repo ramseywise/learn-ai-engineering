@@ -324,7 +324,7 @@ kettle    4   5   3
 ['product', 'w1', 'w2', 'w3']
 ```
 
-`pivot` needs each combination of row and column to occur once. If it occurs twice, pandas cannot know which value to place in the cell, so it raises an error. Chapter 5's `pivot_table` handles that case by aggregating.
+`pivot` needs each combination of row and column to occur once. If it occurs twice, pandas cannot know which value to place in the cell, so it raises an error. Chapter 7's `pivot_table` handles that case by aggregating.
 
 ```python
 dupes = pd.DataFrame({"product": ["kettle", "kettle"], "week": ["w1", "w1"], "units": [4, 1]})
@@ -471,4 +471,4 @@ fay            0        0       0      1
 
 ## Next
 
-The answer you want is usually one number per group: revenue per region, margin per category. You have already called `groupby` several times on trust. Next: [Groupby and aggregation](05-groupby-and-aggregation.md).
+That is the first step, extract: you can load a table, pick out the rows and columns you mean, and bring several tables together. Every example since chapter 3 has used orders that were already clean. The export from chapter 2 is not, and the second step is to make it so. Next: [Cleaning](05-cleaning.md).

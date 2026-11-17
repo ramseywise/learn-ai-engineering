@@ -204,6 +204,8 @@ Plain gradient descent has one step size for every parameter and no memory. Each
 | AdamW | The Adam step, then $W \mathrel{-}= \alpha\lambda W$ applied outside the gradient | See below |
 | Lion | $W \mathrel{-}= \alpha\,(\operatorname{sign}(\beta_1 v + (1-\beta_1) dW) + \lambda W)$; then $v = \beta_2 v + (1-\beta_2) dW$ | Found by program search; less memory than Adam |
 
+**Batch, mini-batch or one example.** Full-batch gradient descent computes the exact gradient over all $m$ examples for each step, so one pass over the data buys one update. Stochastic gradient descent (SGD) steps on one example at a time: $m$ updates per pass, each from a noisy estimate that is right on average. Mini-batch sits between the two and is what "SGD" means in practice. The noise is cheap to accept. The standard error of a batch gradient falls only as $1/\sqrt{B}$, so a batch 100 times larger costs 100 times the compute for a gradient 10 times less noisy, and many rough steps usually beat a few exact ones. A batch of one wastes the hardware, though, since a GPU processes a few hundred examples in one vectorised call. Full batch is still reasonable when the whole dataset fits in one such call.
+
 Your **Optimization methods** notebook writes these in NumPy on "moons". After the same epochs: mini-batch GD 79.7%, momentum 79.7%, Adam 94%. Learning-rate decay completes that notebook. Here they are on digits after 10 epochs, over five seeds, with Lion written out to show how little it stores:
 
 Buduma's ch. 4 times momentum on its MNIST ReLU network (rate 0.01, momentum 0.9): about 18,000 minibatches to reach cost 0.1 without it and just over 2,000 with it, read from one TensorBoard run (*Fundamentals of Deep Learning*, ch. 4). It also gives the heuristic for why local minima worry less in high dimensions: if each of the three kinds of critical point were equally likely in each dimension, a random one would be a minimum with probability $1/3^d$. That is an argument and not a measurement. It says AdaGrad "tends to cause a premature drop in learning rate", which is why RMSprop and Adam replace its running sum with a moving average.
@@ -475,6 +477,7 @@ Every digits number in this chapter came from running the code shown, with `uv r
 | Can you rank the adaptive optimisers from one run? | No. Momentum and per-parameter step sizes clearly matter on a short budget, but the gaps among the adaptive methods were within a standard deviation or two. |
 | Constant learning rate or a schedule? | A schedule gave a small gain here: cosine 0.970 ± 0.003 against constant 0.963 ± 0.006 test accuracy, and it was more consistent across seeds, since the step shrinks as training ends. |
 | When do you stop training? | Watch a validation curve and keep the best checkpoint, since the right epoch count is not known in advance. On digits with 30% label noise, stopping early beat dropout and weight decay. |
+| How does SGD differ from full-batch gradient descent? | Full batch takes one exact step per pass over the data. SGD takes many noisy steps per pass. Gradient noise falls only as 1/√B, so 100 times the batch buys 10 times less noise, and mini-batches win. |
 
 ## Next
 

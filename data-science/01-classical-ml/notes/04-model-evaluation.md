@@ -298,6 +298,8 @@ On the ten-class digits task with logistic regression (450 test images) the book
 
 **Regression.** $R^2$ (default `score`) is fine for model comparison. For reporting, use a unit the business understands: MAE (robust to outliers), RMSE (penalises big misses), MAPE (relative error; undefined at zero). MAPE is not in scikit-learn's core scorers in the book's edition, so Wilson writes it as `np.mean(np.abs((y_true - y_pred) / y_true)) * 100`, and returns every agreed metric from one function (MAE, MAPE, MSE, RMSE, explained variance, $R^2$) so that nobody has to choose a metric before the experiments run (*ML Engineering in Action*, ch. 6).
 
+The definitions, with residuals $e_i = y_i - \hat y_i$: MSE is $\frac{1}{n}\sum e_i^2$, RMSE is its square root, and MAE is $\frac{1}{n}\sum |e_i|$. MSE is in squared units, which is why RMSE is the one reported. The squaring is the whole difference. Residuals of 1, 1, 1 and 9 give an MAE of 3 and an RMSE of $\sqrt{84/4} \approx 4.6$, and the one large miss supplies 81 of the 84. RMSE is never below MAE, and a wide gap between them means a few large errors.
+
 ---
 
 ## Using a metric in model selection
@@ -504,6 +506,7 @@ Where the fixes landed:
 | What are the limits of R² as a metric? | It is fine for comparing models, but not in-sample: with at least as many features as rows a perfect fit is guaranteed, so report held-out or cross-validated error only. |
 | Too many false positives or too many false negatives? | It depends on what each costs. In cancer screening a false negative is a missed cancer and a false positive is extra tests. In a spam filter the false positive, a real email lost, is the worse one. |
 | How do you average F1 over more than two classes? | `macro` weights every class equally, for when small classes matter as much as large. `weighted` weights by class support. `micro` weights every sample equally and equals accuracy for single-label problems. |
+| What are MSE and RMSE? | MSE is the mean of the squared residuals and RMSE is its square root, back in the target's units. Residuals 1, 1, 1 and 9 give MAE 3 but RMSE about 4.6, because squaring lets the large miss dominate. |
 
 ## Next
 
