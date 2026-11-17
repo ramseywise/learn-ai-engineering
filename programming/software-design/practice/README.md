@@ -4,6 +4,26 @@
 
 The module was written for this lab, so its smells are deliberate. The numbers below come from the worked solution, an n of 1 where the same person wrote both versions. [Chapter 2](../notes/02-refactoring.md#what-the-lab-measured) discusses what they do and don't show. Do the lab after chapter 2, and come back for the [mutation step](#step-5-test-the-tests) after [chapter 5](../notes/05-testing-strategy.md).
 
+## Layout
+
+```
+software-design/
+├── README.md
+├── references.md
+├── notes/                         01–07
+├── slides/                        deck.yaml and the built study deck
+└── practice/
+    ├── README.md                  the lab: what to do and what it measured
+    ├── check.sh                   runs the lab's tests (solutions by default)
+    ├── mutate.py                  a tiny mutation tester, used from chapter 5
+    ├── exercises/usage_report_lab/   the module and its characterization tests
+    └── solutions/usage_report_lab/   every refactoring step, and tests over all of them
+```
+
+You need Python 3.14 and [uv](https://docs.astral.sh/uv/) for the lab, and Git for chapter 7. The notes' code blocks are standalone: copy one into a file and run it. Chapter 5's use Hypothesis and coverage, so run those with `uv run --with hypothesis --with coverage python block.py`. Everything in this track was run on Python 3.14.7 and Git 2.55.0.
+
+Chapter 7's blocks create throwaway Git repositories under a temporary directory. Don't change them to point at a real one. Which step of the lab goes with which chapter is in the [syllabus](../README.md#syllabus).
+
 ## Run it
 
 You need Python 3.14 and [uv](https://docs.astral.sh/uv/). From this folder:

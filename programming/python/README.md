@@ -1,58 +1,42 @@
 # Python
 
-> From your first `if` to async, typed, tested code. Three modules: the *Python for Everybody*
-> spine (01–02) and the language features engineering code relies on (03). Pandas comes next, in
-> [data-analytics 01](../../data-analytics/01-python-for-data-analysis/README.md).
-> Jump to: [Syllabus](#syllabus) · [Study decks](#study-decks) · [Layout](#layout) · [Setup](#setup) · [How exercises work](#how-exercises-work) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
+Go from your first `if` to async, typed, tested code. Five steps across three modules: the *Python for Everybody* spine (01 and 02) and the language features that engineering code relies on (03). Each note is short and ends in exercises that check themselves.
 
----
+**What you should already know.** Nothing: this is the entry point of the course. One note, [02 · 05 databases](02-informatics/notes/05-databases.md), borrows joins and upsert from the [SQL track](../sql/README.md) and links the two notes it needs.
+
+## Lecture
+
+One deck per module, on the same examples as the notes: [Python foundations](01-foundations/slides/python-foundations.pptx) ([PDF](01-foundations/slides/python-foundations.pdf)) for step 1, [Python informatics](02-informatics/slides/python-informatics.pptx) ([PDF](02-informatics/slides/python-informatics.pdf)) for step 2, and [Python for engineers](03-language-for-engineers/slides/python-for-engineers.pptx) ([PDF](03-language-for-engineers/slides/python-for-engineers.pdf)) for steps 3 to 5. Librarian turns each slide into a flashcard: the title is the question and the takeaway is the rule that answers it.
+
+## The core
+
+This track teaches the language and stops there. Pandas and the scientific stack start in [data-analytics 01](../../data-analytics/01-python-for-data-analysis/README.md), and the ideas underneath the language (cost, memory, the operating system) are in [computer science foundations](../computer-science/README.md). The question it keeps asking is: **what does this line do, and to which object?** Most Python surprises are answers to it: a default list shared between calls, a function that prints where it should return, a file left open, a coroutine that was never awaited.
+
+There are five steps. The first two get you writing programs that read real text and data. The last three are the same language seen the way production code uses it: its idioms, the habits that keep a package maintainable, and the runtime underneath.
 
 ## Syllabus
 
-### 01 — Foundations
+One row per step. **Core concepts** are the ideas the step turns on, **Study** is what to read, **Labs** is what to do afterwards (the track's own exercises first, then the drills on the same topic), and **Sources** is where to read more. How to run the labs: [practice/README.md](practice/README.md).
 
-| # | Note | You can… | Exercises |
-|---|---|---|---|
-| 01 | [Values, expressions and conditionals](01-foundations/notes/01-values-and-conditionals.md) | Use types, operators, `if`/`elif`, truthiness, `try` on bad input | [py](01-foundations/practice/exercises/01_values_and_conditionals.py) |
-| 02 | [Functions](01-foundations/notes/02-functions.md) | Write functions that return rather than print, with defaults and docstrings | [py](01-foundations/practice/exercises/02_functions.py) |
-| 03 | [Loops and loop patterns](01-foundations/notes/03-loops.md) | Count, sum, find the max, search, with `for`/`while`/`break` | [py](01-foundations/practice/exercises/03_loops.py) |
-| 04 | [Strings and files](01-foundations/notes/04-strings-and-files.md) | Slice, search and format strings; read files line by line with `with` | [py](01-foundations/practice/exercises/04_strings_and_files.py) |
-| 05 | [Lists, dictionaries and tuples](01-foundations/notes/05-collections.md) | Pick the right collection, count with dicts, sort by value | [py](01-foundations/practice/exercises/05_collections.py) |
+| Submodule | Core concepts | Study | Labs | Sources |
+|---|---|---|---|---|
+| **1. Foundations:** first programs | Values have types, and conversion is explicit. A function returns a value; printing is for the edge of the program. Most loops are one of four patterns: count, sum, find the largest, search. Pick the collection by how you will look things up. | [1 Values and conditionals](01-foundations/notes/01-values-and-conditionals.md) · [2 Functions](01-foundations/notes/02-functions.md) · [3 Loops](01-foundations/notes/03-loops.md) · [4 Strings and files](01-foundations/notes/04-strings-and-files.md) · [5 Collections](01-foundations/notes/05-collections.md) | Exercises [01](01-foundations/practice/exercises/01_values_and_conditionals.py) · [02](01-foundations/practice/exercises/02_functions.py) · [03](01-foundations/practice/exercises/03_loops.py) · [04](01-foundations/practice/exercises/04_strings_and_files.py) · [05](01-foundations/practice/exercises/05_collections.py) | Severance, [*Python for Everybody*](https://www.py4e.com/book): topic order, paraphrased |
+| **2. Informatics:** text, the web and a database | A regular expression extracts with groups. An HTTP response is a status, headers and a body, and you check the status. JSON is nested dictionaries and lists. A class keeps data valid at the point it is made. Values reach SQL as `?` parameters. | [1 Regular expressions](02-informatics/notes/01-regular-expressions.md) · [2 Networks and HTTP](02-informatics/notes/02-network-and-http.md) · [3 Web data](02-informatics/notes/03-web-data-json-xml.md) · [4 Objects](02-informatics/notes/04-objects.md) · [5 Databases](02-informatics/notes/05-databases.md) | Exercises [01](02-informatics/practice/exercises/01_regex.py) · [02](02-informatics/practice/exercises/02_http.py) · [03](02-informatics/practice/exercises/03_web_data.py) · [04](02-informatics/practice/exercises/04_objects.py) · [05](02-informatics/practice/exercises/05_databases.py) | Severance, [*Python for Everybody*](https://www.py4e.com/book) |
+| **3. Idioms:** the language as it is meant to be written | A name refers to an object, and assignment never copies. `None` is the default, never `[]`. Iterate lazily over anything that might be large. A decorator is a function that takes a function. Catch the narrowest exception you can handle, and use `with` for anything that must be released. | [1 The data model and idioms](03-language-for-engineers/notes/01-data-model-and-idioms.md) · [2 Iterators and generators](03-language-for-engineers/notes/02-generators-and-iteration.md) · [3 Closures and decorators](03-language-for-engineers/notes/03-functions-deeper.md) · [4 Errors and context managers](03-language-for-engineers/notes/04-errors-and-context-managers.md) | Exercises [01](03-language-for-engineers/practice/exercises/01_data_model.py) · [02](03-language-for-engineers/practice/exercises/02_iteration.py) · [03](03-language-for-engineers/practice/exercises/03_functions.py) · [04](03-language-for-engineers/practice/exercises/04_errors.py) · drills: [advanced Python](../drills/python/advanced/README.md), the functional idioms and resources sections | VanderPlas, [*A Whirlwind Tour of Python*](https://github.com/jakevdp/WhirlwindTourOfPython) · [Python documentation](https://docs.python.org/3/) |
+| **4. Production habits:** types, tooling and concurrency | Type every signature, validate data at the boundary, and trust it afterwards. A package is a `pyproject.toml`, a `src/` layout and tests that run with one command. Threads and `asyncio` are for waiting, processes for CPU work, and every fan-out needs a limit and a timeout. | [5 Type hints and dataclasses](03-language-for-engineers/notes/05-types-and-dataclasses.md) · [6 Modules, packaging and tooling](03-language-for-engineers/notes/06-modules-packaging-tooling.md) · [7 Concurrency](03-language-for-engineers/notes/07-concurrency.md) | Exercises [05](03-language-for-engineers/practice/exercises/05_types.py) · [06, a package](03-language-for-engineers/practice/exercises/06_tooling/) · [07](03-language-for-engineers/practice/exercises/07_concurrency.py) · drills: [advanced Python](../drills/python/advanced/README.md), the concurrency and typing sections | [uv](https://docs.astral.sh/uv/), [Ruff](https://docs.astral.sh/ruff/), [pytest](https://docs.pytest.org/) and [Pydantic](https://docs.pydantic.dev/) docs · Iusztin and Labonne, *LLM Engineer's Handbook*, ch. 2 |
+| **5. The runtime:** objects and memory | Attribute lookup follows the MRO, and `super()` follows it too. Prefer composition until a second behaviour exists, and avoid metaclasses. Memory is reference counts plus a cycle collector, and `tracemalloc` shows where it went. | [8 Objects, inheritance and the MRO](03-language-for-engineers/notes/08-objects-inheritance-and-mro.md) · [9 Memory and the runtime](03-language-for-engineers/notes/09-memory-and-the-runtime.md) | Exercise [08](03-language-for-engineers/practice/exercises/08_objects_mro.py) · note 9's Try it, kept in the note because its results depend on the machine · drills: [advanced Python](../drills/python/advanced/README.md), the memory and OOP sections | [Python documentation](https://docs.python.org/3/) · Ramalho, *Fluent Python*: further reading |
 
-### 02 — Informatics
+Worked answers are in each module's `practice/solutions/`. Try each exercise before you open them. The drills are a senior-interview concept list with runnable examples, not graded exercises: use them to test recall after the step. Timed problems are in [`programming/drills/`](../drills/README.md).
 
-| # | Note | You can… | Exercises |
-|---|---|---|---|
-| 01 | [Regular expressions](02-informatics/notes/01-regular-expressions.md) | Extract with groups, named groups, non-greedy matches | [py](02-informatics/practice/exercises/01_regex.py) |
-| 02 | [Networks and HTTP](02-informatics/notes/02-network-and-http.md) | Fetch with `urllib`, handle status codes, parse links | [py](02-informatics/practice/exercises/02_http.py) |
-| 03 | [Web data: JSON, XML and APIs](02-informatics/notes/03-web-data-json-xml.md) | Walk nested JSON, read XML, follow pagination | [py](02-informatics/practice/exercises/03_web_data.py) |
-| 04 | [Objects](02-informatics/notes/04-objects.md) | Write classes with validation, inheritance, `__repr__`/`__eq__` | [py](02-informatics/practice/exercises/04_objects.py) |
-| 05 | [Using databases from Python](02-informatics/notes/05-databases.md) | Normalise data into `sqlite3` tables, upsert, join | [py](02-informatics/practice/exercises/05_databases.py) |
+## Rules of thumb
 
-### 03 — Language for engineers
-
-| # | Note | You can… | Exercises |
-|---|---|---|---|
-| 01 | [The data model and idioms](03-language-for-engineers/notes/01-data-model-and-idioms.md) | Reason about names vs objects, avoid the mutable-default trap, implement dunders | [py](03-language-for-engineers/practice/exercises/01_data_model.py) |
-| 02 | [Iterators, generators and comprehensions](03-language-for-engineers/notes/02-generators-and-iteration.md) | Write lazy pipelines, use `itertools` and `collections` | [py](03-language-for-engineers/practice/exercises/02_iteration.py) |
-| 03 | [Functions, closures and decorators](03-language-for-engineers/notes/03-functions-deeper.md) | Write closures, decorators and decorator factories | [py](03-language-for-engineers/practice/exercises/03_functions.py) |
-| 04 | [Errors and context managers](03-language-for-engineers/notes/04-errors-and-context-managers.md) | Design exception hierarchies, chain errors, write `with` managers | [py](03-language-for-engineers/practice/exercises/04_errors.py) |
-| 05 | [Type hints and dataclasses](03-language-for-engineers/notes/05-types-and-dataclasses.md) | Type signatures, use Protocols, frozen dataclasses, Pydantic at boundaries | [py](03-language-for-engineers/practice/exercises/05_types.py) |
-| 06 | [Modules, packaging and tooling](03-language-for-engineers/notes/06-modules-packaging-tooling.md) | Lay out a package with `pyproject.toml`; use uv, ruff and pytest | [package](03-language-for-engineers/practice/exercises/06_tooling/) |
-| 07 | [Concurrency](03-language-for-engineers/notes/07-concurrency.md) | Choose threads vs asyncio vs processes, limit concurrency, add timeouts | [py](03-language-for-engineers/practice/exercises/07_concurrency.py) |
-| 08 | [Objects, inheritance and the MRO](03-language-for-engineers/notes/08-objects-inheritance-and-mro.md) | Choose classmethods and staticmethods, predict the MRO, use `super()`, descriptors and `__init_subclass__`, and avoid metaclasses | [py](03-language-for-engineers/practice/exercises/08_objects_mro.py) |
-| 09 | [Memory and the runtime](03-language-for-engineers/notes/09-memory-and-the-runtime.md) | Reason about refcounting and the GC, find a leak with `tracemalloc`, weigh `__slots__`, read bytecode with `dis` | in-note Try it |
-
-Worked answers are in each module's `practice/solutions/`. Try each exercise before you open them.
-
-### Next: Python for data
-
-This track stops at the language. The [programming syllabus](../README.md) hands off to the
-[data-analytics 01 pillar](../../data-analytics/01-python-for-data-analysis/README.md), which owns
-the seven course notebooks (arrays, DataFrames, plotting, aggregation, time series), McKinney's
-chapter notebooks and the earlier Michigan and Wesleyan coursework.
-
----
+- Functions **return** values. Printing is for the edge of the program.
+- Use `with` for anything that must be closed or released: files, connections, locks.
+- Catch the narrowest exception you can actually handle. Let the rest crash with a traceback.
+- `None` as a default, never `[]` or `{}`.
+- Values reach SQL as `?` parameters, never through f-strings.
+- Type every function signature. Validate data from outside the program (Pydantic), and trust it afterwards.
+- Iterate lazily (generators) over anything that might be large.
 
 ## Builds on and feeds into
 
@@ -69,83 +53,9 @@ chapter notebooks and the earlier Michigan and Wesleyan coursework.
 |---|---|
 | [DA 01 Python for data analysis](../../data-analytics/01-python-for-data-analysis/README.md) | Pandas starts where this track ends |
 | [SQL 09 SQL from Python](../sql/notes/09-sql-from-python.md) | Parameters, DuckDB and pandas, from the Python side of [databases](02-informatics/notes/05-databases.md) |
-| [TypeScript](../typescript/README.md) | Starts after 03; its [async](../typescript/notes/06-async.md) note leans on [concurrency](03-language-for-engineers/notes/07-concurrency.md) |
-| [Computer science foundations](../computer-science/README.md) | Read after 03: cost and memory arguments made on Python's own objects |
+| [TypeScript](../typescript/README.md) | Starts after step 5; its [async](../typescript/notes/06-async.md) note leans on [concurrency](03-language-for-engineers/notes/07-concurrency.md) |
+| [Computer science foundations](../computer-science/README.md) | Read after step 5: cost and memory arguments made on Python's own objects |
 | [Software design](../software-design/README.md) | Refactoring and patterns written in Python |
-
----
-
-## Study decks
-
-Each module has a deck that librarian turns into flashcards: the title is the question and the
-takeaway is the rule that answers it.
-
-| Module | Deck | Source |
-|---|---|---|
-| 01 | [python-foundations.pptx](01-foundations/slides/python-foundations.pptx) | [deck.yaml](01-foundations/slides/deck.yaml) |
-| 02 | [python-informatics.pptx](02-informatics/slides/python-informatics.pptx) | [deck.yaml](02-informatics/slides/deck.yaml) |
-| 03 | [python-for-engineers.pptx](03-language-for-engineers/slides/python-for-engineers.pptx) | [deck.yaml](03-language-for-engineers/slides/deck.yaml) |
-
-Rebuild one from the repo root with `make slides PILLAR=programming/python/01-foundations`.
-
----
-
-## Layout
-
-```
-python/
-├── README.md
-├── check.sh                      ok / FAIL for every exercise or solution file; runs pytest for 06_tooling
-├── 01-foundations/
-│   ├── notes/                    01–05
-│   ├── slides/                   deck.yaml and the built deck
-│   └── practice/
-│       ├── exercises/            01_…05_.py, stubs with the asserts at the bottom
-│       └── solutions/            same names, worked
-├── 02-informatics/               same shape, notes and exercises 01–05
-└── 03-language-for-engineers/    same shape, notes 01–09; 06_tooling/ is a uv package (pyproject.toml, src/, tests/); 09 has no practice file
-```
-
----
-
-## Setup
-
-```bash
-cd programming/python
-python3 --version                         # 3.12+ (the course is tested on 3.14)
-python3 01-foundations/practice/exercises/01_values_and_conditionals.py
-bash check.sh                             # ok / FAIL for every exercise
-bash check.sh exercises 03                # one module
-bash check.sh solutions                   # every worked answer must pass
-```
-
-01–03 need only the standard library. 03 · 06 is a small package run with [uv](https://docs.astral.sh/uv/)
-(`uv run pytest`), which installs pytest and ruff for you. The scientific stack belongs to the
-[next pillar](../../data-analytics/01-python-for-data-analysis/README.md), and its README has the setup.
-
----
-
-## How exercises work
-
-Every exercise file is a set of functions (or classes) whose docstrings start with `Q1.`, `Q2.` …
-and whose bodies are `raise NotImplementedError`. The bottom of each file is a block of `assert`s
-under `if __name__ == "__main__":`. Run the file: it stops at the first unsolved question, and it
-prints `all good` once everything passes. Note 03 · 08 has one (`08_objects_mro.py`, from its Try it); 03 · 09 keeps its Try it in the note because the results depend on the machine. Exercises run offline. The HTTP exercise starts its own
-local server, and the concurrency exercise simulates the network with sleeps.
-
----
-
-## Rules of thumb
-
-- Functions **return** values. Printing is for the edge of the program.
-- Use `with` for anything that must be closed or released: files, connections, locks.
-- Catch the narrowest exception you can actually handle. Let the rest crash with a traceback.
-- `None` as a default, never `[]` or `{}`.
-- Values reach SQL as `?` parameters, never through f-strings.
-- Type every function signature. Validate data from outside the program (Pydantic), and trust it afterwards.
-- Iterate lazily (generators) over anything that might be large.
-
----
 
 ## Primary texts
 
@@ -154,9 +64,7 @@ local server, and the concurrency exercise simulates the network with sleeps.
 - Python documentation
 - Ramalho, *Fluent Python*: further reading
 
-Everything else: [references.md](../references.md).
-
-## Sources
+Licences and what each source was used for:
 
 | Source | License | Used for |
 |---|---|---|
@@ -169,4 +77,10 @@ Everything else: [references.md](../references.md).
 | Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), ch. 10 | Proprietary | One-sentence examples in 03 · 01, 04 and 05; the longer treatment is in [software design](../software-design/README.md) |
 | Iusztin and Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 2 | Proprietary | Tooling comparison in 03 · 06 |
 
-Timed and interview-style Python problems are in [`programming/drills/`](../drills/README.md).
+Everything else: [references.md](../references.md). Each deck is built from its module's `slides/deck.yaml` with `make slides PILLAR=programming/python/01-foundations`.
+
+## Next
+
+Start with step 1, **Foundations**: read [1 Values and conditionals](01-foundations/notes/01-values-and-conditionals.md), then do its exercise from the syllabus row.
+
+This track stops at the language. After step 1 you can start [SQL](../sql/README.md). After step 5 the path hands off to [data-analytics 01](../../data-analytics/01-python-for-data-analysis/README.md), which owns pandas, the course notebooks and McKinney's chapter notebooks, and to [TypeScript](../typescript/README.md) if you will build typed applications.

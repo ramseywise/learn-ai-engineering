@@ -1,0 +1,542 @@
+{
+ "schema": 1,
+ "key": "sha1:4c61fd005343",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch06-scoring-term-weighting-vector-space-model.pdf",
+ "bib": {
+  "title": "Introduction to Information Retrieval, Chapter 6: Scoring, term weighting and the vector space model",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition 2009, draft April 1, 2009)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 54059,
+  "chars_total": 54059,
+  "engine": "pymupdf",
+  "skipped": "References section read (short); figures are pymupdf text fragments only, so graph shapes of Fig 6.1, 6.10, 6.16, 6.17 were not seen."
+ },
+ "type": "book-chapter",
+ "question": "How can a search engine rank documents for a query by scoring each (query, document) pair, using zones, term statistics and the vector space model?",
+ "hypothesis": null,
+ "contributions": [
+  "Parametric and zone indexes with weighted zone scoring and learned zone weights (6.1)",
+  "tf, idf and tf-idf term weighting (6.2)",
+  "Vector space model, cosine similarity and queries as vectors (6.3)",
+  "Variant tf-idf functions: sublinear tf, max-tf normalization, SMART notation, pivoted length normalization (6.4)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Weighted zone score is a linear combination of Boolean zone matches; example weights 0.2/0.3/0.5 give 0.8 when the term is in title and body only.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "weighted zone score",
+   "value": "0.8",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example 6.1: query shakespeare, zones author/title/body, g1=0.2, g2=0.3, g3=0.5, Boolean score 1 if term present in zone",
+   "where": "p.112, Example 6.1",
+   "note": null,
+   "quote": "the score of this document would be 0.8."
+  },
+  {
+   "claim": "Optimal zone weight g for the title/body model is a ratio of counts of training examples where the two zones disagree and the editor's judgment matches the zone that is down-weighted (Eq 6.6); it follows from minimising squared error.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two-zone score g*sT+(1-g)*sB, squared error against 0/1 editorial judgments, Eq 6.2-6.6; Eq 6.6 = (n10r+n01n)/(n10r+n10n+n01r+n01n)",
+   "where": "p.116, Sec 6.1.3",
+   "note": null,
+   "quote": "the optimal value of g is"
+  },
+  {
+   "claim": "idf is log(N/df); on Reuters (N=806,791, base-10 logs) idf of car, auto, insurance, best is 1.65, 2.08, 1.62, 1.5.",
+   "kind": "reported",
+   "source": null,
+   "metric": "collection size",
+   "value": "806,791",
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters collection, 806,791 documents, log base 10; df car 18,165, auto 6723, insurance 19,241, best 25,235",
+   "where": "p.118, Sec 6.2.1 and Fig 6.8",
+   "note": "Fig 6.7 gives insurance df=3997 (cf 10440) and Fig 6.8 gives insurance df=19,241, both labelled Reuters; the book does not reconcile them (likely different subsets).",
+   "quote": "Figure 6.8 gives an example of idf’s in the Reuters collection of 806,791 documents; in this example logarithms are to the base 10."
+  },
+  {
+   "claim": "Collection frequency and document frequency differ: try and insurance have almost equal cf (10422 vs 10440) but df 8760 vs 3997, which is why df is preferred for idf.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters example, Figure 6.7",
+   "where": "p.118, Fig 6.7",
+   "note": "insurance df 3997 here vs 19,241 in Fig 6.8.",
+   "quote": "In particular, the cf values for",
+   "table": "Figure 6.7, rows try (cf 10422, df 8760) and insurance (cf 10440, df 3997)"
+  },
+  {
+   "claim": "Tf-idf is tf times idf; document score is the sum of tf-idf over query terms (Eq 6.8, 6.9).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overlap-style scoring over query terms, Eq 6.8-6.9",
+   "where": "p.119",
+   "note": null,
+   "quote": "tf-idft,d = tft,d × idft."
+  },
+  {
+   "claim": "Euclidean lengths of the Figure 6.9 raw tf vectors are 30.56, 46.84 and 41.30 for Doc1-3, giving normalized car weights 0.88, 0.09, 0.58.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "Euclidean length",
+   "value": "30.56, 46.84, 41.30",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example 6.2, tf table Fig 6.9 (car/auto/insurance/best); I recomputed sqrt(934), sqrt(2194), sqrt(1706) and they match",
+   "where": "p.122, Example 6.2",
+   "note": null,
+   "quote": "has the values 30.56, 46.84 and 41.30 respectively"
+  },
+  {
+   "claim": "Cosine of the two Austen novels (SaS, PaP) is 0.999 versus 0.888 between SaS and Wuthering Heights, using raw tf of affection, jealous, gossip only.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": "0.999 vs 0.888",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example 6.3, three terms, raw tf, no idf, unit-normalised; tf Fig 6.12; I recomputed 0.999 and 0.888 from Fig 6.13",
+   "where": "p.123, Example 6.3",
+   "note": "Quote continues on next line: sim(v(SAS),v(WH)) is 0.888.",
+   "quote": "is 0.999, whereas"
+  },
+  {
+   "claim": "For the query jealous gossip, Wuthering Heights scores 0.509, Pride and Prejudice 0.085, Sense and Sensibility 0.074.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "dot product score",
+   "value": "0.509 / 0.085 / 0.074",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Query as unit vector (0, 0.707, 0.707) dotted with Fig 6.13 vectors; three-term toy vocabulary",
+   "where": "p.123, Sec 6.3.2",
+   "note": null,
+   "quote": "Wuthering Heights is the top-scoring docu"
+  },
+  {
+   "claim": "Query as a bag of words is a very short document, so score(q,d) is the cosine between query and document vectors (Eq 6.12); a document can score high without containing all query terms.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vector space scoring, Eq 6.12",
+   "where": "p.124, Sec 6.3.2",
+   "note": null,
+   "quote": "A document may have a high cosine score for a query even if it does not"
+  },
+  {
+   "claim": "Worked score for the query best car insurance is 3.28.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "score",
+   "value": "3.28",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example 6.4: N=1,000,000; df auto 5000, best 50000, car 10000, insurance 1000; query weight = idf (base 10: 2.3, 1.3, 2.0, 3.0); document tf (1,0,1,2) no idf, Euclidean normalised (0.41, 0, 0.41, 0.82)",
+   "where": "p.124, Example 6.4",
+   "note": "Table labels the document column wf and shows wf=tf=2 for insurance, whereas Eq 6.13 would give 1+log(2)=1.3; the example uses plain tf. Text says 'Invoking (6.9)' but the sum is of query weight x normalised doc weight (i.e. Eq 6.12 numerator).",
+   "quote": "Invoking (6.9) now gives a net score of 0 + 0 + 0.82 + 2.46 = 3.28."
+  },
+  {
+   "claim": "Cosine scoring returns the top K documents; many search engines use K=10 for the first results page.",
+   "kind": "reported",
+   "source": null,
+   "metric": "K",
+   "value": "10",
+   "unit": "K",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Basic algorithm Fig 6.14, term-at-a-time accumulators",
+   "where": "p.125, Sec 6.3.3",
+   "note": "Quote is split across lines in the text; see extraction check.",
+   "quote": "many search"
+  },
+  {
+   "claim": "Building a heap takes no more than 2N comparisons and each of the top K scores is extracted in O(log N) comparisons.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2N",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top-K selection from N accumulators using a priority queue (heap)",
+   "where": "p.126, Sec 6.3.3",
+   "note": null,
+   "quote": "takes no more than 2N comparisons to construct"
+  },
+  {
+   "claim": "Sublinear tf scaling: wf = 1 + log tf if tf>0 else 0 (Eq 6.13).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Variant of term frequency",
+   "where": "p.127, Eq 6.13",
+   "note": null,
+   "quote": "1 + log tft,d"
+  },
+  {
+   "claim": "Maximum tf normalization ntf = a + (1-a)*tf/tfmax with a generally 0.4 (0.5 in some early work).",
+   "kind": "claim",
+   "source": null,
+   "metric": "smoothing a",
+   "value": "0.4",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 6.15; a is a smoothing term in [0,1]",
+   "where": "p.127, Sec 6.4.2",
+   "note": "Fig 6.15 augmented scheme uses 0.5 + 0.5*tf/max tf.",
+   "quote": "is generally set to 0.4, although some"
+  },
+  {
+   "claim": "Appending a document to itself doubles its Eq 6.9 score, an anomaly max-tf normalization removes; max-tf is unstable under stop-list changes and sensitive to outlier terms.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argument for ntf, Sec 6.4.2",
+   "where": "p.127",
+   "note": null,
+   "quote": "While d′ should be no more relevant to any query than d is,"
+  },
+  {
+   "claim": "A very standard SMART weighting is lnc.ltc: documents log tf, no idf, cosine; queries log tf, idf, cosine.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SMART ddd.qqq notation, Fig 6.15",
+   "where": "p.128, Sec 6.4.3",
+   "note": null,
+   "quote": "a very"
+  },
+  {
+   "claim": "Pivoted length normalization replaces the Euclidean length with a|V(d)|+(1-a)piv, slope a<1, crossing y=x at piv; approximated by a*ud+(1-a)*piv with ud the unique-term count.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 6.16 and approximation; no value for a or piv is given",
+   "where": "p.130-131, Sec 6.4.4",
+   "note": null,
+   "quote": "aud + (1 −a)piv,"
+  },
+  {
+   "claim": "Cosine normalization distorts relevance at the expense of longer documents; pivoted normalization is not suited to collections like FAQ answers where relevance does not depend on length.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 6.4.4",
+   "where": "p.131",
+   "note": "Quote line-broken in text.",
+   "quote": "In other cases the dependency may be more com"
+  },
+  {
+   "claim": "Moffat and Zobel (1998) hill-climbing over weighting functions failed to reach any conclusion on the best weighting scheme.",
+   "kind": "reported",
+   "source": "Moffat and Zobel (1998)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Moffat and Zobel 1998, as reported in Sec 6.5",
+   "where": "p.133",
+   "note": null,
+   "quote": "they report that such hill-climbing methods failed to lead"
+  }
+ ],
+ "limits": [
+  "Examples use tiny toy collections (three novels, three documents, a fictitious 1,000,000-document collection); no retrieval-effectiveness measurements anywhere in the chapter, so no weighting variant is shown to beat another.",
+  "Moffat and Zobel (1998) found hill-climbing could not identify a best weighting scheme (p.133).",
+  "Max-tf normalization is called unstable and hard to tune; pivoted normalization may not fit all collections (p.127, p.131).",
+  "Pivoted normalization gives no values for a or piv; learned weights are only worked for a two-zone, Boolean case, full machine-learned relevance deferred to Chapter 15.",
+  "Dated (2008): bag-of-words tf-idf and cosine are lexical only, with no BM25 (probabilistic, Ch 11 not covered here), no dense embeddings, no learned sparse retrieval, no neural reranking; the 'machine-learned relevance' remark predates learning-to-rank at scale and transformers.",
+  "Vector scoring cost is described as tens of thousands of dimensions per similarity; modern ANN search over dense vectors is out of scope."
+ ],
+ "practices": [
+  "Weight zones (title, author, body) with weights summing to 1 and learn them from editorial judgments when labels are available (6.1.1-6.1.3).",
+  "Use document frequency rather than collection frequency to damp common terms, via idf = log(N/df) (6.2.1); the log base does not matter for ranking (p.118).",
+  "Length-normalize document vectors (cosine) so long documents are not favoured by raw tf (6.3.1).",
+  "Treat the query as a short bag-of-words document in the same vector space and rank by cosine (6.3.2).",
+  "Dampen tf with 1+log(tf) rather than raw counts (6.4.1).",
+  "Use lnc.ltc as a standard SMART scheme (6.4.3).",
+  "Consider pivoted length normalization when relevance depends on length, and use document length as an ML feature otherwise (6.4.4).",
+  "Store tf per posting and N/df at the head of the postings list rather than float weights (6.3.3)."
+ ],
+ "terms": [
+  {
+   "term": "parametric index",
+   "definition": "one index per metadata field, selecting documents matching a field value (e.g. date)",
+   "where": "p.110"
+  },
+  {
+   "term": "zone",
+   "definition": "like a field, but the contents can be arbitrary free text such as title or abstract",
+   "where": "p.110"
+  },
+  {
+   "term": "weighted zone scoring (ranked Boolean retrieval)",
+   "definition": "linear combination of Boolean zone match scores with weights summing to 1",
+   "where": "p.112"
+  },
+  {
+   "term": "term frequency (tf)",
+   "definition": "number of occurrences of term t in document d",
+   "where": "p.117"
+  },
+  {
+   "term": "bag of words model",
+   "definition": "document ordering ignored, only occurrence counts of each term retained",
+   "where": "p.117"
+  },
+  {
+   "term": "collection frequency",
+   "definition": "total number of occurrences of a term in the collection",
+   "where": "p.118"
+  },
+  {
+   "term": "document frequency (df)",
+   "definition": "number of documents in the collection that contain a term t",
+   "where": "p.118"
+  },
+  {
+   "term": "inverse document frequency (idf)",
+   "definition": "idf_t = log(N/df_t)",
+   "where": "p.118"
+  },
+  {
+   "term": "cosine similarity",
+   "definition": "dot product of two vectors divided by the product of their Euclidean lengths",
+   "where": "p.121"
+  },
+  {
+   "term": "term-at-a-time scoring",
+   "definition": "adding in contributions one query term at a time into accumulators",
+   "where": "p.125"
+  },
+  {
+   "term": "document-at-a-time scoring",
+   "definition": "traversing postings concurrently and scoring one document at a time",
+   "where": "p.126"
+  },
+  {
+   "term": "SMART notation",
+   "definition": "ddd.qqq mnemonic: tf component, df component, normalization for document and query",
+   "where": "p.128"
+  },
+  {
+   "term": "pivoted document length normalization",
+   "definition": "length compensation independent of term and document frequencies, rotating the cosine curve about a pivot length",
+   "where": "p.129"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Luhn 1957; 1958",
+   "year": 1957,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earliest term-weighting applications, medium-frequency terms",
+   "quote": null
+  },
+  {
+   "work": "Spärck Jones 1972",
+   "year": 1972,
+   "arxiv": null,
+   "relation": "related",
+   "note": "experiments on idf in term weighting",
+   "quote": null
+  },
+  {
+   "work": "Salton 1971b (SMART system)",
+   "year": 1971,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "first to view a document as a vector of weights",
+   "quote": null
+  },
+  {
+   "work": "Salton and Buckley 1987; 1988",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "related",
+   "note": "extensions of idf; SMART notation",
+   "quote": null
+  },
+  {
+   "work": "Robertson and Jones 1976; Croft and Harper 1979; Papineni 2001",
+   "year": 1976,
+   "arxiv": null,
+   "relation": "related",
+   "note": "theoretical justifications of idf",
+   "quote": null
+  },
+  {
+   "work": "Singhal et al. 1996a",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pivoted document length normalization",
+   "quote": null
+  },
+  {
+   "work": "Singhal et al. 1996b",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SMART notation version followed in Fig 6.15",
+   "quote": null
+  },
+  {
+   "work": "Moffat and Zobel 1998",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "extended notation; hill-climbing over weighting schemes inconclusive",
+   "quote": null
+  },
+  {
+   "work": "Zobel and Moffat 2006",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basic cosine score computation of Sec 6.3.3",
+   "quote": null
+  },
+  {
+   "work": "Turtle and Flood 1995",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "term-at-a-time vs document-at-a-time",
+   "quote": null
+  },
+  {
+   "work": "Reuters collection (806,791 documents)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "df and idf examples",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6.8",
+   "caption": "Example of idf values. Here we give the idf's of terms with various frequencies in the Reuters collection of 806,791 documents.",
+   "page": "p.119",
+   "why": "Shows idf magnitudes in a real collection."
+  },
+  {
+   "figure": "Fig 6.7",
+   "caption": "Collection frequency (cf) and document frequency (df) behave differently, as in this example from the Reuters collection.",
+   "page": "p.118",
+   "why": "Why df rather than cf"
+  },
+  {
+   "figure": "Fig 6.10",
+   "caption": "Cosine similarity illustrated. sim(d1, d2) = cos θ.",
+   "page": "p.121",
+   "why": "Geometry of cosine on jealous/gossip axes"
+  },
+  {
+   "figure": "Fig 6.14",
+   "caption": "The basic algorithm for computing vector space scores.",
+   "page": "p.125",
+   "why": "COSINESCORE pseudocode"
+  },
+  {
+   "figure": "Fig 6.15",
+   "caption": "SMART notation for tf-idf variants.",
+   "page": "p.128",
+   "why": "One table of all weighting variants"
+  },
+  {
+   "figure": "Fig 6.16/6.17",
+   "caption": "Pivoted document length normalization; Implementing pivoted document length normalization by linear scaling.",
+   "page": "p.130-131",
+   "why": "Shows length bias and pivot rotation graphically"
+  },
+  {
+   "figure": "Example 6.4 table",
+   "caption": "Query best car insurance, N=1,000,000.",
+   "page": "p.124",
+   "why": "End-to-end tf-idf plus cosine arithmetic ending at 3.28"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.125 Fig 6.14",
+   "snippet": "COSINESCORE(q): float Scores[N]=0; Initialize Length[N]; for each query term t: calculate w_t,q and fetch postings list for t; for each pair (d, tf_t,d): Scores[d] += wf_t,d x w_t,q; for each d: Scores[d] = Scores[d]/Length[d]; return top K components of Scores[]",
+   "verbatim": false
+  },
+  {
+   "where": "p.127 Eq 6.13",
+   "snippet": "wf_t,d = 1 + log tf_t,d if tf_t,d > 0, else 0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and tables are fragmented pymupdf text (ligatures, split lines); Eq 6.6 and Fig 6.15 reconstructed by reading order.",
+  "Internal inconsistencies: (1) Fig 6.7 insurance df 3997 vs Fig 6.8 df 19,241, both Reuters; (2) Exercise 6.2 uses g2=0.31, g3=0.49 vs Example 6.1's 0.3 and 0.5; (3) Sec 6.3.3 text cites 'Step 5', 'Steps 6-8' and 'Step 12' but Fig 6.14 has 10 numbered lines with weights at line 4, update at line 6 and top-K at line 10; (4) Example 6.4 labels doc column wf with wf=tf=2, unlike Eq 6.13; (5) max-tf a=0.4 in text vs 0.5 in Fig 6.15 augmented; (6) Sec 6.1.2 says error is minimised 'in the formulation of Section 6.1.3' before 6.1.3 begins (forward reference only).",
+  "Book dated 2008 but PDF is the 2009 online edition draft.",
+  "No embedded instructions found."
+ ]
+}

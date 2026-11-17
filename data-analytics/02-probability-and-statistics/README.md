@@ -128,4 +128,4 @@ uv run --with numpy --with pandas --with scipy --with statsmodels python
 
 Everything else: [references.md](references.md).
 
-**Next:** [03 Experimentation and Causality](../03-experimentation-and-causality/README.md). **References:** [references.md](references.md).
+**Next:** [Visualisation and Storytelling](../05-visualisation-and-storytelling/README.md), the last core module. [Experimentation and Causality](../03-experimentation-and-causality/README.md) follows it. **References:** [references.md](references.md).

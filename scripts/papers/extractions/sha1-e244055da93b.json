@@ -1,0 +1,436 @@
+{
+ "schema": 1,
+ "key": "sha1:e244055da93b",
+ "pdf": "data-science/sources/pattern-recognition-and-machine-learning/ch13-sequential-data.pdf",
+ "bib": {
+  "title": "Pattern Recognition and Machine Learning, ch. 13 Sequential Data",
+  "authors": [
+   "Christopher M. Bishop"
+  ],
+  "first_author": "Bishop",
+  "year": 2006,
+  "venue": "Springer (book chapter, pp. 605-652)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 111788,
+  "chars_total": 111788,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can sequential, non-i.i.d. data be modelled tractably with Markov models and latent-variable state space models (HMMs and linear dynamical systems), and how are inference and learning done?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "A general conditional probability table for a first-order Markov chain over K-state discrete variables has K(K-1) parameters.",
+   "kind": "reported",
+   "source": "Bishop 2006 sec 13.1 (derivation)",
+   "metric": "parameters",
+   "value": "K(K-1)",
+   "unit": "parameters",
+   "setup": "first-order Markov chain, discrete observations with K states, tabular p(xn|xn-1)",
+   "quote": "giving a total of K(K −1) parameters",
+   "note": "The M-th order count is printed as K^(M-1)(K-1) on the same page, which gives K-1 for M=1 and contradicts K(K-1); K^M(K-1) is consistent.",
+   "where": "p. 609"
+  },
+  {
+   "claim": "Naive HMM likelihood sums over K^N paths through the lattice, growing exponentially with chain length.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "terms in likelihood sum",
+   "value": "K^N",
+   "unit": "terms",
+   "setup": "HMM with N latent variables of K states, direct marginalisation of p(X,Z)",
+   "quote": "resulting in a total of KN terms",
+   "where": "p. 615"
+  },
+  {
+   "claim": "Each alpha-recursion step costs O(K^2) and the whole forward pass costs O(K^2 N), linear in chain length.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "computational cost",
+   "value": "O(K^2 N)",
+   "unit": null,
+   "setup": "HMM forward recursion, K states, N time steps",
+   "quote": "of O(K2N)",
+   "where": "p. 621"
+  },
+  {
+   "claim": "Left-to-right HMM trained on 45 handwritten digit '2' examples uses 16 states and 25 EM iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training set size",
+   "value": "45",
+   "unit": "examples",
+   "setup": "on-line pen-trajectory digit data, 16 states each emitting a fixed-length line segment at one of 16 angles (16x16 emission table), transitions only stay or +1",
+   "quote": "There are K = 16 states",
+   "note": "45 examples and 25 EM iterations are stated in the same passage (p. 614): 'optimized using 25 iterations of EM'.",
+   "where": "p. 614"
+  },
+  {
+   "claim": "EM for the digit HMM ran 25 iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM iterations",
+   "value": "25",
+   "unit": "iterations",
+   "setup": "left-to-right HMM, K=16, 45 digit-2 examples",
+   "quote": "optimized using 25 iterations of",
+   "where": "p. 614"
+  },
+  {
+   "claim": "Sampled digits from the trained digit HMM often look unrepresentative, so the HMM is a poor generative model there.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "setup": "Fig 13.11, left-to-right HMM trained on 45 digits",
+   "quote": "many of the synthetic digits",
+   "where": "p. 631"
+  },
+  {
+   "claim": "HMM demo sampling: 3 states, 2-D Gaussian emissions, 50 samples, 5% transition to each other state (90% self-transition).",
+   "kind": "measured",
+   "source": null,
+   "metric": "self-transition probability",
+   "value": "90%",
+   "unit": "%",
+   "setup": "Fig 13.8, sampled sequence of 50 points",
+   "quote": "there is a 5% probability of making a transition to each of the other states",
+   "where": "p. 613"
+  },
+  {
+   "claim": "Unscaled alpha values underflow for chains of roughly 100 steps even in double precision, and taking logs does not help; rescaled alpha with scaling factors c_n fixes it.",
+   "kind": "claim",
+   "source": null,
+   "metric": "chain length at which underflow occurs",
+   "value": "100",
+   "unit": "steps",
+   "setup": "HMM forward recursion without scaling, double-precision floats",
+   "quote": "(say 100 or so)",
+   "where": "p. 627"
+  },
+  {
+   "claim": "Viterbi (max-sum) finds the most probable state path at cost linear in chain length and needs no rescaling because it works with log probabilities.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "setup": "HMM, max-sum on factor graph",
+   "quote": "Note that the max-sum algorithm works with log probabilities and so there is no",
+   "where": "p. 629"
+  },
+  {
+   "claim": "HMM state-duration distribution is geometric, decaying exponentially in T, which is unrealistic for many applications.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "setup": "standard HMM, p(T)=(Akk)^T(1-Akk)",
+   "quote": "and so is an exponentially decaying function of T",
+   "where": "p. 632"
+  },
+  {
+   "claim": "A factorial HMM needs 10 binary chains where a standard HMM needs 1024 states to represent 10 bits.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "latent states",
+   "value": "1024",
+   "unit": "states",
+   "setup": "representing 10 bits of information per time step",
+   "quote": "K = 210 = 1024 latent states",
+   "where": "p. 634"
+  },
+  {
+   "claim": "Exact E step of a factorial HMM with M chains of K states, by merging into one HMM, costs O(N K^(2M)), exponential in M.",
+   "kind": "claim",
+   "source": null,
+   "metric": "computational cost",
+   "value": "O(N K^(2M))",
+   "unit": null,
+   "setup": "factorial HMM converted to single chain with K^M states",
+   "quote": "O(NK2M)",
+   "where": "p. 635"
+  },
+  {
+   "claim": "Linear dynamical system filtering recursions are the Kalman filter, smoothing the RTS equations; LDS needs no Viterbi analogue because the joint is Gaussian.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "setup": "linear-Gaussian state space model",
+   "quote": "There is thus no need to consider the",
+   "where": "p. 637"
+  },
+  {
+   "claim": "With a K-component Gaussian mixture emission, the LDS filtering posterior grows to K^n components, making exact inference impractical.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "mixture components at step n",
+   "value": "K^n",
+   "unit": "components",
+   "setup": "LDS with mixture-of-K-Gaussians emission density",
+   "quote": "being given by a mixture of Kn Gaussians",
+   "where": "p. 644"
+  },
+  {
+   "claim": "Particle filter (sequential Monte Carlo) handles non-linear-Gaussian state space models by sampling-importance-resampling with L weighted samples.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "setup": "graph of Fig 13.5, L samples from p(zn|Xn)",
+   "quote": "survival of the",
+   "where": "p. 646"
+  }
+ ],
+ "limits": [
+  "Stationary case only; nonstationary generative distributions are explicitly out of scope (p. 606).",
+  "HMM is a poor generative model for digits (Fig 13.11), has exponentially decaying state durations, and poor long-range correlations (pp. 631-632).",
+  "LDS linear-Gaussian assumption means observed marginal is a single Gaussian; non-Gaussian emissions make exact inference intractable (p. 644).",
+  "Factorial HMM and switching SSM have no exact tractable E step; variational or sampling approximations needed (pp. 634-635, 644).",
+  "Fully Bayesian LDS treatment omitted for lack of space (p. 644). No neural sequence models beyond brief mentions of neural emission densities and tapped delay lines; predates LSTM-era RNN/attention work.",
+  "Only experiment is a small handwritten digit demo with 45 examples; no quantitative evaluation."
+ ],
+ "practices": [
+  "Use rescaled alpha/beta with scaling factors c_n rather than raw forward-backward to avoid underflow beyond ~100 steps (sec 13.2.4, p. 627).",
+  "Initialise HMM emission parameters by fitting the data as i.i.d. first, or K-means for Gaussians; initialise A and pi randomly or uniformly; zeros in A or pi stay zero under EM (pp. 617, 623).",
+  "Train on multiple shorter sequences for left-to-right models, since each off-diagonal transition occurs at most once per sequence (p. 624, Ex 13.12).",
+  "For sequence classification, train per-class HMMs discriminatively by cross-entropy (13.72) rather than maximum likelihood (p. 631).",
+  "Use Viterbi, not individually most probable states from gamma, to get the best state sequence (p. 629).",
+  "Use autoregressive HMM to capture longer-range correlations, input-output HMM for supervised sequence learning (pp. 632-633).",
+  "For LDS, use Kalman filter for real-time prediction and RTS smoother for learning parameters via EM (pp. 637-642).",
+  "Use extended Kalman filter or particle filter when dynamics or emissions are not linear-Gaussian (pp. 644-645)."
+ ],
+ "terms": [
+  {
+   "term": "homogeneous Markov chain",
+   "definition": "a Markov chain in which the conditional distributions p(xn|xn-1) are constrained to be equal (stationary time series)",
+   "where": "p. 608"
+  },
+  {
+   "term": "state space model",
+   "definition": "a Markov chain of latent variables zn with each observation xn conditioned on zn",
+   "where": "p. 609"
+  },
+  {
+   "term": "hidden Markov model",
+   "definition": "state space model whose latent variables are discrete; equivalent to a mixture model whose component choice depends on the previous component",
+   "where": "p. 610"
+  },
+  {
+   "term": "linear dynamical system",
+   "definition": "state space model in which both latent and observed variables are linear-Gaussian",
+   "where": "p. 610"
+  },
+  {
+   "term": "tapped delay line",
+   "definition": "storing the previous M observed values and using a parametric model such as a neural network to predict the next",
+   "where": "p. 609"
+  },
+  {
+   "term": "left-to-right HMM",
+   "definition": "HMM with Ajk=0 for k<j, so a vacated state cannot be re-entered",
+   "where": "p. 613"
+  },
+  {
+   "term": "alpha-beta algorithm",
+   "definition": "forward-backward algorithm with alpha(zn)=p(x1..xn,zn) and beta(zn)=p(xn+1..xN|zn); gamma=alpha*beta/p(X)",
+   "where": "pp. 618-620"
+  },
+  {
+   "term": "Viterbi algorithm",
+   "definition": "max-sum algorithm applied to the HMM to find the most probable state sequence",
+   "where": "p. 629"
+  },
+  {
+   "term": "Kalman gain matrix",
+   "definition": "Kn = P_{n-1} C^T (C P_{n-1} C^T + Sigma)^-1, scaling the correction from prediction error",
+   "where": "p. 639"
+  },
+  {
+   "term": "particle filter",
+   "definition": "sequential Monte Carlo from sampling-importance-resampling; also bootstrap filter, survival of the fittest, condensation algorithm",
+   "where": "p. 646"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Rabiner 1989 (HMM tutorial)",
+   "year": 1989,
+   "arxiv": null,
+   "relation": "related",
+   "note": "source for forward-backward and HMM variants",
+   "quote": null
+  },
+  {
+   "work": "Baum 1972",
+   "year": 1972,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Baum-Welch = forward-backward",
+   "quote": null
+  },
+  {
+   "work": "Viterbi 1967",
+   "year": 1967,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Viterbi algorithm",
+   "quote": null
+  },
+  {
+   "work": "Kalman 1960",
+   "year": 1960,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Kalman filter",
+   "quote": null
+  },
+  {
+   "work": "Rauch, Tung, Striebel 1965",
+   "year": 1965,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RTS smoother",
+   "quote": null
+  },
+  {
+   "work": "Ghahramani and Jordan 1997",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "related",
+   "note": "factorial HMM with variational inference",
+   "quote": null
+  },
+  {
+   "work": "Bengio and Frasconi 1995",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "input-output HMM",
+   "quote": null
+  },
+  {
+   "work": "Ephraim et al. 1989",
+   "year": 1989,
+   "arxiv": null,
+   "relation": "related",
+   "note": "autoregressive HMM",
+   "quote": null
+  },
+  {
+   "work": "Ghahramani and Hinton 1996b, 1998",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "EM for LDS; switching state space model",
+   "quote": null
+  },
+  {
+   "work": "Gordon et al. 1993; Isard and Blake 1998",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "particle filter names",
+   "quote": null
+  },
+  {
+   "work": "Jordan 2007",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alpha-gamma variant and conditional independence properties",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 13.5",
+   "caption": "We can represent sequential data using a Markov chain of latent variables, with each observation conditioned on the state of the corresponding latent variable.",
+   "page": 609,
+   "why": "One graph underlies both HMM and LDS."
+  },
+  {
+   "figure": "Fig 13.7",
+   "caption": "Lattice (trellis) of the unfolded state transition diagram.",
+   "page": 612,
+   "why": "Shows the exponential path count that forward-backward and Viterbi collapse."
+  },
+  {
+   "figure": "Fig 13.8",
+   "caption": "Sampling from an HMM with 3-state latent variable and 2-D Gaussian emissions; 50 points, 90% self-transition.",
+   "page": 613,
+   "why": "Shows runs of one component with rare switches."
+  },
+  {
+   "figure": "Fig 13.11",
+   "caption": "Top: on-line handwritten digits. Bottom: synthetic digits sampled from a left-to-right HMM trained on 45 digits.",
+   "page": 615,
+   "why": "Concrete generative demo and its weakness."
+  },
+  {
+   "figure": "Fig 13.12/13.13",
+   "caption": "Forward alpha recursion and backward beta recursion on the lattice.",
+   "page": 621,
+   "why": "Visual form of the recursions."
+  },
+  {
+   "figure": "Fig 13.19",
+   "caption": "A factorial HMM comprising two Markov chains of latent variables.",
+   "page": 634,
+   "why": "Head-to-head at x explains the intractable E step."
+  },
+  {
+   "figure": "Fig 13.21",
+   "caption": "LDS as predict (diffusion widens) then correct (data narrows) steps.",
+   "page": 640,
+   "why": "Best intuition for Kalman filter."
+  },
+  {
+   "figure": "Fig 13.22",
+   "caption": "LDS tracking a moving object: true positions, noisy measurements, Kalman posterior means and one-sd ellipses.",
+   "page": 641,
+   "why": "Applied tracking example."
+  },
+  {
+   "figure": "Fig 13.23",
+   "caption": "Schematic of particle filter for one-dimensional latent space.",
+   "page": 647,
+   "why": "Sample-weight-resample step."
+  }
+ ],
+ "code": [
+  {
+   "where": "p. 621 eq 13.36",
+   "snippet": "α(zn) = p(xn|zn) Σ_{zn−1} α(zn−1) p(zn|zn−1)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 622 eq 13.38",
+   "snippet": "β(zn) = Σ_{zn+1} β(zn+1) p(xn+1|zn+1) p(zn+1|zn)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 639 eqs 13.89, 13.92",
+   "snippet": "µn = Aµn−1 + Kn(xn − CAµn−1); Kn = Pn−1 C^T (C Pn−1 C^T + Σ)^−1; Pn−1 = A Vn−1 A^T + Γ",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction drops overbars/hats (alpha-hat, beta-hat, mu-hat, V-hat) and flattens superscripts, so scaled vs unscaled quantities and K^M look like KM. Equations in code field are re-typed, not verbatim.",
+  "Printer typos inside the chapter: eq 13.100 has 'AµN' (should be n); eq 13.68 has 'ln p(x+1|zn)' (should be p(zn+1|zn)); eq 13.65 'p(zn|z−1)'; sec 13.3 intro lists 'z1, ..., xN'; sec 13.3.1 says alpha(zn-1) is posterior 'of zn'; M-th order parameter count K^(M-1)(K-1) vs K(K-1) for M=1; Ex 13.25 uses m0 for mu0.",
+  "No instructions embedded in the text."
+ ]
+}

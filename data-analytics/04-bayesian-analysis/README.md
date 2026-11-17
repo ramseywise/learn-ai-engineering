@@ -127,4 +127,4 @@ Three legacy blocks in chapter 6 are marked `# illustrative`, because they show 
 
 Everything else: [references.md](references.md).
 
-**Next:** [05 Visualisation and Storytelling](../05-visualisation-and-storytelling/README.md), for putting these answers in front of people. **References:** [references.md](references.md).
+**Next:** this is the last module of [data analytics](../README.md#completion-standard-and-next-steps). **References:** [references.md](references.md).

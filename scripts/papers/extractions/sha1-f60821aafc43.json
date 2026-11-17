@@ -1,0 +1,641 @@
+{
+ "schema": 1,
+ "key": "sha1:f60821aafc43",
+ "pdf": "data-science/sources/pattern-recognition-and-machine-learning/ch08-graphical-models.pdf",
+ "bib": {
+  "title": "Graphical Models (Chapter 8 of Pattern Recognition and Machine Learning)",
+  "authors": [
+   "Christopher M. Bishop"
+  ],
+  "first_author": "Bishop",
+  "year": 2006,
+  "venue": "Springer, Pattern Recognition and Machine Learning, ch. 8, pp. 359-422",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 156676,
+  "chars_total": 156676,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can probability distributions over many variables be represented, read for conditional independence, and used for exact and approximate inference via directed, undirected and factor graphs?",
+ "hypothesis": null,
+ "contributions": [
+  "Bayesian networks: factorisation p(x)=prod p(xk|pak), generative models, discrete and linear-Gaussian parameterisations (8.1)",
+  "Conditional independence and d-separation, Markov blanket (8.2)",
+  "Markov random fields: cliques, potentials, partition function, Hammersley-Clifford, image de-noising, moralisation, D/I/perfect maps (8.3)",
+  "Inference: chain message passing, trees, factor graphs, sum-product, max-sum/Viterbi, junction tree, loopy BP, structure learning (8.4)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Chain marginal by message passing costs O(NK^2), linear in chain length, versus exponential for the naive sum over K^N states.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "cost of one marginal",
+   "value": "O(NK^2)",
+   "unit": "operations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chain of N discrete nodes with K states each, undirected chain with pairwise potentials (eq 8.49-8.52).",
+   "quote": "Because there are N −1 summations and multiplications of this kind, the total cost of evaluating the marginal p(xn) is O(NK2).",
+   "table": null,
+   "note": null,
+   "where": "p. 396"
+  },
+  {
+   "claim": "Fully connected joint over M K-state discrete variables needs K^M - 1 parameters; a chain needs K-1+(M-1)K(K-1), and tying the transitions gives K^2-1.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "parameter count, tied chain",
+   "value": "K^2 - 1",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Directed graphs over M discrete variables with K states (Figs 8.9-8.12).",
+   "quote": "Together with the K−1 parameters governing the distribution of x1, this gives a total of K2 −1 parameters that must be speciﬁed in order to deﬁne the joint distribution.",
+   "table": null,
+   "note": null,
+   "where": "p. 368"
+  },
+  {
+   "claim": "A logistic-sigmoid conditional p(y|x1..xM) needs M+1 parameters instead of 2^M table entries.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "parameters of p(y|x1..xM)",
+   "value": "M+1",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One binary child y with M binary parents (Fig 8.13, eq 8.10).",
+   "quote": "This is a more restricted form of conditional distribution than the general case but is now governed by a number of parameters that grows linearly with M.",
+   "table": null,
+   "note": "The M+1 count is stated in Exercise 8.6 (p. 419); text on p. 369 says 'grows linearly with M' and w has M+1 components.",
+   "where": "p. 369"
+  },
+  {
+   "claim": "Explaining-away example: prior probability the fuel tank is empty is 0.1; after seeing gauge read empty it rises to 0.257.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "p(F=0|G=0)",
+   "value": "0.257",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binary B (battery), F (fuel), G (gauge); p(B=1)=p(F=1)=0.9; p(G=1|B,F) = 0.8, 0.2, 0.2, 0.1 for (1,1),(1,0),(0,1),(0,0). Arithmetic checked: p(G=0)=0.315, p(G=0|F=0)=0.81.",
+   "quote": "Thus the probability that the tank is empty has decreased (from 0.257 to 0.111) as a result of the observation of the state of the battery.",
+   "table": null,
+   "note": "Text prints the final formula with the approx sign; p(G=0)=0.315 (8.30) and p(G=0|F=0)=0.81 (8.31) both recompute correctly.",
+   "where": "p. 377"
+  },
+  {
+   "claim": "Observing the battery is flat as well lowers the posterior probability of an empty tank from 0.257 to 0.111 (explaining away).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "p(F=0|G=0,B=0)",
+   "value": "0.111",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same fuel-gauge model as above, observing G=0 and B=0.",
+   "quote": "Thus the probability that the tank is empty has decreased (from 0.257 to 0.111) as a result of the observation of the state of the battery.",
+   "table": null,
+   "note": "Still above the prior 0.1 (text p. 378).",
+   "where": "p. 378"
+  },
+  {
+   "claim": "Iterated conditional modes restores about 96% of pixels of a binary image corrupted by 10% pixel flips.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pixels agreeing with original",
+   "value": "96%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binary image de-noising MRF, energy E=h sum x - beta sum xixj - eta sum xiyi with beta=1.0, eta=2.1, h=0; ICM initialised x=y; 10% of pixels flipped (Fig 8.30). A single illustrative image; image size not stated.",
+   "quote": "ICM produces an image where 96% of the pixels agree with the original image, whereas the corresponding number for graph-cut is 99%.",
+   "table": null,
+   "note": "Graph-cut gives 99% in the same caption. One image, no repeats.",
+   "where": "p. 388 (Fig 8.30 caption)"
+  },
+  {
+   "claim": "Graph-cut restoration of the same noisy image recovers 99% of pixels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pixels agreeing with original",
+   "value": "99%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same MRF and image as the ICM result; graph-cut finds the global maximum for this class of energy.",
+   "quote": "ICM produces an image where 96% of the pixels agree with the original image, whereas the corresponding number for graph-cut is 99%.",
+   "table": null,
+   "note": null,
+   "where": "p. 388 (Fig 8.30 caption)"
+  },
+  {
+   "claim": "De-noising demo parameter settings: beta=1.0, eta=2.1, h=0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "energy parameters",
+   "value": "beta=1.0, eta=2.1, h=0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fixed by hand for the illustration; no tuning described.",
+   "quote": "For the purposes of this simple illustration, we have ﬁxed the parameters to be β = 1.0, η = 2.1 and h = 0.",
+   "table": null,
+   "note": null,
+   "where": "p. 390"
+  },
+  {
+   "claim": "Pixel-flip noise level in the de-noising example is 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "flip probability",
+   "value": "10%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binary image, noisy copy made by randomly flipping pixel signs.",
+   "quote": "An example binary image, together with a noise corrupted image obtained by ﬂipping the sign of the pixels with probability 10%, is shown in Figure 8.30.",
+   "table": null,
+   "note": null,
+   "where": "p. 387"
+  },
+  {
+   "claim": "Individually most probable values need not be jointly most probable: the joint maximum is 0.4 at (x=1,y=0) but the marginal maxima give (0,0) with joint 0.3.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "joint maximum",
+   "value": "0.4",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 8.1, two binary variables; p(x=0)=0.6, p(y=0)=0.7.",
+   "quote": "The joint distribution is maximized by setting x = 1 and y = 0, corresponding the value 0.4.",
+   "table": "Table 8.1, cell x=1,y=0",
+   "note": "The marginal-argmax point (0,0) has joint 0.3 (p. 411).",
+   "where": "p. 411"
+  },
+  {
+   "claim": "Max-sum (Viterbi) with back-tracking finds an exact global maximiser on a tree-structured factor graph; ICM cannot guarantee it even on trees.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tree-structured factor graphs; ties handled by storing arg max phi(x_n) in the forward pass.",
+   "quote": "The max-sum algorithm, with back-tracking, gives an exact maximizing conﬁguration for the variables provided the factor graph is a tree.",
+   "table": null,
+   "note": null,
+   "where": "p. 415"
+  },
+  {
+   "claim": "Marginals for every node cost only twice one marginal on a chain, and the number of sum-product messages is twice the number of links.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tree factor graph; message passed once in each direction on every link.",
+   "quote": "The number of messages that have to be computed is given by twice the number of links in the graph and so involves only twice the computation involved in ﬁnding a single marginal.",
+   "table": null,
+   "note": null,
+   "where": "p. 407"
+  },
+  {
+   "claim": "Separate per-node runs on a chain cost O(N^2 M^2) as printed (M should be K, the number of states).",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost of all marginals, naive",
+   "value": "O(N^2 M^2)",
+   "unit": "operations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Naive repetition of the single-marginal procedure for every node.",
+   "quote": "Simply applying the above procedure separately for each node will have computational cost that is O(N 2M 2).",
+   "table": null,
+   "note": "Inconsistent notation: the chain uses K states and cost O(NK^2) (p. 396), so this should read O(N^2 K^2). M is the number of variables elsewhere in the chapter.",
+   "where": "p. 398"
+  },
+  {
+   "claim": "Junction tree cost grows exponentially with the largest clique size; treewidth is largest clique size minus one, so a tree has treewidth 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discrete variables, exact inference on general graphs.",
+   "quote": "In fact, it is deﬁned to be as one less than the size of the largest clique, to ensure that a tree has a treewidth of 1.",
+   "table": null,
+   "note": null,
+   "where": "p. 417"
+  },
+  {
+   "claim": "Naive Bayes can classify well even when its independence assumption fails, because decision boundaries can be insensitive to class-conditional density details.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Naive Bayes with class z and conditionally independent x1..xD (Fig 8.24).",
+   "quote": "Nevertheless, even if this assumption is not precisely satisﬁed, the model may still give good classiﬁcation performance in practice because the decision boundaries can be insensitive to some of the details in the class-conditional densities, as illustrated in Figure 1.27.",
+   "table": null,
+   "note": null,
+   "where": "p. 381"
+  },
+  {
+   "claim": "Computing the MRF partition function sums over K^M states, exponential in model size.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "M discrete nodes with K states each.",
+   "quote": "then the evaluation of the normalization term involves summing over KM states and so (in the worst case) is exponential in the size of the model.",
+   "table": null,
+   "note": null,
+   "where": "p. 386"
+  },
+  {
+   "claim": "Hammersley-Clifford: for strictly positive potentials the distributions consistent with graph separation (UI) equal those that factorise over maximal cliques (UF).",
+   "kind": "reported",
+   "source": "Clifford, 1990",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Undirected graph, strictly positive potentials.",
+   "quote": "The Hammersley-Clifford theorem (Clifford, 1990) states that the sets UI and UF are identical.",
+   "table": null,
+   "note": null,
+   "where": "p. 387"
+  }
+ ],
+ "limits": [
+  "Directed-to-undirected conversion (moralisation) discards conditional independencies; undirected-to-directed is not covered in general (p. 392).",
+  "Chain graphs, which mix directed and undirected links, are mentioned and not developed (p. 393).",
+  "Junction tree is exact but exponential in treewidth; loopy BP has no convergence or quality guarantee (pp. 416-418).",
+  "MRF partition function is intractable in general; ICM finds only a local maximum (pp. 386, 390).",
+  "Structure learning: evidence p(D|m) is hard to compute and the structure space grows exponentially, so heuristics are needed (p. 418).",
+  "The only empirical content is one de-noising picture and hand-built toy probabilities; no benchmarks, dataset sizes or compute.",
+  "Terminology 'moralization' is called anachronistic by the author (p. 391); treatment is 2006, so modern deep generative/neural-message-passing models are absent."
+ ],
+ "practices": [
+  "Draw the model as a graph to see structure, read conditional independence by inspection and express inference as graph manipulation (p. 359-360).",
+  "Use plates to compress repeated nodes, and small solid nodes for deterministic parameters, shaded nodes for observed variables (pp. 363-364).",
+  "Reduce parameter count by dropping links, tying parameters, or parameterising conditionals (sigmoid) rather than using full tables (pp. 367-369).",
+  "Test conditional independence with d-separation rather than algebra (p. 372, 378).",
+  "Use naive Bayes when D is high or inputs mix discrete and continuous types (p. 381).",
+  "Convert directed or undirected graphs to factor graphs and run sum-product on trees; use max-sum with back-tracking, not per-node argmax, for the joint mode (pp. 399, 407, 413-415).",
+  "Work in log space (max-sum) to avoid underflow of products of small probabilities (p. 412).",
+  "Clamp observed variables by multiplying in indicator functions I(v, v-hat) (pp. 398, 410).",
+  "Use a junction tree for exact inference in graphs with loops only if treewidth is low; otherwise approximate with loopy BP, variational (Ch. 10) or sampling (Ch. 11) methods (pp. 416-417)."
+ ],
+ "terms": [
+  {
+   "term": "probabilistic graphical model",
+   "definition": "diagrammatic representations of probability distributions",
+   "where": "p. 359"
+  },
+  {
+   "term": "Bayesian network",
+   "definition": "also known as directed graphical models, in which the links of the graphs have a particular directionality indicated by arrows",
+   "where": "p. 360"
+  },
+  {
+   "term": "Markov random field",
+   "definition": "also known as undirected graphical models, in which the links do not carry arrows and have no directional significance",
+   "where": "p. 360"
+  },
+  {
+   "term": "plate",
+   "definition": "a box labelled N around a single representative node tn indicating N nodes of this kind",
+   "where": "p. 363"
+  },
+  {
+   "term": "latent variable",
+   "definition": "a random variable that is not observed (also hidden variable), such as w",
+   "where": "p. 364"
+  },
+  {
+   "term": "ancestral sampling",
+   "definition": "start at the lowest-numbered node, sample each node from p(xn|pan) with parents set to sampled values",
+   "where": "p. 365"
+  },
+  {
+   "term": "generative model",
+   "definition": "graphical model capturing the causal process by which observed data was generated",
+   "where": "p. 366"
+  },
+  {
+   "term": "conditional independence",
+   "definition": "a is conditionally independent of b given c if p(a|b,c)=p(a|c) for every value of c",
+   "where": "p. 372"
+  },
+  {
+   "term": "d-separation",
+   "definition": "a path is blocked if it has a head-to-tail or tail-to-tail node in C, or a head-to-head node with neither it nor any descendant in C; if all paths are blocked A is d-separated from B by C",
+   "where": "p. 378"
+  },
+  {
+   "term": "explaining away",
+   "definition": "observing a head-to-head node (or descendant) makes its parents dependent; evidence for one cause lowers belief in another",
+   "where": "pp. 376-378"
+  },
+  {
+   "term": "Markov blanket",
+   "definition": "parents, children and co-parents of a node in a directed graph; neighbours in an undirected graph",
+   "where": "pp. 382-385"
+  },
+  {
+   "term": "clique / maximal clique",
+   "definition": "a fully connected subset of nodes / one to which no further node can be added",
+   "where": "p. 385"
+  },
+  {
+   "term": "partition function",
+   "definition": "normalisation constant Z = sum_x prod_C psi_C(x_C)",
+   "where": "p. 386"
+  },
+  {
+   "term": "energy function / Boltzmann distribution",
+   "definition": "psi_C(x_C) = exp{-E(x_C)}",
+   "where": "p. 387"
+  },
+  {
+   "term": "moral graph",
+   "definition": "undirected graph obtained by linking all parents of each node and dropping arrows",
+   "where": "p. 391"
+  },
+  {
+   "term": "D map / I map / perfect map",
+   "definition": "graph reflects every independence of the distribution / every independence implied by graph holds / both",
+   "where": "p. 392"
+  },
+  {
+   "term": "polytree",
+   "definition": "directed graph with nodes having more than one parent but only one path ignoring direction between any two nodes",
+   "where": "p. 399"
+  },
+  {
+   "term": "factor graph",
+   "definition": "bipartite graph with variable nodes and factor nodes, one per factor fs(xs) of p(x)=prod fs(xs)",
+   "where": "pp. 399-401"
+  },
+  {
+   "term": "sum-product algorithm",
+   "definition": "exact marginals on tree factor graphs by local messages mu_{f->x} and mu_{x->f}",
+   "where": "pp. 403-407"
+  },
+  {
+   "term": "max-sum algorithm",
+   "definition": "sum-product with sums replaced by max in log space; with back-tracking gives the most probable joint configuration; Viterbi in HMMs",
+   "where": "pp. 411-415"
+  },
+  {
+   "term": "junction tree / treewidth",
+   "definition": "exact inference tree over triangulated-graph cliques with running intersection property; treewidth = size of largest clique minus one",
+   "where": "pp. 416-417"
+  },
+  {
+   "term": "loopy belief propagation",
+   "definition": "apply sum-product on a graph with loops with unit initial messages and a schedule (flooding or serial)",
+   "where": "p. 417"
+  },
+  {
+   "term": "iterated conditional modes (ICM)",
+   "definition": "coordinate-wise update setting each xj to the lower-energy state; converges to a local maximum",
+   "where": "pp. 389-390"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Pearl 1988 (d-separation, belief propagation, causal process)",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "source of d-separation and belief propagation",
+   "quote": null
+  },
+  {
+   "work": "Lauritzen and Spiegelhalter 1988 (junction tree)",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "exact inference on general graphs",
+   "quote": null
+  },
+  {
+   "work": "Kindermann and Snell 1980 (Markov random fields)",
+   "year": 1980,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MRF definition",
+   "quote": null
+  },
+  {
+   "work": "Clifford 1990 (Hammersley-Clifford)",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "factorisation equals graph separation",
+   "quote": null
+  },
+  {
+   "work": "Besag 1974, Geman and Geman 1984, Besag 1986",
+   "year": 1984,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MRF image de-noising",
+   "quote": null
+  },
+  {
+   "work": "Kittler and Foglein 1984 (ICM)",
+   "year": 1984,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "iterated conditional modes",
+   "quote": null
+  },
+  {
+   "work": "Greig et al 1989; Boykov et al 2001; Kolmogorov and Zabih 2004 (graph cuts)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "exact MAP for the de-noising energy class",
+   "quote": null
+  },
+  {
+   "work": "Frey 1998; Kschischang et al 2001 (factor graphs)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "printed 'Kschischnang' in the chapter",
+   "quote": null
+  },
+  {
+   "work": "Frey and MacKay 1998 (loopy BP)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "loopy belief propagation",
+   "quote": null
+  },
+  {
+   "work": "Friedman and Koller 2003 (structure learning)",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "learning graph structure",
+   "quote": null
+  },
+  {
+   "work": "Bodlaender 1993 (treewidth)",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "treewidth",
+   "quote": null
+  },
+  {
+   "work": "Dawid 1979, 1980 (conditional independence)",
+   "year": 1980,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "notation",
+   "quote": null
+  },
+  {
+   "work": "Whittaker 1990; Lauritzen 1996; Jensen 1996; Castillo et al 1997; Jordan 1999; Cowell et al 1999; Jordan 2007",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fuller treatments of graphical models",
+   "quote": null
+  },
+  {
+   "work": "Bishop PRML Ch. 1-4, 7 (polynomial regression, exponential family, naive Bayes) and forward refs Ch. 9, 10, 11, 12, 13",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "chapter builds on probability theory in Ch. 1 and uses Ch. 3 Bayesian regression; later chapters reuse the machinery",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 8.21",
+   "caption": "An example of a 3-node graph used to illustrate the phenomenon of 'explaining away'.",
+   "page": 377,
+   "why": "Three panels show the tank posterior moving 0.1 -> 0.257 -> 0.111 as evidence is added."
+  },
+  {
+   "figure": "Fig 8.30",
+   "caption": "Illustration of image de-noising using a Markov random field: original, 10% noisy, ICM (96%), graph-cut (99%).",
+   "page": 388,
+   "why": "Four-image panel shows the gap between local and exact MAP faster than prose."
+  },
+  {
+   "figure": "Fig 8.22",
+   "caption": "Illustration of the concept of d-separation.",
+   "page": 379,
+   "why": "Two small graphs make blocked vs unblocked paths concrete."
+  },
+  {
+   "figure": "Fig 8.38",
+   "caption": "Messages mu_alpha and mu_beta along a chain multiply to give p(xn).",
+   "page": 397,
+   "why": "Shows forward/backward passes in one picture."
+  },
+  {
+   "figure": "Fig 8.53",
+   "caption": "Lattice (trellis) diagram for K=3 states showing max-sum back-tracking.",
+   "page": 414,
+   "why": "Explains why back-tracking is needed and gives the Viterbi picture."
+  },
+  {
+   "figure": "Fig 8.26 / 8.28",
+   "caption": "Markov blanket in directed and undirected graphs.",
+   "page": 383,
+   "why": "Contrasts parents+children+co-parents with plain neighbours."
+  },
+  {
+   "figure": "Fig 8.33",
+   "caption": "A simple directed graph and the corresponding moral graph.",
+   "page": 391,
+   "why": "Shows moralisation in one step."
+  },
+  {
+   "figure": "Fig 8.34",
+   "caption": "Venn diagram of distributions with directed or undirected perfect maps.",
+   "page": 392,
+   "why": "Shows directed and undirected graphs are incomparable in power."
+  },
+  {
+   "figure": "Fig 8.42/8.43",
+   "caption": "Directed graph and polytree to factor graph conversion.",
+   "page": 401,
+   "why": "Shows factor graphs keeping tree structure where moralisation creates loops."
+  }
+ ],
+ "code": [
+  {
+   "where": "p. 385 eq 8.5",
+   "snippet": "p(x) = ∏_{k=1}^{K} p(xk | pak)",
+   "verbatim": true
+  },
+  {
+   "where": "p. 386 eq 8.39-8.40",
+   "snippet": "p(x) = (1/Z) ∏_C ψ_C(x_C),  Z = Σ_x ∏_C ψ_C(x_C)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 389 eq 8.42",
+   "snippet": "E(x, y) = h Σ_i x_i − β Σ_{i,j} x_i x_j − η Σ_i x_i y_i;  p(x,y) = (1/Z) exp{−E(x,y)}",
+   "verbatim": false
+  },
+  {
+   "where": "p. 389 ICM",
+   "snippet": "initialise x_i = y_i; repeat: for each node j, evaluate energy for x_j=+1 and x_j=-1 with others fixed, set x_j to the lower-energy state; stop when a full sweep changes nothing (raster or random order)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 397 eq 8.55",
+   "snippet": "µα(xn) = Σ_{xn−1} ψ_{n−1,n}(xn−1, xn) µα(xn−1);  µβ(xn) = Σ_{xn+1} ψ_{n+1,n}(xn+1, xn) µβ(xn+1);  p(xn) = (1/Z) µα(xn) µβ(xn)",
+   "verbatim": false
+  },
+  {
+   "where": "pp. 405-406 eq 8.66, 8.69-8.71",
+   "snippet": "µ_{fs→x}(x) = Σ_{x1..xM} fs(x, x1..xM) ∏_{m∈ne(fs)\\x} µ_{xm→fs}(xm);  µ_{x→f}(x) = ∏_{l∈ne(x)\\f} µ_{fl→x}(x);  leaf variable sends 1, leaf factor sends f(x)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 413 eq 8.93-8.96, 8.101-8.102",
+   "snippet": "µ_{f→x}(x) = max_{x1..xM}[ln f(x,x1..xM) + Σ_m µ_{xm→f}(xm)];  φ(xn) = argmax_{xn−1}[ln f_{n−1,n}(xn−1,xn) + µ_{xn−1→f}(xn)];  x^max_{n−1} = φ(x^max_n)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations are linearised by the PDF text layer (sums, hats and subscripts partly lost); code snippets marked verbatim=false are reconstructions of the printed equations.",
+  "Notation slip on p. 398: O(N^2 M^2) where the chain uses K states (should be K).",
+  "Chapter has no dataset, hyperparameter or compute content, so the method block is null for a book chapter.",
+  "No embedded instructions found in the text."
+ ]
+}

@@ -18,6 +18,7 @@ sources:
   - https://doi.org/10.1371/journal.pcbi.1011288
   - Bruce and Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017), ch. 7
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 12
+  - Hastie, Tibshirani and Friedman, The Elements of Statistical Learning, 2nd ed. (Springer, 2009), ch. 6, 8
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -451,9 +452,9 @@ for i in range(301):
 300 34128
 ```
 
-The update is the gradient step from [note 02](02-supervised-learning.md#vectors-matrix-products-and-the-gradient): nudge each parameter against its gradient by a small rate.
+The update is the gradient step from [note 02](02b-linear-models.md#vectors-matrix-products-and-the-gradient): nudge each parameter against its gradient by a small rate.
 
-Ex8 checks the [gradient](02-supervised-learning.md#vectors-matrix-products-and-the-gradient) numerically, adds a new user's ratings, **mean-normalises** each movie's ratings (otherwise a user with no ratings gets predicted 0 for everything), and optimises with `scipy.optimize.fmin_cg`. This is low-rank matrix factorisation: the same idea as PCA and NMF, fitted only on observed entries. It is the ancestor of the embedding models in [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md): $x^{(i)}$ is a learned movie embedding.
+Ex8 checks the [gradient](02b-linear-models.md#vectors-matrix-products-and-the-gradient) numerically, adds a new user's ratings, **mean-normalises** each movie's ratings (otherwise a user with no ratings gets predicted 0 for everything), and optimises with `scipy.optimize.fmin_cg`. This is low-rank matrix factorisation: the same idea as PCA and NMF, fitted only on observed entries. It is the ancestor of the embedding models in [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md): $x^{(i)}$ is a learned movie embedding.
 
 ---
 
@@ -547,6 +548,8 @@ gmm soft     recall 0.925  pool 0.620
 ```
 
 A median posterior of 0.992 sits beside seed agreement of 0.718: a posterior is confidence inside one fitted model, not evidence the model is right. As a filter, soft assignment (keep any cluster at 0.05 or more, the project's threshold) finds 92.5% of held-out playlist members but keeps 62% of the library. Hard GMM loses to plain k-means.
+
+**How the mixture is fitted.** `GaussianMixture` uses the EM algorithm. Given the current components, compute each point's *responsibility*, the posterior probability that it came from each component; then re-estimate every mean, variance and weight as a responsibility-weighted average; repeat. Each pass raises the likelihood, but only toward a local maximum, and the global maximum is useless: a component collapsed onto one point has unbounded likelihood. ESL's recipe is therefore several starts (means at two random data points, variances at the overall sample variance, equal weights), keeping the run with the highest likelihood among those whose variances stay above a floor, 0.5 in its example. `n_init` and `reg_covar` are scikit-learn's analogues. On the book's 20-point, two-component example the mixing weight reads 0.485, 0.493, 0.523, 0.544 and 0.546 at iterations 1, 5, 10, 15 and 20 (*ESL*, ch. 8, Table 8.2). A mixture can find a real grouping unprompted: two Gaussians fitted to age alone in the South African heart-disease data, thresholded at a responsibility of 0.5, disagree with the heart-disease label on 146 of 462 people, the same 32% error as a logistic regression fitted with the labels (*ESL*, ch. 6, sec. 6.8).
 
 ### Naming clusters honestly
 

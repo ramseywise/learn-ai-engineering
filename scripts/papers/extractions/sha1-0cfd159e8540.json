@@ -1,0 +1,788 @@
+{
+ "schema": 1,
+ "key": "sha1:0cfd159e8540",
+ "pdf": "data-science/sources/pattern-recognition-and-machine-learning/ch05-neural-networks.pdf",
+ "bib": {
+  "title": "Pattern Recognition and Machine Learning, Chapter 5: Neural Networks",
+  "authors": [
+   "Christopher M. Bishop"
+  ],
+  "first_author": "Bishop",
+  "year": 2006,
+  "venue": "Springer (book chapter, pp. 225-290)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 152674,
+  "chars_total": 152674,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should feed-forward neural networks be defined, trained by maximum likelihood with backpropagation, regularized, extended to multimodal targets and treated in a Bayesian way?",
+ "hypothesis": null,
+ "contributions": [
+  "Network function and output-activation/error pairing (Sec 5.1-5.2)",
+  "Backpropagation for gradients, Jacobian and Hessian (Sec 5.3-5.4)",
+  "Regularization: weight decay, early stopping, invariances, tangent propagation, convolutional nets, soft weight sharing (Sec 5.5)",
+  "Mixture density networks (Sec 5.6)",
+  "Laplace-approximation Bayesian networks with evidence framework (Sec 5.7)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Every point in weight space of a two-layer tanh network with M hidden units belongs to a family of M!2^M equivalent weight vectors (M! orderings times 2^M sign flips).",
+   "kind": "claim",
+   "source": null,
+   "metric": "weight-space symmetry factor",
+   "value": "M!2M",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fully connected two-layer network, tanh hidden units, M hidden units; more layers multiply one factor per hidden layer.",
+   "quote": "The network will therefore have an overall weight-space symmetry factor of M!2M.",
+   "table": null,
+   "note": "Superscript flattened in the text: M!2M means M! x 2^M.",
+   "where": "p. 232, Sec 5.1.1"
+  },
+  {
+   "claim": "Numerical differentiation loses the O(W) cost of backpropagation: each of W weights needs its own O(W) forward pass, so cost is O(W^2).",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost of gradient evaluation",
+   "value": "O(W 2)",
+   "unit": "operations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "W = total weights and biases; forward pass costs O(W).",
+   "quote": "O(W) scaling has been lost",
+   "table": null,
+   "note": null,
+   "where": "p. 246, Sec 5.3.3"
+  },
+  {
+   "claim": "Gradient evaluation by backpropagation costs O(W) steps per evaluation.",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost of one gradient evaluation",
+   "value": "O(W)",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Layered feed-forward network, W weights and biases, one input pattern.",
+   "quote": "each such evaluation takes only O(W) steps",
+   "table": null,
+   "note": null,
+   "where": "p. 240, Sec 5.2.3"
+  },
+  {
+   "claim": "Without gradient information, finding the minimum of the local quadratic needs O(W^2) function evaluations of O(W) each, so O(W^3) in total.",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost to find minimum without gradients",
+   "value": "O(W 3)",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Quadratic approximation, which has O(W^2) free parameters.",
+   "quote": "using such an approach would be O(W 3)",
+   "table": null,
+   "note": null,
+   "where": "pp. 239-240, Sec 5.2.3"
+  },
+  {
+   "claim": "With backpropagated gradients the minimum can be found in O(W^2) steps, which is why gradient information underlies practical training.",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost to find minimum with gradients",
+   "value": "O(W 2)",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same quadratic argument; O(W) gradient evaluations at O(W) each.",
+   "quote": "the minimum can now be found in O(W 2) steps",
+   "table": null,
+   "note": null,
+   "where": "p. 240, Sec 5.2.3"
+  },
+  {
+   "claim": "The local quadratic approximation b and H has W(W+3)/2 independent elements.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "independent elements",
+   "value": "W(W + 3)/2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "W = number of adaptive parameters; H symmetric.",
+   "quote": "the number of independent elements in the quadratic error function (5.28) is given by W(W + 3)/2.",
+   "table": null,
+   "note": "Text p. 239 line-breaks the expression as 'W(W +' / '3)/2'.",
+   "where": "p. 288, Exercise 5.13 (stated in text p. 239 as 'a total of W(W + 3)/2 independent elements')"
+  },
+  {
+   "claim": "Central differences have O(eps^2) error versus O(eps) for forward differences, at roughly double the cost; the book says to use them to check a backprop implementation.",
+   "kind": "claim",
+   "source": null,
+   "metric": "residual error order",
+   "value": "O(ϵ2)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite-difference check of backprop derivatives, eps << 1.",
+   "quote": "the residual corrections are O(ϵ2)",
+   "table": null,
+   "note": null,
+   "where": "p. 246, Eq 5.69; check advice p. 247"
+  },
+  {
+   "claim": "The exact Hessian of a feed-forward network can be computed in O(W^2) steps by extended backpropagation.",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost of exact Hessian",
+   "value": "O(W 2)",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arbitrary feed-forward topology, any differentiable error and activation (Bishop 1991, 1992).",
+   "quote": "The number of computational steps needed to evaluate the Hessian scales\nlike O(W 2).",
+   "table": null,
+   "note": null,
+   "where": "p. 253, Sec 5.4.5"
+  },
+  {
+   "claim": "The diagonal approximation of the Hessian costs O(W), versus O(W^2) for the full Hessian, but the true Hessian is typically strongly nondiagonal.",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost of diagonal Hessian approximation",
+   "value": "O(W)",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Neglecting off-diagonal second-derivative terms (Becker and Le Cun 1989; Le Cun et al. 1990).",
+   "quote": "Note that the number of computational steps required to evaluate this approximation\nis O(W)",
+   "table": null,
+   "note": null,
+   "where": "p. 250, Sec 5.4.1"
+  },
+  {
+   "claim": "Finite-difference Hessian by perturbing pairs of weights costs O(W^3); applying central differences to backprop gradients costs O(W^2).",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost of finite-difference Hessian",
+   "value": "O(W 3)",
+   "unit": "operations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four forward propagations per element, W^2 elements.",
+   "quote": "this approach will require O(W 3) operations to evaluate the complete Hessian",
+   "table": null,
+   "note": null,
+   "where": "p. 253, Sec 5.4.4"
+  },
+  {
+   "claim": "Hessian-vector product vH can be computed in O(W) operations with the R{.} operator, avoiding O(W^2) storage.",
+   "kind": "claim",
+   "source": null,
+   "metric": "cost of Hessian-vector product",
+   "value": "O(W)",
+   "unit": "operations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pearlmutter 1994; Moller 1993; two-layer example, linear outputs, sum-of-squares.",
+   "quote": "find an efficient approach to evaluating vTH directly in a way that requires only\nO(W) operations",
+   "table": null,
+   "note": null,
+   "where": "p. 254, Sec 5.4.6"
+  },
+  {
+   "claim": "Using cross-entropy instead of sum-of-squares for classification gave faster training and better generalization.",
+   "kind": "reported",
+   "source": "Simard et al. (2003)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Classification; no numbers given in the chapter.",
+   "quote": "Simard et al. (2003) found that using",
+   "table": null,
+   "note": null,
+   "where": "p. 235, Sec 5.2"
+  },
+  {
+   "claim": "A two-layer network with linear outputs can uniformly approximate any continuous function on a compact domain given enough hidden units.",
+   "kind": "reported",
+   "source": "Funahashi 1989; Cybenko 1989; Hornik et al. 1989 and others",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Excludes polynomial activations; cites Cybenko 1989, Hornik et al. 1989 and others.",
+   "quote": "a two-layer network with linear outputs can uniformly\napproximate any continuous function on a compact input domain to arbitrary accu-\nracy",
+   "table": null,
+   "note": null,
+   "where": "p. 230, Sec 5.1"
+  },
+  {
+   "claim": "In the 30-random-starts experiment the best validation solution occurred at M = 8 hidden units.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best number of hidden units",
+   "value": 8,
+   "unit": "hidden units",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sinusoidal/polynomial regression data, two-layer net, weights initialised from isotropic Gaussian mean 0 variance 10, 30 random starts per M (Fig 5.10).",
+   "quote": "The overall best validation set performance in this\ncase occurred for a particular solution having M = 8.",
+   "table": null,
+   "note": "Text says validation set performance; the Fig 5.10 caption says sum-of-squares test-set error.",
+   "where": "p. 256, Sec 5.5; Fig 5.10 p. 257"
+  },
+  {
+   "claim": "Early stopping resembles weight decay in a quadratic error: the product tau*eta (iterations times learning rate) plays the role of 1/lambda.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Quadratic error function, gradient descent from origin, widely differing Hessian eigenvalues.",
+   "quote": "showing that the quantity τη (where τ is the iteration index, and η",
+   "table": null,
+   "note": "Exercise 5.25 (p. 287) writes the learning rate as rho and Hessian eigenvalues as eta_j, so eta means different things in the section and the exercise.",
+   "where": "pp. 260-261, Sec 5.5.2"
+  },
+  {
+   "claim": "Simple weight decay is inconsistent with linear rescaling of inputs and targets; a regularizer with separate coefficients per layer and no biases is invariant if lambda1 -> a^(1/2) lambda1 and lambda2 -> c^(-1/2) lambda2.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two-layer network, linear outputs, input map x -> ax+b, output map y -> cy+d.",
+   "quote": "Clearly, simple weight decay (5.112), that treats all\nweights and biases on an equal footing, does not satisfy this property.",
+   "table": null,
+   "note": null,
+   "where": "pp. 258-259, Sec 5.5.1"
+  },
+  {
+   "claim": "A convolutional feature map of 100 units on a 10x10 grid with 5x5 receptive fields has 25 weights plus one bias.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "adjustable weights per feature map",
+   "value": 25,
+   "unit": "weights",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative layer; units share weights; 2x2 non-overlapping subsampling halves rows and columns.",
+   "quote": "The whole feature map\ntherefore has 25 adjustable weight parameters plus one adjustable bias parameter.",
+   "table": null,
+   "note": null,
+   "where": "p. 268, Sec 5.5.6"
+  },
+  {
+   "claim": "Adding noise x -> x + xi to inputs reduces, for small noise, to Tikhonov regularization (1/2) integral ||grad y||^2 p(x) dx; training on transformed data equals tangent propagation to leading order in xi.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sum-of-squares error, infinite copies of each point, p(xi) zero mean and small variance; lambda = E[xi^2].",
+   "quote": "which is known as Tikhonov regularization (Tikhonov and Arsenin, 1977; Bishop,",
+   "table": null,
+   "note": null,
+   "where": "p. 267, Sec 5.5.5"
+  },
+  {
+   "claim": "In the toy inverse problem, the data come from x + 0.3 sin(2 pi x) plus uniform noise on (-0.1, 0.1); a 6-hidden-unit net with sum-of-squares fits the inverse problem very poorly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "toy data amplitude",
+   "value": 0.3,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "x uniform on (0,1); two-layer network, 6 tanh hidden units, one linear output; roles of x and t exchanged for the inverse problem (Fig 5.19).",
+   "quote": "by computing the function xn + 0.3 sin(2πxn) and then adding uniform noise over\nthe interval (−0.1, 0.1).",
+   "table": null,
+   "note": null,
+   "where": "p. 273, Sec 5.6"
+  },
+  {
+   "claim": "A mixture density network with L components over a K-dimensional target needs (K+2)L outputs instead of K.",
+   "kind": "claim",
+   "source": null,
+   "metric": "number of network outputs",
+   "value": "(K + 2)L",
+   "unit": "outputs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gaussian isotropic components: L mixing, L widths, L x K means.",
+   "quote": "The total\nnumber of network outputs is given by (K + 2)L",
+   "table": null,
+   "note": "The text says 'K outputs denoted by a_sigma' for widths, but the total (K+2)L and Fig 5.21 (3 widths for 3 components) imply L width outputs. Also L and K swap meaning between Eq 5.148 (K components) and this paragraph (L components, K target dims).",
+   "where": "p. 274, Sec 5.6"
+  },
+  {
+   "claim": "The MDN on the toy data used 3 Gaussian components and 5 tanh hidden units, giving nine outputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MDN outputs",
+   "value": 9,
+   "unit": "outputs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two-layer MLP, 5 tanh hidden units, 3 Gaussian components, trained on the Fig 5.19 inverse data (Fig 5.21).",
+   "quote": "and\nnine outputs (corresponding to the 3\nmeans and 3 variances of the Gaus-",
+   "table": null,
+   "note": null,
+   "where": "p. 276, Fig 5.21"
+  },
+  {
+   "claim": "MDN output derivatives with respect to activations are pi_k - gamma_k (mixing), gamma_k (mu_kl - t_l)/sigma_k^2 (means) and -gamma_k(||t-mu_k||^2/sigma_k^3 - 1/sigma_k) (widths).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Negative log likelihood (5.153) of Gaussian MDN; gamma_k is the posterior responsibility.",
+   "quote": "The derivatives with respect to the network output activations governing the mix-",
+   "table": null,
+   "note": null,
+   "where": "p. 275, Eqs 5.155-5.157"
+  },
+  {
+   "claim": "Predictive variance of the Laplace Bayesian network is sigma^2(x) = 1/beta + g^T A^-1 g, with A = alpha I + beta H.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Regression, Gaussian prior N(0, alpha^-1 I), Gaussian noise precision beta, Laplace approximation at w_MAP, network linearised at w_MAP.",
+   "quote": "where the input-dependent variance is given by",
+   "table": null,
+   "note": null,
+   "where": "p. 280, Eq 5.173"
+  },
+  {
+   "claim": "Evidence re-estimation: alpha = gamma / w_MAP^T w_MAP with gamma = sum lambda_i/(alpha+lambda_i); 1/beta = (1/(N-gamma)) sum (y_n - t_n)^2.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Alternate with re-estimating the posterior; ignores dependence of Hessian eigenvalues on alpha.",
+   "quote": "where γ represents the effective number of parameters and is deﬁned by",
+   "table": null,
+   "note": null,
+   "where": "pp. 280-281, Eqs 5.178-5.180"
+  },
+  {
+   "claim": "When comparing nets of different size the evidence should be multiplied by M!2^M to account for equivalent modes.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "M!2M",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Laplace approximation around one mode of a two-layer network.",
+   "quote": "this can be taken into account by multiplying the evidence by a factor of\nM!2M.",
+   "table": null,
+   "note": null,
+   "where": "p. 281, Sec 5.7.2"
+  },
+  {
+   "claim": "Evidence-optimised alpha greatly reduces over-fitting of an 8-hidden-unit network on a synthetic 2-D two-class problem; marginalisation pushes probabilities towards 0.5 and leaves the y = 0.5 contour unchanged.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hidden units",
+   "value": 8,
+   "unit": "units",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5.22/5.23: two-layer net, 8 tanh hidden units, logistic output, scaled conjugate gradients, alpha started at 0, Appendix A synthetic data. Qualitative figure, no error rates given.",
+   "quote": "Note that the evidence proce-\ndure greatly reduces the over-ﬁtting of the network.",
+   "table": null,
+   "note": null,
+   "where": "p. 283, Fig 5.22; p. 284 Fig 5.23"
+  },
+  {
+   "claim": "Under the Laplace approximation the predictive probability for classification is sigma(kappa(sigma_a^2) b^T w_MAP) with sigma_a^2 = b^T A^-1 b.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single logistic output; activation linearised at w_MAP.",
+   "quote": "apply the approximation (4.153) to (5.189) giving",
+   "table": null,
+   "note": null,
+   "where": "p. 284, Eq 5.190"
+  },
+  {
+   "claim": "A two-layer network trained with 3 tanh hidden units on N = 50 points approximates x^2, sin x, |x| and the Heaviside step.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training points",
+   "value": 50,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5.3: points sampled uniformly on (-1, 1), linear outputs, three hidden units.",
+   "quote": "In\neach case, N\n= 50 data points,",
+   "table": null,
+   "note": null,
+   "where": "p. 231, Fig 5.3"
+  }
+ ],
+ "limits": [
+  "Chapter has no experiments with reported test accuracies; figures are qualitative toy illustrations (sinusoid, 2-D synthetic classes, Appendix A) with no seeds or error tables.",
+  "Written in 2006: sigmoidal tanh/logistic hidden units, sum-of-squares or cross-entropy, batch methods (conjugate gradients, quasi-Newton, scaled conjugate gradient) preferred; no ReLU, dropout, batch norm, residual connections, Adam or minibatch SGD practice, no attention or transformers, no deep stacks.",
+  "Convolutional networks are covered in about two pages using average-subsampling units with sigmoid, not max pooling or ReLU.",
+  "Says plain gradient descent 'turns out to be a poor algorithm' for batch optimization; modern minibatch SGD practice differs.",
+  "Laplace evidence needs the Hessian determinant, which the author notes is sensitive to small eigenvalues that are hard to determine accurately.",
+  "Gradient descent is dismissed only by reference to Bishop and Nabney (2008), not argued here."
+ ],
+ "practices": [
+  "Use identity outputs with sum-of-squares for regression, logistic sigmoid with cross-entropy for independent binary labels, softmax with multiclass cross-entropy for K exclusive classes; all give dE/da_k = y_k - t_k (Sec 5.2, pp. 235-236).",
+  "Call Fig 5.1 a two-layer network, counting layers of adaptive weights (p. 229).",
+  "Verify a backpropagation implementation against central differences (5.69) on some test cases, but train with backprop (p. 247).",
+  "Run a gradient optimiser several times from random starts and compare on an independent validation set (p. 240, Fig 5.10).",
+  "Use on-line (stochastic) gradient descent on large or redundant data sets; it handles redundancy well and can escape local minima (pp. 240-241).",
+  "Choose hidden units M by validation error, or use large M with a regulariser (pp. 256-257).",
+  "Use early stopping at the minimum validation error (p. 259, Fig 5.12).",
+  "Prefer regularizers invariant to linear rescaling: separate coefficients per layer, no biases (p. 258).",
+  "Encourage invariance by augmenting data with transformed copies, by tangent propagation, by invariant features, or by weight sharing (pp. 261-262).",
+  "Parametrise sigma^2 = exp(eta) and mixing coefficients by softmax to keep them valid (pp. 271, 274).",
+  "Use a mixture density network when p(t|x) is multimodal; use the mean of the most probable component as a mode estimate (p. 277)."
+ ],
+ "terms": [
+  {
+   "term": "multilayer perceptron",
+   "definition": "'multilayer perceptron' is really a misnomer, because the model comprises multiple layers of logistic regression models (with continuous nonlinearities) rather than multiple perceptrons",
+   "where": "p. 226"
+  },
+  {
+   "term": "activation / hidden unit / weights / biases",
+   "definition": "a_j = sum_i w_ji x_i + w_j0 are activations; z_j = h(a_j) are hidden units; w_ji weights, w_j0 biases",
+   "where": "p. 227"
+  },
+  {
+   "term": "two-layer network",
+   "definition": "counts the layers of adaptive weights",
+   "where": "p. 229"
+  },
+  {
+   "term": "universal approximator",
+   "definition": "a two-layer network with linear outputs can uniformly approximate any continuous function on a compact domain given enough hidden units",
+   "where": "p. 230"
+  },
+  {
+   "term": "weight-space symmetry",
+   "definition": "distinct weight vectors giving the same mapping: M! interchanges times 2^M sign flips",
+   "where": "pp. 231-232"
+  },
+  {
+   "term": "canonical link pairing",
+   "definition": "natural pairing of output activation and error function giving dE/da_k = y_k - t_k",
+   "where": "pp. 234-236"
+  },
+  {
+   "term": "batch vs on-line gradient descent",
+   "definition": "batch uses the whole training set per step; on-line (sequential, stochastic) updates from one data point at a time",
+   "where": "p. 240"
+  },
+  {
+   "term": "backpropagation",
+   "definition": "used specifically for the evaluation of derivatives, distinct from the weight-update stage",
+   "where": "p. 241"
+  },
+  {
+   "term": "delta (error)",
+   "definition": "delta_j = dE_n/da_j",
+   "where": "p. 243"
+  },
+  {
+   "term": "Jacobian",
+   "definition": "J_ki = dy_k/dx_i",
+   "where": "p. 247"
+  },
+  {
+   "term": "Hessian",
+   "definition": "second derivatives of error w.r.t. weights, W x W",
+   "where": "p. 249"
+  },
+  {
+   "term": "outer product (Levenberg-Marquardt) approximation",
+   "definition": "H ~ sum_n b_n b_n^T, neglecting the (y_n - t_n) grad grad y_n term",
+   "where": "p. 251"
+  },
+  {
+   "term": "weight decay",
+   "definition": "quadratic regularizer (lambda/2) w^T w, negative log of a zero-mean Gaussian prior",
+   "where": "p. 257"
+  },
+  {
+   "term": "early stopping",
+   "definition": "halt training at the minimum of validation-set error",
+   "where": "p. 259"
+  },
+  {
+   "term": "tangent propagation",
+   "definition": "regularizer penalising change in output along the tangent of a transformation manifold",
+   "where": "p. 264"
+  },
+  {
+   "term": "Tikhonov regularization",
+   "definition": "Omega = 1/2 integral ||grad y(x)||^2 p(x) dx, arises from input noise",
+   "where": "p. 267"
+  },
+  {
+   "term": "convolutional network mechanisms",
+   "definition": "(i) local receptive fields, (ii) weight sharing, and (iii) subsampling",
+   "where": "p. 268"
+  },
+  {
+   "term": "soft weight sharing",
+   "definition": "mixture-of-Gaussians prior on weights so groups of weights take similar values (Nowlan and Hinton 1992)",
+   "where": "pp. 269-270"
+  },
+  {
+   "term": "mixture density network",
+   "definition": "mixture model for p(t|x) whose mixing coefficients, means and variances are outputs of a neural network",
+   "where": "p. 273"
+  },
+  {
+   "term": "effective number of parameters",
+   "definition": "gamma = sum_i lambda_i/(alpha + lambda_i)",
+   "where": "p. 281"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Rumelhart et al. 1986",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "original backpropagation with gradient descent",
+   "quote": null
+  },
+  {
+   "work": "Le Cun et al. 1989; LeCun et al. 1998",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "convolutional networks and on-line gradient descent",
+   "quote": null
+  },
+  {
+   "work": "Simard et al. 1992, 2003",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tangent propagation; cross-entropy and warping-based augmentation for digits",
+   "quote": null
+  },
+  {
+   "work": "MacKay 1992b,c",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Laplace approximation and evidence framework for Bayesian networks",
+   "quote": null
+  },
+  {
+   "work": "Bishop 1991, 1992",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "exact Hessian by backprop",
+   "quote": null
+  },
+  {
+   "work": "Pearlmutter 1994; Moller 1993",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fast Hessian-vector product, R-operator",
+   "quote": null
+  },
+  {
+   "work": "Hassibi and Stork 1993",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sequential inverse Hessian",
+   "quote": null
+  },
+  {
+   "work": "Nowlan and Hinton 1992",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "soft weight sharing",
+   "quote": null
+  },
+  {
+   "work": "Cybenko 1989; Hornik et al. 1989; Funahashi 1989",
+   "year": 1989,
+   "arxiv": null,
+   "relation": "related",
+   "note": "universal approximation",
+   "quote": null
+  },
+  {
+   "work": "Bishop and Nabney 2008",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "optimization methods, cited for why plain gradient descent is poor",
+   "quote": null
+  },
+  {
+   "work": "Bishop 1995a (Neural Networks for Pattern Recognition)",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "additional background",
+   "quote": null
+  },
+  {
+   "work": "Hinton and van Camp 1993; Barber and Bishop 1998",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "variational Bayesian networks",
+   "quote": null
+  },
+  {
+   "work": "Appendix A synthetic classification data",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "used in Figs 5.4, 5.22, 5.23",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5.1",
+   "caption": "Network diagram for the two-layer neural network corresponding to (5.7).",
+   "page": 228,
+   "why": "Shows inputs, hidden units, outputs, bias links and forward propagation."
+  },
+  {
+   "figure": "Fig 5.3",
+   "caption": "Capability of a multilayer perceptron to approximate x^2, sin(x), |x|, H(x); N=50 points, 3 tanh hidden units.",
+   "page": 231,
+   "why": "Shows hidden units combining to fit different shapes."
+  },
+  {
+   "figure": "Fig 5.4",
+   "caption": "Two-class synthetic problem solved with 2 tanh hidden units and one logistic output; dashed z=0.5 contours.",
+   "page": 232,
+   "why": "Shows what hidden units do in classification."
+  },
+  {
+   "figure": "Fig 5.5",
+   "caption": "Error surface over weight space with local minimum wA, global minimum wB, gradient at wC.",
+   "page": 236,
+   "why": "Picture of local versus global minima and the gradient."
+  },
+  {
+   "figure": "Fig 5.7",
+   "caption": "Calculation of delta_j for hidden unit j by backpropagation of the deltas.",
+   "page": 244,
+   "why": "Core backprop picture: forward blue arrow, backward red arrows."
+  },
+  {
+   "figure": "Fig 5.10",
+   "caption": "Test-set error versus number of hidden units, 30 random starts each, Gaussian init variance 10.",
+   "page": 257,
+   "why": "Shows local-minima spread; best at M=8."
+  },
+  {
+   "figure": "Fig 5.12",
+   "caption": "Training and validation error against iteration step; stop at validation minimum.",
+   "page": 261,
+   "why": "Standard early-stopping curve."
+  },
+  {
+   "figure": "Fig 5.13",
+   "caption": "Why early stopping resembles weight decay for a quadratic error.",
+   "page": 262,
+   "why": "Geometry of gradient path versus regularized minimum."
+  },
+  {
+   "figure": "Fig 5.17",
+   "caption": "Part of a convolutional network: convolutional layer followed by subsampling layer.",
+   "page": 268,
+   "why": "Local receptive fields, weight sharing, subsampling."
+  },
+  {
+   "figure": "Fig 5.19",
+   "caption": "Forward problem fit versus inverse problem fit by least squares.",
+   "page": 273,
+   "why": "Why a unimodal Gaussian fails on multimodal targets."
+  },
+  {
+   "figure": "Fig 5.21",
+   "caption": "MDN on toy inverse data: mixing coefficients, means, conditional density contours, approximate mode.",
+   "page": 276,
+   "why": "MDN switches between unimodal and trimodal outputs."
+  },
+  {
+   "figure": "Fig 5.23",
+   "caption": "Laplace approximation: point estimate vs marginalised predictions.",
+   "page": 284,
+   "why": "Marginalisation makes predictions less confident, same decision boundary."
+  }
+ ],
+ "code": [
+  {
+   "where": "p. 244, Error Backpropagation steps 1-4",
+   "snippet": "1. Apply an input vector xn to the network and forward propagate through the network using (5.48) and (5.49) to find the activations of all the hidden and output units.\n2. Evaluate the delta_k for all the output units using (5.54).\n3. Backpropagate the deltas using (5.56) to obtain delta_j for each hidden unit.\n4. Use (5.53) to evaluate the required derivatives.",
+   "verbatim": false
+  },
+  {
+   "where": "pp. 245-246, Eqs 5.62-5.67 (tanh hidden, linear outputs, sum-of-squares)",
+   "snippet": "a_j = sum_i w1_ji x_i ; z_j = tanh(a_j) ; y_k = sum_j w2_kj z_j ; delta_k = y_k - t_k ; delta_j = (1 - z_j^2) sum_k w_kj delta_k ; dE/dw1_ji = delta_j x_i ; dE/dw2_kj = delta_k z_j",
+   "verbatim": false
+  },
+  {
+   "where": "p. 246, Eq 5.69",
+   "snippet": "dEn/dwji = [En(wji + eps) - En(wji - eps)] / (2 eps) + O(eps^2)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 252, Eq 5.89",
+   "snippet": "H_{L+1}^-1 = H_L^-1 - (H_L^-1 b b^T H_L^-1)/(1 + b^T H_L^-1 b), with H_0 = alpha I",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and superscripts are flattened by extraction (M!2M for M!2^M, O(W 2) for O(W^2)); symbols are transcribed in plain text in the JSON.",
+  "Inconsistencies in the book text: p. 245 Sec 5.3.2 calls tanh hidden units 'logistic sigmoid activation functions'; p. 239 Fig 5.6 caption says lengths are inversely proportional to square roots of 'eigenvectors' (should be eigenvalues); p. 262 says approach 2 (tangent propagation) is 'closely related to approach 2' (should be approach 1, augmentation); p. 254 Eq 5.95 uses H_kk' where M_kk' is defined in 5.92; p. 271 Eq 5.142 has indices mu_i - w_j swapped (should be w_i - mu_j); p. 275 Eq 5.153 sums k=1 to lowercase k; MDN output count text (K widths) disagrees with total (K+2)L.",
+  "Fig 5.10 is said to use 'polynomial data set' while text p. 256 cites the sinusoidal data of Fig 5.9.",
+  "No embedded instructions found in the PDF text."
+ ]
+}

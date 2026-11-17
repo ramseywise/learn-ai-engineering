@@ -1,0 +1,422 @@
+{
+ "schema": 1,
+ "key": "sha1:36b9bf423c67",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch12-language-models-information-retrieval.pdf",
+ "bib": {
+  "title": "Language models for information retrieval (Chapter 12 of Introduction to Information Retrieval)",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition, draft April 1, 2009)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 38982,
+  "chars_total": 38982,
+  "engine": "pymupdf",
+  "skipped": "Nothing skipped; exercises 12.1-12.9 read but have no answers in the chapter."
+ },
+ "type": "book-chapter",
+ "question": "How can a probabilistic language model of each document be used to rank documents for a query?",
+ "hypothesis": "A document is a good match for a query if its language model is likely to generate the query, which happens when the document contains the query words often.",
+ "contributions": [
+  "Introduces language models (12.1), the query likelihood model with smoothing (12.2), comparison with other IR approaches (12.3) and extensions: document likelihood, KL model comparison, translation models (12.4)."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Language modelling term weighting beats tf-idf on average 11-point precision in Ponte and Croft's experiments",
+   "kind": "reported",
+   "source": "Ponte and Croft 1998",
+   "metric": "11-point average precision",
+   "value": "0.2233",
+   "unit": "11-point average precision",
+   "baseline_value": "0.1868",
+   "n": null,
+   "setup": "Ponte and Croft (1998): TREC topics 202-250 over TREC disks 2 and 3, sentence-length natural language queries; tf-idf is the INQUERY version with length-normalised tf; 11-point average precision; Wilcoxon signed rank test",
+   "note": "Table prints +19.55 % change for the Ave row.",
+   "where": "p.247, Fig 12.4",
+   "quote": "Ave",
+   "table": "Figure 12.4, row Ave, columns tf-idf 0.1868, LM 0.2233, %chg +19.55"
+  },
+  {
+   "claim": "Relative gain of LM over tf-idf is largest at high recall (+169.6 % at recall 0.8, 0.0160 to 0.0432)",
+   "kind": "reported",
+   "source": "Ponte and Croft 1998",
+   "metric": "11-point precision at recall 0.8",
+   "value": "+169.6",
+   "unit": "% change",
+   "baseline_value": "0.0160",
+   "n": null,
+   "setup": "Ponte and Croft (1998): TREC topics 202-250 over TREC disks 2 and 3, sentence-length natural language queries; tf-idf is the INQUERY version with length-normalised tf; 11-point average precision; Wilcoxon signed rank test",
+   "note": "Significant (*) only at recall 0.2 to 0.8 and Ave; the text says gains are at higher recall levels. At recall 0.9 the table prints +89.3 but 0.0063/0.0033 is about +91; likely rounding of unrounded inputs.",
+   "where": "p.247, Fig 12.4",
+   "table": "Figure 12.4, row 0.8, column %chg +169.6"
+  },
+  {
+   "claim": "At recall 0.0 the LM gain is small (+2.0 %, 0.7439 to 0.7590) and not significant",
+   "kind": "reported",
+   "source": "Ponte and Croft 1998",
+   "metric": "11-point precision at recall 0.0",
+   "value": "+2.0",
+   "unit": "% change",
+   "baseline_value": "0.7439",
+   "n": null,
+   "setup": "Ponte and Croft (1998): TREC topics 202-250 over TREC disks 2 and 3, sentence-length natural language queries; tf-idf is the INQUERY version with length-normalised tf; 11-point average precision; Wilcoxon signed rank test",
+   "note": null,
+   "where": "p.247, Fig 12.4",
+   "table": "Figure 12.4, row 0.0, column %chg +2.0"
+  },
+  {
+   "claim": "Worked example 12.3: two-document collection with lambda = 1/2 ranks d1 above d2 for query 'revenue down' (3/256 vs 1/256)",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "P(q|d1)",
+   "value": "3/256",
+   "unit": "probability",
+   "baseline_value": "1/256",
+   "n": null,
+   "setup": "d1 and d2 each 8 tokens, collection 16 tokens; MLE unigram models mixed with lambda=1/2; query 'revenue down'",
+   "note": "Arithmetic checked: correct. d2 lacks 'down' so gets only (0/8+1/16)/2 = 1/32 for it, which shows smoothing keeps its score non-zero.",
+   "where": "p.246, Example 12.3 (Eq 12.13)",
+   "quote": "1/8 × 3/32 = 3/256"
+  },
+  {
+   "claim": "Example 12.1 prints P(frog said that toad likes frog) as about 1.573e-12, which matches five, not six, factors of 0.8",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "P(frog said that toad likes frog)",
+   "value": "1.573e-12",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unigram model of Fig 12.2 with STOP=0.2, continue=0.8, string of six words",
+   "note": "INCONSISTENCY: the equation lists six 0.8 factors and one 0.2; 2.4e-11 × 0.8^6 × 0.2 = 1.258e-12, whereas 1.573e-12 = 2.4e-11 × 0.8^5 × 0.2. Recomputed by the extractor.",
+   "where": "p.239, Example 12.1 (Eq 12.2)",
+   "quote": "0.000000000001573"
+  },
+  {
+   "claim": "Example 12.2 prints P(s|M1) as 0.00000000000048 (4.8e-13) but the listed factors multiply to 4.8e-15",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "P(s|M1)",
+   "value": "4.8e-13",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seven-term sequence 'frog said that toad likes that dog' under M1 and M2 of Fig 12.3, STOP omitted",
+   "note": "INCONSISTENCY: 0.01×0.03×0.04×0.01×0.02×0.04×0.005 = 4.8e-15, a factor 100 below the printed value. P(s|M2) = 3.84e-16 is printed correctly. The conclusion P(s|M1) > P(s|M2) holds either way; the true likelihood ratio is 12.5, not 1250.",
+   "where": "p.240, Eq 12.3",
+   "quote": "P(s|M1) = 0.00000000000048"
+  },
+  {
+   "claim": "Printed P(s|M2) in Example 12.2 is correct at 3.84e-16",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "P(s|M2)",
+   "value": "3.84e-16",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same sequence under M2",
+   "note": null,
+   "where": "p.240, Eq 12.3",
+   "quote": "P(s|M2) = 0.000000000000000384"
+  },
+  {
+   "claim": "The book says LM retrieval has beaten tf-idf and BM25 weights, but doubts it is enough to justify replacing a well-tuned vector space system (quote: 'recent work has shown the LM approach to be very effective in retrieval experiments, beating tf-idf and BM25 weights'; 'perhaps still insufficient evidence that its performance so greatly exceeds that of a well-tuned traditional vector space retrieval system as to justify changing an existing implementation')",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 12.3 judgement; no number",
+   "note": null,
+   "where": "p.249-250"
+  },
+  {
+   "claim": "Smoothing is essential to LM retrieval, not only to avoid zero probabilities: it implements major parts of term weighting",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Query likelihood model with MLE unigram document models",
+   "note": null,
+   "where": "p.244",
+   "quote": "an unsmoothed model works badly because it lacks parts of the term weighting component"
+  },
+  {
+   "claim": "Unsmoothed MLE gives conjunctive semantics: a document scores non-zero only if it contains all query terms",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Query likelihood with P(t|Md)=0 for missing terms",
+   "note": null,
+   "where": "p.244",
+   "quote": "then we get a strict conjunctive semantics"
+  },
+  {
+   "claim": "Little smoothing suits short queries, much smoothing suits long queries; lambda can be a function of query size",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear interpolation or Bayesian smoothing; no numbers",
+   "note": null,
+   "where": "p.246",
+   "quote": "a small amount of smoothing (a “conjunctive-like” search) is more suitable for short queries, while a lot of smoothing is more suitable for long queries"
+  },
+  {
+   "claim": "Mixing document and collection probabilities acts a little like idf",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear interpolation LM, Eq 12.10",
+   "note": null,
+   "where": "p.249",
+   "quote": "terms rare in the general collection but common in some documents will have a greater inﬂuence on the ranking of documents"
+  },
+  {
+   "claim": "Unigram models are used in IR because data per document is sparse (bias-variance trade-off) and they are cheaper (quote: 'Losses from data sparseness (see the discussion on page 260) tend to outweigh any gains from richer models')",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Document-level language models estimated from one document",
+   "note": null,
+   "where": "p.240-241"
+  },
+  {
+   "claim": "Lafferty and Zhai report model comparison (KL divergence) beats both query likelihood and document likelihood (quote: 'Lafferty and Zhai (2001) present results suggesting that a model comparison approach outperforms both query-likelihood and document-likelihood approaches')",
+   "kind": "reported",
+   "source": "Lafferty and Zhai 2001",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Risk minimisation framework, Fig 12.5; no figures given in the chapter",
+   "note": null,
+   "where": "p.251"
+  },
+  {
+   "claim": "Translation, relevance-feedback and model-comparison extensions each improve over basic query likelihood (quote: 'translation models, relevance feedback models, and model comparison approaches have all been demonstrated to improve performance over the basic query likelihood LM')",
+   "kind": "reported",
+   "source": "Berger and Lafferty 1999; Lavrenko and Croft 2001; Lafferty and Zhai 2001",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 12.4; no numbers",
+   "note": null,
+   "where": "p.251-252"
+  },
+  {
+   "claim": "Smoothing a document LM with similar documents gives gains (Liu and Croft modest, Tao et al. larger)",
+   "kind": "reported",
+   "source": "Liu and Croft 2004; Tao et al. 2006",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cluster-based and document-similarity smoothing; no numbers",
+   "note": null,
+   "where": "p.252"
+  }
+ ],
+ "limits": [
+  "Only one empirical table (Fig 12.4, Ponte and Croft 1998, TREC 2 and 3 disks, topics 202-250); no results for smoothing methods, lambda values or BM25 comparison are given in the chapter.",
+  "Authors concede unigram models, no explicit relevance (hard to add relevance feedback or user preferences), and no phrase, passage or Boolean support.",
+  "Authors say the evidence is insufficient that LM beats a well-tuned vector space system by enough to justify switching.",
+  "Dated (2008): no neural or dense retrieval, no learned sparse models, no LLM generation; BM25 is the baseline, and Dirichlet-prior smoothing (Eq 12.11) is the form later used as query likelihood in toolkits.",
+  "Printed arithmetic errors in Examples 12.1 and 12.2 (see results notes). Eq 12.8 writes tf_{t,d} in the product over the vocabulary where the query count is meant. Eq 12.14 labels R as KL(Md||Mq) but the sum is over P(t|Mq) log P(t|Mq)/P(t|Md), which is KL(Mq||Md)."
+ ],
+ "practices": [
+  "Rank by P(q|Md) with P(d) uniform unless a genuine prior (authority, length, genre, newness, readership) is available (12.2.1).",
+  "Smooth document models with a collection model; do not use unsmoothed MLE (12.2.2).",
+  "Tune lambda or alpha by line search or EM; make it depend on query length: little smoothing for short queries, much for long (12.2.2).",
+  "Work with sums of log probabilities in practice (12.1.1).",
+  "Use multinomial rather than multivariate Bernoulli document models (12.2.3).",
+  "Use translation models to bridge synonymy or cross-language gaps, built from a thesaurus, bilingual dictionary or title/anchor-text pairs (12.4).",
+  "Two-stage smoothing (Bayesian then linear interpolation) is more stable than a single form (12.5, Zhai and Lafferty 2002)."
+ ],
+ "terms": [
+  {
+   "term": "language model",
+   "definition": "a function that puts a probability measure over strings drawn from some vocabulary",
+   "where": "p.238 Eq 12.1"
+  },
+  {
+   "term": "unigram language model",
+   "definition": "throws away all conditioning context, and estimates each term independently",
+   "where": "p.240 Eq 12.5"
+  },
+  {
+   "term": "query likelihood model",
+   "definition": "construct from each document d in the collection a language model Md and rank documents by P(q|Md)",
+   "where": "p.242-243"
+  },
+  {
+   "term": "linear interpolation (Jelinek-Mercer) smoothing",
+   "definition": "P(t|d) = lambda Pmle(t|Md) + (1-lambda) Pmle(t|Mc)",
+   "where": "p.245 Eq 12.10"
+  },
+  {
+   "term": "Bayesian smoothing",
+   "definition": "P(t|d) = (tf_{t,d} + alpha P(t|Mc)) / (L_d + alpha); the collection model is a prior",
+   "where": "p.245 Eq 12.11"
+  },
+  {
+   "term": "document likelihood model",
+   "definition": "probability of a query language model Mq generating the document",
+   "where": "p.250"
+  },
+  {
+   "term": "KL divergence ranking",
+   "definition": "risk R(d;q) = KL between the document and query language models",
+   "where": "p.251 Eq 12.14"
+  },
+  {
+   "term": "translation model",
+   "definition": "generate query words not in a document by translation to alternate terms with similar meaning, P(q|Md) = prod_t sum_v P(v|Md) T(t|v)",
+   "where": "p.251 Eq 12.15"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Ponte and Croft 1998",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "First LM-for-IR experiments; source of Fig 12.4",
+   "quote": null
+  },
+  {
+   "work": "Hiemstra 1998; Miller et al. 1999; Hiemstra 2000",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Mixture of two multinomials",
+   "quote": null
+  },
+  {
+   "work": "Berger and Lafferty 1999",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Translation models",
+   "quote": null
+  },
+  {
+   "work": "Lafferty and Zhai 2001",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Risk minimisation, KL model comparison",
+   "quote": null
+  },
+  {
+   "work": "Zhai and Lafferty 2001b, 2002",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Role of smoothing, two-stage smoothing",
+   "quote": null
+  },
+  {
+   "work": "Lavrenko and Croft 2001",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Relevance model with pseudo-relevance feedback",
+   "quote": null
+  },
+  {
+   "work": "Hiemstra and Kraaij 2005",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "TREC results, LM beating BM25",
+   "quote": null
+  },
+  {
+   "work": "Chapter 11 probabilistic IR (BIM)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Contrast: models relevance explicitly",
+   "quote": null
+  },
+  {
+   "work": "Spärck Jones 2004; Lafferty and Zhai 2003",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Critique and unification with classical probabilistic IR",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 12.2",
+   "caption": "A one-state finite automaton that acts as a unigram language model.",
+   "page": 238,
+   "why": "Shows a unigram LM as a bag of per-term emission probabilities plus STOP"
+  },
+  {
+   "figure": "Fig 12.4",
+   "caption": "Results of a comparison of tf-idf with language modeling (LM) term weighting by Ponte and Croft (1998).",
+   "page": 247,
+   "why": "Only empirical table; gains concentrated at high recall"
+  },
+  {
+   "figure": "Fig 12.5",
+   "caption": "Three ways of developing the language modeling approach: (a) query likelihood, (b) document likelihood, and (c) model comparison.",
+   "page": 250,
+   "why": "Shows the three generation directions at a glance"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.245 Eq 12.10",
+   "snippet": "P(t|d) = λ P_mle(t|M_d) + (1 − λ) P_mle(t|M_c)",
+   "verbatim": false
+  },
+  {
+   "where": "p.246 Eq 12.12",
+   "snippet": "P(d|q) ∝ P(d) ∏_{t∈q} ((1 − λ)P(t|M_c) + λP(t|M_d))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction is clean; figure internals (automaton diagrams) are not in the text. Equation symbols were read from garbled math layout. No embedded instructions found."
+ ]
+}

@@ -1,0 +1,626 @@
+{
+ "schema": 1,
+ "key": "sha1:a7ac87fd7651",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch05-index-compression.pdf",
+ "bib": {
+  "title": "Introduction to Information Retrieval, Chapter 5: Index compression",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition 2009, draft of April 1, 2009)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 49496,
+  "chars_total": 49496,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can the dictionary and the postings lists of an inverted index be compressed so the index uses less disk, fits more in cache and loads faster, without losing information?",
+ "hypothesis": null,
+ "contributions": [
+  "Statistical characterisation of terms (Heaps' law, Zipf's law)",
+  "Dictionary compression: fixed-width, dictionary-as-a-string, blocked storage, front coding",
+  "Postings compression: gap encoding, variable byte codes, gamma codes, with a Zipf-based size estimate"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Compressing the postings with gamma codes gives the smallest postings file on Reuters-RCV1, about a quarter of the 32-bit uncompressed size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "postings size",
+   "value": "101",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); gap-encoded, gamma codes; compared with 400 MB at 32-bit words",
+   "note": null,
+   "where": "p.103, sec 5.3.2",
+   "quote": "the actual size of the compressed index is even lower: 101 MB, a bit more than one tenth of the size of the collection"
+  },
+  {
+   "claim": "Variable byte encoding of the same postings gives 116 MB, a more than 50% reduction against the 250 MB 20-bit index.",
+   "kind": "measured",
+   "source": null,
+   "metric": "postings size",
+   "value": "116",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); VB with 7-bit payload; versus 250 MB uncompressed (20 bits per docID)",
+   "note": "Against the 400 MB (32-bit) line the reduction is about 71%, and the chapter uses 400 MB for its 'about 25%' ratio on p.104. 116/250 = 46%, so 'more than 50% reduction' holds only against the 20-bit line.",
+   "where": "p.98, sec 5.3.1",
+   "quote": "the size of the compressed index for Reuters-RCV1 is 116 MB as we verified in an experiment. This is a more than 50% reduction"
+  },
+  {
+   "claim": "Gamma codes beat VB by about 15% on Reuters-RCV1 but are costlier to decode.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); gamma 101 MB versus VB 116 MB",
+   "note": "Computed from the table: 101/116 = 0.87, so 13% smaller; the text rounds to 15%.",
+   "where": "p.103, sec 5.3.2",
+   "quote": "γ codes achieve great compression ratios – about 15% better than variable byte codes for Reuters-RCV1."
+  },
+  {
+   "claim": "Compression ratio of the compressed index to the uncompressed 32-bit index is about 25%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "about 25%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); 400 MB (32-bit words) versus 101 MB (gamma) and 116 MB (VB)",
+   "note": "The text prints 'un-compressed' hyphenated in the cache; the quote is normalised by the check if it fails. 101/400=25%, 116/400=29%. The chapter opening says compression ratios of 1:4 'are easy to achieve', cutting storage cost by 75%.",
+   "where": "p.104",
+   "quote": "The compression ratio for the index in Table 5.6 is about 25%: 400 MB (un-compressed, each posting stored as a 32-bit word) versus 101 MB (γ) and 116 MB (VB)."
+  },
+  {
+   "claim": "Dictionary stored as a fixed-width array takes 11.2 MB.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "11.2",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); 20 bytes term + 4 bytes document frequency + 4 bytes postings pointer = 28 bytes, times 400,000 terms",
+   "note": "The extracted text prints '11.2megabytes' with no space.",
+   "where": "p.91, sec 5.2.1",
+   "quote": "400,000 × 28 = 11.2megabytes (MB)"
+  },
+  {
+   "claim": "Dictionary-as-a-string cuts the dictionary to 7.6 MB, one third smaller.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7.6",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); 4 bytes freq + 4 bytes postings pointer + 3 bytes term pointer (22 bits) + 8 bytes average term",
+   "note": null,
+   "where": "p.92, sec 5.2.1",
+   "quote": "400,000 × (4 + 4 + 3 + 8) = 7.6 MB"
+  },
+  {
+   "claim": "Blocked storage with k=4 gives 7.1 MB.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7.1",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); one term pointer per block of 4 terms, one length byte per term, saves 5 bytes per block",
+   "note": null,
+   "where": "p.92, sec 5.2.2",
+   "quote": "or a total of 400,000 × 1/4 × 5 = 0.5 MB, bringing us down to 7.1 MB."
+  },
+  {
+   "claim": "Blocking plus front coding gives 5.9 MB, about half of the fixed-width size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.9",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); front coding saved 1.2 MB 'as we found in an experiment'",
+   "note": "Front coding detail is given only as one experimental figure, 1.2 MB, with no description of the setup beyond Reuters-RCV1.",
+   "where": "p.95, Table 5.2 and Table 5.6",
+   "table": "Table 5.2, row ~, with blocking & front coding, column size in MB"
+  },
+  {
+   "claim": "As the block size k grows, the dictionary approaches a floor of 6.8 MB but lookup slows.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "6.8",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); 4+4+1+8 bytes per term, k arbitrarily large",
+   "note": null,
+   "where": "p.93",
+   "quote": "400,000 × (4 + 4 + 1 + 8) = 6.8 MB"
+  },
+  {
+   "claim": "Blocking at k=4 costs about 25% more search steps than binary search over the uncompressed eight-term dictionary.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "2 vs 1.6 steps",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eight-term dictionary of Fig 5.6, each term equally likely as query",
+   "note": "Blocked: (0+1+2+3+4+1+2+3)/8 = 2 steps, '≈25% more'. A toy example, not measured on Reuters.",
+   "where": "p.93",
+   "quote": "takes on average (0 + 1 + 2 + 3 + 2 + 1 + 2 + 2)/8 ≈1.6 steps"
+  },
+  {
+   "claim": "Heaps' law fit for Reuters-RCV1: b = 0.49 and k = 44.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.49",
+   "unit": "exponent b",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Least-squares fit of log10 M = 0.49 log10 T + 1.64 on Reuters-RCV1; fit is excellent for T > 10^5",
+   "note": "The extracted text drops superscript formatting (T > 105 means 10^5).",
+   "where": "p.88, sec 5.1.1; Fig 5.1",
+   "quote": "the fit is excellent for T > 105 = 100,000, for the parameter values b = 0.49 and k = 44."
+  },
+  {
+   "claim": "Heaps' law predicts 38,323 terms for the first 1,000,020 tokens; actual is 38,365.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "38,365",
+   "unit": "terms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "First 1,000,020 tokens of Reuters-RCV1, M = k T^b with k=44, b=0.49",
+   "note": "Prediction 44 x 1,000,020^0.49 is printed as 38,323; the text writes the exponent expression as '1,000,0200.49'.",
+   "where": "p.89",
+   "quote": "The actual number is 38,365 terms, very close to the prediction."
+  },
+  {
+   "claim": "Typical Heaps' law parameters across collections.",
+   "kind": "reported",
+   "source": "Heaps (1978)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Generic ranges, no named collection",
+   "note": null,
+   "where": "p.88",
+   "quote": "Typical values for the parameters k and b are: 30 ≤k ≤100 and b ≈0.5."
+  },
+  {
+   "claim": "Case folding and stemming each reduce distinct terms by 17%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "17%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1; case folding 473,723 to 391,523 terms; stemming (Porter) 391,373 to 322,383",
+   "note": null,
+   "where": "p.86, Table 5.1",
+   "quote": "Stemming and case folding reduce the number of (distinct) terms by 17% each"
+  },
+  {
+   "claim": "A 150-word stop list cuts 30% of nonpositional postings but the effect mostly vanishes after compression.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "30%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, reference line case folding: 96,969,056 to 67,001,847 postings; 94,516,599 tokens (-47%)",
+   "note": "Text says 25% to 30% but the table gives -14% for 30 stop words and -30% for 150, so 25% fits neither row; 'a quarter or more' for 150 words is consistent with 30%.",
+   "where": "p.86-87",
+   "quote": "Eliminating the 150 most common words from indexing (as stop words; cf. Section 2.2.2, page 27) cuts 25% to 30% of the nonpositional",
+   "table": "Table 5.1, row 150 stop words, column nonpositional postings delta %"
+  },
+  {
+   "claim": "Rule of 30: the 30 most common words account for 30% of tokens in written text.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "30%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Written text in general; the chapter says 31% in Table 5.1",
+   "note": "Table 5.1 prints -31% tokens for 30 stop words against case folding, but 121,857,825 vs 179,158,204 is a 32.0% drop. Minor rounding difference.",
+   "where": "p.86",
+   "quote": "The rule of 30 states"
+  },
+  {
+   "claim": "Gamma code is within a factor of 2 + 1/H(P) (at most 3) of the entropy bound for any distribution, so it is universal.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Any distribution P with 1 < H(P) < infinity; proof referenced, not given",
+   "note": null,
+   "where": "p.100",
+   "quote": "γ encoding is within a factor of 3 of this optimal encoding, approaching 2 for large H(P):"
+  },
+  {
+   "claim": "Gamma code length for gap G is 2 x floor(log2 G) + 1 bits.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Elias gamma, gaps G >= 1",
+   "note": null,
+   "where": "p.99",
+   "quote": "so the length of the entire code is 2 × ⌊log2 G⌋+ 1 bits."
+  },
+  {
+   "claim": "Zipf-based model predicts a 224 MB gamma-coded postings file for Reuters-RCV1; the real one is 101 MB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "224",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zipf law with c = 1/H_M ~ 1/13, Lc = 15, blocks of 15 terms, M/Lc ~ 27,000, uniform gaps within each term",
+   "note": "Eq 5.7 prints the factor 2 × 10^6 x 15; with N = 800,000 documents the sum gives about 225 MB (I recomputed: 2N x 15 x sum_{j<=27000} log2 j / j = 224.99 MB), whereas 2 x 10^6 would give 281 MB. So the 10^6 is either a typo for 2N=1.6x10^6 or a rounded N. Also the unrounded model gives 251 MB (Table 4.2 numbers) and 254 MB on synthetic Zipf data.",
+   "where": "p.103, Eq 5.7",
+   "quote": "So the postings file of the compressed inverted index for our 960 MB collection has a size of 224 MB, one fourth the size of the original collection."
+  },
+  {
+   "claim": "Model discrepancy: the Zipf model predicts 251 MB and artificial Zipf-generated terms compress to 254 MB.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "254",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Compressed index built from terms generated from the Zipf model",
+   "note": "Text gives 251 MB for the unrounded model; Exercise 5.18 asks for 'about 251 MB'.",
+   "where": "p.103",
+   "quote": "then the compressed size is 254 MB."
+  },
+  {
+   "claim": "Ratio of compressed index plus dictionary to collection size with gamma and blocking with front coding is about 0.03.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.03",
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1 with XML markup (3600 MB collection); (101 + 5.9)/3600",
+   "note": "Against the 960 MB text-only collection the ratio is about 0.11; the caption itself says the XML markup makes the ratio especially small.",
+   "where": "p.103, Table 5.6 caption",
+   "quote": "(101 + 5.9)/3600 ≈0.03"
+  },
+  {
+   "claim": "Uncompressed 20-bit postings file is 250 MB for the 960 MB collection.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "250",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 800,000 documents, 200 tokens per document, six characters per token, M=400,000 distinct terms, docID postings only (no frequencies or positions); docID = log2 800,000 ~ 20 bits; 100,000,000 postings",
+   "note": "Table 5.1 case folding line has 96,969,056 postings; the chapter rounds to 100,000,000.",
+   "where": "p.96",
+   "quote": "100,000,000 × 20/8 = 250 MB"
+  },
+  {
+   "claim": "Term incidence matrix for Reuters-RCV1 is 40 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "40",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "400,000 terms x 800,000 documents, one bit each",
+   "note": null,
+   "where": "p.103",
+   "quote": "400,000 × 800,000 = 40 × 8 × 109 bits or 40 GB."
+  },
+  {
+   "claim": "Scholer et al.: VB codes process queries about two times faster than bit-level compressed or uncompressed indexes.",
+   "kind": "reported",
+   "source": "Scholer et al. 2002",
+   "metric": null,
+   "value": "2x",
+   "unit": "x faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reported experiment; setup not given in chapter; VB has a 30% compression-ratio penalty against the best bit-level method",
+   "note": null,
+   "where": "p.106, sec 5.4",
+   "quote": "variable byte codes process queries two times faster than either bit-level compressed indexes or uncompressed indexes with a 30% penalty in compression ratio"
+  },
+  {
+   "claim": "Variable nibble codes compress 5% to 10% better than VB but cost up to one third in effectiveness.",
+   "kind": "reported",
+   "source": "Anh and Moffat 2005",
+   "metric": null,
+   "value": "5% to 10%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One experiment, setup not stated",
+   "note": null,
+   "where": "p.106",
+   "quote": "“variable nibble” codes showed 5% to 10% better compression"
+  }
+ ],
+ "limits": [
+  "Only docID postings are compressed; frequencies and positions are referred to Scholer et al. 2002 and Zobel and Moffat 2006 (p.86, p.106).",
+  "Only Boolean retrieval; for ranked retrieval the chapter says postings can be ordered by term frequency and notes weights should not be stored as they compress poorly (p.107).",
+  "All numbers are from one collection, Reuters-RCV1, which is mostly XML markup so ratios look especially small (Table 5.6 caption).",
+  "No timing numbers for decoding speed; the speed claims for VB versus gamma are qualitative or quoted from Scholer et al. 2002.",
+  "The Zipf model fit 'is not particularly good' (p.89) and the 224 MB estimate is more than double the real 101 MB.",
+  "Dated by 2008: no SIMD or frame-of-reference codes (PForDelta, SIMD-BP128, Elias-Fano, Roaring bitmaps), no dense vector indexes (HNSW, IVF-PQ) or learned sparse indexes; 32-bit pointers and 4 GB address spaces, disk seek costs and 'mobile phone' memory limits differ from today; web-scale docID widths are beyond 4 bytes as the chapter itself notes (p.91).",
+  "Word-aligned codes (Anh and Moffat 2005, 2006a; Zukowski et al. 2006) are named as faster and at least as efficient as VB but not described (p.106)."
+ ],
+ "practices": [
+  "Compress the dictionary so it fits in main memory, because disk seeks dominate query time (p.90).",
+  "Use variable byte codes for most IR systems as an excellent time-space tradeoff and simple to implement (p.98).",
+  "Use bit-level gamma or delta codes when disk space is scarce, accepting costlier decoding (p.98, p.103-104).",
+  "Store gaps between sorted docIDs instead of docIDs (p.96).",
+  "Use blocked dictionary storage with a moderate k, as large k makes lookup prohibitively slow (p.93).",
+  "Page a very large dictionary to disk and index the first term of each page with a B-tree (p.95).",
+  "Do not use minimal perfect hashing for the dictionary in a dynamic environment (p.95).",
+  "Do not precompute and store weights in the index; store frequencies as they compress better (p.107).",
+  "Assign docIDs so that similar documents are in a small range to make gaps small (p.106)."
+ ],
+ "terms": [
+  {
+   "term": "posting",
+   "definition": "a docID in a postings list",
+   "where": "p.86"
+  },
+  {
+   "term": "Heaps' law",
+   "definition": "estimates vocabulary size as a function of collection size: M = kT^b",
+   "where": "p.88"
+  },
+  {
+   "term": "Zipf's law",
+   "definition": "the collection frequency of the ith most common term is proportional to 1/i",
+   "where": "p.89"
+  },
+  {
+   "term": "rule of 30",
+   "definition": "the 30 most common words account for 30% of the tokens in written text",
+   "where": "p.86"
+  },
+  {
+   "term": "lossless / lossy compression",
+   "definition": "lossless preserves all information; lossy discards some, e.g. case folding, stemming, stop word elimination",
+   "where": "p.87"
+  },
+  {
+   "term": "front coding",
+   "definition": "a common prefix is identified for a subsequence of the term list and then referred to with a special character",
+   "where": "p.93"
+  },
+  {
+   "term": "variable byte (VB) encoding",
+   "definition": "uses an integral number of bytes to encode a gap; last 7 bits are payload, first bit is a continuation bit set to 1 for the last byte",
+   "where": "p.96"
+  },
+  {
+   "term": "unary code",
+   "definition": "the unary code of n is a string of n 1s followed by a 0",
+   "where": "p.99"
+  },
+  {
+   "term": "gamma encoding",
+   "definition": "splits a gap G into length (unary code of the offset length) and offset (G in binary with the leading 1 removed)",
+   "where": "p.99"
+  },
+  {
+   "term": "entropy",
+   "definition": "H(P) = -sum P(x) log2 P(x), a measure of uncertainty",
+   "where": "p.99"
+  },
+  {
+   "term": "universal code",
+   "definition": "a code with the property of being within a factor of optimal for an arbitrary distribution P",
+   "where": "p.100"
+  },
+  {
+   "term": "prefix free",
+   "definition": "no code is the prefix of another, so decoding is unique without delimiters",
+   "where": "p.100"
+  },
+  {
+   "term": "parameter free",
+   "definition": "a code that needs no fitted model parameters",
+   "where": "p.100"
+  },
+  {
+   "term": "delta code",
+   "definition": "like gamma code but encodes the length part in gamma code instead of unary",
+   "where": "p.104, Exercise 5.9"
+  },
+  {
+   "term": "parameterized code / Golomb code",
+   "definition": "codes that explicitly model the probability distribution of gaps for each term",
+   "where": "p.106"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Heaps (1978)",
+   "year": 1978,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Heaps' law",
+   "quote": null
+  },
+  {
+   "work": "Zipf (1949)",
+   "year": 1949,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Zipf's law",
+   "quote": null
+  },
+  {
+   "work": "Scholer et al. 2002",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Basis for variable byte codes subsection",
+   "quote": "Subsection 5.3.1 is based on (Scholer et al. 2002)."
+  },
+  {
+   "work": "Elias (1975)",
+   "year": 1975,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "gamma and delta codes, proved universal",
+   "quote": null
+  },
+  {
+   "work": "Witten, Moffat and Bell 1999, Managing Gigabytes",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "recommended for dictionary compression and parameterized codes such as Golomb",
+   "quote": null
+  },
+  {
+   "work": "Zobel and Moffat 2006",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "related",
+   "note": "in-depth tutorial on inverted indexes recommended by the chapter",
+   "quote": null
+  },
+  {
+   "work": "Anh and Moffat 2005; Zukowski et al. 2006",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "word-aligned binary codes faster than VB",
+   "quote": null
+  },
+  {
+   "work": "Reuters-RCV1 (Table 4.2)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "model collection for every number",
+   "quote": null
+  },
+  {
+   "work": "Williams and Zobel 2005",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "detailed study of vocabulary growth",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 5.6",
+   "caption": "Index and dictionary compression for Reuters-RCV1.",
+   "page": 103,
+   "why": "One table with every size from the 40 GB incidence matrix to the 5.9 MB dictionary"
+  },
+  {
+   "figure": "Fig 5.4 and Fig 5.5",
+   "caption": "Dictionary-as-a-string storage; Blocked storage with four terms per block.",
+   "page": 92,
+   "why": "Shows pointers and length bytes; explains the byte accounting"
+  },
+  {
+   "figure": "Table 5.3",
+   "caption": "Encoding gaps instead of document IDs.",
+   "page": 96,
+   "why": "The 'the' vs 'arachnocentric' contrast shows why gaps help frequent terms"
+  },
+  {
+   "figure": "Table 5.4 and Table 5.5",
+   "caption": "VB encoding; Some examples of unary and gamma codes.",
+   "page": 97,
+   "why": "Bit patterns worked through"
+  },
+  {
+   "figure": "Fig 5.1 and Fig 5.2",
+   "caption": "Heaps' law; Zipf's law for Reuters-RCV1.",
+   "page": 88,
+   "why": "Log-log plots with fitted lines (k=44, b=0.49; intercept 6.95)"
+  },
+  {
+   "figure": "Fig 5.10",
+   "caption": "Stratification of terms for estimating the size of a gamma encoded inverted index.",
+   "page": 102,
+   "why": "Explains the Zipf size estimate in one picture"
+  },
+  {
+   "figure": "Table 5.1",
+   "caption": "The effect of preprocessing on the number of terms, nonpositional postings, and tokens for Reuters-RCV1.",
+   "page": 87,
+   "why": "Effect of case folding, stop words, stemming"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 5.8, p.97",
+   "snippet": "VBENCODENUMBER(n)\n1 bytes <- <>\n2 while true\n3 do PREPEND(bytes, n mod 128)\n4 if n < 128\n5 then BREAK\n6 n <- n div 128\n7 bytes[LENGTH(bytes)] += 128\n8 return bytes",
+   "verbatim": true
+  },
+  {
+   "where": "p.99, gamma code length",
+   "snippet": "2 × ⌊log2 G⌋ + 1 bits",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 5.1, p.88",
+   "snippet": "M = k T^b",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Tables 5.1 and 5.5 and the figures extract as one value per line, so row/column alignment was reconstructed by hand; Table 5.5 loses some cells (e.g. gamma code of 0 and 1 are missing in the cache).",
+  "Superscripts are lost in the text ('105', '109', '1,000,0200.49'); exponents were read as 10^5, 10^9 and ^0.49.",
+  "Figure captions tool returned nothing; captions were taken from the text.",
+  "No embedded instructions found."
+ ]
+}

@@ -4,6 +4,30 @@
 
 The mock server is the point. It needs no API key, no model runs, and its answers are scripted, so every failure can be repeated on purpose. It also means nothing here says how good a real model's answers are. The harbour, the help-centre text and the answers are all invented for this lab. The tests are written for the worked solution, so they show that the behaviours hold, and not that the design suits people: nobody has used this page in a study. It maps to all five chapters, and most of all to [chapter 5](../notes/05-ai-interfaces.md).
 
+## Layout
+
+```
+frontend-and-ux/
+├── README.md
+├── references.md
+├── notes/                 01–05
+├── slides/                deck.yaml and the built study deck
+└── practice/
+    ├── README.md          the lab: what to do and what it measured
+    ├── check.sh           runs everything (solutions by default)
+    ├── run_notes.ts       runs the code blocks in the notes and compares their output
+    ├── server/            the mock server, with one scenario per failure
+    ├── public/            the page and its stylesheet
+    ├── app/               the entry point the bundle starts from
+    ├── exercises/         stubs for the parser and reducer, and a naive chat to fix
+    ├── solutions/         the worked parser, reducer, client and chat
+    └── tests/             unit, browser, axe and planted-fault tests
+```
+
+You need Node 22.18 or later, which runs the TypeScript directly. `bash check.sh` installs its few dependencies the first time, and no API key is needed. The browser tests need Chromium, once: run `npx playwright-core install chromium`. Without it, `bash check.sh no-browser` runs the rest and says what it skipped.
+
+The notes' code blocks are small and most run on their own in Node. Blocks of HTML run in Chromium under `run_notes.ts`, and the chapters' expected output is compared with what they print. Which exercise goes with which chapter is in the [syllabus](../README.md#syllabus).
+
 ## Run it
 
 You need Node 22.18 or later. The first run installs the dependencies with `npm ci`. The browser tests need Chromium once: `npx playwright-core install chromium`. From this folder:

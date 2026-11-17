@@ -115,7 +115,7 @@ $$\hat r_{ui} = \mu + b_u + b_i + p_u^\top q_i$$
  Fit only on the observed cells, with L2 on everything, or the factors memorise them.
 ```
 
-Fit on observed cells only, by stochastic [gradient descent](../../01-classical-ml/notes/02-supervised-learning.md#vectors-matrix-products-and-the-gradient). The loop below is the whole algorithm, deliberately in plain NumPy.
+Fit on observed cells only, by stochastic [gradient descent](../../01-classical-ml/notes/02b-linear-models.md#vectors-matrix-products-and-the-gradient). The loop below is the whole algorithm, deliberately in plain NumPy.
 
 ```python
 def rmse(a, b): return float(np.sqrt(np.mean((np.asarray(a) - np.asarray(b)) ** 2)))

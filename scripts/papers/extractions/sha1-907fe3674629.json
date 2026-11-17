@@ -1,0 +1,356 @@
+{
+ "schema": 1,
+ "key": "sha1:907fe3674629",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch20-web-crawling-indexes.pdf",
+ "bib": {
+  "title": "Introduction to Information Retrieval, Chapter 20: Web crawling and indexes",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition, draft April 1, 2009)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 38864,
+  "chars_total": 38864,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How is a web crawler built (robust, polite, distributed, fresh), and how are indexes and the link graph distributed and stored across machines?",
+ "hypothesis": null,
+ "contributions": [
+  "Desiderata for crawlers (20.1)",
+  "Mercator-style crawler architecture, DNS resolution and URL frontier (20.2)",
+  "Term vs document partitioning of indexes (20.3)",
+  "Connectivity servers with compressed web graph (20.4)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Fetching a billion pages in a month-long crawl needs several hundred fetches per second.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "several hundred",
+   "unit": "pages/second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reference point for crawler design, 2008-2009 web size; no derivation shown (1e9/30 days is about 386/s)",
+   "quote": "fetching a billion pages (a small fraction of the static Web at present) in a month-long crawl requires fetching several hundred pages each second",
+   "table": null,
+   "note": null,
+   "where": "p.445, 20.2"
+  },
+  {
+   "claim": "Mercator recommends roughly three times as many back queues as crawler threads in the URL frontier.",
+   "kind": "reported",
+   "source": "Najork and Heydon 2001; 2002 (Mercator)",
+   "metric": null,
+   "value": "3",
+   "unit": "back queues per thread",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Politeness/priority URL frontier with F front queues and B back queues",
+   "quote": "The designers of Mercator recommend a rough rule of three times as many back queues as crawler threads.",
+   "table": null,
+   "note": null,
+   "where": "p.453, 20.2.3"
+  },
+  {
+   "claim": "Politeness heuristic: gap between successive fetches to a host should be an order of magnitude larger than the last fetch time; example next-allowed time is now plus ten times the last fetch time.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "x last fetch time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Back-queue heap entry te",
+   "quote": "A common heuristic is to insert a gap between successive fetch requests to a host that is an order of magnitude larger than the time taken for the most recent fetch from that host.",
+   "table": null,
+   "note": "Separately says a wait of 'a few seconds' between requests to a host (p.445, p.451); the two rules differ and the chapter does not reconcile them. Exercise 20.3 asks how the 10x and 3x constants relate.",
+   "where": "p.451 and p.453"
+  },
+  {
+   "claim": "Mercator DNS resolver retries about five times with an exponentially growing wait, from one second to roughly 90 seconds.",
+   "kind": "reported",
+   "source": "Najork and Heydon 2001; 2002 (Mercator)",
+   "metric": null,
+   "value": "5",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Custom asynchronous DNS resolver, because library lookups are synchronous and block threads; some host names take tens of seconds to resolve",
+   "quote": "the designers of Mercator recommend of the order of ﬁve attempts",
+   "table": null,
+   "note": "Start and end waits are in the text: 'Mercator started with one second and ended with roughly 90 seconds'.",
+   "where": "p.450, 20.2.2"
+  },
+  {
+   "claim": "Naive web graph storage for four billion pages with ten links each needs 3.2 x 10^11 bytes.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "3.2e11",
+   "unit": "bytes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 billion pages, 10 out-links each, 32-bit (4-byte) integer per link end",
+   "quote": "4 × 109 × 10 × 8 = 3.2 × 1011",
+   "table": null,
+   "note": "Printed with lost superscripts (109, 1011) in the extracted text.",
+   "where": "p.455, 20.4"
+  },
+  {
+   "claim": "An adjacency-table representation halves the naive link storage.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Row per page with sorted list of linked page integers vs two 32-bit endpoints per link",
+   "quote": "This table representation cuts the space taken by the naive representation",
+   "table": null,
+   "note": null,
+   "where": "p.456, 20.4"
+  },
+  {
+   "claim": "With prototype-row, locality and gap encoding, the connectivity server uses as few as 3 bits per link versus 64 naive.",
+   "kind": "reported",
+   "source": "Najork and Heydon 2001; 2002 (Mercator)",
+   "metric": null,
+   "value": "3",
+   "unit": "bits/link",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rows encoded against one of seven preceding rows (3-bit offset), gap encoded; experiments cited in 20.5 (Boldi and Vigna 2004a;b); naive is 64 bits",
+   "quote": "appears to use as few as 3 bits per link, on average",
+   "table": null,
+   "note": "Text also says 'well under 10%' of the naive memory; 3/64 is about 4.7%.",
+   "where": "p.457, 20.4"
+  },
+  {
+   "claim": "Expressing each row against one of seven preceding rows lets the offset fit in 3 bits.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "7",
+   "unit": "preceding rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Row-prototype encoding of the link table",
+   "quote": "the offset can be expressed with only 3 bits; this choice is optimized empirically",
+   "table": null,
+   "note": "Seventh not eighth because one code is needed for 'no prototype' (Exercise 20.4).",
+   "where": "p.457, 20.4"
+  },
+  {
+   "claim": "Document partitioning of a distributed index is generally found better than term partitioning when term distribution is skewed, but at least one line of work found the opposite.",
+   "kind": "reported",
+   "source": "Najork and Heydon 2001; 2002 (Mercator)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Comparisons by Tomasic and Garcia-Molina 1993, Jeong and Omiecinski 1995, MacFarlane et al. 2000; counter: Ribeiro-Neto and Barbosa 1998, Badue et al. 2001",
+   "quote": "Document partitioning is found to be superior, at least when the distribution of terms is skewed, as it typically is in practice.",
+   "table": null,
+   "note": null,
+   "where": "p.458, 20.5"
+  }
+ ],
+ "limits": [
+  "Dated: 2008 web (a billion pages 'a small fraction of the static Web'); four-billion-page example; IPv4 only, IPv6 mentioned as future.",
+  "Static HTML crawling; no JavaScript rendering, dynamic or deep-web pages, sitemaps or crawl-delay directives; robots.txt example only Disallow.",
+  "No measured experiments in the chapter; numbers are design rules or worked arithmetic, and 3 bits/link is quoted from other work.",
+  "Freshness is stated as a goal (crawl at the page change rate) with only a priority-by-change-rate heuristic; no refresh-policy analysis.",
+  "Says it does not describe a full-scale commercial crawler.",
+  "Document-vs-term partitioning outcome 'depends on the details of the distributed system'."
+ ],
+ "practices": [
+  "Open only one connection per host at a time and wait a few seconds between requests to a host (p.445).",
+  "Obey robots.txt, and filter against it immediately before fetching, not at enqueue time, because a URL can wait days or weeks in the frontier (p.447).",
+  "Cache robots.txt per host; locality in dequeued URLs still gives high hit rates (p.447).",
+  "Detect duplicate content with checksum fingerprints or shingles; store the fingerprint in the frontier so it can be deleted on re-crawl (p.446, 449).",
+  "Partition crawl by host, not URL, using a host splitter before the duplicate URL eliminator (p.448; Exercises 20.1-20.2).",
+  "Use own asynchronous DNS resolver with a cache, retries about five times and exponential timeouts (p.450).",
+  "Prioritise by both change rate and quality since spam pages change on every fetch (p.451).",
+  "Use front queues for priority and back queues (one host each) with a heap of earliest-contact times for politeness (p.451-453).",
+  "Keep most of a large frontier on disk with a portion of each queue in memory (p.453).",
+  "Checkpoint crawler state every few hours (p.448).",
+  "Partition a serving index by documents, hash URLs to nodes for even load, query all nodes and merge top k; refresh global idf by background processes (p.454-455).",
+  "Split documents into high-scoring and low-scoring indexes and search the latter only when matches are too few (p.455)."
+ ],
+ "terms": [
+  {
+   "term": "web crawler (spider)",
+   "definition": "process by which we gather pages from the Web, in order to index them and support a search engine",
+   "where": "p.443"
+  },
+  {
+   "term": "spider trap",
+   "definition": "generators of web pages that mislead crawlers into getting stuck fetching an inﬁnite number of pages in a particular domain",
+   "where": "p.443"
+  },
+  {
+   "term": "seed set",
+   "definition": "one or more URLs the crawler begins with",
+   "where": "p.444"
+  },
+  {
+   "term": "URL frontier",
+   "definition": "URLs whose corresponding pages have yet to be fetched by the crawler",
+   "where": "p.444"
+  },
+  {
+   "term": "Robots Exclusion Protocol",
+   "definition": "robots.txt file at the root of the site naming parts off-limits to crawling",
+   "where": "p.447"
+  },
+  {
+   "term": "URL normalization",
+   "definition": "resolving relative link targets to absolute URLs",
+   "where": "p.447"
+  },
+  {
+   "term": "term partitioning (global index organization)",
+   "definition": "dictionary of terms partitioned into subsets, each node holding postings for its terms",
+   "where": "p.454"
+  },
+  {
+   "term": "document partitioning (local index organization)",
+   "definition": "each node contains the index for a subset of all documents",
+   "where": "p.454"
+  },
+  {
+   "term": "connectivity server",
+   "definition": "supports fast connectivity queries on the web graph (which URLs link to a URL, which it links to)",
+   "where": "p.455"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Mercator (Najork and Heydon)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "chapter follows its design",
+   "quote": null
+  },
+  {
+   "work": "Brin and Page, anatomy of a search engine",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "early crawler description",
+   "quote": null
+  },
+  {
+   "work": "Cho and Garcia-Molina, distributed crawler communication",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "taxonomy of node communication modes",
+   "quote": null
+  },
+  {
+   "work": "Boldi et al. / Shkapenyuk and Suel",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "large-scale distributed crawlers",
+   "quote": null
+  },
+  {
+   "work": "Tomasic and Garcia-Molina; Jeong and Omiecinski",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "term vs document partitioning, document partitioning superior",
+   "quote": null
+  },
+  {
+   "work": "Ribeiro-Neto and Barbosa; Badue et al.",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "found term partitioning better in some systems",
+   "quote": null
+  },
+  {
+   "work": "Barroso et al.",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Google's index distribution",
+   "quote": null
+  },
+  {
+   "work": "Bharat et al.",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "first connectivity server",
+   "quote": null
+  },
+  {
+   "work": "Boldi and Vigna",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "web graph compression, 3 bits per link",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 20.1",
+   "caption": "The basic crawler architecture.",
+   "page": 446,
+   "why": "Module cycle: fetch, parse, content seen, URL filter, dup URL elim, frontier"
+  },
+  {
+   "figure": "Fig 20.2",
+   "caption": "Distributing the basic crawl architecture.",
+   "page": 449,
+   "why": "Host splitter between nodes"
+  },
+  {
+   "figure": "Fig 20.3",
+   "caption": "The URL frontier ... front queues manage priority ... back queues manage politeness.",
+   "page": 452,
+   "why": "Priority plus politeness queue design with heap"
+  },
+  {
+   "figure": "Fig 20.6",
+   "caption": "A four-row segment of the table of links.",
+   "page": 457,
+   "why": "Prototype-row encoding example"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.447",
+   "snippet": "User-agent: *\nDisallow: /yoursite/temp/\nUser-agent: searchengine\nDisallow:",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figures are vector drawings; pymupdf text shows stray glyph/arrow characters, so figure content was read from captions only.",
+  "Superscripts lost in extracted text ('4 × 109 × 10 × 8 = 3.2 × 1011').",
+  "Typos in source: 'limits of cache hit rate', 'also know as'.",
+  "Inconsistency: 'a few seconds' politeness gap vs 'ten times last fetch time' heuristic; unreconciled.",
+  "No embedded instructions found."
+ ]
+}

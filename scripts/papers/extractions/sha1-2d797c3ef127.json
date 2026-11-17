@@ -1,0 +1,698 @@
+{
+ "schema": 1,
+ "key": "sha1:2d797c3ef127",
+ "pdf": "data-science/sources/elements-of-statistical-learning/ch10-boosting-additive-trees.pdf",
+ "bib": {
+  "title": "The Elements of Statistical Learning, 2nd ed., Chapter 10: Boosting and Additive Trees",
+  "authors": [
+   "Trevor Hastie",
+   "Robert Tibshirani",
+   "Jerome Friedman"
+  ],
+  "first_author": "Hastie",
+  "year": 2009,
+  "venue": "Springer (book chapter, pp. 337-388)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 91428,
+  "chars_total": 91428,
+  "engine": "pymupdf",
+  "skipped": "Nothing skipped; chapter has no reference list (bibliography is at book end). Figures are image panels so only their captions and axis text were read."
+ },
+ "type": "book-chapter",
+ "question": "Why does boosting work, how is it equivalent to forward stagewise additive modelling, and how does gradient tree boosting with shrinkage, subsampling and right-sized trees yield an accurate off-the-shelf learner?",
+ "hypothesis": "Boosting is fitting an additive model in tree basis functions by stagewise optimisation of a loss; robust differentiable losses plus slow learning make it an effective data-mining procedure.",
+ "contributions": [
+  "AdaBoost fits an additive model under exponential loss (Sec 10.2-10.4)",
+  "Population minimizer of exponential loss is half the log-odds (Sec 10.5)",
+  "Robust losses for regression and classification (Sec 10.6)",
+  "Gradient boosted models for any differentiable loss (Sec 10.10)",
+  "Right-sized trees via ANOVA/interaction order (Sec 10.11)",
+  "Shrinkage and subsampling regularisation (Sec 10.12)",
+  "Relative importance and partial dependence for interpretation (Sec 10.13)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Boosting stumps (AdaBoost) on the simulated example reaches 5.8% test error after 400 iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 5.8,
+   "unit": "%",
+   "baseline_value": "45.8 (single stump)",
+   "n": null,
+   "setup": "Simulated data (10.2): 10 standard independent Gaussian features, Y=1 if sum X_j^2 > chi2_10(0.5)=9.34 else -1, 2000 training cases (~1000 per class), 10,000 test observations, Bayes error 0 (deterministic); AdaBoost.M1 with 2-terminal-node stumps, 400 iterations",
+   "quote": "reaching 5.8% after 400 iterations",
+   "note": null,
+   "where": "p. 340 (Fig 10.2)"
+  },
+  {
+   "claim": "A single stump has test error 45.8% against 50% for random guessing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 45.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated data (10.2): 10 standard independent Gaussian features, Y=1 if sum X_j^2 > chi2_10(0.5)=9.34 else -1, 2000 training cases (~1000 per class), 10,000 test observations, Bayes error 0 (deterministic); one stump",
+   "quote": "yields a very poor test set error rate of 45.8%",
+   "note": null,
+   "where": "p. 339"
+  },
+  {
+   "claim": "A single large classification tree on the same data has test error 24.7%, worse than boosted stumps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 24.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated data (10.2): 10 standard independent Gaussian features, Y=1 if sum X_j^2 > chi2_10(0.5)=9.34 else -1, 2000 training cases (~1000 per class), 10,000 test observations, Bayes error 0 (deterministic); single 244-node classification tree",
+   "quote": "(error rate 24.7%)",
+   "note": null,
+   "where": "p. 340 (Fig 10.2 legend: 244 Node Tree)"
+  },
+  {
+   "claim": "Training misclassification error reaches zero near 250 iterations while exponential loss and test error keep improving.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iteration at which training error hits 0",
+   "value": 250,
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated data (10.2): 10 standard independent Gaussian features, Y=1 if sum X_j^2 > chi2_10(0.5)=9.34 else -1, 2000 training cases (~1000 per class), 10,000 test observations, Bayes error 0 (deterministic); AdaBoost with stumps",
+   "quote": "decreases to zero at around 250",
+   "note": null,
+   "where": "p. 344 (Fig 10.3)"
+  },
+  {
+   "claim": "On the spam data gradient boosting has test error 4.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 4.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spam data (57 predictors; test set of 1536 per Ex. 10.6), same test set as Sec. 9.1.2; gradient boosting with J=5 terminal-node trees; M, nu and eta not stated",
+   "quote": "resulted in a test error rate of 4.5%",
+   "note": "Fixed-J=5 is stated on p. 353; 'gradient boosting is significantly better than all of them using the McNemar test' (Exercise 10.6 works GAM only).",
+   "where": "p. 352, Sec 10.8"
+  },
+  {
+   "claim": "Spam comparison: additive logistic regression 5.5%, MARS 5.5%, CART grown and pruned by CV 8.7%; standard error of these estimates about 0.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 8.7,
+   "unit": "%",
+   "baseline_value": "4.5 (GBM)",
+   "n": null,
+   "setup": "Spam data, same test set; value shown is the CART tree pruned by cross-validation (additive logistic regression and MARS both 5.5%)",
+   "quote": "pruned by cross-validation 8.7%",
+   "note": null,
+   "where": "pp. 352-353"
+  },
+  {
+   "claim": "Spam standard error of the error-rate estimates is about 0.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "standard error",
+   "value": 0.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spam data test error estimates",
+   "quote": "The standard error of these estimates is around 0.6%",
+   "note": null,
+   "where": "p. 353"
+  },
+  {
+   "claim": "Spam: boosting with J=2 trees (additive, main-effects model) has error 4.7%, versus 4.5% for J=5; difference not significant, hinting at interactions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 4.7,
+   "unit": "%",
+   "baseline_value": "4.5 (J=5)",
+   "n": null,
+   "setup": "Spam data; gradient boosting with J=2 terminal-node trees",
+   "quote": "with a corresponding error rate of 4.7%",
+   "note": null,
+   "where": "p. 353"
+  },
+  {
+   "claim": "Recommended tree size for boosting is 4 <= J <= 8, rarely better than J about 6; J>10 unlikely to be needed.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' experience, no dataset given",
+   "quote": "it is unlikely\nthat J > 10 will be required",
+   "note": null,
+   "where": "p. 363, Sec 10.11"
+  },
+  {
+   "claim": "Interaction order is limited to J-1: J=2 stumps give main effects only; J=3 allows two-variable interactions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Structural property of additive trees (ANOVA expansion 10.40)",
+   "quote": "no interaction eﬀects of level greater than J −1 are pos-",
+   "note": null,
+   "where": "p. 362"
+  },
+  {
+   "claim": "Best shrinkage strategy: nu very small (<0.1) and choose M by early stopping.",
+   "kind": "reported",
+   "source": "Friedman (2001)",
+   "metric": "shrinkage nu",
+   "value": 0.1,
+   "unit": "upper bound",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Friedman 2001 empirical finding; regression and probability estimation improve dramatically, misclassification less",
+   "quote": "set ν to be very small (ν < 0.1)",
+   "note": "Fig 10.11 itself uses shrinkage 0.2 (stumps) and 0.6 (6-node trees), larger than the <0.1 recommended in the text.",
+   "where": "p. 365, Sec 10.12.1"
+  },
+  {
+   "claim": "Stochastic gradient boosting samples a fraction eta (typically 1/2, without replacement) per tree, cutting compute by that fraction and often improving accuracy.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Friedman (1999) stochastic gradient boosting; large N can use eta well below 1/2",
+   "quote": "Not only does the sampling reduce the computing time by the same",
+   "note": null,
+   "where": "p. 365, Sec 10.12.2"
+  },
+  {
+   "claim": "Number of boosting parameters to tune with shrinkage and subsampling is four: J, M, nu, eta.",
+   "kind": "claim",
+   "source": null,
+   "metric": "number of tuned parameters",
+   "value": 4,
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gradient boosting with shrinkage and subsampling",
+   "quote": "The downside is that we now have four parameters to set: J, M, ν and",
+   "note": null,
+   "where": "p. 367"
+  },
+  {
+   "claim": "California housing: gradient boosting average absolute error 0.31 after 800 iterations versus 0.89 for the median constant predictor.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average absolute error (AAE)",
+   "value": 0.31,
+   "unit": "$100,000 units",
+   "baseline_value": "0.89 (median{yi} constant)",
+   "n": null,
+   "setup": "California housing, 20,460 neighborhoods (as printed), 8 numeric predictors, 80%/20% random train/test split; MART J=6, nu=0.1, Huber loss; test AAE",
+   "quote": "The value of AAE after 800 iterations is 0.31.",
+   "note": null,
+   "where": "p. 371, Sec 10.14.1"
+  },
+  {
+   "claim": "California housing: optimal constant predictor AAE is 0.89.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average absolute error",
+   "value": 0.89,
+   "unit": "$100,000 units",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same split; constant = median of y",
+   "quote": "median{yi} which is 0.89",
+   "note": null,
+   "where": "p. 371"
+  },
+  {
+   "claim": "California housing: R^2 of boosting 0.84 on Y, versus 0.85 for Pace and Barry spatial autoregression predicting log Y; boosting on log Y gets 0.86.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.84,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "California housing, MART J=6 nu=0.1 Huber, response Y",
+   "quote": "R2 = 0.84",
+   "note": "Pace-Barry R^2=0.85 and boosting on log Y R^2=0.86 are also on p. 371 (quote: 'R2 = 0.85, predicting log Y'; 'R2 = 0.86'). It is not stated whether R^2 is on train or test data.",
+   "where": "p. 371"
+  },
+  {
+   "claim": "California housing: boosting on log Y gets R^2 0.86.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.86,
+   "unit": null,
+   "baseline_value": "0.85 (Pace and Barry 1997)",
+   "n": null,
+   "setup": "California housing, response log Y, same model settings",
+   "quote": "R2 = 0.86",
+   "note": null,
+   "where": "p. 371"
+  },
+  {
+   "claim": "New Zealand fish: at the equal sensitivity/specificity point GBM achieves 91% and GAM 90%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sensitivity=specificity",
+   "value": 91,
+   "unit": "%",
+   "baseline_value": "90 (GAM)",
+   "n": null,
+   "setup": "Black Oreo Dory presence/absence, about 17,000 trawls, 2353 with the fish present; GBM binomial deviance depth-10 trees nu=0.025 with 10-fold CV for number of terms; GAM smoothing splines 8 df per term; test data",
+   "quote": "achieves 91%, and GAM 90%",
+   "note": null,
+   "where": "p. 378"
+  },
+  {
+   "claim": "New Zealand fish: AUC GBM 0.98 vs GAM 0.97 on test data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": 0.98,
+   "unit": null,
+   "baseline_value": "0.97 (GAM)",
+   "n": null,
+   "setup": "Same fish presence model, ROC curves on test data",
+   "table": "Figure 10.19 right panel legend, row GBM, column AUC (GAM 0.97, GBM 0.98)",
+   "note": "Values are read from figure label text, not body text.",
+   "where": "p. 378"
+  },
+  {
+   "claim": "Demographics (occupation, 9 classes) boosting overall test error 42.5% vs null rate 69%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error rate",
+   "value": 42.5,
+   "unit": "%",
+   "baseline_value": "69 (null: always predict Prof/Man)",
+   "n": null,
+   "setup": "9243 mall-customer questionnaires, 13 demographic predictors, K=9 occupation classes, 80%/20% train/test, MART J=6, nu=0.1",
+   "quote": "The overall error rate is 42.5%",
+   "note": null,
+   "where": "p. 379-380, Sec 10.14.3"
+  },
+  {
+   "claim": "Demographics null rate from predicting the most numerous class Prof/Man is 69%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 69,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same data",
+   "quote": "null rate of 69%",
+   "note": null,
+   "where": "p. 379-380"
+  },
+  {
+   "claim": "Exercise 10.6 McNemar: GAM makes significantly more errors than GBM, two-sided p = 0.036, discordant errors 33 vs 18.",
+   "kind": "reported",
+   "source": "exercise stated by the book (answer not worked)",
+   "metric": "p-value",
+   "value": 0.036,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spam test sample of size 1536; GAM 5.5% vs GBM 4.5%",
+   "quote": "with a two-sided p-value of 0.036",
+   "note": "Contingency table is printed with ambiguous row/column labels (header 'GBM / GAM'); counts 1434, 18, 33, 51 sum to 1536. Body text of Sec 10.8 says boosting is significantly better than 'all of them' (GAM, CART, MARS) but only the GAM test is set as an exercise.",
+   "where": "p. 386, Ex. 10.6"
+  },
+  {
+   "claim": "Exponential-loss population minimizer is half the log-odds, so sign(f) is the Bayes rule.",
+   "kind": "reported",
+   "source": "Friedman, Hastie, Tibshirani (2000)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Population result, Friedman et al. 2000",
+   "quote": "the additive expansion produced by AdaBoost is estimating one-",
+   "note": null,
+   "where": "p. 346, eq 10.16"
+  },
+  {
+   "claim": "AdaBoost.M1 equals forward stagewise additive modeling with exponential loss; alpha_m = 2*beta_m.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Derivation in Sec 10.4 (eqs 10.9-10.15)",
+   "quote": "where αm = 2βm is the quantity deﬁned at line 2c of AdaBoost.M1",
+   "note": null,
+   "where": "p. 344"
+  },
+  {
+   "claim": "Binomial deviance penalises large negative margins linearly while exponential loss penalises exponentially, so deviance is more robust to label noise and AdaBoost degrades with mislabeling.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative; Fig 10.4",
+   "quote": "It is therefore far more robust in noisy settings where the Bayes error rate is",
+   "note": null,
+   "where": "pp. 347-348"
+  },
+  {
+   "claim": "Boosting stumps beat larger trees (10 and 100 nodes) on the simulated example because the generating function is additive.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated data (10.2): 10 standard independent Gaussian features, Y=1 if sum X_j^2 > chi2_10(0.5)=9.34 else -1, 2000 training cases (~1000 per class), 10,000 test observations, Bayes error 0 (deterministic); deviance-loss gradient boosting with stumps, 10-node and 100-node trees, plus AdaBoost for comparison; curves only, no numbers",
+   "quote": "Since the generative model is additive, stumps perform the",
+   "note": null,
+   "where": "p. 363 (Fig 10.9)"
+  },
+  {
+   "claim": "Shrinkage helps in all cases, especially for test deviance; subsampling without shrinkage does poorly while sampling plus shrinkage slightly wins.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated data (10.2): 10 standard independent Gaussian features, Y=1 if sum X_j^2 > chi2_10(0.5)=9.34 else -1, 2000 training cases (~1000 per class), 10,000 test observations, Bayes error 0 (deterministic); MART with binomial deviance, stumps (shrink 0.2) and 6-node trees (shrink 0.6) to 2000 iterations (Fig 10.11); 4-node trees, shrink 0.1, sample 0.5, 1000 iterations (Fig 10.12); curves only",
+   "quote": "The beneﬁcial eﬀect of shrinkage can be seen in all cases, especially",
+   "note": null,
+   "where": "p. 366 (Fig 10.11), p. 365-367 (Fig 10.12)"
+  }
+ ],
+ "limits": [
+  "Chapter is a textbook exposition: simulation and application results come with few settings (M, nu and eta often not stated; gbm settings only partly given).",
+  "Authors concede boosting sacrifices speed, interpretability and (for AdaBoost) robustness to overlapping classes and mislabelling relative to single trees (Sec 10.7).",
+  "Theory bounds for AdaBoost are 'too loose to be of practical importance' (Bibliographic Notes); debate about why boosting works continues (Mease and Wyner 2008 vs Friedman et al. 2008a).",
+  "Pre-2009: covers MART/gbm/mboost/TreeNet; no XGBoost, LightGBM, second-order (Newton) tree boosting, histogram splits, or explicit tree-complexity penalties. Only single-step Newton for multiclass (Ex. 10.8).",
+  "Partial dependence assumes inputs not strongly interacting with the complement; marginal average differs from conditional expectation (Sec 10.13.2)."
+ ],
+ "practices": [
+  "Use gradient tree boosting rather than plain AdaBoost for data mining; it keeps most advantages of trees (mixed types, missing values, monotone-transformation invariance) and loses speed and interpretability (Sec 10.7, p. 352).",
+  "Restrict all trees to the same size J treated as a meta-parameter; 4 <= J <= 8 works well, J about 6 is rarely beaten, J>10 unlikely needed (Sec 10.11, p. 363).",
+  "Set J to the dominant interaction order of the target plus one; J=2 gives a purely additive model (Sec 10.11, p. 362).",
+  "Use a small learning rate nu < 0.1 and choose number of iterations M by early stopping on a validation sample (Sec 10.12, pp. 364-365).",
+  "Use stochastic gradient boosting with subsample fraction eta about 1/2 (smaller for large N) (Sec 10.12.2, p. 365).",
+  "Explore J, nu and eta first and leave M as the main tuning parameter (p. 367).",
+  "Use binomial/multinomial deviance rather than exponential loss when label noise or probability estimates matter (Sec 10.6, pp. 347-349).",
+  "Use absolute or Huber loss for regression with outliers or long tails; Huber delta_m is the alpha-th quantile of |y - f| (Sec 10.6, Table 10.2).",
+  "Fit trees to negative gradients (pseudo-residuals) by least squares, then set leaf constants by a separate line search (Algorithm 10.3, p. 361).",
+  "Interpret fitted boosted models with relative variable importance (largest scaled to 100) and low-dimensional partial dependence plots (Sec 10.13, pp. 367-370).",
+  "Use 10-fold CV to choose number of terms and shrinkage (NZ fish example, p. 376).",
+  "Pick the number of iterations less carefully for large data with shrinkage: test error flattens and overfitting is mild (California housing, p. 371)."
+ ],
+ "terms": [
+  {
+   "term": "weak classifier",
+   "definition": "one whose error rate is only slightly better than random guessing",
+   "where": "p. 337"
+  },
+  {
+   "term": "AdaBoost.M1 (Discrete AdaBoost)",
+   "definition": "sequentially fits classifiers on reweighted data and combines them by weighted majority vote G(x)=sign(sum alpha_m G_m(x))",
+   "where": "p. 338-339, Algorithm 10.1"
+  },
+  {
+   "term": "forward stagewise additive modeling",
+   "definition": "sequentially adding new basis functions to the expansion without adjusting the parameters and coefficients of those that have already been added",
+   "where": "p. 342, Algorithm 10.2"
+  },
+  {
+   "term": "exponential loss",
+   "definition": "L(y,f(x)) = exp(-y f(x)); population minimizer is half the log-odds of P(Y=1|x)",
+   "where": "pp. 343, 345-346"
+  },
+  {
+   "term": "margin",
+   "definition": "y f(x); positive means correctly classified",
+   "where": "p. 346"
+  },
+  {
+   "term": "binomial deviance",
+   "definition": "-l(Y,f(x)) = log(1 + exp(-2 Y f(x)))",
+   "where": "p. 346, eq 10.18"
+  },
+  {
+   "term": "Huber loss",
+   "definition": "squared error for |y-f| <= delta, 2 delta |y-f| - delta^2 otherwise",
+   "where": "p. 349, eq 10.23"
+  },
+  {
+   "term": "gradient boosting / GBM / MART",
+   "definition": "fit a regression tree to the negative gradient (pseudo-residuals) at each step; MART = multiple additive regression trees",
+   "where": "pp. 359-361"
+  },
+  {
+   "term": "pseudo residuals",
+   "definition": "components of the negative gradient r_im = -dL(y_i,f(x_i))/df(x_i) at f=f_{m-1}",
+   "where": "p. 360"
+  },
+  {
+   "term": "shrinkage (learning rate nu)",
+   "definition": "scale each tree's contribution by 0 < nu < 1: f_m = f_{m-1} + nu * sum_j gamma_jm I(x in R_jm)",
+   "where": "p. 364, eq 10.41"
+  },
+  {
+   "term": "stochastic gradient boosting",
+   "definition": "at each iteration sample a fraction eta of the training observations without replacement and grow the next tree on the subsample",
+   "where": "p. 365"
+  },
+  {
+   "term": "relative importance",
+   "definition": "sum over internal nodes of squared improvement for splits on the variable, averaged over trees; sqrt taken and largest scaled to 100",
+   "where": "pp. 367-368, eqs 10.42-10.43"
+  },
+  {
+   "term": "partial dependence",
+   "definition": "marginal average f_S(X_S)=E_{X_C} f(X_S,X_C), estimated by averaging over training values of X_C",
+   "where": "p. 369, eqs 10.47-10.48"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Freund and Schapire (1997), AdaBoost.M1",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Most popular boosting algorithm, presented as Algorithm 10.1",
+   "quote": null
+  },
+  {
+   "work": "Friedman, Hastie, Tibshirani (2000), Additive logistic regression",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Statistical view: exponential loss, log-odds, additive trees, right-sized trees, multiclass logit",
+   "quote": null
+  },
+  {
+   "work": "Friedman (2001), Greedy function approximation: a gradient boosting machine",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Gradient boosting and shrinkage",
+   "quote": null
+  },
+  {
+   "work": "Friedman (1999), Stochastic gradient boosting",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Subsampling",
+   "quote": null
+  },
+  {
+   "work": "Mason et al. (2000)",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Also a gradient approach to boosting",
+   "quote": null
+  },
+  {
+   "work": "Schapire (1990); Freund (1995)",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Earlier boosting by filtering and boost-by-majority",
+   "quote": null
+  },
+  {
+   "work": "Breiman et al. (1984)",
+   "year": 1984,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Relative importance measure for trees",
+   "quote": null
+  },
+  {
+   "work": "Mease and Wyner (2008)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Challenge some of the authors' interpretations; authors respond in Friedman et al. (2008a)",
+   "quote": null
+  },
+  {
+   "work": "Pace and Barry (1997), California housing",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Spatial autoregression R^2=0.85 on log Y; also the data source",
+   "quote": null
+  },
+  {
+   "work": "Leathwick et al. (2005, 2006), NZ fish data",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Black Oreo Dory trawl data and GBM setup",
+   "quote": null
+  },
+  {
+   "work": "R gbm package (Ridgeway 1999); mboost; TreeNet",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Implementations of gradient boosting named in the chapter",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 10.1",
+   "caption": "Schematic of AdaBoost. Classifiers are trained on weighted versions of the dataset, and then combined to produce a final prediction.",
+   "page": 338,
+   "why": "Shows the reweight-and-vote loop at a glance"
+  },
+  {
+   "figure": "Fig 10.2",
+   "caption": "Simulated data (10.2): test error rate for boosting with stumps, as a function of the number of iterations. Also shown are the test error rate for a single stump, and a 244-node classification tree.",
+   "page": 340,
+   "why": "Headline demonstration that boosted stumps beat a large tree"
+  },
+  {
+   "figure": "Fig 10.3",
+   "caption": "Simulated data, boosting with stumps: misclassification error rate on the training set, and average exponential loss. After about 250 iterations, the misclassification error is zero, while the exponential loss continues to decrease.",
+   "page": 345,
+   "why": "Shows boosting does not optimise training error and keeps improving test error past zero training error"
+  },
+  {
+   "figure": "Fig 10.4",
+   "caption": "Loss functions for two-class classification (misclassification, exponential, binomial deviance, squared error, support vector), scaled through (0,1).",
+   "page": 347,
+   "why": "Compares surrogate losses by margin; explains deviance robustness"
+  },
+  {
+   "figure": "Fig 10.9",
+   "caption": "Boosting with different sized trees, applied to the example (10.2) used in Figure 10.2. Since the generative model is additive, stumps perform the best.",
+   "page": 363,
+   "why": "Tree size J vs interaction order"
+  },
+  {
+   "figure": "Fig 10.11",
+   "caption": "Test error curves for simulated example (10.2) ... gradient boosting (MART), binomial deviance, stumps or six terminal-node trees, with or without shrinkage.",
+   "page": 366,
+   "why": "Shows shrinkage benefit and the M vs nu tradeoff"
+  },
+  {
+   "figure": "Fig 10.12",
+   "caption": "Test-error curves for the simulated example (10.2), showing the effect of stochasticity (Sample=0.5, Shrink=0.1).",
+   "page": 367,
+   "why": "Effect of subsampling with/without shrinkage"
+  },
+  {
+   "figure": "Table 10.1",
+   "caption": "Some characteristics of different learning methods (neural nets, SVM, trees, MARS, k-NN).",
+   "page": 351,
+   "why": "Why trees are the off-the-shelf choice"
+  },
+  {
+   "figure": "Table 10.2",
+   "caption": "Gradients for commonly used loss functions.",
+   "page": 360,
+   "why": "Pseudo-residual per loss in one table"
+  },
+  {
+   "figure": "Fig 10.6",
+   "caption": "Predictor variable importance spectrum for the spam data.",
+   "page": 354,
+   "why": "Example relative-importance plot"
+  },
+  {
+   "figure": "Fig 10.13",
+   "caption": "Average-absolute error as a function of number of iterations for the California housing data.",
+   "page": 372,
+   "why": "Test error flattens, M not critical"
+  }
+ ],
+ "code": [
+  {
+   "where": "p. 339, Algorithm 10.1",
+   "snippet": "AdaBoost.M1: w_i=1/N; for m=1..M: fit G_m with weights w_i; err_m = sum w_i I(y_i != G_m(x_i)) / sum w_i; alpha_m = log((1-err_m)/err_m); w_i <- w_i exp[alpha_m I(y_i != G_m(x_i))]; output G(x)=sign[sum alpha_m G_m(x)]",
+   "verbatim": false
+  },
+  {
+   "where": "p. 361, Algorithm 10.3",
+   "snippet": "Gradient tree boosting: f_0(x)=argmin_gamma sum L(y_i,gamma); for m=1..M: (a) r_im = -[dL(y_i,f(x_i))/df(x_i)]_{f=f_{m-1}}; (b) fit regression tree to r_im giving regions R_jm; (c) gamma_jm = argmin_gamma sum_{x_i in R_jm} L(y_i, f_{m-1}(x_i)+gamma); (d) f_m(x)=f_{m-1}(x)+sum_j gamma_jm I(x in R_jm)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 364, eq 10.41",
+   "snippet": "f_m(x) = f_{m-1}(x) + nu * sum_{j=1}^{J} gamma_jm I(x in R_jm)",
+   "verbatim": false
+  },
+  {
+   "where": "p. 387, Algorithm 10.4",
+   "snippet": "K-class: p_k(x)=exp f_k/sum exp f_l; r_ikm = y_ik - p_k(x_i); fit tree to r_ikm; gamma_jkm = ((K-1)/K) sum r_ikm / sum |r_ikm|(1-|r_ikm|); f_km = f_k,m-1 + sum_j gamma_jkm I(x in R_jkm)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction has ligatures and broken equations; formulas transcribed from reading, not copied.",
+  "Inconsistency: Fig 10.11 caption says 'simulated example (10.2) of Figure 10.9' while the text (p. 365) says 'of Figure 10.2'; same data (10.2).",
+  "Inconsistency: text recommends nu < 0.1 (p. 365) but Fig 10.11 uses shrinkage 0.2 (stumps) and 0.6 (6-node trees).",
+  "Typo in eq 10.38 (p. 360): prints L(y_i, f_1m(x_i), ..., f_1m(x_i)); last argument should be f_Km.",
+  "Ex. 10.6 contingency table labels ambiguous in extracted text; counts sum to 1536.",
+  "Algorithm 10.1 gives alpha_m = log((1-err)/err) while eq 10.12 gives beta_m = 1/2 log(...); reconciled by alpha=2 beta, not an error.",
+  "Spam GBM figure (4.5%) states J=5 but gives no M, nu or eta; Sec 10.8 text does not say how tuning was done.",
+  "California housing printed as 20,460 neighborhoods (p. 371); not checked against the dataset.",
+  "No instructions embedded in the text."
+ ]
+}

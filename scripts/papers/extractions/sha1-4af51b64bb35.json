@@ -1,0 +1,440 @@
+{
+ "schema": 1,
+ "key": "sha1:4af51b64bb35",
+ "pdf": "data-science/sources/elements-of-statistical-learning/ch16-ensemble-learning.pdf",
+ "bib": {
+  "title": "Ensemble Learning (Chapter 16, The Elements of Statistical Learning, 2nd ed.)",
+  "authors": [
+   "Trevor Hastie",
+   "Robert Tibshirani",
+   "Jerome Friedman"
+  ],
+  "first_author": "Hastie",
+  "year": 2009,
+  "venue": "Springer (book chapter, pp. 605-624)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 39832,
+  "chars_total": 39832,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a collection of simple base models be combined, and why do boosting and lasso-style L1 regularization explain ensemble success?",
+ "hypothesis": "Boosting with shrinkage behaves like an L1-regularized (lasso-like) path over a huge tree dictionary, so ensembles can be learned in two stages: generate diverse trees, then lasso-post-process them.",
+ "contributions": [
+  "Error-correcting output codes as an ensemble",
+  "Forward stagewise regression as lasso analogue of shrunken boosting",
+  "Bet on sparsity principle",
+  "Margin view of boosting",
+  "ISLE and rule ensembles (Friedman and Popescu)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Lasso post-processing of a 1000-tree random forest on spam data keeps about 40 trees and matches gradient boosting.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": null,
+   "value": "40",
+   "unit": "trees",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spam data; random forest of 1000 trees grown to max depth, m=7; lasso applied to the first 500 trees; test error vs number of nonzero-coefficient trees",
+   "quote": "reduces the forest to about 40 trees, rather than the original 1000",
+   "table": null,
+   "note": "Fig 16.6 caption says post-processing used the first 500 trees; text says forest of 1000. No numeric test errors printed (read from figure only).",
+   "where": "p.617, Fig 16.6"
+  },
+  {
+   "claim": "Modified random forest (5% subsample without replacement, ~six terminal nodes) cuts training cost about 100-fold but post-processed performance falls short of the full random forest.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": null,
+   "value": "about 100",
+   "unit": "x training-cost reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spam data; each tree grown on 5% random subsample without replacement, shallow (~6 terminal nodes), then lasso post-processed",
+   "quote": "training costs are reduced by a factor of about 100",
+   "table": null,
+   "note": null,
+   "where": "p.617, Sec 16.3"
+  },
+  {
+   "claim": "ISLE on spam data (eta=1/2, nu=0.05, 5-terminal-node trees) does not improve test error but cuts the number of trees by a factor of five.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": null,
+   "value": "five",
+   "unit": "x fewer trees",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spam data; ISLE; lasso path shown on test data (not CV-chosen lambda)",
+   "quote": "but it reduces the number of trees by a factor of five",
+   "table": null,
+   "note": null,
+   "where": "p.620, Fig 16.7"
+  },
+  {
+   "claim": "AdaBoost test error on mixture data is minimised at 240 trees and overfits dramatically if run to convergence (10,000 trees, margin settled).",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": "test error",
+   "value": "240",
+   "unit": "trees at minimum test error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mixture data; AdaBoost via R package gbm, 4-node trees, shrinkage 0.02, 10,000 trees",
+   "quote": "The right panel shows the test error, which is minimized at 240 trees.",
+   "table": null,
+   "note": null,
+   "where": "p.616, Fig 16.5"
+  },
+  {
+   "claim": "Simulation for regression ISLE: sub-sampled GBM (eta=0.1, nu=0.01) beats full GBM (eta=1, nu=0.01); random forest is worst, post-processing helps it.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": null,
+   "value": "1.3",
+   "unit": "noise sd sigma (SNR about 2)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "f(X)=10*prod_{j<=5} exp(-2 Xj^2)+sum_{j=6..35} Xj, X~U[0,1]^100, n_train=1000, test set 500, MSE from true function",
+   "quote": "we chose σ = 1.3 resulting in a signal-to-noise ratio of approximately 2",
+   "table": null,
+   "note": "Text calls the sub-sampled GBM curve 'light blue'; caption calls it 'green' (and full GBM 'orange'). No MSE values printed for Fig 16.8.",
+   "where": "p.621, Eq 16.13"
+  },
+  {
+   "claim": "Rulefit rule-based model reaches MSE 1.06 on the same training set as Fig 16.8, not comparable to Fig 16.8 because CV was used for model selection.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": "mean squared error",
+   "value": "1.06",
+   "unit": "MSE vs true function",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulation (16.13), same training set as Fig 16.8; Rulefit software automatic mode; Fig 16.10 uses 20 realizations",
+   "quote": "the rule based model achieved a mean-squared error of 1.06",
+   "table": null,
+   "note": null,
+   "where": "p.623"
+  },
+  {
+   "claim": "Lasso vs ridge simulation: 50 observations, 300 independent Gaussian predictors, 20 realizations per scenario.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": null,
+   "value": "20",
+   "unit": "realizations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Nonzero coefficients 300 (Gaussian), 10 or 30; five NSR levels; lambda picked to minimise test error (oracle); 50 lambda values, df 1 to 50; test set infinite (Gaussian) / 5000 (binary)",
+   "quote": "There are 20 simulation runs for each scenario.",
+   "table": null,
+   "note": "Caption says ridge beats lasso only in the dense top row (and neither does well); text says 'The L2 penalty performs poorly everywhere'. Compatible but loosely worded.",
+   "where": "p.613, Fig 16.2"
+  },
+  {
+   "claim": "Block-correlated simulation for FS0 vs lasso: 60 samples, 1000 variables, rho=0.95 in blocks of 20, 50 nonzero coefficients, NSR 0.72; both reach about the same minimum MSE.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": null,
+   "value": "0.72",
+   "unit": "noise-to-signal ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dictionary of 1000 Gaussian variables, blocks of 20, one nonzero coefficient per block drawn from standard Gaussian",
+   "quote": "with a noise-to-signal ratio of 0.72",
+   "table": null,
+   "note": null,
+   "where": "p.613-614, Figs 16.3-16.4"
+  },
+  {
+   "claim": "Prostate data forward stagewise vs lasso: Figure 16.1 caption gives M=220 steps of eps=.01; body text gives M=250.",
+   "kind": "measured",
+   "source": "Hastie, Tibshirani and Friedman ESL 2nd ed. ch. 16 (own simulation)",
+   "metric": null,
+   "value": "220 vs 250",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prostate data, 8 predictors, Algorithm 16.1 with eps=0.01",
+   "quote": "using M = 220 consecutive steps of size ε = .01",
+   "table": null,
+   "note": "INCONSISTENT: caption says M = 220, text on same page says 'M = 250 and ε = 0.01'. Both printed.",
+   "where": "p.609, Fig 16.1"
+  },
+  {
+   "claim": "Friedman et al. (2004) thought example: 10,000 data points, a million trees; ridge best if coefficients Gaussian, lasso if only 1000 nonzero.",
+   "kind": "worked-example",
+   "source": "Friedman et al. (2004)",
+   "metric": null,
+   "value": "1000",
+   "unit": "nonzero coefficients (sparse case)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Thought experiment, not run",
+   "quote": "if there are only a small number (e.g., 1000) coeﬃcients",
+   "table": null,
+   "note": null,
+   "where": "p.611, Sec 16.2.2"
+  },
+  {
+   "claim": "ISLE sampling recommendation: eta <= 1/2, and eta ~ 1/sqrt(N) for large N; stochastic gradient boosting recommended nu=0.1.",
+   "kind": "reported",
+   "source": "Friedman and Popescu (2003)",
+   "metric": null,
+   "value": "1/2",
+   "unit": "eta upper bound",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ISLE Algorithm 16.2, Friedman and Popescu (2003); nu=0.1 recommended by Friedman (1999)",
+   "quote": "Their simulations suggest picking η ≤",
+   "table": null,
+   "note": null,
+   "where": "p.619-620"
+  },
+  {
+   "claim": "ECOC for 10-class digits uses L=15 binary problems, full code matrix has minimum Hamming distance 7.",
+   "kind": "reported",
+   "source": "Dietterich and Bakiri (1995)",
+   "metric": null,
+   "value": "7",
+   "unit": "minimum Hamming distance between rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dietterich and Bakiri (1995) code matrix, 10 classes, 15 bits",
+   "quote": "has a minimum Hamming distance1",
+   "table": null,
+   "note": "Text prints 'dlog2 10 = 4 bits' with the ceiling bracket malformed (⌈log2 10 = 4 should be ⌈log2 10⌉ = 4).",
+   "where": "p.606, Sec 16.1"
+  },
+  {
+   "claim": "Random ECOC code assignment works as well as optimally built codes; the benefit is variance reduction.",
+   "kind": "claim",
+   "source": "James and Hastie (1998)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "James and Hastie (1998) analysis",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p.606"
+  },
+  {
+   "claim": "Boosted classifiers form an L1-regularized monotone path to a margin-maximizing solution, which can be a poor overfit end point; early stopping should use a validation set.",
+   "kind": "claim",
+   "source": "various",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summary of Schapire 1998, Raetsch and Warmuth 2002, Rosset 2004a, Hastie 2007",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p.616"
+  },
+  {
+   "claim": "Bet on sparsity principle: use a procedure that does well in sparse problems, since no procedure does well in dense problems.",
+   "kind": "claim",
+   "source": "various",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "High-dimensional problems; qualified by target, dictionary size, training size, NSR",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p.611"
+  }
+ ],
+ "limits": [
+  "Simulations only (spam, mixture, prostate, synthetic); Fig 16.2 picks lambda by test error (oracle), not CV",
+  "Most comparisons are read off figures; few numbers printed",
+  "Fig 16.8 vs Rulefit comparison is not like-for-like (CV used for Rulefit)",
+  "Lasso and FS0 paths equal only if coefficients monotone / basis uncorrelated",
+  "Chapter does not cover modern gradient boosting libraries (XGBoost, LightGBM)"
+ ],
+ "practices": [
+  "Treat bagging, random forests, boosting, stacking and dictionary methods as ensembles of base learners (p.605).",
+  "Use shrinkage (small nu) in gradient boosting rather than nu=1; subset-selection-like no shrinkage is too greedy (p.610).",
+  "Bet on sparsity: prefer L1-type procedures in high dimensions (p.611).",
+  "Stop boosting early using a validation set, since the margin-maximizing end of the path can overfit (p.616).",
+  "Post-process a tree ensemble with the lasso to shrink the model, choosing lambda by cross-validation (p.617, 620).",
+  "Subsample without replacement with eta<=1/2 (and ~1/sqrt(N) for large N) and nu=0.1 to get diverse trees (p.619-620).",
+  "Add rules from trees and original variables to the dictionary before lasso (p.622)."
+ ],
+ "terms": [
+  {
+   "term": "Ensemble learning",
+   "definition": "build a prediction model by combining the strengths of a collection of simpler base models",
+   "where": "p.605"
+  },
+  {
+   "term": "ECOC",
+   "definition": "Error-correcting output codes: one classifier per column of a coding matrix; delta_k(x)=sum_l |C_kl - p_l(x)|",
+   "where": "p.606"
+  },
+  {
+   "term": "Forward stagewise (Alg 16.1)",
+   "definition": "repeatedly pick tree best fitting residuals and nudge its coefficient by eps*sign(beta*)",
+   "where": "p.608"
+  },
+  {
+   "term": "FS0",
+   "definition": "infinitesimal forward stagewise, limit eps->0; fits a monotone lasso",
+   "where": "p.610, 613"
+  },
+  {
+   "term": "Normalized L1 margin",
+   "definition": "m(f)=min_i y_i f(x_i)/sum_k|alpha_k|",
+   "where": "p.615, Eq 16.7"
+  },
+  {
+   "term": "ISLE",
+   "definition": "Importance sampled learning ensemble: subsampled ensemble generation (Alg 16.2) plus lasso post-processing",
+   "where": "p.620"
+  },
+  {
+   "term": "Rule ensemble",
+   "definition": "set of indicator rules derived from every node of every tree, then lasso-fit",
+   "where": "p.622"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dietterich and Bakiri (1995) ECOC",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "error-correcting output codes",
+   "quote": null
+  },
+  {
+   "work": "James and Hastie (1998)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "analysis of ECOC; random codes suffice",
+   "quote": null
+  },
+  {
+   "work": "Efron et al. (2004) LARS",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "piecewise-linear lasso and stagewise paths",
+   "quote": null
+  },
+  {
+   "work": "Hastie et al. (2007)",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "related",
+   "note": "FS0 fits monotone lasso",
+   "quote": null
+  },
+  {
+   "work": "Rosset et al. (2004a)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "boosting converges to margin-maximizer for exp loss and deviance",
+   "quote": null
+  },
+  {
+   "work": "Schapire et al. (1998)",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "margin explanation of AdaBoost",
+   "quote": null
+  },
+  {
+   "work": "Friedman and Popescu (2003, 2008)",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ISLE and RuleFit",
+   "quote": null
+  },
+  {
+   "work": "Friedman (1999) stochastic gradient boosting",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "special case of ISLE generation",
+   "quote": null
+  },
+  {
+   "work": "Friedman et al. (2004)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bet on sparsity example",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 16.1",
+   "caption": "Profiles of estimated coefficients: lasso vs stagewise on prostate data",
+   "page": 609,
+   "why": "shows lasso and boosting-style stagewise paths nearly coincide"
+  },
+  {
+   "figure": "Fig 16.2",
+   "caption": "Simulations that show the superiority of the L1 (lasso) penalty over L2 (ridge)",
+   "page": 612,
+   "why": "sparse vs dense scenarios across NSR"
+  },
+  {
+   "figure": "Fig 16.5",
+   "caption": "L1 margin and test error for AdaBoost on mixture data",
+   "page": 616,
+   "why": "margin maximisation coincides with overfitting"
+  },
+  {
+   "figure": "Fig 16.6",
+   "caption": "Lasso post-processing on spam data",
+   "page": 618,
+   "why": "tree-count reduction vs error"
+  },
+  {
+   "figure": "Fig 16.8",
+   "caption": "Ensemble methods on regression simulation",
+   "page": 621,
+   "why": "subsampling beats full GBM"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.608 Algorithm 16.1",
+   "snippet": "(beta*,k*)=argmin_{beta,k} sum_i (y_i - sum_l alpha_l T_l(x_i) - beta T_k(x_i))^2 ; alpha_k* <- alpha_k* + eps*sign(beta*)",
+   "verbatim": false
+  },
+  {
+   "where": "p.619 Algorithm 16.2",
+   "snippet": "gamma_m = argmin_gamma sum_{i in S_m(eta)} L(y_i, f_{m-1}(x_i)+b(x_i;gamma)); f_m = f_{m-1}+nu b(x;gamma_m)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction renders math with broken symbols and ligatures; figure axes appear as stray numbers.",
+  "Inconsistencies: Fig 16.1 M=220 (caption) vs 250 (text); Fig 16.6 caption first 500 trees vs forest of 1000; Fig 16.8 sub-sampled GBM 'light blue' (text) vs 'green' (caption); ceiling bracket typo in ECOC bits.",
+  "No embedded instructions found."
+ ]
+}

@@ -46,6 +46,7 @@ Read in this order. It is the pillar's reading order, and note numbers are stabl
 |---|---|---|
 | 1.1 | [Statistical foundations](notes/01-statistical-foundations.md) | What is a model estimating, and why does it fail on new data? |
 | 1.2 | [Supervised learning](notes/02-supervised-learning.md) | Which family first, and what controls its complexity? |
+| 1.3 | [Linear models](notes/02b-linear-models.md) | Which penalty goes on the weights, and how is the fit found? |
 
 ### 2. Honest inputs, honest scores
 

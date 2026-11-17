@@ -10,6 +10,7 @@ sources:
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
   - Bruce and Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017), ch. 6
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 17
+  - Hastie, Tibshirani and Friedman, The Elements of Statistical Learning, 2nd ed. (Springer, 2009), ch. 8, 10, 15, 16
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -48,6 +49,8 @@ A [decision tree](02-supervised-learning.md#decision-trees) has low bias and hig
 $$\rho\sigma^2 + \frac{1-\rho}{B}\sigma^2$$
 
 Adding more trees kills the second term; only *decorrelating* the trees attacks the first. That is the whole design of random forests.
+
+**What bagging can and cannot do.** Bagging averages one model fitted to $B$ bootstrap samples. Under squared error the argument is clean: averaging leaves the bias alone and removes variance, so the ideal aggregate over the population never has a higher mean squared error than a single fit (*ESL*, ch. 8, Eq. 8.52). Three limits follow. It helps only unstable fits such as trees; a fit that is linear in the data, such as a spline smoother, comes back essentially unchanged. It does not reduce bias: on 100 points in two classes separated by the line $x_1 + x_2 = 1$, bagging 50 single-split stumps gives test error 0.166 where boosting the same stump gives 0.065 (Fig. 8.12). And under 0-1 loss the guarantee is gone: if the true label is always 1 and a classifier predicts 1 with probability 0.4, its error is 0.6 and the error of its bagged majority vote is 1.0. Bagging makes a good classifier better and can make a bad one worse. When the base model outputs class probabilities, ESL recommends averaging those over counting votes (*ESL*, ch. 8, sec. 8.7).
 
 | | Bagging / random forests | Boosting |
 |---|---|---|
@@ -102,6 +105,10 @@ The same out-of-bag estimate drives R's `randomForest` printout. With 500 trees 
 
 Two further points from the statisticians' account of the same method (*Computer Age*, ch. 17). The OOB error is cross-validation at no extra cost: each row is predicted by averaging only the trees whose bootstrap sample missed it, and once the number of trees is about three times the number the forest needs to stabilise, the OOB error is equivalent to leave-one-out CV. The number of trees is therefore not a tuning parameter, only a stability one: enough for the estimate to settle, and too many cannot overfit. The classic `m` choices are $\sqrt{p}$ or $p/3$; on the 57-feature spam data a forest with $m=7$ beats bagging ($m=57$), and both beat a single tree (9.3% test error) and the lasso (7.1% linear, 5.7% with interactions). A small $m$ also spreads variable importance across correlated predictors instead of crowning one, the same sharing that ridge does for coefficients (the importance plots are in [note 08](08-model-interpretability.md)).
 
+**What the forest can and cannot average away.** For $B$ identically distributed trees with pairwise correlation $\rho$, the variance of their average is $\rho\sigma^2 + \frac{1-\rho}{B}\sigma^2$. More trees shrink only the second term; the random feature subset exists to shrink $\rho$, which for bootstrapped trees is "0.05 or lower" (*ESL*, ch. 15, Eq. 15.1). Bias is the same as a single tree's, so every gain is variance. The inventors' defaults are $m=\lfloor\sqrt{p}\rfloor$ with minimum node size 1 for classification and $m=\lfloor p/3\rfloor$ with node size 5 for regression, and ESL says they "should be treated as tuning parameters": on California housing (8 features) $m=6$ "performs much better than the default value" of 2. Against boosting the forest is close but seldom ahead. On the spam test set of 1,536 emails it scores 4.88% error, "not significantly worse" than gradient boosting's 4.5%, while bagging's 5.4% is significantly worse than either by a McNemar test. On California housing the forest stabilises at about 200 trees while boosting is still improving at 1,000, and the weaker boosted model beats the best forest (Wilcoxon p-value 0.007 on absolute errors) (*ESL*, ch. 15, Figs. 15.1 and 15.3, one train/test split each).
+
+Two cautions on the folklore. A small $m$ fails when few features matter among many: the chance that a split is even offered a relevant variable falls, and the gap to boosting widens. The damage is slower than it sounds, though: with 6 relevant and 100 noise variables and $m\approx 10$ that chance is 0.46, and the forest keeps pace with boosting in ESL's simulation. And "cannot overfit" is true only of the number of trees. The limit that more trees converge to is an average of fully grown trees, which "can result in too rich a model"; ESL finds depth control seldom buys much, and rarely anything for classification (*ESL*, ch. 15, sec. 15.3.4).
+
 | Parameter | Effect | Default advice |
 |---|---|---|
 | `n_estimators` | More trees: smoother, more stable; diminishing returns | As many as time and memory allow (100–500) |
@@ -114,15 +121,17 @@ Two further points from the statisticians' account of the same method (*Computer
 
 `ExtraTreesClassifier` adds a third source of randomness (random split thresholds); faster, sometimes as good.
 
+**Pruning the ensemble afterwards.** The trees of a fitted forest can be treated as features and reweighted by a lasso, which keeps a few and zeroes the rest. On the spam data, applying the lasso to the first 500 trees of a 1,000-tree forest ($m=7$, trees grown to full depth) "reduces the forest to about 40 trees" and matches gradient boosting; ESL prints the curves, not the error values. The same step on a boosted ensemble did not lower the test error but cut the tree count "by a factor of five" (*ESL*, ch. 16, Figs. 16.6 and 16.7, selection shown on the test data, not by cross-validation). The argument for the L1 penalty is ESL's "bet on sparsity": "Use a procedure that does well in sparse problems, since no procedure does well in dense problems." The same chapter reads boosting with a small learning rate as a path of L1-regularised fits over the space of trees, which is why early stopping there acts like a lasso penalty (*ESL*, ch. 16).
+
 ---
 
 ## Gradient boosting
 
-Friedman framed boosting as gradient descent on a loss ([doi:10.1214/aos/1013203451](https://doi.org/10.1214/aos/1013203451), Annals of Statistics 2001). Fit a shallow tree; compute the residuals (more generally, the negative [gradient](02-supervised-learning.md#vectors-matrix-products-and-the-gradient) of the loss with respect to the current predictions); fit the next tree to those; add it scaled by a learning rate; repeat.
+Friedman framed boosting as gradient descent on a loss ([doi:10.1214/aos/1013203451](https://doi.org/10.1214/aos/1013203451), Annals of Statistics 2001). Fit a shallow tree; compute the residuals (more generally, the negative [gradient](02b-linear-models.md#vectors-matrix-products-and-the-gradient) of the loss with respect to the current predictions); fit the next tree to those; add it scaled by a learning rate; repeat.
 
 $$F_m(x) = F_{m-1}(x) + \eta \, h_m(x), \qquad h_m \approx -\frac{\partial L(y, F_{m-1}(x))}{\partial F_{m-1}(x)}$$
 
-For squared error the negative gradient *is* the residual; for log-loss it is $y - p$. Gradient boosting is gradient descent in function space. The `learning_rate` here is a shrinkage factor on each tree's contribution, not the step size of [SGD](02-supervised-learning.md#vectors-matrix-products-and-the-gradient) on weights: no weight is being stepped, and a smaller value just means more, smaller corrections.
+For squared error the negative gradient *is* the residual; for log-loss it is $y - p$. Gradient boosting is gradient descent in function space. The `learning_rate` here is a shrinkage factor on each tree's contribution, not the step size of [SGD](02b-linear-models.md#vectors-matrix-products-and-the-gradient) on weights: no weight is being stepped, and a smaller value just means more, smaller corrections.
 
 ```python
 from sklearn.ensemble import GradientBoostingClassifier
@@ -159,6 +168,8 @@ lr 0.01                   train 0.988  test 0.958
 *Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 17.10*
 
 **Boosting against a forest, and trimming the ensemble.** Boosting slightly beat a random forest on both the ALS and spam data, but at the price of cross-validating three parameters (rounds, depth, shrinkage), whereas the forest is almost automatic; on spam a McNemar test finds boosting and the forest not significantly different, and both better than bagging. `gbm` grows each tree on a 50% subsample by default, which acts like bagging. AdaBoost, the original boosting algorithm for $\pm 1$ labels, reweights misclassified points so the classifier just fitted has weighted error 0.5; it turns out to be forward-stagewise fitting of the exponential loss, whose left tail punishes confident mistakes far harder than the logistic loss, and on spam it matches binomial gradient boosting. Because shrunken trees are similar, a non-negative lasso over the trees can pick and reweight a subset: on the ALS data it matched the depth-2 boosted model with about a third of the trees, though choosing the number to keep is critical (*Computer Age*, ch. 17, Fig. 17.13).
+
+**How weak the weak learner can be.** ESL's opening example is the cleanest demonstration. On ten Gaussian features with the class set by whether the squared radius exceeds its median (2,000 training cases, 10,000 test, no label noise), a single stump has 45.8% test error, barely better than a coin. AdaBoost on stumps reaches 5.8% after 400 rounds, against 24.7% for a single 244-node tree. Training error hits zero at around 250 rounds and the test error keeps falling, because the exponential loss being minimised is still decreasing after the misclassification count has nothing left to give (*ESL*, ch. 10, Figs. 10.2 and 10.3, one simulated dataset). The price of that loss is robustness: ESL concedes that AdaBoost degrades with overlapping classes and mislabelled training data, which is the case for the deviance loss that gradient boosting uses for classification.
 
 Because `n_estimators` and `learning_rate` trade against each other, a grid over both is wasteful; early stopping picks `n_estimators` for you. [Note 09](09-training-and-tuning.md#early-stopping-is-regularisation-too) explains why stopping acts as regularisation.
 
@@ -250,6 +261,10 @@ rf 0.972  svc 0.965  stack 0.972
 ```
 
 Gains are usually small and the system gets harder to maintain. Kaggle uses stacking heavily (see the Kaggle notebook in [NLP text classification](../../03-nlp/notes/02-text-classification.md)); production usually doesn't.
+
+Why the meta-model must see out-of-fold predictions: fit the combining weights on in-sample predictions and the most complex model takes all the weight, because it fits the training rows best. ESL's stacking weights minimise $\sum_i \big(y_i - \sum_m w_m \hat f_m^{-i}(x_i)\big)^2$, where $\hat f_m^{-i}$ is model $m$ fitted without row $i$; constraining the weights to be non-negative and sum to 1 keeps them readable as shares (*ESL*, ch. 8, Eq. 8.59). That is the job `cv=5` does above. The Bayesian alternative weights each model by its posterior probability, for which BIC is the cheap approximation, and the authors say they have "seen no real evidence" that the full computation is worth the effort over BIC.
+
+A cousin worth knowing is **bumping**: fit the model on bootstrap samples and keep the single fit with the lowest error on the original training data, not the average. It returns one readable model and can jolt a greedy search out of a bad start. On data where the classes follow a pure interaction of two features, so that no first split helps on its own, 20 bootstrap samples were enough to find a tree with near-optimal splits (*ESL*, ch. 8, sec. 8.9, Fig. 8.13). The candidates must be of similar complexity, for instance trees with the same number of leaves.
 
 ---
 

@@ -1,0 +1,467 @@
+{
+ "schema": 1,
+ "key": "sha1:06780cc26b6b",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch19-web-search-basics.pdf",
+ "bib": {
+  "title": "Introduction to Information Retrieval, Chapter 19: Web search basics",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition, April 1, 2009 draft)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 53668,
+  "chars_total": 53668,
+  "engine": "pymupdf",
+  "skipped": "Reference list at the end is only a short prose paragraph (19.7), read. Figure bodies (19.1-19.9) are drawings, text-extraction of 19.7 and 19.8 is garbled letters; captions read."
+ },
+ "type": "book-chapter",
+ "question": "How does web search differ from classical IR, and how are web index size and duplicate pages estimated or handled?",
+ "hypothesis": null,
+ "contributions": [
+  "Background on web history, graph structure, spam, advertising and user needs (19.1-19.4)",
+  "Capture-recapture index-size estimation with sampling biases (19.5)",
+  "Near-duplicate detection by shingling and min-hash sketches (19.6)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Shingling with k=4 is the typical value for near-duplicate web page detection.",
+   "kind": "reported",
+   "source": "Broder et al. 1997 (credited in 19.7)",
+   "metric": "shingle length k",
+   "value": "4",
+   "unit": "terms (shingle length k)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "k-shingles = all consecutive k-term sequences of a document; web pages",
+   "quote": "(k = 4 is a typical value used in the detection of near-duplicate web pages)",
+   "table": null,
+   "note": null,
+   "where": "p.438 (19.6)"
+  },
+  {
+   "claim": "Two documents are declared near duplicates if the Jaccard coefficient of their shingle sets exceeds a preset threshold, example 0.9.",
+   "kind": "reported",
+   "source": "Broder et al. 1997",
+   "metric": "near-duplicate threshold",
+   "value": "0.9",
+   "unit": "Jaccard coefficient",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Jaccard of shingle sets S(d1), S(d2); threshold is an example ('say')",
+   "quote": "if it exceeds a preset threshold (say, 0.9), we",
+   "table": null,
+   "note": "Quote is split over a line break; the full sentence is 'if it exceeds a preset threshold (say, 0.9), we declare them near duplicates and eliminate one from indexing.' The sketch-overlap threshold example later is 80% (160 of 200), a different, looser value.",
+   "where": "p.438 (19.6)"
+  },
+  {
+   "claim": "Each shingle is hashed to a 64-bit value; the min over a random permutation of the hashes equals for two documents with probability equal to their Jaccard coefficient (Theorem 19.1).",
+   "kind": "reported",
+   "source": "Broder et al. 1997",
+   "metric": "hash width",
+   "value": "64",
+   "unit": "bits (hash width)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Shingles mapped to a 64-bit hash space; pi a random permutation of 64-bit integers",
+   "quote": "First, we map every shingle into",
+   "table": null,
+   "note": null,
+   "where": "p.438 (19.6)"
+  },
+  {
+   "claim": "A sketch of 200 independent random permutations (min value each) per document estimates Jaccard as |psi_i intersect psi_j|/200.",
+   "kind": "reported",
+   "source": "Broder et al. 1997",
+   "metric": "sketch size",
+   "value": "200",
+   "unit": "permutations per sketch",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200 independent random permutations, 'a choice suggested in the literature'; sketch psi(d) = the 200 min values",
+   "quote": "Repeat the process independently for 200 random permutations",
+   "table": null,
+   "note": null,
+   "where": "p.440 (19.6)"
+  },
+  {
+   "claim": "With a sketch-overlap threshold of 80% the count of shared min values must be at least 160 of 200.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "min shared sketch values",
+   "value": "160",
+   "unit": "shared sketch values",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200-value sketches, threshold 80%",
+   "quote": "the threshold were 80%, we would need the count to be at least 160 for any",
+   "table": null,
+   "note": null,
+   "where": "p.441 (19.6)"
+  },
+  {
+   "claim": "By some estimates as many as 40% of web pages are duplicates of other pages.",
+   "kind": "reported",
+   "source": null,
+   "metric": "duplicate share",
+   "value": "40",
+   "unit": "% of web pages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web circa the mid-2000s; estimate, no study named in the section",
+   "quote": "as many as 40% of the pages on the Web are duplicates of other",
+   "table": null,
+   "note": "Source of the estimate not given in 19.6 or 19.7.",
+   "where": "p.437 (19.6)"
+  },
+  {
+   "claim": "Exact duplicate detection uses a succinct (say 64-bit) fingerprint of page characters, then a full comparison on fingerprint equality; it misses near duplicates.",
+   "kind": "claim",
+   "source": null,
+   "metric": "fingerprint width",
+   "value": "64",
+   "unit": "bits (fingerprint)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Exact duplicate step before shingling",
+   "quote": "a succinct (say 64-bit) digest of the characters on that",
+   "table": null,
+   "note": null,
+   "where": "p.438 (19.6)"
+  },
+  {
+   "claim": "Common HTML tags and integers can be removed from the shingle computation, and union-find over sketch-overlapping pairs gives near-duplicate clusters (a variant of single-link clustering).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pipeline: fingerprints remove identical docs, then shingle, sketch, sorted (x,d) lists, count shared values per pair, union-find",
+   "quote": "We may also",
+   "table": null,
+   "note": null,
+   "where": "p.440-441 (19.6)"
+  },
+  {
+   "claim": "Super-shingles (shingling the sorted sketch) prune pairs: only pairs sharing a super-shingle get the exact |psi_i intersect psi_j|/200 computed. Described as a heuristic.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Space reduction for the pairwise sketch comparison",
+   "quote": "This again is a heuristic but can be highly effective",
+   "table": null,
+   "note": null,
+   "where": "p.441 (19.6)"
+  },
+  {
+   "claim": "Mean in-degree of a web page has been 8 to 15 across studies.",
+   "kind": "reported",
+   "source": "studies not named in the section; power law exponent credited to Kumar et al. 1999",
+   "metric": "average in-degree",
+   "value": "8 to 15",
+   "unit": "in-links per page",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Static web graph; range over several studies",
+   "quote": "has averaged from roughly 8 to 15, in a range of studies",
+   "table": null,
+   "note": null,
+   "where": "p.425 (19.2.1)"
+  },
+  {
+   "claim": "The in-degree distribution is a power law with exponent alpha 2.1, not Poisson.",
+   "kind": "reported",
+   "source": "Kumar et al. 1999",
+   "metric": "alpha",
+   "value": "2.1",
+   "unit": "power-law exponent alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pages with in-degree i proportional to 1/i^alpha; widely reported",
+   "quote": "the value of α typically",
+   "table": null,
+   "note": "Quote ends at a line break; full phrase 'the value of α typically reported by studies is 2.1.' Zipf's law for words has alpha=1 (footnote 1).",
+   "where": "p.426 (19.2.1)"
+  },
+  {
+   "claim": "Altavista reported about 30 million static pages crawled and indexed at end of 1995.",
+   "kind": "reported",
+   "source": "Altavista report, not cited",
+   "metric": "index size",
+   "value": "30 million",
+   "unit": "static pages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Altavista, end of 1995",
+   "quote": "approximately 30 million static web pages",
+   "table": null,
+   "note": null,
+   "where": "p.424 (19.2)"
+  },
+  {
+   "claim": "Average web query is 2 to 3 keywords.",
+   "kind": "reported",
+   "source": null,
+   "metric": "query length",
+   "value": "2 and 3",
+   "unit": "keywords per query",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Range from 'a range of studies'",
+   "quote": "somewhere between 2 and 3",
+   "table": null,
+   "note": null,
+   "where": "p.432 (19.4)"
+  },
+  {
+   "claim": "Search engines generally index only the first few thousand words of a page.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Index-size ambiguity point 1",
+   "quote": "search engines generally index only the first few thousand words in a web page",
+   "table": null,
+   "note": null,
+   "where": "p.433 (19.5)"
+  },
+  {
+   "claim": "Capture-recapture estimates the index size ratio |E1|/|E2| as y/x, from x = fraction of E1 pages found in E2 and y = fraction of E2 pages found in E1.",
+   "kind": "reported",
+   "source": "Bharat and Broder 1998 and later (19.7)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Assumes both engines index independent uniform random subsets of a finite Web; chapter says this is far from true",
+   "quote": "|E1|",
+   "table": null,
+   "note": "Equation 19.1 in the text extraction is garbled across lines; the form is |E1|/|E2| ~ y/x from x|E1| ~ y|E2|.",
+   "where": "p.435 (19.5, Eq 19.1)"
+  },
+  {
+   "claim": "Random-query sampling: take a random conjunctive query on E1, pick a page from the top 100 results, test presence in E2 using 6-8 low-frequency terms of the page.",
+   "kind": "reported",
+   "source": "Bharat and Broder 1998 (inferred from 19.7)",
+   "metric": "terms per test query",
+   "value": "6-8",
+   "unit": "low-frequency terms per presence test",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top 100 results of E1; conjunctive queries",
+   "quote": "choosing 6-8 low-frequency terms in p and",
+   "table": null,
+   "note": null,
+   "where": "p.436 (19.5)"
+  },
+  {
+   "claim": "Navigational queries are best measured by precision at 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Broder (2002) three-way query taxonomy: informational, navigational, transactional",
+   "quote": "the best measure of user satisfaction is precision at",
+   "table": null,
+   "note": null,
+   "where": "p.432 (19.4.1)"
+  },
+  {
+   "claim": "Early taxonomy (Yahoo) surpassed 1000 nodes; manual classification did not scale, and full-text engines won.",
+   "kind": "claim",
+   "source": null,
+   "metric": "taxonomy nodes",
+   "value": "1000",
+   "unit": "distinct nodes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Yahoo! taxonomy tree",
+   "quote": "surpassed 1000 distinct nodes fairly early on",
+   "table": null,
+   "note": null,
+   "where": "p.423 (19.1)"
+  }
+ ],
+ "limits": [
+  "2008-9 web: AltaVista, Goto/Overture, Yahoo taxonomy, sponsored results shown 'to the right' of results; all dated.",
+  "No experiments; numbers (40% duplicates, in-degree 8-15, 2-3 keywords, k=4, 200 permutations, 0.9 threshold) are cited ranges or 'say' examples without data tables.",
+  "Threshold 0.9 and 80% are illustrations not tuned values.",
+  "Shingling treats a document as a set of exact term sequences: no semantic near-duplicates (paraphrase, translation, embeddings), no chunk-level dedup for RAG corpora.",
+  "Capture-recapture assumes independent uniform subsets, which the chapter itself says is far from true.",
+  "Chapter says the 200-permutation choice is 'suggested in the literature' but does not state error bounds."
+ ],
+ "practices": [
+  "Remove exact duplicates first with a 64-bit fingerprint, then detect near duplicates with shingles (19.6, p.437-441).",
+  "Drop common HTML tags and integers before shingling so ubiquitous shingles do not mask duplication signal (p.440).",
+  "Use k=4 term shingles and a 200-permutation min-hash sketch, cluster with union-find, and prune pairs with super-shingles (p.438-441).",
+  "Do not pick random terms from a standard dictionary to sample a search index; build a sample web dictionary, and expect bias toward longer documents (p.436).",
+  "Measure navigational queries by precision at 1 and informational queries by comprehensiveness (p.432-433)."
+ ],
+ "terms": [
+  {
+   "term": "shingling",
+   "definition": "Given a positive integer k and a sequence of terms in a document d, define the k-shingles of d to be the set of all consecutive sequences of k terms in d.",
+   "where": "p.438"
+  },
+  {
+   "term": "sketch",
+   "definition": "The set of the 200 resulting values of x_i^pi (the smallest permuted hash under each of 200 random permutations) is the sketch psi(d_i) of d_i.",
+   "where": "p.440"
+  },
+  {
+   "term": "super-shingles",
+   "definition": "Shingles of the sorted sketch sequence; documents sharing one get a precise sketch-overlap computation.",
+   "where": "p.441"
+  },
+  {
+   "term": "capture-recapture method",
+   "definition": "Classical estimation technique: x|E1| ~ y|E2|, so |E1|/|E2| ~ y/x.",
+   "where": "p.435"
+  },
+  {
+   "term": "spam",
+   "definition": "The manipulation of web page content for the purpose of appearing high up in search results for selected keywords.",
+   "where": "p.427"
+  },
+  {
+   "term": "cloaking",
+   "definition": "The spammer's web server returns different pages depending on whether the http request comes from a crawler or a human browser.",
+   "where": "p.428"
+  },
+  {
+   "term": "informational / navigational / transactional queries",
+   "definition": "Broder's three categories of web query: broad-topic information, a single entity's home page, or a prelude to a web transaction.",
+   "where": "p.432-433"
+  },
+  {
+   "term": "bowtie structure",
+   "definition": "Web graph with IN, SCC and OUT sets plus tubes and tendrils.",
+   "where": "p.426-427"
+  },
+  {
+   "term": "cost per click (CPC)",
+   "definition": "Pricing model where an ad is priced by number of clicks rather than impressions.",
+   "where": "p.430"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Broder et al. 1997 (shingling)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Shingling and min-hash sketches credited to Broder et al. (1997)",
+   "quote": "Shingling was introduced by Broder et al. (1997)"
+  },
+  {
+   "work": "Bharat and Broder 1998; Lawrence and Giles 1998; Henzinger et al. 2000; Bar-Yossef and Gurevich 2006",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Index-size estimation lineage; state of the art is Bar-Yossef and Gurevich 2006",
+   "quote": "The state of the art is Bar-Yossef and Gure-"
+  },
+  {
+   "work": "Broder 2002 (query taxonomy)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Informational/navigational/transactional taxonomy",
+   "quote": "The taxonomy of web queries in Section 19.4 is due to Broder (2002)."
+  },
+  {
+   "work": "Kumar et al. 1999 / 2000; Broder et al. 2000 (web graph)",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Power law exponent 2.1, bowtie structure",
+   "quote": null
+  },
+  {
+   "work": "Bharat et al. 2000",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Shingling used to detect identical websites rather than pages",
+   "quote": null
+  },
+  {
+   "work": "Bush 1945 (memex)",
+   "year": 1945,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Foreshadowed the Web",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 19.8",
+   "caption": "Illustration of shingle sketches. We see two documents going through four stages of shingle sketch computation.",
+   "page": "p.439",
+   "why": "Shows hash, permute, take minimum for two documents; the idea behind min-hash in one picture."
+  },
+  {
+   "figure": "Fig 19.9",
+   "caption": "Two sets Sj1 and Sj2; their Jaccard coefficient is 2/5.",
+   "page": "p.440",
+   "why": "Row-type matrix (C00,C01,C10,C11) behind the proof of Theorem 19.1."
+  },
+  {
+   "figure": "Fig 19.4",
+   "caption": "The bowtie structure of the Web. Here we show one tube and three tendrils.",
+   "page": "p.427",
+   "why": "Web graph shape; not relevant to RAG."
+  },
+  {
+   "figure": "Fig 19.7",
+   "caption": "The various components of a web search engine.",
+   "page": "p.434",
+   "why": "Crawler, indexer, ad indexes and user in one diagram; the crawl/index/serve pipeline."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.438, Theorem 19.1",
+   "snippet": "J(S(d1), S(d2)) = P(x1^pi = x2^pi)",
+   "verbatim": false
+  },
+  {
+   "where": "p.440, Eq 19.2",
+   "snippet": "J(Sj1, Sj2) = C11 / (C01 + C10 + C11)",
+   "verbatim": false
+  },
+  {
+   "where": "p.435, Eq 19.1",
+   "snippet": "|E1|/|E2| ~ y/x",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and figure labels in the text cache are garbled by line breaks (Eq 19.1, Fig 19.7, 19.8, 19.9); code snippets are re-typeset, not verbatim.",
+  "Chapter has exercises 19.1-19.10 with no answers; Exercise 19.7 answer would be |A|/|B| = 0.5/0.3 = 5/3 by Eq 19.1 (my arithmetic, not in the text).",
+  "No embedded instructions found."
+ ]
+}

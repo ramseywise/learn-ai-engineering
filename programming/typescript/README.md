@@ -1,32 +1,39 @@
 # TypeScript
 
-> From "JavaScript for Python developers" to typed LLM apps, in nine modules. Each module is a
-> short note plus exercises that are checked by the type checker, by `node --test`, or by both.
-> Study deck: [typescript.pptx](slides/typescript.pptx), which librarian turns into flashcards (source: [deck.yaml](slides/deck.yaml)).
-> Jump to: [Syllabus](#syllabus) · [Layout](#layout) · [Setup](#setup) · [How exercises are checked](#how-exercises-are-checked) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
+Go from "JavaScript for Python developers" to typed LLM applications. Three steps and nine short notes, each with exercises that are checked by the type checker, by `node --test`, or by both.
 
----
+**What you should already know.** [Python 03 Language for engineers](../python/README.md): TypeScript starts after it, so types and asynchronous work already have context. The [async](notes/06-async.md) note compares promises with the asyncio model from [Python 03 · 07 concurrency](../python/03-language-for-engineers/notes/07-concurrency.md).
+
+## Lecture
+
+Start with the overview deck, [TypeScript](slides/typescript.pptx) ([PDF](slides/typescript.pdf)), on the same examples as the notes. Librarian turns each slide into a flashcard: the title is the question and the takeaway is the rule that answers it.
+
+## The core
+
+TypeScript's types exist only while the code is being checked. They are erased before the program runs, so a type is a claim about a value and not a check on it. The question this track keeps asking is: **what does the type checker know here, and what does the running program actually have?** Inside your own code the two agree if you let the checker do its work. At every boundary (JSON, environment variables, a model's output) they agree only if you parse.
+
+There are three steps: JavaScript itself and the types you write every day, then types computed from other types, then the places where a program meets the outside world. The notes are written for someone who knows Python and name the Python equivalent wherever there is one.
 
 ## Syllabus
 
-| # | Note | You can… | Exercises |
-|---|---|---|---|
-| 01 | [JavaScript for Python developers](notes/01-js-for-python-devs.md) | Map Python idioms to JS and avoid `==`, `sort()` and truthiness traps | [01-js-basics](practice/exercises/01-js-basics.ts) |
-| 02 | [Everyday types](notes/02-everyday-types.md) | Annotate boundaries, choose `interface` vs `type`, use `unknown` not `any` | [ts-ex 01](practice/typescript-exercises/01/index.ts) |
-| 03 | [Unions and narrowing](notes/03-unions-and-narrowing.md) | Model discriminated unions with an exhaustive `switch`, write type predicates | [ts-ex 02](practice/typescript-exercises/02/index.ts) · [03](practice/typescript-exercises/03/index.ts) · [04](practice/typescript-exercises/04/index.ts) |
-| 04 | [Generics](notes/04-generics.md) | Write constrained generics, `keyof`/`T[K]`, overloads | [ts-ex 06](practice/typescript-exercises/06/index.ts) · [07](practice/typescript-exercises/07/index.ts) · [09](practice/typescript-exercises/09/index.ts) |
-| 05 | [Building types from types](notes/05-type-transformations.md) | Use utility, mapped, conditional and template-literal types | [ts-ex 05](practice/typescript-exercises/05/index.ts) · [08](practice/typescript-exercises/08/index.ts) · stretch: [14](practice/typescript-exercises/14/index.ts) · [15](practice/typescript-exercises/15/index.ts) · 12 easy and 14 medium challenges |
-| 06 | [Async](notes/06-async.md) | Run work in parallel vs sequentially, add timeouts, retries, concurrency limits | [06-async](practice/exercises/06-async.ts) · [ts-ex 10](practice/typescript-exercises/10/index.ts) |
-| 07 | [Modules, `tsconfig` and tooling](notes/07-modules-and-tooling.md) | Set up ESM + strict config, write `.d.ts` files, augment modules | [ts-ex 11](practice/typescript-exercises/11/index.ts) · [12](practice/typescript-exercises/12/index.ts) · [13](practice/typescript-exercises/13/index.ts) |
-| 08 | [Runtime validation with Zod](notes/08-runtime-validation-zod.md) | Parse env, JSON and LLM output into typed values at the boundary | [08-zod](practice/exercises/08-zod.ts) |
-| 09 | [TypeScript for AI apps](notes/09-typescript-for-ai-apps.md) | Narrow content blocks, drive a tool loop from `stop_reason`, stream, get structured output | [09-ai-helpers](practice/exercises/09-ai-helpers.ts) · [live example](practice/examples/claude.ts) |
+One row per step. **Core concepts** are the ideas the step turns on, **Study** is what to read, **Labs** is what to do afterwards (the track's own exercises first, then the drills on the same topic), and **Sources** is where to read more. How to run the labs and how each kind is checked: [practice/README.md](practice/README.md).
 
-The type challenges are in [`practice/type-challenges/challenges/`](practice/type-challenges/challenges/).
-Solutions sit next to each vendored exercise (`index.solution.ts`), in
-[`practice/type-challenges/solutions/`](practice/type-challenges/solutions/) and in
-[`practice/solutions/`](practice/solutions/). Try each exercise before you open them.
+| Submodule | Core concepts | Study | Labs | Sources |
+|---|---|---|---|---|
+| **1. JavaScript and core types:** the language you already half know | JavaScript is not Python with braces: `===` always, `sort()` compares strings by default, and truthiness differs. Annotate signatures and exports, and let inference do the rest. `unknown` instead of `any`. "One of these" is a discriminated union whose `switch` ends in a `never` check. | [1 JavaScript for Python developers](notes/01-js-for-python-devs.md) · [2 Everyday types](notes/02-everyday-types.md) · [3 Unions and narrowing](notes/03-unions-and-narrowing.md) | [01-js-basics](practice/exercises/01-js-basics.ts) · ts-ex [01](practice/typescript-exercises/01/index.ts) · [02](practice/typescript-exercises/02/index.ts) · [03](practice/typescript-exercises/03/index.ts) · [04](practice/typescript-exercises/04/index.ts) | [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) · [typescript-exercises](https://github.com/typescript-exercises/typescript-exercises) |
+| **2. Type-level design:** types computed from types | A generic is a function over types, and a constraint says what it may assume. `keyof` and `T[K]` tie a key to its value's type. Utility, mapped and conditional types derive one type from another, so a change in the source type reaches every use. | [4 Generics](notes/04-generics.md) · [5 Building types from types](notes/05-type-transformations.md) | ts-ex [06](practice/typescript-exercises/06/index.ts) · [07](practice/typescript-exercises/07/index.ts) · [09](practice/typescript-exercises/09/index.ts) · [05](practice/typescript-exercises/05/index.ts) · [08](practice/typescript-exercises/08/index.ts) · stretch: [14](practice/typescript-exercises/14/index.ts) · [15](practice/typescript-exercises/15/index.ts) · [type challenges](practice/type-challenges/challenges/), 12 easy and 14 medium · drill: [a typed `groupBy`](../drills/typescript/types/group-by.md) | [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) · [type-challenges](https://github.com/type-challenges/type-challenges) · [Total TypeScript](https://www.totaltypescript.com/): further reading |
+| **3. Production boundaries:** async, modules and the outside world | Always `await` or return a promise. `Promise.all` is for independent work, and a large fan-out needs a limit. `strict` is on from day one. Types are erased and `as` checks nothing, so parse anything from outside with a schema. A tool loop is driven by `stop_reason`. | [6 Async](notes/06-async.md) · [7 Modules, `tsconfig` and tooling](notes/07-modules-and-tooling.md) · [8 Runtime validation with Zod](notes/08-runtime-validation-zod.md) · [9 TypeScript for AI apps](notes/09-typescript-for-ai-apps.md) | [06-async](practice/exercises/06-async.ts) · ts-ex [10](practice/typescript-exercises/10/index.ts) · [11](practice/typescript-exercises/11/index.ts) · [12](practice/typescript-exercises/12/index.ts) · [13](practice/typescript-exercises/13/index.ts) · [08-zod](practice/exercises/08-zod.ts) · [09-ai-helpers](practice/exercises/09-ai-helpers.ts) · [live example](practice/examples/claude.ts) · drill: [ESLint](../drills/typescript/eslint.md) | [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) · [Zod](https://zod.dev) · [Anthropic TypeScript SDK](https://github.com/anthropics/anthropic-sdk-typescript) |
 
----
+Solutions sit next to each vendored exercise (`index.solution.ts`), in [`practice/type-challenges/solutions/`](practice/type-challenges/solutions/) and in [`practice/solutions/`](practice/solutions/). Try each exercise before you open them. Timed problems in TypeScript are in [`programming/drills/`](../drills/README.md).
+
+## Rules of thumb
+
+- Types are erased. `as` checks nothing, so parse anything from outside the program with a schema.
+- Annotate function signatures and exports. Let inference handle the rest.
+- Use `unknown` instead of `any`, and narrow before you use it.
+- Model "one of these" as a discriminated union and end the `switch` with a `never` check.
+- Always `await` or return a promise. Use `Promise.all` for independent work and a limit for large fan-outs.
+- Turn on `strict` from day one. Turning it on later is painful.
 
 ## Builds on and feeds into
 
@@ -45,67 +52,6 @@ Solutions sit next to each vendored exercise (`index.solution.ts`), in
 | [DA 05/06 Dashboard stacks](../../data-analytics/05-visualisation-and-storytelling/notes/06-dashboard-stacks-from-python-to-frontend.md) | The TypeScript end of a dashboard stack |
 | [AI Engineering](../../ai-engineering/README.md) | Labs come in TypeScript and Python side by side |
 
----
-
-## Layout
-
-```
-typescript/
-├── README.md
-├── notes/                        01–09
-├── slides/                       deck.yaml and the built study deck; `make slides PILLAR=programming/typescript`
-└── practice/                     one npm project: package.json, tsconfig.json, .gitignore (node_modules/)
-    ├── check.ts                  one tsc run with the errors grouped by exercise; --solutions swaps the solutions in
-    ├── exercises/                own runtime exercises 01, 06, 08, 09
-    ├── solutions/                same names, worked
-    ├── tests/                    node --test, one file per runtime exercise
-    ├── examples/claude.ts        live Anthropic SDK example
-    ├── typescript-exercises/     vendored 01–15 (index.ts, index.solution.ts, test.ts), LICENSE, NOTICE.md
-    └── type-challenges/          challenges/ vendored with its LICENSE; solutions/ written here
-```
-
----
-
-## Setup
-
-```bash
-cd programming/typescript/practice
-npm install                 # TypeScript 7, zod, the Anthropic SDK, @types/node
-npm run typecheck           # ok / FAIL for every type exercise (unsolved ones fail; that's expected)
-node check.ts exercises/03/ # just one exercise; `node check.ts easy` for the easy challenges
-npm test                    # runtime tests for 01, 06, 08, 09
-npm run check               # swaps every solution in: must be 45/45 typecheck + all tests green
-```
-
-Node 22.18+ runs `.ts` files directly by stripping the types, so there is no build step. Only
-`examples/claude.ts` needs `ANTHROPIC_API_KEY`. It exits cleanly without one.
-
----
-
-## How exercises are checked
-
-| Kind | Where | Passes when |
-|---|---|---|
-| Type exercises (vendored) | `typescript-exercises/NN/index.ts` (+ `test.ts`) | `tsc` reports no errors in that folder |
-| Type challenges | `type-challenges/challenges/*.ts` | The `Expect<Equal<…>>` test cases at the bottom compile |
-| Runtime exercises (own) | `exercises/*.ts` + `tests/*.test.ts` | `npm test` is green. The stubs throw `TODO` until you implement them |
-
-`check.ts` runs one `tsc -p .` over the project and groups the errors by exercise. With
-`--solutions` it copies the project to a temp dir and swaps every solution in first.
-
----
-
-## Rules of thumb
-
-- Types are erased. `as` checks nothing, so parse anything from outside the program with a schema.
-- Annotate function signatures and exports. Let inference handle the rest.
-- Use `unknown` instead of `any`, and narrow before you use it.
-- Model "one of these" as a discriminated union and end the `switch` with a `never` check.
-- Always `await` or return a promise. Use `Promise.all` for independent work and a limit for large fan-outs.
-- Turn on `strict` from day one. Turning it on later is painful.
-
----
-
 ## Primary texts
 
 - TypeScript Handbook
@@ -113,9 +59,7 @@ Node 22.18+ runs `.ts` files directly by stripping the types, so there is no bui
 - *type-challenges*
 - Zod documentation
 
-Everything else: [references.md](../references.md).
-
-## Sources
+Licences and what each source was used for:
 
 | Source | License | Used for |
 |---|---|---|
@@ -126,4 +70,10 @@ Everything else: [references.md](../references.md).
 | [Anthropic TypeScript SDK](https://github.com/anthropics/anthropic-sdk-typescript) | MIT | Note 09 and the live example |
 | [Total TypeScript](https://www.totaltypescript.com/) (Matt Pocock), [TypeScript Deep Dive](https://basarat.gitbook.io/typescript/) (Basarat) | Proprietary / read online | Further reading, link only |
 
-Timed and interview-style problems in TypeScript are in [`programming/drills/`](../drills/README.md).
+Everything else: [references.md](../references.md). The deck is built from [`slides/deck.yaml`](slides/deck.yaml) with `make slides PILLAR=programming/typescript`.
+
+## Next
+
+Start with step 1, **JavaScript and core types**: read [1 JavaScript for Python developers](notes/01-js-for-python-devs.md), then do its exercise from the syllabus row.
+
+After step 3 you can write a typed program that stays correct at its edges. Putting one in front of a person is the next track, [frontend and UX](../frontend-and-ux/README.md).

@@ -359,7 +359,7 @@ boosting: subsample             1  0.973  0.903  <- best
   100          71   0.893           83   0.894
 ```
 
-L1 and L2 reach nearly the same best validation score, 0.901 and 0.902, but L1 at `C=1` uses 29 non-zero weights where L2 keeps all 83, so L1 is the choice when a shorter model is worth something. See [note 02](02-supervised-learning.md#regression-ols-ridge-lasso) for lasso. Subsampling did not help: full rows won at 0.903 and a tenth of the rows fell to 0.815. That is one seed on a small sample, but a knob is a hypothesis until a validation curve agrees.
+L1 and L2 reach nearly the same best validation score, 0.901 and 0.902, but L1 at `C=1` uses 29 non-zero weights where L2 keeps all 83, so L1 is the choice when a shorter model is worth something. See [note 02](02b-linear-models.md#regression-ols-ridge-lasso) for lasso. Subsampling did not help: full rows won at 0.903 and a tenth of the rows fell to 0.815. That is one seed on a small sample, but a knob is a hypothesis until a validation curve agrees.
 
 Now a small network, averaged over three seeds. The mechanics live in the [deep learning note](../../02-deep-learning/notes/02-optimisation-and-regularisation.md#regularisation), which measures both knobs on digits.
 
@@ -476,7 +476,7 @@ L2 C=10        |w|   9.27  AUC 0.8978
 L2 C=1000      |w|  19.37  AUC 0.8912
 ```
 
-The two lists trace one path, with $|w|$ the size of the weights. Gradient descent ([note 02](02-supervised-learning.md#vectors-matrix-products-and-the-gradient)) at step 1,000 has size 3.88 and AUC 0.9013. The L2 fit at `C=1` has size 4.88 and AUC 0.9016. Training time and penalty strength are two handles on one thing. Prechelt, [*Early Stopping, But When?*](https://page.mi.fu-berlin.de/prechelt/Biblio/stop_tricks1997.pdf) (Neural Networks: Tricks of the Trade, 1998), says the same of networks: stopping works by limiting the effective size of each dimension, as weight decay does.
+The two lists trace one path, with $|w|$ the size of the weights. Gradient descent ([note 02](02b-linear-models.md#vectors-matrix-products-and-the-gradient)) at step 1,000 has size 3.88 and AUC 0.9013. The L2 fit at `C=1` has size 4.88 and AUC 0.9016. Training time and penalty strength are two handles on one thing. Prechelt, [*Early Stopping, But When?*](https://page.mi.fu-berlin.de/prechelt/Biblio/stop_tricks1997.pdf) (Neural Networks: Tricks of the Trade, 1998), says the same of networks: stopping works by limiting the effective size of each dimension, as weight decay does.
 
 The practical knob is **patience**, the rounds without improvement to wait before giving up. It exists because real validation curves wobble. Prechelt shows one with 16 local minima before overfitting truly starts, and across 1,296 runs on 12 problems, slower stopping rules bought about 4% lower test error for about four times the training.
 

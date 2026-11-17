@@ -41,6 +41,7 @@ sources:
   - https://arxiv.org/abs/2103.01281
   - https://arxiv.org/abs/2308.01475
   - https://arxiv.org/abs/2605.08242
+  - Hastie, Tibshirani and Friedman, The Elements of Statistical Learning, 2nd ed. (Springer, 2009), ch. 14
 confidence: medium
 cleaned: 2026-11-02
 ---
@@ -215,6 +216,8 @@ The evidence for categorical data is more mixed than the warning suggests. Joint
 [Gower's 1971 coefficient](https://doi.org/10.2307/2528823) (*Biometrics*) skips coordinates. For each pair of customers, each number scores absolute difference over the column's range, each category scores 0 for a match and 1 otherwise, and the distance is the average. A column missing for either customer just drops out of that pair's average, which is the method's most useful property and one the coordinate methods don't have. Adding weights is easy, Gower writes, but "how to decide on a rational set of weights is more difficult".
 
 There are no coordinates, so k-means is out. You need a method that takes a distance matrix: **PAM** (k-medoids), whose centres are real customers, or agglomerative clustering with average link. HDBSCAN [also accepts precomputed distances](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.HDBSCAN.html), but I found no benchmark of the pairing.
+
+ESL makes the choice of distance the main decision: "Specifying an appropriate dissimilarity measure is far more important in obtaining success with clustering than choice of clustering algorithm." Its example of data that exists only as distances is a survey in which political science students rated pairwise dissimilarity for 12 countries. It is clustered with 3 medoids, because "K-means clustering could not be applied because we have only distances rather than raw observations" (*ESL*, ch. 14, sec. 14.3.10, from Kaufman and Rousseeuw 1990). The same chapter warns against scaling by reflex: on its simulated two-group data, standardising the features before K-means "has obscured the two well-separated groups" (*ESL*, ch. 14, Fig. 14.5).
 
 Equal weights don't mean equal say:
 

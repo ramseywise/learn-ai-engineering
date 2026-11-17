@@ -68,7 +68,7 @@ $$dW^{[l]} = \tfrac{1}{m} dZ^{[l]} A^{[l-1]\top}, \quad db^{[l]} = \tfrac{1}{m}\
 
 The statisticians' phrasing of the same recursion is useful when debugging: after a forward pass, each node gets an error term $\delta$ measuring its responsibility for the miss. At the output it is the residual (or a generalised residual, depending on the loss); at an inner layer it is a weighted sum of the error terms of the nodes that use its activation, and the gradient for a layer's weights is the next layer's $\delta$ times this layer's activations (*Computer Age*, ch. 18). That is the $dZ$ and $dW$ lines above in words. The same chapter notes that a one-layer autoencoder with an identity activation recovers the leading principal components, so a nonlinear autoencoder is nonlinear PCA (it needs no labels, and was once used to warm-start the weights of a supervised net).
 
-Here `dW` is shorthand for $\partial L / \partial W$, the gradient of the loss with respect to that layer's weights; [Vectors, matrix products and the gradient](../../01-classical-ml/notes/02-supervised-learning.md#vectors-matrix-products-and-the-gradient) builds it up for one linear layer.
+Here `dW` is shorthand for $\partial L / \partial W$, the gradient of the loss with respect to that layer's weights; [Vectors, matrix products and the gradient](../../01-classical-ml/notes/02b-linear-models.md#vectors-matrix-products-and-the-gradient) builds it up for one linear layer.
 
 **Building your Deep Neural Network: Step by Step** (course 1, week 4) structures this as cached forward and backward functions. Here they are, cut down to the three the rest depend on:
 

@@ -1,54 +1,55 @@
-# Python for data analysis
+# Working with data
 
-> The on-ramp to pandas. Seven chapters take you from never having seen a DataFrame to loading, cleaning, reshaping, summarising and plotting real data. Each chapter has a notebook to practise in.
->
-> Jump to: [Why](#why-this-comes-first) · [Story](#the-story) · [Reading order](#reading-order) · [Rules of thumb](#rules-of-thumb) · [Deck](#deck) · [Practice](#practice) · [Sources](#sources)
+Turn a raw export into a table you can trust. Three steps, each with the check that catches its usual mistake: extract the rows you need, clean them until every column is the type it claims to be, and summarise them.
 
----
+**What you should already know.** Nothing below is taught again here. Tick each line off, and go back to the chapter it links for any you cannot.
 
-## What this is
+Python, from the [Python track](../../programming/python/README.md):
 
-The working pandas, NumPy, matplotlib and seaborn you need to do analysis in Python. It assumes the Python of [`programming/python/`](../../programming/python/) modules 01 to 03 and no previous pandas. All code in the notes was run on Python 3.13, pandas 3.1.0, NumPy 2.5.4, matplotlib 3.11.2 and seaborn 0.13.2, with the output shown as it printed.
+- [ ] Tell an `int`, a `float`, a `str`, a `bool` and `None` apart, and convert between them ([values and types](../../programming/python/01-foundations/notes/01-values-and-conditionals.md))
+- [ ] Write a function that takes arguments and returns a value ([functions](../../programming/python/01-foundations/notes/02-functions.md))
+- [ ] Loop over a sequence and keep a running result ([loops](../../programming/python/01-foundations/notes/03-loops.md))
+- [ ] Open a text file, and split, strip and compare strings ([strings and files](../../programming/python/01-foundations/notes/04-strings-and-files.md))
+- [ ] Hold records in lists, dictionaries and tuples ([collections](../../programming/python/01-foundations/notes/05-collections.md))
 
-## Why this comes first
+Relational tables, from the [SQL track](../../programming/sql/README.md). These help but are not required, because each idea returns here on a table in memory:
 
-Every later pillar in [data analytics](../README.md) starts with "given a table". An analyst spends more of the job getting the table right than running any model on it, and the errors made here do not raise exceptions. A join that doubles rows, a filter that drops missing keys and an average of averages all give a clean-looking number that is wrong. So these chapters teach the checks along with the calls.
+- [ ] Pick columns and filter rows with `SELECT … WHERE` ([selecting and filtering](../../programming/sql/notes/01-select-and-filter.md))
+- [ ] Say why a missing value is not a zero ([missing data](../../programming/sql/notes/02-nulls-and-expressions.md))
+- [ ] Get one row per group with `GROUP BY` ([aggregation](../../programming/sql/notes/03-aggregation.md))
+- [ ] Match two tables on a key, and say what a left join keeps ([joins](../../programming/sql/notes/04-joins.md))
 
-Pandas 3.0 changed enough that most tutorials and books, including McKinney's second edition, now mislead in places. The chapters use the current behaviour and say where old advice breaks.
+## Lecture
 
-## The story
+Start with the overview deck, [Python for Data Analysis](slides/python-for-data-analysis.pptx) ([PDF](slides/python-for-data-analysis.pdf)), on the same shop data as the notes. It was built for the earlier five-part order (load, select and join, summarise, time, plot) and keeps that order until it is rebuilt as one overview and one lecture per step.
 
-A small online shop sells kettles, grinders, filters and scales. Its orders start as a list of dictionaries, which shows the problem a DataFrame solves (chapter 1). The real export is a messy CSV with stray capitals, duplicates and a `$` in the price column, and it becomes a clean frame of 11 orders (chapter 2). We learn to ask for exactly the rows we want (chapter 3), attach customers and products without letting a join quietly inflate revenue from 523.5 to 756.0 (chapter 4), and summarise by group, where averaging rates gives the wrong margin (chapter 5). Then the shop gets a full year of daily revenue, with an outage and a December jump, to learn the rules of time (chapter 6) and to see it all in charts (chapter 7).
+## The core
 
-## Reading order
+This module is about the data, not about Python. Every later module in [data analytics](../README.md) starts with "given a table", and an analyst spends more of the job getting that table right than running any model on it. The mistakes made here do not raise exceptions. A join that doubles rows, a price column that is still text and an average of averages all give a clean-looking number that is wrong. So the one question this module keeps asking is: **is this number the one you meant?**
 
-| # | Chapter | What you can do afterwards | Practice | Go deeper |
+There are three steps between an export and a number, and each has a mistake to learn to catch. Analysis and charts come after them, in the modules that follow.
+
+The steps are the same in any tool. The notes use pandas, and the choice between tools is mostly about where the data lives and how big it is:
+
+| Tool | Reach for it when | Where the course says so |
+|---|---|---|
+| SQL | The data lives in a database. Filter and aggregate there, so the database reads less and sends back less. | [SQL 09](../../programming/sql/notes/09-sql-from-python.md) |
+| pandas | The result fits in memory and you need to clean, reshape and look at it. | This module |
+| Polars | The files are large but still fit on one machine. A lazy scan pushes the filter and the column choice into the read. | [DE 01/08](../../data-engineering/01-storage-and-compute-foundations/notes/08-distributed-compute.md) |
+
+## Syllabus
+
+One row per step. **Core concepts** are the ideas that make the step go right in any tool, **Study** is what to read, **Labs** is the notebook to work through afterwards, and **Sources** is where to read more. How to run the labs: [practice/README.md](practice/README.md).
+
+| Submodule | Core concepts | Study | Labs | Sources |
 |---|---|---|---|---|
-| 1 | [Series and DataFrame](notes/01-series-and-dataframe.md) | Explain labels, alignment, dtypes and Copy-on-Write; make a first check of any frame | [1_Overview](practice/1_Overview.ipynb), a refresher on the Python involved | [umich_pandas_basics.py](practice/courses/umich_pandas_basics.py) |
-| 2 | [Loading and cleaning](notes/02-loading-and-cleaning.md) | Read a messy CSV, fix text and types, decide what gaps mean, wrap it in one function | [2_Texts](practice/2_Texts.ipynb) | [mckinney/ch06](practice/mckinney/ch06.ipynb), [ch07](practice/mckinney/ch07.ipynb) |
-| 3 | [Indexing and selection](notes/03-indexing-and-selection.md) | Use `loc`, `iloc` and masks without surprises, and set values safely | [3_Arrays](practice/3_Arrays.ipynb) | [wrangle_pandas.py](practice/courses/wrangle_pandas.py) |
-| 4 | [Reshaping and joins](notes/04-reshaping-and-joins.md) | Merge with checks, stack tables, move between long and wide | [4_DataFrames](practice/4_DataFrames.ipynb) | [mckinney/ch08](practice/mckinney/ch08.ipynb) |
-| 5 | [Groupby and aggregation](notes/05-groupby-and-aggregation.md) | Use `agg`, `transform`, `filter` and pivot tables, and compute ratios correctly | [6_Aggregation](practice/6_Aggregation.ipynb) | [mckinney/ch10](practice/mckinney/ch10.ipynb) |
-| 6 | [Time series](notes/06-time-series.md) | Parse dates, resample, shift, handle time zones and use rolling windows without leakage | [7_Time_Series](practice/7_Time_Series.ipynb) | [mckinney/ch11](practice/mckinney/ch11.ipynb) |
-| 7 | [Plotting](notes/07-plotting.md) | Choose a chart from the question, and draw it in matplotlib, pandas or seaborn | [5_Plotting](practice/5_Plotting.ipynb) | [mckinney/ch09](practice/mckinney/ch09.ipynb), [ch14](practice/mckinney/ch14.ipynb), [umich_visualization.py](practice/courses/umich_visualization.py) |
+| **1. Extract:** the rows and columns you need | Know what one row means before you touch it. Labels and positions are different things, and they come apart after a filter. A filter is a mask of true and false. A join can multiply rows, so state what it should do and count before and after. | [1 Series and DataFrame](notes/01-series-and-dataframe.md) · [2 Loading and cleaning](notes/02-loading-and-cleaning.md), as far as [`read_csv`](notes/02-loading-and-cleaning.md#read_csv-and-the-options-that-matter) · [3 Indexing and selection](notes/03-indexing-and-selection.md) · [4 Reshaping and joins](notes/04-reshaping-and-joins.md) | [1_Overview](practice/1_Overview.ipynb), a refresher on the Python involved · [3_Arrays](practice/3_Arrays.ipynb) · [4_DataFrames](practice/4_DataFrames.ipynb) · book code: [ch06](practice/mckinney/ch06.ipynb), [ch08](practice/mckinney/ch08.ipynb) · [wrangle_pandas.py](practice/courses/wrangle_pandas.py) | McKinney ch. 4 to 6 and 8 · VanderPlas ch. 2 and 3 (pandas objects, indexing, merge and join) · Wickham, [Tidy Data](https://doi.org/10.18637/jss.v059.i10) |
+| **2. Clean:** every column the type it claims | The type of a column decides what an operation on it means. A gap is a decision, and missing is not zero. A date is a type, not text, and it carries a time zone and a period. Keep the raw file untouched and put every fix in one function you can rerun. | [2 Loading and cleaning](notes/02-loading-and-cleaning.md), from [fixing text](notes/02-loading-and-cleaning.md#fixing-text) · [6 Time series](notes/06-time-series.md): [parsing dates](notes/06-time-series.md#parsing-dates), [periods](notes/06-time-series.md#periods-when-you-mean-the-whole-month) and [time zones](notes/06-time-series.md#time-zones) | [2_Texts](practice/2_Texts.ipynb) · [7_Time_Series](practice/7_Time_Series.ipynb), Datetime Basics and Periods · book code: [ch07](practice/mckinney/ch07.ipynb), [ch11](practice/mckinney/ch11.ipynb) | McKinney ch. 7 and 11 · VanderPlas ch. 3 (missing data, time series) · [Kaggle Learn: Data Cleaning](https://www.kaggle.com/learn/data-cleaning) |
+| **3. Summarise:** one number per group | Split, apply, combine. Print a count beside every mean. For a rate, sum the top, sum the bottom, then divide. The groups must add back up to the total. Time is one more group key, and a window that feeds a model must look backward. | [5 Groupby and aggregation](notes/05-groupby-and-aggregation.md) · [6 Time series](notes/06-time-series.md): [shift](notes/06-time-series.md#change-over-time-shift-and-pct_change), [resampling](notes/06-time-series.md#resampling-changing-the-frequency) and [rolling windows](notes/06-time-series.md#rolling-windows) | [6_Aggregation](practice/6_Aggregation.ipynb) · [7_Time_Series](practice/7_Time_Series.ipynb), from Shifting onward · book code: [ch10](practice/mckinney/ch10.ipynb) | McKinney ch. 10 and 11 · VanderPlas ch. 3 (aggregation and grouping) · Wickham, [The Split-Apply-Combine Strategy](https://doi.org/10.18637/jss.v040.i01) |
 
-The notebook numbers come from their original course, so notebook 5 goes with chapter 7, and notebooks 6 and 7 with chapters 5 and 6.
+The chapters were written in a different order, so chapters 2 and 6 each serve two steps. Follow the rows and not the file numbers. Every source and the notes it maps to: [references.md](references.md).
 
-## Builds on and feeds into
-
-**Builds on**
-
-| Chapter | Why |
-|---|---|
-| [Python track](../../programming/python/README.md) | Assumes modules 01 to 03, then teaches pandas |
-
-**Feeds into**
-
-| Chapter | Why |
-|---|---|
-| [GA 07/05 Data-analysis agent](../../generative-ai/07-agentic-applications/notes/05-data-analysis-agent.md) | Its cleaning and group-by checks are this pillar's |
-| [DE 05/01 Quality dimensions and tests](../../data-engineering/05-quality-and-observability/notes/01-quality-dimensions-and-tests.md) | Automates the checks an analyst runs by hand here |
-| [DS 05/01 Time-series ML](../../data-science/05-time-series-and-recommenders/notes/01-time-series-ml.md) | Takes resampling and shifting as given |
+Charts come later. [7 Plotting](notes/07-plotting.md) and its lab [5_Plotting](practice/5_Plotting.ipynb) (book code: [ch09](practice/mckinney/ch09.ipynb), [ch14](practice/mckinney/ch14.ipynb); [umich_visualization.py](practice/courses/umich_visualization.py)) give you the calls to look at your own table. Read them when you reach [visualisation and storytelling](../05-visualisation-and-storytelling/README.md), which is about designing a chart for someone else.
 
 ## Rules of thumb
 
@@ -62,98 +63,34 @@ The notebook numbers come from their original course, so notebook 5 goes with ch
 - **On time data, make gaps visible with `asfreq`,** and keep shifts and windows looking backward in anything you feed to a model.
 - **Choose the chart from the question.** Bars start at zero, and there is only one y axis.
 
-## Deck
+## Builds on and feeds into
 
-[`slides/python-for-data-analysis.pptx`](slides/python-for-data-analysis.pptx) ([PDF](slides/python-for-data-analysis.pdf), source: [`slides/deck.yaml`](slides/deck.yaml)). To rebuild it: `make slides PILLAR=data-analytics/01-python-for-data-analysis STRICT=1 PREVIEW=1`.
+**Builds on**
 
-## Practice
-
-The notebooks read data that is too big to commit, so fetch it once. `fetch_data.sh` lives in `practice/` and works from any directory.
-
-```bash
-cd data-analytics/01-python-for-data-analysis/practice
-bash fetch_data.sh    # about 240 MB from wesm/pydata-book into mckinney/ and data/, not committed
-uv run --with jupyterlab --with pandas --with matplotlib --with seaborn --with scipy --with requests jupyter lab
-```
-
-Open the numbered notebooks from `practice/`. The `mckinney/chNN` notebooks read `examples/` and `datasets/` relative to `mckinney/`, so Jupyter's working directory must be `mckinney/` for those. Opening them from the file browser handles that.
-
-### Numbered notebooks
-
-All seven were patched minimally for current libraries and run cell by cell with no failures on pandas 3.1.0. The patches also fixed cells that ran out of order. Cell 18 of `2_Texts` downloads a text file from py4inf.com, so it needs a network connection. Stored cell outputs may still come from older runs, so rerun a notebook rather than trusting what it shows on opening.
-
-| # | Notebook | Covers | Data |
-|---|---|---|---|
-| 1 | [Overview](practice/1_Overview.ipynb) | Expressions, conditions, iteration and data types, as a fast refresher | none |
-| 2 | [Texts](practice/2_Texts.ipynb) | Text files, parsing | `mckinney/examples/segismundo.txt`, py4inf.com |
-| 3 | [Arrays](practice/3_Arrays.ipynb) | NumPy arrays, indexing and slicing, sorting, broadcasting | none |
-| 4 | [DataFrames](practice/4_DataFrames.ipynb) | Series and DataFrame, descriptives, indexing, subsetting, joins | none |
-| 5 | [Plotting](practice/5_Plotting.ipynb) | matplotlib and seaborn basics | `macrodata`, `spx`, `tips` |
-| 6 | [Aggregation](practice/6_Aggregation.ipynb) | `groupby`, grouping by dicts and index levels, quantile buckets, group-wise fill | `tips` |
-| 7 | [Time series](practice/7_Time_Series.ipynb) | Datetimes, shifting, periods, resampling, rolling windows | `stock_px_2` |
-
-### McKinney chapters
-
-These are the book's own code from the second edition, kept unpatched as the record of the book, so some cells fail on current pandas. Chapters 2 to 5 (Python and NumPy basics) are not included. The failure counts below are from one cell-by-cell run on pandas 3.1.0, and a cell can fail because an earlier one did.
-
-| Chapter | Topic | Code cells | Failed |
-|---|---|---|---|
-| [ch06](practice/mckinney/ch06.ipynb) | Loading and storing data: CSV, JSON, Excel, HDF5 | 70 | 4 |
-| [ch07](practice/mckinney/ch07.ipynb) | Cleaning: missing data, duplicates, transforms, string operations | 88 | 10 |
-| [ch08](practice/mckinney/ch08.ipynb) | Wrangling: hierarchical indexes, merge, concat, reshape | 70 | 12 |
-| [ch09](practice/mckinney/ch09.ipynb) | Plotting and visualisation | 54 | 4 |
-| [ch10](practice/mckinney/ch10.ipynb) | Aggregation and group operations | 74 | 11 |
-| [ch11](practice/mckinney/ch11.ipynb) | Time series | 116 | 24 |
-| [ch14](practice/mckinney/ch14.ipynb) | Worked examples: Bitly, MovieLens, baby names, USDA food, FEC donations | 114 | 12 |
-
-When a cell fails, this table translates most of it.
-
-| Old idiom | Current form |
+| Chapter | Why |
 |---|---|
-| `df.append(other)` | `pd.concat([df, other])` |
-| `df.ix[...]` | `df.loc[...]` or `df.iloc[...]` |
-| `pd.unique(list)` | `pd.unique(np.array(list))`, or `list(dict.fromkeys(items))` |
-| `df["a"][mask] = x` | `df.loc[mask, "a"] = x` |
-| `groupby(key, axis=1)` | `df.T.groupby(key)`, then `.T` on the result |
-| `grouped["a", "b"]` | `grouped[["a", "b"]]` |
-| `grouped.mean()` on frames with text columns | `grouped.mean(numeric_only=True)` |
-| `freq="M"`, `"Q"`, `"A"` or `"Y"` | `"ME"`, `"QE"`, `"YE"` |
-| `freq="A-DEC"` on a period | `freq="Y-DEC"` |
-| `freq="H"`, `"T"`, `"S"` | `"h"`, `"min"`, `"s"` |
-| `resample(rule, how="mean")` | `resample(rule).mean()` |
-| `df.fillna(method="ffill")` | `df.ffill()` |
-| `df.applymap(f)` | `df.map(f)` |
-| `sns.factorplot(...)` | `sns.catplot(..., kind=...)` |
-| `sns.regplot("x", "y", data=df)` | `sns.regplot(x="x", y="y", data=df)` |
-| `sns.distplot(a)` | `sns.histplot(a, kde=True)` (`distplot` still runs, with a deprecation warning) |
-| `pd.rolling_mean(s, n)` | `s.rolling(n).mean()` |
+| [Python track](../../programming/python/README.md) | Assumes modules 01 to 03; the checklist at the top names the chapters |
+| [SQL track](../../programming/sql/README.md) | Helpful, not required: selecting, grouping and joining return here on a table in memory |
 
-### Course scripts
+**Feeds into**
 
-Scripts kept from earlier coursework, in [`courses/`](practice/courses). They are notes as code, so read them beside an open REPL rather than running them top to bottom.
-
-| Script | From | Does it run? |
-|---|---|---|
-| [`wrangle_pandas.py`](practice/courses/wrangle_pandas.py) | Ben Gorman's *Data Wrangling* (pandas half) | Partly. It reads its CSVs from GitHub, then stops at `transactions[[1]]`, a lookup by position that raises `KeyError` on pandas 3.1. |
-| [`umich_pandas_basics.py`](practice/courses/umich_pandas_basics.py) | Michigan, *Applied Data Science with Python* | No. It reads `cars.csv` and `census.csv` from an old Desktop path, and the course data isn't redistributable. |
-| [`umich_visualization.py`](practice/courses/umich_visualization.py) | Michigan visualisation and Wesleyan *Data Analysis and Interpretation* | Partly. `iris.csv` is `sns.load_dataset("iris")`, and the NESARC survey file (`nesarc_pds.csv`) isn't included. |
+| Chapter | Why |
+|---|---|
+| [GA 07/05 Data-analysis agent](../../generative-ai/07-agentic-applications/notes/05-data-analysis-agent.md) | Its cleaning and group-by checks are this pillar's |
+| [DE 05/01 Quality dimensions and tests](../../data-engineering/05-quality-and-observability/notes/01-quality-dimensions-and-tests.md) | Automates the checks an analyst runs by hand here |
+| [DS 05/01 Time-series ML](../../data-science/05-time-series-and-recommenders/notes/01-time-series-ml.md) | Takes resampling and shifting as given |
 
 ## Primary texts
 
 - McKinney, *Python for Data Analysis*: the base text
 - VanderPlas, *Python Data Science Handbook*
 
-Everything else: [references.md](references.md).
+All code in the notes was run on Python 3.13, pandas 3.1.0, NumPy 2.5.4, matplotlib 3.11.2 and seaborn 0.13.2, with the output shown as it printed. Pandas 3.0 changed enough that most tutorials and books, including McKinney's second edition, now mislead in places. The notes use the current behaviour and say where old advice breaks.
 
-## Sources
+Everything else: [references.md](references.md). The deck is built from [`slides/deck.yaml`](slides/deck.yaml) with `make slides PILLAR=data-analytics/01-python-for-data-analysis STRICT=1 PREVIEW=1`.
 
-See [`references.md`](references.md) for books, papers and courses mapped to chapters. For the practice material:
+## Next
 
-| Source | License | Used for |
-|---|---|---|
-| Wes McKinney, [*Python for Data Analysis*](https://wesmckinney.com/book/), 2nd ed. ([code and data](https://github.com/wesm/pydata-book/tree/2nd-edition)) | Book: proprietary. Code and data: MIT | Chapter notebooks; data fetched by `fetch_data.sh` |
-| University of Michigan, *Applied Data Science with Python* (Coursera) | Course materials: proprietary | Own notes in `courses/` |
-| Wesleyan University, *Data Analysis and Interpretation* (Coursera) | Course materials: proprietary | Own notes in `courses/` (NESARC data not included) |
-| Ben Gorman, [*DataWrangling*](https://github.com/ben519/DataWrangling) | Read online | `courses/wrangle_pandas.py` |
+Start with submodule 1, **Extract**: read [1 Series and DataFrame](notes/01-series-and-dataframe.md), then work through its labs in the syllabus row.
 
-Next in this subject: [probability and statistics](../02-probability-and-statistics/README.md).
+After submodule 3 you can get data into a table and say how you know a number is the one you meant. What you cannot yet say is whether a difference in that table is real or luck. That is the next module, [probability and statistics](../02-probability-and-statistics/README.md).

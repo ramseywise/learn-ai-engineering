@@ -14,6 +14,7 @@ sources:
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
   - Bruce and Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017), ch. 6
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 17
+  - Hastie, Tibshirani and Friedman, The Elements of Statistical Learning, 2nd ed. (Springer, 2009), ch. 10
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -23,7 +24,7 @@ cleaned: 2026-11-01
 
 **In plain words.** Boosting comes in four popular software packages, rather like four brands of washing machine that get clothes about equally clean. The choice between them comes down to how fast they run, how they cope with text categories and blank cells, and which settings you have to adjust. At work this chapter saves you from arguing over libraries, so you can pick one, tune it in a sensible order and get back to the problem.
 
-[Ensembles](06-ensembles.md) gave the idea: add shallow trees, each fitted to the [gradient](02-supervised-learning.md#vectors-matrix-products-and-the-gradient) of the loss. This note is about the engineering that made that idea the default for tables. Blocks run top to bottom from this `notes/` folder with the packages in the command below; the numbers are from running them.
+[Ensembles](06-ensembles.md) gave the idea: add shallow trees, each fitted to the [gradient](02b-linear-models.md#vectors-matrix-products-and-the-gradient) of the loss. This note is about the engineering that made that idea the default for tables. Blocks run top to bottom from this `notes/` folder with the packages in the command below; the numbers are from running them.
 
 ```bash
 uv run --python 3.12 --with scikit-learn --with xgboost --with lightgbm --with catboost --with pandas python ...
@@ -237,6 +238,8 @@ On this table the whole search moves AUC by under 0.003, about the size of the s
 ISLP's textbook version of the recipe agrees on its shape: a small shrinkage such as 0.01 or 0.001, rounds chosen by cross-validation, and shallow trees, where depth 1 (stumps) gives an additive model with no interactions and often works well; on its 15-class gene-expression data (349 patients, 500 genes) depth 1 slightly beat depth 2, and both beat a random forest, but with a standard error near 0.02 the gaps are not significant (*ISLP*, ch. 8).
 
 The statisticians' text agrees and adds the reason shrinkage comes first: on the ALS data a rate of 0.5 overfits within about 20 trees while 0.02 reaches a lower validation error and is less sensitive to the stopping point, and the depth that suits it is around 4 (*Computer Age*, ch. 17). The two figures are in [Gradient boosting](06-ensembles.md#gradient-boosting).
+
+ESL, where the method was set out before any of these libraries existed, names the same four knobs: tree size $J$ (counted in leaves), rounds $M$, shrinkage $\nu$ and the row-sampling fraction $\eta$. Its advice is experience, not a benchmark: $4 \le J \le 8$ leaves works well and "it is unlikely that J > 10 will be required", since a $J$-leaf tree can model interactions among at most $J-1$ features; set $\nu$ "very small (ν < 0.1)" and choose $M$ by early stopping; sample half the rows without replacement for each tree, which cuts the computing by the same fraction; in its simulated example, run as both a classification and a regression problem, subsampling without shrinkage did poorly (*ESL*, ch. 10, secs. 10.11 and 10.12). The worked results give the scale of what tuning tree size buys. On the spam test set of 1,536 emails, gradient boosting with 5-leaf trees scores 4.5% error against 5.5% for an additive logistic model, 5.5% for MARS and 8.7% for a pruned CART tree, with a standard error of about 0.6% on each; stumps, which allow no interactions, score 4.7%, a gap ESL calls not significant. On California housing (8 predictors, 80/20 split, 6-leaf trees, $\nu=0.1$, Huber loss) the average absolute error is 0.31 after 800 rounds against 0.89 for predicting the median, in units of $100,000 (*ESL*, ch. 10, secs. 10.8 and 10.14, one split each).
 
 Untuned XGBoost overfits visibly. On the loan-default table (46,272 rows, balanced between paid off and default), 250 rounds with defaults reach 14.6% training error but 0.3715 error on 10,000 held-out rows. (The book's prose says 36.2% for the test error; the printed output is 0.3715, so the prose is the slip.) Refitting with `lambda=1000`, `eta=0.1` and `subsample=0.63` gives 33.2% training and 0.3483 test error, so the gap nearly closes and the test error improves by about 2.3 points. Because `eta` and `subsample` changed in the same run, the gain is not attributable to the L2 penalty alone, and it is one split with no repeat (*Practical Statistics*, ch. 6).
 

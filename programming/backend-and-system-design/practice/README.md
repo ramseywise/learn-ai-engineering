@@ -4,6 +4,25 @@
 
 Each module goes with a chapter, so do it after reading that one. None of it is for production: use a maintained library for JWTs, and a real database for storage. The point is that you can see what each piece must get right.
 
+## Layout
+
+```
+backend-and-system-design/
+├── README.md
+├── references.md
+├── notes/                         01–10
+├── slides/                        deck.yaml and the built study deck
+└── practice/
+    ├── README.md                  the lab: what to build and how it's checked
+    ├── check.sh                   runs the lab's tests, every code block, and deploy/verify.sh
+    ├── run_notes.py               runs the notes' blocks, and compares output where it's fixed
+    ├── deploy/                    service, Dockerfile, Kubernetes manifest, CI workflow, verify.sh
+    ├── exercises/backend_lab/     stubs and their tests
+    └── solutions/backend_lab/     worked versions and the same tests
+```
+
+You need Python 3.14 and [uv](https://docs.astral.sh/uv/). Docker is optional, for chapter 6's example. The notes' code blocks are standalone apart from a few marked with a package they need, so you can copy one into a file and run it. Nothing needs a cloud account, and no block calls a model. Which part of the lab goes with which chapter is in the [syllabus](../README.md#syllabus).
+
 ## Run it
 
 You need Python 3.14 and [uv](https://docs.astral.sh/uv/). `deploy/verify.sh` also needs a running Docker daemon, and `check.sh` skips it with a message if there isn't one. Nothing here uses a cloud account. From this folder:

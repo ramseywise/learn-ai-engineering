@@ -1,0 +1,407 @@
+{
+ "schema": 1,
+ "key": "sha1:be451213c0c9",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch04-index-construction.pdf",
+ "bib": {
+  "title": "Introduction to Information Retrieval, Chapter 4: Index construction",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition 2009, draft April 1, 2009)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 43018,
+  "chars_total": 43018,
+  "engine": "pymupdf",
+  "skipped": "Figure drawings (4.5, 4.8) appear only as scattered labels; Table 4.3 time column is empty in the book (an exercise)."
+ },
+ "type": "book-chapter",
+ "question": "How is an inverted index built when the collection exceeds memory, is distributed over a cluster, or changes over time?",
+ "hypothesis": null,
+ "contributions": [
+  "Hardware basics that govern indexing design",
+  "Blocked sort-based indexing (BSBI)",
+  "Single-pass in-memory indexing (SPIMI)",
+  "Distributed indexing with MapReduce",
+  "Dynamic indexing: auxiliary index and logarithmic merging",
+  "Notes on positional, impact-ordered and access-controlled indexes"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Merge/transfer of 10 MB from disk takes about 0.7 s if stored in 100 noncontiguous chunks versus 0.2 s as one chunk",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.7",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4.1 system parameters (5 ms seek, 0.02 us/byte transfer), 10 MB read",
+   "quote": "it may take as little as 0.2 seconds to transfer 10 megabytes (MB) from disk to memory if it is stored as one chunk, but up to 0.2 + 100 × (5 × 10−3) = 0.7 seconds",
+   "table": null,
+   "note": null,
+   "where": "p.68, 4.1"
+  },
+  {
+   "claim": "Collecting all termID-docID pairs of Reuters-RCV1 at 4 bytes each needs 0.8 GB, too large to sort comfortably in memory on 2007 servers",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.8",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reuters-RCV1, 100 million tokens, 4-byte termID and 4-byte docID",
+   "quote": "Reuters-RCV1 has 100 million tokens. Collecting all termID–docID pairs of the collection using 4 bytes each for termID and docID therefore requires 0.8",
+   "table": null,
+   "note": null,
+   "where": "p.70, 4.2"
+  },
+  {
+   "claim": "With 10 million pairs fitting in memory, BSBI on RCV1 yields ten blocks that are merged in one pass",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "ten",
+   "unit": "blocks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BSBI, RCV1, block size 10 million termID-docID pairs",
+   "quote": "assuming we can ﬁt 10 million termID–docID pairs into memory, we end up",
+   "table": null,
+   "note": "Quote contains the ligature as printed in the text cache.",
+   "where": "p.71, 4.2"
+  },
+  {
+   "claim": "BSBI time complexity is Theta(T log T), but actual time is dominated by parsing and the final merge",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "Θ(T log T)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T = number of termID-docID pairs; sorting is the highest-complexity step",
+   "quote": "Its time complexity is Θ(T log T) because the step",
+   "table": null,
+   "note": null,
+   "where": "p.71, 4.2"
+  },
+  {
+   "claim": "SPIMI time complexity is Theta(T), because no sorting of tokens is needed",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "Θ(T)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-pass in-memory indexing with per-block dictionaries, T = tokens",
+   "quote": "The time complexity of SPIMI is Θ(T) because no sorting of tokens is required",
+   "table": null,
+   "note": null,
+   "where": "p.74, 4.3"
+  },
+  {
+   "claim": "Good MapReduce split sizes for distributed indexing are 16 or 64 MB",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "16 or 64",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MapReduce-style distributed indexing, split size trades even distribution against chunk count",
+   "quote": "16 or 64 MB are good sizes in distributed indexing",
+   "table": null,
+   "note": null,
+   "where": "p.75, 4.4"
+  },
+  {
+   "claim": "Google's 2004 indexing system chained five to ten MapReduce operations; the term-partitioned step described is only one",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "five to ten",
+   "unit": "operations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dean and Ghemawat (2004) design as described by the chapter",
+   "quote": "What we describe in this section corre-",
+   "table": null,
+   "note": "Quote is a line-break fragment; see claim text on p.77: 'corresponds to only one of five to ten MapReduce operations in that indexing system'.",
+   "where": "p.77, 4.4"
+  },
+  {
+   "claim": "Rebuilding with an auxiliary index merged repeatedly costs Theta(T^2/n) overall, since each posting is touched floor(T/n) times",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "Θ(T2/n)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Main index plus in-memory auxiliary index of size n, T total postings, whole index stored as one file",
+   "quote": "Thus, the overall time complexity is Θ(T2/n)",
+   "table": null,
+   "note": "Printed as T2/n in the text layer; the book prints T squared.",
+   "where": "p.79, 4.5"
+  },
+  {
+   "claim": "Logarithmic merging cuts construction time to Theta(T log(T/n)) at the cost of querying log(T/n) indexes instead of two",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "Θ(T log(T/n))",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "log2(T/n) indexes I0, I1, ... of size 2^i x n; n = in-memory limit",
+   "quote": "Overall index construction time is Θ(T log(T/n)) because each posting",
+   "table": null,
+   "note": null,
+   "where": "p.80, 4.5"
+  },
+  {
+   "claim": "Postings in impact-sorted ranked-retrieval indexes can be inserted anywhere, complicating updates, whereas docID-sorted indexes append at the end",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ranked retrieval vs Boolean, postings ordered by weight/impact",
+   "quote": "In a docID-sorted index, new documents are",
+   "table": null,
+   "note": null,
+   "where": "p.81, 4.6"
+  },
+  {
+   "claim": "Some large search engines avoid dynamic indexing entirely and rebuild the index periodically from scratch",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Large search engines; new index built then query processing switched",
+   "quote": "some large search engines",
+   "table": null,
+   "note": null,
+   "where": "p.80, 4.5"
+  }
+ ],
+ "limits": [
+  "Describes nonpositional, docID-ordered inverted indexes for keyword (Boolean/tf-idf) retrieval; no dense vector, ANN (HNSW, IVF, PQ) or embedding index construction.",
+  "Hardware parameters are 2007 (5 ms seek, spinning disk, several GB RAM, 1 TB disk); SSDs, NVMe, and RAM of hundreds of GB change the BSBI/SPIMI trade-offs.",
+  "MapReduce and Hadoop (cited at lucene.apache.org/hadoop) are dated; Spark and managed search services have replaced them.",
+  "No experiments: the only data is Reuters-RCV1 statistics (Table 4.2) used in worked examples; Table 4.3 time column is left as Exercise 4.6.",
+  "Compression is deferred to Chapter 5; ranked retrieval details to Chapters 6-7; security of ACLs only sketched.",
+  "Authors concede multiple-index schemes complicate collection statistics such as idf and spelling correction, p.80."
+ ],
+ "practices": [
+  "Keep frequently used disk data in memory (caching) and store data read together contiguously to cut seeks, p.68.",
+  "Store compressed data on disk: read plus decompress is usually faster than reading uncompressed, p.69.",
+  "For collections too large for memory use blocked sort-based indexing: parse blocks that fit memory, invert, write, merge with a priority queue, p.71.",
+  "Prefer SPIMI when the term-to-termID map does not fit in memory: per-block dictionaries, postings lists that double in size, sort terms before writing, p.73-74.",
+  "For web-scale collections use MapReduce with parsers and inverters; split input into 16 or 64 MB chunks reassigned on failure, p.75.",
+  "For a static or slowly changing collection rebuild the index periodically while the old one serves queries, p.78.",
+  "For quick freshness keep a small in-memory auxiliary index plus an invalidation bit vector for deletions, and merge when it grows, p.78.",
+  "Use logarithmic merging to lower update cost, accepting slower queries across log(T/n) indexes, p.79-80.",
+  "Order postings by impact for ranked retrieval to allow early termination; docID order for compression, p.81.",
+  "Enforce document-level security via ACL inverted lists intersected with results, or check the file system at query time, p.81."
+ ],
+ "terms": [
+  {
+   "term": "indexing / indexer",
+   "definition": "the process of constructing an inverted index; the process or machine that performs it",
+   "where": "p.67"
+  },
+  {
+   "term": "seek time",
+   "definition": "time to position the disk head in a new position; averages 5 ms for typical disks",
+   "where": "p.68"
+  },
+  {
+   "term": "BSBI",
+   "definition": "blocked sort-based indexing: segments the collection into equal parts, sorts termID-docID pairs of each in memory, stores sorted runs on disk, merges them",
+   "where": "p.71"
+  },
+  {
+   "term": "SPIMI",
+   "definition": "single-pass in-memory indexing: uses terms instead of termIDs, writes each block's dictionary to disk, then starts a new dictionary",
+   "where": "p.73"
+  },
+  {
+   "term": "MapReduce",
+   "definition": "a general architecture for distributed computing designed for large computer clusters of commodity machines",
+   "where": "p.75"
+  },
+  {
+   "term": "parser / inverter",
+   "definition": "machines executing the map phase / the reduce phase that collects all docIDs for a termID into a postings list",
+   "where": "p.75-76"
+  },
+  {
+   "term": "auxiliary index",
+   "definition": "a small in-memory index storing new documents, searched together with the large main index",
+   "where": "p.78"
+  },
+  {
+   "term": "logarithmic merging",
+   "definition": "maintain indexes I0, I1, ... of size 2^i x n so each posting is merged once per level",
+   "where": "p.79"
+  },
+  {
+   "term": "access control list (ACL)",
+   "definition": "representation of each document as the set of users that can access it; inverted to a per-user access list",
+   "where": "p.81"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Heinz and Zobel, SPIMI",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "source of SPIMI algorithm",
+   "quote": null
+  },
+  {
+   "work": "Dean and Ghemawat, MapReduce",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "distributed indexing design; Fig 4.5 adapted",
+   "quote": null
+  },
+  {
+   "work": "Witten, Moffat and Bell, Managing Gigabytes",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "extensive treatment of index construction, ch.5",
+   "quote": null
+  },
+  {
+   "work": "Moffat and Bell, in situ index construction",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "low-disk construction",
+   "quote": null
+  },
+  {
+   "work": "Lester et al.; Büttcher and Clarke, logarithmic merging",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "analyse logarithmic merging; first used in Lucene",
+   "quote": null
+  },
+  {
+   "work": "Lewis et al., RCV1",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Reuters-RCV1 characterisation",
+   "quote": null
+  },
+  {
+   "work": "Zobel and Moffat, Inverted files for text search engines",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "recommended up-to-date treatment",
+   "quote": null
+  },
+  {
+   "work": "Fox and Lee FAST-INV",
+   "year": 1991,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multi-pass index construction",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 4.1",
+   "caption": "Typical system parameters in 2007",
+   "page": 68,
+   "why": "Seek 5 ms and transfer 0.02 us/byte drive every cost argument"
+  },
+  {
+   "figure": "Table 4.2",
+   "caption": "Collection statistics for Reuters-RCV1",
+   "page": 70,
+   "why": "Sizes behind the worked 0.8 GB example"
+  },
+  {
+   "figure": "Figure 4.2",
+   "caption": "Blocked sort-based indexing",
+   "page": 71,
+   "why": "Four-step algorithm in 7 lines"
+  },
+  {
+   "figure": "Figure 4.3",
+   "caption": "Merging in blocked sort-based indexing",
+   "page": 72,
+   "why": "Shows postings lists merged across two blocks"
+  },
+  {
+   "figure": "Figure 4.4",
+   "caption": "Inversion of a block in single-pass in-memory indexing",
+   "page": 73,
+   "why": "SPIMI-INVERT pseudocode"
+  },
+  {
+   "figure": "Figure 4.5",
+   "caption": "An example of distributed indexing with MapReduce",
+   "page": 76,
+   "why": "Parsers, segment files and inverters by term partition a-f g-p q-z"
+  },
+  {
+   "figure": "Figure 4.6",
+   "caption": "Map and reduce functions in MapReduce",
+   "page": 77,
+   "why": "Worked Caesar example of map and reduce for postings"
+  },
+  {
+   "figure": "Figure 4.7",
+   "caption": "Logarithmic merging",
+   "page": 79,
+   "why": "Pseudocode of the binomial-like merge cascade"
+  },
+  {
+   "figure": "Figure 4.8",
+   "caption": "A user-document matrix for access control lists",
+   "page": 81,
+   "why": "Why ACL index inversion is hard to maintain"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.77 Fig 4.6",
+   "snippet": "map: web collection → list(termID, docID); reduce: (⟨termID1, list(docID)⟩, ⟨termID2, list(docID)⟩, …) → (postings list1, postings list2, …)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text layer has ligatures (ﬁ, ﬂ) and lost math (T2/n for T squared, 107 for 10^7, 20 x n for 2^0 x n).",
+  "Table 4.3 contents are empty in the book (exercise), figure drawings only partly extracted.",
+  "Table 4.1 clock-rate row lost its symbol label in text extraction.",
+  "No embedded instructions found."
+ ]
+}

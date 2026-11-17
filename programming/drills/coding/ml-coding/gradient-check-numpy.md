@@ -143,5 +143,5 @@ That is why you use it to check a gradient and never to train.
 - **Follow-ups**: add an L2 penalty `lam * w @ w` and re-derive the gradient. Check the logistic-regression gradient
   in [logistic-regression-numpy](logistic-regression-numpy.md) the same way. Explain why the network version uses
   backpropagation rather than `numerical_grad` ([Why backward beats nudging](../../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md#why-backward-beats-nudging)).
-- Theory: [Vectors, matrix products and the gradient](../../../../data-science/01-classical-ml/notes/02-supervised-learning.md#vectors-matrix-products-and-the-gradient)
+- Theory: [Vectors, matrix products and the gradient](../../../../data-science/01-classical-ml/notes/02b-linear-models.md#vectors-matrix-products-and-the-gradient)
   and [Derivatives, numerically](../../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md#derivatives-numerically).

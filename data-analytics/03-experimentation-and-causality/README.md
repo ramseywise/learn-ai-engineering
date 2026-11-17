@@ -106,4 +106,4 @@ Add `--with dowhy` for the DoWhy block in chapter 4. Chapter 5 is the exception:
 
 Everything else: [references.md](references.md).
 
-**Next:** [04 Bayesian Analysis](../04-bayesian-analysis/README.md). **Online evaluation of LLM features** continues in [the Eval pillar](../../generative-ai/08-eval/README.md). **References:** [references.md](references.md).
+**Next:** [Applied Analyses](../06-applied-analyses/README.md), then [Bayesian Analysis](../04-bayesian-analysis/README.md), which answers this module's checkout test again with posteriors. **Online evaluation of LLM features** continues in [the Eval pillar](../../generative-ai/08-eval/README.md). **References:** [references.md](references.md).

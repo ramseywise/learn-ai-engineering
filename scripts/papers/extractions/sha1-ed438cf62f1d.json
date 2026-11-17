@@ -1,0 +1,376 @@
+{
+ "schema": 1,
+ "key": "sha1:ed438cf62f1d",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch07-computing-scores-complete-search-system.pdf",
+ "bib": {
+  "title": "Introduction to Information Retrieval, Chapter 7: Computing scores in a complete search system",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition, April 1, 2009 draft)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 34586,
+  "chars_total": 34586,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can cosine scoring be computed fast enough for a real search engine, and how do scoring, proximity, indexes and query operators fit into a complete system?",
+ "hypothesis": null,
+ "contributions": [
+  "Heuristics for inexact top-K retrieval (index elimination, champion lists, static quality ordering, impact ordering, cluster pruning)",
+  "Tiered indexes, proximity weighting, query parsing and aggregate scoring",
+  "Architecture of a complete search system (Fig 7.5)",
+  "How vector space scoring interacts with Boolean, wildcard and phrase operators"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Heap selection of the top K from J scored documents costs 2J comparisons to build and log J per document read off.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "heap build comparisons",
+   "value": "2J",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top-K selection over the J documents with non-zero cosine score; asymptotic count, no measured data.",
+   "quote": "constructing such a heap can be performed in 2J comparison steps, following which each of the K highest scoring documents can be “read off” the heap with log J comparison steps.",
+   "table": null,
+   "note": null,
+   "where": "p.136, 7.1"
+  },
+  {
+   "claim": "For free-text queries, query weights can all be set to 1 because ranking depends only on relative scores; this turns the multiply-add into an addition (FastCosineScore).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "query unit-vector component",
+   "value": "0.707",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Query jealous gossip; unit query vector has two non-zero components of 0.707 each without term weighting.",
+   "quote": "In the absence of any weighting for query terms, these non-zero compo-",
+   "table": null,
+   "note": null,
+   "where": "p.135-136, 7.1"
+  },
+  {
+   "claim": "Cluster pruning picks sqrt(N) random leaders, so each leader is expected to have about sqrt(N) followers.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Basic cluster pruning, b1 = b2 = 1; N documents in the collection.",
+   "quote": "the expected number of followers for each leader is ≈N/",
+   "table": null,
+   "note": "Square-root symbols are split across lines in the text, so no numeric value is recorded.",
+   "where": "p.141, 7.1.6"
+  },
+  {
+   "claim": "Cluster pruning variants attach each follower to its b1 closest leaders and consider the b2 leaders closest to the query; the basic scheme is b1 = b2 = 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": "b1 = b2 in basic scheme",
+   "value": "1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cluster pruning variants; raising b1 or b2 raises the chance of finding the true top K at more compute cost.",
+   "quote": "the basic scheme above corresponds to the case b1 = b2 = 1",
+   "table": null,
+   "note": null,
+   "where": "p.141, 7.1.6"
+  },
+  {
+   "claim": "Tiered indexes example uses tf thresholds of 20 for tier 1 and 10 for tier 2, with fall-back when a tier returns fewer than K results.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "tf thresholds, tier 1 and tier 2",
+   "value": "20 and 10",
+   "unit": "tf",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustration on the terms and documents of Figure 6.9 (Fig 7.4); postings within a tier ordered by document ID.",
+   "quote": "In this example we set a tf threshold of 20 for tier 1 and 10 for tier 2",
+   "table": null,
+   "note": null,
+   "where": "p.143, 7.2.1"
+  },
+  {
+   "claim": "The smallest-window proximity width omega for the query 'strained mercy' in 'The quality of mercy is not strained' is 4 words.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "omega",
+   "value": "4",
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Proximity weighting feature omega = width in words of the smallest window containing all query terms; set to an enormous number if a term is missing.",
+   "quote": "the smallest window for the query strained mercy would be 4.",
+   "table": null,
+   "note": null,
+   "where": "p.145, 7.2.2"
+  },
+  {
+   "claim": "Static quality and cosine contribute equally to net-score when each lies in [0,1] under the simple sum of Equation 7.2.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Net-score(q,d) = g(d) + cosine; other weightings possible and heuristic effectiveness depends on the weighting.",
+   "quote": "the static quality g(d) and the query-dependent score",
+   "table": null,
+   "note": "Quote is the start of the sentence; the text runs on 'from (6.10) have equal contributions, assuming each is between 0 and 1'.",
+   "where": "p.139, 7.1.4"
+  },
+  {
+   "claim": "Rising interest rates example: a query parser issues a cascade of up to three query stages, falling back when fewer than ten documents are found.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "fallback threshold on documents",
+   "value": "10",
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Three-step query parse: 3-term phrase, then two 2-term phrases, then the 3-term vector space query; scores from steps are combined by an aggregate scoring function.",
+   "quote": "If fewer than ten documents contain the phrase rising interest rates",
+   "table": null,
+   "note": null,
+   "where": "p.145, 7.2.3"
+  },
+  {
+   "claim": "Web search can have scoring factors numbering in the hundreds, so the authors say hand-tuned scoring is difficult and machine-learned scoring is increasingly common.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web search versus enterprise search; qualitative 2008 statement, no measurement.",
+   "quote": "the number of scoring factors can run into the hundreds",
+   "table": null,
+   "note": null,
+   "where": "p.146, 7.2.3"
+  },
+  {
+   "claim": "Vector space index can answer Boolean queries but not conversely; no easy way to combine them, and p-norms exist but the authors know no system using them.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 7.3 discussion of Boolean retrieval.",
+   "quote": "we know of no system that makes use",
+   "table": null,
+   "note": null,
+   "where": "p.148, 7.3"
+  },
+  {
+   "claim": "A vector space index cannot in general serve phrase queries because the document-as-vector representation is lossy about term order.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 7.3 phrase queries; German shepherd example.",
+   "quote": "The representation of documents as vectors is fundamentally lossy",
+   "table": null,
+   "note": null,
+   "where": "p.149, 7.3"
+  }
+ ],
+ "limits": [
+  "No experiments or measured speed/quality numbers; every heuristic is described qualitatively and the authors say parameters (r, m, thresholds, b1, b2) must be tuned per collection (p.137).",
+  "Most heuristics suit free-text queries but not Boolean or phrase queries (p.137, 7.4 refs).",
+  "Dated 2008-09: scoring is TF-IDF cosine and machine-learned ranking is only sketched; no dense or learned-sparse retrieval, approximate nearest neighbour indexes (HNSW, IVF), BM25 (appears elsewhere in the book, not here), WAND or block-max pruning, or neural rerankers.",
+  "The claim that web engines use 'soft conjunctive' semantics is hedged ('evidently use'), not shown.",
+  "Cluster pruning with random leaders is the book's only vector-space ANN idea; it is the ancestor of IVF-style partitioning but is not named so."
+ ],
+ "practices": [
+  "Rank by relative score: set all query weights to 1 and skip query normalisation (p.135-136).",
+  "Use a heap for top K instead of sorting all J scored documents (p.136).",
+  "Drop low-idf query terms as stop words during traversal, and require many or all terms to be present, accepting that fewer than K candidates may result (p.137-138).",
+  "Precompute champion lists of r top documents per term, with r large relative to K and possibly larger for rarer terms (p.138).",
+  "Fall back through tiered indexes when a tier yields fewer than K results (p.143-144).",
+  "Add the proximity window width omega as a learned feature rather than hand-coding it (p.145).",
+  "Use a query parser that cascades from phrase to sub-phrase to bag-of-terms queries, and an aggregate scoring function to accumulate evidence (p.145-146).",
+  "Use hand-tuned scoring in stable enterprise collections and machine-learned scoring for web-scale setups with many factors (p.146).",
+  "Keep a document cache for result snippets and run spelling correction only when the original query returns too few results (p.146-147)."
+ ],
+ "terms": [
+  {
+   "term": "Champion list (fancy list, top docs)",
+   "definition": "for each term t in the dictionary, the set of the r documents with the highest weights for t; the value of r is chosen in advance",
+   "where": "p.138, 7.1.3"
+  },
+  {
+   "term": "Static quality score g(d)",
+   "definition": "a measure of quality g(d) for each document d that is query-independent and thus static, a number between zero and one",
+   "where": "p.138, 7.1.4"
+  },
+  {
+   "term": "Document-at-a-time scoring",
+   "definition": "computing the score for each document as encountered during concurrent traversal of postings lists with a common ordering",
+   "where": "p.140, 7.1.5"
+  },
+  {
+   "term": "Term-at-a-time scoring",
+   "definition": "scores accumulated one query term at a time, needed when postings lists are not in a common order",
+   "where": "p.140, 7.1.5"
+  },
+  {
+   "term": "Impact ordering",
+   "definition": "ordering a postings list by a quantity such as tf rather than document ID",
+   "where": "p.141, 7.1.5"
+  },
+  {
+   "term": "Cluster pruning",
+   "definition": "cluster the document vectors in preprocessing; at query time compute cosines only for documents in a few clusters",
+   "where": "p.141, 7.1.6"
+  },
+  {
+   "term": "Tiered index",
+   "definition": "a generalization of champion lists: tier 1 holds postings with the highest tf, and query processing falls back to later tiers if fewer than K results",
+   "where": "p.143, 7.2.1"
+  },
+  {
+   "term": "Proximity weighting",
+   "definition": "scoring that depends on omega, the width of the smallest window in a document that contains all the query terms",
+   "where": "p.145, 7.2.2"
+  },
+  {
+   "term": "Evidence accumulation",
+   "definition": "an aggregate scoring function that accumulates evidence of a document's relevance from multiple sources",
+   "where": "p.146, 7.2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Anh et al. 2001; Garcia et al. 2004; Anh and Moffat 2006b; Persin et al. 1996",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "early termination heuristics",
+   "quote": null
+  },
+  {
+   "work": "Persin 1994; Brown 1995 (top docs); Brin and Page 1998; Long and Suel 2003",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "champion lists",
+   "quote": null
+  },
+  {
+   "work": "Singitham et al. 2004; Chierichetti et al. 2007",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "cluster pruning",
+   "quote": null
+  },
+  {
+   "work": "Carmel et al. 2001; Clarke et al. 2000; Song et al. 2005",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "query term proximity",
+   "quote": null
+  },
+  {
+   "work": "Fuhr 1989; Fuhr and Pfeifer 1994; Cooper et al. 1994; Bartell 1994; Bartell et al. 1998; Cohen et al. 1998",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "learning ranking functions",
+   "quote": null
+  },
+  {
+   "work": "Anh and Moffat 2006c",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "index supporting weighted and Boolean/phrase search",
+   "quote": null
+  },
+  {
+   "work": "IIR Chapter 6 (tf-idf, cosine scoring)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "this chapter speeds up Section 6.3.3 scoring",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7.1",
+   "caption": "A faster algorithm for vector space scores.",
+   "page": 136,
+   "why": "Pseudocode of FastCosineScore."
+  },
+  {
+   "figure": "Fig 7.2",
+   "caption": "A static quality-ordered index.",
+   "page": 139,
+   "why": "Postings ordered by g(d) with g = 0.25, 0.5, 1."
+  },
+  {
+   "figure": "Fig 7.3",
+   "caption": "Cluster pruning.",
+   "page": 142,
+   "why": "Leaders, followers and dense regions drawn."
+  },
+  {
+   "figure": "Fig 7.4",
+   "caption": "Tiered indexes.",
+   "page": 144,
+   "why": "Fall-back across tf tiers."
+  },
+  {
+   "figure": "Fig 7.5",
+   "caption": "A complete search system.",
+   "page": 147,
+   "why": "Best single picture of ingestion, indexes, spelling, ranking and results; strongest candidate for the hybrid-search note."
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 7.1, p.136",
+   "snippet": "FASTCOSINESCORE(q): float Scores[N]=0; for each d: Initialize Length[d]; for each query term t: calculate w_t,q and fetch postings list for t; for each pair (d, tf_t,d) in postings: add wf_t,d to Scores[d]; Read Length[d]; for each d: Scores[d] /= Length[d]; return Top K components of Scores[]",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 7.2, p.139",
+   "snippet": "net-score(q, d) = g(d) + V(q).V(d) / (|V(q)||V(d)|)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text contains ligatures (ﬁ) and square-root symbols split over lines; quotes avoid them.",
+  "Internal inconsistencies: p.136 says line 8 of Figure 6.14 is altered, but the multiply-add is line 7 in Fig 7.1; Eq 7.2 text cites (6.12) then (6.10) for the same cosine score; p.139 cites 'Figure 1.6' for the postings intersection algorithm while p.143/Ex 7.9 cite Section 1.3; 'user of tiered indexes' typo for 'use' (p.143); p.140 says global champion lists sort by 'document IDs or static quality' but the high/low lists are said to sort by g(d).",
+  "The cached text begins with a draft header 'DRAFT! (c) April 1, 2009'; the book is dated 2008.",
+  "No embedded instructions found."
+ ]
+}

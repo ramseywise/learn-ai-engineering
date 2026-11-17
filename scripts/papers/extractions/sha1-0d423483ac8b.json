@@ -1,0 +1,563 @@
+{
+ "schema": 1,
+ "key": "sha1:0d423483ac8b",
+ "pdf": "data-science/sources/elements-of-statistical-learning/ch05-basis-expansions-regularization.pdf",
+ "bib": {
+  "title": "The Elements of Statistical Learning, 2nd ed., Chapter 5: Basis Expansions and Regularization",
+  "authors": [
+   "Trevor Hastie",
+   "Robert Tibshirani",
+   "Jerome Friedman"
+  ],
+  "first_author": "Hastie",
+  "year": 2009,
+  "venue": "Springer (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 131542,
+  "chars_total": 131542,
+  "engine": "pymupdf",
+  "skipped": "Figure plot glyphs (O, bullets, tick labels) were filtered out for reading; no prose skipped"
+ },
+ "type": "book-chapter",
+ "question": "How can linear models be extended to nonlinear functions by augmenting inputs with basis expansions, and how is the resulting flexibility controlled by restriction, selection or regularization?",
+ "hypothesis": null,
+ "contributions": [
+  "Linear basis expansions f(X)=sum beta_m h_m(X) (5.1) with three complexity controls: restriction, selection, regularization",
+  "Piecewise polynomials, regression splines, natural cubic splines, B-splines",
+  "Smoothing splines with effective degrees of freedom trace(S_lambda), smoother matrix, Reinsch form, CV by the leave-one-out shortcut",
+  "Nonparametric logistic regression, tensor-product and thin-plate splines",
+  "RKHS view of regularization (kernel property), Gaussian RBF, penalized polynomial regression",
+  "Wavelet bases with SURE soft-threshold shrinkage"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Restricting phoneme logistic-regression coefficients to a smooth natural-spline expansion (M=12) cuts test error from 0.255 (raw 256 inputs) to 0.158.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error, regularized",
+   "value": "0.158",
+   "unit": "error rate",
+   "baseline_value": "0.255",
+   "n": null,
+   "setup": "Phoneme 'aa' vs 'ao', 256 log-periodogram inputs, training sample 1000 drawn from 695 aa and 1022 ao; linear logistic regression; smooth coefficient beta=H theta, M=12 natural cubic spline basis, knots uniform over 1..256",
+   "where": "Section 5.2.3, p.150",
+   "note": null,
+   "table": "Section 5.2.3 table, row Test error, column Regularized (0.158; raw 0.255)"
+  },
+  {
+   "claim": "Raw (unrestricted) phoneme logistic regression fits training data far better than the smooth one but generalises worse: training error 0.080 raw vs 0.185 regularized.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training error, raw",
+   "value": "0.080",
+   "unit": "error rate",
+   "baseline_value": "0.185",
+   "n": null,
+   "setup": "Same phoneme setup",
+   "where": "Section 5.2.3, p.150",
+   "note": null,
+   "table": "Section 5.2.3 table, row Training error, column Raw (0.080; regularized 0.185)"
+  },
+  {
+   "claim": "Natural cubic spline with K knots needs only K basis functions; the linear-beyond-boundary constraint frees four degrees of freedom to spend on interior knots.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1-D natural cubic spline vs cubic spline, Fig 5.3 (50 points from U[0,1], six df splines, knots at 0.33/0.66 vs boundary 0.1/0.9 plus four interior)",
+   "where": "Section 5.2.1, p.145",
+   "note": null,
+   "quote": "A natural cubic spline with K knots is represented by K basis functions."
+  },
+  {
+   "claim": "A smoothing spline's effective degrees of freedom is defined as the trace of the smoother matrix, df_lambda = trace(S_lambda).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Smoothing spline, linear smoother f-hat = S_lambda y",
+   "where": "Section 5.4.1, p.154",
+   "note": "Definition (5.16); quote not recorded, value null"
+  },
+  {
+   "claim": "Bone-density smoothing splines for males and females were fit with df=12, which corresponds numerically to lambda about 0.00022.",
+   "kind": "measured",
+   "source": null,
+   "metric": "lambda for df=12",
+   "value": "0.00022",
+   "unit": "lambda",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Relative change in spinal BMD vs age in adolescents, separate smoothing spline per sex, df_lambda=12 solved from trace(S_lambda)=12",
+   "where": "Fig 5.6, p.152 and Section 5.4.1",
+   "note": null,
+   "quote": "λ ≈0.00022"
+  },
+  {
+   "claim": "Leave-one-out CV for a linear smoother is computed from one fit: CV = sum ((y_i - f_i)/(1 - S_lambda(i,i)))^2, so no refits are needed.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Smoothing spline with smoother matrix S_lambda, eq 5.26-5.27",
+   "where": "Section 5.5.2, p.161",
+   "note": null,
+   "quote": "which can (remarkably) be computed for each value of λ from the original ﬁtted values and the diagonal elements Sλ(i, i) of Sλ"
+  },
+  {
+   "claim": "In the bias-variance simulation, EPE is minimised near df=9 for the true function sin(12(x+0.2))/(x+0.2); df=5 underfits (narrow bands, high bias) and df=15 is wiggly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "df minimising EPE",
+   "value": "9",
+   "unit": "df_lambda",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Y=f(X)+eps, X~U[0,1], eps~N(0,1), N=100, smoothing spline, EPE and N-fold CV curves (single realisation shown)",
+   "where": "Section 5.5.2, Fig 5.9, p.159-161",
+   "note": null,
+   "quote": "The blue points in the top left panel of Figure 5.9 suggest that dfλ = 9 is spot on!"
+  },
+  {
+   "claim": "Leave-one-out CV curve is approximately unbiased for EPE overall, though in the example the whole CV curve lies above the EPE curve.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5.9 example, N=100",
+   "where": "Section 5.5.2, p.161",
+   "note": null,
+   "quote": "overall the CV curve is approximately unbiased as an estimate of the EPE curve"
+  },
+  {
+   "claim": "Additive natural-spline logistic regression on the Chapter 2 simulation (4 df per coordinate, total df 7) has test error 0.28 against Bayes error 0.21.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error, additive",
+   "value": "0.28",
+   "unit": "error rate",
+   "baseline_value": "0.21",
+   "n": null,
+   "setup": "Simulated two-class mixture example of Fig 2.1; logit model with natural splines in each of two coordinates; training error 0.23",
+   "where": "Fig 5.11 upper, p.164",
+   "note": "Training error 0.23 and Bayes 0.21; the tensor-product panel prints 0.230, 0.282 and 0.210",
+   "quote": "Test Error:       0.28"
+  },
+  {
+   "claim": "Tensor-product natural-spline basis (4x4 = 16 df) gives test error 0.282, no better than the additive 7-df model (0.28), and adds spurious structure at the boundary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error, tensor product",
+   "value": "0.282",
+   "unit": "error rate",
+   "baseline_value": "0.28",
+   "n": null,
+   "setup": "Same simulation; tensor product of natural spline bases, total df 16",
+   "where": "Fig 5.11 lower, p.164",
+   "note": null,
+   "quote": "Test Error:       0.282"
+  },
+  {
+   "claim": "A stepwise-deleted natural-spline logistic model for South African heart disease reaches deviance 458.09 and AIC 502.09 with terms sbp, tobacco, ldl, famhist, obesity, age.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AIC of final model",
+   "value": "502.09",
+   "unit": "AIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Natural splines, 4 basis functions per continuous term (famhist a single dummy); backward deletion by group using AIC",
+   "where": "Table 5.1, p.148",
+   "note": null,
+   "table": "Table 5.1, row none, column AIC"
+  },
+  {
+   "claim": "Deleting famhist raises AIC from 502.09 to 521.44 (LRT 21.356, 1 df); deleting age raises it to 517.86 (LRT 23.768, 4 df); deleting sbp or obesity changes AIC by only about 1 (503.16, 502.24).",
+   "kind": "measured",
+   "source": null,
+   "metric": "LRT age",
+   "value": "23.768",
+   "unit": "LRT",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 5.1 terms",
+   "where": "Table 5.1, p.148",
+   "note": null,
+   "table": "Table 5.1, row age, column LRT"
+  },
+  {
+   "claim": "Gaussian-kernel ridge regression on 200 points has an effective feature-space dimension of about 12 although the implicit space is infinite; eigenvalues beyond the 30th are effectively zero.",
+   "kind": "measured",
+   "source": null,
+   "metric": "effective dimension",
+   "value": "12",
+   "unit": "effective dimension",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Radial kernel nu=1, first coordinate of mixture data, 200x200 kernel matrix, Fig 5.14-5.15",
+   "where": "Section 5.8.2, p.173",
+   "note": null,
+   "quote": "leaving an eﬀective dimension of about 12 in this case"
+  },
+  {
+   "claim": "Soft-threshold wavelet shrinkage solves an L1 criterion in closed form for an orthonormal basis: theta_j = sign(y*_j)(|y*_j| - lambda)+, with lambda = sigma sqrt(2 log N).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Orthonormal wavelet basis W, N=2^J uniformly spaced points, y* = W^T y; noise sd sigma estimated from data",
+   "where": "Section 5.9.2, p.176-179",
+   "note": null,
+   "quote": "A simple choice for λ is λ = σ√2 log N"
+  },
+  {
+   "claim": "The wavelet transform costs O(N) (faster than FFT's N log N); smoothing-spline fitting with B-splines is O(N) via a banded Cholesky; thin-plate splines cost O(N^3), or O(NK^2+K^3) with K knots.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "As stated in the text",
+   "where": "Section 5.9.2, p.179; Appendix p.187-190",
+   "note": null,
+   "quote": "can be obtained in O(N) computations, which is even faster than the N log(N) of the fast Fourier transform (FFT)"
+  },
+  {
+   "claim": "smooth.spline in S-PLUS thins knots: all included if N<50, but only 204 knots at N=5,000.",
+   "kind": "reported",
+   "source": "S-PLUS smooth.spline",
+   "metric": "knots used at N=5000",
+   "value": "204",
+   "unit": "knots",
+   "baseline_value": null,
+   "n": null,
+   "setup": "S-PLUS smooth.spline, approximately logarithmic knot thinning",
+   "where": "Appendix, p.190",
+   "note": null,
+   "quote": "even at N = 5, 000 only 204 knots are used"
+  },
+  {
+   "claim": "Polynomial basis expansion grows as O(p^d) terms for degree d; tensor-product basis grows exponentially in dimension (curse of dimensionality).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 5.1 and 5.7",
+   "where": "Section 5.1, p.140",
+   "note": null,
+   "quote": "the number of variables grows exponentially in the de-"
+  }
+ ],
+ "limits": [
+  "Splines and wavelets are developed mainly in one dimension; the basis grows exponentially with dimension (tensor products) and thin-plate splines cost O(N^3) (Sec 5.7).",
+  "Natural splines trade extra bias near the boundaries for lower variance (Sec 5.2.1).",
+  "Knot placement/number for regression splines is combinatorially hard; the chapter defers to MARS (Ch 9) (Sec 5.5).",
+  "Smoothing-parameter selection is only sketched (CV, GCV, Cp are pointed to Chapter 7); the bias-variance figure is a single realisation (Sec 5.5.2).",
+  "Wavelet fit adds unnecessary wiggles for smooth functions with high noise (variance price for adaptivity) (Sec 5.9.2, Fig 5.19).",
+  "Heart-disease nonlinearities at low obesity/sbp are attributed to retrospective data, not a causal effect (Sec 5.2.2).",
+  "The experiments report single splits and no seeds; no code is given (S-PLUS/R function names only). Dated: S-PLUS waveshrink, bs()/smooth.spline defaults of 2009."
+ ],
+ "practices": [
+  "Use basis expansions h_m(X) and then fit a linear model in the derived features; fitting proceeds as before (Sec 5.1).",
+  "Avoid global polynomials: they flap in remote regions; use piecewise polynomials/splines (Sec 5.1).",
+  "Cubic splines are the usual choice; orders M=1, 2, 4 are the most used; seldom a reason to go beyond cubic (Sec 5.2).",
+  "Parameterise a regression spline by df and let data quantiles place knots, e.g. bs(x, df=7) puts interior knots at 20/40/60/80th percentiles (Sec 5.2).",
+  "Prefer the B-spline basis to truncated powers numerically (Sec 5.2, Appendix).",
+  "Use natural cubic splines when boundary variance matters; spend freed df on interior knots (Sec 5.2.1).",
+  "Drop spline terms as groups (all basis columns of a variable together) in stepwise selection, using AIC (Sec 5.2.2).",
+  "Smooth high-dimensional ordered features (signals) by projecting x*=H^T x onto a spline basis before a learner; domain-derived preprocessing often improves any learner, e.g. wavelets then a neural net (Sec 5.2.3).",
+  "Specify smoothers by effective df = trace(S) to compare methods uniformly and fit by F-tests or residual plots (Sec 5.5.1).",
+  "Choose lambda by cross-validation; for linear smoothers use the leave-one-out shortcut with S(i,i) (Sec 5.5.2).",
+  "For thin-plate splines use a lattice of knots inside the convex hull of the data (Sec 5.7).",
+  "For signals with isolated spikes use wavelet soft-threshold shrinkage (lambda = sigma sqrt(2 log N)); for smooth truths smoothing splines are better (Sec 5.9.2)."
+ ],
+ "terms": [
+  {
+   "term": "linear basis expansion",
+   "definition": "f(X) = sum_{m=1}^M beta_m h_m(X), linear in derived features h_m(X)",
+   "where": "Eq 5.1, p.139"
+  },
+  {
+   "term": "regression splines",
+   "definition": "fixed-knot splines; one selects the order, number of knots and their placement",
+   "where": "Sec 5.2, p.144"
+  },
+  {
+   "term": "natural cubic spline",
+   "definition": "cubic spline constrained to be linear beyond the boundary knots; K knots give K basis functions",
+   "where": "Sec 5.2.1, p.144-145"
+  },
+  {
+   "term": "smoothing spline",
+   "definition": "minimizer of RSS(f, lambda)= sum {y_i - f(x_i)}^2 + lambda int {f''(t)}^2 dt; a natural cubic spline with knots at the unique x_i, shrunk toward linear",
+   "where": "Eq 5.9, p.151"
+  },
+  {
+   "term": "smoother matrix",
+   "definition": "S_lambda, the linear operator with f-hat = S_lambda y, depending only on x_i and lambda",
+   "where": "Eq 5.14, p.153"
+  },
+  {
+   "term": "effective degrees of freedom",
+   "definition": "df_lambda = trace(S_lambda)",
+   "where": "Eq 5.16, p.154"
+  },
+  {
+   "term": "Reinsch form",
+   "definition": "S_lambda = (I + lambda K)^-1 with penalty matrix K independent of lambda",
+   "where": "Eq 5.17, p.154"
+  },
+  {
+   "term": "shrinking smoother vs projection smoother",
+   "definition": "smoothing splines shrink eigen-components by rho_k(lambda)=1/(1+lambda d_k); regression splines keep M components and drop the rest",
+   "where": "Sec 5.4.1, p.155-156"
+  },
+  {
+   "term": "tensor product basis",
+   "definition": "g_jk(X)=h1j(X1)h2k(X2), dimension M1 x M2",
+   "where": "Eq 5.35, p.162"
+  },
+  {
+   "term": "thin-plate spline",
+   "definition": "solution of (5.37) with the 2-D curvature penalty (5.38); expansion in radial basis h_j(x)=||x-x_j||^2 log||x-x_j||",
+   "where": "Sec 5.7, p.165-166"
+  },
+  {
+   "term": "reproducing kernel Hilbert space",
+   "definition": "space H_K generated by the span of K(., y) for a positive definite kernel K; penalty J(f)=||f||^2_HK",
+   "where": "Sec 5.8.1, p.168-169"
+  },
+  {
+   "term": "kernel property",
+   "definition": "the infinite-dimensional problem (5.48) reduces to a finite one min_alpha L(y,K alpha)+lambda alpha^T K alpha",
+   "where": "Sec 5.8.1, p.169-170"
+  },
+  {
+   "term": "SURE shrinkage",
+   "definition": "Stein Unbiased Risk Estimation wavelet fitting: lasso criterion with soft threshold on orthonormal wavelet coefficients",
+   "where": "Sec 5.9.2, p.176"
+  },
+  {
+   "term": "symmlet-p wavelet",
+   "definition": "family with support of 2p-1 consecutive intervals and p vanishing moments",
+   "where": "Sec 5.9.1, p.178"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "de Boor (1978), splines and B-splines",
+   "year": 1978,
+   "arxiv": null,
+   "relation": "related",
+   "note": "B-spline reference",
+   "quote": null
+  },
+  {
+   "work": "Green and Silverman (1994)",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "related",
+   "note": "smoothing splines, thin-plate splines",
+   "quote": null
+  },
+  {
+   "work": "Wahba (1990)",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "related",
+   "note": "smoothing/thin-plate splines and RKHS",
+   "quote": null
+  },
+  {
+   "work": "Girosi, Jones and Poggio (1995)",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "general penalty functionals and RKHS",
+   "quote": null
+  },
+  {
+   "work": "Evgeniou et al. (2000)",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RKHS summary of nonparametric regression",
+   "quote": null
+  },
+  {
+   "work": "Donoho and Johnstone (1994)",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "related",
+   "note": "SURE shrinkage for wavelets",
+   "quote": null
+  },
+  {
+   "work": "Daubechies (1992)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "related",
+   "note": "wavelet theory, symmlet",
+   "quote": null
+  },
+  {
+   "work": "Ramsay and Silverman (1997)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "related",
+   "note": "functional data modelling (Sec 5.2.3)",
+   "quote": null
+  },
+  {
+   "work": "Hastie and Zhu (2006)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "related",
+   "note": "effective dimension of kernel feature spaces",
+   "quote": null
+  },
+  {
+   "work": "ESL Ch 2, 3, 4 (mixture data, ridge/lasso, logistic regression, SA heart disease)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "datasets and methods reused",
+   "quote": null
+  },
+  {
+   "work": "South African heart disease data",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Sec 4.4.2, reused 5.2.2",
+   "quote": null
+  },
+  {
+   "work": "Phoneme data (aa/ao)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "book website www-stat.stanford.edu/ElemStatLearn",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5.1",
+   "caption": "Piecewise constant, piecewise linear, continuous piecewise linear and the (X-xi1)+ basis function",
+   "page": 4,
+   "why": "shows what a basis function with continuity built in looks like"
+  },
+  {
+   "figure": "Fig 5.2",
+   "caption": "Piecewise-cubic polynomials with increasing orders of continuity",
+   "page": 5,
+   "why": "cubic spline = continuity of value, first and second derivative"
+  },
+  {
+   "figure": "Fig 5.3",
+   "caption": "Pointwise variance curves for global linear, cubic, cubic spline and natural cubic spline",
+   "page": 7,
+   "why": "boundary variance blow-up and why natural splines help"
+  },
+  {
+   "figure": "Fig 5.5",
+   "caption": "Phoneme log-periodograms and raw vs smooth logistic coefficients",
+   "page": 11,
+   "why": "regularising coefficients as a smooth function of feature index; error 0.255 to 0.158"
+  },
+  {
+   "figure": "Fig 5.7",
+   "caption": "Smoothing spline fits at df 5 and 11, eigenvalues and eigenvectors of S",
+   "page": 17,
+   "why": "shrinking vs projection smoother"
+  },
+  {
+   "figure": "Fig 5.9",
+   "caption": "EPE and CV vs df and fits at df=5, 9, 15",
+   "page": 21,
+   "why": "bias-variance tradeoff with a concrete df choice"
+  },
+  {
+   "figure": "Fig 5.11",
+   "caption": "Additive vs tensor-product natural spline decision boundaries on the Ch 2 simulation",
+   "page": 26,
+   "why": "flexibility versus spurious structure; test error 0.28 vs 0.282, Bayes 0.21"
+  },
+  {
+   "figure": "Fig 5.17/5.19",
+   "caption": "NMR signal wavelet transform and shrinkage; wavelet vs smoothing spline",
+   "page": 39,
+   "why": "sparsity (wavelet L1) versus smoothness (spline L2)"
+  },
+  {
+   "figure": "Fig 5.20",
+   "caption": "B-splines of order 1 to 4, ten knots on [0,1]",
+   "page": 50,
+   "why": "local support of the B-spline basis"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5.3, p.143",
+   "snippet": "h1(X)=1, h2(X)=X, h3(X)=X^2, h4(X)=X^3, h5(X)=(X-xi1)^3_+, h6(X)=(X-xi2)^3_+",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.12, p.152",
+   "snippet": "theta_hat = (N^T N + lambda Omega_N)^-1 N^T y   (smoothing spline as generalized ridge regression)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.27, p.161",
+   "snippet": "CV(f_lambda) = sum_i ((y_i - f_lambda(x_i)) / (1 - S_lambda(i,i)))^2",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.55, p.170",
+   "snippet": "alpha_hat = (K + lambda I)^-1 y;  f_hat(x) = sum_j alpha_hat_j K(x, x_j)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.69, p.176",
+   "snippet": "theta_hat_j = sign(y*_j)(|y*_j| - lambda)_+ ,  lambda = sigma sqrt(2 log N)",
+   "verbatim": false
+  },
+  {
+   "where": "p.144",
+   "snippet": "bs(x,df=7)   # cubic-spline basis, interior knots at 20,40,60,80th percentiles; smooth.spline(x,y,df=6)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Plot glyph noise (O, bullets, axis ticks) fills the text of figures; table body of the phoneme error table and Table 5.1 are extracted as stacked lines.",
+  "Equations lose operators/summation limits in extraction; formulas in the extraction were re-typed from the text and flagged verbatim:false.",
+  "No embedded instructions found."
+ ]
+}

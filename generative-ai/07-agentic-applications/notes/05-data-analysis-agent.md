@@ -47,7 +47,7 @@ flowchart LR
 
 ## The data
 
-The lab uses two files that the [Python for data analysis](../../../data-analytics/01-python-for-data-analysis/README.md) pillar already teaches with. Nothing is synthetic, so the numbers below are ones you can check.
+The lab uses two files that the [working with data](../../../data-analytics/01-python-for-data-analysis/README.md) pillar already teaches with. Nothing is synthetic, so the numbers below are ones you can check.
 
 | Table | Path from the repo root | Rows | Why it is here |
 |---|---|---|---|

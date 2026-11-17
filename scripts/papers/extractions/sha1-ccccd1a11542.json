@@ -1,0 +1,576 @@
+{
+ "schema": 1,
+ "key": "sha1:ccccd1a11542",
+ "pdf": "generative-ai/02-rag-retrieval/sources/introduction-to-information-retrieval/ch17-hierarchical-clustering.pdf",
+ "bib": {
+  "title": "Introduction to Information Retrieval, Chapter 17: Hierarchical clustering",
+  "authors": [
+   "Christopher D. Manning",
+   "Prabhakar Raghavan",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Manning",
+  "year": 2008,
+  "venue": "Cambridge University Press (online edition, 2009 draft of April 1, 2009)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-17",
+  "chars_read": 56722,
+  "chars_total": 56722,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can documents be clustered into a hierarchy, which agglomerative merge criterion should be used, and how are clusters labelled and the methods made efficient?",
+ "hypothesis": null,
+ "contributions": [
+  "Four HAC algorithms (single-link, complete-link, GAAC, centroid) with merge criteria, complexity and optimality",
+  "Top-down clustering, cluster labeling and implementation notes (Buckshot)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Naive HAC (similarity matrix rescanned for the max in each of N-1 merges) costs Theta(N^3).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "time complexity",
+   "value": "Θ(N3)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Generic HAC over N documents, N x N similarity matrix",
+   "quote": "The complexity of the naive HAC algorithm in Figure 17.2 is Θ(N3) because",
+   "table": null,
+   "note": null,
+   "where": "p.385 (Sec 17.2.1)"
+  },
+  {
+   "claim": "Priority-queue HAC (EfficientHAC) is Theta(N^2 log N) for single-link, complete-link, GAAC and centroid.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "time complexity",
+   "value": "Θ(N2 log N)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Priority queues with log-time insert/delete, N documents",
+   "quote": "Its time complexity is Θ(N2 log N).",
+   "table": null,
+   "note": null,
+   "where": "p.385"
+  },
+  {
+   "claim": "Single-link with a next-best-merge (NBM) array is Theta(N^2), because single-link alone is best-merge persistent.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "time complexity",
+   "value": "Θ(N2)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single-link only; Figure 17.9",
+   "quote": "thus the overall complexity of single-link clustering is Θ(N2).",
+   "table": null,
+   "note": null,
+   "where": "p.387"
+  },
+  {
+   "claim": "In practice the log N penalty is small, since a similarity computation costs an order of magnitude more than a scalar comparison; all four are Theta(N^2) in similarity computations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dot-product similarities on document vectors; no timings given",
+   "quote": "All four HAC algorithms in this chapter are Θ(N2) with respect to similarity computations.",
+   "table": null,
+   "note": "Table 17.1 lists Theta(N^2 log N) for three methods; Sec 17.9 notes the literature sometimes gives Theta(N^2). The two are reconciled only by the similarity-vs-comparison argument.",
+   "where": "p.388"
+  },
+  {
+   "claim": "Chapter recommends GAAC for document clustering: no chaining, no outlier sensitivity, no inversions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Vector-space documents, length-normalised, dot-product similarity; no experiment shown",
+   "quote": "We recommend GAAC for document clustering because it is generally the method that produces the clustering with the best",
+   "table": null,
+   "note": "Recommendation is argued from properties, not measured in this chapter.",
+   "where": "p.394-395"
+  },
+  {
+   "claim": "Cutting the single-link dendrogram of 30 Reuters-RCV1 documents at similarity 0.4 gives 24 clusters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "clusters at cut y=0.4",
+   "value": "24",
+   "unit": "clusters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 documents from Reuters-RCV1, single-link, cosine similarity",
+   "quote": "cutting the diagram at y = 0.4 yields 24 clusters",
+   "table": null,
+   "note": null,
+   "where": "p.380, Fig 17.1"
+  },
+  {
+   "claim": "Cutting the same dendrogram at 0.1 gives 12 clusters (one large financial cluster and 11 small).",
+   "kind": "measured",
+   "source": null,
+   "metric": "clusters at cut y=0.1",
+   "value": "12",
+   "unit": "clusters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 30-document single-link clustering",
+   "quote": "cutting it at y = 0.1 yields 12 clusters",
+   "table": null,
+   "note": null,
+   "where": "p.380, Fig 17.1"
+  },
+  {
+   "claim": "Single-link chaining: the last eleven merges above the 0.1 line each add one document or a pair.",
+   "kind": "measured",
+   "source": null,
+   "metric": "chained merges",
+   "value": "eleven",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 Reuters-RCV1 documents, single-link",
+   "quote": "The last eleven merges of the single-link clustering (those above the 0.1 line) add on single docu-",
+   "table": null,
+   "note": "Consistent with 12 clusters at y=0.1 (12 clusters means 11 further merges).",
+   "where": "p.385"
+  },
+  {
+   "claim": "Complete-link on the same 30 documents splits at the last merge into documents 1-16 and 17-30; no single-link cut gives such a balanced split.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-level split sizes",
+   "value": "16 and 14 documents",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 30 documents, complete-link",
+   "quote": "(documents 1–16, from NYSE closing averages to Lloyd’s chief / U.S. grilling, and",
+   "table": null,
+   "note": null,
+   "where": "p.384, Fig 17.5"
+  },
+  {
+   "claim": "Centroid clustering is non-monotonic: in Fig 17.12 the second merge has similarity about -3.46, higher than the first merge at -(4-eps).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "similarity of second merge",
+   "value": "-3.46",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Three points d1 (1+eps,1), d2 (5,1), d3 (3,1+2*sqrt3); similarity = negative distance",
+   "quote": "is ≈−cos(π/6) × 4 = −",
+   "table": null,
+   "note": "Text prints -sqrt(3)/2 x 4 ≈ -3.46 across a line break; Sec 17.5 repeats '-3.46'.",
+   "where": "p.392, Fig 17.12"
+  },
+  {
+   "claim": "The root merge of the 30-document single-link clustering has combination similarity about 0.56 for the Lloyd's pair cluster.",
+   "kind": "measured",
+   "source": null,
+   "metric": "combination similarity",
+   "value": "0.56",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 17.1, cosine similarity",
+   "quote": "similarity of the cluster consisting of Lloyd’s CEO questioned and Lloyd’s chief",
+   "table": null,
+   "note": "Text: 'is ≈0.56' on the next line.",
+   "where": "p.378"
+  },
+  {
+   "claim": "SIM-GA' (self-similarities included) gives two documents with similarity s a value (1+s)/2, favouring small clusters; SIM-GA gives s.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "SIM-GA' of two documents",
+   "value": "(1+s)/2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GAAC, length-normalised vectors",
+   "quote": "For two documents d1, d2 with a similarity s, we have SIM-GA′(d1, d2) = (1 + s)/2.",
+   "table": null,
+   "note": null,
+   "where": "p.389"
+  },
+  {
+   "claim": "Running GAAC or centroid with dense centroids costs Theta(M N^2 log N) vs Theta(M_ave N^2 log N) for complete-link.",
+   "kind": "claim",
+   "source": null,
+   "metric": "time complexity",
+   "value": "Θ(MN2 log N)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "M vocabulary size, M_ave average distinct terms per document",
+   "quote": "clustering can take time Θ(MN2 log N) where M is the size of the vocabulary, whereas",
+   "table": null,
+   "note": null,
+   "where": "p.398"
+  },
+  {
+   "claim": "HAC is infeasible for sets of 1,000,000 or more documents.",
+   "kind": "claim",
+   "source": null,
+   "metric": "document count threshold",
+   "value": "1,000,000",
+   "unit": "documents",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theta(N^2) or Theta(N^2 log N) methods; threshold stated without measurement",
+   "quote": "and therefore infeasible for large sets of 1,000,000 or more documents. For",
+   "table": null,
+   "note": null,
+   "where": "p.398"
+  },
+  {
+   "claim": "Buckshot: HAC on a sqrt(N) sample to seed K-means gives overall Theta(N).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "time complexity",
+   "value": "Θ(N)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HAC applied to sqrt(N) documents then K-means; Theta(N^2 log N) HAC needs a size adjustment",
+   "quote": "is Θ(N). This is because the application of a quadratic algorithm",
+   "table": null,
+   "note": null,
+   "where": "p.399"
+  },
+  {
+   "claim": "Single-link is optimal (maximises combination similarity of every k-cluster cut) by induction; complete-link and GAAC are not (4-point counterexample).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Proof assumes no ties; extended to ties by assertion",
+   "quote": "We can now prove the optimality of single-link clustering by induction",
+   "table": null,
+   "note": "Optimality is with respect to the single-link criterion, which the chapter says is the wrong one for spherical clusters.",
+   "where": "p.394"
+  },
+  {
+   "claim": "Top-down clustering with K-means is linear in documents and clusters for a fixed number of top levels, and may give more accurate hierarchies in some circumstances.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Divisive with an efficient flat subroutine; evidence only by reference to bisecting K-means (Steinbach et al. 2000)",
+   "quote": "For a ﬁxed num-",
+   "table": null,
+   "note": "No figure is quoted; evidence is delegated to Sec 17.9 references.",
+   "where": "p.396"
+  },
+  {
+   "claim": "For labeling, MI and chi-square gave almost the same labels on a K-means clustering (10 clusters of the first 10,000 Reuters-RCV1 docs).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "K-means, 10 clusters, first 10,000 Reuters-RCV1 documents; chi-square results omitted from table",
+   "quote": "In this example, there is almost no difference between MI and χ2.",
+   "table": null,
+   "note": null,
+   "where": "p.396, Table 17.2"
+  }
+ ],
+ "limits": [
+  "No experiments: the chapter's only data examples are one 30-document Reuters-RCV1 dendrogram (Figs 17.1, 17.5) and a 3-cluster label table (Table 17.2); the GAAC recommendation is not backed by a measured comparison.",
+  "Authors concede no consensus on whether hierarchical beats flat clustering (Sec 17.9, Zhao and Karypis 2002 suggests the opposite).",
+  "Dated (2008/2009): cosine-on-tf-idf vector space only; no dense embeddings, no approximate nearest-neighbour or scalable HAC (e.g. nearest-neighbour chain, HDBSCAN); infeasible limit of 1,000,000 documents is hardware-of-its-time. Ward's method only mentioned in Sec 17.9, not developed.",
+  "Optimality definition (combination similarity) favours single-link, which the authors call the wrong criterion for spherical clusters.",
+  "Labeling advice rests on one K-means example; hierarchy-node labeling is deferred to references."
+ ],
+ "practices": [
+  "Use GAAC for document clustering with length-normalised vectors and dot-product similarity (Sec 17.5, p.394).",
+  "Use complete-link when documents are not vector representations (Sec 17.5, p.395).",
+  "Use single-link variants for first story detection and duplicate detection, where local structure matters (Sec 17.5, p.395).",
+  "Choose a dendrogram cut by a similarity level, the largest gap, an RSS+lambda*K penalty, or a prespecified K (Sec 17.1, p.380).",
+  "Use HAC to seed K-means on a sqrt(N) sample (Buckshot) for large collections (Sec 17.8, p.398-399).",
+  "Use an inverted index and truncated centroids or sparse medoids to keep GAAC cheap (Sec 17.8, p.398).",
+  "Label clusters with MI or chi-square plus a rare-term penalty, or with the title of the document nearest the centroid (Sec 17.7, p.396)."
+ ],
+ "terms": [
+  {
+   "term": "hierarchical clustering",
+   "definition": "outputs a hierarchy, a structure more informative than the unstructured set of clusters returned by flat clustering",
+   "where": "p.377"
+  },
+  {
+   "term": "HAC",
+   "definition": "bottom-up: each document starts as a singleton cluster and pairs of clusters are successively merged until one remains",
+   "where": "p.378"
+  },
+  {
+   "term": "combination similarity",
+   "definition": "the similarity of the two clusters merged, the y-coordinate of the merge line in a dendrogram; for a singleton its self-similarity (1.0 for cosine)",
+   "where": "p.378"
+  },
+  {
+   "term": "monotonicity",
+   "definition": "combination similarities satisfy s1 >= s2 >= ... >= s(K-1)",
+   "where": "p.378"
+  },
+  {
+   "term": "inversion",
+   "definition": "a merge with s_i < s_(i+1), contradicting that the best merge is chosen at each step",
+   "where": "p.378"
+  },
+  {
+   "term": "single-link",
+   "definition": "cluster similarity is the similarity of the most similar members; local criterion",
+   "where": "p.382"
+  },
+  {
+   "term": "complete-link",
+   "definition": "cluster similarity is the similarity of the most dissimilar members; equivalent to the merge with smallest diameter",
+   "where": "p.382"
+  },
+  {
+   "term": "chaining",
+   "definition": "a chain of points extended for long distances without regard to overall cluster shape",
+   "where": "p.385"
+  },
+  {
+   "term": "GAAC",
+   "definition": "average similarity of all pairs of documents in the merged cluster, excluding self-similarities (Eq 17.3)",
+   "where": "p.388-389"
+  },
+  {
+   "term": "centroid clustering",
+   "definition": "cluster similarity is the dot product of the two centroids, equal to the average inter-cluster pair similarity",
+   "where": "p.391"
+  },
+  {
+   "term": "best-merge persistence",
+   "definition": "after merging the best-merge cluster of w_k with a third cluster, the merge is still w_k's best merge; true only for single-link",
+   "where": "p.387"
+  },
+  {
+   "term": "optimal clustering",
+   "definition": "a K-cluster clustering whose combination similarity is at least that of every clustering with k <= K clusters",
+   "where": "p.393"
+  },
+  {
+   "term": "Buckshot algorithm",
+   "definition": "HAC on a sqrt(N) sample to compute seeds for K-means",
+   "where": "p.399"
+  },
+  {
+   "term": "differential cluster labeling",
+   "definition": "selects labels by comparing the term distribution of a cluster with other clusters",
+   "where": "p.396"
+  },
+  {
+   "term": "cluster-internal labeling",
+   "definition": "computes a label that depends only on the cluster itself",
+   "where": "p.396"
+  },
+  {
+   "term": "first story detection",
+   "definition": "detecting the first occurrence of an event in a stream of news stories",
+   "where": "p.395"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "King, single-link",
+   "year": 1967,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "early reference for single-link",
+   "quote": null
+  },
+  {
+   "work": "Sneath and Sokal, Numerical Taxonomy",
+   "year": 1973,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "early reference for complete-link and GAAC",
+   "quote": null
+  },
+  {
+   "work": "Lance and Williams",
+   "year": 1967,
+   "arxiv": null,
+   "relation": "related",
+   "note": "variety of hierarchical algorithms",
+   "quote": null
+  },
+  {
+   "work": "Voorhees, centroid algorithm",
+   "year": 1985,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "source of the centroid algorithm; recommends complete-link and centroid over single-link for retrieval",
+   "quote": null
+  },
+  {
+   "work": "Cutting et al., Buckshot",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Buckshot algorithm",
+   "quote": null
+  },
+  {
+   "work": "Allan et al., first story detection",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "single-link for first story detection",
+   "quote": null
+  },
+  {
+   "work": "Zhao and Karypis",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "experimental results suggesting flat beats hierarchical clustering",
+   "quote": null
+  },
+  {
+   "work": "Steinbach et al., bisecting K-means",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "efficient divisive algorithm",
+   "quote": null
+  },
+  {
+   "work": "Ward Jr., Ward's method",
+   "year": 1963,
+   "arxiv": null,
+   "relation": "related",
+   "note": "minimum-variance HAC, not developed",
+   "quote": null
+  },
+  {
+   "work": "Reuters-RCV1",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "30-document dendrograms and the Table 17.2 K-means clustering",
+   "quote": null
+  },
+  {
+   "work": "Popescul and Ungar; Glover et al. 2002",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cluster labeling with chi-square, information gain",
+   "quote": null
+  },
+  {
+   "work": "Jain et al., clustering review",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "general review of clustering",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 17.1",
+   "caption": "A dendrogram of a single-link clustering of 30 documents from Reuters-RCV1. Two possible cuts of the dendrogram are shown: at 0.4 into 24 clusters and at 0.1 into 12 clusters.",
+   "page": 379,
+   "why": "Shows dendrograms, cuts and chaining in one picture"
+  },
+  {
+   "figure": "Fig 17.3",
+   "caption": "The different notions of cluster similarity used by the four HAC algorithms.",
+   "page": 381,
+   "why": "Four merge criteria side by side"
+  },
+  {
+   "figure": "Fig 17.4",
+   "caption": "A single-link (left) and complete-link (right) clustering of eight documents.",
+   "page": 382,
+   "why": "Single versus complete link on identical points"
+  },
+  {
+   "figure": "Fig 17.5",
+   "caption": "A dendrogram of a complete-link clustering. The same 30 documents were clustered with single-link clustering in Figure 17.1.",
+   "page": 383,
+   "why": "Contrast with Fig 17.1: balanced top split"
+  },
+  {
+   "figure": "Fig 17.6",
+   "caption": "Chaining in single-link clustering.",
+   "page": 384,
+   "why": "Chaining in one image"
+  },
+  {
+   "figure": "Fig 17.7",
+   "caption": "Outliers in complete-link clustering.",
+   "page": 385,
+   "why": "Outlier splitting a natural cluster"
+  },
+  {
+   "figure": "Fig 17.12",
+   "caption": "Centroid clustering is not monotonic.",
+   "page": 392,
+   "why": "Geometric inversion example with dendrogram"
+  },
+  {
+   "figure": "Table 17.1",
+   "caption": "Comparison of HAC algorithms.",
+   "page": 395,
+   "why": "One-table summary of criterion, complexity, optimality, comment"
+  },
+  {
+   "figure": "Table 17.2",
+   "caption": "Automatically computed cluster labels.",
+   "page": 397,
+   "why": "Centroid, MI and title labels compared"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.389 Eq 17.3",
+   "snippet": "SIM-GA(ωi, ωj) = 1/((Ni + Nj)(Ni + Nj − 1)) [ (Σ_{dm∈ωi∪ωj} d_m)^2 − (Ni + Nj) ]",
+   "verbatim": false
+  },
+  {
+   "where": "p.381 Fig 17.2",
+   "snippet": "SIMPLEHAC: N-1 iterations; pick argmax C[i][m] over active clusters; append merge; update row/column with SIM(i,m,j); deactivate m",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction splits equations and figures across lines; equations (17.1)-(17.4) and Fig 17.8 formulas were read garbled and are paraphrased, not verbatim.",
+  "Online edition draft stamp 'April 1, 2009' while the book is 2008; page numbers given are book pages 377-401.",
+  "Inconsistency: complexity of complete-link/GAAC/centroid is Theta(N^2 log N) in Sec 17.2.1 and Table 17.1 but Sec 17.9 says literature sometimes gives Theta(N^2).",
+  "No embedded instructions found."
+ ]
+}
