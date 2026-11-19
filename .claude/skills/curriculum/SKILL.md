@@ -1,6 +1,6 @@
 ---
 name: curriculum
-description: "Keep the course one coherent whole as it grows. Shows the curriculum map and its integration problems, decides where a new topic belongs, wires a new or moved note into READMEs, Next links, decks and syllabi, and audits a subject for overlap and order. Usage: /curriculum (status), /curriculum place \"vector databases\", /curriculum integrate <note path>, /curriculum audit <subject or pillar>, /curriculum fix <pillar>. Run from the learn-ai-engineering repo."
+description: "Keep the course one coherent whole as it grows. Shows the curriculum map and its integration problems, decides where a new topic belongs, wires a new or moved note into READMEs, Next links, decks and syllabi, and audits a subject for overlap and order. Usage: /curriculum (status), /curriculum place \"vector databases\", /curriculum integrate <note path>, /curriculum audit <subject or pillar>, /curriculum tier <subject or pillar>, /curriculum fix <pillar>. Run from the learn-ai-engineering repo."
 ---
 <!-- Generated from .claude/skills/_shared/curriculum.md in the librarian repo (uv run python -m librarian.tools.skillsync sync). Edit the template, not this file. -->
 
@@ -56,6 +56,22 @@ Run `python3 scripts/curriculum_map.py issues --pillar <scope>`, then dispatch `
 subject, dispatch one per pillar, then one across the subject's boundaries, at most 3 at a time. Report findings
 ranked by what a learner would suffer. Change nothing. Say how far each reader read: an audit that read only headings
 says so.
+
+## Tier: `tier <subject or pillar>`
+
+Every note has a tier (`foundations`, `practitioner` or `specialist`): who should meet the topic at all. The rules
+are in `depth-rubric.md`, beside the layout file, under "Tier". The steward decides it, never you and never the
+note's author. Section depth (`depth`, `depth_sections`) is a different axis and not part of this verb.
+
+1. Dispatch `curriculum-steward` once per pillar with the question "tier every note of `<pillar>`", at most 3 at a
+   time. Do not tell it what tiers you expect, and do not pass it tiers a note already carries.
+2. Show the user its table for each pillar: note, tier, the one-line reason, and any note it reports as covering two
+   topics at different tiers. Where a note already has a different tier, show both. Wait for the user's answer.
+3. Write only the approved tiers, as `tier: <value>` in each note's frontmatter, in the source repo
+   (`../learn-ai-engineering` when you run from librarian). Change nothing else in the note.
+4. This repo's scripts do not read `tier`: the checks for it run in the librarian repo, after the user has imported the change. Say so in the report.
+
+A note the steward reports as two topics is a structure question for the user, not a tier to pick.
 
 ## Fix: `fix <pillar>`
 

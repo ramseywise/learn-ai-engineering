@@ -20,6 +20,7 @@ Logistic regression stops at 0.895 on two interleaved moons, because its boundar
 |---|---|---|---|
 | 1 | [Neural network fundamentals](notes/01-neural-networks-fundamentals.md) | What does a network compute, and what does training do? | Neural Networks and Deep Learning |
 | 2 | [Optimisation and regularisation](notes/02-optimisation-and-regularisation.md) | Why won't it train, and why won't it generalise? | Improving Deep Neural Networks |
+| 2b | [What the training papers measured](notes/02b-what-the-training-papers-measured.md) | How much of a training method's headline did its paper measure? | Beyond Ng: the batch norm, Adam, Lion, AlgoPerf, D-Adaptation and dropout papers, read against a rerun on digits |
 | 3 | [Structuring ML projects](notes/03-structuring-ml-projects.md) | What should you try next? | Structuring Machine Learning Projects |
 | 4 | [Convolutional networks](notes/04-convolutional-networks.md) | Why do images need a different architecture? | Convolutional Neural Networks |
 | 4b | [Vision in practice](notes/04b-vision-in-practice.md) | Should you train an image model, or borrow one trained on ImageNet? | Beyond Ng: Bourke, *Learn PyTorch* ch. 03 to 08 |

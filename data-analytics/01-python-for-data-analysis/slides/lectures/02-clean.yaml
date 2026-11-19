@@ -55,6 +55,7 @@ parts:
           title: The useful half
           bullets: ["Preparation is no one-off first step", "It gets repeated as new problems surface"]
         takeaway: You will clean the same data again, so cleaning should be a script you can rerun and not edits you did once.
+        answer: "The second half: preparation is no one-off first step. It gets repeated as new problems surface, so write it as a script you can rerun."
         source: notes/05-cleaning.md
         notes: >-
           Treat the 80% as folklore and the second half as the useful part. Because you will clean the same data again,
@@ -93,7 +94,7 @@ parts:
           - ["customer, product, region", str, categories, You do not yet know how many spellings]
           - [date, "datetime64[us]", Already right, Chapter 6 is about what it gives you]
         highlight: [3]
-        takeaway: Read the dtypes as a list of jobs, because only date is already what it claims to be.
+        takeaway: Only date is already the type it claims to be, so read the other dtypes as a list of jobs.
         source: notes/05-cleaning.md
         notes: >-
           The load wrote the same export that chapter 2 read, with the banner skipped, `-` treated as a missing region and
@@ -116,10 +117,9 @@ parts:
           # Filter     1
           # filter     1
         bullets:
-          - "**Two spellings** of `ana`."
-          - "**A trailing space** in `filter `."
-          - "**A capital** in `South`."
-          - "The same value, written differently."
+          - "**A capital** gives `Filter` a row of its own."
+          - "**A trailing space** gives the second `filter` another."
+          - "**Other columns too:** two spellings of `ana`, and `South` beside `south`."
         takeaway: A groupby counts different spellings of one value as separate things, and an invisible space is enough.
         source: notes/05-cleaning.md
         notes: >-
@@ -133,15 +133,24 @@ parts:
         recall: How do you normalise every text column the same way?
         bullets:
           - "**Strip** the whitespace, then **lower** the case."
-          - "**The `.str` accessor** skips missing values rather than crashing on them."
+          - "**The `.str` accessor** skips missing values and does not crash on them."
           - "**Products** go from six spellings to four."
         aside:
-          title: The same line on every column
-          body: "`orders[col].str.strip().str.lower()` for customer, product and region. The customers come out as ana, ben, cara, dev, eli and fay."
+          code: |-
+            s = orders["product"]
+            s = s.str.strip().str.lower()
+            print(s.value_counts())
+
+            # filter     5
+            # kettle     3
+            # scale      3
+            # grinder    2
+          lang: python
         takeaway: Strip the whitespace and then lower the case, the same way on every text column.
         source: notes/05-cleaning.md
         notes: >-
-          After normalising, filter has 5 rows, kettle 3, scale 3 and grinder 2.
+          After normalising, filter has 5 rows, kettle 3, scale 3 and grinder 2. The note runs the same two calls in
+          a loop over customer, product and region. The customers come out as ana, ben, cara, dev, eli and fay.
 
       - layout: code
         beat: practice
@@ -164,12 +173,12 @@ parts:
         bullets:
           - "**Each capture group** becomes a column."
           - "**No match** gives `NaN`, not an error."
-          - "`practice/2_Texts.ipynb` works through `re` on free text."
         takeaway: Use a regular expression through str.extract, where each capture group becomes a column and a miss is NaN.
         source: notes/05-cleaning.md
         notes: >-
           Say the shop's couriers send notes with a tracking reference buried inside. The third row has no match, so it
           gets NaN and not an error. `str.contains("deliver")` gives False, True, False on the same notes.
+          `practice/2_Texts.ipynb` works through `re` on free text.
 
       - layout: steps
         beat: practice
@@ -191,14 +200,16 @@ parts:
         section: Fixing text
         title: When do you use map and when replace?
         recall: What is the difference between map and replace?
+        lead: "The first five regions are north, south, north, east and a gap. The dictionary maps north to N, south to S and east to E."
         emphasis: none
         left:
           title: map
           bullets: ["Applies a dictionary to every value", "A value absent from it becomes `NaN`", "Gives ['N', 'S', 'N', 'E', nan]"]
         right:
           title: replace
-          bullets: ["Changes only the values you list", "Leaves the rest", "Gives ['north', 'south', 'north', 'eastern', nan]"]
+          bullets: ["Changes only the values you list", "Leaves the rest", "Only east changes, to 'eastern'"]
         takeaway: Choose map when the dictionary should be complete and a miss should surface, and replace for a handful of corrections.
+        answer: "map applies the dictionary to every value, and a value absent from it becomes NaN. replace changes only the values you list and leaves the rest."
         source: notes/05-cleaning.md
         notes: >-
           The dictionary was north to N, south to S and east to E. The fifth value is the order with no region.
@@ -208,14 +219,21 @@ parts:
         section: Duplicates
         title: Why check the column that should be unique?
         recall: Why check the column that should be unique and not only the whole row?
-        bullets:
-          - "**Exact duplicates** usually come from a join or a retry upstream."
-          - "**`duplicated`** flags every repeat after the first, and `drop_duplicates` removes them."
-          - "**Two rows can share an order id** and differ in another field. A full-row comparison would not catch that."
-          - "**Order 1006** appears twice."
         aside:
-          title: The fix
-          body: "`drop_duplicates(subset=\"order_id\")` leaves 12 rows."
+          code: |-
+            ids = orders["order_id"]
+            print(ids.duplicated().sum())
+            orders = orders.drop_duplicates(
+                subset="order_id")
+            print(len(orders))
+
+            # 1
+            # 12
+          lang: python
+        bullets:
+          - "**Exact duplicates** usually come from a join or a retry upstream. Order 1006 appears twice."
+          - "**`duplicated`** flags every repeat after the first."
+          - "**Two rows can share an order id** and differ in another field, which a full-row comparison misses."
         takeaway: Check duplicates on the column that should be unique, because a full-row comparison misses rows that differ elsewhere.
         source: notes/05-cleaning.md
         notes: >-
@@ -233,8 +251,9 @@ parts:
           bullets: ["Stands for something that could not be measured", "Can safely be removed"]
         right:
           title: Observation
-          bullets: ["Should have been recorded and was not", "Needs keeping"]
+          bullets: ["Should be there, but is not", "Needs keeping"]
         takeaway: Ask why a value is missing before you fill or drop it, because pandas can count gaps but not say what they mean.
+        answer: "A structural missing value stands for something that could not be measured, so it can safely be removed. A missing observation should have been recorded and was not, so it needs keeping."
         source: notes/05-cleaning.md
         notes: >-
           If people with high incomes skip the income question, then dropping those rows biases every average you compute
@@ -256,7 +275,7 @@ parts:
             # region        2
             # (every other column: 0)
           lang: python
-        takeaway: Three orders have gaps, one in qty and two in region, and the two kinds need different treatment.
+        takeaway: Orders 1005 and 1010 have no region and order 1006 has no qty, and the two kinds of gap need different treatment.
         source: notes/05-cleaning.md
         notes: >-
           Order 1005 and order 1010 have no region. Order 1006 has no quantity.
@@ -310,6 +329,7 @@ parts:
           title: dropna
           bullets: ["Removes rows with gaps", "Gives [48.0, 52.0]", "`subset`, `how=\"all\"` and `thresh=n` tolerate some gaps"]
         takeaway: Always read the count alongside the mean, because a summary can look fine when half the column is empty.
+        answer: "ffill fits a slowly changing reading such as a price list, not independent orders. sum and mean skip gaps, so the mean of 48, gap, gap, 52, gap is 50.0, over 2 values and not 5."
         source: notes/05-cleaning.md
         notes: >-
           The old `fillna(method="ffill")` form was removed in pandas 3.0, so ffill is a method of its own. The count of
@@ -332,17 +352,24 @@ parts:
         section: Impossible values and assertions
         title: Where do the negative quantities go?
         recall: Why set returns aside in their own frame and not delete them?
+        aside:
+          code: |-
+            neg = orders["qty"] < 0
+            returns = orders[neg]
+            orders = orders[~neg]
+            print(len(returns), len(orders))
+
+            # 1 11
+          lang: python
         bullets:
           - "**In this shop** negative quantities are returns, which belong in a different table."
           - "**Set them aside**, even in a separate frame."
           - "**You can report** how much was removed, and undo it if you turn out to be wrong."
-        aside:
-          title: The split
-          body: "Rows with `qty < 0` go to `returns`: 1 row set aside, 11 orders left."
         takeaway: Set impossible rows aside and keep them, because you can then report the loss and undo it.
         source: notes/05-cleaning.md
         notes: >-
-          Keeping them is better than a silent delete.
+          Keeping them is better than a silent delete. The note keeps the rows with a quantity above zero and resets
+          the index afterwards.
 
       - layout: code
         beat: practice
@@ -353,18 +380,15 @@ parts:
         lang: python
         code: |-
           assert orders["order_id"].is_unique
-          assert orders[["order_id", "date", "product", "qty", "unit_price"]].notna().all(axis=None)
+          key = ["order_id", "date", "product", "qty", "unit_price"]
+          assert orders[key].notna().all(axis=None)
           assert orders["qty"].between(1, 100).all()
           assert set(orders["region"]) <= {"north", "south", "east", "unknown"}
-          print(orders.describe().loc[["min", "max"], ["qty", "unit_price"]])
-
-          #      qty  unit_price
-          # min  1.0         6.5
-          # max  6.0        95.0
         takeaway: Assert a unique key, no gaps in key columns, a range for qty and the allowed regions, because next month's export will differ.
         source: notes/05-cleaning.md
         notes: >-
-          Next month's export will have problems this month's did not.
+          Next month's export will have problems this month's did not. The note then prints the minimum and maximum
+          from `describe`: qty runs from 1 to 6 and unit_price from 6.5 to 95.0.
 
       - layout: bullets
         beat: practice
@@ -428,35 +452,32 @@ parts:
         lang: python
         code: |-
           def load_orders(path):
-              df = pd.read_csv(path, comment="#", na_values={"region": ["-"]}, parse_dates=["date"])
-              n_raw = len(df)
-              df = (
-                  df.drop_duplicates(subset="order_id")
-                    .assign(
-                        customer=lambda d: d["customer"].str.strip().str.lower(),
-                        # product: the same strip and lower as customer
-                        region=lambda d: d["region"].str.strip().str.lower().fillna("unknown"),
-                        unit_price=lambda d: pd.to_numeric(
-                            d["unit_price"].str.replace("$", "", regex=False), errors="coerce"),
-                    )
-              )
-              df.loc[df["order_id"] == 1006, "qty"] = 1          # confirmed by the shop owner
-              df = df[df["qty"] > 0].reset_index(drop=True)      # negative quantities are returns
+              raw = pd.read_csv(path, comment="#", parse_dates=["date"],
+                                na_values={"region": ["-"]})
+              df = raw.drop_duplicates(subset="order_id")
+              for col in ["customer", "product", "region"]:
+                  df[col] = df[col].str.strip().str.lower()
+              df["region"] = df["region"].fillna("unknown")
+              df["unit_price"] = pd.to_numeric(
+                  df["unit_price"].str.replace("$", "", regex=False), errors="coerce")
+              df.loc[df["order_id"] == 1006, "qty"] = 1   # confirmed by the shop owner
+              df = df[df["qty"] > 0].reset_index(drop=True)   # negatives are returns
               df["qty"] = df["qty"].astype("int64")
               assert df["order_id"].is_unique and df["unit_price"].notna().all()
-              print(f"loaded {n_raw} rows, kept {len(df)}")
+              print(f"loaded {len(raw)} rows, kept {len(df)}")
               return df
         takeaway: One function that takes a path and returns a clean frame lets next month's export run through the same steps.
         source: notes/05-cleaning.md
         notes: >-
-          Printing a row count at the end makes silent losses visible.
+          Printing a row count at the end makes silent losses visible. The note writes the same steps as one
+          `assign` chain. The slide uses a loop so that every line fits, and it returns the same frame.
 
       - layout: steps
         beat: practice
         section: Put it in one function
         title: What does the function guarantee?
-        recall: What are the steps inside load_orders, and what does it print?
-        answer: "Read with decisions stated, drop duplicates on the key, normalise, record the decisions, assert and count. It prints loaded 13 rows, kept 11."
+        recall: What does load_orders print, and which rows does that line account for?
+        answer: "It prints loaded 13 rows, kept 11. The two removed rows are the repeat of order 1006 and the return, order 1008."
         lead: "It prints `loaded 13 rows, kept 11`, and 11 orders feed chapters 3 and 7."
         steps:
           - {title: Read with decisions, text: "`comment`, `na_values` and `parse_dates` stated"}
@@ -473,7 +494,7 @@ parts:
         beat: pitfalls
         section: Pitfalls
         title: Where does cleaning go quietly wrong?
-        recall: Which cleaning habits go quietly wrong, and what is the fix for each?
+        recall: Which habits keep a cleaning script from going quietly wrong?
         header: [Pitfall, Why it bites, Fix]
         widths: [3.4, 4.2, 3.8]
         rows:
@@ -485,6 +506,10 @@ parts:
           - [Pickle as an archive format, A later library version may not read it, Use Parquet for anything you might read in a year]
           - [A check on a type and not a meaning, "A quantity of -1 is a valid integer", Assert the range and the allowed values]
         takeaway: Keep the raw data, count what coerce and every drop remove, and assert meanings and not only dtypes.
+        answer: >-
+          Keep the raw data unchanged and fix in code. Count what coerce makes. Ask why a value is missing. Print row
+          counts and keep what you removed. Check the column that should be unique. Use Parquet, not pickle, to archive.
+          Assert the range and the allowed values.
         source: notes/05-cleaning.md
         notes: >-
           Each of these has a symptom you can spot and a fix you can apply on Monday.
@@ -667,7 +692,6 @@ parts:
         title: Why print both ends of a week label?
         recall: What do you have to define before two people compare week numbers?
         bullets:
-          - "**`W-SUN`** is a week that ends on Sunday, so it runs Monday to Sunday."
           - "**The week label** prints both ends, so nobody asks which day a week starts on."
           - "**A week ignores the year boundary:** the first week starts in 2024, so \"week 1\" needs a definition."
           - "**The week of 13 January** has no row, and a groupby only shows groups that have rows."
@@ -677,8 +701,8 @@ parts:
         takeaway: Define week 1 before comparing week numbers, and remember a groupby hides weeks that have no rows.
         source: notes/06-dates-and-times.md
         notes: >-
-          Convert a column with `.dt.to_period` and group by the result as you would any key. Chapter 8 shows how to make
-          such gaps visible.
+          Convert a column with `.dt.to_period` and group by the result as you would any key. `W-SUN` is a week that ends
+          on Sunday, so it runs Monday to Sunday. Chapter 8 shows how to make such gaps visible.
 
       - layout: compare
         beat: practice
@@ -689,7 +713,7 @@ parts:
         emphasis: none
         left:
           title: Year ending in January
-          bullets: ["`Period(\"2012Q4\", freq=\"Q-JAN\")`", "Runs from 2011-11-01 to 2012-01-31"]
+          bullets: ["`Period(\"2012Q4\", freq=\"Q-JAN\")`", "Runs 2011-11-01 to 2012-01-31"]
         right:
           title: Year ending in June
           bullets: ["`to_period(\"Y-JUN\")` on 2007-08-15", "Gives 2008: August 2007 belongs to fiscal 2008"]
@@ -746,6 +770,7 @@ parts:
           - {title: A time that never happened, accent: "D4621A", body: "The clocks jumped from 02:00 to 03:00, so pandas raises on 02:30 and does not invent a moment."}
           - {title: Text with its own offsets, body: "`utc=True` converts every value to UTC, so two strings that both say 10:00 come out an hour apart."}
         takeaway: Convert local times with the zone, never a fixed hour, and let pandas raise on a time that never happened.
+        answer: "The offset changes with daylight saving, so a fixed hour is wrong half the year. A local time that never happened raises. `utc=True` converts text that carries its own offsets, so two strings that both say 10:00 come out an hour apart."
         source: notes/06-dates-and-times.md
         notes: >-
           The offset changed overnight. The last call handles text that carries its own offsets, and the two strings were an hour apart.
@@ -754,7 +779,7 @@ parts:
         beat: pitfalls
         section: Pitfalls
         title: How does a date parse go quietly wrong?
-        recall: Which parsing mistakes go quietly wrong, and what is the fix for each?
+        recall: Which four habits keep a date parse from going quietly wrong?
         header: [Pitfall, Fix]
         widths: [4, 7]
         rows:
@@ -763,6 +788,9 @@ parts:
           - ["`errors=\"coerce\"` without counting", "Print `isna().sum()` and read `min` and `max`. A date in 2052 parses without complaint"]
           - ["`format=\"mixed\"` as a fix", "It removes the error and keeps the ambiguity. Parse each source with its own format"]
         takeaway: State the format, count the NaT, read min and max, and parse each source with its own format.
+        answer: >-
+          Check `dtypes` and pass `parse_dates`. State `format=`. After `errors="coerce"`, count the NaT and read `min` and
+          `max`. Parse each source with its own format.
         source: notes/06-dates-and-times.md
         notes: >-
           The first four pitfalls are about the parse. The next slide covers time arithmetic and zones.
@@ -771,16 +799,17 @@ parts:
         beat: pitfalls
         section: Pitfalls
         title: How does date arithmetic go quietly wrong?
-        recall: Which arithmetic and time zone mistakes go quietly wrong?
+        recall: Which habits keep date arithmetic and time zones from going quietly wrong?
         bullets:
           - "**Adding 30 days when you mean a month.** Use `pd.DateOffset(months=1)`, or work in periods."
           - "**Labelling a month with a timestamp.** Does `2024-01-31` mean that day or the month? A period says which."
           - "**Naive timestamps from two sources.** Every join and daily total is off by hours. Localize each on arrival."
           - "**Local-time arithmetic across daylight saving.** Local days can be 23 or 25 hours long. Store in UTC."
-          - "**Old spellings.** `A-JUN` is now `Y-JUN`, and `PeriodIndex(year=, quarter=)` is deprecated."
         takeaway: Use DateOffset or periods for months, localize each source on arrival, and store in UTC.
+        answer: "Add a month with DateOffset or work in periods. Label a whole month with a period. Localize each source on arrival. Store in UTC."
         source: notes/06-dates-and-times.md
         notes: >-
+          Old spellings are a fifth pitfall: `A-JUN` is now `Y-JUN`, and `PeriodIndex(year=, quarter=)` is deprecated.
           Converting a datetime to an integer also changed in pandas 3.0: the unit is inferred, usually microseconds, so
           the number is 1000 times smaller than old code expected. State the unit with `as_unit` first if you depend on it.
 

@@ -71,7 +71,8 @@ parts:
           print(totals)
           print(orders.groupby("product")["qty"].sum())
 
-          # {'filter': 15, 'grinder': 2, 'kettle': 4, 'scale': 2}
+          # {'filter': 15, 'grinder': 2,
+          #  'kettle': 4, 'scale': 2}
           # product
           # filter     15
           # grinder     2
@@ -105,7 +106,8 @@ parts:
           bullets:
             - "A running mean: each step overlaps the last"
             - "Needs different tools"
-        takeaway: The pattern assumes each piece is handled independently, so a running mean needs different tools.
+        takeaway: The pattern needs independent pieces, so a running mean needs other tools.
+        answer: One whose pieces overlap, such as a running mean, where each step overlaps the last. It needs different tools, the rolling windows later in this lecture.
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           This is Wickham's limit on his own pattern. The different tools are rolling windows, which come later in this lecture.
@@ -164,6 +166,7 @@ parts:
           - ["n", "2", "1", "5.0"]
           - ["s", "3", "1", "4.0"]
         takeaway: Print a count beside every mean, because 5.0 rests on one value out of two and 4.0 on one out of three.
+        answer: A mean can rest on very few values. Here 5.0 for n rests on one rating out of two rows and 4.0 for s on one out of three, and only the count shows it.
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           Without the counts next to them, those means look more solid than they are.
@@ -179,6 +182,7 @@ parts:
           - '**Select** the numeric columns you mean: `[["qty", "revenue"]]`.'
           - "**Or pass** `numeric_only=True`."
         takeaway: Mean on a frame with text columns raises in current pandas, so select the numeric columns or pass numeric_only=True.
+        answer: Current pandas raises a TypeError on text columns, where old versions silently dropped them. Select the numeric columns you mean or pass numeric_only=True.
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           With numeric_only=True the shop's frame keeps six columns: order_id, qty, unit_price, revenue, unit_cost and margin.
@@ -231,7 +235,8 @@ parts:
         recall: How do you compute a group's rate in pandas?
         lang: python
         code: |-
-          orders["rate"] = orders["margin"] / orders["revenue"]
+          orders["rate"] = (
+              orders["margin"] / orders["revenue"])
           by_region = orders.groupby("region").agg(
               revenue=("revenue", "sum"),
               margin=("margin", "sum"),
@@ -263,7 +268,7 @@ parts:
           - [north, "169.0", "69.0", "0.453", "0.408"]
           - [south, "128.5", "64.0", "0.515", "0.498"]
           - [unknown, "118.0", "46.0", "0.415", "0.390"]
-        takeaway: East beats north on the mean of rates and north beats east on the true rate, so the wrong method changes the ranking.
+        takeaway: East beats north on the mean of rates, but north wins on the true rate, so the method changes the ranking.
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           Every region reads higher on the mean of rates than on the true rate.
@@ -325,6 +330,7 @@ parts:
         section: "transform: one value per original row"
         title: Which mean should fill a missing rating?
         recall: Why fill a gap from its own group, and what comes first?
+        answer: "The group's mean beats the global mean when regions differ. First ask why the value is missing."
         cards:
           - title: Fill from its own group
             body: 'Use `fillna` with `groupby("region")["rating"].transform("mean")`. It beats the global mean when regions differ.'
@@ -341,6 +347,7 @@ parts:
         section: "filter and apply: keep or rebuild groups"
         title: How do you keep only whole groups?
         recall: What does the function you pass to filter receive and return?
+        answer: "It receives a whole group and returns True or False, and True keeps all of that group's rows."
         lang: python
         code: |-
           repeat = orders.groupby("customer").filter(
@@ -353,7 +360,7 @@ parts:
           - "**It returns** `True` or `False`."
           - "**`True`** keeps all of the group's rows."
           - "**Here:** orders from repeat customers, 9 rows."
-        takeaway: filter keeps or drops each whole group by a True or False function, such as orders from repeat customers.
+        takeaway: filter keeps or drops each whole group by a True or False function, such as repeat customers.
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           The same shape drives the MovieLens example, where groupby title with size at least 250 keeps 1,216 films from 1,000,209 ratings. The book admits that 250 is an arbitrary cutoff, so state it.
@@ -363,6 +370,7 @@ parts:
         section: "filter and apply: keep or rebuild groups"
         title: Which of the four methods do you need?
         recall: How do agg, transform, filter and apply differ in what they return?
+        answer: "agg returns one row per group, transform the same rows as the input, filter a subset of the rows, and apply anything you stitch together."
         lead: Ask what shape comes back.
         header: [Method, Returns, Result has, Typical question]
         widths: [1.6, 2.6, 2.6, 4]
@@ -394,7 +402,8 @@ parts:
           bullets:
             - "`sort_values` then `groupby(...).head(1)` gives the same top row"
             - "Faster, and keeps the frame flat"
-        takeaway: Reach for apply last, since sort then head gives the top row per group faster and keeps the frame flat.
+        takeaway: Reach for apply last, since sort then head gives the top row per group faster.
+        answer: Use apply only when nothing more specific fits, since it is the slowest option. For the top row per group, sort_values then groupby(...).head(1) is faster and keeps the frame flat.
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           Custom aggregation functions are generally much slower than the built-in ones, though the book gives no timing. Use apply when nothing more specific fits.
@@ -429,7 +438,8 @@ parts:
                             "revenue": [10.0, 20.0, 30.0, 40.0]})
           print(k.groupby("region")["revenue"].sum().sum(),
                 k["revenue"].sum())
-          print(k.groupby("region", dropna=False)["revenue"].sum())
+          print(k.groupby("region", dropna=False)
+                ["revenue"].sum())
 
           # 40.0 100.0
           # region
@@ -455,6 +465,7 @@ parts:
         statement: "Overall survival was 38%. But it was 74.2% for women against 18.9% for men, and 96.8% for first-class women against 13.5% for third-class men."
         attribution: Descriptive rates, no test
         takeaway: A single average hides large differences between groups, which a pivot table lays out side by side.
+        answer: Overall survival was 38%, which hides 74.2% for women against 18.9% for men, and 96.8% for first-class women against 13.5% for third-class men.
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           This is the book's standard demonstration, a pivot_table of survived by sex and class.
@@ -534,6 +545,9 @@ parts:
           - [Old syntax, "`axis=1` was removed, `grouped[[...]]` needs a list, text columns raise"]
           - ["Reaching for `apply` first", "Flexible and slow: `agg` or `transform` usually does it"]
         takeaway: The groupby mistakes raise no error, so sum then divide, keep a count, check the groups add up, and use apply last.
+        answer: >-
+          Averaging averages (sum, then divide), lost NaN keys (dropna=False), size and count swapped, means without counts,
+          the default aggfunc of pivot_table (the mean), old syntax (axis=1, text columns), and reaching for apply first (use agg or transform).
         source: notes/07-groupby-and-aggregation.md
         notes: >-
           A group mean built on one observation prints with the same confidence as one built on ten thousand.
@@ -616,6 +630,7 @@ parts:
         section: Frequencies and date ranges
         title: Which frequency names did pandas 3 change?
         recall: Which frequency aliases did pandas 3.0 replace, and why?
+        answer: "M, Q, Y, H and T became ME, QE, YE, h and min, because ME (month end) had to be told apart from MS (month start)."
         lead: "`M`, `Q`, `Y`, `H` and `T` now raise an error, because `ME` says month end, as distinct from `MS`."
         header: [Alias, Meaning, Old spelling]
         widths: [2.4, 4, 3]
@@ -681,11 +696,12 @@ parts:
       - layout: statement
         beat: pitfalls
         section: "Change over time: shift and pct_change"
-        title: What can go wrong when you build a feature with shift?
+        title: What goes wrong with shift features?
         recall: What is leakage, and how does shift cause it?
         kicker: Leakage
         statement: "`shift(-1)` puts tomorrow's value on today's row. Used to predict today, it looks brilliant in testing and is impossible in production."
-        takeaway: A negative shift reads the future, so keep model features looking backward, with positive shifts only.
+        takeaway: A negative shift reads the future, so give a model positive shifts only.
+        answer: Leakage is using information not known at prediction time. shift(-1) puts tomorrow's value on today's row, so keep model features to positive shifts.
         source: notes/08-time-series.md
         notes: >-
           Tomorrow is not yet known in production. Shift is also how you build features for a model, which is why this is the main hazard in time-series analysis.
@@ -705,6 +721,7 @@ parts:
           # 2024-02-29  12266.4  423.0     29
           # 2024-03-31  12775.1  440.5     29
         takeaway: resample bins by time like a groupby, so aggregate with sum, mean and count together.
+        answer: resample is a groupby whose key is a time bin. The count shows how many observations each bin holds, here 31, 29 and 29 for January to March.
         source: notes/08-time-series.md
         notes: >-
           Going from daily to monthly is a groupby in which the key is a time bin.
@@ -722,7 +739,7 @@ parts:
           - ["2024-01-31", "11992.8", "386.9", "31"]
           - ["2024-02-29", "12266.4", "423.0", "29"]
           - ["2024-03-31", "12775.1", "440.5", "29"]
-        takeaway: A monthly sum compares unequal lengths, so read count and mean beside it, as March has 29 observations once two outage days drop out.
+        takeaway: A monthly sum compares unequal lengths, so read the count and the mean beside it.
         source: notes/08-time-series.md
         notes: >-
           December looks big partly for having 31 days and February small partly for having 29.
@@ -739,7 +756,7 @@ parts:
           tag: "closed=left, label=left"
           bullets:
             - "`[0, 1, 2, 3, 4)` is labelled 09:00"
-            - "Sums on the 12-minute series: **10, 35, 21**"
+            - "12-minute sums: **10, 35, 21**"
         right:
           title: Right, right
           tag: "closed=right, label=right"
@@ -764,6 +781,7 @@ parts:
             accent: "D4621A"
             body: "Carries 48.0 into February and March, which assumes it held until the next value."
         takeaway: Carrying a value forward suits a monthly price list and misrepresents a monthly sales total.
+        answer: Upsampling creates rows with nothing in them. Carrying a value forward assumes it held until the next one, which suits a price list and misrepresents a sales total.
         source: notes/08-time-series.md
         notes: >-
           Upsampling creates rows with nothing in them, and you must choose how to fill them.
@@ -777,7 +795,6 @@ parts:
           - '**`to_period("M")`** labels a month without the argument about which day stands for it.'
           - "**Group by the result** as you would any key."
           - "**A calendar part** such as the day name gives the seasonal view, with one row per weekday."
-          - "**Time zone first:** a late sale belongs to a different day, sometimes month, in another zone."
         aside:
           code: |-
             d = regular.index.day_name()
@@ -790,10 +807,11 @@ parts:
             # Sunday      568.0
             # Friday      536.0
           lang: python
-        takeaway: Group by a period or a weekday name for the seasonal view, and pick the reporting time zone before you do.
+        takeaway: Group by a period for calendar months, and by the weekday name for the seasonal view.
         source: notes/08-time-series.md
         notes: >-
-          Saturday leads, as the weekly pattern we built in says it should. Resampling periods needs the target to be a subperiod or superperiod, or pandas raises.
+          Saturday leads, as the weekly pattern we built in says it should. Pick the reporting time zone first, since a late sale
+          belongs to a different day, sometimes month, in another zone. Resampling periods needs the target to be a subperiod or superperiod, or pandas raises.
 
       - layout: code
         beat: practice
@@ -816,6 +834,7 @@ parts:
           # 445.4  390.2     390.2      390.2  412.4
           # 402.1  396.2     396.2      391.7  409.6
         takeaway: A rolling window slides a fixed span along the series, and a 7-day mean removes the weekly pattern because each window holds every weekday.
+        answer: rolling slides a fixed window, seven rows for rolling(7) and seven calendar days for rolling("7D"). expanding averages everything so far, and ewm weights recent days more.
         source: notes/08-time-series.md
         notes: >-
           The printout is the rows from 4 to 8 January. This is the case Wickham's split, apply, combine excludes, because the pieces overlap.
@@ -829,7 +848,7 @@ parts:
           - title: "`rolling(7)`"
             body: "Counts seven rows, and needs seven non-missing values by default. `min_periods` relaxes that."
           - title: "`rolling(\"7D\")`"
-            body: "Seven calendar days. Prefer it on irregular data: on `daily`, `rolling(7)` on March 16 reaches back nine days."
+            body: "Seven calendar days. Prefer it on irregular data."
           - title: "`expanding`"
             body: "Uses everything so far: a running total or a mean to date."
           - title: "`ewm`"
@@ -838,7 +857,8 @@ parts:
         takeaway: rolling(7) counts rows and rolling("7D") counts days, expanding uses all so far, and ewm weights recent days more.
         source: notes/08-time-series.md
         notes: >-
-          On a series with absent rows, a count-based window spans more calendar time than you think.
+          On a series with absent rows, a count-based window spans more calendar time than you think: on daily,
+          rolling(7) on March 16 reaches back nine days.
 
       - layout: compare
         beat: pitfalls
@@ -861,7 +881,8 @@ parts:
             - "Uses future values"
             - "Rises on 29 November: **614**"
             - "Fine on a chart, cheating in a forecast"
-        takeaway: A centred window reads the future and rises before the event, so keep it off anything you feed to a model.
+        takeaway: A centred window reads the future and rises before the event, so keep it out of a model.
+        answer: A trailing window uses that date and earlier ones, and a centred one uses future values. Only the trailing window can feed a model.
         source: notes/08-time-series.md
         notes: >-
           center=True looks nicer on a chart since it removes the lag. This is the leakage hazard again.
@@ -882,7 +903,10 @@ parts:
           - [Duplicate timestamps, "Check `index.is_unique`, aggregate with `groupby(level=0)`"]
           - [Unsorted index, "`sort_index()`, and check `is_monotonic_increasing`"]
           - [Daily totals in the wrong zone, Pick the reporting zone before you resample]
-        takeaway: Show the gaps, use current aliases, compare per-day means, keep features backward, and sort and de-duplicate the index.
+        takeaway: Show the gaps, use current aliases, compare per-day means, keep features backward, and sort the index.
+        answer: >-
+          Absent rows (asfreq), old aliases (ME, QE, YE, h, min), raw monthly sums (per-day means), leakage (no negative shift or center=True),
+          removed resample arguments, duplicate timestamps (index.is_unique), an unsorted index (sort_index) and totals in the wrong time zone.
         source: notes/08-time-series.md
         notes: >-
           Leakage is fine on a chart and not in a model.
@@ -904,7 +928,7 @@ parts:
           - {title: Gaps, body: "Show absent rows with `asfreq`."}
           - {title: Months, body: "Compare mean daily values, and read the count."}
           - {title: Backward, accent: "D4621A", body: "Keep model features looking backward: positive shifts, trailing windows."}
-        takeaway: Group by shape, divide sums for rates, print counts, show gaps and keep model features looking backward.
+        takeaway: Pick the method by shape, divide sums for rates, print counts, show gaps and keep features backward.
         source: notes/08-time-series.md
         notes: >-
           None of these mistakes raises an error. Each check is cheap.
@@ -917,7 +941,7 @@ parts:
         answer: Whether a difference in the table is real or luck, which probability and statistics answer next.
         bullets:
           - "**Next module:** is a difference in that table real, or luck? Probability and statistics."
-          - "**SQL:** keys are `GROUP BY`, a filter on groups is `HAVING`, and `transform` is `OVER (PARTITION BY ...)`."
+          - "**SQL:** keys are `GROUP BY`, group filters `HAVING`, `transform` is `OVER`."
           - "**Forecasting:** the chapter in pillar 06 assumes you already have these time tools."
         takeaway: You can extract, clean and summarise by group and over time, and the next question is whether a difference is real.
         source: notes/08-time-series.md
