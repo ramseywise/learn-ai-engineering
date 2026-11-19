@@ -18,6 +18,8 @@ sources:
   - https://arxiv.org/abs/2308.03028
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - react-synergizing-reasoning-and-acting
 ---
 # 3 — Core Techniques
 

@@ -8,6 +8,8 @@ sources:
   - https://arxiv.org/abs/2504.21252
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - text-to-sql-retrieval
 ---
 # 8 — Agentic RAG in production: the PRINCE retrieval stack
 

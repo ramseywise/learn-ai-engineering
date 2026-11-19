@@ -12,6 +12,8 @@ sources:
   - https://arxiv.org/abs/2604.08649 (Ostroukhov et al., 2026-08, preprint, arXiv v2, full)
 confidence: high
 cleaned: 2026-11-03
+wiki:
+  - transformer-architecture
 ---
 
 # Transformer encoders

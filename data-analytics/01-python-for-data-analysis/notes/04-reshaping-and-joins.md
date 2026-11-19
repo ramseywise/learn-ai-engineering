@@ -8,6 +8,10 @@ sources:
   - https://pandas.pydata.org/docs/user_guide/reshaping.html
 confidence: high
 cleaned: 2026-11-01
+tier: practitioner
+depth: core
+depth_sections:
+  "What one row means: tidy data": intro
 ---
 # 4 — Reshaping and Joins
 

@@ -6,6 +6,9 @@ sources:
   - https://www.truefoundry.com/blog/graph-engineering-enterprise-guide
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - runtime-topology
+  - adk-hitl-patterns
 ---
 # 4 — Durable Execution and Interrupts
 

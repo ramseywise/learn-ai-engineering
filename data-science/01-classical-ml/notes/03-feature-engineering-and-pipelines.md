@@ -12,6 +12,8 @@ sources:
   - Hastie, Tibshirani and Friedman, The Elements of Statistical Learning, 2nd ed. (Springer, 2009), ch. 5, 9, 18
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - tabular-ml-leakage-taxonomy
 ---
 # Feature Engineering and Pipelines
 

@@ -6,6 +6,8 @@ sources:
   - https://arxiv.org/abs/2512.21309
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - semantic-cache
 ---
 # 10 — Semantic cache for support agents
 

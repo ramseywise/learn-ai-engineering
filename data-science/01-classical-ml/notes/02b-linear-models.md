@@ -11,6 +11,8 @@ sources:
   - https://doi.org/10.1111/j.2517-6161.1996.tb02080.x
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - logistic-odds-ratios-vs-marginal-effects
 ---
 # Linear Models
 

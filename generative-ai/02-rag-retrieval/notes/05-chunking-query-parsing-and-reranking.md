@@ -22,6 +22,8 @@ sources:
   - https://arxiv.org/abs/2310.04408
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - rag-knowledge-preparation
 ---
 # 5 — Chunking, query parsing and reranking
 

@@ -7,6 +7,8 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - langgraph-state-reducers
 ---
 # 3 — State and Reducers
 

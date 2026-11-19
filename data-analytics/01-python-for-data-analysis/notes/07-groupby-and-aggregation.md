@@ -8,6 +8,10 @@ sources:
   - https://pandas.pydata.org/docs/user_guide/groupby.html
 confidence: high
 cleaned: 2026-11-01
+tier: practitioner
+depth: core
+depth_sections:
+  "Split, apply, combine": intro
 ---
 # 7 — Groupby and Aggregation
 

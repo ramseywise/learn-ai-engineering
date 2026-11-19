@@ -17,6 +17,8 @@ sources:
   - https://arxiv.org/abs/2607.14611
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - agent-memory-types
 ---
 # 6 — Memory as a Context Sub-Component
 

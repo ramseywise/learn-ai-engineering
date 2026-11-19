@@ -22,6 +22,8 @@ sources:
   - https://arxiv.org/abs/2503.11301
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - a2a-agent-protocol
 ---
 # 5b — Running Multi-Agent Systems
 

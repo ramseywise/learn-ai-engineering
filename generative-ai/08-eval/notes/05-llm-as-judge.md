@@ -35,6 +35,8 @@ sources:
   - https://arxiv.org/abs/2305.11171
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - llm-as-judge-evaluation
 ---
 # 5 — LLM as Judge
 

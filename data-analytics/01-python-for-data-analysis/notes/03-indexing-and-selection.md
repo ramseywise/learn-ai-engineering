@@ -8,6 +8,8 @@ sources:
   - https://pandas.pydata.org/docs/user_guide/indexing.html
 confidence: high
 cleaned: 2026-11-01
+tier: practitioner
+depth: core
 ---
 # 3 — Indexing and Selection
 

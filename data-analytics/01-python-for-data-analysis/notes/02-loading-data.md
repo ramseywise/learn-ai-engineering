@@ -5,6 +5,8 @@ sources:
   - https://pandas.pydata.org/docs/user_guide/io.html
 confidence: high
 cleaned: 2026-11-17
+tier: practitioner
+depth: core
 ---
 # 2 — Loading Data
 

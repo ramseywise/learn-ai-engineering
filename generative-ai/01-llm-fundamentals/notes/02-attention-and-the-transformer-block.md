@@ -39,6 +39,8 @@ sources:
   - https://arxiv.org/abs/1602.07868
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - self-attention-mechanism
 ---
 
 # 2 — Attention and the transformer block

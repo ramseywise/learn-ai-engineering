@@ -10,6 +10,8 @@ sources:
   # eval-harness.md (retired 2026-10-28)
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - agent-trace-anatomy
 ---
 # 8 — Tracing and Observability
 

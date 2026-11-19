@@ -8,6 +8,8 @@ sources:
   - https://pandas.pydata.org/docs/whatsnew/v3.0.0.html
 confidence: high
 cleaned: 2026-11-17
+tier: practitioner
+depth: core
 ---
 # 5 — Cleaning
 

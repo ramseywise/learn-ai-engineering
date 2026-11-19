@@ -12,6 +12,8 @@ sources:
   - https://assets.anthropic.com/m/785e231869ea8b3b/original/claude-3-7-sonnet-system-card.pdf
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - input-guardrails-pipeline
 ---
 
 # 2 — Prompt Injection and Jailbreaks

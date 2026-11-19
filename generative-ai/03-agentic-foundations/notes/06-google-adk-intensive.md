@@ -11,6 +11,8 @@ sources:
   - "Zhang et al. 2025, Nemotron-Research-Tool-N1 — https://arxiv.org/abs/2505.00024"
   - "Fang et al. 2025, AgentScaler — https://arxiv.org/abs/2509.13311"
 cleaned: 2026-11-01
+wiki:
+  - skill-md-pattern
 ---
 
 # 6 — Google ADK intensive: context, harness, protocols and skills

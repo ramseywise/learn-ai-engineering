@@ -26,6 +26,8 @@ sources:
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 3
   - Lakshmanan & Hapke, *Generative AI Design Patterns* (O'Reilly, 2025), ch. 3, ch. 4
 cleaned: 2026-11-01
+wiki:
+  - rag-architecture-selection
 ---
 
 # 1 — The RAG pipeline

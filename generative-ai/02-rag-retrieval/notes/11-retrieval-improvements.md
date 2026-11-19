@@ -14,6 +14,8 @@ sources:
   - Lakshmanan & Hapke, *Generative AI Design Patterns* (O'Reilly, 2025), ch. 4
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - crag-retry-logic
 ---
 # 11 — Retrieval improvements: reading an ablation
 

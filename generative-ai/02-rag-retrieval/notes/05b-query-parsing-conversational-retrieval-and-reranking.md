@@ -18,6 +18,8 @@ sources:
   - https://arxiv.org/abs/2310.04408
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - rag-reranking
 ---
 # 5b — Query parsing, conversational retrieval and reranking
 

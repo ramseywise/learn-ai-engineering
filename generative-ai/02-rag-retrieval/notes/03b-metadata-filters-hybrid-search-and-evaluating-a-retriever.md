@@ -9,6 +9,10 @@ sources:
   - https://doi.org/10.1145/3404835.3463238
 confidence: high
 cleaned: 2026-11-08
+wiki:
+  - reciprocal-rank-fusion
+  - bm25-and-the-lexical-gap
+  - rag-retrieval-strategies
 ---
 # 3b — Metadata filters, hybrid search and evaluating a retriever
 

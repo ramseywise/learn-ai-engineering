@@ -9,6 +9,8 @@ sources:
   - https://doi.org/10.18637/jss.v040.i01
 confidence: high
 cleaned: 2026-11-17
+tier: practitioner
+depth: core
 ---
 # 8 — Time Series
 

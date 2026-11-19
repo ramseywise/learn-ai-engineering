@@ -29,6 +29,8 @@ sources:
   - https://arxiv.org/abs/2512.07921
 confidence: high
 cleaned: 2026-11-01
+wiki:
+  - context-compaction
 ---
 # 5 — Compression and Compaction
 

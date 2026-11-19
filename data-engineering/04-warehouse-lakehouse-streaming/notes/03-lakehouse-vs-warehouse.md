@@ -9,6 +9,8 @@ sources:
   - https://dataintensive.net/
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - lakehouse-vs-warehouse-decision
 ---
 # Lakehouse against warehouse
 

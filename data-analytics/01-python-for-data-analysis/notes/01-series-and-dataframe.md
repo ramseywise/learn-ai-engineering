@@ -9,6 +9,14 @@ sources:
   - https://doi.org/10.18637/jss.v040.i01
 confidence: high
 cleaned: 2026-11-01
+tier: foundations
+depth: core
+depth_sections:
+  "The problem a DataFrame solves": intro
+  "A Series is a column with labels": intro
+  "Alignment: the idea that makes it pandas": intro
+  "A DataFrame is a dictionary of aligned columns": intro
+  "What a dtype costs in memory and speed": deep
 ---
 # 1 — Series and DataFrame
 

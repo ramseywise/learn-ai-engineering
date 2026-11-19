@@ -12,6 +12,8 @@ sources:
   - https://arxiv.org/abs/2605.23071
 confidence: medium
 cleaned: 2026-11-01
+wiki:
+  - why-context-is-finite
 ---
 # 3 — Budgeting the Window
 
